@@ -4,10 +4,50 @@
 local RWA = RWA
 local W = RWA.W
 
+-- Reload UI keeps native widgets and RWA, while the module-local pools are rebuilt.
+-- Draft-only extras must not reappear when their XML parent is reused by a saved aura.
+-- Keep only a cleanup registry across loads, never active rendering state or old pools.
+local function cleanOldChild(region)
+  if type(region) ~= "table" then return end
+  if type(region.Hide) == "function" then pcall(region.Hide, region) end
+  pcall(RWA.Try, region.frame, "Hide")
+  -- Also clear individual components if an older/custom Hide handler failed midway.
+  for _, name in ipairs({ "text", "text2" }) do
+    local fs = region[name]
+    if type(fs) == "table" and fs.obj then
+      pcall(RWA.Try, fs.obj, "SetText", "")
+      pcall(RWA.Try, fs.obj, "Hide")
+      fs.lastText = nil
+    end
+  end
+  for _, name in ipairs({ "icon", "shade", "fill", "bg", "tex" }) do
+    pcall(RWA.Try, region[name], "Hide")
+  end
+  for _, texture in ipairs(region.borderParts or {}) do pcall(RWA.Try, texture, "Hide") end
+  region.state, region.elementActive, region.elementPhase = nil, nil, nil
+end
+if type(RWA.regionChildren) == "table" then
+  for _, region in pairs(RWA.regionChildren) do pcall(cleanOldChild, region) end
+end
+local childRegistry = {}
+RWA.regionChildren = childRegistry
+
 local Regions = {}
 RWA.Regions = Regions
 
 local pools = {} -- [regionType] = { region, ... } frames cannot be deleted in RoM, so they are reused
+local CORE_TYPES = { icon = true, aurabar = true, text = true, texture = true }
+local SIDES = {
+  LEFT = { "RIGHT", "LEFT", -2, 0 },
+  RIGHT = { "LEFT", "RIGHT", 2, 0 },
+  TOP = { "BOTTOM", "TOP", 0, -2 },
+  BOTTOM = { "TOP", "BOTTOM", 0, 2 },
+  CENTER = { "CENTER", "CENTER", 0, 0 },
+}
+Regions.ELEMENT_SIDES = { "LEFT", "RIGHT", "TOP", "BOTTOM", "CENTER" }
+Regions.borderStyles = { "none", "thin", "thick", "double", "corners" }
+Regions.borderLabels = { none = "None", thin = "Thin", thick = "Thick", double = "Double", corners = "Corners" }
+local acquireElement
 
 local Base = {}
 Base.__index = Base
@@ -96,16 +136,25 @@ end
 
 function Base:Place(dx, dy)
   local d = self.data
+  if self.owner then
+    local side = SIDES[d.side or "LEFT"] or SIDES.LEFT
+    W.SetPoint(self.frame, side[1], self.owner.frame, side[2],
+      side[3] + (tonumber(d.x) or 0) + (dx or 0), side[4] + (tonumber(d.y) or 0) + (dy or 0))
+    return
+  end
   W.Place(self.frame, d.point or "CENTER", "UIParent", d.point or "CENTER", (d.x or 0) + (dx or 0), (d.y or 0) + (dy or 0))
 end
 
 function Base:Layout(data)
   self.data = data
   self.color = data.color
+  if data._element then self.elementActive, self.elementPhase = nil, nil end
   W.SetSize(self.frame, data.width, data.height)
   self:Place()
+  self.elementDy = nil
   self:LayoutParts(data)
-  self:LayoutElements(data)
+  self:LayoutBorder(data)
+  if not self.isElement then self:LayoutElements(data) end
 end
 
 function Base:SetState(state)
@@ -126,6 +175,10 @@ function Base:Show()
   if not self.shown then
     self.shown = true
     RWA.Try(self.frame, "Show")
+    for _, name in ipairs({ "text", "text2" }) do
+      local fs = self[name]
+      if fs and fs.obj then W.SetShown(fs.obj, true) end
+    end
   end
 end
 
@@ -133,13 +186,46 @@ function Base:Hide()
   if self.shown ~= false then
     self.shown = false
     RWA.Try(self.frame, "Hide")
+    for _, name in ipairs({ "text", "text2" }) do
+      local fs = self[name]
+      if fs and fs.obj then
+        W.SetShown(fs.obj, false)
+        fs.lastText = nil
+      end
+    end
   end
+  for _, el in ipairs(self.elems or {}) do el.region:Hide() end
 end
 
 function Base:Release()
+  if self.released then return end
   self:Hide()
-  self.state = nil
-  table.insert(pools[self.regionType], self)
+  self.released = true
+  for _, el in ipairs(self.elems or {}) do el.region:Release() end
+  self.elems = nil
+  self.state, self.elementActive, self.elementPhase = nil, nil, nil
+  self.elementIndex, self.elementDy = nil, nil
+  self.lastIcon, self.lastFill = nil, nil
+  for _, name in ipairs({ "text", "text2" }) do
+    local fs = self[name]
+    if fs and fs.obj then
+      W.SetText(fs.obj, "")
+      W.SetShown(fs.obj, false)
+      fs.lastText = nil
+    end
+  end
+  if self.icon then W.SetTexture(self.icon, nil) end
+  local pool
+  if self.owner then
+    self.owner.elementPools = self.owner.elementPools or {}
+    self.owner.elementPools[self.regionType] = self.owner.elementPools[self.regionType] or {}
+    pool = self.owner.elementPools[self.regionType]
+  else
+    pools[self.regionType] = pools[self.regionType] or {}
+    pool = pools[self.regionType]
+  end
+  self.data = nil
+  table.insert(pool, self)
 end
 
 local function colorOf(c)
@@ -147,6 +233,73 @@ local function colorOf(c)
   return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
 end
 Regions.ColorOf = colorOf
+
+local function positive(value, fallback)
+  local n = tonumber(value)
+  return n and n > 0 and n < math.huge and n or fallback
+end
+
+local function borderMetrics(data, kind)
+  local style = data.borderStyle
+  if style == nil then style = kind == "icon" and not data._element and "thin" or "none" end
+  if not Regions.borderLabels[style] then style = "none" end
+  local thickness = positive(data.borderSize, style == "thick" and 3 or style == "corners" and 2 or 1)
+  thickness = math.min(thickness, math.max(1, math.min(data.width, data.height) / 4))
+  local inset = style == "none" and 0 or style == "double" and thickness * 3 or thickness
+  inset = math.min(inset, math.max(0, math.min(data.width, data.height) / 2 - 0.5))
+  return style, thickness, inset
+end
+
+-- Borders use actual rectangular textures; no unsupported native backdrop/glow APIs.
+-- Segments are reused and surplus segments are hidden when a style changes.
+function Base:LayoutBorder(data)
+  local style, thickness, inset = borderMetrics(data, self.regionType)
+  self.borderStyle, self.borderInset = style, inset
+  self.borderParts = self.borderParts or {}
+  local count = 0
+  local function segment(x, y, width, height)
+    if width <= 0 or height <= 0 then return end
+    count = count + 1
+    local tex = self.borderParts[count]
+    if not tex then
+      tex = W.Texture(self.frame, "OVERLAY", "Square_FullWhite")
+      self.borderParts[count] = tex
+    end
+    W.SetSize(tex, width, height)
+    W.SetPoint(tex, "TOPLEFT", self.frame, "TOPLEFT", x, y)
+    W.SetColor(tex, colorOf(data.borderColor or { 0, 0, 0, 1 }))
+    RWA.Try(tex, "Show")
+  end
+  local w, h = data.width, data.height
+  local function ring(offset)
+    local width, height = w - offset * 2, h - offset * 2
+    if width <= 0 or height <= 0 then return end
+    local t = math.min(thickness, width / 2, height / 2)
+    segment(offset, offset, width, t)
+    segment(offset, h - offset - t, width, t)
+    segment(offset, offset + t, t, height - t * 2)
+    segment(w - offset - t, offset + t, t, height - t * 2)
+  end
+  if style == "thin" or style == "thick" then
+    ring(0)
+  elseif style == "double" then
+    ring(0)
+    ring(thickness * 2)
+  elseif style == "corners" then
+    local t = math.min(thickness, w / 2, h / 2)
+    local arm = math.min(math.min(w, h) / 2, math.max(t * 3, math.min(w, h) / 4))
+    segment(0, 0, arm, t)
+    segment(0, t, t, arm - t)
+    segment(w - arm, 0, arm, t)
+    segment(w - t, t, t, arm - t)
+    segment(0, h - t, arm, t)
+    segment(0, h - arm, t, arm - t)
+    segment(w - arm, h - t, arm, t)
+    segment(w - t, h - arm, t, arm - t)
+  end
+  for i = count + 1, #self.borderParts do RWA.Try(self.borderParts[i], "Hide") end
+  self.borderCount = count
+end
 
 local function setText(fs, text)
   if fs.lastText ~= text then
@@ -171,60 +324,141 @@ local function setTexSize(tex, w, h)
 end
 
 ---------------------------------------------------------------------------
--- Extra elements (WeakAuras sub-elements): more icons or texts on one aura, each fed by the
--- shown state or by one trigger, placed on a side of the main region.
--- data.elements = { { type = "icon"|"text", from = 0 (shown) or trigger index,
---                     side = "LEFT"|"RIGHT"|"TOP"|"BOTTOM"|"CENTER", size, text, x, y }, ... }
+-- Extra displays use the same rendering classes as the main display on independent,
+-- non-interactive child frames. Only mains use the draggable XML region-frame pool.
+-- from = 0 follows the shown main state; a positive index uses that trigger's state.
 ---------------------------------------------------------------------------
 
-local SIDES = {
-  LEFT = { "RIGHT", "LEFT", -2, 0 },
-  RIGHT = { "LEFT", "RIGHT", 2, 0 },
-  TOP = { "BOTTOM", "TOP", 0, -2 },
-  BOTTOM = { "TOP", "BOTTOM", 0, 2 },
-  CENTER = { "CENTER", "CENTER", 0, 0 },
-}
-Regions.ELEMENT_SIDES = { "LEFT", "RIGHT", "TOP", "BOTTOM", "CENTER" }
+-- A detached rendering model, also used by the editor's selected-display preview.
+-- Keep old icon/text size semantics; new width/height/fontSize fields take priority.
+function Regions.ElementData(parentData, element)
+  parentData, element = parentData or {}, element or {}
+  local d = RWA.CopyTable(element)
+  local kind = CORE_TYPES[element.type] and element.type or "icon"
+  d.regionType, d._element = kind, true
+  d.elements, d.triggers, d.conditions, d.load = nil, nil, nil, nil
+  local size = positive(element.size, positive(parentData.height, 32))
+  if kind == "text" then
+    d.fontSize = positive(element.fontSize, size)
+    d.width, d.height = positive(element.width, 200), positive(element.height, d.fontSize + 4)
+    d.text = element.text == nil and "%n" or element.text
+  elseif kind == "aurabar" then
+    d.width, d.height = positive(element.width, 220), positive(element.height, positive(element.size, 22))
+    d.fontSize = positive(element.fontSize, 12)
+    d.text = element.text == nil and "%n" or element.text
+    d.text2 = element.text2 == nil and "%p" or element.text2
+    d.showIcon = element.showIcon ~= false
+  else
+    local defaultSize = kind == "texture" and positive(element.size, 64) or size
+    d.width, d.height = positive(element.width, defaultSize), positive(element.height, defaultSize)
+    d.fontSize = positive(element.fontSize, 14)
+    d.text = element.text or ""
+  end
+  d.text2 = d.text2 or ""
+  d.font = element.font or parentData.font
+  d.color = d.color or { 1, 1, 1, 1 }
+  d.bgColor = d.bgColor or { 0, 0, 0, 0.5 }
+  d.alpha = tonumber(d.alpha) or 1
+  if d.alpha ~= d.alpha then d.alpha = 1 end
+  d.alpha = math.max(0, math.min(1, d.alpha))
+  d.texture = d.texture or (kind == "texture" and "Circle_White" or "Square_FullWhite")
+  d.borderStyle = d.borderStyle or "none"
+  d.animation = type(d.animation) == "table" and d.animation or {}
+  RWA.MergeDefaults(d.animation, { start = "none", main = "none", finish = "none" })
+  return d
+end
+
+function Regions.ElementState(owner, index, states)
+  local e = owner.data and owner.data.elements and owner.data.elements[index]
+  if not e then return {}, false end
+  local from = tonumber(e.from) or 0
+  local state
+  if from > 0 then state = states and states[from] else state = owner.state end
+  local active = type(state) == "table" and state.show ~= false
+  if type(state) ~= "table" then state = {} end
+  if (e.type == nil or e.type == "icon" or e.type == "aurabar") and not (e.icon and e.icon ~= "")
+    and Regions.ElementIcon then
+    local icon = Regions.ElementIcon(owner, index, state)
+    if icon ~= nil then
+      local copy = {}
+      for key, value in pairs(state) do copy[key] = value end
+      state = copy
+      state.icon, state._elementNoIcon = icon or nil, icon == false
+    end
+  end
+  return state, active
+end
 
 function Base:LayoutElements(data)
   self.elems = self.elems or {}
   local list = data.elements or {}
   for i, e in ipairs(list) do
     local el = self.elems[i]
+    local resolved = Regions.ElementData(data, e)
+    if el and el.kind ~= resolved.regionType then
+      el.region:Release()
+      el = nil
+    end
     if not el then
-      el = { tex = W.Texture(self.frame, "OVERLAY"), fs = makeText(self.frame, 12, "CENTER") }
+      el = { kind = resolved.regionType, region = acquireElement(self, resolved, i) }
       self.elems[i] = el
-    end
-    local side = SIDES[e.side or "LEFT"] or SIDES.LEFT
-    local size = tonumber(e.size) or data.height or 32
-    local x, y = side[3] + (tonumber(e.x) or 0), side[4] + (tonumber(e.y) or 0)
-    el.kind = e.type == "text" and "text" or "icon"
-    if el.kind == "icon" then
-      W.SetSize(el.tex, size, size)
-      W.SetPoint(el.tex, side[1], self.frame, side[2], x, y)
-      RWA.Try(el.tex, "Show")
-      W.SetText(el.fs.obj, "")
-      RWA.Try(el.fs.obj, "Hide")
     else
-      W.SetFont(el.fs.obj, size, "OUTLINE", data.font)
-      W.SetSize(el.fs.obj, 200, size + 4)
-      W.SetJustify(el.fs.obj, side[1] == "RIGHT" and "RIGHT" or side[1] == "LEFT" and "LEFT" or "CENTER")
-      W.SetPoint(el.fs.obj, side[1], self.frame, side[2], x, y)
-      RWA.Try(el.fs.obj, "Show")
-      RWA.Try(el.tex, "Hide")
+      el.region:Layout(resolved)
+      el.region:SetAlpha(resolved.alpha)
+      el.region:Hide()
     end
-    el.lastIcon, el.fs.lastText = nil, nil
+    el.region.state, el.region.elementActive, el.region.elementPhase = nil, nil, nil
+    el.tex, el.fs = el.region.icon or el.region.tex, el.region.text
   end
-  for i = #list + 1, #self.elems do
-    local el = self.elems[i]
-    el.kind = nil
-    RWA.Try(el.tex, "Hide")
-    W.SetText(el.fs.obj, "")
-    RWA.Try(el.fs.obj, "Hide")
+  for i = #self.elems, #list + 1, -1 do
+    self.elems[i].region:Release()
+    self.elems[i] = nil
   end
 end
 
--- states: every trigger's state (a.states); elements with from = 0 use the shown state.
+local function animateElement(region, now, active, baseAlpha)
+  local d, animation = region.data, region.data.animation or {}
+  if active ~= region.elementActive then
+    local wasActive = region.elementActive
+    region.elementActive = active
+    region.elementPhase = (active or wasActive) and { kind = active and "start" or "finish", t0 = now } or nil
+  end
+  local phase, alpha, dy = region.elementPhase, baseAlpha or d.alpha or 1, 0
+  if phase and (phase.kind == "start" or phase.kind == "finish") then
+    local p = math.min(1, math.max(0, (now - phase.t0) / 0.25))
+    local kind = phase.kind
+    local preset = animation[kind] or "none"
+    if preset == "none" or p >= 1 then
+      region.elementPhase = active and { kind = "main", t0 = now } or nil
+    elseif preset == "fade" then
+      alpha = alpha * (kind == "start" and p or 1 - p)
+    elseif preset == "slide" then
+      alpha = alpha * (kind == "start" and p or 1 - p)
+      dy = kind == "start" and 30 * (1 - p) or -30 * p
+    end
+  end
+  phase = region.elementPhase
+  if phase and phase.kind == "main" then
+    local t = now - phase.t0
+    if animation.main == "pulse" then
+      alpha = alpha * (0.55 + 0.45 * math.cos(t * math.pi * 2))
+    elseif animation.main == "flash" then
+      alpha = alpha * (math.floor(t * 2) % 2 == 0 and 1 or 0.25)
+    elseif animation.main == "bounce" then
+      dy = -math.abs(math.sin(t * math.pi)) * 8
+    end
+  end
+  if region.elementDy ~= dy then
+    region.elementDy = dy
+    region:Place(0, dy)
+  end
+  if region.alpha ~= alpha then region:SetAlpha(alpha) end
+  if active or region.elementPhase then region:Show() else region:Hide() end
+end
+-- Selected-display previews may use this with their own Place implementation and
+-- condition-adjusted alpha, without applying main-display color/alpha defaults.
+Regions.AnimateElement = animateElement
+
 function Base:UpdateElements(now, states)
   local list = self.data and self.data.elements
   if not list or not self.elems then
@@ -232,25 +466,13 @@ function Base:UpdateElements(now, states)
   end
   for i, e in ipairs(list) do
     local el = self.elems[i]
-    local from = tonumber(e.from) or 0
-    local state = (from > 0 and states and states[from]) or self.state or {}
-    if el and el.kind == "icon" then
-      local icon = state.icon or (self.state and self.state.icon)
-      if Regions.ElementIcon then -- KittyTracker.lua: extra icons show the next kitty picks
-        local kitty = Regions.ElementIcon(self, i, state)
-        if kitty ~= nil then
-          icon = kitty or nil
-        end
-      end
-      if icon ~= el.lastIcon then
-        el.lastIcon = icon
-        if icon then
-          RWA.Try(el.tex, "SetTexture", icon)
-        end
-      end
-      setTexSize(el.tex, icon and (tonumber(e.size) or self.data.height or 32) or 0, icon and (tonumber(e.size) or self.data.height or 32) or 0)
-    elseif el and el.kind == "text" then
-      setText(el.fs, Regions.FormatText(e.text or "%n", state, now))
+    if el then
+      local region = el.region
+      local state, active = Regions.ElementState(self, i, states)
+      if active or not region.elementActive and not region.elementPhase then region:SetState(state) end
+      region:Update(now)
+      active = active and region.contentShown ~= false and region.data.enabled ~= false
+      animateElement(region, now, active)
     end
   end
 end
@@ -265,7 +487,6 @@ Icon.__index = Icon
 
 function Icon:Build()
   local f = self.frame
-  self.border = W.Texture(f, "BACKGROUND", "Square_FullWhite")
   self.icon = W.Texture(f, "ARTWORK")
   self.shade = W.Texture(f, "OVERLAY", "Square_FullWhite")
   self.text = makeText(f, 14, "CENTER")
@@ -274,13 +495,12 @@ end
 
 function Icon:LayoutParts(d)
   local w, h = d.width, d.height
-  W.SetSize(self.border, w, h)
-  W.SetPoint(self.border, "CENTER", self.frame, "CENTER", 0, 0)
-  W.SetColor(self.border, 0, 0, 0, 1)
-  W.SetSize(self.icon, w - 2, h - 2)
+  local _, _, inset = borderMetrics(d, self.regionType)
+  self.contentW, self.contentH = math.max(0, w - inset * 2), math.max(0, h - inset * 2)
+  W.SetSize(self.icon, self.contentW, self.contentH)
   W.SetPoint(self.icon, "CENTER", self.frame, "CENTER", 0, 0)
   RWA.Try(self.icon, "SetTexCoord", 0.07, 0.93, 0.07, 0.93)
-  W.SetPoint(self.shade, "TOP", self.frame, "TOP", 0, 1)
+  W.SetPoint(self.shade, "TOP", self.frame, "TOP", 0, inset)
   W.SetColor(self.shade, 0, 0, 0, 0.6)
   for _, fs in ipairs({ self.text, self.text2 }) do
     W.SetFont(fs.obj, fs == self.text and d.fontSize or math.max(9, d.fontSize - 2), "NORMAL", d.font)
@@ -294,25 +514,30 @@ function Icon:LayoutParts(d)
 end
 
 function Icon:ApplyColor()
-  local r, g, b = colorOf(self.color)
-  W.SetColor(self.icon, r, g, b)
+  W.SetColor(self.icon, colorOf(self.color))
 end
 
 function Icon:Update(now)
   local d, state = self.data, self.state or {}
-  if state.icon and d.previewIcon ~= state.icon then
+  local extra = self.isElement or d._element
+  if not extra and state.icon and d.previewIcon ~= state.icon then
     d.previewIcon = state.icon -- remembered for the preview in the /rwa list
   end
-  local iconPath = (d.icon and d.icon ~= "") and d.icon or state.icon or W.TexturePath("exclamation-mark")
+  local explicit = d.icon and d.icon ~= "" and W.TexturePath(d.icon) or nil
+  local iconPath = explicit or state.icon
+  if not extra then iconPath = iconPath or d.previewIcon or W.TexturePath("exclamation-mark") end
+  if state._elementNoIcon and not explicit then iconPath = nil end
   if iconPath ~= self.lastIcon then
     self.lastIcon = iconPath
     RWA.Try(self.icon, "SetTexture", iconPath)
   end
+  self.contentShown = not extra or iconPath ~= nil
+  setTexSize(self.icon, iconPath and self.contentW or 0, iconPath and self.contentH or 0)
   local shade = 0
   if state.progressType == "timed" and state.duration and state.duration > 0 then
     shade = 1 - Regions.Progress(state, now)
   end
-  setTexSize(self.shade, d.width - 2, (d.height - 2) * shade)
+  setTexSize(self.shade, iconPath and self.contentW or 0, iconPath and self.contentH * shade or 0)
   setText(self.text, Regions.FormatText(d.text, state, now))
   setText(self.text2, Regions.FormatText(d.text2, state, now))
 end
@@ -335,8 +560,8 @@ end
 
 function Bar:LayoutParts(d)
   local w, h = d.width, d.height
-  local iconW = d.showIcon and h or 0
-  self.barX, self.barW = iconW, w - iconW
+  local iconW = d.showIcon and math.min(w, h) or 0
+  self.barX, self.barW = iconW, math.max(0, w - iconW)
   W.SetSize(self.bg, w, h)
   W.SetPoint(self.bg, "TOPLEFT", self.frame, "TOPLEFT", 0, 0)
   W.SetColor(self.bg, colorOf(d.bgColor))
@@ -344,7 +569,7 @@ function Bar:LayoutParts(d)
   W.SetPoint(self.fill, "TOPLEFT", self.frame, "TOPLEFT", iconW, 0)
   if d.showIcon then
     RWA.Try(self.icon, "Show")
-    W.SetSize(self.icon, h, h)
+    W.SetSize(self.icon, iconW, h)
     W.SetPoint(self.icon, "TOPLEFT", self.frame, "TOPLEFT", 0, 0)
     RWA.Try(self.icon, "SetTexCoord", 0.07, 0.93, 0.07, 0.93)
   else
@@ -352,8 +577,8 @@ function Bar:LayoutParts(d)
   end
   W.SetFont(self.text.obj, d.fontSize, "NORMAL", d.font)
   W.SetFont(self.text2.obj, d.fontSize, "NORMAL", d.font)
-  W.SetSize(self.text.obj, self.barW * 0.7 - 6, h)
-  W.SetSize(self.text2.obj, self.barW * 0.3 - 4, h)
+  W.SetSize(self.text.obj, math.max(1, self.barW * 0.7 - 6), h)
+  W.SetSize(self.text2.obj, math.max(1, self.barW * 0.3 - 4), h)
   W.SetPoint(self.text.obj, "LEFT", self.frame, "LEFT", iconW + 4, 0)
   W.SetPoint(self.text2.obj, "RIGHT", self.frame, "RIGHT", -4, 0)
   self.text.lastText, self.text2.lastText, self.lastIcon, self.lastFill = nil, nil, nil, nil
@@ -372,14 +597,19 @@ function Bar:Update(now)
     setTexSize(self.fill, width, d.height)
   end
   if d.showIcon then
-    if state.icon and d.previewIcon ~= state.icon then
+    local extra = self.isElement or d._element
+    if not extra and state.icon and d.previewIcon ~= state.icon then
       d.previewIcon = state.icon -- remembered for the preview in the /rwa list
     end
-    local iconPath = (d.icon and d.icon ~= "") and d.icon or state.icon or W.TexturePath("exclamation-mark")
+    local explicit = d.icon and d.icon ~= "" and W.TexturePath(d.icon) or nil
+    local iconPath = explicit or state.icon
+    if not extra then iconPath = iconPath or d.previewIcon or W.TexturePath("exclamation-mark") end
+    if state._elementNoIcon and not explicit then iconPath = nil end
     if iconPath ~= self.lastIcon then
       self.lastIcon = iconPath
       RWA.Try(self.icon, "SetTexture", iconPath)
     end
+    setTexSize(self.icon, iconPath and self.barX or 0, iconPath and d.height or 0)
   end
   setText(self.text, Regions.FormatText(d.text, state, now))
   setText(self.text2, Regions.FormatText(d.text2, state, now))
@@ -397,7 +627,10 @@ function Text:Build()
 end
 
 function Text:LayoutParts(d)
-  W.SetFont(self.text.obj, d.fontSize, "THICK", d.font)
+  local extra = self.isElement or d._element
+  W.SetFont(self.text.obj, d.fontSize, extra and "OUTLINE" or "THICK", d.font)
+  W.SetJustify(self.text.obj, d.justify or (extra and d.side == "LEFT" and "RIGHT"
+    or extra and d.side == "RIGHT" and "LEFT" or "CENTER"))
   W.SetSize(self.text.obj, d.width, d.height)
   W.SetPoint(self.text.obj, "CENTER", self.frame, "CENTER", 0, 0)
   self.text.lastText = nil
@@ -446,6 +679,27 @@ Regions.types = { icon = Icon, aurabar = Bar, text = Text, texture = Tex }
 Regions.labels = { icon = "Icon", aurabar = "Bar", text = "Text", texture = "Texture" }
 Regions.order = { "icon", "aurabar", "text", "texture" }
 
+-- A separate pool per owner avoids reparenting native widgets and never claims an
+-- XML main-region frame for an extra display. Removed/type-changed children return here.
+acquireElement = function(owner, data, index)
+  owner.elementPools = owner.elementPools or {}
+  local pool = owner.elementPools[data.regionType]
+  local region = pool and table.remove(pool)
+  if not region then
+    region = setmetatable({ regionType = data.regionType, isElement = true, owner = owner }, Regions.types[data.regionType])
+    region.frame = W.Frame(nil, owner.frame)
+    W.EnableMouse(region.frame, false)
+    childRegistry[#childRegistry + 1] = region
+    region:Build()
+  end
+  region.released, region.owner, region.elementIndex = false, owner, index
+  region.contentShown = nil
+  region:Layout(data)
+  region:SetAlpha(data.alpha)
+  region:Hide()
+  return region
+end
+
 function Regions.Acquire(data)
   local regionType = Regions.types[data.regionType] and data.regionType or "icon"
   pools[regionType] = pools[regionType] or {}
@@ -455,6 +709,7 @@ function Regions.Acquire(data)
     region.frame = W.RegionFrame()
     region:Build()
   end
+  region.released, region.contentShown = false, nil
   region:Layout(data)
   region:SetAlpha(data.alpha or 1)
   region:Hide()

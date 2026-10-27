@@ -1,6 +1,6 @@
 # PortraitHP
 
-Version **2019.07.14-ck1** · Kit release **0.11.77** · [All addons / hub](../README.md)
+Version **2019.07.14-ck2** · Kit release **0.11.78** · [All addons / hub](../README.md)
 
 **Your target's health in percent, right on its portrait.**
 
@@ -11,6 +11,7 @@ PortraitHP v2019.07.14 by Nonante@Nuada, fixed for Cherry's Kit.
 - Shows the target's health percent on the target portrait, and nothing when you have no target.
 - Fixed for today's client: the original's event handler never ran in RoM, and it cleared your target when the UI loaded. Both are fixed.
 - No error on units without a maximum health. On/off is saved. Safe with Reload UI.
+- The portrait text, font and placement are declared in XML and reused after Reload UI; target events wait until initialization is complete.
 
 ## Chat commands
 
@@ -32,7 +33,7 @@ Requires the [Cherry's Kit hub](../README.md). Download ZIPs from [Releases](htt
 
 ## Bug reports
 
-Write to **cherry** on the Runes of Magic Discord. Add the output of `/php probe` if you can.
+Write to **cherry** on the Runes of Magic Discord. Add the output of `/php probe` if you can. It includes initialization state and the last event error. If a native client call supplies no error text, PortraitHP reports the event and operation in chat; include that line too. A missing `PortraitHP_Text` message means the addon XML needs reinstalling before Reload UI.
 
 ## Credits and licence
 

@@ -1,11 +1,26 @@
 <Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
 	<!-- PortraitHP: the event frame on the target portrait (scripts must be declared in XML in RoM). -->
 	<Frame name="PortraitHP_Frame" parent="TargetPortrait" hidden="true">
+		<Size><AbsDimension x="64" y="64"/></Size>
 		<Anchors>
 			<Anchor point="CENTER" relativeTo="TargetPortrait" relativePoint="CENTER">
 				<Offset><AbsDimension x="0" y="0"/></Offset>
 			</Anchor>
 		</Anchors>
+		<Backdrop name="PortraitHP_Backdrop" edgeFile="Interface/Tooltips/Tooltip-border" bgFile="Interface/Common/Portrait-Border">
+			<EdgeSize><AbsValue val="0"/></EdgeSize>
+			<TileSize><AbsValue val="1"/></TileSize>
+			<BackgroundInsets><AbsInset top="0" left="0" bottom="0" right="0"/></BackgroundInsets>
+		</Backdrop>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="PortraitHP_Text" inherits="GameFontHighlight" justifyH="CENTER" justifyV="MIDDLE" text="">
+					<Size><AbsDimension x="64" y="64"/></Size>
+					<Anchors><Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER"/></Anchors>
+					<FontHeight><AbsValue val="24"/></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
 		<Scripts>
 			<OnLoad>
 				PortraitHP.OnFrameLoad(this)

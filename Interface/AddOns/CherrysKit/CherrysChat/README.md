@@ -1,10 +1,14 @@
 # Cherry's Chat
 
-Version **0.10.5** · Kit release **0.11.77** · [All addons / hub](../README.md)
+Version **0.10.6** · Kit release **0.11.78** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
+
+## Updated in 0.10.6
+
+The long-text copy box keeps its payload when focus moves elsewhere and no longer disappears after twenty seconds. Click the text, hint or border to select the complete payload again, then press Ctrl+C. Escape or Enter still closes the box.
 
 ## Features
 
@@ -30,6 +34,7 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 - `/cchat size 600 300`: chat window width and height
 - `/cchat resize`: drag corner on the chat window
 - `/cchat linktest`: teach it how your client clicks item links
+- `/cchat linkprobe`: select a raw-link report for the last five tagged/bracketed messages in this tab; use it after an affected item message
 - `/cchat emojis`: list every emoji picture and its code
 - `/cchat key guild <key>`: set the encryption key for a channel; `/cchat key guild` clears it
 - `/cchat symbols`: numbered test of the emoji symbols

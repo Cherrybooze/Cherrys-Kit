@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Fifteen package descriptions, up to date with Cherry's Kit 0.11.77, ready to paste into each CurseForge project. The individual files in `CurseForge-descriptions` preserve the exact Markdown provided by the page's Copy Markdown buttons. Each package description below also preserves that Markdown.
+Fifteen package descriptions for Cherry's Kit 0.11.78, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -173,7 +173,7 @@ rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras
 - **Displays**: Icon, Bar, Text, Texture, Kitty tracker or **Threat meter** (the top names on your target's threat list, with bars and values; the one with aggro in red, your own bar in gold). One aura can draw up to four displays (like WeakAuras' sub-elements), and an extra display can have its own trigger.
 - **Look**: every texture from WeakAuras (shapes, bars, symbols and all 145 Power Auras textures) in a picture grid, the WeakAuras fonts (Fira Sans, Fira Mono, PT Sans Narrow), colours, fade/slide in and out, pulse/flash/bounce loops.
 - **Text codes** as in WeakAuras: `%n` name, `%p` time left, `%t` duration, `%s` stacks, `%v` value, `%pct` percent, `%e` time since start (combat timer), plus `%rate`, `%fight`, `%avg` for Past second.
-- **Conditions**: change colour when time left, stacks, percent or value crosses a number. **Load** only in or out of combat, or for one class.
+- **Conditions**: add multiple rules with Show, Hide, Play sound, Grow, Blink, Colour or Draw icon on top. A buff remaining-time rule is true when it is missing OR below the chosen time. **Load** only in or out of combat, or for one class.
 - **Sounds**: the 64 WeakAuras sounds, with an "All auras volume" setting that works even when your game sounds are turned down, and an Unmute button when interface sound is off.
 - **Editor with live preview**, hover help on every box, dropdowns with a description of every choice. While the window is open every aura is on screen in move mode with looping test data, so you can drag it into place.
 - **Export / Import**: compressed `RWA2!` codes (one aura is usually 110 to 240 characters), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.

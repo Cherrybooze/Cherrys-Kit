@@ -287,8 +287,9 @@ M.place = function()
 		local button = find(name);
 		if(button) then
 			button:ClearAllAnchors();
-			if(tonumber(mode[spec[1]]) and tonumber(mode[spec[2]])) then
-				button:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", mode[spec[1]], mode[spec[2]]);
+			local x, y = tonumber(mode[spec[1]]), tonumber(mode[spec[2]]);
+			if(x and y) then
+				button:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", x, y);
 			elseif(find("MinimapViewFrame")) then
 				-- left of the minimap, a little below its middle
 				button:SetAnchor("RIGHT", "LEFT", "MinimapViewFrame", spec[3], spec[4]);
@@ -327,7 +328,8 @@ end
 
 -- Left click: open the modes. Right-drag (or Shift+left-drag) moves it unless locked.
 M.onLoad = function(button)
-	M.place();
+	-- XML provides the initial anchors. Place both widgets in afterLoad, once
+	-- VARIABLES_LOADED has supplied their saved positions and both frames exist.
 	if(button and button.RegisterForClicks) then
 		pcall(button.RegisterForClicks, button, "LeftButton", "RightButton");
 	end

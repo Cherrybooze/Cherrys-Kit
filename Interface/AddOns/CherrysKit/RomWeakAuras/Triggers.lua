@@ -43,6 +43,23 @@ end
 local cache = {} -- ["unit|filter"] = list, cleared every poll and on UNIT_BUFF_CHANGED
 local durations = {} -- ["unitKey|filter|id|name"] = { duration, expires, seen }
 local scanSerial = 0
+local knownAuras = {}
+
+local function rememberAura(aura)
+  if not aura.icon then
+    return
+  end
+  local info = { name = aura.name, icon = aura.icon, id = aura.id }
+  knownAuras["name:" .. string.lower(aura.name)] = info
+  if aura.id then
+    local key = tostring(aura.id)
+    knownAuras[key] = info
+    if type(RWA_DB) == "table" then
+      RWA_DB.buffInfo = RWA_DB.buffInfo or {}
+      RWA_DB.buffInfo[key] = info
+    end
+  end
+end
 
 function T.InvalidateAuras()
   cache = {}
@@ -75,6 +92,7 @@ local function scan(unit, filter)
     end
     local left = getLeft and getLeft(unit, i)
     local aura = { name = name, icon = icon, stacks = tonumber(stacks) or 0, id = id, index = i, unit = unit }
+    rememberAura(aura)
     if left and left > 0 then
       local key = who .. "|" .. filter .. "|" .. tostring(id) .. "|" .. name
       local rec = durations[key]
@@ -154,7 +172,61 @@ local function rt(trigger)
   return r
 end
 
-evaluators.aura = function(trigger)
+-- Editor shortcuts keep the existing aura schema, including shared/imported codes.
+function T.GetOptionType(trigger)
+  local kind = trigger.type or "aura"
+  if kind == "aura" and trigger.filter ~= "HARMFUL" and trigger.showOn == "missing"
+    and not (trigger.stacksOp and trigger.stacks) then
+    return "buffmissing"
+  end
+  return kind
+end
+
+function T.SetOptionType(trigger, kind)
+  local previous = T.GetOptionType(trigger)
+  trigger.type = kind == "buffmissing" and "aura" or kind
+  if kind == "buffmissing" then
+    trigger.filter, trigger.showOn = "HELPFUL", "missing"
+    trigger.stacksOp, trigger.stacks = nil, nil
+  elseif kind == "aura" and previous == "buffmissing" then
+    trigger.showOn = "active"
+  end
+end
+
+-- An absent buff still needs a name and picture. Prefer the actual buff observed
+-- by ID, then the skill book when its localized name matches that buff.
+function T.AuraInfo(trigger)
+  local id = trigger.ids and trigger.ids[1]
+  local key = id and tostring(id)
+  local info = key and (knownAuras[key] or (RWA_DB and RWA_DB.buffInfo and RWA_DB.buffInfo[key]))
+  if info then
+    return info
+  end
+  local name = trigger.names and trigger.names[1]
+  if id and TEXT then
+    local ok, value = pcall(TEXT, "Sys" .. tostring(id) .. "_name")
+    if ok and type(value) == "string" and value ~= "" and not string.find(value, "^Sys%d") then
+      name = value
+    end
+  end
+  info = name and knownAuras["name:" .. string.lower(name)]
+  if info and (not id or tostring(info.id) == key) then
+    return info
+  end
+  if name and T.FindSkill and GetSkillDetail then
+    local page, slot = T.FindSkill(name)
+    if page then
+      local ok, _, _, icon = pcall(GetSkillDetail, page, slot)
+      if ok and type(icon) == "string" and icon ~= "" then
+        return { name = name, icon = icon, id = id }
+      end
+    end
+  end
+  return { name = name or (id and ("#" .. tostring(id))) or "?", id = id }
+end
+
+evaluators.aura = function(trigger, now)
+  now = now or RWA.Now()
   local unit = trigger.unit or "player"
   local filter = trigger.filter == "HARMFUL" and "HARMFUL" or "HELPFUL"
   local r = rt(trigger)
@@ -188,16 +260,26 @@ evaluators.aura = function(trigger)
       state.value, state.total = 1, 1
     end
   else
-    state.name = trigger.names and trigger.names[1] or "?"
+    local info = T.AuraInfo(trigger)
+    state.name, state.icon, state.auraId = info.name, info.icon, info.id
+    state.stacks = 0
     state.progressType = "static"
     state.value, state.total = 0, 1
   end
   if showOn == "missing" then
     state.show = (found == nil) and (unit == "player" or unitExists(unit))
+  elseif showOn == "missingOrExpiring" then
+    local low = found and found.expirationTime and compare(
+      math.max(0, found.expirationTime - now), trigger.remainingOp or "<", trigger.remaining or 3)
+    state.show = (found == nil or low == true) and (unit == "player" or unitExists(unit))
   elseif showOn == "always" then
     state.show = unit == "player" or unitExists(unit)
   else
     state.show = found ~= nil
+  end
+  if showOn == "active" and state.show and trigger.remainingOp and trigger.remaining ~= nil then
+    state.show = found.expirationTime ~= nil and compare(
+      math.max(0, found.expirationTime - now), trigger.remainingOp, trigger.remaining)
   end
   return state
 end

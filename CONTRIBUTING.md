@@ -7,7 +7,7 @@ This is a small hobby project. Feel free to change things for your own setup. A 
 1. Make a branch from `main` and keep the change focused on one problem.
 2. Explain how to reproduce the problem and what changes after the fix.
 3. Test it in the RoM client where possible, including Reload UI if the change touches loading, events, settings or hooks. Say exactly what you checked and anything you could not check.
-4. Run `python tools/build_release.py` to check packages, file references and documentation links.
+4. Run `python tools/build_release.py` for packaging checks, then install `tests/requirements.txt` in your own environment and run `python -m unittest discover -s tests -p "test_*.py" -v` for Lua 5.1 regressions.
 5. Open a PR and mention any relevant addon/kit versions and probe output.
 
 The original addon test harnesses and generators mentioned in some archived READMEs were not supplied with the initial import. Do not claim those checks passed unless you have the tools and actually ran them.
@@ -18,7 +18,7 @@ The original addon test harnesses and generators mentioned in some archived READ
 - Use the existing Lua/XML patterns and load order. RoM's API differs from WoW's; verify an API in this client before depending on it.
 - Preserve the original credits, licence files and media notices.
 - Update the affected addon README when commands, installation, limitations or behaviour change.
-- For a release, update the relevant versions and follow [the release guide](docs/RELEASING.md).
+- Every changed addon needs a new runtime version for a new release. Update its package metadata and README, bump the kit version, and follow [the release guide](docs/RELEASING.md). Keep unchanged addon packages byte-identical.
 
 ## Reporting a bug
 

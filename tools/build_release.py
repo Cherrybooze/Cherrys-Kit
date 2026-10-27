@@ -169,6 +169,9 @@ def build(output: Path) -> None:
             "requires_hub": kind not in {"Full", "Hub"},
             "bundled_addons": bundled,
         })
+        addon = next((item for item in addons if item["folder"] == kind), None)
+        if addon and addon.get("minimum_hub_version"):
+            result["minimum_hub_version"] = addon["minimum_hub_version"]
         packages.append(result)
     require(len(packages) == 16, "Expected a full kit, a hub, and fourteen addon ZIPs.")
     revision = git_output("rev-parse", "HEAD")
@@ -199,6 +202,13 @@ def build(output: Path) -> None:
 
     release_url = f"https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v{version}"
     tick = chr(96)
+    rwa = next((item for item in addons if item["folder"] == "RomWeakAuras"), {})
+    hub_note = (
+        f"**Updating RWA separately? Update the hub too.** RWA {rwa.get('version')} "
+        f"needs hub {rwa['minimum_hub_version']} or later to load its modules. "
+        "The Full ZIP already includes both."
+        if rwa.get("minimum_hub_version") else ""
+    )
     notes = [
         f"# Cherry's Kit {version}", "",
         f"## [Download the full kit — install ZIP]({release_url}/CherrysKit-Full-{version}.zip)", "",
@@ -213,6 +223,7 @@ def build(output: Path) -> None:
         f"Remove old separate copies, start the game or Reload UI, and type {tick}/ck{tick}.", "",
         "The hub includes Addon LoadTimes because the shared loader needs its hooks. "
         "The separate LoadTimes ZIP updates those same files. Other individual ZIPs require the hub.", "",
+        hub_note, "",
         "## Downloads", "",
         "| Package | Version | ZIP |", "| --- | --- | --- |",
     ]
@@ -243,9 +254,10 @@ def build(output: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=ROOT / "dist")
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    build(args.output.resolve())
+    version = json.loads((ROOT / "release-packages.json").read_text(encoding="utf-8"))["kit_version"]
+    build((args.output or ROOT / "dist" / version).resolve())
 
 
 if __name__ == "__main__":

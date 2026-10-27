@@ -1,13 +1,13 @@
 {
-  "kit_version": "0.11.77",
-  "hub_version": "0.4.9",
-  "release_summary": "Initial GitHub release of the existing Runes of Magic addon collection. The runtime code is unchanged from the supplied 0.11.77 bundle. This release adds organised READMEs and reproducible release packaging.",
-  "runtime_validation": "No new in-game checks. All 1,382 original runtime and media files match the supplied 0.11.77 bundle byte for byte.",
+  "kit_version": "0.11.78",
+  "hub_version": "0.4.10",
+  "release_summary": "RWA editor drafts, missing/low-time buff reminders, automatic and selectable icons, editable displays and condition actions; startup fixes for KittyCombo and PortraitHP; long-copy recovery and stronger item-link handling in Cherry's Chat.",
+  "runtime_validation": "Lua 5.1 regression tests exercise production modules and XML handlers with simulated client APIs. New runtime behaviour still needs confirmation in the actual RoM client.",
   "addons": [
     {
       "folder": "KittyCombo",
       "title": "Cherry's KittyCombo",
-      "version": "1.7.7",
+      "version": "1.7.8",
       "command": "/kc",
       "description_file": "02-cherrys-kittycombo.md",
       "summary": "One-key priority combos and shared rotation codes."
@@ -15,15 +15,16 @@
     {
       "folder": "RomWeakAuras",
       "title": "rom weakauras",
-      "version": "0.9.15",
+      "version": "0.9.16",
       "command": "/wa",
       "description_file": "03-rom-weakauras.md",
-      "summary": "Custom buff, debuff, cooldown, cast and status displays."
+      "summary": "Custom buff, debuff, cooldown, cast and status displays.",
+      "minimum_hub_version": "0.4.10"
     },
     {
       "folder": "CherrysChat",
       "title": "Cherry's Chat",
-      "version": "0.10.5",
+      "version": "0.10.6",
       "command": "/cchat",
       "description_file": "04-cherrys-chat.md",
       "summary": "Selectable chat, copying, emoji and chat display settings."
@@ -103,7 +104,7 @@
     {
       "folder": "PortraitHP",
       "title": "PortraitHP",
-      "version": "2019.07.14-ck1",
+      "version": "2019.07.14-ck2",
       "command": "/php",
       "description_file": "14-portraithp.md",
       "summary": "Your target's health percentage on its portrait."

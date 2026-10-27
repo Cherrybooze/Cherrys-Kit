@@ -99,6 +99,7 @@ end
 ---------------------------------------------------------------------------
 
 Wn.widthCache = {}
+Wn.widthCacheCount = 0
 
 local function utf8Len(s)
   local _, n = string.gsub(s, "[^\128-\191]", "")
@@ -119,7 +120,7 @@ end
 
 function Wn.SetMeasureScale(n)
   cfg().measureScale = n
-  Wn.widthCache, Wn.gap = {}, nil
+  Wn.widthCache, Wn.widthCacheCount, Wn.gap = {}, 0, nil
   for i = 1, Wn.WINDOWS do
     Wn.rows[i] = nil
     if Wn.Owns(i) then
@@ -192,7 +193,10 @@ function Wn.TextWidth(text)
   end
   -- Without a measure, guess: an average letter is about half the font size wide.
   w = w or utf8Len(text) * 14 * 0.62
+  -- Complete chat prefixes are usually unique. Keep measurement memory bounded.
+  if Wn.widthCacheCount >= 4096 then Wn.widthCache, Wn.widthCacheCount = {}, 0 end
   Wn.widthCache[text] = w
+  Wn.widthCacheCount = Wn.widthCacheCount + 1
   return w
 end
 
@@ -218,7 +222,7 @@ local function tokenize(list, msg, link, full, pics)
   while i <= n do
     local ps, pe, num = string.find(msg, "^\1(%d+)\2", i)
     local c = string.match(msg, "^|c%x%x%x%x%x%x%x%x", i)
-    local ls, le, target, text = string.find(msg, "^|H(.-)|h(.-)|h", i)
+    local itemLink = not link and C.ReadLink(msg, i)
     if ps then
       local pic = pics and pics[tonumber(num)]
       if pic then
@@ -227,9 +231,9 @@ local function tokenize(list, msg, link, full, pics)
           link = link, full = full }
       end
       i = pe + 1
-    elseif ls and not link then
-      tokenize(list, text, target, string.sub(msg, ls, le), pics)
-      i = le + 1
+    elseif itemLink then
+      tokenize(list, itemLink.text, itemLink.target, itemLink.full, pics)
+      i = itemLink.last + 1
     elseif c then
       list[#list + 1] = { kind = "colour", raw = c }
       i = i + 10
@@ -267,18 +271,44 @@ end
 
 -- Returns rows { text, plain, spans = { { x0, x1, link, full } }, pics = { { x, pic } } } and the
 -- message's link targets. plain is the text to copy (emoji as they were written).
+-- Split only words too wide for a whole row, retaining UTF-8 character boundaries and
+-- the complete original link on every fragment. Localized names need not contain spaces.
+local function fittingTokens(tokens, maxW)
+  local result = {}
+  for _, token in ipairs(tokens) do
+    if token.kind == "word" and not token.pic and token.raw == token.vis
+      and Wn.TextWidth((string.gsub(token.vis, "%s+$", ""))) > maxW then
+      local part, i = "", 1
+      local function add()
+        if part ~= "" then
+          result[#result + 1] = { kind = "word", raw = part, vis = part, link = token.link, full = token.full }
+        end
+      end
+      while i <= #token.vis do
+        local byte = string.byte(token.vis, i)
+        local len = byte >= 240 and 4 or byte >= 224 and 3 or byte >= 192 and 2 or 1
+        local ch = string.sub(token.vis, i, i + len - 1)
+        if part ~= "" and Wn.TextWidth(part .. ch) > maxW then add(); part = "" end
+        part, i = part .. ch, i + len
+      end
+      add()
+    else
+      result[#result + 1] = token
+    end
+  end
+  return result
+end
+
 function Wn.WrapMessage(msg, maxW, pics)
-  local list, links = Wn.Tokens(msg, pics)
+  maxW = math.max(1, tonumber(maxW) or 1)
+  local tokens, links = Wn.Tokens(msg, pics)
+  local list = fittingTokens(tokens, maxW)
   local rows, parts, plain, spans, rowPics, width, colour = {}, {}, {}, {}, {}, 0, nil
   local function finish()
-    if colour then
-      parts[#parts + 1] = "|r"
-    end
+    if colour then parts[#parts + 1] = "|r" end
     rows[#rows + 1] = { text = table.concat(parts), plain = table.concat(plain), spans = spans, pics = rowPics }
     parts, plain, spans, rowPics, width = {}, {}, {}, {}, 0
-    if colour then
-      parts[1] = colour
-    end
+    if colour then parts[1] = colour end
   end
   for _, t in ipairs(list) do
     if t.kind == "colour" then
@@ -288,29 +318,27 @@ function Wn.WrapMessage(msg, maxW, pics)
       colour = nil
       parts[#parts + 1] = "|r"
     else
-      local w = t.w or Wn.TextWidth(t.vis)
-      if width > 0 and width + (t.w or Wn.TextWidth((string.gsub(t.vis, "%s+$", "")))) > maxW then
-        finish()
-      end
-      if t.pic then
-        rowPics[#rowPics + 1] = { x = width, pic = t.pic, prefix = table.concat(parts) }
-      end
+      local prefix = table.concat(parts)
+      -- Measure the same complete visible prefix that the FontString draws. Summed word
+      -- widths miss kerning across colour/link boundaries and move the clickable area.
+      local fit = Wn.TextWidth(C.Plain(prefix .. (string.gsub(t.raw, "%s+$", ""))))
+      if width > 0 and fit > maxW then finish(); prefix = table.concat(parts) end
+      local nextWidth = Wn.TextWidth(C.Plain(prefix .. t.raw))
+      if t.pic then rowPics[#rowPics + 1] = { x = width, pic = t.pic, prefix = prefix } end
       plain[#plain + 1] = t.copy or t.vis
       if t.link then
         local last = spans[#spans]
-        if last and last.full == t.full then
-          last.x1 = width + w
+        if last and last.full == t.full and last.x1 == width then
+          last.x1 = nextWidth
         else
-          spans[#spans + 1] = { x0 = width, x1 = width + w, link = t.link, full = t.full }
+          spans[#spans + 1] = { x0 = width, x1 = nextWidth, link = t.link, full = t.full }
         end
       end
       parts[#parts + 1] = t.raw
-      width = width + w
+      width = nextWidth
     end
   end
-  if #parts > 0 or #rows == 0 then
-    finish()
-  end
+  if #parts > 0 or #rows == 0 then finish() end
   return rows, links
 end
 
@@ -567,13 +595,6 @@ function Wn.Update(elapsed)
   if Wn.painting then
     guarded(Wn.PaintUpdate, elapsed)
   end
-  if Wn.copyLeft then
-    Wn.copyLeft = Wn.copyLeft - (elapsed or 0)
-    if Wn.copyLeft <= 0 then
-      Wn.copyLeft = nil
-      Wn.CopyDone()
-    end
-  end
   Wn.followWait = Wn.followWait - (elapsed or 0)
   if Wn.followWait <= 0 then
     Wn.followWait = Wn.FOLLOW_EVERY
@@ -619,16 +640,17 @@ end
 
 -- The link under the mouse, if any.
 function Wn.LinkAtCursor(i)
-  local x = cursorUI(i)
-  local idx = Wn.RowAtCursor(i)
-  local r = idx and Wn.Rows(i)[idx]
-  if not (r and x) then
-    return nil
-  end
-  for _, span in ipairs(r.spans or {}) do
-    if x >= span.x0 - 2 and x <= span.x1 + 2 then
-      return span
-    end
+  local x, y = cursorUI(i)
+  if not x or not y then return nil end
+  local first, last, count = Wn.Range(i)
+  local slot = math.floor(y / Wn.LINE_H) + 1
+  local index = last - (count - slot)
+  -- RowAtCursor deliberately clamps during dragging. Link clicks must instead stay on
+  -- the actual rendered row, excluding empty slots and padding above/below the text.
+  if slot < 1 or slot > count or index < first or index > last then return nil end
+  local row = Wn.Rows(i)[index]
+  for _, span in ipairs(row and row.spans or {}) do
+    if x >= span.x0 and x < span.x1 then return span end
   end
 end
 
@@ -636,54 +658,96 @@ end
 -- RoM does not document ChatFrame_OnHyperlinkClick, so the game's own calls are watched (see
 -- Wn.WatchLinkClicks): once a real click in the game's chat has been seen, the same argument
 -- layout is used. Until then the guess is (frame, link, key), with this/arg1/arg2/arg3 set too.
+local function linkValue(kind, chat, span, key)
+  if kind == "frame" then return chat end
+  if kind == "link" then return span.link end
+  if kind == "full" then return span.full end
+  if kind == "key" then return key end
+  if kind == "label" or kind == "plainLabel" then
+    local link = C.ReadLink(span.full or "")
+    local text = link and link.text or ""
+    return kind == "plainLabel" and C.Plain(text) or text
+  end
+end
+
 function Wn.LinkArgs(chat, span, key)
   local sig = C.DB().linkSig
   if type(sig) == "table" and sig.n then
     local args = {}
-    for p = 1, sig.n do
-      local kind = sig[p]
-      args[p] = (kind == "frame" and chat) or (kind == "link" and span.link) or (kind == "full" and span.full)
-        or (kind == "key" and key) or nil
-    end
+    for p = 1, sig.n do args[p] = linkValue(sig[p], chat, span, key) end
     return args, sig.n
   end
   return { chat, span.link, key }, 3
 end
 
-function Wn.ClickLink(i, span, key)
-  local fn = Wn.origLinkClick or ChatFrame_OnHyperlinkClick
-  if type(fn) ~= "function" then
-    return false
+local function itemTooltip(span)
+  -- These native SetHyperLink methods are also used by the bundled auction/tooltip addons.
+  -- Only an encoded item target qualifies: ordinary brackets never become guessed item IDs.
+  if not string.match(span.link or "", "^item:") or not C.ReadLink(span.full or "") then return false end
+  for _, name in ipairs({ "GameTooltipHyperLink", "GameTooltip" }) do
+    local tooltip = _G[name]
+    local ok, shown = try(tooltip, "SetHyperLink", span.full)
+    if ok and shown ~= false then try(tooltip, "Show"); return true end
   end
-  local chat = C.Chat(i)
-  local args, n = Wn.LinkArgs(chat, span, key)
-  local oldThis, a1, a2, a3 = this, arg1, arg2, arg3
-  this, arg1, arg2, arg3 = chat, span.link, span.full, key
-  Wn.callingLink = true
-  local ok, err = pcall(fn, unpack(args, 1, n))
-  Wn.callingLink = false
-  this, arg1, arg2, arg3 = oldThis, a1, a2, a3
-  if not ok and not Wn.linkErrorShown then
-    Wn.linkErrorShown = true
-    C.Print("item link click failed (" .. tostring(err) .. "). Type /cchat linktest once to teach me how your game does it.")
-  end
-  return ok
+  return false
 end
 
--- Describes one argument of a real call, so the same layout can be rebuilt for our clicks.
-local function argKind(v, link)
-  if type(v) == "table" then
-    return "frame"
-  elseif type(v) == "string" then
-    if v == "LBUTTON" or v == "RBUTTON" or v == "MBUTTON" then
-      return "key"
-    elseif string.find(v, "|H", 1, true) then
-      return "full"
-    elseif string.find(v, ":", 1, true) or v == link then
-      return "link"
+function Wn.ClickLink(i, span, key)
+  local fn = Wn.origLinkClick or ChatFrame_OnHyperlinkClick
+  local ok, result = false, "native hyperlink click handler is unavailable"
+  if type(fn) == "function" then
+    local chat = C.Chat(i)
+    local args, n = Wn.LinkArgs(chat, span, key)
+    local oldThis, a1, a2, a3 = this, arg1, arg2, arg3
+    local sig = C.DB().linkSig
+    local globals = type(sig) == "table" and sig.globals
+    if globals then
+      this = linkValue(globals.this, chat, span, key)
+      arg1, arg2, arg3 = linkValue(globals.arg1, chat, span, key), linkValue(globals.arg2, chat, span, key), linkValue(globals.arg3, chat, span, key)
+    else
+      this, arg1, arg2, arg3 = chat, span.link, span.full, key
     end
+    Wn.callingLink = true
+    ok, result = pcall(fn, unpack(args, 1, n))
+    Wn.callingLink = false
+    this, arg1, arg2, arg3 = oldThis, a1, a2, a3
+  end
+  if ok and result ~= false then return true end
+  Wn.lastLinkError = tostring(result)
+  if itemTooltip(span) then return true end
+  if not Wn.linkErrorShown then
+    Wn.linkErrorShown = true
+    C.Print("item link click failed (" .. Wn.lastLinkError .. "). Type /cchat linktest to learn the native click; /cchat linkprobe captures the raw message.")
+  end
+  return false
+end
+
+-- Classify actual native arguments, including event globals and a separate localized label.
+-- The label is matched only to encoded link text witnessed in that same native call.
+local function argKind(v, sample)
+  if type(v) == "table" or type(v) == "userdata" then
+    for i = 1, Wn.WINDOWS do if v == C.Chat(i) then return "frame" end end
+    if has(v, "GetName") then return "frame" end
+  elseif type(v) == "string" then
+    if v == "LBUTTON" or v == "RBUTTON" or v == "MBUTTON"
+      or v == "LeftButton" or v == "RightButton" or v == "MiddleButton" then return "key" end
+    if string.find(v, "|H", 1, true) then return "full" end
+    if sample and v == sample.text then return "label" end
+    if sample and v == C.Plain(sample.text) then return "plainLabel" end
+    if string.match(v, "^[%a_][%w_]*:") then return "link" end
   end
   return "nil"
+end
+
+local function nativeSample(...)
+  for p = 1, select("#", ...) do
+    local value = select(p, ...)
+    if type(value) == "string" then
+      local start = string.find(value, "|H", 1, true)
+      local link = start and C.ReadLink(value, start)
+      if link then return link end
+    end
+  end
 end
 
 -- Wraps the game's ChatFrame_OnHyperlinkClick: every real click in the game's chat is passed on
@@ -702,12 +766,15 @@ function Wn.WatchLinkClicks()
       pcall(function(...)
         local n = select("#", ...)
         local sig = { n = n, seen = {} }
+        local sample = nativeSample(...) or nativeSample(arg1, arg2, arg3)
         for p = 1, n do
           local v = select(p, ...)
-          sig[p] = argKind(v)
+          sig[p] = argKind(v, sample)
           sig.seen[p] = type(v) == "string" and string.sub(v, 1, 40) or type(v)
         end
-        sig.thisIsFrame = type(this) == "table"
+        sig.globals = { this = argKind(this, sample), arg1 = argKind(arg1, sample),
+          arg2 = argKind(arg2, sample), arg3 = argKind(arg3, sample) }
+        sig.thisIsFrame = sig.globals.this == "frame"
         sig.arg1 = type(arg1) == "string" and string.sub(arg1, 1, 40) or type(arg1)
         local learned = C.DB().linkSig
         C.DB().linkSig = sig
@@ -735,6 +802,66 @@ function Wn.LinkTest()
   Wn.learning = true
   Wn.Toggle(false)
   C.Print("link test: the normal chat is back for a moment. Link an item into chat (Shift+click it in your bag and press Enter), then click that link in the chat.")
+end
+
+-- Screenshots hide link metadata. Capture a bounded local report from the original log,
+-- before decoration, instead of guessing an item ID from its translated label.
+function Wn.LinkProbe(i)
+  i = i or C.CurrentIndex()
+  local probe = { window = i, version = C.version, entries = {}, signature = C.DB().linkSig,
+    clickError = Wn.lastLinkError }
+  local output = { "Cherry's Chat link report (chat " .. i .. ", " .. C.version .. ")" }
+  local function quoted(value)
+    if type(value) == "string" then return string.format("%q", value) end
+    if type(value) == "number" or type(value) == "boolean" then return tostring(value) end
+    return type(value)
+  end
+  local function native(link)
+    if type(ParseHyperlink) ~= "function" then return "ParseHyperlink unavailable" end
+    local ok, kind, data, label = pcall(ParseHyperlink, link)
+    return "ParseHyperlink: " .. tostring(ok) .. " / " .. quoted(kind) .. " / " .. quoted(data) .. " / " .. quoted(label)
+  end
+  local source = C.log[i] or {}
+  for k = #source, 1, -1 do
+    local msg = source[k]
+    if string.find(msg, "|H", 1, true) or string.find(msg, "[", 1, true) then
+      local entry = { raw = msg, links = {}, native = native(msg), colour = C.logColor[i] and C.logColor[i][k] }
+      probe.entries[#probe.entries + 1] = entry
+      output[#output + 1] = "\nRaw " .. #probe.entries .. ": " .. quoted(msg)
+      output[#output + 1] = entry.native
+      local p = 1
+      while p <= #msg do
+        local link = C.ReadLink(msg, p)
+        if link then
+          entry.links[#entry.links + 1] = link
+          output[#output + 1] = "Target: " .. quoted(link.target)
+          output[#output + 1] = "Full: " .. quoted(link.full)
+          output[#output + 1] = native(link.full)
+          p = link.last + 1
+        else
+          p = p + (string.sub(msg, p, p + 1) == "||" and 2 or 1)
+        end
+      end
+      local _, links = Wn.Tokens(msg)
+      entry.recognized = #links
+      output[#output + 1] = "Recognized targets: " .. #links
+      if #probe.entries == 5 then break end
+    end
+  end
+  if #probe.entries == 0 then output[#output + 1] = "No recent tagged/bracketed messages in this tab. Run again after the affected message." end
+  local sig = probe.signature
+  output[#output + 1] = "\nNative click signature: " .. (sig and tostring(sig.n) or "not learned")
+  if sig then
+    for p = 1, sig.n or 0 do output[#output + 1] = "argument " .. p .. ": " .. tostring(sig[p]) end
+    for _, name in ipairs({ "this", "arg1", "arg2", "arg3" }) do
+      output[#output + 1] = name .. ": " .. tostring(sig.globals and sig.globals[name] or "legacy/default")
+    end
+  end
+  if probe.clickError then output[#output + 1] = "Last native click error: " .. probe.clickError end
+  C.DB().linkProbe = probe
+  local report = table.concat(output, "\n")
+  Wn.ShowCopy(i, report)
+  return report
 end
 
 local function clearOthers(i)
@@ -854,19 +981,21 @@ end
 function Wn.ChatBox()
   for _, n in ipairs({ "ChatFrameEditBox", "ChatFrame1EditBox", "DEFAULT_CHAT_FRAME_EDITBOX" }) do
     local box = _G[n]
-    if type(box) == "table" then
+    if has(box, "GetText") or has(box, "InsertText") then
       return box
     end
   end
   local f = DEFAULT_CHAT_FRAME
-  return f and type(f.editBox) == "table" and f.editBox or nil
+  local box = f and f.editBox
+  return (has(box, "GetText") or has(box, "InsertText")) and box or nil
 end
 
 -- Puts text at the cursor of the chat typing box, opening it if needed. Item links go through the
 -- game's own ChatEdit_AddItemLink first.
 function Wn.InsertIntoChat(text, isItem)
-  if isItem and type(ChatEdit_AddItemLink) == "function" and pcall(ChatEdit_AddItemLink, text) then
-    return true
+  if isItem and type(ChatEdit_AddItemLink) == "function" then
+    local ok, inserted = pcall(ChatEdit_AddItemLink, text)
+    if ok and inserted ~= false then return true end
   end
   local box = Wn.ChatBox()
   if not box then
@@ -879,7 +1008,7 @@ function Wn.InsertIntoChat(text, isItem)
     end
   end
   try(box, "SetFocus")
-  if not try(box, "Insert", text) then
+  if not try(box, "InsertText", text) and not try(box, "Insert", text) then
     box:SetText((box:GetText() or "") .. text)
   end
   return true
@@ -1054,17 +1183,35 @@ function Wn.ShowCopy(i, text)
   CherrysChat_WinCopy:SetText(text)
   try(CherrysChat_WinCopyHint, "SetText", C.PRESS_CTRL_C .. "  Esc closes")
   bar:Show()
-  Wn.copyLeft = 20 -- the bar closes itself after 20 s
+  Wn.SelectCopy()
+end
+
+-- Clicking the text, hint or border selects the saved payload again. Do this on mouse-up:
+-- the edit box's own mouse-down otherwise replaces the selection with a caret.
+function Wn.SelectCopy()
+  local bar = CherrysChat_WinCopyBar
+  if not Wn.copyText or not bar or not bar:IsVisible() then
+    return
+  end
+  Wn.CopyGuard()
   try(CherrysChat_WinCopy, "SetFocus")
   try(CherrysChat_WinCopy, "HighlightText")
 end
 
+-- Static XML callback: the client does not always provide a usable 'this'.
+function Wn.HighlightCopy()
+  if Wn.copyText then
+    Wn.CopyGuard()
+    try(CherrysChat_WinCopy, "HighlightText")
+  end
+end
+
 function Wn.HideCopy()
+  Wn.copyText, Wn.copyFor = nil, nil
   if CherrysChat_WinCopyBar and CherrysChat_WinCopyBar:IsVisible() then
     try(CherrysChat_WinCopy, "ClearFocus")
     CherrysChat_WinCopyBar:Hide()
   end
-  Wn.copyLeft = nil
 end
 
 function Wn.CopyDone()
@@ -1087,10 +1234,19 @@ function Wn.ClipTest()
   C.Print("clipboard test copied. Paste it anywhere: the last <number> is how many letters the game copies. Then type /cchat clipmax <that number> (now " .. Wn.ClipMax() .. ").")
 end
 
+-- Keep the payload until explicitly closed, even while another input owns focus. The XML
+-- focus-lost handler restores text without taking focus back; a later click reselects it all.
 -- Read-only: whatever is typed or pasted into the copy box is put back.
 function Wn.CopyGuard()
+  if Wn.restoringCopy then
+    return
+  end
   if Wn.copyText and CherrysChat_WinCopy:GetText() ~= Wn.copyText then
-    CherrysChat_WinCopy:SetText(Wn.copyText)
+    -- Native edit boxes may normalize line endings or truncate input. Their
+    -- OnTextChanged callback must not recursively try to restore forever.
+    Wn.restoringCopy = true
+    try(CherrysChat_WinCopy, "SetText", Wn.copyText)
+    Wn.restoringCopy = nil
     try(CherrysChat_WinCopy, "HighlightText")
   end
 end

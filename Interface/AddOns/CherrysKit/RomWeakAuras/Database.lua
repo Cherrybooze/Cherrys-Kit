@@ -56,6 +56,13 @@ local EXAMPLE_DESC = {
   ["Example: missing buff reminder"] = "Shows when a buff is missing",
 }
 
+-- A mode belongs to KittyCombo's own state; it is not a game buff.
+local KITTY_MODE_CODE = [[
+local ui = Kitty and Kitty.ModeUI
+if not ui or not ui.current then return false end
+local mode = ui.current()
+return true, { name = "Mode: " .. (mode or "none"), icon = ui.iconPath and ui.iconPath(mode or "") }]]
+
 local EXAMPLES = {
   {
     id = "Player health",
@@ -165,15 +172,13 @@ local EXAMPLES = {
       mode = "all",
       {
         type = "custom",
-        code = [[
-local ui = Kitty and Kitty.ModeUI
-if not ui or not ui.current then return false end
-local mode = ui.current()
-return true, { name = "Mode: " .. (mode or "none"), icon = ui.iconPath and ui.iconPath(mode or "") }]],
+        code = KITTY_MODE_CODE,
       },
     },
     elements = {
-      { type = "icon", from = 1, side = "LEFT" },
+      -- Follow the main mode state. A positive source would make trigger 1 belong
+      -- exclusively to this extra icon, leaving the main text without a trigger.
+      { type = "icon", from = 0, side = "LEFT" },
     },
     animation = { start = "fade", main = "none", finish = "fade" },
   },
@@ -238,6 +243,7 @@ function RWA.InitDB()
   RWA.AddClassIconExamples()
   RWA.AddCombatTimerExample()
   RWA.AddKittyModeExample()
+  RWA.FixKittyModeExample()
   RWA_DB.version = RWA.DB_VERSION
 end
 
@@ -276,6 +282,52 @@ function RWA.AddKittyModeExample()
       table.insert(RWA_DB.order, copy.id)
     end
   end
+end
+
+local function sameDefinition(a, b)
+  if type(a) ~= type(b) then return false end
+  if type(a) ~= "table" then return a == b end
+  for key, value in pairs(a) do
+    if not sameDefinition(value, b[key]) then return false end
+  end
+  for key in pairs(b) do
+    if a[key] == nil then return false end
+  end
+  return true
+end
+
+-- Repair only the recognizable original mode example. Older editor refreshes could
+-- append a blank buff trigger after the icon claimed its sole custom trigger.
+-- Leave meaningful user triggers, custom code, conditions and source choices intact.
+function RWA.FixKittyModeExample()
+  local settings = RWA_DB.settings
+  if settings.kittyModeSourceFixed then return end
+  settings.kittyModeSourceFixed = true
+  local data = RWA_DB.auras["KittyCombo mode"]
+  if not data or data.regionType ~= "text" or type(data.triggers) ~= "table"
+    or type(data.elements) ~= "table" or #data.elements ~= 1 then return end
+  for key in pairs(data.elements) do
+    if key ~= 1 then return end
+  end
+  local triggers, icon = data.triggers, data.elements[1]
+  if type(icon) ~= "table" or icon.type ~= "icon" or tonumber(icon.from) ~= 1
+    or (triggers.mode ~= nil and triggers.mode ~= "all") then return end
+  local visualKeys = { type = true, from = true, side = true, size = true, text = true, x = true, y = true }
+  for key in pairs(icon) do
+    if not visualKeys[key] then return end
+  end
+  if not sameDefinition(triggers[1], { type = "custom", code = KITTY_MODE_CODE }) then return end
+  for key in pairs(triggers) do
+    if key ~= "mode" and key ~= 1 and key ~= 2 then return end
+  end
+  if triggers[2] ~= nil and not sameDefinition(triggers[2], {
+    type = "aura", unit = "player", filter = "HELPFUL", names = {}, showOn = "active",
+  }) then return end
+  for _, condition in ipairs(data.conditions or {}) do
+    if condition.trigger ~= nil and tonumber(condition.trigger) ~= 1 then return end
+  end
+  icon.from = 0
+  if triggers[2] ~= nil then table.remove(triggers, 2) end
 end
 
 -- 0.8.0: the class icon aura and the class icon on the health bar, added once to saved auras too.
@@ -335,6 +387,7 @@ end
 function RWA.NewAura(regionType)
   return RWA.AddAura({
     id = "New aura",
+    enabled = true,
     regionType = regionType or "icon",
     triggers = {
       mode = "all",
@@ -350,6 +403,7 @@ function RWA.DuplicateAura(id)
   end
   local copy = RWA.CopyTable(data)
   copy.id = id
+  copy.enabled = true
   copy.y = (copy.y or 0) + 30
   return RWA.AddAura(copy)
 end

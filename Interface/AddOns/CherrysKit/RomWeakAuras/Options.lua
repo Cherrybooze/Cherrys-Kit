@@ -1,12 +1,15 @@
 -- Options.lua: the /rwa window, laid out like Cherry's KittyCombo: a list of auras (preview, name,
 -- description, what it tracks) and, behind each Edit button, an editor for that one aura in sections.
 -- It replaces the WeakAurasOptions addon (AceGUI) with plain RoM buttons and edit boxes:
--- cycle buttons stand in for dropdowns (left click = next, right click = previous).
+-- XML-backed buttons open lists of choices; right click can step back one value.
 
 local RWA = RWA
 local W = RWA.W
 local Regions = RWA.Regions
 local Triggers = RWA.Triggers
+local Editor = RWA.Editor
+local DisplayEditor = RWA.DisplayEditor
+local Conditions = RWA.Conditions
 
 local WIN_W, WIN_H = 800, 580
 local ROWS = 12
@@ -21,8 +24,8 @@ local LX, WX = COL1, COL1 + 100 -- label and widget x of the editor column being
 local ui
 
 local UNITS = { "player", "target", "party1", "party2", "party3", "party4", "party5", "pet" }
-local TRIGGER_TYPES = { "aura", "status", "custom" }
-local TRIGGER_LABELS = { aura = "Buff / debuff", status = "Status", custom = "Custom Lua" }
+local TRIGGER_TYPES = { "aura", "buffmissing", "status", "custom" }
+local TRIGGER_LABELS = { aura = "Buff / debuff", buffmissing = "Buff missing", status = "Status", custom = "Custom Lua" }
 local CHECKS = { "health", "mana", "skill", "combat", "target", "cast", "cooldown", "class" }
 local CHECK_LABELS = {
   health = "Health",
@@ -38,6 +41,7 @@ local OPS = { "none", "<", "<=", ">", ">=", "==" }
 local COND_VARS = { "none", "remaining", "stacks", "percent", "value" }
 local COLORS = {
   { "White", { 1, 1, 1, 1 } },
+  { "Black", { 0, 0, 0, 1 } },
   { "Red", { 0.9, 0.15, 0.15, 1 } },
   { "Green", { 0.2, 0.7, 0.3, 1 } },
   { "Blue", { 0.25, 0.5, 1, 1 } },
@@ -79,7 +83,7 @@ local function colorName(c)
 end
 
 local function selected()
-  return ui and ui.selected and RWA.GetAura(ui.selected)
+  return ui and ui.selected and Editor.Get(ui.selected)
 end
 
 local function newTrigger()
@@ -93,18 +97,62 @@ local function selElement()
   return i > 0 and data and data.elements and data.elements[i] or nil
 end
 
+local DISPLAY_NAMES = { text = "Text", aurabar = "Bar", icon = "Icon", texture = "Graphic" }
+local function displayName(kind)
+  return DISPLAY_NAMES[kind] or Regions.labels[kind] or kind
+end
+local function selectedDisplay()
+  return selElement() or selected()
+end
+local function selectedType()
+  local e = selElement()
+  return e and (e.type or "icon") or (selected() and selected().regionType or "icon")
+end
+local function displaySettings()
+  local data, e = selected(), selElement()
+  if not data then return nil end
+  if e and Regions.ElementData then return Regions.ElementData(data, e, ui.elemIndex) end
+  if not e then return data end
+  local result = RWA.CopyTable(data)
+  result.elements = nil
+  for key, value in pairs(e) do result[key] = value end
+  result.regionType = e.type or "icon"
+  result.width = tonumber(e.width) or tonumber(e.size) or data.height or 32
+  result.height = tonumber(e.height) or tonumber(e.size) or data.height or 32
+  result.fontSize = tonumber(e.fontSize) or tonumber(e.size) or data.fontSize or 18
+  return result
+end
+
+local function auxiliaryTrigger(data, i)
+  local auxiliary = data.triggers.auxiliary
+  return type(auxiliary) == "table" and (auxiliary[i] == true or auxiliary[tostring(i)] == true)
+end
+
+local function mainTriggerCount(data)
+  local owned, count = RWA.OwnedTriggers(data), 0
+  for i = 1, #data.triggers do
+    if not owned[i] then count = count + 1 end
+  end
+  return count
+end
+
+local function canRemoveTrigger(data, i)
+  if not data.triggers[i] or #data.triggers <= 1 then return false end
+  return RWA.OwnedTriggers(data)[i] or mainTriggerCount(data) > 1
+end
+
 -- The triggers of the selected display: an extra display with its own trigger has just that one,
--- the main display (and extra displays that follow it) has every trigger no extra display owns.
+-- the main picker also exposes retained conditions-only sources for editing and reattachment.
 local function displayTriggers(data)
   local e = selElement()
   local from = e and tonumber(e.from) or 0
-  if from > 0 and data.triggers[from] then
+  local owned = RWA.OwnedTriggers(data)
+  if from > 0 and data.triggers[from] and owned[from] then
     return { from }, true
   end
-  local owned = RWA.OwnedTriggers(data)
   local list = {}
   for i = 1, #data.triggers do
-    if not owned[i] then
+    if not owned[i] or auxiliaryTrigger(data, i) then
       list[#list + 1] = i
     end
   end
@@ -113,7 +161,16 @@ end
 
 -- Removes trigger i and renumbers what points at triggers after it.
 local function removeTrigger(data, i)
+  local auxiliary = data.triggers.auxiliary
   table.remove(data.triggers, i)
+  if type(auxiliary) == "table" then
+    local renumbered = {}
+    for index, value in pairs(auxiliary) do
+      local n = tonumber(index)
+      if n and n ~= i then renumbered[tostring(n > i and n - 1 or n)] = value end
+    end
+    data.triggers.auxiliary = next(renumbered) and renumbered or nil
+  end
   for _, e in ipairs(data.elements or {}) do
     local from = tonumber(e.from) or 0
     if from == i then
@@ -155,17 +212,6 @@ local function trigger1()
   end
   ui.trigIndex = i
   return data.triggers[i]
-end
-
-local function cond1(create)
-  local data = selected()
-  if not data then
-    return nil
-  end
-  if not data.conditions[1] and create then
-    data.conditions[1] = { trigger = 1, var = "remaining", op = "<", value = 3, set = { color = { 0.9, 0.15, 0.15, 1 } } }
-  end
-  return data.conditions[1]
 end
 
 ---------------------------------------------------------------------------
@@ -239,11 +285,13 @@ local TIPS = {
   ["Side#1"] = { "Side", "Where this display sits next to the main one:", "left, right, above, below, or in the middle on top of it." },
   ["Size / text#1"] = { "Size", "Icon: width and height in pixels. Text: font size.", "Empty = the height of the main display. Press Save." },
   ["Size / text#2"] = { "Text", "What a text display says. Codes:", "%n name   %p time left or value   %t duration or maximum", "%s stacks   %v value   %pct percent   %e time since it started", "Example: %e shows how long you have been in combat. Press Save." },
-  ["Type#1"] = { "Trigger type", "Buff / debuff: a buff or debuff by name or ID.", "Status: health, mana, combat, target, casting, cooldown, class.", "Custom Lua: your own code." },
+  ["Type#1"] = { "Trigger type", "Buff / debuff: a buff or debuff by name or ID.", "Buff missing: true while the chosen buff ID is absent.", "Status: health, mana, combat, target, casting, cooldown, class.", "Custom Lua: your own code." },
   ["Type#2"] = { "Unit", "Whose buffs or status to check: you, your target, party members or pet." },
   ["Looks for#1"] = { "Buff or debuff", "Look for a helpful buff or a harmful debuff." },
-  ["Looks for#2"] = { "When to show", "Show if active: while it is on.", "Show if missing: a reminder while it is NOT on.", "Always show: always, with its time when on." },
-  ["Name or ID#1"] = { "Buff / debuff names", "One or more names or IDs, separated by commas.", "Example: Holy Seal, 500123. TooltipIds (/ti) shows IDs on tooltips.", "Leave empty to match any. Press Save." },
+  ["Looks for#2"] = { "When to show", "Show if active: while it is on; optionally check Time left.", "Show if missing: while the buff is absent.", "Missing / time: absent OR passes the Time left check.", "Always show: always, with its time when on." },
+  ["Time left#1"] = { "Trigger time check", "Controls whether this trigger is true, not just its colour.", "For a refresh reminder: Missing / time, <, 3 seconds.", "Any time ignores the timer for active buffs." },
+  ["Time left#2"] = { "Seconds left", "Compare the buff's remaining duration with this number.", "Use < 3 for strictly less than three seconds." },
+  ["Name or ID#1"] = { "Buff / debuff names", "One or more names or IDs, separated by commas.", "Example: Holy Seal, 500123. TooltipIds (/ti) shows IDs on tooltips.", "Choose a name or ID to track. Save commits the draft." },
   ["Check#1"] = { "Check", "What to watch: health, mana, rage/energy/focus, combat,", "having a target, casting, a skill cooldown, or the class." },
   ["Show when#1"] = { "Compare", "always = show all the time; or show only when the value is", "<, <=, >, >= or == the number next to it." },
   ["Show when#2"] = { "Number", "The number to compare with, e.g. 30. Press Save." },
@@ -257,7 +305,7 @@ local TIPS = {
   ["When#4"] = { "Colour", "The colour to use while the condition is true." },
   ["Combat / class#1"] = { "Combat", "Load the aura any time, only in combat or only out of combat." },
   ["Combat / class#2"] = { "Class", "Only for this class, e.g. Mage (main or secondary). Empty = any. Press Save." },
-  ["Text#1"] = { "Main text", "The main line of text. Codes:", "%n name   %p time left or value   %t duration or maximum", "%s stacks   %v value   %pct percent   %e time since it started", "Bars show it on the left, icons in the middle. Press Save." },
+  ["Text#1"] = { "Display text", "The selected display's text. Codes:", "%n name   %p time left or value   %t duration or maximum", "%s stacks   %v value   %pct percent   %e time since it started", "Bars show it on the left, icons in the middle. Press Save." },
   ["Text#2"] = { "Second text", "A second line: on the right of a bar, the corner of an icon.", "Example: %v / %t shows 7395 / 7395 health. Press Save." },
   ["Size  W / H / font#1"] = { "Width", "Width in pixels, e.g. 220 for a bar, 48 for an icon. Press Save." },
   ["Size  W / H / font#2"] = { "Height", "Height in pixels, e.g. 22 for a bar. Press Save." },
@@ -266,7 +314,7 @@ local TIPS = {
   ["Position X / Y#1"] = { "X", "Left (-) or right (+) of the anchor, in pixels.", "Easier: drag the aura on screen while this window is open." },
   ["Position X / Y#2"] = { "Y", "Up (-) or down (+) from the anchor, in pixels.", "The arrows move it 5 pixels; dragging works too." },
   ["Colour#1"] = { "Colour", "The main colour of the bar, texture or text." },
-  ["Icon#1"] = { "Icon", "A game icon path to always show, e.g. interface/icons/skill_mag1.", "Empty = the buff's or skill's own icon. Press Save." },
+  ["Icon#1"] = { "Icon", "Click the Icon button to browse a scrollable grid.", "Or type a game icon path here.", "Empty = the buff's or skill's own icon. Save commits the draft." },
   ["Animation#1"] = { "Start animation", "How it appears and disappears: fade or slide." },
   ["Animation#2"] = { "Loop animation", "While shown: pulse, flash or bounce." },
   ["Sound on show#1"] = { "Sound", "Plays when the aura appears (not while this window is open).", "Play previews it. Sounds need interface sounds on." },
@@ -293,16 +341,34 @@ local function field(x, y, w, get, set)
   local box, bg = W.EditBox(ui.win, w, 20)
   at(box, x, y)
   addTip(box)
-  local c = {
-    objs = { box, bg },
-    refresh = function()
+  local c = { objs = { box, bg } }
+  c.refresh = function()
+      c.refreshing = true
       local v = get()
       W.SetText(box, v == nil and "" or tostring(v))
-    end,
-    save = function()
-      set(W.GetText(box))
-    end,
-  }
+      c.savedText = W.GetText(box)
+      c.refreshing = false
+    end
+  c.save = function()
+      local text = W.GetText(box)
+      -- A field may share its setting with an inline display control. An unchanged
+      -- copy must not overwrite the newer draft value when another button saves fields.
+      if text ~= c.savedText then
+        set(text)
+        c.savedText = text
+      end
+    end
+  W.SetScript(box, "OnTextChanged", function()
+    if not c.refreshing and ui and ui.pageName == "edit" then
+      c.save()
+      local data = selected()
+      for _, t in ipairs(data and data.triggers or {}) do
+        Triggers.Reset(t)
+      end
+      RWA.MarkDirty()
+      ui.previewDirty = true
+    end
+  end)
   table.insert(controls, c)
   return c
 end
@@ -347,6 +413,7 @@ local DESCRIBE = {
   text = "just text, e.g. a big warning",
   texture = "a picture or shape, e.g. a glowing ring",
   aura = "a buff or debuff is on (or missing)",
+  buffmissing = "true when the chosen buff ID is absent",
   status = "health, mana, combat, casting, cooldown",
   custom = "your own Lua code",
   player = "you",
@@ -356,6 +423,7 @@ local DESCRIBE = {
   HARMFUL = "a debuff",
   active = "while it is on",
   missing = "while it is NOT on (reminder)",
+  missingOrExpiring = "missing OR passes the Time left check",
   always = "always, with its time when on",
   ready = "when the skill is ready",
   health = "health",
@@ -414,6 +482,7 @@ local function dropValues(c)
 end
 
 local function hideDrop()
+  if RWA.DisplayMenu then RWA.DisplayMenu.Close() end
   local d = ui and ui.drop
   if d then
     d.open = false
@@ -594,10 +663,23 @@ end
 
 -- Any other button closes an open dropdown first.
 function RWA.CloseDropdown()
+  if RWA.DisplayMenu then RWA.DisplayMenu.Close() end
   closeDrop()
 end
 
 W.BeforeClick = function(b)
+  if ui and ui.pageName == "edit" then
+    for _, control in ipairs(controls) do
+      if control.save then control.save() end
+    end
+  end
+  if RWA.IconPicker and RWA.IconPicker.open then
+    RWA.IconPicker.Close(true)
+  end
+  local menu = RWA.DisplayMenu
+  if menu and menu.open and not (menu.context and menu.context.anchor == b) then
+    menu.Close()
+  end
   local d = ui and ui.drop
   if d and d.open and not d.mine[b] and not (d.owner and d.owner.objs[1] == b) then
     closeDrop()
@@ -702,7 +784,7 @@ function RWA.DescribeTarget(data)
       what[#what + 1] = "#" .. n
     end
     text = (t.filter == "HARMFUL" and "debuff" or "buff") .. " on " .. (t.unit or "player") .. ": "
-      .. (#what > 0 and table.concat(what, ", ") or "any")
+      .. (#what > 0 and table.concat(what, ", ") or "no name/ID set")
     if t.showOn == "missing" then
       text = "missing " .. text
     end
@@ -812,6 +894,10 @@ end
 
 -- Called from the window's XML (and its buttons) on the mouse wheel: delta > 0 is up.
 function RWA_ListWheel(delta)
+  if RWA.IconPicker and RWA.IconPicker.open then
+    RWA.IconPicker.Scroll(delta)
+    return
+  end
   RWA.ScrollList((tonumber(delta) or 0) > 0 and -1 or 1)
 end
 
@@ -833,6 +919,7 @@ local function scrollTo(pos)
 end
 
 local function closePicker()
+  if RWA.IconPicker then RWA.IconPicker.Close(true) end
   if ui.picker and ui.picker.open then
     ui.picker.open = false
     setShown(ui.picker.objs, false)
@@ -868,6 +955,7 @@ function RWA.ShowList()
   setShown(ui.editorObjs, false)
   setShown(ui.listObjs, true)
   refreshList()
+  if RWA.ApplyOptionsSize then RWA.ApplyOptionsSize() end
   if ui.exportAura and ui.selected and RWA_DB.auras[ui.selected] then
     ui.exportAura(ui.selected, false)
   end
@@ -894,6 +982,7 @@ function RWA.ShowEditor(id)
   if ui.selected ~= id then
     ui.trigIndex = 1
     ui.elemIndex = 0
+    ui.conditionPage = 0
   end
   ui.selected = id
   ui.pageName = "edit"
@@ -912,8 +1001,8 @@ end
 
 local previews = {} -- [regionType] = region drawn on its own child frame of the window
 
-local function previewPlace(self)
-  W.SetPoint(self.frame, "CENTER", ui.win, "TOPLEFT", ui.previewX or 0, ui.previewY or 0)
+local function previewPlace(self, dx, dy)
+  W.SetPoint(self.frame, "CENTER", ui.win, "TOPLEFT", (ui.previewX or 0) + (dx or 0), (ui.previewY or 0) + (dy or 0))
 end
 
 local function hidePreview()
@@ -936,7 +1025,11 @@ function RWA.UpdatePreview(now)
     hidePreview()
     return
   end
-  local t = Regions.types[data.regionType] and data.regionType or "icon"
+  local visual = displaySettings()
+  local previewData = RWA.CopyTable(visual)
+  previewData.elements = nil -- the preview edits one selected display, never its siblings
+  previewData.conditions, previewData.triggers = data.conditions, data.triggers
+  local t = Regions.types[previewData.regionType] and previewData.regionType or "icon"
   local region = previews[t]
   if not region then
     region = setmetatable({ regionType = t }, Regions.types[t])
@@ -949,15 +1042,29 @@ function RWA.UpdatePreview(now)
   if ui.previewShown ~= region or ui.previewDirty then
     hidePreview()
     ui.previewDirty = false
-    region:Layout(data)
+    region:Layout(previewData)
     ui.previewShown = region
   end
-  region:SetState(a.region.state or {})
-  region:SetColor(a.region.color)
-  region:SetAlpha(a.region.alpha or 1)
+  local e = selElement()
+  local from = e and tonumber(e.from) or 0
+  local state, sourceActive = (from > 0 and a.states[from]) or a.region.state or {}, true
+  if e and Regions.ElementState then state, sourceActive = Regions.ElementState(a.region, ui.elemIndex, a.states) end
+  local real = a.realActive and sourceActive and (not e or state.show ~= false)
+  W.SetText(ui.previewStatus, real and "|cff40ff40Live rules: on|r" or "|cffffb060Live rules: off|r")
+  region:SetState(state)
+  region:SetColor(visual.color)
   region:Update(now)
-  region:UpdateElements(now, a.states)
-  region:Show()
+  local effects = Conditions.Effects(previewData, a.states, now)
+  local alpha = effects.alpha or visual.alpha or 1
+  if RWA.ApplyConditionVisuals then alpha = RWA.ApplyConditionVisuals(region, effects, now) or alpha end
+  local parentBase = a.conditionEffects and a.conditionEffects.alpha or data.alpha or 1
+  local animation = parentBase > 0 and (a.region.alpha or parentBase) / parentBase or 1
+  if e and Regions.AnimateElement then
+    Regions.AnimateElement(region, now, true, alpha)
+    alpha = region.alpha or alpha
+  end
+  region:SetAlpha(alpha * animation)
+  if effects.hide then region:Hide() else region:Show() end
 end
 
 function RWA.RefreshEditor()
@@ -979,12 +1086,7 @@ function RWA.RefreshEditor()
   end
   setShown(ui.editorObjs, true)
   W.SetText(ui.editTitle, "Editing: " .. data.id .. "   |cffaaaaaa" .. shorten(RWA.DescribeTarget(data), 50) .. "|r")
-  local d = ui.drop
-  if d and d.open then
-    setShown(ui.colObjs[d.side], false)
-    setShown(d.objs, true)
-    refreshDrop()
-  end
+  if ui.prepareConditions then ui.prepareConditions() end
   for _, c in ipairs(controls) do
     c.refresh()
   end
@@ -1001,21 +1103,28 @@ function RWA.RefreshEditor()
   local isResource = kind == "status" and (t.check == "health" or t.check == "mana" or t.check == "skill")
   setShown(ui.groups.cooldown, isCooldown)
   setShown(ui.groups.compare, isResource)
-  setShown(ui.groups.texture, data.regionType == "texture" or data.regionType == "aurabar")
+  setShown(ui.groups.texture, selectedType() == "texture" or selectedType() == "aurabar")
   local list, own = displayTriggers(data)
   if ui.trigPick then
     -- the dropdown says whose triggers it lists
     local e = selElement()
-    local main = Regions.labels[data.regionType] or data.regionType
-    local name = e and (e.type == "text" and "Text" or "Icon") or main
+    local main = displayName(data.regionType)
+    local name = e and displayName(e.type or "icon") or main
     ui.trigPick.prompt = (e and not own) and ("The " .. name .. " uses the " .. main .. "'s triggers:")
       or ("Triggers of the " .. name .. " display:")
   end
-  setShown(ui.trigX, own or #list > 1)
-  setShown(ui.trigCombine, not own and #list > 1)
-  if ui.refreshDisplays then
-    ui.refreshDisplays()
+  setShown(ui.trigX, canRemoveTrigger(data, ui.trigIndex))
+  setShown(ui.trigCombine, not own and mainTriggerCount(data) > 1)
+  setShown(ui.trigRole, not own)
+  if ui.refreshDisplays then ui.refreshDisplays() end
+  if ui.refreshConditions then ui.refreshConditions() end
+  local d = ui.drop
+  if d and d.open then
+    setShown(ui.colObjs[d.side], false)
+    setShown(d.objs, true)
+    refreshDrop()
   end
+  if RWA.ApplyOptionsSize then RWA.ApplyOptionsSize() end
 end
 
 -- Called after any cycle button: rebuild the aura so the change shows at once.
@@ -1040,18 +1149,12 @@ local function saveEditor()
     return
   end
   local oldId = data.id
-  local newName
   for _, c in ipairs(controls) do
     if c.save then
       c.save()
     end
-    if c.isName then
-      newName = c.pending
-    end
   end
-  if newName and newName ~= oldId then
-    ui.selected = RWA.RenameAura(oldId, newName)
-  end
+  ui.selected = Editor.Commit(oldId)
   RWA.RefreshAuraFromEditor()
   RWA.Print("saved", ui.selected)
 end
@@ -1167,9 +1270,9 @@ local function buildEditor()
   L("Name", r)
   local nameField
   nameField = field(WX, r, 250, function()
-    return selected().id
+    return Editor.names[ui.selected] or selected().id
   end, function(text)
-    nameField.pending = RWA.Trim(text)
+    Editor.names[ui.selected] = RWA.Trim(text)
   end)
   nameField.isName = true
 
@@ -1182,253 +1285,188 @@ local function buildEditor()
     selected().desc = desc ~= "" and desc or nil
   end)
 
-  r = nextRow()
-  L("Display", r)
-  local DISP_W = 100
-  -- What "Change type" opens for the main display (the Display list, with previews).
-  local mainType = { objs = {}, col = 1, title = "Display", values = Regions.order }
-  mainType.labelOf = function(v)
-    return Regions.labels[v] or v
-  end
-  mainType.get = function()
-    return selected().regionType
-  end
-  mainType.set = function(v)
-    local data = selected()
-    data.regionType = v
-    local defaults = RWA.REGION_DEFAULTS[v]
-    data.width, data.height = defaults.width, defaults.height
-    data.text, data.text2 = defaults.text, defaults.text2
-    data.showIcon = defaults.showIcon
-  end
-  -- Displays: the main one and up to 3 more, all buttons of the same size. Click selects one
-  -- (green: the rows below and the Trigger section edit it); right click opens its menu,
-  -- Change type or Remove. + adds one.
-  local MAX_EXTRA = 3
+  r = cur.y
+  cur.y = cur.y + 18
+  L("Main display", r)
+  local extraHeading = label("Additional displays", LX + 176, r + 2, 150)
+  table.insert(labels, extraHeading)
+  local MAX_EXTRA = DisplayEditor.MAX_EXTRA
   local function saveTypedNow()
     for _, c in ipairs(controls) do
-      if c.save and not c.isName then
-        c.save()
-      end
+      if c.save and not c.isName then c.save() end
     end
   end
-  local function elements()
-    return selected().elements or {}
-  end
-  local function element()
-    local i = ui.elemIndex or 0
-    return i > 0 and elements()[i] or nil
-  end
-  local function elementLabel(i)
-    local e = elements()[i]
-    return (e and e.type == "text") and "Text" or "Icon"
-  end
+  local function elements() return selected().elements or {} end
   local function selectDisplay(i)
     if (ui.elemIndex or 0) ~= i then
       saveTypedNow()
-      ui.elemIndex = i
+      ui.elemIndex, ui.trigIndex = i, 1
+      ui.previewDirty = true
     end
   end
-  -- "Change type" for an extra display
-  local elemType = { objs = {}, col = 1, title = "Display type", values = { "icon", "text" } }
-  elemType.labelOf = function(v)
-    return v == "text" and "Text" or "Icon"
+  local function removeDisplay(i)
+    saveTypedNow()
+    local ok, reason = DisplayEditor.Remove(selected(), i)
+    if not ok then RWA.Print(reason); return end
+    ui.elemIndex, ui.trigIndex, ui.previewDirty = 0, 1, true
+    if reason then RWA.Print(reason) end
+    closeDrop()
+    RWA.RefreshAuraFromEditor()
   end
-  elemType.get = function()
-    local e = element()
-    return e and e.type or "icon"
+  local function changeType(kind)
+    local raw = selectedDisplay()
+    local defaults = RWA.REGION_DEFAULTS[kind] or RWA.REGION_DEFAULTS.icon
+    if selElement() then raw.type = kind else raw.regionType = kind end
+    raw.width, raw.height = defaults.width, defaults.height
+    raw.text, raw.text2 = defaults.text, defaults.text2
+    raw.fontSize = defaults.fontSize or raw.fontSize or 14
+    raw.showIcon = defaults.showIcon
+    if defaults.texture then raw.texture = defaults.texture end
+    ui.previewDirty = true
   end
-  elemType.set = function(v)
-    local e = element()
-    if e then
-      e.type = v
-    end
-  end
-  local SIDE_LABELS = { LEFT = "Left", RIGHT = "Right", TOP = "Above", BOTTOM = "Below", CENTER = "Middle" }
-  local delConfirm = { objs = {}, col = 1, title = "Delete", values = { "yes", "no" } }
-  delConfirm.labelOf = function(v)
-    return v == "yes" and "Yes, delete it" or "No"
-  end
-  delConfirm.get = function()
-    return nil
-  end
-  delConfirm.set = function(v)
-    local data = selected()
-    local i = delConfirm.index or 0
-    local e = data.elements and data.elements[i]
-    if v == "yes" and e then
-      saveTypedNow()
-      local from = tonumber(e.from) or 0
-      table.remove(data.elements, i)
-      -- its own trigger goes with it
-      if from > 0 and data.triggers[from] then
-        removeTrigger(data, from)
-      end
-      if #data.elements == 0 then
-        data.elements = nil
-      end
-      ui.elemIndex = 0
-    end
-  end
-  -- Layout: [Main][+] [Extra 1] on the Display row, [Extra 2] [Extra 3] under it; every display
-  -- button is DISP_W wide.
-  local function isRight(key)
-    return key == "RBUTTON" or key == "RightButton"
-  end
-  -- Right click menu of display i (0 = the main display, which cannot be removed)
+  local mainType = { objs = {}, col = 1, title = "Display type", values = function()
+    return selElement() and { "text", "aurabar", "icon", "texture" } or Regions.order
+  end, labelOf = displayName, get = selectedType, set = changeType }
   local dispMenu = { objs = {}, col = 1, title = "Display menu" }
   dispMenu.values = function()
-    return (dispMenu.index or 0) > 0 and { "type", "remove" } or { "type" }
+    return DisplayEditor.Count(selected()) > 1 and { "type", "remove" } or { "type" }
   end
-  dispMenu.labelOf = function(v)
-    return v == "remove" and "Remove" or "Change type"
-  end
-  dispMenu.get = function()
-    return nil
-  end
+  dispMenu.labelOf = function(v) return v == "remove" and "Remove" or "Change type" end
+  dispMenu.get = function() return nil end
   dispMenu.set = function(v)
-    local i = dispMenu.index or 0
-    if v == "remove" then
-      delConfirm.index = i
-      delConfirm.prompt = 'Delete display "' .. elementLabel(i) .. '"?'
-      ui.nextDrop = delConfirm
-    else
-      ui.nextDrop = i > 0 and elemType or mainType
-    end
+    if v == "remove" then removeDisplay(dispMenu.index or 0) else ui.nextDrop = mainType end
   end
-  local function openMenu(i, name)
-    dispMenu.index = i
-    dispMenu.prompt = name .. " display:"
-    openDrop(dispMenu)
-  end
-  local mainBtn = W.Button(win, "", DISP_W, 22, function(_, key)
-    selectDisplay(0)
-    if isRight(key) then
-      RWA.RefreshEditor()
-      openMenu(0, mainType.labelOf(selected().regionType))
-      return
+  local addDisp
+  addDisp = W.Button(win, "+", 22, 22, function()
+    if DisplayEditor.Count(selected()) >= MAX_EXTRA + 1 then
+      RWA.Print("an aura can have up to four displays"); return
     end
     closeDrop()
-    RWA.RefreshEditor()
+    RWA.DisplayMenu.Open({ anchor = addDisp, choose = function(kind)
+      saveTypedNow()
+      local i, reason = DisplayEditor.Add(selected(), kind)
+      if not i then RWA.Print(reason); return end
+      ui.elemIndex, ui.previewDirty = i, true
+      RWA.RefreshAuraFromEditor()
+    end })
   end)
-  at(mainBtn, WX, r)
-  addTip(mainBtn)
-  mainType.objs[1], dispMenu.objs[1], elemType.objs[1] = mainBtn, mainBtn, mainBtn
-  table.insert(controls, { objs = { mainBtn }, refresh = function()
-    local text = mainType.labelOf(selected().regionType)
-    -- green while it is the display being edited (when there are several)
-    if (ui.elemIndex or 0) == 0 and selected().elements then
-      text = "|cff40ff40" .. text .. "|r"
-    end
-    W.SetText(mainBtn, text)
-  end })
-  local addDisp = W.Button(win, "+", 22, 22, function()
-    local data = selected()
-    if #elements() >= MAX_EXTRA then
-      RWA.Print("an aura can have up to " .. (MAX_EXTRA + 1) .. " displays")
-      return
-    end
-    saveTypedNow()
-    closeDrop()
-    data.elements = data.elements or {}
-    table.insert(data.elements, { type = "text", from = 0, side = "BOTTOM", text = "%n" })
-    ui.elemIndex = #data.elements
-    RWA.RefreshAuraFromEditor()
-  end)
-  at(addDisp, WX + DISP_W + 4, r)
-  W.Tooltip(addDisp, "Add a display", "Adds another piece to this aura, shown next to it:",
-    "a text (like a combat timer) or an icon.", "Up to " .. (MAX_EXTRA + 1) .. " displays per aura.")
+  at(addDisp, LX + 338, r)
+  W.Tooltip(addDisp, "Add a display", "Choose Text, Bar, Icon or Graphic.", "Up to four displays per aura.")
   table.insert(controls, { objs = { addDisp }, refresh = function() end })
-  local dispRow1 = r
-  r = nextRow()
-  local noExtra = label("", WX, r + 2, 250)
-  table.insert(labels, noExtra)
-  local dispButtons = {}
-  for i = 1, MAX_EXTRA do
-    local slot = i + 1 -- slot 1 is the main display
-    local x = WX + ((slot - 1) % 2) * (DISP_W + 34)
-    local y = slot <= 2 and dispRow1 or r
-    local b = W.Button(win, "", DISP_W, 22, function(_, key)
-      selectDisplay(i)
-      if isRight(key) then
-        RWA.RefreshEditor()
-        openMenu(i, elementLabel(i))
-        return
-      end
+  local selectorY = nextRow()
+  local selectorY2 = nextRow()
+  local selectors = {}
+  for i = 0, MAX_EXTRA do
+    local index = i
+    local x = LX + (i % 2) * 176
+    local y = i < 2 and selectorY or selectorY2
+    local b = W.Button(win, "", 134, 22, function(_, key)
+      selectDisplay(index)
       closeDrop()
       RWA.RefreshEditor()
+      if key == "RBUTTON" or key == "RightButton" then
+        dispMenu.index = index
+        dispMenu.prompt = displayName(selectedType()) .. " display:"
+        openDrop(dispMenu)
+      end
     end)
     at(b, x, y)
-    W.Tooltip(b, "Extra display", "Click: select it. The rows below and the Trigger section",
-      "then edit this display, and it turns green.", "Right click: change its type or remove it.")
-    dispButtons[i] = b
-    table.insert(controls, { objs = { b }, refresh = function() end })
+    local minus = W.Button(win, "-", 22, 22, function() removeDisplay(index) end)
+    at(minus, x + 138, y)
+    W.Tooltip(b, "Select display", "The controls below edit only the selected display.", "Right click also offers Change type.")
+    W.Tooltip(minus, "Remove display", "Keeps all triggers and conditions.", "The last display cannot be removed.")
+    selectors[index] = { button = b, remove = minus, objs = { b, minus } }
+    table.insert(controls, { objs = { b, minus }, refresh = function() end })
   end
+  mainType.objs[1], dispMenu.objs[1] = selectors[0].button, selectors[0].button
+  r = cur.y
+  cur.y = cur.y + 18
+  local helper = label("click - to remove, + to add new display mode", LX, r + 2, 360)
+  W.SetFont(helper, 11)
+  table.insert(labels, helper)
+  r = nextRow()
+  L("Side", r)
+  local SIDE_LABELS = { MAIN = "Main", LEFT = "Left", RIGHT = "Right", TOP = "Above", BOTTOM = "Below", CENTER = "Middle" }
+  local side = cycle(WX, r, 80, function()
+    return selElement() and Regions.ELEMENT_SIDES or { "MAIN" }
+  end, function(v) return SIDE_LABELS[v] or v end, function()
+    local e = selElement()
+    return e and (e.side or "LEFT") or "MAIN"
+  end, function(v) if selElement() then selElement().side = v end end, "Side")
+  local typeLabel = label("Type", WX + 88, r + 2, 36)
+  table.insert(labels, typeLabel)
+  cycle(WX + 126, r, 124, mainType.values, displayName, selectedType, changeType, "Display type")
 
-  -- Rows for the selected extra display
-  local elemRows = {}
-  local function elRow(...)
-    for i = 1, select("#", ...) do
-      local item = select(i, ...)
-      for _, o in ipairs(item.objs or { item }) do
-        table.insert(elemRows, o)
-      end
-    end
+  local forms = { text = {}, icon = {}, dimensions = {}, bartext = {}, graphic = {} }
+  local function form(name, item)
+    for _, obj in ipairs(item.objs or { item }) do forms[name][#forms[name] + 1] = obj end
+    return item
   end
-  r = nextRow()
-  elRow(L("Side", r))
-  elRow(cycle(WX, r, 80, Regions.ELEMENT_SIDES, function(v)
-    return SIDE_LABELS[v] or v
-  end, function()
-    local e = element()
-    return e and e.side or "LEFT"
-  end, function(v)
-    local e = element()
-    if e then
-      e.side = v
-    end
-  end, "Side"))
-  r = nextRow()
-  elRow(L("Size / text", r))
-  elRow(field(WX, r, 50, function()
-    local e = element()
-    return e and e.size or ""
-  end, function(text)
-    local e = element()
-    if e then
-      e.size = tonumber(text)
-    end
+  local formY = nextRow()
+  local formY2 = nextRow()
+  form("text", L("Size / font", formY))
+  form("text", field(WX, formY, 50, function() return displaySettings().fontSize end, function(text)
+    local n = tonumber(text)
+    if n and n > 0 then selectedDisplay().fontSize = n end
   end))
-  elRow(field(WX + 58, r, 192, function()
-    local e = element()
-    return e and e.type == "text" and (e.text or "%n") or ""
-  end, function(text)
-    local e = element()
-    if e and e.type == "text" then
-      e.text = text ~= "" and text or nil
-    end
+  form("text", cycle(WX + 58, formY, 192, FONTS, function(v) return string.gsub(v, "%.ttf$", "") end,
+    function() return displaySettings().font or "default" end,
+    function(v) selectedDisplay().font = v ~= "default" and v or nil end, "Font"))
+  form("text", L("Text", formY2))
+  form("text", field(WX, formY2, 250, function() return displaySettings().text or "%n" end,
+    function(text) selectedDisplay().text = text end))
+  form("dimensions", L("Size  W / H", formY))
+  form("dimensions", field(WX, formY, 80, function() return displaySettings().width end, function(text)
+    local n = tonumber(text)
+    if n and n > 0 then selectedDisplay().width = n end
   end))
-
+  form("dimensions", field(WX + 88, formY, 80, function() return displaySettings().height end, function(text)
+    local n = tonumber(text)
+    if n and n > 0 then selectedDisplay().height = n end
+  end))
+  local iconButton = W.Button(win, "Icon...", 90, 22, function()
+    hideDrop()
+    RWA.IconPicker.Open({ get = selectedDisplay, changed = RWA.RefreshAuraFromEditor, closed = RWA.RefreshEditor })
+  end)
+  at(iconButton, LX, formY2)
+  form("icon", iconButton)
+  table.insert(controls, { objs = { iconButton }, refresh = function() end })
+  form("icon", field(WX, formY2, 250, function() return selectedDisplay().icon or "" end, function(text)
+    local path = RWA.Trim(text)
+    selectedDisplay().icon = path ~= "" and path or nil
+  end))
+  form("bartext", L("Text", formY2))
+  form("bartext", field(WX, formY2, 150, function() return displaySettings().text or "" end,
+    function(text) selectedDisplay().text = text end))
+  form("bartext", field(WX + 158, formY2, 92, function() return displaySettings().text2 or "" end,
+    function(text) selectedDisplay().text2 = text end))
+  local graphicButton = W.Button(win, "Graphic...", 90, 22, function() RWA.OpenTexturePicker() end)
+  at(graphicButton, LX, formY2)
+  form("graphic", graphicButton)
+  table.insert(controls, { objs = { graphicButton }, refresh = function() end })
+  form("graphic", field(WX, formY2, 250, function() return displaySettings().texture or "" end,
+    function(text) selectedDisplay().texture = RWA.Trim(text) end))
   ui.refreshDisplays = function()
-    local list = elements()
-    if (ui.elemIndex or 0) > #list then
-      ui.elemIndex = 0
+    local data, list = selected(), elements()
+    if (ui.elemIndex or 0) > #list then ui.elemIndex = 0 end
+    local visible = not (ui.drop and ui.drop.open and ui.drop.side == 1)
+    for index = 0, MAX_EXTRA do
+      local row = selectors[index]
+      local exists = index == 0 or list[index] ~= nil
+      local kind = index == 0 and data.regionType or (list[index] and list[index].type or "icon")
+      local name = displayName(kind)
+      W.SetText(row.button, (ui.elemIndex or 0) == index and ("|cff40ff40" .. name .. "|r") or name)
+      setShown(row.objs, exists and visible)
+      RWA.Try(row.remove, DisplayEditor.Count(data) > 1 and "Enable" or "Disable")
     end
-    for i, b in ipairs(dispButtons) do
-      if list[i] then
-        local text = elementLabel(i)
-        W.SetText(b, ui.elemIndex == i and ("|cff40ff40" .. text .. "|r") or text)
-      end
-      setShown({ b }, list[i] ~= nil)
-    end
-    local hint = ""
-    if #list == 0 then
-      hint = "+ adds a display (a timer, an icon...); right click: type"
-    elseif #list == 1 then
-      hint = "click: edit it   right click: type / remove"
-    end
-    W.SetText(noExtra, hint ~= "" and ("|cff909090" .. hint .. "|r") or "")
-    setShown(elemRows, element() ~= nil)
+    RWA.Try(addDisp, DisplayEditor.Count(data) < MAX_EXTRA + 1 and "Enable" or "Disable")
+    local kind = selectedType()
+    setShown(forms.text, visible and kind == "text")
+    setShown(forms.dimensions, visible and kind ~= "text")
+    setShown(forms.icon, visible and (kind == "icon" or kind == "kittytracker"))
+    setShown(forms.bartext, visible and kind == "aurabar")
+    setShown(forms.graphic, visible and kind == "texture")
+    RWA.Try(side.objs[1], selElement() and "Enable" or "Disable")
   end
 
   -- KittyTracker.lua (optional) adds the "kitty" trigger type.
@@ -1473,7 +1511,9 @@ local function buildEditor()
     if not t then
       return "+ Add a trigger"
     end
-    return i .. ": " .. shorten(RWA.DescribeTarget({ triggers = { t } }), 24)
+    local auxiliary = auxiliaryTrigger(data, i)
+    return i .. ": " .. shorten(RWA.DescribeTarget({ triggers = { t } }), auxiliary and 12 or 24)
+      .. (auxiliary and " (conditions only)" or "")
   end
   local confirm = { objs = {}, col = 1, title = "Delete", values = { "yes", "no" } }
   confirm.labelOf = function(v)
@@ -1485,9 +1525,8 @@ local function buildEditor()
   confirm.set = function(v)
     local data = selected()
     local i = confirm.index or ui.trigIndex
-    local list, own = displayTriggers(data)
-    -- the main display keeps at least one trigger; an extra display can drop its own
-    if v == "yes" and data.triggers[i] and (own or #list > 1) then
+    -- Auxiliary entries must not make the last main gate look removable.
+    if v == "yes" and canRemoveTrigger(data, i) then
       saveTyped()
       removeTrigger(data, i)
       ui.trigIndex = math.min(ui.trigIndex, #data.triggers)
@@ -1534,8 +1573,7 @@ local function buildEditor()
     if v == "add" then
       return false
     end
-    local list, own = displayTriggers(selected())
-    return own or #list > 1
+    return canRemoveTrigger(selected(), v)
   end
   pick.onRemove = askDelete
   ui.trigPick = pick
@@ -1557,6 +1595,38 @@ local function buildEditor()
     "Any of: it shows when at least one is. Triggers of an extra display", "with its own trigger do not count here.")
   ui.trigX, ui.trigCombine = { delBtn }, { combine.objs[1] }
   r = nextRow()
+  local roleLabel = L("Role", r)
+  local role = cycle(WX, r, 238, { "main", "auxiliary" }, function(v)
+    return v == "auxiliary" and "Conditions only" or "Controls showing"
+  end, function()
+    return auxiliaryTrigger(selected(), ui.trigIndex) and "auxiliary" or "main"
+  end, function(v)
+    saveTyped()
+    local data, i = selected(), ui.trigIndex
+    local auxiliary = type(data.triggers.auxiliary) == "table" and data.triggers.auxiliary or {}
+    if v == "auxiliary" then
+      if not auxiliaryTrigger(data, i) and mainTriggerCount(data) <= 1 then
+        RWA.Print("Keep at least one trigger that controls showing.")
+        return
+      end
+      auxiliary[i], auxiliary[tostring(i)] = nil, true
+      data.triggers.auxiliary = auxiliary
+    else
+      for _, e in ipairs(data.elements or {}) do
+        if tonumber(e.from) == i and RWA.OwnedTriggers(data)[i] then
+          RWA.Print("This source still belongs to an additional display. Remove that display before making it control showing.")
+          return
+        end
+      end
+      auxiliary[i], auxiliary[tostring(i)] = nil, nil
+      data.triggers.auxiliary = next(auxiliary) and auxiliary or nil
+    end
+  end, "Trigger role")
+  W.Tooltip(role.objs[1], "Trigger role", "Controls showing: contributes to the main display's All of / Any of check.",
+    "Conditions only: still checked for condition rules, without gating the main display.",
+    "Keep at least one trigger that controls showing.")
+  ui.trigRole = { roleLabel, role.objs[1] }
+  r = nextRow()
   kittyAsk = { objs = {}, col = 1, title = "Kitty display", values = { "yes", "no" },
     prompt = "Set display as Kitty tracker?" }
   kittyAsk.labelOf = function(v)
@@ -1574,11 +1644,11 @@ local function buildEditor()
   cycle(WX, r, 120, TRIGGER_TYPES, function(v)
     return TRIGGER_LABELS[v] or v
   end, function()
-    return trigger1().type or "aura"
+    return Triggers.GetOptionType(trigger1())
   end, function(v)
     local t = trigger1()
     local old = t.type or "aura"
-    t.type = v
+    Triggers.SetOptionType(t, v)
     -- switching the main display's trigger to Kitty asks once whether the display should follow
     local KTr = RWA.KittyTracker
     if KTr and KTr.ShouldAskDisplay and not selElement() and KTr.ShouldAskDisplay(selected(), old, v) then
@@ -1606,13 +1676,19 @@ local function buildEditor()
   end, function(v)
     trigger1().filter = v
   end))
-  group("aura", cycle(WX + 128, r, 110, { "active", "missing", "always" }, function(v)
-    return v == "missing" and "Show if missing" or v == "always" and "Always show" or "Show if active"
+  group("aura", cycle(WX + 128, r, 110, { "active", "missing", "missingOrExpiring", "always" }, function(v)
+    return v == "missing" and "Show if missing" or v == "missingOrExpiring" and "Missing / time"
+      or v == "always" and "Always show" or "Show if active"
   end, function()
     return trigger1().showOn or "active"
   end, function(v)
     trigger1().showOn = v
+    if v == "missingOrExpiring" then
+      trigger1().remainingOp = trigger1().remainingOp or "<"
+      trigger1().remaining = trigger1().remaining or 3
+    end
   end))
+
   local rowNames = nextRow()
   group("aura", L("Name or ID", rowNames))
   group("aura", field(WX, rowNames, 250, function()
@@ -1630,6 +1706,7 @@ local function buildEditor()
     if t.type ~= "aura" then
       return
     end
+    local old = table.concat(t.names or {}, ",") .. "|" .. table.concat(t.ids or {}, ",")
     t.names, t.ids = {}, {}
     for _, part in ipairs(RWA.Split(text, ",")) do
       if tonumber(part) then
@@ -1638,6 +1715,8 @@ local function buildEditor()
         table.insert(t.names, part)
       end
     end
+    local changed = table.concat(t.names, ",") .. "|" .. table.concat(t.ids, ",")
+    if old ~= changed then selected().previewIcon = nil end
   end))
 
   -- Status trigger rows (share the same two rows as the aura trigger)
@@ -1767,8 +1846,12 @@ local function buildEditor()
   end
 
   column(2)
-  section("Look", { 0.62, 0.25, 0.52 }, "colour, picture, animation")
-  -- Live preview: the aura as it looks right now, redrawn every frame (RWA.UpdatePreview).
+  section("Look", { 0.62, 0.25, 0.52 }, "selected display")
+  local previewTitle = label("Draft preview", LX, cur.y + 2, 120)
+  ui.previewStatus = label("", LX + 164, cur.y + 2, 188)
+  table.insert(labels, previewTitle)
+  table.insert(labels, ui.previewStatus)
+  cur.y = cur.y + 22
   local pv = W.Texture(win, "BORDER", "Square_FullWhite")
   W.SetSize(pv, SECTION_W - 12, PREVIEW_H)
   at(pv, LX, cur.y)
@@ -1776,129 +1859,126 @@ local function buildEditor()
   table.insert(labels, pv)
   ui.previewBox = pv
   ui.previewX, ui.previewY = LX + (SECTION_W - 12) / 2, cur.y + PREVIEW_H / 2
-  cur.y = cur.y + PREVIEW_H + 6
+  cur.y = cur.y + PREVIEW_H + 2
+  local previewHint = label("Inactive drafts stay visible; Hide rules still apply", LX, cur.y, 350)
+  W.SetFont(previewHint, 11)
+  table.insert(labels, previewHint)
+  cur.y = cur.y + 22
+  local function colorValues()
+    local names = {}
+    for _, entry in ipairs(COLORS) do names[#names + 1] = entry[1] end
+    return names
+  end
+  local function chooseColor(value)
+    for _, entry in ipairs(COLORS) do
+      if entry[1] == value then return RWA.CopyTable(entry[2]) end
+    end
+  end
   r = nextRow()
   L("Colour", r)
-  cycle(WX, r, 120, function()
-    local names = {}
-    for _, e in ipairs(COLORS) do
-      names[#names + 1] = e[1]
-    end
-    return names
-  end, ident, function()
-    return colorName(selected().color)
-  end, function(v)
-    for _, e in ipairs(COLORS) do
-      if e[1] == v then
-        selected().color = RWA.CopyTable(e[2])
-      end
-    end
-  end)
-  local texBtn = W.Button(win, "", 122, 22, function()
-    RWA.OpenTexturePicker()
-  end)
-  at(texBtn, WX + 128, r)
-  group("texture", { objs = { texBtn } })
-  table.insert(controls, {
-    objs = { texBtn },
-    refresh = function()
-      local tex = selected().texture or ""
-      tex = string.gsub(string.gsub(tex, "^PowerAuras/Aura", "Power Aura "), "_", " ")
-      W.SetText(texBtn, "Tex: " .. shorten(tex, 13))
-    end,
-  })
-
-  r = nextRow()
-  L("Icon", r)
-  field(WX, r, 250, function()
-    return selected().icon or ""
+  cycle(WX, r, 120, colorValues, ident, function() return colorName(displaySettings().color) end,
+    function(value) selectedDisplay().color = chooseColor(value) end)
+  local opacityLabel = label("Opacity %", WX + 128, r + 2, 68)
+  table.insert(labels, opacityLabel)
+  local opacity = field(WX + 200, r, 50, function()
+    return math.floor((tonumber(displaySettings().alpha) or 1) * 100 + 0.5)
   end, function(text)
-    local icon = RWA.Trim(text)
-    selected().icon = icon ~= "" and icon or nil
+    local n = tonumber(text)
+    if n then selectedDisplay().alpha = math.max(0, math.min(100, n)) / 100 end
   end)
-
+  W.Tooltip(opacity.objs[1], "Opacity", "0 is invisible; 100 is fully visible.")
+  r = nextRow()
+  L("Edge", r)
+  local borderStyles = Regions.borderStyles or { "none", "thin", "thick", "double", "corners" }
+  local borderLabels = Regions.borderLabels or { none = "None", thin = "Thin", thick = "Thick", double = "Double", corners = "Corners" }
+  cycle(WX, r, 100, borderStyles, function(v) return borderLabels[v] or v end, function()
+    return displaySettings().borderStyle or (not selElement() and selectedType() == "icon" and "thin" or "none")
+  end, function(v) selectedDisplay().borderStyle = v end, "Edge style")
+  local edgeWidth = field(WX + 108, r, 40, function()
+    local d = displaySettings()
+    return d.borderSize or (d.borderStyle == "thick" and 3 or d.borderStyle == "corners" and 2 or 1)
+  end, function(text)
+    local n = tonumber(text)
+    if n and n > 0 then selectedDisplay().borderSize = n end
+  end)
+  W.Tooltip(edgeWidth.objs[1], "Edge width", "Line width in pixels.")
+  cycle(WX + 156, r, 94, colorValues, ident, function()
+    return colorName(displaySettings().borderColor or { 0, 0, 0, 1 })
+  end, function(v) selectedDisplay().borderColor = chooseColor(v) end, "Edge colour")
   r = nextRow()
   L("Animation", r)
-  cycle(WX, r, 80, START_ANIMS, function(v)
-    return "in: " .. v
-  end, function()
-    return selected().animation.start or "none"
-  end, function(v)
-    selected().animation.start = v
-    selected().animation.finish = v
-  end)
-  cycle(WX + 88, r, 100, MAIN_ANIMS, function(v)
-    return "loop: " .. v
-  end, function()
-    return selected().animation.main or "none"
-  end, function(v)
-    selected().animation.main = v
-  end)
-
-
-  section("Text and size", { 0.15, 0.55, 0.50 }, "%n name  %p time  %s stacks")
+  local function animation()
+    local raw = selectedDisplay()
+    if not raw.animation then
+      raw.animation = RWA.CopyTable(displaySettings().animation or { start = "none", main = "none", finish = "none" })
+    end
+    return raw.animation
+  end
+  cycle(WX, r, 110, START_ANIMS, function(v) return "Start: " .. v end,
+    function() return (displaySettings().animation or {}).start or "none" end,
+    function(v) animation().start, animation().finish = v, v end)
+  cycle(WX + 118, r, 132, MAIN_ANIMS, function(v) return "Loop: " .. v end,
+    function() return (displaySettings().animation or {}).main or "none" end,
+    function(v) animation().main = v end)
   r = nextRow()
-  L("Text", r)
-  field(WX, r, 150, function()
-    return selected().text
-  end, function(text)
-    selected().text = text
-  end)
-  field(WX + 158, r, 92, function()
-    return selected().text2 or ""
-  end, function(text)
-    selected().text2 = text
-  end)
-
+  local texBtn = W.Button(win, "Choose graphic...", 150, 22, function() RWA.OpenTexturePicker() end)
+  at(texBtn, WX, r)
+  group("texture", L("Texture", r), { objs = { texBtn } })
+  table.insert(controls, { objs = { texBtn }, refresh = function()
+    W.SetText(texBtn, "Tex: " .. shorten(displaySettings().texture or "none", 19))
+  end })
+  local fontObjs, iconTextObjs = {}, {}
+  local function lookGroup(list, item)
+    for _, obj in ipairs(item.objs or { item }) do list[#list + 1] = obj end
+    return item
+  end
   r = nextRow()
-  L("Size  W / H / font", r)
-  field(WX, r, 50, function()
-    return selected().width
-  end, function(text)
-    selected().width = num(text, selected().width)
-  end)
-  field(WX + 58, r, 50, function()
-    return selected().height
-  end, function(text)
-    selected().height = num(text, selected().height)
-  end)
-  field(WX + 116, r, 40, function()
-    return selected().fontSize
-  end, function(text)
-    selected().fontSize = num(text, selected().fontSize)
-  end)
-  cycle(WX + 164, r, 86, FONTS, function(v)
-    return (string.gsub(tostring(v), "%.ttf$", ""))
-  end, function()
-    return selected().font or "default"
-  end, function(v)
-    selected().font = (v ~= "default") and v or nil
-  end)
+  lookGroup(fontObjs, L("Text style", r))
+  lookGroup(fontObjs, field(WX, r, 50, function() return displaySettings().fontSize end, function(text)
+    local n = tonumber(text)
+    if n and n > 0 then selectedDisplay().fontSize = n end
+  end))
+  lookGroup(fontObjs, cycle(WX + 58, r, 192, FONTS, function(v) return string.gsub(v, "%.ttf$", "") end,
+    function() return displaySettings().font or "default" end,
+    function(v) selectedDisplay().font = v ~= "default" and v or nil end, "Font"))
+  r = nextRow()
+  lookGroup(iconTextObjs, L("Icon text", r))
+  lookGroup(iconTextObjs, field(WX, r, 150, function() return displaySettings().text or "" end,
+    function(text) selectedDisplay().text = text end))
+  lookGroup(iconTextObjs, field(WX + 158, r, 92, function() return displaySettings().text2 or "" end,
+    function(text) selectedDisplay().text2 = text end))
+  local refreshDisplays = ui.refreshDisplays
+  ui.refreshDisplays = function()
+    refreshDisplays()
+    local visible = not (ui.drop and ui.drop.open and ui.drop.side == 2)
+    local kind = selectedType()
+    setShown(fontObjs, visible and kind ~= "text" and kind ~= "texture")
+    setShown(iconTextObjs, visible and (kind == "icon" or kind == "kittytracker"))
+  end
 
   section("Position", { 0.35, 0.35, 0.60 }, "or drag it on screen")
   r = nextRow()
   L("Position X / Y", r)
   local xField = field(WX, r, 50, function()
-    return selected().x
+    return selectedDisplay().x or 0
   end, function(text)
-    selected().x = num(text, selected().x)
+    selectedDisplay().x = num(text, selectedDisplay().x or 0)
   end)
   local yField = field(WX + 58, r, 50, function()
-    return selected().y
+    return selectedDisplay().y or 0
   end, function(text)
-    selected().y = num(text, selected().y)
+    selectedDisplay().y = num(text, selectedDisplay().y or 0)
   end)
   local function nudge(dx, dy)
     return function()
-      local data = selected()
-      if not data then
-        return
-      end
+      local data = selectedDisplay()
+      if not data then return end
       data.x, data.y = (data.x or 0) + dx, (data.y or 0) + dy
-      local a = RWA.loaded[data.id]
+      local a = not selElement() and RWA.loaded[selected().id]
       if a then
         a.region:Place(0, a.dy or 0)
       end
+      if selElement() then RWA.RefreshAuraFromEditor() end
       xField.refresh()
       yField.refresh()
     end
@@ -1971,56 +2051,6 @@ local function buildEditor()
     end,
   })
 
-  column(1)
-  section("Condition", { 0.50, 0.20, 0.22 }, "change colour when...")
-  r = nextRow()
-  L("When", r)
-  cycle(WX, r, 80, COND_VARS, ident, function()
-    local c = cond1(false)
-    return c and c.var or "none"
-  end, function(v)
-    local data = selected()
-    if v == "none" then
-      data.conditions = {}
-    else
-      cond1(true).var = v
-    end
-  end)
-  cycle(WX + 88, r, 40, { "<", "<=", ">", ">=", "==" }, ident, function()
-    local c = cond1(false)
-    return c and c.op or "<"
-  end, function(v)
-    cond1(true).op = v
-  end)
-  field(WX + 136, r, 40, function()
-    local c = cond1(false)
-    return c and c.value or ""
-  end, function(text)
-    local c = cond1(false)
-    if c then
-      c.value = tonumber(text) or c.value
-    end
-  end)
-  cycle(WX + 184, r, 66, function()
-    local names = {}
-    for _, e in ipairs(COLORS) do
-      names[#names + 1] = e[1]
-    end
-    return names
-  end, function(v)
-    return "-> " .. v
-  end, function()
-    local c = cond1(false)
-    return c and c.set and colorName(c.set.color) or "Red"
-  end, function(v)
-    local c = cond1(true)
-    for _, e in ipairs(COLORS) do
-      if e[1] == v then
-        c.set = { color = RWA.CopyTable(e[2]) }
-      end
-    end
-  end)
-
   section("Load", { 0.28, 0.45, 0.22 }, "only show when...")
   r = nextRow()
   L("Combat / class", r)
@@ -2045,18 +2075,198 @@ local function buildEditor()
     selected().load.class = class ~= "" and class or nil
   end)
 
+  column(1)
+  section("Conditions", { 0.50, 0.20, 0.22 }, "time left includes missing")
+  local ACTIONS = { "show", "hide", "sound", "grow", "blink", "color", "overlayIcon" }
+  local ACTION_LABELS = { show = "Show", hide = "Hide", sound = "Play sound", grow = "Grow",
+    blink = "Blink", color = "Change colour", overlayIcon = "Overlay icon" }
+  local VARIABLES = { "remaining", "stacks", "percent", "value", "show" }
+  local VARIABLE_LABELS = { remaining = "Time left", stacks = "Stacks", percent = "Percent", value = "Value", show = "Trigger true" }
+  local COMPARES = { "<", "<=", ">", ">=", "==", "~=" }
+  local COMPARE_LABELS = { ["<"] = "below", ["<="] = "at most", [">"] = "above", [">="] = "at least", ["=="] = "equals", ["~="] = "not equal" }
+  local function conditionList() return selected().conditions or {} end
+  local function conditionIndex(slot) return (ui.conditionPage or 0) * 2 + slot end
+  local function condition(slot) return conditionList()[conditionIndex(slot)] end
+  local function clampConditionPage()
+    ui.conditionPage = math.max(0, math.min(ui.conditionPage or 0, math.max(0, math.floor((#conditionList() - 1) / 2))))
+  end
+  ui.prepareConditions = clampConditionPage
+  local function addCondition()
+    saveTypedNow()
+    local data = selected()
+    data.conditions = data.conditions or {}
+    local rule = Conditions.New("color")
+    rule.trigger = ui.trigIndex or 1
+    table.insert(data.conditions, rule)
+    ui.conditionPage = math.floor((#data.conditions - 1) / 2)
+    RWA.RefreshAuraFromEditor()
+  end
+  r = nextRow()
+  L("Rules", r)
+  local prevCondition = W.Button(win, "<", 24, 22, function()
+    ui.conditionPage = math.max(0, (ui.conditionPage or 0) - 1)
+    RWA.RefreshEditor()
+  end)
+  at(prevCondition, WX, r)
+  local conditionPages = label("", WX + 32, r + 2, 64)
+  table.insert(labels, conditionPages)
+  local nextCondition = W.Button(win, ">", 24, 22, function()
+    ui.conditionPage = (ui.conditionPage or 0) + 1
+    clampConditionPage()
+    RWA.RefreshEditor()
+  end)
+  at(nextCondition, WX + 100, r)
+  local addConditionBtn = W.Button(win, "+ Add rule", 118, 22, addCondition)
+  at(addConditionBtn, WX + 132, r)
+  table.insert(controls, { objs = { prevCondition, nextCondition, addConditionBtn }, refresh = function() end })
+  local cards = {}
+  for slot = 1, 2 do
+    local cardSlot = slot
+    local card = { fields = {}, parameters = { color = {}, grow = {}, sound = {}, overlayIcon = {} } }
+    local top = nextRow()
+    card.title = label("", LX + 8, top + 2, 66)
+    table.insert(labels, card.title)
+    for _, line in ipairs(goldBox(LX, top, SECTION_W - 12, 112, THEME.darkGold)) do table.insert(labels, line) end
+    local remove = W.Button(win, "-", 22, 22, function()
+      saveTypedNow()
+      if condition(cardSlot) then
+        table.remove(selected().conditions, conditionIndex(cardSlot))
+        clampConditionPage()
+        RWA.RefreshAuraFromEditor()
+      end
+    end)
+    at(remove, LX + 330, top)
+    card.remove = remove
+    table.insert(controls, { objs = { remove }, refresh = function() end })
+    local function addField(item)
+      for _, obj in ipairs(item.objs or { item }) do card.fields[#card.fields + 1] = obj end
+      return item
+    end
+    local function parameter(action, item)
+      for _, obj in ipairs(item.objs or { item }) do card.parameters[action][#card.parameters[action] + 1] = obj end
+      return item
+    end
+    local function rule() return condition(cardSlot) end
+    local sourceY = top
+    addField(cycle(LX + 78, sourceY, 246, function()
+      local list = {}
+      for i = 1, #selected().triggers do list[#list + 1] = i end
+      return list
+    end, function(i) return "Source " .. triggerLabel(i) end, function() return rule() and rule().trigger or ui.trigIndex or 1 end,
+      function(v) if rule() then rule().trigger = v end end, "Condition source"))
+    local whenY = nextRow()
+    addField(L("When", whenY))
+    addField(cycle(WX, whenY, 96, VARIABLES, function(v) return VARIABLE_LABELS[v] or v end,
+      function() return rule() and rule().var or "remaining" end,
+      function(v) if rule() then rule().var = v end end, "Condition value"))
+    addField(cycle(WX + 104, whenY, 86, COMPARES, function(v) return COMPARE_LABELS[v] or v end,
+      function() return rule() and rule().op or "<" end,
+      function(v) if rule() then rule().op = v end end, "Comparison"))
+    addField(field(WX + 198, whenY, 52, function() return rule() and rule().value or "" end, function(text)
+      if rule() then rule().value = tonumber(text) or rule().value end
+    end))
+    local actionY = nextRow()
+    local actionLabel = label("When condition met…", LX + 8, actionY + 2, 152)
+    table.insert(labels, actionLabel)
+    addField(actionLabel)
+    addField(cycle(LX + 164, actionY, 188, ACTIONS, function(v) return ACTION_LABELS[v] or v end,
+      function() return Conditions.GetAction(rule()) end,
+      function(v) if rule() then Conditions.SetAction(rule(), v) end end, "When condition met…"))
+    local parameterY = nextRow()
+    parameter("color", L("Colour", parameterY))
+    parameter("color", cycle(WX, parameterY, 250, colorValues, ident,
+      function() return rule() and rule().set and colorName(rule().set.color) or "Red" end,
+      function(v) if rule() then rule().set.color = chooseColor(v) end end, "Condition colour"))
+    parameter("grow", L("Size %", parameterY))
+    parameter("grow", field(WX, parameterY, 80, function()
+      return rule() and rule().set and math.floor((tonumber(rule().set.grow) or 1.25) * 100 + 0.5) or 125
+    end, function(text)
+      local n = tonumber(text)
+      if rule() and n and n > 0 then rule().set.grow = n / 100 end
+    end))
+    parameter("sound", L("Sound", parameterY))
+    parameter("sound", cycle(WX, parameterY, 190, function()
+      local values = { "AirHorn" }
+      local current = rule() and rule().set and rule().set.sound
+      if current and current ~= "AirHorn" then values[#values + 1] = current end
+      for _, value in ipairs(SOUNDS) do
+        if value ~= "none" and indexOf(values, value) == 0 then values[#values + 1] = value end
+      end
+      return values
+    end, ident, function() return rule() and rule().set and rule().set.sound or "AirHorn" end,
+      function(v) if rule() then rule().set.sound = v end end, "Condition sound"))
+    local play = W.Button(win, "Play", 52, 22, function()
+      if rule() and rule().set.sound then RWA.PlaySound(rule().set.sound) end
+    end)
+    at(play, WX + 198, parameterY)
+    parameter("sound", play)
+    table.insert(controls, { objs = { play }, refresh = function() end })
+    local overlay = W.Button(win, "Overlay...", 90, 22, function()
+      local chosen = rule()
+      if not chosen then return end
+      hideDrop()
+      RWA.IconPicker.Open({
+        get = function()
+          for _, value in ipairs(conditionList()) do
+            if value == chosen then return { icon = chosen.set.overlayIcon } end
+          end
+        end,
+        set = function(path) if path then chosen.set.overlayIcon = path end end,
+        allowAutomatic = false, changed = RWA.RefreshAuraFromEditor, closed = RWA.RefreshEditor,
+      })
+    end)
+    at(overlay, LX, parameterY)
+    parameter("overlayIcon", overlay)
+    table.insert(controls, { objs = { overlay }, refresh = function() end })
+    parameter("overlayIcon", field(WX, parameterY, 250,
+      function() return rule() and rule().set and rule().set.overlayIcon or "" end,
+      function(text) if rule() then rule().set.overlayIcon = RWA.Trim(text) end end))
+    card.actionHint = label("", LX + 8, parameterY + 2, 336)
+    table.insert(labels, card.actionHint)
+    card.empty = label("Add a rule to this slot.", LX + 12, whenY + 2, 320)
+    table.insert(labels, card.empty)
+    card.add = W.Button(win, "+ Add rule", 118, 22, addCondition)
+    at(card.add, WX, actionY)
+    table.insert(controls, { objs = { card.add }, refresh = function() end })
+    cur.y = cur.y + 8
+    cards[slot] = card
+  end
+  ui.refreshConditions = function()
+    clampConditionPage()
+    local visible = not (ui.drop and ui.drop.open and ui.drop.side == 1)
+    local pages = math.max(1, math.ceil(#conditionList() / 2))
+    W.SetText(conditionPages, ((ui.conditionPage or 0) + 1) .. " / " .. pages)
+    RWA.Try(prevCondition, (ui.conditionPage or 0) > 0 and "Enable" or "Disable")
+    RWA.Try(nextCondition, (ui.conditionPage or 0) + 1 < pages and "Enable" or "Disable")
+    for slot, card in ipairs(cards) do
+      local rule = condition(slot)
+      W.SetText(card.title, "Rule " .. conditionIndex(slot) .. (rule and "" or "  (empty)"))
+      setShown(card.fields, visible and rule ~= nil)
+      setShown({ card.remove }, visible and rule ~= nil)
+      setShown({ card.empty, card.add }, visible and rule == nil)
+      local action = Conditions.GetAction(rule)
+      for name, objs in pairs(card.parameters) do setShown(objs, visible and rule ~= nil and action == name) end
+      local hint = action == "show" and "Shows when this source is true." or action == "hide" and "Hides the aura while this rule matches."
+        or action == "blink" and "Blinks while this rule matches." or ""
+      W.SetText(card.actionHint, hint)
+      setShown({ card.actionHint }, visible and rule ~= nil and hint ~= "")
+    end
+  end
+
   closeSection()
   column(2)
   closeSection()
   -- Save and Revert under the right column; Back (top left) is part of the editor header.
   local r2 = math.max(cols[1].y, cols[2].y) + 8
+  ui.editorHeight = r2 + 42
   local saveBtn = W.Button(win, "Save", 90, 24, saveEditor)
   at(saveBtn, COL2 + 100, r2)
   local revertBtn = W.Button(win, "Revert", 90, 24, function()
-    RWA.RefreshEditor()
+    Editor.Revert(ui.selected)
+    RWA.RefreshAuraFromEditor()
   end)
   at(revertBtn, COL2 + 198, r2)
-  local saveHint = label("Typed fields are kept when you press Save. Buttons change the aura at once.", COL1, r2 + 4, 380)
+  local saveHint = label("All changes stay in this draft. Save commits; Revert restores the saved aura.", COL1, r2 + 4, 380)
   table.insert(labels, saveHint)
   local back = W.Button(win, "< Back to list", 120, 24, function()
     RWA.ShowList()
@@ -2105,7 +2315,7 @@ local function refreshPicker()
   local per = PICK_COLS * PICK_ROWS
   local maxPage = math.max(0, math.floor((#list - 1) / per))
   p.page = math.max(0, math.min(p.page, maxPage))
-  local current = selected() and selected().texture
+  local current = selectedDisplay() and selectedDisplay().texture
   for i, cell in ipairs(p.cells) do
     local name = list[p.page * per + i]
     cell.name = name
@@ -2159,7 +2369,7 @@ local function buildPicker()
       local x = COL1 + 4 + (col - 1) * PICK_CELL
       local y = 76 + (row - 1) * PICK_CELL
       cell.btn = add(W.Button(win, "", PICK_CELL - 4, PICK_CELL - 4, function()
-        local data = selected()
+        local data = selectedDisplay()
         if data and cell.name then
           data.texture = cell.name
           RWA.CloseTexturePicker()
@@ -2189,9 +2399,9 @@ function RWA.OpenTexturePicker()
   hideDrop()
   local p = ui.picker
   p.open = true
-  p.category = categoryOf(selected().texture)
+  p.category = categoryOf(selectedDisplay().texture)
   local list = MEDIA.textures[p.category] or {}
-  p.page = math.floor(math.max(0, indexOf(list, selected().texture) - 1) / (PICK_COLS * PICK_ROWS))
+  p.page = math.floor(math.max(0, indexOf(list, selectedDisplay().texture) - 1) / (PICK_COLS * PICK_ROWS))
   setShown(ui.editorObjs, false)
   setShown(p.objs, true)
   refreshPicker()
@@ -2268,15 +2478,31 @@ function RWA.GripHover(on)
   end
 end
 
--- The options window's scale (0.6 to 1.6), kept in the settings.
+-- Keep the user's preferred scale while fitting this page inside the available UI.
+-- Missing height/width APIs simply leave the preference unchanged.
+function RWA.ApplyOptionsSize()
+  if not ui then return end
+  local height = ui.pageName == "edit" and (ui.editorHeight or WIN_H) or WIN_H
+  if ui.resizeWindow then ui.resizeWindow(height) end
+  local effective = tonumber(RWA_DB.settings.uiScale) or 1
+  local okH, availableH = RWA.Try(UIParent, "GetHeight")
+  local okW, availableW = RWA.Try(UIParent, "GetWidth")
+  if okH and type(availableH) == "number" and availableH > 200 then
+    effective = math.min(effective, (availableH - 32) / height)
+  end
+  if okW and type(availableW) == "number" and availableW > 200 then
+    effective = math.min(effective, (availableW - 32) / WIN_W)
+  end
+  effective = math.max(0.25, effective)
+  ui.effectiveScale = effective
+  RWA.Try(ui.win, "SetScale", effective)
+end
+
 function RWA.SetWindowScale(scale)
   scale = math.max(0.6, math.min(1.6, tonumber(scale) or 1))
   scale = math.floor(scale * 10 + 0.5) / 10
   RWA_DB.settings.uiScale = scale
-  local win = ui and ui.win or _G["RWA_OptionsWindow"]
-  if win then
-    RWA.Try(win, "SetScale", scale)
-  end
+  RWA.ApplyOptionsSize()
   return scale
 end
 
@@ -2303,8 +2529,21 @@ local function build()
   W.SetPoint(titleBg, "TOPLEFT", win, "TOPLEFT", 4, 4)
   W.SetColor(titleBg, THEME.title[1], THEME.title[2], THEME.title[3], THEME.title[4])
   -- golden frame around the window and under the title
-  goldBox(2, 2, WIN_W - 4, WIN_H - 4, THEME.gold, 2)
-  goldBox(7, 7, WIN_W - 14, WIN_H - 14, THEME.darkGold, 1)
+  local outer = goldBox(2, 2, WIN_W - 4, WIN_H - 4, THEME.gold, 2)
+  local inner = goldBox(7, 7, WIN_W - 14, WIN_H - 14, THEME.darkGold, 1)
+  ui.resizeWindow = function(height)
+    W.SetSize(win, WIN_W, height)
+    W.SetSize(bg, WIN_W - 8, height - 8)
+    local function resizeBorder(lines, inset, thick)
+      local width, h = WIN_W - inset * 2, height - inset * 2
+      W.SetPoint(lines[2], "TOPLEFT", win, "TOPLEFT", inset, inset + h - thick)
+      W.SetSize(lines[2], width, thick)
+      W.SetSize(lines[3], thick, h)
+      W.SetSize(lines[4], thick, h)
+    end
+    resizeBorder(outer, 2, 2)
+    resizeBorder(inner, 7, 1)
+  end
   local titleLine = W.Texture(win, "ARTWORK", "Square_FullWhite")
   W.SetSize(titleLine, WIN_W - 8, 1)
   W.SetPoint(titleLine, "TOPLEFT", win, "TOPLEFT", 4, 34)
@@ -2427,6 +2666,8 @@ local function build()
       local data = row.id and RWA_DB.auras[row.id]
       if data then
         data.enabled = not data.enabled
+        local draft = Editor.drafts[row.id]
+        if draft then draft.enabled = data.enabled end
         -- LoadAura unloads a turned-off aura, except in edit mode where it stays visible, dimmed.
         RWA.LoadAura(row.id)
         refreshList()

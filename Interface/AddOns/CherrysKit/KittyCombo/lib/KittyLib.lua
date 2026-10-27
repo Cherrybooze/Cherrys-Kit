@@ -28,21 +28,34 @@ Kitty.debugPrint = function(...)
 end;
 
 -- Protected mode
-Kitty.protectFunction = function(func)
-	return function(...)
-		return Kitty.pcall(func, ...);
-	end
-end;
-Kitty.pcall = function(func, ...)
+local function callProtected(context, func, ...)
 	-- Run protected (errors go to chat)
 	local resultList = {pcall(func, ...)};
 	if(resultList[1]) then
 		return unpack(resultList, 2);
 	else
-		-- Error
-		Kitty.sendMessage(resultList[2], "DEFAULT", 1, 0, 0);
+		-- Native UI calls can fail with nil; Lua also permits other error objects.
+		-- Do not let the error reporter hide that failure with a second exception.
+		local message = resultList[2];
+		if(message == nil or message == "") then
+			message = "Client call failed without an error message.";
+		else
+			message = tostring(message);
+		end
+		if(context ~= nil) then
+			message = tostring(context) .. ": " .. message;
+		end
+		Kitty.sendMessage(message, "DEFAULT", 1, 0, 0);
 		return nil;
 	end
+end;
+Kitty.protectFunction = function(func, context)
+	return function(...)
+		return callProtected(context, func, ...);
+	end
+end;
+Kitty.pcall = function(func, ...)
+	return callProtected(nil, func, ...);
 end;
 -- Hide the instance in a closure
 Kitty.bind = function(instance, func)
@@ -84,7 +97,7 @@ Kitty.sendMessage = function(message, messageType, r, g, b, indent)
 		for index=1, indent-1 do
 			blank = blank .. "    ";
 		end
-		message = blank .. message;
+		message = blank .. tostring(message);
 
 		if(messageType == nil or string.upper(messageType) == "DEFAULT") then
 			if(DEFAULT_CHAT_FRAME ~= nil and DEFAULT_CHAT_FRAME.AddMessage ~= nil) then

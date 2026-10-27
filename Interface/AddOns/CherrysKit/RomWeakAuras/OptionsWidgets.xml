@@ -2609,6 +2609,606 @@
 					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
 				</Scripts>
 			</Button>
+			<Button name="RWA_OptBtn261" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn261", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn261", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn261", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn262" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn262", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn262", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn262", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn263" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn263", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn263", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn263", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn264" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn264", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn264", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn264", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn265" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn265", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn265", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn265", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn266" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn266", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn266", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn266", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn267" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn267", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn267", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn267", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn268" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn268", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn268", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn268", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn269" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn269", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn269", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn269", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn270" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn270", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn270", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn270", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn271" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn271", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn271", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn271", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn272" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn272", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn272", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn272", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn273" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn273", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn273", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn273", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn274" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn274", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn274", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn274", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn275" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn275", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn275", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn275", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn276" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn276", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn276", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn276", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn277" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn277", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn277", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn277", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn278" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn278", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn278", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn278", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn279" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn279", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn279", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn279", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn280" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn280", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn280", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn280", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn281" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn281", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn281", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn281", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn282" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn282", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn282", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn282", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn283" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn283", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn283", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn283", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn284" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn284", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn284", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn284", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn285" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn285", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn285", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn285", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn286" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn286", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn286", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn286", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn287" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn287", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn287", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn287", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn288" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn288", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn288", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn288", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn289" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn289", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn289", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn289", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn290" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn290", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn290", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn290", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn291" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn291", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn291", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn291", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn292" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn292", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn292", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn292", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn293" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn293", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn293", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn293", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn294" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn294", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn294", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn294", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn295" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn295", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn295", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn295", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn296" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn296", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn296", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn296", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn297" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn297", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn297", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn297", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn298" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn298", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn298", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn298", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn299" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn299", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn299", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn299", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn300" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn300", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn300", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn300", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn301" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn301", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn301", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn301", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn302" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn302", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn302", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn302", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn303" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn303", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn303", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn303", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn304" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn304", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn304", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn304", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn305" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn305", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn305", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn305", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn306" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn306", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn306", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn306", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn307" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn307", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn307", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn307", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn308" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn308", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn308", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn308", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn309" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn309", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn309", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn309", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn310" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn310", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn310", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn310", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn311" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn311", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn311", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn311", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn312" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn312", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn312", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn312", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn313" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn313", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn313", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn313", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn314" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn314", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn314", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn314", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn315" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn315", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn315", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn315", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn316" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn316", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn316", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn316", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn317" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn317", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn317", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn317", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn318" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn318", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn318", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn318", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn319" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn319", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn319", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn319", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
+			<Button name="RWA_OptBtn320" inherits="UIPanelButtonTemplate" text="" hidden="true">
+				<Size><AbsDimension x="80" y="22" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnClick>RWA_Script("RWA_OptBtn320", "OnClick", key);</OnClick>
+					<OnEnter>RWA_Script("RWA_OptBtn320", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptBtn320", "OnLeave");</OnLeave>
+					<OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel>
+				</Scripts>
+			</Button>
 			<Frame name="RWA_OptHover1" enableMouse="true" hidden="true">
 				<Size><AbsDimension x="190" y="28" /></Size>
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
@@ -2722,6 +3322,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit1", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit1", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit1", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit1", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit1", "OnLeave");</OnLeave>
@@ -2732,6 +3333,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit2", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit2", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit2", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit2", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit2", "OnLeave");</OnLeave>
@@ -2742,6 +3344,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit3", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit3", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit3", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit3", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit3", "OnLeave");</OnLeave>
@@ -2752,6 +3355,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit4", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit4", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit4", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit4", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit4", "OnLeave");</OnLeave>
@@ -2762,6 +3366,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit5", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit5", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit5", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit5", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit5", "OnLeave");</OnLeave>
@@ -2772,6 +3377,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit6", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit6", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit6", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit6", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit6", "OnLeave");</OnLeave>
@@ -2782,6 +3388,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit7", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit7", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit7", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit7", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit7", "OnLeave");</OnLeave>
@@ -2792,6 +3399,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit8", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit8", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit8", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit8", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit8", "OnLeave");</OnLeave>
@@ -2802,6 +3410,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit9", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit9", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit9", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit9", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit9", "OnLeave");</OnLeave>
@@ -2812,6 +3421,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit10", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit10", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit10", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit10", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit10", "OnLeave");</OnLeave>
@@ -2822,6 +3432,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit11", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit11", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit11", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit11", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit11", "OnLeave");</OnLeave>
@@ -2832,6 +3443,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit12", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit12", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit12", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit12", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit12", "OnLeave");</OnLeave>
@@ -2842,6 +3454,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit13", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit13", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit13", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit13", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit13", "OnLeave");</OnLeave>
@@ -2852,6 +3465,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit14", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit14", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit14", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit14", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit14", "OnLeave");</OnLeave>
@@ -2862,6 +3476,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit15", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit15", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit15", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit15", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit15", "OnLeave");</OnLeave>
@@ -2872,6 +3487,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit16", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit16", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit16", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit16", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit16", "OnLeave");</OnLeave>
@@ -2882,6 +3498,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit17", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit17", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit17", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit17", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit17", "OnLeave");</OnLeave>
@@ -2892,6 +3509,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit18", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit18", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit18", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit18", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit18", "OnLeave");</OnLeave>
@@ -2902,6 +3520,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit19", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit19", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit19", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit19", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit19", "OnLeave");</OnLeave>
@@ -2912,6 +3531,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit20", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit20", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit20", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit20", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit20", "OnLeave");</OnLeave>
@@ -2922,6 +3542,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit21", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit21", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit21", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit21", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit21", "OnLeave");</OnLeave>
@@ -2932,6 +3553,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit22", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit22", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit22", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit22", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit22", "OnLeave");</OnLeave>
@@ -2942,6 +3564,7 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit23", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit23", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit23", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit23", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit23", "OnLeave");</OnLeave>
@@ -2952,9 +3575,274 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
 				<Scripts>
 					<OnEnterPressed>RWA_Script("RWA_OptEdit24", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit24", "OnTextChanged");</OnTextChanged>
 					<OnEscapePressed>RWA_Script("RWA_OptEdit24", "OnEscapePressed");</OnEscapePressed>
 					<OnEnter>RWA_Script("RWA_OptEdit24", "OnEnter");</OnEnter>
 					<OnLeave>RWA_Script("RWA_OptEdit24", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit25" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit25", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit25", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit25", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit25", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit25", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit26" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit26", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit26", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit26", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit26", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit26", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit27" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit27", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit27", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit27", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit27", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit27", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit28" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit28", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit28", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit28", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit28", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit28", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit29" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit29", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit29", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit29", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit29", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit29", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit30" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit30", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit30", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit30", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit30", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit30", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit31" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit31", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit31", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit31", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit31", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit31", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit32" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit32", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit32", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit32", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit32", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit32", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit33" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit33", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit33", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit33", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit33", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit33", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit34" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit34", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit34", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit34", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit34", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit34", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit35" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit35", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit35", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit35", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit35", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit35", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit36" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit36", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit36", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit36", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit36", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit36", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit37" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit37", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit37", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit37", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit37", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit37", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit38" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit38", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit38", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit38", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit38", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit38", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit39" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit39", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit39", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit39", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit39", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit39", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit40" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit40", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit40", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit40", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit40", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit40", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit41" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit41", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit41", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit41", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit41", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit41", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit42" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit42", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit42", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit42", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit42", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit42", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit43" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit43", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit43", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit43", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit43", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit43", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit44" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit44", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit44", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit44", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit44", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit44", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit45" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit45", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit45", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit45", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit45", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit45", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit46" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit46", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit46", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit46", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit46", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit46", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit47" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit47", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit47", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit47", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit47", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit47", "OnLeave");</OnLeave>
+				</Scripts>
+			</EditBox>
+			<EditBox name="RWA_OptEdit48" inherits="UIPanelEditBoxTemplate" letters="1000" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="120" y="20" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors>
+				<Scripts>
+					<OnEnterPressed>RWA_Script("RWA_OptEdit48", "OnEnterPressed");</OnEnterPressed>
+					<OnTextChanged>RWA_Script("RWA_OptEdit48", "OnTextChanged");</OnTextChanged>
+					<OnEscapePressed>RWA_Script("RWA_OptEdit48", "OnEscapePressed");</OnEscapePressed>
+					<OnEnter>RWA_Script("RWA_OptEdit48", "OnEnter");</OnEnter>
+					<OnLeave>RWA_Script("RWA_OptEdit48", "OnLeave");</OnLeave>
 				</Scripts>
 			</EditBox>
 			<Button name="RWA_OptGrip" enableMouse="true">
