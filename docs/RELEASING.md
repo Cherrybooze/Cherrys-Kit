@@ -55,6 +55,8 @@ Each addon includes its own README, local reference notes and the original combi
 8. Compare uploaded asset sizes and SHA-256 digests with the local files before publishing.
 9. Update the direct full-kit ZIP links at the top of the project README and the repository's About website. Keep the full-kit asset labelled as the installer, and start the release notes with its direct download. Test a downloaded asset by extracting it directly into an empty `Interface/AddOns/` folder: `CherrysKit/CherrysKit.toc` must appear there, with no repository or version wrapper.
 
+Keep the clickable download graphic as the first item in the project README. When releasing a new kit version, update its filename/version text and the image's link to the full-kit ZIP; the graphic lives in [images/download-full-kit.svg](images/download-full-kit.svg).
+
 GitHub's green **Code → Download ZIP** button and **Source code** release links always produce repository snapshots. They are separate from the install ZIPs. Keep the direct installer link prominent so players do not need to find the correct asset in a list.
 
 A draft release is useful while uploading and checking assets. Do not replace an already published release's files silently; make a new version for changed source.
