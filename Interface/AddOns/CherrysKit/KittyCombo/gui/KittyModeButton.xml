@@ -1,0 +1,251 @@
+<!-- Cherry's KittyCombo: the mode button and the modes that open under it (gui/KittyModeButton.lua) -->
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+
+	<!-- One mode in the flyout -->
+	<Button name="KittyModeFlyoutButtonTemplate" virtual="true" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="30" y="30" /></Size>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentIcon">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="$parentLetters" inherits="GameFontNormal" justifyH="CENTER" text="">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<FontHeight><AbsValue val="11" /></FontHeight>
+				</FontString>
+				<!-- the mode that is on now -->
+				<Texture name="$parentGlow" alphaMode="ADD" hidden="true">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<HighlightTexture name="$parentHighlight" alphaMode="ADD" />
+		<Scripts>
+			<OnClick>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.pick(this:GetID());
+				end)();
+				]]>
+			</OnClick>
+			<OnEnter>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.onChoiceEnter(this);
+				end)();
+				]]>
+			</OnEnter>
+			<OnLeave>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.hideGameTooltip(this);
+				end)();
+				]]>
+			</OnLeave>
+		</Scripts>
+	</Button>
+
+	<!-- The mode button: action button size, near the minimap -->
+	<Button name="KittyModeButton" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="36" y="36" /></Size>
+		<Anchors>
+			<Anchor point="TOPRIGHT" relativeTo="UIParent" relativePoint="TOPRIGHT">
+				<Offset><AbsDimension x="-230" y="160" /></Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentIcon">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="$parentLetters" inherits="GameFontNormal" justifyH="CENTER" text="">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<FontHeight><AbsValue val="13" /></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture name="$parentHighlight" alphaMode="ADD" />
+		<Frames>
+			<Frame name="KittyModeFlyout" enableMouse="true" hidden="true">
+				<Size><AbsDimension x="148" y="80" /></Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="KittyModeButton" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="0" y="4" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parent_SkinBg">
+							<Anchors>
+								<Anchor point="TOPLEFT" />
+								<Anchor point="BOTTOMRIGHT" />
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="KittyModeFlyout_Button1" inherits="KittyModeFlyoutButtonTemplate" id="1" />
+					<Button name="KittyModeFlyout_Button2" inherits="KittyModeFlyoutButtonTemplate" id="2" />
+					<Button name="KittyModeFlyout_Button3" inherits="KittyModeFlyoutButtonTemplate" id="3" />
+					<Button name="KittyModeFlyout_Button4" inherits="KittyModeFlyoutButtonTemplate" id="4" />
+					<Button name="KittyModeFlyout_Button5" inherits="KittyModeFlyoutButtonTemplate" id="5" />
+					<Button name="KittyModeFlyout_Button6" inherits="KittyModeFlyoutButtonTemplate" id="6" />
+					<Button name="KittyModeFlyout_Button7" inherits="KittyModeFlyoutButtonTemplate" id="7" />
+					<Button name="KittyModeFlyout_Button8" inherits="KittyModeFlyoutButtonTemplate" id="8" />
+					<Button name="KittyModeFlyout_Button9" inherits="KittyModeFlyoutButtonTemplate" id="9" />
+					<Button name="KittyModeFlyout_Button10" inherits="KittyModeFlyoutButtonTemplate" id="10" />
+					<Button name="KittyModeFlyout_Button11" inherits="KittyModeFlyoutButtonTemplate" id="11" />
+					<Button name="KittyModeFlyout_Button12" inherits="KittyModeFlyoutButtonTemplate" id="12" />
+					<Button name="KittyModeFlyout_Button13" inherits="KittyModeFlyoutButtonTemplate" id="13" />
+					<Button name="KittyModeFlyout_Button14" inherits="KittyModeFlyoutButtonTemplate" id="14" />
+					<Button name="KittyModeFlyout_Button15" inherits="KittyModeFlyoutButtonTemplate" id="15" />
+					<Button name="KittyModeFlyout_Button16" inherits="KittyModeFlyoutButtonTemplate" id="16" />
+				</Frames>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.onLoad(this);
+				end)();
+				]]>
+			</OnLoad>
+			<OnMouseDown>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.onMouseDown(this, key);
+				end)();
+				]]>
+			</OnMouseDown>
+			<OnMouseUp>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.onMouseUp(this, key);
+				end)();
+				]]>
+			</OnMouseUp>
+			<OnEnter>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.onEnter(this);
+				end)();
+				]]>
+			</OnEnter>
+			<OnLeave>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.hideGameTooltip(this);
+				end)();
+				]]>
+			</OnLeave>
+		</Scripts>
+	</Button>
+	<!-- Current mode readout: "Mode: [aoe]", click for a menu of modes -->
+	<Button name="KittyModeText" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="140" y="24" /></Size>
+		<Anchors>
+			<Anchor point="TOPRIGHT" relativeTo="UIParent" relativePoint="TOPRIGHT">
+				<Offset><AbsDimension x="-230" y="204" /></Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parent_SkinBg">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="$parentText" inherits="GameFontNormal" justifyH="CENTER" text="">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<FontHeight><AbsValue val="13" /></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture name="$parentHighlight" alphaMode="ADD" />
+		<Scripts>
+			<OnLoad>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.onLoad(this);
+				end)();
+				]]>
+			</OnLoad>
+			<OnMouseDown>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.onMouseDown(this, key);
+				end)();
+				]]>
+			</OnMouseDown>
+			<OnMouseUp>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.onMouseUp(this, key);
+				end)();
+				]]>
+			</OnMouseUp>
+			<OnEnter>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.ModeUI.onTextEnter(this);
+				end)();
+				]]>
+			</OnEnter>
+			<OnLeave>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.hideGameTooltip(this);
+				end)();
+				]]>
+			</OnLeave>
+		</Scripts>
+	</Button>
+
+	<!-- The readout's menu (opened by code, its own box is not used) -->
+	<Frame name="KittyModeTextMenu" inherits="UIDropDownMenuTemplate" parent="UIParent" hidden="true">
+		<Size><AbsDimension x="140" /></Size>
+		<Anchors>
+			<Anchor point="TOPLEFT" relativeTo="KittyModeText" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="-16" y="0" /></Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					local dropDown = Kitty.DropDown(this, 120);
+					dropDown:setListData(
+						function(this, button, value, text, previousValue, previousText)
+							Kitty.ModeUI.onMenuPick(text);
+						end,
+						Kitty.ModeUI.menuChoices
+					);
+				end)();
+				]]>
+			</OnLoad>
+		</Scripts>
+	</Frame>
+</Ui>

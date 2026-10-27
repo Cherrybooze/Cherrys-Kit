@@ -1,0 +1,763 @@
+<!-- (C) 2012-2013 Miranda -->
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+<!--
+-->
+
+	<!-- Basic settings window -->
+	<Frame name="KittyBasicConfigFrame" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<!-- Window size -->
+		<Size><AbsDimension x="560" y="674" /></Size> 
+		<!-- Position -->
+		<Anchors>
+			<Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" />
+			<Offset><AbsDimension x="0" y="0" /></Offset>
+		</Anchors>
+
+
+		<Layers>
+			<Layer level="BACKGROUND">
+				<!-- Cherry's KittyCombo skin: panel colour, set by Kitty.Skin -->
+				<Texture name="$parent_SkinBg">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+				<!-- Version -->
+				<FontString name="KittyBasicConfigFrame_VersionLabel" inherits="GameTitleFont" justifyH="LEFT" text="VersionLabel">
+					<Size><AbsDimension x="400" y="-14" /></Size>
+					<FontHeight><AbsValue val="14" /></FontHeight>
+				</FontString>
+
+				<!-- Title -->
+				<FontString name="KittyBasicConfigFrame_TitleLabel" inherits="GameFontNormal" justifyH="LEFT" text="TitleLabel">
+					<Size><AbsDimension x="560" y="50" /></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+							<Offset><AbsDimension x="20" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="14" /></FontHeight>
+				</FontString>
+
+				<!-- Separator 1 -->
+				<FontString name="KittyBasicConfigFrame_Separator1Label" inherits="GameFontNormal" justifyH="LEFT" text="Separator1Label">
+					<Size><AbsDimension x="560" y="20" /></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+							<Offset><AbsDimension x="20" y="45" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="14" /></FontHeight>
+				</FontString>
+
+				<!-- Separator 2 -->
+				<FontString name="KittyBasicConfigFrame_Separator2Label" inherits="GameFontNormal" justifyH="LEFT" text="Separator2Label">
+					<Size><AbsDimension x="560" y="20" /></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+							<Offset><AbsDimension x="20" y="250" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="14" /></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+
+		<Frames>
+			<!-- Corner grip: window size -->
+			<Button name="$parent_Grip" inherits="KittyResizeGripTemplate" />
+
+			<CheckButton name="KittyBasicConfigFrame_SkipTargetCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="70" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_SkipTargetLabel" inherits="GameTitleFont" text="SkipTargetLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</CheckButton>
+
+			<!-- Check box (skip pet targets) -->
+			<CheckButton name="KittyBasicConfigFrame_SkipPetTargetCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="100" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_SkipPetTargetLabel" inherits="GameTitleFont" text="SkipPetTargetLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</CheckButton>
+
+
+			<CheckButton name="KittyBasicConfigFrame_UseAutoshotCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="130" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_UseAutoshotLabel" inherits="GameTitleFont" text="SkipTargetLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</CheckButton>
+
+			<!-- Edit box (damage taken threshold) -->
+			<EditBox name="KittyBasicConfigFrame_ShowDamageTakenThresholdEditBox" inherits="UIPanelEditBoxTemplate" numeric="true" letters="8" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="80" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="160" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_ShowDamageTakenThresholdLabel" inherits="GameTitleFont" text="ShowDamageTakenThresholdLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "CompleteInput"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</EditBox>
+
+			<!-- Edit box (damage dealt threshold) -->
+			<EditBox name="KittyBasicConfigFrame_ShowDamageDoneThresholdEditBox" inherits="UIPanelEditBoxTemplate" numeric="true" letters="8" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="80" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="190" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_ShowDamageDoneThresholdLabel" inherits="GameTitleFont" text="ShowDamageDoneThresholdLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "CompleteInput"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</EditBox>
+
+			<!-- Dropdown (DPS display) -->
+			<Frame name="KittyBasicConfigFrame_ShowDPSTypeDropDownMenu" inherits="UIDropDownMenuTemplate">
+				<Size><AbsDimension x="110" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="215" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_ShowDPSTypeLabel" inherits="GameTitleFont" text="ShowDPSTypeLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local dropDown = Kitty.DropDown(this);
+							dropDown:setListData(
+								nil,
+								{"None", "Normal", "Detail"}
+							);
+						end)();
+						]]>
+					</OnLoad>
+				</Scripts>
+			</Frame>
+
+
+
+			<!-- Check box (assistant) -->
+			<CheckButton name="KittyBasicConfigFrame_AutoAssistantCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="275" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_AutoAssistantLabel" inherits="GameTitleFont" text="AutoAssistantLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</CheckButton>
+
+			<!-- Check box (auto-join party) -->
+			<CheckButton name="KittyBasicConfigFrame_AutoAcceptPartyCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="305" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_AutoAcceptPartyLabel" inherits="GameTitleFont" text="AutoAcceptPartyLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</CheckButton>
+
+			<!-- Check box (pass leader) -->
+			<CheckButton name="KittyBasicConfigFrame_GivePartyLeaderCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="335" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_GivePartyLeaderLabel" inherits="GameTitleFont" text="GivePartyLeaderLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</CheckButton>
+
+
+			<!-- Check box (white dice) -->
+			<CheckButton name="KittyBasicConfigFrame_LootThresholdCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="365" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_LootThresholdLabel" inherits="GameTitleFont" text="LootThresholdLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</CheckButton>
+
+			<!-- Check box (auto party invite) -->
+			<CheckButton name="KittyBasicConfigFrame_AutoInvitePartyCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="395" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_AutoInvitePartyLabel" inherits="GameTitleFont" text="AutoInvitePartyLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.BasicConfigFrame.set(this);
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+
+			<!-- Edit box (party invite keyword 1) -->
+			<EditBox name="KittyBasicConfigFrame_AutoInvitePartyKeyword1EditBox" inherits="UIPanelEditBoxTemplate" numeric="false" letters="12" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="160" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="425" /></Offset>
+					</Anchor>
+				</Anchors>
+
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "CompleteInput"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</EditBox>
+
+			<!-- Edit box (party invite keyword 2) -->
+			<EditBox name="KittyBasicConfigFrame_AutoInvitePartyKeyword2EditBox" inherits="UIPanelEditBoxTemplate" numeric="false" letters="12" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="160" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="200" y="425" /></Offset>
+					</Anchor>
+				</Anchors>
+
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "CompleteInput"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</EditBox>
+
+			<!-- Edit box (party invite keyword 3) -->
+			<EditBox name="KittyBasicConfigFrame_AutoInvitePartyKeyword3EditBox" inherits="UIPanelEditBoxTemplate" numeric="false" letters="12" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="160" y="20" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="380" y="425" /></Offset>
+					</Anchor>
+				</Anchors>
+
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "CompleteInput"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</EditBox>
+
+
+
+			<!-- Check box (show instance difficulty) -->
+			<CheckButton name="KittyBasicConfigFrame_ShowInstanceLevelCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="455" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_ShowInstanceLevelLabel" inherits="GameTitleFont" text="ShowInstanceLevelLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</CheckButton>
+
+			<!-- Instance difficulty -->
+			<Frame name="KittyBasicConfigFrame_InstanceLevelDropDownMenu" inherits="UIDropDownMenuTemplate">
+				<Size><AbsDimension x="110" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="485" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_InstanceLevelLabel" inherits="GameTitleFont" text="InstanceLevelLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local dropDown = Kitty.DropDown(this);
+							dropDown:setListData(
+								nil,
+								{"None", "Easy", "Normal", "Hard"}
+							);
+						end)();
+						]]>
+					</OnLoad>
+				</Scripts>
+			</Frame>
+
+
+
+			<!-- Check box (show the mode button) -->
+			<CheckButton name="KittyBasicConfigFrame_ShowModeButtonCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="525" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_ShowModeButtonLabel" inherits="GameTitleFont" text="ShowModeButtonLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.BasicConfigFrame.TIPS["ShowModeButton"]);
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</CheckButton>
+
+			<!-- Check box (show the current mode) -->
+			<CheckButton name="KittyBasicConfigFrame_ShowModeTextCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="555" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_ShowModeTextLabel" inherits="GameTitleFont" text="ShowModeTextLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.BasicConfigFrame.TIPS["ShowModeText"]);
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</CheckButton>
+
+			<!-- Check box (lock the mode button) -->
+			<CheckButton name="KittyBasicConfigFrame_LockModeButtonCheckButton" inherits="UIPanelCheckButtonTemplate">
+				<Size><AbsDimension x="27" y="27" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="585" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="KittyBasicConfigFrame_LockModeButtonLabel" inherits="GameTitleFont" text="LockModeButtonLabel">
+							<FontHeight><AbsValue val="14" /></FontHeight>
+							<Anchors>
+								<Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT">
+									<Offset><AbsDimension x="5" y="0" /></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.BasicConfigFrame.TIPS["LockModeButton"]);
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</CheckButton>
+
+			<!-- Button (command lists) -->
+			<Button name="KittyBasicConfigFrame_CommandListButton" inherits="UIPanelButtonTemplate" text="CommandListButton">
+				<Size><AbsDimension x="100" y="30" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT">
+						<Offset><AbsDimension x="20" y="-14" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							KittyBasicConfigFrame:Hide();
+							Kitty.CommandListFrame.open();
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+
+			<!-- Button (changelog) -->
+			<Button name="KittyBasicConfigFrame_ChangelogButton" inherits="UIPanelButtonTemplate" text="Changelog">
+				<Size><AbsDimension x="100" y="30" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="KittyBasicConfigFrame_CommandListButton" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							KittyBasicConfigFrame:Hide();
+							Kitty.Changelog.open();
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, "What changed since KittyCombo 0.973, and how to report bugs.");
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</Button>
+
+			<!-- Button (save and close) -->
+			<Button name="KittyBasicConfigFrame_CloseButton" inherits="UIPanelButtonTemplate" text="CloseButton">
+				<Size><AbsDimension x="100" y="30" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-128" y="-14" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.BasicConfigFrame.onSave(this);
+							KittyBasicConfigFrame:Hide();
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+
+			<!-- Button (cancel) -->
+			<Button name="KittyBasicConfigFrame_CancelButton" inherits="UIPanelButtonTemplate" text="CancelButton">
+				<Size><AbsDimension x="100" y="30" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-22" y="-14" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							KittyBasicConfigFrame:Hide();
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+
+		<!-- Scripts -->
+		<Scripts>
+			<OnShow>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.Skin.onShow(this);
+					Kitty.BasicConfigFrame.onShow(this);
+				end)();
+				]]>
+			</OnShow>
+			<OnHide>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					-- Hide the level-1 list
+					CloseDropDownMenus();
+				end)();
+				]]>
+			</OnHide>
+			<OnMouseDown>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					-- A click on the window closes an open KittyCombo menu
+					CloseDropDownMenus();
+					if(key=="LBUTTON") then
+						this:StartMoving();
+					end
+				end)();
+				]]>
+			</OnMouseDown>
+			<OnMouseUp>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					this:StopMovingOrSizing();
+					Kitty.savePosition(this);
+				end)();
+				]]>
+			</OnMouseUp>
+		</Scripts>
+
+	</Frame>
+</Ui>

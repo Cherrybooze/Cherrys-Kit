@@ -1,0 +1,675 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<!-- author adisadicul -->
+	
+	
+	<Button name="zTBagItemMaster" virtual="true">
+		<Size>
+			<AbsDimension x="32" y="32"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentNormal" file="Interface\Buttons\QuickSlot-Normal">
+					<Size><AbsDimension x="64" y="64"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture name="$parentIcon">
+					<Size><AbsDimension x="32" y="32"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">			
+				<FontString name="$parentStock" inherits="NumberFontNormal" weight="BOLD" justifyH="LEFT" hidden="true">
+					<Anchors><Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="2" y="2"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTextItemCount" inherits="NumberFontNormal" text="">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT"><Offset><AbsDimension x="-2" y="-1"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTextWackyBag" inherits="NumberFontNormal" text="">
+					<Anchors>
+						<Anchor point="TOPRIGHT"><Offset><AbsDimension x="-2" y="1"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentKitSlotBack" hidden="true">
+					<Size><AbsDimension x="26" y="15"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+					<Color r="0" g="0" b="0" a="0.35"/>
+				</Texture>
+				<FontString name="$parentKitSlot" inherits="GameFontHighlight" text="" hidden="true">
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</FontString>
+				<FontString name="$parentTextSlotNumber" inherits="GameFontLabelYellow" text="">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="2" y="-1"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>				
+				<Texture name="$parentTabColor2" file="Interface\Buttons\QuickSlot-QualityBorder01" hidden="true" alphaMode="ADD">
+					<Color r="0.7" g="0.7" b="0.7" a="0.5"/>
+					<Size>
+						<AbsDimension x="64" y="64"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>				
+				<Texture name="$parentTabColor" file="Interface\Buttons\QuickSlot-QualityBorder01" hidden="false" alphaMode="ADD">
+					<Color r="0.7" g="0.7" b="0.7" a="0.5"/>
+					<Size>
+						<AbsDimension x="64" y="64"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture name="$parentDisabled" file="Interface\Buttons\QuickSlot-Red" hidden="true"/>
+			</Layer>
+		</Layers>
+		<PushedTexture name="$parentPushed" file="Interface\Buttons\QuickSlot-Depress">
+			<Size><AbsDimension x="64" y="64"/></Size>
+			<Anchors><Anchor point="CENTER"/></Anchors>
+		</PushedTexture>
+		<HighlightTexture file="Interface\Buttons\QuickSlot-Highlight" alphaMode="ADD"/>
+		<Frames>
+			<Frame name="$parentCooldown" inherits="CooldownFrameTemplate">
+				<Size><AbsDimension x="32" y="32"/></Size>
+				<Anchors><Anchor point="CENTER"/></Anchors>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnLoad>zBagItem_OnLoad(this);</OnLoad>
+			<OnEvent>zBagItem_OnEvent(this,event);</OnEvent>
+			<OnClick>zBagItem_OnClick(this,key);</OnClick>
+			<OnDragStart>zBagItem_OnClick(this,"LBUTTON",1);</OnDragStart>
+			<OnReceiveDrag>zBagItem_OnClick(this,"LBUTTON",1);</OnReceiveDrag>
+			<OnUpdate></OnUpdate>
+			<OnEnter>
+				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
+				GameTooltip:SetBagItem(this.index);
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+				GameTooltip1:Hide();
+				GameTooltip2:Hide();
+			</OnLeave>
+		</Scripts>
+	</Button>
+	
+	<Button name="zTBagItem" virtual="true" inherits="zTBagItemMaster">
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="$parentCount" inherits="NumberFontNormal" weight="BOLD" justifyH="RIGHT" hidden="true">
+					<Anchors><Anchor point="BOTTOMRIGHT">
+							<Offset><AbsDimension x="-4000" y="-4000"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>	
+			</Layer>
+		</Layers>	
+		<Scripts>
+			<OnLoad>zBagItem_OnLoad(this);</OnLoad>
+			<OnEvent>zBagItem_OnEvent(this,event);</OnEvent>
+			<OnClick>zBagItem_OnClick(this,key);</OnClick>
+			<OnDragStart>zBagItem_OnClick(this,"LBUTTON",1);</OnDragStart>
+			<OnReceiveDrag>zBagItem_OnClick(this,"LBUTTON",1);</OnReceiveDrag>
+			<OnUpdate></OnUpdate>
+			<OnEnter>
+				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
+				GameTooltip:SetBagItem(this.index);
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+				GameTooltip1:Hide();
+				GameTooltip2:Hide();
+			</OnLeave>
+		</Scripts>	
+	</Button>
+	
+	<Button name="zTEqItem" virtual="true" inherits="zTBagItemMaster">
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="$parentCount" inherits="NumberFontNormal" weight="BOLD" justifyH="RIGHT" hidden="true">
+					<Anchors><Anchor point="BOTTOMRIGHT">
+							<Offset><AbsDimension x="-4" y="-2"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>	
+			</Layer>
+		</Layers>	
+		<Scripts>
+			<OnLoad>zEqItem_OnLoad(this);</OnLoad>
+			<OnShow>zEqItem_OnShow(this);</OnShow>
+			<OnEvent>zEqItem_OnEvent(this,event,arg1,arg2);</OnEvent>
+			<OnClick>zEqItem_OnClick(this,key);</OnClick>
+			<OnDragStart>zEqItem_OnClick(this,"LBUTTON",1);</OnDragStart>
+			<OnReceiveDrag>zEqItem_OnClick(this,"LBUTTON",1);</OnReceiveDrag>
+			<OnUpdate></OnUpdate>
+			<OnEnter>
+				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
+				GameTooltip:SetInventoryItem("player",this:GetID());
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+		</Scripts>
+	</Button>
+	
+	<Button name="zTBankItem" virtual="true" inherits="zTBagItemMaster">
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="$parentCount" inherits="NumberFontNormal" weight="BOLD" justifyH="RIGHT" hidden="true">
+					<Anchors><Anchor point="BOTTOMRIGHT">
+							<Offset><AbsDimension x="-4" y="-2"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>	
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>zBankItem_OnLoad(this);</OnLoad>
+			<OnShow>zBankItem_OnShow(this);</OnShow>
+			<OnEvent></OnEvent>
+			<OnClick>zBankItem_OnClick(this,key);</OnClick>
+			<OnDragStart>zBankItem_OnClick(this,"LBUTTON",1);</OnDragStart>
+			<OnReceiveDrag>zBankItem_OnClick(this,"LBUTTON",1);</OnReceiveDrag>
+			<OnUpdate></OnUpdate>
+			<OnEnter>
+				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
+				GameTooltip:SetBankItem(this.index);
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+		</Scripts>
+	</Button>
+
+	<Button name="QSItemFilterFrame_Template" virtual="true" enableMouse="true">
+		<Layers>
+			<Layer>
+				<FontString name="$parent_Roll" justifyH="LEFT" inherits="Font_Normal">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="RIGHT" relativeTo="$parent">
+							<Offset><AbsDimension x="-65" y="-10"/></Offset>
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT" relativePoint="RIGHT" relativeTo="$parent">
+							<Offset><AbsDimension x="0" y="10"/></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12"/></FontHeight>
+				</FontString>
+				<FontString name="$parent_Loot" justifyH="LEFT" inherits="Font_Normal">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent_Roll">
+							<Offset><AbsDimension x="-105" y="0"/></Offset>
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Roll">
+							<Offset><AbsDimension x="-5" y="0"/></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12"/></FontHeight>
+				</FontString>
+				<FontString name="$parent_Name" justifyH="LEFT" inherits="Font_Normal">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="LEFT" relativeTo="$parent">
+							<Offset><AbsDimension x="10" y="-10"/></Offset>
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Loot">
+							<Offset><AbsDimension x="-5" y="0"/></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12"/></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture file="Interface\AuctionFrame\AuctionFrameItem-Highlight" alphaMode="ADD">
+			<Anchors>
+				<Anchor point="TOPLEFT"/>
+				<Anchor point="BOTTOMRIGHT"/>
+			</Anchors>
+		</HighlightTexture>
+		<Scripts>
+			<OnClick>QSItemFilter_RowClicked(tonumber(this:GetID()));</OnClick>
+			<OnEnter>
+				if (getglobal(this:GetName().."_Name"):GetColor()==1) then
+					getglobal(this:GetName().."_Name"):SetColor(1,0.82,0);
+					getglobal(this:GetName().."_Loot"):SetColor(1,0.82,0);
+					getglobal(this:GetName().."_Roll"):SetColor(1,0.82,0);
+				else
+					getglobal(this:GetName().."_Name"):SetColor(0.5,0.41,0);
+					getglobal(this:GetName().."_Loot"):SetColor(0.5,0.41,0);
+					getglobal(this:GetName().."_Roll"):SetColor(0.5,0.41,0);
+				end;
+			</OnEnter>
+			<OnLeave>
+				if (getglobal(this:GetName().."_Name"):GetColor()==1) then
+					getglobal(this:GetName().."_Name"):SetColor(1,1,1);
+					getglobal(this:GetName().."_Loot"):SetColor(1,1,1);
+					getglobal(this:GetName().."_Roll"):SetColor(1,1,1);
+				else
+					getglobal(this:GetName().."_Name"):SetColor(0.5,0.5,0.5);
+					getglobal(this:GetName().."_Loot"):SetColor(0.5,0.5,0.5);
+					getglobal(this:GetName().."_Roll"):SetColor(0.5,0.5,0.5);
+				end;
+			</OnLeave>
+			<OnMouseWheel>QSItemFilter_Scroll(delta);</OnMouseWheel>
+		</Scripts>
+	</Button>	
+	
+	<!-- Drop Tab stuff -->
+	<Button name="QSDropTab_ButtonTemplate" virtual="true">
+		<Size><AbsDimension x="24" y="24"/></Size>
+		<NormalTexture file="Interface\Buttons\QuickSlot-Normal">
+			<Size><AbsDimension x="48" y="48"/></Size>
+			<Anchors><Anchor point="CENTER"/></Anchors>
+		</NormalTexture>
+		<HighlightTexture file="Interface\Buttons\QuickSlot-Highlight" alphaMode="ADD"/>
+		<Scripts>
+			<OnLoad>this:RegisterForClicks("LeftButton","RightButton");</OnLoad>
+			<OnReceiveDrag>QSDropTab_Receive("LBUTTON",this);</OnReceiveDrag>
+			<OnClick>QSDropTab_Receive(key,this);</OnClick>
+			<OnEnter>QSDropTab_Display(this);</OnEnter>
+		</Scripts>
+	</Button>	
+	
+	<Frame name="QSDropTabTemplate" enableMouse="true" virtual="true">
+		<Size><AbsDimension x="164" y="172"/></Size>
+		<Backdrop edgeFile="Interface\Tooltips\Tooltip-border" bgFile="Interface\SocialFrame\SocialFrame_Contextborder_bg">
+			<BackgroundInsets><AbsInset top="4" left="4" bottom="4" right="4"/></BackgroundInsets>
+			<EdgeSize><AbsValue val="16"/></EdgeSize>
+			<TileSize><AbsValue val="16"/></TileSize>
+		</Backdrop>
+		<Scripts>
+			<OnShow>
+				QSDropTab_OnShow(this);
+			</OnShow>
+			<OnUpdate>
+				QSDropTab_OnUpdate(this);
+			</OnUpdate>
+		</Scripts>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parent_Itemname" justifyH="LEFT" inherits="Font_Normal">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="12" y="10"/></Offset>
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT">
+							<Offset><AbsDimension x="-12" y="25"/></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="13"/></FontHeight>
+					<Color r="1" g="1" b="0.5" a="1"/>
+				</FontString>
+				<Texture name="$parent_LootIcon" file="Interface\LootFrame\grouploot-pass-normal">
+					<Size><AbsDimension x="16" y="16"/></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent">
+							<Offset><AbsDimension x="10" y="25"/></Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parent_LootText" inherits="Font_Normal" text="Looten">
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_LootIcon">
+							<Offset><AbsDimension x="1" y="0"/></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="11"/></FontHeight>
+				</FontString>
+				<Texture name="$parent_RollIcon" file="Interface\LootFrame\grouploot-pass-normal">
+					<Size><AbsDimension x="16" y="16"/></Size>
+					<Anchors>
+						<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="$parent">
+							<Offset><AbsDimension x="-10" y="25"/></Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parent_RollText" inherits="Font_Normal" text="Bedarf">
+					<Anchors>
+						<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parent_RollIcon">
+							<Offset><AbsDimension x="-1" y="0"/></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="11"/></FontHeight>
+				</FontString>
+				<FontString name="$parent_Remove" inherits="Font_Normal" text="Remove Entry">
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parent_LootText">
+							<Offset><AbsDimension x="-15" y="0"/></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12"/></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame name="$parent_RollMarker">
+				<Size><AbsDimension x="30" y="117"/></Size>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parent_Top" file="Interface/AddOns/CherrysKit/zBag/Textures/droptab-marker">
+							<Size><AbsDimension x="64" y="24"/></Size>
+							<TexCoords left="0" right="1" top="0" bottom="0.375"/>
+							<Anchors>
+								<Anchor point="TOP"><Offset><AbsDimension x="0" y="-18"/></Offset></Anchor>
+							</Anchors>
+							<Color r="1" g="1" b="0.5" a="0.5"/>
+						</Texture>
+						<Texture name="$parent_Bottom" file="Interface/AddOns/CherrysKit/zBag/Textures/droptab-marker">
+							<Size><AbsDimension x="64" y="24"/></Size>
+							<TexCoords left="0" right="1" top="0.625" bottom="1"/>
+							<Anchors>
+								<Anchor point="BOTTOM"><Offset><AbsDimension x="0" y="18"/></Offset></Anchor>
+							</Anchors>
+							<Color r="1" g="1" b="0.5" a="0.5"/>
+						</Texture>
+						<Texture name="$parent_Right" file="Interface/AddOns/CherrysKit/zBag/Textures/droptab-marker">
+							<Size><AbsDimension x="64" y="1"/></Size>
+							<TexCoords left="0" right="1" top="0.375" bottom="0.625"/>
+							<Anchors>
+								<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parent_Top"/>
+								<Anchor point="BOTTOM" relativePoint="TOP" relativeTo="$parent_Bottom"/>
+							</Anchors>
+							<Color r="1" g="1" b="0.5" a="0.5"/>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="$parent_LootMarker">
+				<Size><AbsDimension x="147" y="30"/></Size>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parent_Left" file="Interface/AddOns/CherrysKit/zBag/Textures/droptab-marker">
+							<Size><AbsDimension x="24" y="64"/></Size>
+							<TexCoords left="0" right="0.375" top="0" bottom="1"/>
+							<Anchors>
+								<Anchor point="LEFT">
+									<Offset><AbsDimension x="-18" y="0"/></Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="1" g="1" b="0.5" a="0.5"/>
+						</Texture>
+						<Texture name="$parent_Right" file="Interface/AddOns/CherrysKit/zBag/Textures/droptab-marker">
+							<Size><AbsDimension x="24" y="64"/></Size>
+							<TexCoords left="0.625" right="1" top="0" bottom="1"/>
+							<Anchors>
+								<Anchor point="RIGHT">
+									<Offset><AbsDimension x="18" y="0"/></Offset>
+								</Anchor>
+							</Anchors>
+							<Color r="1" g="1" b="0.5" a="0.5"/>
+						</Texture>
+						<Texture name="$parent_Right" file="Interface/AddOns/CherrysKit/zBag/Textures/droptab-marker">
+							<Size><AbsDimension x="1" y="64"/></Size>
+							<TexCoords left="0.375" right="0.625" top="0" bottom="1"/>
+							<Anchors>
+								<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_Left"/>
+								<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parent_Right"/>
+							</Anchors>
+							<Color r="1" g="1" b="0.5" a="0.5"/>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Button name="$parent_00" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent">
+					<Offset><AbsDimension x="10" y="48"/></Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture file="Interface\Buttons\PanelCloseButton-Normal">
+					<Size><AbsDimension x="18" y="18"/></Size>
+					<TexCoords left="0" right="0.625" top="0" bottom="0.625"/>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</NormalTexture>
+				<HighlightTexture file="Interface\Buttons\PanelCloseButton-Highlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="$parent_01" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_00">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface/AddOns/CherrysKit/zBag/Textures/item">
+							<Anchors><Anchor point="CENTER"/></Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+			<Button name="$parent_02" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_01">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface/AddOns/CherrysKit/zBag/Textures/itemtype">
+							<Anchors><Anchor point="CENTER"/></Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+			<!--
+			<Button name="$parent_03" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_02">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface/AddOns/CherrysKit/zBag/Textures/roll-need">
+							<Anchors><Anchor point="CENTER"/></Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+			<Button name="$parent_04" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_03">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface/AddOns/CherrysKit/zBag/Textures/roll-manual">
+							<Anchors><Anchor point="CENTER"/></Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+			-->
+			<Button name="$parent_10" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parent_00">
+					<Offset><AbsDimension x="0" y="6"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface/AddOns/CherrysKit/zBag/Textures/alwayssell">
+							<Anchors><Anchor point="CENTER"/></Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+			<Button name="$parent_11" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_10">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parent_12" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_11">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<!--
+			<Button name="$parent_13" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_12">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parent_14" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_13">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			-->
+			<Button name="$parent_20" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parent_10">
+					<Offset><AbsDimension x="0" y="6"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface/AddOns/CherrysKit/zBag/Textures/neversell">
+							<Anchors><Anchor point="CENTER"/></Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+			<Button name="$parent_21" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_20">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parent_22" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_21">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<!--
+			<Button name="$parent_23" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_22">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parent_24" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_23">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			-->
+			<!--
+			<Button name="$parent_30" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parent_20">
+					<Offset><AbsDimension x="0" y="6"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface/AddOns/CherrysKit/zBag/Textures/loot-drop">
+							<Anchors><Anchor point="CENTER"/></Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Button>
+			<Button name="$parent_31" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_30">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parent_32" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_31">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parent_33" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_32">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parent_34" inherits="QSDropTab_ButtonTemplate">
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_33">
+					<Offset><AbsDimension x="6" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			-->
+		</Frames>
+	</Frame>	
+
+<Slider name="QSScrollbarTemplate" virtual="true">
+	<Layers>
+		<Layer level="BACKGROUND">
+			<Texture name="$parentTop" file="Interface\Common\PanelScrollBar-Broder">
+				<Size><AbsDimension x="16" y="16"/></Size>
+				<Anchors>
+					<Anchor point="TOP">
+						<Offset><AbsDimension x="0" y="-20"/></Offset>
+					</Anchor>
+				</Anchors>
+				<TexCoords left="0" right="1" top="0" bottom="0.25"/>
+			</Texture>
+			<Texture name="$parentBottom" file="Interface\Common\PanelScrollBar-Broder">
+				<Size><AbsDimension x="16" y="16"/></Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset><AbsDimension x="0" y="20"/></Offset>
+					</Anchor>
+				</Anchors>
+				<TexCoords left="0" right="1" top="0.75" bottom="1"/>
+			</Texture>
+			<Texture name="$parentMiddle" file="Interface\Common\PanelScrollBar-Broder">
+				<Size><AbsDimension x="16" y="1"/></Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="$parentTop" relativePoint="BOTTOM"/>
+					<Anchor point="BOTTOM" relativeTo="$parentBottom" relativePoint="TOP"/>
+				</Anchors>
+				<TexCoords left="0" right="1" top="0.25" bottom="0.75"/>
+			</Texture>
+		</Layer>
+	</Layers>
+	<Frames>
+		<Button name="$parentScrollUpButton" inherits="UIPanelScrollUpButtonTemplate">
+			<Anchors><Anchor point="BOTTOM" relativePoint="TOP" relativeTo="$parent"/></Anchors>
+		</Button>
+		<Button name="$parentScrollDownButton" inherits="UIPanelScrollDownButtonTemplate">
+			<Anchors><Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parent"/></Anchors>
+		</Button>
+	</Frames>
+	<ThumbTexture file="Interface\Buttons\ScrollBar-Knob">
+		<Size><AbsDimension x="16" y="42"/></Size>
+		<TexCoords left="0" right="1" top="0" bottom="0.65625"/>
+	</ThumbTexture>
+</Slider>
+	
+</Ui>

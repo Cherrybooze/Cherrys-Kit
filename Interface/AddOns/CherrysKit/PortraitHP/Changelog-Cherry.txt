@@ -1,0 +1,11 @@
+PortraitHP v2019.07.14-ck1 for Cherry's Kit (2026-10-27)
+Based on PortraitHP v2019.07.14 by Nonante@Nuada.
+
+- The event frame is declared in PortraitHP.xml: RoM ignores frame scripts set from Lua, so the
+  original's SetScripts("OnEvent", ...) never ran.
+- No longer clears your target when the UI loads.
+- Shows nothing without a target; no error when a unit has no maximum health.
+- /php on/off is saved (PortraitHP_DB).
+- Reload UI safe (reuses its text instead of creating it twice).
+- On/off switch and row in the Cherry's Kit hub (/ck); the row's button turns it on or off.
+- /php probe prints what it sees (paste the lines back to Cherry).

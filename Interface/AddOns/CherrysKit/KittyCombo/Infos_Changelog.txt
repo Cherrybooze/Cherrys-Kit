@@ -1,0 +1,1659 @@
+KittyCombo - History - Miranda
+Who ever continue, 
+please keep the history updated found in Kitty.lua
+
+Thanks to MIRANDA or who ever started that project and shared it
+with the community and thanks to all who translated / reworked it.
+
+Who ever has problems with this Version 0.973, 
+step back to the last "offical" release 0.970 (found on Addon pages),
+don't start blaming me, I'not a programmer.
+Or help to fix the issue and share it with the community.
+
+... and thanks to Chronicle of Archadia, morphing "Runes" in a
+player friendly up to date game.
+
+Have fun
+Dalaqua
+
+Changes:
+#Autoshoot for Scout, check or uncheck on Mainpage
+#Wardenpet Condition, Summond or not (could also work with other class pets, not tested)
+#Help Files / Messages
+#Lenght modified for the Editbox Window where you write Skill names (was to short)
+#"Original" Conditons using reworked and expanded, no need to know all IDs.
+#Targeth Health Condition
+#Target Stack counter of same Debuff from different player
+#Setskills some work without a shortcut and cooldown is working without condition but, 
+if setskill is not working use shortcut and condition use.
+Setskill table reworked up to Lvl 104 (Archadia).
+if you have any timinig issue on Setskills, check in KittyClassLib.lua"
+beginning from line 2217 the duration time for your class and Setskill
+
+Problem: ###### - Would be nice if someone can help - ###############################
+# with Knight/Warrior, 
+Knight Skill -Bestrafung/Punishment- Warrior Setskill -Bestrafung/Punishment 
+they have the same name, Kitty always tries to take the Warrior Setskill if you play Knight.
+It seems Kitty has a problem with Skills having the same name, it takes first Skill in Skill-List,
+there is no check, if the skill can be used by actual Main and Sec class.
+# building a timer function
+
+
+Keep in mind you can call 2 Kitty Rotas with one Macro
+for the Warden that need charged chops and a rota with setskill,
+just put charged chops in one Kitty Rota [WdW_001] and setskill etc. in a second [WdW_002].
+
+Start Kitty with the Macro...
+/script Kitty.attack([[WdW_002]],[[WdW_001]])
+... i think you must pay attention for the order when using 2,  
+([[WdW_002]],[[WdW_001]]) or ([[WdW_001]],[[WdW_002]]) try to change order if its not working 
+
+and hammer your button :)
+
+works also for other classes ....
+
+
+	Kitty.sendMessage(Kitty.color("At version:0.973", 255, 255, 255), messageType);
+	Kitty.sendMessage("- Dalaqua, 10.09.2021", messageType);	
+	Kitty.sendMessage("- #Setskills over lvl 70 old classes, Warlock and Champion added with duration time", messageType);	
+	Kitty.sendMessage("- Setskills can be used now without a shortcut on Skillbars ", messageType);	
+	Kitty.sendMessage("- for timing of Setskills use the Cancast condition/function ", messageType);
+	Kitty.sendMessage("- if you have any timinig issue on Setskills, check in KittyClassLib.lua", messageType);
+	Kitty.sendMessage("- beginning from line 2217 the duration time for your class and Setskill, i could not check all combos", messageType);
+	Kitty.sendMessage("- I used all Chronicle of Arcadia Setskill Duration times", messageType);	
+	Kitty.sendMessage("- the Chronicle of Arcdia Lvl 104 Setskills are included", messageType);	
+	Kitty.sendMessage("- #Autoshoot function for Scout added, check or uncheck on main page if needed ", messageType);	
+	Kitty.sendMessage("- #For Warden, Condition Playerpet is summond or not added to be able to use skill that work only if pet is summond  ", messageType);
+	Kitty.sendMessage("- #Reworked the Info / Help messages some Infos seemed to be not so good translated, from original Japan ", messageType);
+	Kitty.sendMessage("- #glued the language translations (locals) together, not finished, some help needed ", messageType);
+	Kitty.sendMessage("- #Reworked the Original Skill Conditions, erased the Japan, not working and renewed the IDs, not finished ", messageType);
+	Kitty.sendMessage("- ###Need Help### with Knight/Warrior, Knight Skill -Bestrafung- Warrior Setskill -Bestrafung- they have the same name in german  ", messageType);
+	Kitty.sendMessage("- ###Need Help### Kitty always tries to take the Warrior Setskill if you play Knight  ", messageType);	
+
+	Kitty.sendMessage(Kitty.color("At version:0.972", 255, 255, 255), messageType);
+	Kitty.sendMessage("...", messageType);		
+
+	Kitty.sendMessage(Kitty.color("At version:0.971", 255, 255, 255), messageType);
+	Kitty.sendMessage("- targethealth and targetdebuffcounter function added", messageType);	
+
+	Kitty.sendMessage(Kitty.color("At version:0.9xx", 255, 255, 255), messageType);
+	Kitty.sendMessage("- Fixed: Bug of initialize button.", messageType);
+
+	Kitty.sendMessage(Kitty.color("At version:0.946", 255, 255, 255), messageType);
+	Kitty.sendMessage("- Show messsage when Lv75ID 5th Boss calls party menber name.", messageType);
+	Kitty.sendMessage("- Changed: auto-target function is available, when pet skip function is enabled.", messageType);
+	Kitty.sendMessage("- Changed: 40 durability or less equipment might be repaired. Changed high durable weapon might be repaired always.", messageType);
+	Kitty.sendMessage([[- The log of area event information was displayed by "/kc event."]], messageType);
+	Kitty.sendMessage("- Chagend: Pet of centaur is not targetted by pet skip function.", messageType);
+	Kitty.sendMessage([[- Fixed: the issue which ToolTip does not shown when using "Kitty.attack" macro.]], messageType);
+	Kitty.sendMessage([[- Added: "canUse" which is triggering conditions whether player can use shortcut item.]], messageType);
+
+	Kitty.sendMessage(Kitty.color("At version:0.929", 255, 255, 255), messageType);
+	Kitty.sendMessage("- Multi-language is supported.", messageType);
+	Kitty.sendMessage("- The initial value of isRequest is changed into off.", messageType);
+	Kitty.sendMessage("- Ss(Warlock): The defect which could not detect [Sublimation Weave Curse] buff is revised.", messageType);
+	Kitty.sendMessage("- W(Warrior): The defect which could not execute [Undefeatable King] is revised.", messageType);
+	Kitty.sendMessage("- Remove guild CG limitation. Player can attack all guild in CG.", messageType);
+	Kitty.sendMessage("- Add: Command List of McR, WS", messageType);
+
+	Kitty.sendMessage(Kitty.color("◇0.922にて", 255, 255, 255), messageType);
+	Kitty.sendMessage("- PM 共通コマンドは、プレイヤーが硬直していないときのみ利用するよう変更。", messageType);
+	Kitty.sendMessage("- PM ホーリーチェインを初期値に追加。", messageType);
+	Kitty.sendMessage("- PKのスキル回しを追加。", messageType);
+	Kitty.sendMessage("- Dのスキル回しを追加。", messageType);
+
+	Kitty.sendMessage(Kitty.color("◇0.920にて", 255, 255, 255), messageType);
+	Kitty.sendMessage("- 発動条件で複数バフを指定した場合、and条件となるよう変更。or条件はコマンドを複数指定することで設定可能。", messageType);
+	Kitty.sendMessage("- K、Sは自動ルートしないよう初期値を変更。", messageType);
+	Kitty.sendMessage("- WKペインディスリガードを発動するよう初期値を変更。", messageType);
+	Kitty.sendMessage("- R用RangeAttackを初期値に追加。", messageType);
+	Kitty.sendMessage("- 自動ポーション設定を初期値に追加(無効状態)。", messageType);
+	Kitty.sendMessage("- 自動ドロップ設定を初期値に追加(無効状態)。", messageType);
+	Kitty.sendMessage("- Exスキルが発動しにくい不具合を修正。", messageType);
+
+	Kitty.sendMessage(Kitty.color("◇0.918にて", 255, 255, 255), messageType);
+	Kitty.sendMessage("- スキル回しを設定する機能を追加。", messageType);
+	Kitty.sendMessage("- グラデーション表示機能を追加。", messageType);
+	Kitty.sendMessage("- AddonManager対応。", messageType);
+	Kitty.sendMessage("- 設定画面を表示するためのミニマップボタンを追加。", messageType);
+	Kitty.sendMessage("- マジックトリックなど、ExtraActionを利用できるよう変更。", messageType);
+	Kitty.sendMessage("- IDの難易度を設定する機能に、None(変更しない)を追加。", messageType);
+	Kitty.sendMessage("- R スキル回しに、ハーツアヴォイドを追加。", messageType);
+
+	Kitty.sendMessage(Kitty.color("◇0.851にて", 255, 255, 255), messageType);
+	Kitty.sendMessage("- 基本設定を変更できるよう設定画面を追加。 /kc show", messageType);
+	Kitty.sendMessage("- Wd、WdS、WdWのスキル実行順を変更", messageType);
+	Kitty.sendMessage("- IDの難易度、サイコロの設定機能を追加", messageType);
+	Kitty.sendMessage("- Party招待、再編成機能を追加", messageType);
+	Kitty.sendMessage("- checkBuff() Ssがいるときは、クラスアップスペルの有無を表示するよう変更", messageType);
+	Kitty.sendMessage("- rangeAttack() Rの遠距離攻撃を追加", messageType);
+	Kitty.sendMessage("- ShiftKeyを押しながら購入することで、まとめ買いする機能を追加", messageType);
+	Kitty.sendMessage("- イベントコードを自動変換する機能を追加。" .. Kitty.colorCyan("YossyE") .. "さん、ありがとう～", messageType);
+
+	Kitty.sendMessage(Kitty.color("◇0.777にて", 255, 255, 255), messageType);
+	Kitty.sendMessage("- [パルプ○テ]と発言したPartyMemberへリーダーを譲与する機能を追加。", messageType);
+	Kitty.sendMessage("- 全員へアシストを配布する機能を追加。", messageType);
+	Kitty.sendMessage("- S、SKのスキルを追加", messageType);
+	Kitty.sendMessage("- M 自分が無敵のときはサイレンスをうたないよう変更", messageType);
+	Kitty.sendMessage("- WR スキルの優先順を変更。ダブルアタックを削除", messageType);
+	Kitty.sendMessage("- MK、MP 対人のときはサンダーボールを使うよう変更", messageType);
+	Kitty.sendMessage("- MK、PM 相手との距離により、サンダー召喚を撃つように変更", messageType);
+	Kitty.sendMessage("- KS ホーリーヘイト > ヘイトアタック > シルブラ > ホリソの順に変更", messageType);
+	Kitty.sendMessage("- 自動追尾時に「～さん呼ばれましたよ」と表示される不具合を修正", messageType);
+
+	Kitty.sendMessage(Kitty.color("◇0.766にて", 255, 255, 255), messageType);
+	Kitty.sendMessage("- 改定履歴を参照できるよう、ヘルプに機能を追加", messageType);
+	Kitty.sendMessage("- WK 片手装備のときディフェンスダウンを連打するよう修正", messageType);
+	Kitty.sendMessage("- W、WK サバイバルオーラを追加", messageType);
+	Kitty.sendMessage("- W ブロウを連打するよう修正", messageType);
+	Kitty.sendMessage("- KS ヘイトアタックを追加、円弧斬、ムーンスラッシュを除外", messageType);
+	Kitty.sendMessage("- MP、MK、PM 相手がホーリーライトガードのときはサンダー召喚を撃たないよう変更", messageType);
+	Kitty.sendMessage("- 自動ルート機能を一時的に廃止", messageType);
+
+	Kitty.sendMessage(Kitty.color("◇0.764にて", 255, 255, 255), messageType);
+	Kitty.sendMessage("- ヘルプ機能を追加", messageType);
+	Kitty.sendMessage("- マウスオーバーでターゲティング(CG中のみ)", messageType);
+	Kitty.sendMessage("- 不評のため、事前バフを廃止", messageType);
+	Kitty.sendMessage("- CG中の門など、監視対象がきえる不具合を修正(事前バフ廃止により対応)", messageType);
+	Kitty.sendMessage("- ベネフィットライフ・ブーストがあるとベネを詠唱し続ける不具合を修正(事前バフ廃止により対応)", messageType);
+	Kitty.sendMessage("- 特定のフィアレスを検知できない不具合を修正", messageType);
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+-- 読まないで～
+--------------------------------------------------------------------------------
+--[[
+-- TODO:Effect TypeがOriginalで、日本語のものは非表示にする。
+-- TODO:DPSグラフ
+-- TODO:Continueの実装
+-- TODO:Exスキルのクールダウン管理
+-- TODO:ホーリーバインド 623162でバックリーブ?
+-- TODO:イルさんWd対応
+-- TODO:RWの最後に、コレクトハーツを追加。
+-- TODO:RWのエリートスキルはバフないときのみうつ。ブロウ優先。
+-- TODO:WRのスキル順追加
+-- TODO:"/kc event"の説明をヘルプへ追記
+-- TODO:/kc dateコマンドのヘルプ表示
+-- TODO:%t、%s対応
+-- TODO:gradのカスタムチャンネル対応
+-- TODO:３者間Procの無限ループ防止
+-- TODO:skillManagerをnormal、suitとに分離
+-- TODO:cooldownManagerを簡易化
+-- TODO:GUIのredrawの簡易化
+-- TODO:conditionのtemplete部品の整理
+-- TODO:toString()の見直し
+-- TODO:commandListのclass化
+-- TODO:commandのclass化
+-- TODO:xmlのtemplete部整理
+-- TODO:onRedraw関数の引数を省略
+-- TODO:show関数の抑止 -> onRedrawを廃止
+-- TODO:時間測定し、all、pcのsettingを統合
+-- TODO:action、macro、emote、procの入力欄は一覧から選択できるようにする
+-- TODO:GameTooltip:ClearLines();
+-- TODO:コマンド発動条件に、PlayerIsCasting状態を追加
+-- TODO:コマンドリスト一覧、コマンドリスト、発動条件のリストに、連番を付加
+-- TODO:dofileのロード順を元にもどす。
+-- TODO:KittyEventCodeButton.luaをxmlへ統合
+-- TODO:データ項目の変更に対応 -> updateSettingData();
+-- TODO:ヒール用に、ターゲットを変更してキャストするオプションを追加
+-- TODO:便利マクロ自動生成
+-- TODO:リーダー交代、ゾーン変更で、PTの状態を更新 PARTY_LEADER_CHANGED
+-- TODO:RaidPTにスイッチしない？
+-- TODO:キャンセルできるメッセージカウンター
+-- TODO:dofileでKittyControl.lua(line 550)setting is nilとなる。
+-- TODO:PLAYER_COOL_SUIT_CHANGED
+-- TODO:CG中、エンブのオートトレード
+-- TODO:SwapEquipmentItem(index);
+-- TODO:MVCモデルの導入
+-- TODO:EventManager
+-- TODO:自動pcall
+-- TODO:Luaエディタ -> ProgamEditor2, サイト 入力支援のあるものがある
+-- TODO:attackコマンドの処理時間表示
+-- TODO:称号スキル、マントスキルをロックして使用 addFunction
+-- TODO:MTはスキル使用時、前へ移動しない
+-- TODO:(KS)、(SK)、SR、(WK)、WP、PW、(Wd)、(RP)
+-- TODO:Mがサンブレでザレス
+-- TODO:貯金しましょう。GetPlayerMoney("copper");
+-- TODO:IsWeaponOrArmor(?)、GetCameraLayout(?)、GetCameraMoveTime、GetCameraPosition
+-- TODO:ジュルジュルの卵をタゲれる。
+-- TODO:Mobの体力表示(ヘティカス、ラファディアス)
+-- TODO:AutoHarvest and 高速連続生産
+-- TODO:ジュリアスなどのギミックサポート
+-- TODO:見られたら警告
+-- TODO:与ダメージグラフ化
+-- TODO:チャットでキーワード発言で、バフチェック
+
+-- Done TODO:ターゲットの区分に、王冠ボスを追加
+-- Done TODO:DropDownメニューの部品化
+-- Done TODO:ビルドクラスの入替え
+-- Done TODO:ソウルポイントの発動条件
+-- Done TODO:英訳、SSエリートのテンション、エネルギー
+-- Done TODO:英訳、Mcエリートのエネルギー、フォーカス
+-- Done TODO:英訳、Lv60、Lv70エリートのテンション、エネルギー、フォーカス
+-- Done TODO:CommandクラスのTypeは定数化
+-- Done TODO:指定値以下の与ダメは、表示しないようにする
+-- Done TODO:スキル発動条件コンボボックスの一覧をformatTypeで分類
+-- Done TODO:不敗の王者、フェイトとかのprocはアイコンを追加
+-- Done TODO:WSのスキル順追加
+-- Done TODO:McRのスキル順追加
+-- Done TODO:パルプンテ Hocus Pocus
+-- Done TODO:playerEffect playerNonEffectの日本語表記が不揃い -> 修正不要
+-- Done TODO:/kc dateコマンドで日付表示
+-- Done TODO:Aloさん、環境により英語が表示される
+-- Done TODO:マントマクロ。canUse発動条件があるとよい
+-- Done TODO:WdSブラッディアローからタメ斬りにつながらない(発動条件に設定が付与されているのが誤り)
+-- Done TODO:75ID、５ボス、Warningで名前よばれるとき音がしないときがある
+-- Done TODO:連射中にツールチップが消えないようにしたい。 -> コントロールの動的作成 CreateUIComponent();
+-- Done TODO:ケンタウロスとかはタゲらないようにする。
+-- Done TODO:耐久40以上で修理
+-- Done TODO:オートターゲットOFF機能(ペットスキップ機能が有効なときのみ、オートターゲットを有効とするよう変更)
+-- Done TODO:WARNING_MESSAGEで名前検知(for Lv75ID 5th boss)
+-- Done TODO:プロテクトのギルド名称を列挙 > プロテクト機能を削除したため不要
+-- Done TODO:デッドアングルの初期値はoff
+-- Done TODO:マクロ実行時にアドオンを実行しないようロック
+-- Done TODO:TowHandedテーブル分割
+-- Done TODO:与ダメ表示の条件を、設定された閾値から判定するよう変更
+-- Done TODO:スキル汎用化による自作コンボ設定機能GUI
+-- Done TODO:距離判定ショートカットなし時ログ出力。SlogManager、CooldownManagerのnilチェック。->対応しない。
+-- Done TODO:相手が無敵のときの警告にcooltime追加
+-- Done TODO:ピンチのときフィリポ > ハイドアウェイ > ドロップ
+-- Done TODO:自動ルートは、非戦闘中のみにしたい
+-- Done TODO:drop、potを利用するprocを作成
+-- Done TODO:Kは自動lootしない
+-- Done TODO:isRequestのメッセージ
+-- Done TODO:両手武器、片手武器でコマンドリストを分離
+-- Done TODO:森のケーキ
+-- Done TODO:自動ルートKはしない。
+-- Done TODO:サイレンスが発動しない 再現せず
+-- Done TODO:不敗の王者、and条件
+-- Done TODO:インターフェース実行エラーの修正 old versionの作成中コードが原因
+-- Done TODO:自動ルートをパラメータ化
+-- Done TODO:無敵判定をパラメータ化
+-- Done TODO:rangeAttackをパラメータ化
+-- Done TODO:プリズン解除 エスケープ、レインボードロップ
+-- Done TODO:発動条件のtargetClassの指定は、リストで選択可能とさせる
+-- Done TODO:メッセージに、バフ名、残り時間、ターゲット名を表示できるようにする %s、%t、%b、%d
+-- Done TODO:自分もしくは相手のバフを複数指定したときは、or条件とする。
+-- Done TODO:Exスキルを番号指定可能とさせる。
+-- Done TODO:Shift押しながらBuffCheck
+-- Done TODO:発動条件のinRangeの指定は、リストで選択可能とさせる
+-- Done TODO:AddonManager対応
+-- Done TODO:行ヘルプ(コマンドリスト実行順、コマンドタイプの説明)
+-- Done TODO:GameTooltipの書式を整理
+-- Done TODO:GameTooltip:SetText("@@@@@@@@@@"); GameTooltip:AddSeparator(); GameTooltip:AddDoubleLine("aa", "bb"); GameTooltip:Show();
+-- Done TODO:procは専用の区分にする
+-- Done TODO:GameTooltip:SetSkillItem(tabIndex, skillIndex);
+-- Done TODO:GameTooltip:SetSuitSkillListItem(index);	0～list
+-- Done TODO:GameTooltip:SetSuitSkillPlateItem(index);	1～3
+-- Done TODO:GameTooltip:SetActionItem(index);
+-- Done TODO:コマンドのHyperLinkを動的取得に変更
+-- Done TODO:SkillとSuitSkillは分離
+-- Done TODO:GetActionInfo() continued = trueなら攻撃中？ -> 攻撃中判定は不可、矢の攻撃中は判定可能？
+-- Done TODO:グラデーション
+-- Done TODO:プロシージャの導入 要素はskillだけでなく、action、proc、emoteを追加導入する。
+-- Done TODO:プリズンのとき効果解除アイテムをマクロとして利用できない。 -> プリズンのデバフIDが漏れていた
+-- Done TODO:Mスーツスキル(マジックトリック、フェイト)のバフIDを追加
+-- Done TODO:ショートカットでマクロをドロップしたとき、種別をマクロに変更する。
+-- Done TODO:DoEmote(4);	-- wave	-- g_EmoteCmdTable
+-- Done TODO:emoteのexecute
+-- Done TODO:emoteのcooldown
+-- Done TODO:macroのexecute
+-- Done TODO:コマンド発動条件に、デバッグプリントコマンドの追加
+-- Done TODO:コマンド発動条件に、Breakerの追加(String + SysMessage)
+-- Done TODO:ID難易度設定の種別にnoneを追加
+-- Done TODO:コマンド発動条件に、TargetIsDeadOrGhostを追加
+-- Done TODO:Exスキル対応 CastSpellByName(""); UseExtraAction(1);
+-- Done TODO:local duration, remaining = GetExtraActionCooldown(this:GetID()); API:GetExtraActionInfo
+-- Done TODO:ItemManager -> SlotManager
+-- Done TODO:EventQueueクラスは、KittyLib.luaへ
+-- Done TODO:Build種別anyの追加
+-- Done TODO:proc呼出しの追加
+-- Done TODO:actionのexecute
+-- Done TODO:copytright
+-- Done TODO:ExActionを追加 1～5
+-- Done TODO:スーツスキル一覧取得APIを使用する
+-- Done TODO:inherits="MinimapButtonTemplate"
+-- Done TODO:発動条件で、Effect(Original)の指定は、リストで選択可能とさせる。
+-- Done TODO:コマンドリストが重複するケース -> 赤色で表示
+-- Done TODO:enable/disable判定
+-- Done TODO:ItemClipboard_Clear();
+-- Done TODO:GameTooltip:Hide();, GameTooltip1:Hide();, GameTooltip2:Hide(); 他のTooltipを使うことで、ActionName取得時のちらつきを抑止できる？ ->1,2は使用不可
+-- Done TODO:effectのID廃止? Name, ID, originalの種別で指定できるよう変更
+-- Done TODO:SuitSkillのexecute
+-- Done TODO:ヘルプに、スキル、アクションなどの区別を追加表示
+-- Done TODO:対象コマンドリストselectorの追加
+-- Done TODO:isPCなどの条件名/説明文言/入力タイプ(boolean, number/text, リスト+種別)
+-- Done TODO:ImplementFuncをKitty.pcallに変更
+-- Done TODO:多重フックの防止
+-- Done TODO:バインド bind関数
+-- Done TODO:Kitty.debugPrint();	-- isDebug() == trueのときのみ出力
+-- Done TODO:複数画面での設定方法
+-- Done TODO:新しいデータの登録、命名方法
+-- Done TODO:commandType = skill, item, proc, emote
+-- Done TODO:フィアー対策 ロウロアー(508775) BuffManager:isFear
+-- Done TODO:まとめ買いマクロ
+-- Done TODO:GetEmoteInfo(3);	-- 4 / 手を振る / wave / inteerface/Incons/emo_wave
+-- Done TODO:emoteのdrop
+-- Done TODO:PM空iconの追加
+-- Done TODO:HP、MP、Tensionなどはデータフォーマットをmin、maxに
+-- Done TODO:MPのpercent
+-- Done TODO:suitのdrop
+-- Done TODO:actionのdrop
+-- Done TODO:actionの源泉を算出
+-- Done TODO:ビルド選択ドロップダウンメニューの第１階層をソート
+-- Done TODO:Kitty.protectFunction();
+-- Done TODO:コマンドの有効、無効フラグの実装 enable属性を追加
+-- Done TODO:フレームの位置情報を保存
+-- Done TODO:データ構造 commandType=skill, commandName=ダーティトリック
+-- Done TODO:Drag&Dropのモデル
+-- Done TODO:PickupAction(index)で、Actionアイコンを元にもどせる。
+-- Done TODO:全職のスーツスキルをCTリストへ追加
+-- Done TODO:GUI部品の型判定 -> 難しそう。名前の末尾で判定する。
+-- Done TODO:R ボスがタゲしてきたら、ハーツアヴォイド
+-- Done TODO:UPDATE_MOUSEOVER_UNIT 自動ターゲット機能をこのイベントへ移動
+-- Done TODO:/run Kitty.print(UnitSex("target"));	-- 王冠:3、エリート:2、女性:1、男性・ペット・雑魚:0
+-- Done TODO:じけんが表示されない？ -> Delya実行で対応
+-- Done TODO:EventCode変換
+-- Done TODO:まとめ買い
+-- Done TODO:PartyManager.iterator()で、空メンバーはスキップするよう変更。
+-- Done TODO:特定キーワードでPT招待
+-- Done TODO:ゾーン後のログ出力有無指定
+-- Done TODO:ID難易度ログイン直後も変更
+-- Done TODO:クラスアップスペル[621736](Ss)
+-- Done TODO:RK シークエンススロー、スローイング RangeAttack
+-- Done TODO:WKのペインディスリガード[501805]のときは、サンダー召喚しない
+-- Done TODO:ID難易度、エリアをログ出力
+-- Done TODO:HookManagerにインスタンスをセットできるようにする。
+-- Done TODO:Kitty.partyManager:addListnerに複数イベント登録されている。
+-- Done TODO:HookManaerはテーブルかどうか型判定が先。関数を参照すると落ちるのでは。
+-- Done TODO:ID難易度の変更が遅い
+-- Done TODO:６人以上招待する場合はレイド構成に変更。自分はPTからぬけない。
+-- Done TODO:GetInstanceLevel(); GetLootThreshold();
+-- Done TODO:CheckMultiMount Party/Raidの判定、対応 ???
+-- Done TODO:設定情報の保存
+-- Done TODO:GetCameraUpVector()、GetPlayerAbility?、GetZoneName()調査 七英雄の墓
+-- Done TODO:与ダメ表示オプション
+-- Done TODO:エラー処理(sendMessgeをerrorに変更)
+-- Done TODO:newproxy未サポートの場合
+-- Done TODO:PT/Raid 再編成(PTなしで、ラストメンバーを再招待)、Shiftで解散
+-- Done TODO:ID難易度、さいころ設定
+-- Done TODO:アシスタント付与メッセージが冗長 -> クールダウンを10Secとして設定
+-- Done TODO:多重フック防止 -> 共通テーブルを利用して回避
+-- Done TODO:dofileをループ
+-- Done TODO:SecondsToTimeAbbrev(seconds)調査 -> バフなどの効果時間の書式変換関数
+-- Done TODO:設定値一覧
+-- Done TODO:Kitty.print() メタテーブルは循環参照するため、走査しない。
+-- Done TODO:メタテーブル __index, __call __tostring(newにもselfがつく)
+-- Done TODO:newよりconstructor
+-- Done TODO:Kitty.dump tostring()をサポートしているか判定
+-- Done TODO:Kitty.dump 関数、テーブルがTableのkeyになることがある
+-- Done TODO:名前 Cell, LinkedList 名前変更
+-- Done TODO:職種判定メソッド
+-- Done TODO:pcallは根元から(attack, rangeAttack, checkBuff, repair)
+-- Done TODO:UnitIsRaidAssistant(unit); IsRaidAssistant(); アシスタント付与メッセージ表示
+-- Done TODO:片手、両手定数化
+-- Done TODO:PartyManagerにイテレータ導入
+-- Done TODO:Kitty.print関数 ネイティブ環境対応
+-- Done TODO:Kitty.dump関数 スタックオーバーフロー抑止
+-- Done TODO:loopMemberを削除
+-- Done TODO:ちゃんとしたイテレータ
+-- Done TODO:Kitty.ClassManager.getWeaponType? GetInventoryItemType(-1:空スロット、1:武器、0000:盾)
+-- Done TOTO:string.trim(self, {" ", "　"})
+-- Done TODO:startsWith、endsWithに正規表現offスイッチ
+-- Done TODO:<Script file="KittyCombo.lua" />
+-- Done TODO:giveAssistant名前変更
+-- Done TODO:error(), assert() <--- pcallしないと、機能しない。
+-- Done TODO:自分が無敵のときはサイレンスをうたない
+-- Done TODO:相手の名前判定、[城門]は出血にならない
+-- Done TODO:ComboManagerで、スキルの発動条件失敗時のデバッグ処理を追加
+-- Done TODO:IsRaidLeader()でアシスト付加
+-- Done TODO:isShield
+-- Done TODO:KSはホーリーヘイト>ヘイトアタック>SB>ホリソ
+-- Done TODO:Mの対人は、パーガでなくサンダーボール
+-- Done TODO:PMサンダー召喚に距離判定
+-- Done TODO:自動追尾時に「～呼ばれました」メッセージが表示される不具合の修正
+-- Done TODO:Wは最初にサバイバルオーラ(対人戦も)
+-- Done TODO:72IDで名前よばれる(再現せず、また軽微→対応しない)
+-- Done TODO:変更履歴ヘルプ機能を追加
+-- Done TODO:KS 円弧斬はボス戦では不要 ホーリヘイト、ヘイトアタック、シールドブラスト、ホーリーソード
+-- Done TODO:WK 片手はDD連打
+-- Done TODO:ComboManagerをnewするときに、他のManagerクラスを引数渡し
+-- Done TODO:新クラス名追加(マシーナリー、シャドウサマナー)
+-- Done TODO:事前バフの廃止(不評のため)
+-- Done TOTO:CG中の門など、監視対象がきえるバグ修正(事前バフ廃止により対応)
+-- Done TODO:ヘルプ機能の追加
+-- Done TODO:マウスオーバーでターゲティング(CG中のみ)
+-- Done TODO:ベネフィットライフ・ブーストがあるとベネを詠唱し続ける問題を修正(事前バフ廃止により対応)
+-- Done TODO:特定のフィアレスを検知できないBugを修正
+-- Done TODO:距離判定 inRange条件追加
+-- Done TODO:PMスキル発生が遅い。FB > フロストデス > アイシクル > サンダー召還
+-- Done TODO:ClassManagerで両手武器/片手武器判定
+-- Done TODO:KPならヘイトカットバフ表示(checkBuff)
+-- Done TODO:KPはホーリソード連打。ShiftKeyでDD連打モードにスイッチ
+-- Done TODO:非戦闘中のみ事前バフをキャスト
+-- Done TODO:背後からの一撃を事前バフに追加
+-- Done TODO:パニッシュ、ホーリーバック、ホーリークリアランス、ホーリーライトアグリー、スタッブを除外
+-- Done TODO:ワイルドアウェイク対応
+-- Done TODO:RS自動バフ
+-- Done TODO:RKバグ修正
+-- Done TODO:KR対応
+-- Done TODO:KP対応
+-- Done TODO:相手の無敵時間表示
+-- Done TODO:BuffManager:isBuff、SkillManager:canUseで閾値指定
+-- Done TODO:Kitty.color.redなど固定色指定([ ]ではさむ)
+-- Done TODO:mana、tension自動取得
+-- Done TODO:スーツスキル情報をキャッシュ
+-- Done TODO:BuffManagerでターゲットなしのケース
+-- Done TODO:デッドアングルの効果音変更
+-- Done TODO:レンジアタックサブ職制限
+-- Done TODO:スキル順調整 RS、MK、RW、WR、RK
+-- Done TODO:RKコンボもあったほうがいい。
+-- Done TODO:RWのブロウのスキルの出がわるい。->テンションの閾値を変更
+-- Done TODO:背後攻撃の実装
+-- Done TODO:スーツスキルをショートカットなしで詠唱可能にする
+-- Done TODO:isDebug, isAuthor
+-- Done TODO:ペットをタゲしない。
+-- Done TODO:シージ占領中の呼ばれましたエラーメッセージを非表示にする
+-- Done TODO:自分の名前のときに鳴らすサウンドの調整
+-- Done TODO:P/MのAttackマクロ(スーツスキル)
+-- Done TODO:対人の場合はダーティを先
+-- Done TODO:1,000以下のダメージログを非表示
+-- Done TODO:何か警告するときは、サウンド PlaySoundByPath("sound/character/creature/dog/dog_aggro.mp3");
+-- Done TODO:AddonManager対応(スラッシュコマンド)
+-- Done TODO:スーツスキル使用
+-- Done TODO:バフの有効期限の補正
+-- Done TODO:全装備修理
+-- Done TODO:脱ぎマクロ
+-- Done TODO:矢自動生成装備
+-- Done TODO:マントスキル使用
+-- Done TODO:定数のテーブル化(switch文)
+-- Done TODO:汎用関数別ファイルライブラリィ化
+-- Done TODO:BuffManager
+-- Done TODO:SkillManager
+-- Done TODO:ダーティトリックのスキル実行
+-- Done TODO:ウーンドアタックのスキル実行
+-- Done TODO:ブラッディアローのスキル実行
+-- Done TODO:与ダメージ数値化
+-- Done TODO:時間切れelementの削除(バフマネージャ)
+-- Done TODO:称号スキル高速移動
+-- Done TODO:OOP化
+-- Done TODO:パーティメンバーのバフチェック
+-- Done TODO:関数名の頭文字は小文字
+-- Done TODO:CombatManager Combatチャットイベントから戦闘開始、Updateイベントにて５秒経過で戦闘終了
+-- Done TODO:PartyManager
+-- 不可 TODO:デバッガ搭載(スタックトレース) debugパッケージ利用不可
+
+--------------------------------------------------------------------------------
+-- 【メモ】
+-- アドオンのリロード
+/script ReloadUI();
+
+-- バックアップデータ格納場所
+\Documents and Settings\名前\My Documents\Runes of Magic
+
+-- 固定文字列の検索キー
+\"[^\"a-zA-Z\[\]=, ]*\"
+
+-- 使いそうな関数
+GetCameraUpVector();
+GetZoneName();
+GetChannelList();
+DEFAULT_CHAT_FRAME:AddMessage("@@@@");	-- メッセージ表示
+SendChatMessage("ありがとう～", "SAY");	-- メッセージ表示 SAY, PARTY, ZONE, YELL, GUILD, RAID, WHISPER, CHANNEL
+SendChatMessage("Some Text", "CHANNEL", 0, 1);	-- 第４引数:チャンネル番号
+SendSystemMsg("This is Message");	-- システムメッセージ表示
+UnitManaType(unit);		-- メイン職
+UnitSkillType(unit);	-- サブ職
+UnitMana("player");		-- メイン職のマナ
+UnitSkill("player");	-- サブ職のマナ
+UnitGUID("target");		-- 固有ID
+TargetUnit("player");	-- ターゲット
+AssistUnit("target");	-- アシスト
+UnitIsUnit("player", "targettarget");	-- ターゲットしていないとき"target"を指定すると落ちる。
+GetPlayerMoney("account");
+UseSkill(#, #); -- スキル使用(スキル表のタブの順番1～4と何番目か指定する１～)
+EquipItem();
+GetBagItemInfo();
+GetBagCount();
+UseBagItem();	-- 使用不可
+ExecuteMacroLine();
+SwapEquipmentItem();
+GetInventoryItemDurable("player", #);	-- 装備品の名称取得
+GetInventoryItemType("player", 16);
+ReturnPet(#);
+IsPetSummoned(index);
+HasPetItem(#);
+UseEquipmentItem(#);	-- 5:マント, 10:レンジ武器
+HasSelfRevive();
+InspectUnit("target");
+UseAction(index);		-- ショートカット利用
+GetActionUsable(slotNo);
+GetActionInfo();
+IsBattleGroundZone();	-- CG中
+UnitCanAttack("player", "target");
+TargetNearestEnemy(bool previous);
+UnitMaster("target");	-- ペットのオーナー名取得
+local x, y = GetPlayerWorldMapPos();
+GetTime();	-- 時間(秒、整数)
+os.time();	-- 時間(秒、小数)
+local x, y, z = GetPlayerPosition();	-- 未実装
+GetPlayerDirection()	-- 未実装
+UnitDistance("target")	-- 未実装
+AcceptResurrect(); interface/world.xml -> UIParent.lua>PLAYER_ALIVE>StaticPopup_Hide StaticPopup -> StaticPopup.lua>onClick内でAcceptRessurect();
+MoveRaidMember(a, b);
+a, b, c = UnitCastingTime("target");
+DoEmote(index);
+SendSystemMsg("■■■");
+SendWarningMsg("■■■");
+RotateCamera(1, 0, 0.82, 0);
+BS_GetEquipmentInfo(16);
+ChatFrame2:AddMessage("Yahoo！");	-- ２番目のチャットフレーム
+FocusUnit(i, "target");	-- フォーカス？ focus1～focus12
+/run ChatFrame_RemoveMessageGroup(ChatFrame1, "SYSTEM");	-- 総合タブのシステムメッセージをOFFにする
+/run ChatFrame_AddMessageGroup(ChatFrame1, "SYSTEM");		-- 総合タブのシステムメッセージをONにする
+GameTooltip:AddLine("@@@@", 0, 1, 0);	-- マウスをあてたときにでる、吹出しにメッセージを追加する。
+PromoteToPartyLeader("target"); IsPartyLeader(); IsRaidLeader();
+j=6 s=2; name, _, index=GetSuitSkill_List(j, s-1); SkillPlateReceiveDrag(1, index);
+SetSuitSkill_List();
+SkillPlateUpdate(index);	-- 利用可能なスーツスキル 引数は、-1、0～4
+GameTooltip:SetSkillItem(tabIndex, skillIndex);
+GameTooltip:SetSuitSkillListItem(index);	0～list
+GameTooltip:SetSuitSkillPlateItem(index);	1～3
+GameTooltip:SetActionItem(index);
+-- コンポーネント動的作成(ロード時のみ)
+Kitty.Create = CreateUIComponent("CheckButton", "MyCheckButton", "KittyCommandConfigFrame", "UIPanelCheckButtonTemplate");  -- Creates a CheckButton
+Kitty.Create:ClearAllAnchors(); -- Clear The Anchores of the new created CheckButton  ( you need to do this if you want to give it a position )
+Kitty.Create:SetAnchor("CENTER", "CENTER", "KittyCommandConfigFrame"); -- Put it in center of ur screen
+-- ToolTip
+CreateUIComponent('GameTooltip', 'KittyComboGameTooltip', 'UIParent', 'GameTooltipTemplate');
+KittyComboGameTooltip:SetSize(1, 1);
+KittyComboGameTooltip:SetAlpha(0);
+
+-- イベントの発火順
+-- ゲーム開始
+Main部
+onLoad			-- ここからonUpdate多発
+SYSTEM_MESSAGE	-- スクリーンショット
+VARIABLES_LOADED
+UNIT_BUFF_CHANGED
+ZONE_CHANGED
+LOADING_END
+-- キャラが利用可能になる。
+-- ゾーンチェンジ
+ACTIONBAR_SLOT_CHANGED
+ZONE_CHANGED
+WARNING_STOP
+CASTING_STOP
+UNIT_BUFF_CHANGED
+ZONE_CHANGED
+MAP_CHANGED
+LOADING_END
+-- キャラが利用可能になる。
+-- キャラチェンジ
+SAVE_VARIABLES
+………
+-- キャラチェンジ後、ゲーム開始
+Main部
+onLoad
+VARIABLES_LOADED
+UNIT_BUFF_CHANGED
+LOADING_END
+キャラが利用可能になる。
+SAVE_VARIABLES
+
+-- ユニット
+"player"
+"pet"	-- 未実装？
+"target"
+"mouseover"
+"focus1" ～ "focus12"
+"party1" ～ "party5"
+"raid1" ～ "raid36"
+"targettarget"
+"party3target"	-- 未確認
+"focus8pet"	-- 未確認
+
+-- スロットID(PickupEquipmentItemで指定するslot)
+equipmentTable = {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 21};
+[HeadSlot]:0
+[HandsSlot]:1
+[FeetSlot]:2
+[ChestSlot]:3
+[LegsSlot]:4
+[BackSlot]:5
+[WaistSlot]:6
+[ShoulderSlot]:7
+[NecklaceSlot]:8
+[AmmoSlot]:9
+[RangedSlot]:10
+[Ring0Slot]:11
+[Ring1Slot]:12
+[Earring0Slot]:13
+[Earring1Slot]:14
+[MainHandSlot]:15
+[SecondaryHandSlot]:16
+[UtensilSlot]:17
+[Talisman0Slot]:18
+[Talisman1Slot]:19
+[Talisman2Slot]:20
+[AdornmentSlot]:21
+
+-- カーソルタイプ
+action
+skill
+bag
+equip
+SuitSkill
+SkillPlate
+bank
+emote
+macro
+
+-- UI
+<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+relativeToフレームのrelativeTo(CENTERなど)を起点とし、当フレームのpoint(CENTERなど)がどのくらいずれているかを示す。
+SetAnchor(...);する前に、Kitty.Create:ClearAllAnchors();を呼ぶ必要がある。
+
+-- ドロップダウンメニュー
+	- 初期化時に指定する配列
+	info.text="AA",				-- 表示文言
+	info.value=1,				-- UIDROPDOWNMENU_MENU_VALUEの値
+	info.func=onClick,			-- クリック時に実行する関数
+	info.hasArrow=true,			-- 矢印表示
+	info.notCheckable=true;		-- 選択不可
+	info.checked=true;			-- チェック
+	info.isTitle=true;			-- 黄色文字、選択不可
+	info.keepShownOnClick=true;	-- クリックしてもリストを非表示にしない
+	- グローバル変数
+	UIDROPDOWNMENU_MENU_LEVEL	-- ドロップダウンの階層
+	UIDROPDOWNMENU_MENU_VALUE	-- マウスがあたっている項目のインデックス(順番)
+	- サポート関数
+	CloseDropDownMenus(1);		-- 指定した階層のリストを非表示
+	UIDropDownMenu_SetText(this, button:GetText());
+	UIDropDownMenu_SetSelectedID(this, button:GetID());
+	UIDropDownMenu_SetSelectedName(this, button:GetText());
+	UIDropDownMenu_SetSelectedValue(this, button.value);
+	UIDropDownMenu_GetText(this);
+	UIDropDownMenu_GetSelectedID(this);		-- 通常はnil?
+	UIDropDownMenu_GetSelectedName(this);	-- 通常はnil?
+	UIDropDownMenu_GetSelectedValue(this);	-- 通常はnil?
+
+-- Exスキル
+ct, rt=GetExtraActionCooldown(1);
+f=0;for i=1, 30 do if (UnitBuff("player", i)=="チョイス" ) then f=1;end;end
+if(f==0 and rt==0) then
+	CastSpellByName("フェイト");
+elseif (f==1 and rt==0) then
+	UseExtraAction(1);
+end
+
+/run	-- 花束１クリック購入
+if not kashin then
+	kashin = coroutine.wrap(
+		function()
+			while 1 do
+				UseSkill(1, 1);
+				coroutine.yield();
+				SpeakFrame_SpeakOption(56, 2);
+				coroutine.yield();
+				SpeakFrame_SpeakOption(56, 1);
+				coroutine.yield();
+			end
+		end
+	);
+end
+kashin();
+
+/run	-- タゲとらずキャスト
+FocusUnit(1, "target");
+TargetUnit("party1");
+CastSpellByName("ライフブロッサム");
+TargetUnit("focus1");
+FocusUnit(1, "");
+
+-- /run for i=1,20 do TargetNearestFriend();if UnitName("target")=="ブリンスキー" then UseSkill(1,1); CompleteQuest();AcceptQuest();SpeakFrame:Hide();break; end end
+-- 魔術エネルギー（目を開けろ！この素晴らしいショーを見逃すな！）
+
+-- リベンジリスト
+function NMN_Slash(a, name)
+	if(string.lower(name) == "all") then
+		if(GetFriendCount("HateFriend") > 0) then
+			local count = 0;
+			while(GetFriendCount("HateFriend")>0) do
+				DelFriend("HateFriend", GetFriendInfo("HateFriend", 1));
+				count = count + 1;
+			end
+			DEFAULT_CHAT_FRAME:AddMessage(count .. "件削除しました");
+		else
+			DEFAULT_CHAT_FRAME:AddMessage("1人も登録されていません");
+		end
+	elseif(tonumber(name) ~= nil) then
+		DelFriend("HateFriend", GetFriendInfo("HateFriend", tonumber(name)));
+	else
+		DelFriend("HateFriend", name);
+	end
+end;
+
+-- ペット対応の各種アドオンは誰も作ってないのかな？
+-- とりあえずscrutのペットDPSを自分のにまとめる修正
+-- --if event == "COMBATMETER_DAMAGE" then の下に追加
+-- if _source == UnitName("pet") then
+-- _source = playerName
+-- _skill = "pet:" .. _skill
+-- end
+-- CLMはCLM.CHAT_MSG_COMBAT = function(this)の中の
+-- -- FLOW TYPES --以降のif first==player thenを
+-- if first==player or first==UnitName("pet") thenに修正(3箇所)
+
+--		SendChatMessage("|H|h|cffff0000R|r|h |H|h|cffff9900A|r|h |H|h|cffffff00I|r|h |H|h|cff009933N|r|h |H|h|cff00ffffB|r|h |H|h|cff336699O|r|h |H|h|cff9900ffW|r|h |H|h|cffffffffはじめたのに＞＜|r|h", "SAY");
+--		SendChatMessage("|H|h|cffff0000私たち|r|h |H|h|cffff9900結婚|r|h |H|h|cffffff00し|r|h |H|h|cff009933ま|r|h |H|h|cff00ffffし|r|h |H|h|cff336699た|r|h |H|h|cff9900ff！！|r|h", "SAY");
+
+-- XMLのエラー行数
+<Scripts>タグを１行目として、数えた行数
+
+--------------------------------------------------------------------------------
+-- 配列
+scrutinizer.cats = {
+	[1] = "Damage done",
+	[2] = "Damage taken",
+	[3] = "Healing done",
+	[4] = "Healing taken",
+	["key"] = "value"
+};
+
+-- 構造体
+scrutinizer.currentlylockedskill = {
+	button = 0,
+	skill = 0,
+	name = ""
+};
+
+-- クラス
+Kitty.Person = {};
+-- スタティックメソッド
+Kitty.Person.getType = function()
+	return "Called static method.";
+end;
+-- インスタンスメソッド
+Kitty.Person.getName = function(self)
+	return self.name;
+end;
+Kitty.Person.getAge = function(self)
+	return self.age;
+end;
+-- 文字列表現
+Kitty.Person.toString = function(self)
+	return "Name:[" .. tostring(self.name) .. "], Age:[" .. tostring(self.age) .. "]";
+end;
+-- デストラクタ
+Kitty.Person.destructor = function(self)
+	self.name = "";
+	self.age = 0;
+--	Kitty.print(self);
+end;
+-- コンストラクタ
+Kitty.Person.constructor = function(self, name, age)
+	-- データメンバ
+	local obj = {};
+	obj.name = name;
+	obj.age = age;
+
+	-- デストラクタの指定
+	assert(newproxy, "newproxy does not support.");
+	obj.__userdata = newproxy(true);
+	getmetatable(obj.__userdata).__gc = function() obj:destructor(); end;
+	-- 関数の付与、文字列表現サポート
+	return setmetatable(obj, {__index=Kitty.Person, __tostring=Kitty.Person.toString});
+end;
+setmetatable(Kitty.Person, {__call=Kitty.Person.constructor});	-- コンストラクタを指定
+
+-- ループ(While)
+local index = 1;
+while(index < 5) do
+	print("[" .. index .. "]");
+	index = index + 1;
+end
+
+-- ループ(For)
+for index = 1, 5 do
+	print("[" .. index .. "]");
+end
+-- ループ(For)
+local list = {10, 20, 30};
+for index=1, #list do
+	print("[" .. list[index] .. "]");
+end
+
+-- ループ(Repeat)
+local index = 1;
+repeat
+	print("[" .. index .. "]");
+	index = index + 1;
+until(index > 5);
+
+-- ループ(テーブル走査)
+for index, value in ipairs({10, 20, 30}) do	-- １番目(index=1)に要素がないと何も戻さない
+	print("index:[" .. index .. "], value:[" .. value .. "]");
+end
+for key, value in pairs({a=5, b=6, c=7}) do	-- すべての要素を走査
+	print("key:[" .. key .. "], value:[" .. value .. "]");
+end
+
+-- 可変長引数
+local multiArg = function(...)
+	print("Count:" .. select("#", ...));
+	for index, value in pairs({...}) do
+		print("Index:[" .. index .. "], Value:[" .. value .. "]");
+	end
+
+	return ...;
+--	もしくは
+--	return unpack({1, 2, 3});
+end;
+-- 可変長引数
+for index = 1, select("#", ...) do
+	print(select(index, ...));
+end
+
+-- 配列に変換
+local list = {multiArg(11, 22, 33, 44, "xx")};
+for index, value in pairs(list) do
+	print("Index:[" .. index .. "], Out:[" .. value .. "]");
+end
+
+-- 10進数→16進数
+print(string.format("%02X", 255));
+-- 16進数→10進数
+print(tonumber("FF", 16));
+
+-- ガーベージコレクト
+collectgarbage("collect");
+
+--------------------------------------------------------------------------------
+-- DropDown Menu
+- UIDropDownMenu_SetWidth(this, width);
+	リストの表示幅をwidthに変更する。
+- UIDropDownMenu_GetText(this);
+	選択済項目を取得する。
+- UIDropDownMenu_SetText(this, text);
+	textを選択済項目欄に表示させる。
+- CloseDropDownMenus(level);
+	指定した階層(level)の、ドロップダウンを非表示にする。
+- UIDropDownMenu_Initialize(this, func);
+	ドロップダウンが開いたときに、初期化関数(func)を呼出す。
+	- UIDROPDOWNMENU_MENU_LEVEL
+		ユーザーが開こうとしているドロップダウンの階層。
+		初期化関数内で有効。
+	- UIDROPDOWNMENU_MENU_VALUE
+		ユーザーが開こうとしているドロップダウンの第１レベルの項目(親項目)。
+		初期化関数内で第２レベルのドロップダウンが開かれるときに有効。
+- UIDropDownMenu_AddButton(settingsList, level);
+	指定した階層(level)に、settingsListで設定した条件の選択肢を追加する。
+	- settingsList
+	["text"]=text				-- 選択肢のKey値
+	["value"]=value,			-- 選択肢のValue
+	["checked"]=isChecked,		-- チェック状態/未チェック状態
+	["notCheckable"]=true,		-- 選択可能/選択不可
+	["isTitle"]=true,			-- タイトル表示(選択不可)
+	["hasArrow"]=true,			-- 矢印を表示(下位階層のドロップダウンを表示可能となる)
+	["func"]=function(button),	-- 選択時に呼出される関数
+		- button
+		button:GetName();
+		button:GetID();
+		button.value			-- 選択されたボタンのValue
+
+--------------------------------------------------------------------------------
+-- 【マクロ】
+-- 称号スキル使用マクロ
+-- 刻印マスター(530659)
+-- マッドラッシュ(530449)
+-- ソルジャーアタック(530538)
+-- ストーンプロテクション(???)
+/run title = GetCurrentTitle(); if(IsShiftKeyDown()) then SetTitleRequest(530538); else SetTitleRequest(530449); end
+/wait 0.4
+/run if(IsShiftKeyDown()) then CastSpellByName("ソルジャーアタック"); else CastSpellByName("マッドラッシュ"); end SetTitleRequest(title);
+
+-- 装備交換、ペットハイドマクロ
+/run
+SwapEquipmentItem();
+for index = 1, 6 do
+	if(HasPetItem(index)) then
+		if(IsPetSummoned(index)) then
+			ReturnPet(index);
+		end
+	end
+end
+-- /run SwapEquipmentItem(); for index = 1, 6 do if(HasPetItem(index)) then if(IsPetSummoned(index)) then ReturnPet(index); end end end
+
+-- 称号変更マクロ
+/run title = GetCurrentTitle();
+/run if title == 530659 then title = 530724; else title = 530659; end
+/run SetTitleRequest(title);
+/wait 0.4
+/run DEFAULT_CHAT_FRAME:AddMessage(tostring(UnitTitle("player")) .. "(" .. tostring(title) .. ")");
+
+-- 矢作成・装備マクロ
+/run _, _, oldItem = GetInventoryItemDurable("player", 10);
+/run UseItemByName("ルーンカタパルト");
+/wait 0.4
+/run UseEquipmentItem(10);
+/wait 0.4
+/run UseItemByName(oldItem);
+/wait 0.4
+/run UseItemByName("ルーンソーン");
+
+-- マントスキル使用マクロ
+/run _,_,o=GetInventoryItemDurable("player",5); if(IsShiftKeyDown()) then i="ブレードケープ"; elseif(IsCtrlKeyDown()) then i="ブレイブマント"; else i="ストライクケープ"; end UseItemByName("オースの" .. i);
+/wait 0.3
+/run UseEquipmentItem(5);
+/wait 0.3
+/run UseItemByName(o);
+
+-- 連打で修理するマクロ
+/run
+for i=0,21 do
+	local d,m,n=GetInventoryItemDurable("player",i);
+	if(m>100 and d<=100) then
+		UseItemByName("リペアハンマー");
+		PickupEquipmentItem(i);
+		DEFAULT_CHAT_FRAME:AddMessage(n .. "[" .. d .. "]->[" .. m .. "]");
+		return;
+	end
+end
+-- /run for i=0,21 do local d,m,n=GetInventoryItemDurable("player",i); if(m>100 and d<=100) then UseItemByName("リペアハンマー"); PickupEquipmentItem(i); DEFAULT_CHAT_FRAME:AddMessage(n .. "[" .. d .. "]->[" .. m .. "]"); return; end end
+
+-- PT再編成マクロ
+/run pt={}; for i=1,5 do pt[i]=UnitName("party"..i); UninviteFromParty("party"..i); end
+/wait 1.0
+/run for _,n in pairs(pt) do InviteByName(n); end
+/wait 1.0
+/run SetInstanceLevel("normal");
+/wait 1.0
+/run SetLootThreshold(0);
+
+-- ライトニング詠唱マクロ
+/run _,r=GetSkillCooldown(4,7); if(r<0.7) then CastSpellByName("ライトニング"); end
+/s ライトニング
+/wait 1.0
+/wait 1.0
+/s ３秒
+/wait 1.0
+/s ２秒
+/wait 1.0
+/s １秒
+/wait 1.0
+/s 終了
+
+-- フレームのメソッド
+-- UIParent
+GetID
+SetBackdropEdgeAlpha
+Enable
+ResetFrameOrder
+SetBackdropTileAlpha
+SetMouseEnable
+RegisterForDrag
+IsEnable
+Locked
+SetFrameStrata
+__index
+SetScripts
+StartMoving
+RegisterForClicks
+SetBackdropTileColor
+SetKeyboardEnable
+RegisterEvent
+SetID
+Unlocked
+StopMovingOrSizing
+StartSizing
+SetParent
+SetBackdropEdgeColor
+SetFrameLevel
+SetLayers
+SetBackdrop
+UnregisterEvent
+Dsable
+
+-- WorldFrame
+GetRealScale
+GetRight
+GetScale
+SetScale
+Moving
+GetLeft
+__index
+SetColor
+SetAlpha
+SetPos
+GetBottom
+GetColor
+SetSize
+ClearAllAnchors
+GetWidth
+Hide
+GetSize
+IsVisible
+GetAnchorOffset
+SetAnchor
+GetAlpha
+GetPos
+GetName
+GetRealSize
+Show
+GetHeight
+SetWidth
+SetHeight
+GetTop
+GetParent
+GetCenter
+GetAnchor
+
+-- イベントの種類
+ACCOUNTBAG_CLOSE
+ACCOUNTBAG_UPDATE
+ACCOUNTBOOK_SHOW
+ACCOUNTBOOK_UPDATE
+ACTIONBAR_SLOT_CHANGED
+ACTIONBAR_UPDATE_COOLDOWN
+ADD_FRIEND
+ADDNEW_QUESTBOOK
+ASK_JOIN_TO_PARTY
+ATF_Fame_UPDATE
+ATF_Titlt_REPEAT
+ATF_UPDATE
+ATF_USE_ITEMFRAME_UPDATE
+AUCTION_AUCTION_INFO_UPDATE
+AUCTION_AUCTION_MONEY_UPDATE
+AUCTION_BORWSE_PRICE_UPDATE
+AUCTION_BROWSE_UPDATE
+AUCTION_BUY_UPDATE
+AUCTION_CLOSE
+AUCTION_HISTORY_HIDE
+AUCTION_HISTORY_SHOW
+AUCTION_OPEN
+AUCTION_SEARCH_RESULT
+AUCTION_SELL_UPDATE
+AUTO_HIDE_PARTY_INVITE
+AUTO_HIDE_PARTY_JOIN
+BAG_ITEM_UPDATE
+BAG_UPDATE_COOLDOWN
+BANK_CAPACITY_CHANGED
+BANK_CLOSE
+BANK_OPEN
+BANK_UPDTAE
+BEFRIEND_REQUEST
+BILLBOARD_CLOSE
+BILLBOARD_OPEN
+BILLBOARD_UPDATE
+BOOTY_HIDE
+BOOTY_SHOW
+BOOTY_UPDATE
+BULLETINBOARD_UPDATE
+BUY_ACCOUNTSHOP_FAILED
+BUY_ACCOUNTSHOP_SUCCEEDED
+CAFrame_OnMouseWheel
+CANCEL_LOOT_ROLL
+CARDBOOKFRAME_CLOSE
+CARDBOOKFRAME_OPEN
+CARDBOOKFRAME_UPDATE
+CASTING_DELAYED
+CASTING_FAILED
+CASTING_START
+CASTING_STOP
+CHAT_MSG_BG
+CHAT_MSG_CHANNEL
+CHAT_MSG_CHANNEL_COLOR_CHANGE
+CHAT_MSG_CHANNEL_CREATE
+CHAT_MSG_CHANNEL_JOIN
+CHAT_MSG_CHANNEL_LEAVE
+CHAT_MSG_GUILD
+CHAT_MSG_PARTY
+CHAT_MSG_SAY
+CHAT_MSG_WHISPER
+CHAT_MSG_WHISPER_INFORM
+CHAT_MSG_ZONE
+CHAT_MSN_ADD
+CHAT_MSN_ADDBUTTON
+CHAT_MSN_ADDITEMLINK
+CHAT_MSN_CLOSE
+CHAT_MSN_ITEMPREVIEW
+CHAT_MSN_OPEN
+CHAT_MSN_POPUP
+CHAT_MSN_SMALL
+CHECKGETITEMBEQUEUEITEM
+CLEAR_ALL_QUEUE_STATUS
+CLEARSTONE_ERROR
+CLEARSTONE_OK
+CLIENT_COUNT_DOWN_START
+CLIENT_COUNT_DOWN_STOP
+CLOSE_BATTLEGROUND_CAMP_SCORE_FRAME
+CLOSE_BATTLEGROUND_PLAYER_SCORE_FRAME
+CLOSE_BATTLEGROUND_ROOM_LIST_FRAME
+CLOSE_ENTER_BATTLEGROUND_QUERY_DIALOG
+CLOSE_INBOX_ITEM
+CLOSE_SPEAKFRAME
+CLOSE_WINDOW
+CloseBuyLottery
+CloseExchangePrize
+COLORING_END
+COMBATMETER_DAMAGE		_target, _damage, _source, _skill, _type
+COMBATMETER_HEAL
+COOLCLOTHBAG_KEYITEM
+COOLCLOTHBAG_PENDING1_CONFIRM
+COOLCLOTHBAG_PENDING2_CONFIRM
+COOLCLOTHBAG_PENDING3_CONFIRM
+COOLCLOTHBAG_UPDATE
+COOLCLOTHBAG_UPDTAE
+COOLSUIT_KEYITEM
+COUNTDOWN_END
+COUNTDOWN_START
+CRAFT_LEARNRECIPE
+CRAFT_NEXT_CREATE
+CRAFT_NUMBER_CHANGED
+CRAFT_STOP_CREATE
+CRAFT_UNLOCK
+CRAFTQUEUE_DELETE_CREATE
+CRAFTQUEUE_NEXT_CREATE
+CRAFTQUEUE_NUMBER_CHANGED
+CRAFTQUEUE_STOP_CREATE
+CREATE_PLAYER_SPRITE
+CRG_UPDATE_LIST
+CRG_UPDATE_MEMBERLIST
+CRG_UPDATE_OWNER
+CURSOR_ITEM_UPDATE
+DEL_FRIEND
+DELETE_ITEM_CONFIRM
+DELETE_QUESETITEM_CONFIRM
+DRAWRUNE_ERROR
+DRAWRUNE_OK
+DUEL_READY
+DUEL_REQUESTED
+ELITE_BOSS_BELL
+EM_NewTitleSysUseItemResult_ItemNotFind
+EM_NewTitleSysUseItemResult_NoEffect
+EM_NewTitleSysUseItemResult_OK
+ENTER_MOUNT
+EQUIP_BIND_CONFIRM
+EQUIPMENT_UPDATE_COOLDOWN
+EXCHANGECLASS_CLOSED
+EXCHANGECLASS_FAILED
+EXCHANGECLASS_SHOW
+EXCHANGECLASS_SUCCESS
+EXTRA_ACTIONBAR_HIDE
+EXTRA_ACTIONBAR_SHOW
+FOCUS_CHANGED
+FORCE_DIALOG_HIDE
+FORCE_DIALOG_SHOW
+FSF_CLOSE
+FSF_OPEN
+FSF_UPDATE
+FUSION_STONE_TRADE_CLOSE
+FUSION_STONE_TRADE_DATA_ERR
+FUSION_STONE_TRADE_NO_MONEY
+GAMBLE_CLOSE
+GAMBLE_ITEM_CHANGED
+GAMBLE_ITEM_EXCHANGED
+GAMBLE_OPEN
+GAMBLE_RESULT_FAILED
+GAMBLE_RESULT_OK
+GARBAGE_UPDATE
+GIVE_NEW_ITEM
+GIVEITEMFRAME_OPEN
+GIVEITEMFRAME_UPDATE
+GOT_BATTLE_GROUND_QUEUE_RESULT
+GRF_UPDATELOG
+GRF_UPDATERESOURCE
+GSF_INFO_UPDATE
+GSF_SETMENNTYPE
+GUILD_ASK_LEADERCHANGE
+GUILD_ASK_LEADERCHANGE_RESULT
+GUILD_BBS_MESSAGEUPDATE
+GUILD_BBS_PAGEUPDATE
+Guild_Board_Result
+GUILD_COMMAND_CLOSE
+GUILD_COMMAND_OPEN
+GUILD_CONTRIBUTION_CLOSE
+GUILD_CONTRIBUTION_OPEN
+GUILD_HOUSES_CLOSE_VISIT_HOUSE
+GUILD_HOUSES_OPEN_VISIT_HOUSE
+GUILD_INVITE_REQUEST
+GUILD_KICK
+GUILD_PETITION_SIGNATURE
+GUILD_REGISTER
+GUILD_RENAME_OPEN
+GUILD_SHOP_CLOSE
+GUILD_SHOP_OPEN
+GUILDBANK_CAPACITY_CHANGED
+GUILDBANK_CLOSE
+GUILDBANK_FIX_ITEM
+GUILDBANK_OPEN
+GUILDBANK_PAGE_LOG_UPDATE
+GUILDBANK_PAGE_UPDATE
+GUILDBANK_UPDTAE
+GUILDHOUSE_FURNITURE_CHANGED
+GUILDHOUSES_BUILDINGINFO_CHANGED
+GUILDHOUSES_OPEN_BUILDING_RESOURCES
+GUILDHOUSESFRAME_HIDE
+GUILDHOUSESFRAME_SHOW
+GUILDHOUSEWAR_INFOS_UPDATE
+GUILDHOUSEWAR_STATE_CHANGE
+GUILDHOUSEWARSCORE
+GUILDINVITE_SELF
+GUILDWAR_DECLARE_RESULT
+GUILDWAR_DECLARELIST_UPDATE
+HIDE_MINIMAP_BG_OPTION
+HIDE_PET_EVENT_DIALOG
+HIDE_REQUEST_DIALOG
+HORSE_RACING_FINAL_RANKING
+HOUSES_CHANGED_NAME
+HOUSES_CHANGED_PASSWORD
+HOUSES_CLOSE_VISIT_HOUSE
+HOUSES_FRIEND_CHANGED
+HOUSES_FRIEND_ITEM_LOG_CHANGED
+HOUSES_FRIEND_ITEM_LOG_SHOW
+HOUSES_FURNITURE_CHANGED
+HOUSES_HANGER_CHANGED
+HOUSES_HANGER_SHOW
+HOUSES_MAID_SPEAK
+HOUSES_OPEN_VISIT_HOUSE
+HOUSES_PLANT_CHANGED
+HOUSES_PLANT_CLOSE
+HOUSES_PLANT_OPEN
+HOUSES_SERVANT_HIRE_LIST_SHOW
+HOUSES_SERVANT_INFO_SHOW
+HOUSES_SERVANT_INFO_UPDATE
+HOUSES_SERVANT_ITEM_CHANGED
+HOUSES_SERVANT_LIST_CHANGED
+HOUSES_STORAGE_CHANGED
+HOUSES_STORAGE_SHOW
+HOUSES_VISIT_HOUSE_NOTFIND
+HOUSES_VISIT_HOUSE_PASSWORDERROR
+HOUSESFRAME_HIDE
+HOUSESFRAME_SHOW
+IM_UPDATE_LIST
+IMF_FILTER_UPDATE
+IMF_ITEM_UPDATE
+IMPLEMENT_ACTIONBAR_HIDE
+IMPLEMENT_ACTIONBAR_SHOW
+IMPLEMENT_ACTIONBAR_UPDATE
+IMPLEMENT_ACTIONBAR_UPDATE_COOLDOWN
+INSPECT_INTRODUCE_UPDATE
+INSTANCE_CONFIRM_HIDE
+INSTANCE_CONFIRM_SHOW
+INSTANCE_RESET
+INVITE_TO_CHANNEL
+ITEMMALL_INFO_UPDATE
+ITEMMALL_ITEM_OK
+ITEMMALL_ITEMTYPE_UPDATE
+ITEMMALL_LOADING
+ITEMMALL_MAILNAME_ERROR
+ITEMMALL_MESSAGELIST_UPDATE
+ITEMMALL_PLAYER_NOTFAND
+ITEMMARGE_CLOSE
+ITEMMARGE_OPEN
+ITEMQUEUE_CLEAR
+ITEMQUEUE_INSERT
+ITEMQUEUE_UPDATE
+LEADER_CHANNEL_CONFIRM
+LEARNSUITSKILL_SUCCESS
+LEAVE_MOUNT
+LOADING_END
+LOADING_START
+LOOT_ITEM_SHOW
+LOOT_METHOD_CHANGED
+Lottery_Exchange_SLOT_CHANGED
+MACROFRAME_UPDATE
+MAGICBOX_CHANGED
+MAGICBOX_ENABLE
+MAGICBOX_NOT_ENOUGH_ENERGY
+MAIL_CLOSED	-- 未実装
+MAIL_FAILED
+MAIL_INBOX_UPDATE
+MAIL_SEND_INFO_UPDATE
+MAIL_SEND_SUCCESS
+MAIL_SHOW	-- 未実装
+MAP_CHANGED
+MAP_DISABLE
+MAP_ENABLE
+MAP_PING
+MSN_MENU_OPEN
+NPCTRACK_CLEAR_TARGET
+OBJECTBLOODBAR_CHANGEPOS
+OBJECTBLOODBAR_CHANGEVALUE
+OBJECTBLOODBAR_HIDE
+OBJECTBLOODBAR_SHOW
+ON_BATTLEGROUND_CLOSE
+ON_GUILDHOUSE_CLOSE
+ONLINE_FRIEND
+OPEN_BATTLEGROUND_CAMP_SCORE_FRAME
+OPEN_BATTLEGROUND_PLAYER_SCORE_FRAME
+OPEN_BATTLEGROUND_ROOM_LIST_FRAME
+OPEN_CLEARATTRIBSTONE_FRAME
+OPEN_ENTER_BATTLEGROUND_QUERY_DIALOG
+OPEN_FUSION_STONE_TRADE_FARME
+OPEN_GUILDHOUSE_PLAYER_SCORE_FRAME
+OPEN_PET_FRAME
+OPEN_POSTVIEW
+OpenBuyLottery
+OpenExchangePrize
+PARTNERFRAME_ADDPARTNER
+PARTNERFRAME_ERROR
+PARTNERFRAME_REMOVEPARTNER
+PARTY_BOARD_POST_DELETED
+PARTY_BOARD_REFRESH
+PARTY_INVITE_REQUEST
+PARTY_LEADER_CHANGED
+PARTY_MEMBER_CHANGED
+PASSWORD_CONFIRM
+PASSWORD_FAILED
+PB_RAIDINFO_REFRESH
+PE_ACTIVE_PHASE_CHANGE
+PE_FAILED
+PE_INTO
+PE_LEAVE
+PE_LeaveAndClose
+PE_OBJECTIVE_ACHIEVED
+PE_OBJECTIVE_VALUE_CHANGE
+PE_PHASE_FAILED
+PE_PHASE_SUCCESS
+PE_PLAYER_SCORE
+PE_SUCCESS
+PET_ACTIONBAR_HIDE
+PET_ACTIONBAR_SHOW
+PET_ACTIONBAR_UPDATE
+PET_ACTIONBAR_UPDATE_COOLDOWN
+PET_COUNT_CHANGE
+PET_CRAFT_END
+PET_CRAFT_START
+PET_CRAFTING_END
+PET_CRAFTING_FAILED
+PET_CRAFTING_START
+PET_EGG_PUSH_OK
+PET_EQUIPMENT_UPDATE
+PET_FEED_INFO_UPDATE
+PET_FRAME_UPDATE
+PET_MIX_FAILED
+PET_MIX_SUCESS
+PET_NAME_UPDATE
+PET_PUSH_SUCCESS
+PET_RELEASE_SUCCEED
+PET_RELEASE_SUCCESS
+PET_RETURN_SUCCEED
+PET_SUMMON_LEVEL_ERROR
+PET_SUMMON_SUCCEED
+PET_SWAPITEM_FAILD
+PET_SWAPITEM_SUCESS
+PET_TAKEOUT_SUCCESS
+PLAYER_ABILITY_CHANGED
+PLAYER_ABILITYPOINT_CHANGED
+PLAYER_ALIVE
+PLAYER_BAG_CHANGED
+PLAYER_BOXENERGY_CHANGED
+PLAYER_BUFF_CHANGED
+PLAYER_COOL_SUIT_CHANGED
+PLAYER_DEAD
+PLAYER_ENTER_COMBAT		-- 未実装
+PLAYER_EQUIPMENT_UPDATE
+PLAYER_EXP
+PLAYER_EXP_CHANGED
+PLAYER_GET_TITLE
+PLAYER_GOODEVIL_CHANGED
+PLAYER_HONOR_CHANGED
+PLAYER_HONORPOINT_CHANGED
+PLAYER_INVENTORY_CHANGED
+PLAYER_LEAVE_COMBAT		-- 未実装
+PLAYER_LEVEL_UP
+PLAYER_LIFESKILL_CHANGED
+PLAYER_MAXEQSKILLCOUNT_CHANGED
+PLAYER_MODEL_INFO_READY
+PLAYER_MONEY
+PLAYER_SKILLED_CHANGED
+PLAYER_TARGET_CHANGED
+PLAYER_TITLE_FLAG_CHANGED
+PLAYER_TITLE_ID_CHANGED
+PLAYER_TRADE_MONEY
+PLAYTIME_QOUTA_NOTIFY
+QUEST_COMPLETE
+QUEST_REQUEST_COMPLETE
+RAID_TARGET_CHANGED
+RESET_BAD_FRIEND
+RESET_FRIEND
+RESET_QUESTBOOK
+RESET_QUESTTRACK
+RESET_SPEAKFRAME_TEXT
+REST_MERGE_TIME
+RESURRECT_REQUEST
+RIDE_INVITE_REQUEST
+RUNE_EXCHANGE_FRAME_CLOSE
+RUNE_EXCHANGE_FRAME_OPEN
+RUNE_EXCHANGE_PLATE
+SAVE_VARIABLES
+SCREEN_RESIZE
+SCRIPT_RUNTIME_ERROR
+ScrollBannerMessage
+ScrollBannerMessageEX
+SEARCH_GROUP_RESULT
+SELECT_REWARD_ITEM
+SET_ANCILLARY_TITLE_FRAME
+SHOW_FRIEND_DETAIL
+SHOW_GEME_PROMRT
+SHOW_MESSAGE_DIALOG
+SHOW_MINIMAP_BG_OPTION
+SHOW_PET_EVENT_DIALOG
+SHOW_QUESTDETAIL_FROM_BOOK
+SHOW_QUESTDETAIL_FROM_NPC
+SHOW_QUESTLIST
+SHOW_REQUEST_DIALOG
+SHOW_REQUESTLIST_DIALOG
+SHOW_SCRIPTBORDER
+SHOW_SERVERINPUT_DIALOG
+ShowMessageDialog
+SKILL_UPDATE
+SKILL_UPDATE_COOLDOWN
+SKILLPLATE_DELETE
+SSB_SORTTYPE_UPDATE
+START_FLASH_BG_OPTION_BUTTON
+STOP_FLASH_BG_OPTION_BUTTON
+STORE_CLOSE	-- 未実装
+STORE_OPEN	-- 未実装
+SUIT_SKILL_PLATE_UPDATE
+SUITSKILL_CLOSE
+SUITSKILL_MODELUPDATE
+SUITSKILL_OPEN
+SUITSKILLEPLATE_UPDATE
+SUITSKILLEQUIP_UPDATE
+SWAP_EQUIPMENT_SUCCESS
+SYS_WINDOWS_RESIZE
+SYSTEM_MESSAGE
+TALISMAN_BIND_CONFIRM
+TARGET_HATE_LIST_UPDATED
+TB_UPDATE
+TIMEKEEPER_CLOSE
+TIMEKEEPER_PAUSE
+TIMEKEEPER_START
+TP_EXP_UPDATE
+TRADE_ACCEPT_UPDATE
+TRADE_CLOSED
+TRADE_MONEY_CHANGED
+TRADE_PLAYER_ITEM_STATE
+TRADE_RECIPIENT_ITEM_STATE
+TRADE_REQUEST
+TRADE_REQUEST_CANCEL
+TRADE_SHOW
+TUTORIAL_TRIGGER
+UIEVENT_HOUSES_SERVANT_HIRE_FAIL
+UNIT_BUFF_CHANGED
+UNIT_CASTINGTIME
+UNIT_CLASS_CHANGED
+UNIT_HEALTH
+UNIT_INVENTORY_CHANGED
+UNIT_LEVEL
+UNIT_MANA
+UNIT_MAXHEALTH
+UNIT_MAXMANA
+UNIT_MAXSKILL
+UNIT_NAME_UPDATE
+UNIT_PET_CHANGED
+UNIT_PORTRAIT_UPDATE
+UNIT_RELATION
+UNIT_SKILL
+UNIT_TARGET_CHANGED
+UNLOCKED_ITEM_CONFIRM
+UPDATE_BATTLEGROUND_CAMP_SCORE
+UPDATE_BATTLEGROUND_PLAYER_SCORE
+UPDATE_BATTLEGROUND_ROOM_LIST_FRAME
+UPDATE_BATTLEGROUND_TOWER_IVAR
+UPDATE_BINDINGS
+UPDATE_CHAT_FRAMES
+UPDATE_FRIEND
+UPDATE_GUILD_INFO
+UPDATE_GUILD_MEMBER
+UPDATE_GUILD_MEMBER_INFO
+UPDATE_GUILDHOUSE_PLAYER_SCORE
+UPDATE_HORSE_RACING_RANKING
+UPDATE_LOOT_ASSIGN
+UPDATE_MINIMAP
+UPDATE_MOUSE_LEAVE
+UPDATE_MOUSE_LIGHT
+UPDATE_MOUSE_LIGHT_NotEnough
+UPDATE_MOUSEOVER_UNIT
+UPDATE_PARALLEL
+UPDATE_PLAYTIMEQUOTA
+UPDATE_QUEUE_FRAME_INFO
+UPDATE_STORE_BUYBACK_ITEMS
+UPDATE_STORE_SELL_ITEMS
+USE_CRAFTFRAME_SKILL
+VARIABLES_LOADED
+VIEW_FRIEND_ALERT
+VOICE_CHANNEL_MEMBER_UPDATE
+VOICE_CHANNEL_UPDATE
+Voice_Chat_World_Event_Ch_Exit
+Voice_Chat_World_Event_Ch_Exit_Partner
+Voice_Chat_World_Event_Ch_Join
+Voice_Chat_World_Event_Ch_Join_Partner
+Voice_Chat_World_Event_Disable_OK
+Voice_Chat_World_Event_Enable_OK
+Voice_Chat_World_Event_Part_Mute_Off
+Voice_Chat_World_Event_Part_Mute_On
+Voice_Chat_World_Event_Part_Silent
+Voice_Chat_World_Event_Part_Update
+WARNING_MESSAGE
+WARNING_START
+WARNING_STOP
+WBG_FRAME__PRIZE_TIMEUPDATE
+WBG_FRAME_END_TIMEUPDATE
+WBG_FRAME_INFLUENCE_SCOREUPDATE
+WBG_SCORE_UPDATE
+WBG_Tie_UPDATE
+WORLDMAP_ICONCLICK
+ZONE_CHANGE
+ZONE_CHANGED
+
+<xs:element name="OnLoad" type="xs:string" />
+<xs:element name="OnSizeChanged" type="xs:string" />
+<xs:element name="OnEvent" type="xs:string" />
+<xs:element name="OnUpdate" type="xs:string" />
+<xs:element name="OnShow" type="xs:string" />
+<xs:element name="OnHide" type="xs:string" />
+<xs:element name="OnEnable" type="xs:string" />
+<xs:element name="OnDisable" type="xs:string" />
+<xs:element name="OnEnter" type="xs:string" />
+<xs:element name="OnLeave" type="xs:string" />
+<xs:element name="OnMouseDown" type="xs:string" />
+<xs:element name="OnMouseUp" type="xs:string" />
+<xs:element name="OnMouseWheel" type="xs:string" />
+<xs:element name="OnDragStart" type="xs:string" />
+<xs:element name="OnDragStop" type="xs:string" />
+<xs:element name="OnReceiveDrag" type="xs:string" />
+<xs:element name="OnClick" type="xs:string" />
+<xs:element name="OnDoubleClick" type="xs:string" />
+<xs:element name="OnValueChanged" type="xs:string" />
+<xs:element name="OnUpdateModel" type="xs:string" />
+<xs:element name="OnAnimFinished" type="xs:string" />
+<xs:element name="OnEnterPressed" type="xs:string" />
+<xs:element name="OnEscapePressed" type="xs:string" />
+<xs:element name="OnSpacePressed" type="xs:string" />
+<xs:element name="OnTabPressed" type="xs:string" />
+<xs:element name="OnTextChanged" type="xs:string" />
+<xs:element name="OnTextSet" type="xs:string" />
+<xs:element name="OnCursorChanged" type="xs:string" />
+<xs:element name="OnInputLanguageChanged" type="xs:string" />
+<xs:element name="OnEditFocusGained" type="xs:string" />
+<xs:element name="OnEditFocusLost" type="xs:string" />
+<xs:element name="OnHorizontalScroll" type="xs:string" />
+<xs:element name="OnVerticalScroll" type="xs:string" />
+<xs:element name="OnScrollRangeChanged" type="xs:string" />
+<xs:element name="OnChar" type="xs:string" />
+<xs:element name="OnKeyDown" type="xs:string" />
+<xs:element name="OnKeyUp" type="xs:string" />
+<xs:element name="OnColorSelect" type="xs:string" />
+<xs:element name="OnHyperlinkEnter" type="xs:string" />
+<xs:element name="OnHyperlinkLeave" type="xs:string" />
+<xs:element name="OnHyperlinkClick" type="xs:string" />
+<xs:element name="OnMessageScrollChanged" type="xs:string" />
+<xs:element name="OnMovieFinished" type="xs:string" />
+<xs:element name="OnMovieShowSubtitle" type="xs:string" />
+<xs:element name="OnMovieHideSubtitle" type="xs:string" />
+<xs:element name="OnTooltipSetDefaultAnchor" type="xs:string" />
+<xs:element name="OnTooltipCleared" type="xs:string" />
+<xs:element name="OnTooltipAddMoney" type="xs:string" />
+
+--------------------------------------------------------------------------------
+-- 翻訳エクスポート設定
+-- Namespace: base namespace
+-- Format: Simple Lua table
+-- Language: Japanese
+-- Handle unlocalized: Commented blank
+-- Escape non=ASCII charactores?: Checked
+-- Handle subnamespaces: Show as a table
+
+--------------------------------------------------------------------------------
+-- 翻訳インポート設定
+-- Namespace: 指定
+-- Format: Standard lua dictionary-style table
+-- Language: 指定
+-- フォーマット
+-- message = 
+{
+	AddonManagerDescription = "XXXX XXXX",
+	AllCommandListTitle = "XXXX",
+}
+
+--]]
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--[[
+-- データ項目の更新(再帰)
+Kitty.updateSettingData = function(oldStoredValue, newInitialValue)
+	if(type(oldStoredValue) == "table" and type(newInitialValue) == "table") then
+		-- どちらもテーブル
+		local result = {};
+		for key, value in pairs(newInitialValue) do
+			local newValue = newInitialValue[key]
+			local oldValue = oldStoredValue[key]
+			result[key] = Kitty.updateSettingData(oldValue, newValue);	-- 再帰呼出し
+		end
+		return result;
+	else
+		if(oldStoredValue == nil) then
+			return newInitialValue;
+		else
+			return oldStoredValue;
+		end
+	end
+end;
+--]]
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------

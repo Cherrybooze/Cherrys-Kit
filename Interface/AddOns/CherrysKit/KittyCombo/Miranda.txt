@@ -1,0 +1,214 @@
+KittyCombo - English (Miranda)
+Mainly KittyCombo will support attack flow of the player.
+KittyCombo executes in order the command by conditions which player specified.
+The kind of command, execution sequence, and an execution condition are customizable.
+As command, player can specify skill, suit skill, action (including using item), Ex skill, macro, emotion and so on.
+
+Main functions:
+- Combo attack
+    This add-on will execute in order the command configured by player in advance.
+- Repair of equipment
+    This add-on will repair high durable equipment, when current durability is less than 100.
+- Buff check of PartyMember
+    This add-on will show message on default chat window, if buff(mainly healer's buff) of party member are insufficient.
+- Reorganization of Party
+    This add-on can disperse party, or re-invite last member.
+- Automatic display of DPS
+    DPS is displayed after the end of combat.
+- Automatic display of damage taken
+    The damage received from PC and NPC is displayed on default chat window.
+- Skip target of PC's pet(only under guild CG).
+    When targeting by Tab key, this add-on avoids targeting player's pet.
+- Warning of target state.
+    Warning is displayed when high level NPC calls the name of a player.
+    Warning is displayed when a target PC is in a matchless state.
+- Bulk purchase
+    Bulk purchase will be possible with ShiftKey.
+- Conversion of event code
+    When player received the mail attached event code, it can exchange without typing code.
+    As for this function, YossyE's code is used. YossyE, Thank you for your support.
+- Increase icons of macro
+    The number of icons of macro increases.
+
+Main usage:
+- Show help window
+    /kc help
+- Show configuration window
+    /kc show
+- MiniMap Button
+    It can use from a mini map button.
+- AddonManager
+    It can use from add-on manager.
+
+- Combo attack
+    /run Kitty.attack();
+    /run Kitty.attack("RangeAttack");
+- Repair of equipment
+    /run Kitty.repair();
+- Buff check of PartyMember
+    /run Kitty.checkBuff();
+- Reorganization of Party
+    /run Kitty.remakeParty();
+- Automatic display of DPS
+    It can configure whether it shows on default chat window.
+- Automatic display of damage taken
+    It can configure whether it shows on default chat window.
+- Skip target of PC's pet(only under guild CG).
+    It can configure whether it enables or not.
+- Warning of target state.
+    It is displayed automatically.
+- Bulk purchase
+    It purchases pressing the Shift key.
+- Conversion of event code
+    It presses conversion button below the mail message window.
+- Increase icons of macro
+    It is increasing automatically.
+
+Limitations:
+In addition, this add-on might only work in Japan, since it contains much Japanese data.
+(Ready to translate.)
+Thanks in advance!
+
+--------------------------------------------------------------------------------
+KittyCombo - German
+KittyCombo unterstützt hauptsächlich den Spieler dabei, den Angriff flüssig zu halten.
+KittyCombo führt Kommandos in der Reihenfolge und unter den Bedingungen, welche vom Spieler vorgegeben wurden,aus.
+Die Art des Kommandos, sowie Ablaufreihenfolge und die Ausführungsbedingungen sind anpassbar.
+Als Kommando kann der Spieler einen Skill, Set-Skill, Item-Skill (inklusive ausrüstung des Items), Extra Skills, Macro, Emote, usw. vorgeben.
+
+Hauptfunktionen:
+- Combo-Angriffe
+    Dieses Addon wird in, vom Spieler, vorher festgelegter Reihenfolge Kommandos ausführen.
+- Ausrüstung Reparieren
+    Dieses Addon wird Items mit Hoher Dura reparieren, sollte die momentane Dura unter 100 sein.
+- Buff Überprüfung der Gruppenmitglieder
+    Dieses Addon wird eine Nachricht im Chatfenster ausgaben, wenn Buffs (Hauptsächlich Healer Buffs) auf Gruppenmitgliedern fehlen.
+- Neuorganisation der Gruppe
+   Dieses Addon kann die Gruppe auflösen bzw. die letzten Mitglieder neu einladen.
+- Automatische Anzeige der DPS
+    Die DPS wird nach Kampfende angezeigt.
+- Automatische Anzeige des Eingehenden Schadens
+    Der von Spielern und NPC's eingehende Schaden wird im Chatfenster angezeigt
+- Begleiter von Spielern werden nicht angezielt (nur im Gildenkrieg)
+    Die durch TAB angezielten Begleiter werden aus dem Target genommen.
+- Warning of target state.
+    Eine Warnung wird angezeigt, wenn ein High Level NPC den Namen eines Spielers ausuft.
+    Eine Warnung wird angezeigt, wenn ein Spieler in einem unverwundbaren Zustand ist.
+- Massen Einkauf
+    Durch drücken der Shift-Taste wird ein Massenkauf möglich.
+- Übertragung von Event-Codes
+    Wenn ein Spieler eine Nachricht mit anhängendem Event-Code erhält, kann er Eingesetzt werden ohne den Code zu tippen.
+     Für diese Funktion wird YossyE's Code verwendet. Danke dir YossyE für deine unterstützung.
+- Macro-Icon Anzahl erhöhen
+    Die Anzahl der Macro-Icons wird erweitert.
+
+Benutzung:
+- Hilfe anzeigen
+    /kc help
+- Konfigurationsfenster anzeigen
+    /kc show
+- MiniMap Button
+    Das Addon kann durch einen MiniMap Button aufgerufen werden.
+- AddonManager
+    Das Addon kann durch AddonManager verwaltet werden.
+
+- Combo Angriff
+    /run Kitty.attack();
+    /run Kitty.attack("RangeAttack");
+- Ausrüstung Reparieren
+    /run Kitty.repair();
+- Buff Überprüfung
+    /run Kitty.checkBuff();
+- Gruppe neuorganisieren
+    /run Kitty.remakeParty();
+- Automatische Anzeige der DPS
+    Es kann konfiguriert werden, ob es im Chatfenster angezeit wird.
+- Automatische Anzeige eingehenden Schadens
+    Es kann konfiguriert werden, ob es im Chatfenster angezeit wird.
+- Begleiter von Spielern werden nicht angezielt (nur im Gildenkrieg)
+    Es kann an oder aus gestellt werden.
+- Target-Status-Warnung
+    Wird automatisch angezeigt.
+- Massenkauf
+    Durch halten der Shift-Taste aktiviert
+- Übertragung des Event-Codes
+    Der Übertragungsbutton unterhalb des Nachrichten-Fensters wird automatisch gedrückt.
+- Steigerung der Macro-Icon Anzahl
+   Macro-Icons werden automatisch hinzugefügt.
+
+Einschränkungen:
+Da dieses Addon japanische Daten enthält ist die korrekte Ausführung des Addons nicht gewährleistet.
+Allerdings sind die zu Übersetzenden Teile in bearbeitung.
+Vielen Dank im Vorraus!
+
+--------------------------------------------------------------------------------
+KittyCombo - Japanese
+KittyComboは、主にプレイヤーのスキル回しを支援します。
+KittyComboは、指定した条件のコマンドを順に実行します。
+コマンドの種類、実行順序、実行条件をカスタマイズすることができます。
+コマンドとして、スキル、スーツスキル、アクション(アイテムの使用)、Exスキル、マクロ、エモーションなどを指定することができます。
+
+主な機能:
+- コンボ攻撃
+    あらかじめ設定された、スキル、アクション、マクロなどを、順番に実行します。
+- 装備の修理
+    耐久が100未満の高耐久装備を修理します。
+- PartyMemberのバフチェック
+    PartyMemberのバフ(主にPのバフ)が不足している場合に、総合タブに表示します。
+- Partyの再編成
+    Partyを解散、前回のメンバーを招待します。
+- DPSの自動表示
+    戦闘終了後に、DPSを表示します。
+- 被ダメの自動表示
+    PC, NPCから受けたダメージを、総合タブに表示します。
+- ペットのターゲットスキップ(CG中のみ)
+    Tabキーでターゲットするとき、ペットはターゲットしないようにします。
+- ボスが自分の名前を呼んだとき、相手PCが無敵状態のときに警告
+    NPCがプレイヤーの名前を呼んだときに、警告を表示します。
+    ターゲットが無敵状態のときに、警告を表示します。
+- まとめ買い
+    ShiftKeyを押しながら購入すると、まとめ買いができます。
+- イベントコード変換機能
+    イベントコードが記載されているメールを受信したとき、イベントコード入力せずに引換えることができます。
+    YossyEさんのコードを流用しています。Yossyさんありがとうございます。
+- マクロのアイコン数の増加
+    マクロを作成したときに設定するアイコン数が、増えます。
+
+利用方法:
+- ヘルプ表示
+    /kc help
+- 設定画面表示
+    /kc show
+- MiniMap Button
+    ミニマップボタンより利用できます。
+- AddonManager
+    アドオンマネージャに対応しています。
+
+- コンボ攻撃
+    /run Kitty.attack();
+    /run Kitty.attack("RangeAttack");
+- 装備の修理
+    /run Kitty.repair();
+- PartyMemberのバフチェック
+    /run Kitty.checkBuff();
+- Partyの再編成
+    /run Kitty.remakeParty();
+- DPSの自動表示
+    設定画面にて、表示するかどうか設定することができます。
+- 被ダメの自動表示
+    設定画面にて、表示するかどうか設定することができます。
+- ペットのターゲットスキップ(CG中のみ)
+    設定画面にて、機能を有効にするか設定することができます。
+- ボスが自分の名前を呼んだとき、相手PCが無敵状態のときに警告
+    自動で表示されます。
+- まとめ買い
+    Shiftキーを押下しながら、購入します。
+- イベントコード変換機能
+    メール文面の下段の、変換ボタンを押下します。
+- マクロのアイコン数の増加
+    自動的に増えています。
+
+制約事項：
+なお、日本語データを多く含むため、日本語環境以外では動作しないと思われます。
+(Version KittyCombo_v946.zipにて、vs Guild CGの制約は解除されました。)
+MysticStoneの活性化に、少しでも役立てればよいかと思っております。

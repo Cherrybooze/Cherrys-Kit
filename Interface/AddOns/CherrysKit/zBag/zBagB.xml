@@ -1,0 +1,565 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<!-- author adisadicul -->
+
+	<Frame name="zBagB" parent="UIParent" hidden="true" enableMouse="true" frameStrata="LOW">
+		<Size> <AbsDimension x="10" y="10"/></Size>
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset><AbsDimension x="50" y="200"/></Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			<Frame name="zBagBBackground" inherits="UIPanelBackdropFrame" enableMouse="true" frameStrata="LOW">
+				<Size><AbsDimension x="250" y="250"/></Size>
+				<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="-14" y="-16"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="zBagBTitleText" inherits="GameTitleFont" text="zBank">
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="14" y="7"/></Offset></Anchor></Anchors>
+						</FontString>
+					</Layer>
+					<Layer level="ARTWORK">
+						<FontString name="zBagBInspect" inherits="GameTitleFont" text="PREVIEW">
+							<Color r="0.7" g="0" b="0" a="1"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="zBagBTitleText" relativePoint="TOPRIGHT">					
+									<Offset><AbsDimension x="0" y="0"/></Offset>
+								</Anchor>
+							</Anchors>							
+						</FontString>
+					</Layer>
+				</Layers>				
+				<Scripts><OnLoad>UIPanelBackdropFrame_SetTexture(this,"Interface/Common/PanelCommonBorder",64,64);</OnLoad>
+				<OnMouseDown>
+				--this code makes sure you only move the bag when grabbing any of the 15 pixels on the edge of the frame
+				local frameX, frameY	= this:GetPos(); --get top left corner of bag frame
+				local frameW, frameH	= this:GetSize();  --get size of frame
+				
+				--allow grabbing from 15 pixels on any edge
+				local leftXGrabMin, leftXGrabMax, topYGrabMin, topYGrabMax, rightXGrabMin, rightXGrabMax, bottomYGrabMin, bottomYGrabMax;
+				leftXGrabMin = frameX;
+				leftXGrabMax = leftXGrabMin+15;
+				topYGrabMin = frameY;
+				topYGrabMax = topYGrabMin + 15;
+				rightXGrabMax = leftXGrabMin + frameW;
+				rightXGrabMin = rightXGrabMax - 15;
+				bottomYGrabMax = topYGrabMin + frameH;
+				bottomYGrabMin = bottomYGrabMax -15;
+				
+				-- get mouse position
+				local cursorX, cursorY = GetCursorPos();
+				
+				--figure out if your cursor is on an edge
+				local withinPixelsFromTop, withinPixelsFromLeft, withinPixelsFromRight, withinPixelsFromBottom;
+				withinPixelsFromTop = math.max(topYGrabMax - cursorY, 0);
+				withinPixelsFromLeft = math.max(leftXGrabMax - cursorX, 0);
+				withinPixelsFromRight = math.max(cursorX - rightXGrabMin, 0);
+				withinPixelsFromBottom = math.max(cursorY - bottomYGrabMin, 0);
+				
+				if ((withinPixelsFromTop ==0) and (withinPixelsFromLeft ==0) and (withinPixelsFromRight ==0) and (withinPixelsFromBottom ==0)) then
+					--if your cursor is in the middle, do nothing
+				else
+					--if your cursor is on an edge
+					if IsShiftKeyDown() then
+						zBagB:SetFrameStrata( "MEDIUM" );
+					else
+						zBagB:SetFrameStrata( "LOW" );
+					end
+					this:StartMoving("TOPLEFT");
+				end
+				</OnMouseDown>
+				<OnMouseUp>
+				this:StopMovingOrSizing();
+				local xx,yy = zBagB:GetPos();
+				zBag_VAR["bbx"],zBag_VAR["bby"] = zBagBBackground:GetPos();
+				zBag_VAR["bbx"] = zBag_VAR["bbx"] - xx;
+				zBag_VAR["bby"] = zBag_VAR["bby"] - yy;
+				this:ClearAllAnchors();
+				this:SetAnchor("TOPLEFT","TOPLEFT","zBagB",zBag_VAR["bbx"]/GetUIScale(),zBag_VAR["bby"]/GetUIScale());
+				SaveVariablesPerCharacter("zBag_VAR");
+				SaveVariables("zBag_VAR");
+				</OnMouseUp>
+				</Scripts>
+			</Frame>
+			<Button name="zBagBBackgroundCloseButton"  inherits="UIPanelCloseButtonTemplate"> <!-- override default close button -->
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="zBagBBackground" relativePoint="TOPRIGHT">					
+						<Offset><AbsDimension x="-5" y="5"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+					if (BankFrame:IsVisible()) then
+						HideUIPanel(BankFrame);
+					end
+					if (zBagBBackground:IsVisible()) then
+						HideUIPanel(zBagB);
+					end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<Button name="zBagBSort">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="zBagBBackground" relativePoint="TOPLEFT">					
+						<Offset><AbsDimension x="12" y="20"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Anchors>
+					
+				</Anchors>				
+				<Scripts>
+					<OnClick>
+					zBagB_Sort();
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBankStrings.BankSortTooltip);
+						GameTooltip:AddLine(zBLocale.zBankStrings.BankSortTooltipAddline);
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\BagRefresh-Normal"/>
+				<PushedTexture file="Interface\BagFrame\BagRefresh-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\BagRefresh-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+		
+			<Button name="zBagBRent2">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="zBagBSort" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="2" y="0"/></Offset>
+					</Anchor>					
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenTimeFlagStoreUpFrame("BankBag2");
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBankStrings.BankRentTab2Tooltip);
+						GameTooltip:AddLine(zBag_LetTime(2,true));
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\ClockButton-Normal"/>
+				<PushedTexture file="Interface\BagFrame\ClockButton-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\ClockButton-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="zBagBRent3">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="zBagBRent2" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="2" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenTimeFlagStoreUpFrame("BankBag3");
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBankStrings.BankRentTab3Tooltip);
+						GameTooltip:AddLine(zBag_LetTime(3,true));
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\ClockButton-Normal"/>
+				<PushedTexture file="Interface\BagFrame\ClockButton-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\ClockButton-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="zBagBRent4">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagBRent3" relativePoint="TOPRIGHT">
+					<Offset><AbsDimension x="2" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenTimeFlagStoreUpFrame("BankBag4");
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBankStrings.BankRentTab4Tooltip);
+						GameTooltip:AddLine(zBag_LetTime(4,true));
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\ClockButton-Normal"/>
+				<PushedTexture file="Interface\BagFrame\ClockButton-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\ClockButton-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="zBagBRent5">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagBRent4" relativePoint="TOPRIGHT">
+					<Offset><AbsDimension x="2" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenTimeFlagStoreUpFrame("BankBag5");
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBankStrings.BankRentTab5Tooltip);
+						GameTooltip:AddLine(zBag_LetTime(5,true));
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\ClockButton-Normal"/>
+				<PushedTexture file="Interface\BagFrame\ClockButton-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\ClockButton-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			<Frame name="zBagBHLBank">
+				<Size><AbsDimension x="250" y="250"/></Size>
+				<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+					<Texture name="$parentTex" file="Interface\Buttons\QuickSlot-QualityBorder01" hidden="false" alphaMode="ADD">
+						<Color r="0.0" g="0.8" b="0" a="0.5"/>
+<!--						<Size>
+							<AbsDimension x="64" y="64"/>
+						</Size> -->
+						<Anchors>
+							<Anchor point="TOPLEFT"/>
+							<Anchor point="BOTTOMRIGHT"/>
+						</Anchors>
+					</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Button name="zBagBItem1" inherits="zTBankItem" id="1"/>
+			<Button name="zBagBItem2" inherits="zTBankItem" id="2"/>
+			<Button name="zBagBItem3" inherits="zTBankItem" id="3"/>
+			<Button name="zBagBItem4" inherits="zTBankItem" id="4"/>
+			<Button name="zBagBItem5" inherits="zTBankItem" id="5"/>
+			<Button name="zBagBItem6" inherits="zTBankItem" id="6"/>
+			<Button name="zBagBItem7" inherits="zTBankItem" id="7"/>
+			<Button name="zBagBItem8" inherits="zTBankItem" id="8"/>
+			<Button name="zBagBItem9" inherits="zTBankItem" id="9"/>
+			<Button name="zBagBItem10" inherits="zTBankItem" id="10"/>
+			<Button name="zBagBItem11" inherits="zTBankItem" id="11"/>
+			<Button name="zBagBItem12" inherits="zTBankItem" id="12"/>
+			<Button name="zBagBItem13" inherits="zTBankItem" id="13"/>
+			<Button name="zBagBItem14" inherits="zTBankItem" id="14"/>
+			<Button name="zBagBItem15" inherits="zTBankItem" id="15"/>
+			<Button name="zBagBItem16" inherits="zTBankItem" id="16"/>
+			<Button name="zBagBItem17" inherits="zTBankItem" id="17"/>
+			<Button name="zBagBItem18" inherits="zTBankItem" id="18"/>
+			<Button name="zBagBItem19" inherits="zTBankItem" id="19"/>
+			<Button name="zBagBItem20" inherits="zTBankItem" id="20"/>
+			<Button name="zBagBItem21" inherits="zTBankItem" id="21"/>
+			<Button name="zBagBItem22" inherits="zTBankItem" id="22"/>
+			<Button name="zBagBItem23" inherits="zTBankItem" id="23"/>
+			<Button name="zBagBItem24" inherits="zTBankItem" id="24"/>
+			<Button name="zBagBItem25" inherits="zTBankItem" id="25"/>
+			<Button name="zBagBItem26" inherits="zTBankItem" id="26"/>
+			<Button name="zBagBItem27" inherits="zTBankItem" id="27"/>
+			<Button name="zBagBItem28" inherits="zTBankItem" id="28"/>
+			<Button name="zBagBItem29" inherits="zTBankItem" id="29"/>
+			<Button name="zBagBItem30" inherits="zTBankItem" id="30"/>
+			<Button name="zBagBItem31" inherits="zTBankItem" id="31"/>
+			<Button name="zBagBItem32" inherits="zTBankItem" id="32"/>
+			<Button name="zBagBItem33" inherits="zTBankItem" id="33"/>
+			<Button name="zBagBItem34" inherits="zTBankItem" id="34"/>
+			<Button name="zBagBItem35" inherits="zTBankItem" id="35"/>
+			<Button name="zBagBItem36" inherits="zTBankItem" id="36"/>
+			<Button name="zBagBItem37" inherits="zTBankItem" id="37"/>
+			<Button name="zBagBItem38" inherits="zTBankItem" id="38"/>
+			<Button name="zBagBItem39" inherits="zTBankItem" id="39"/>
+			<Button name="zBagBItem40" inherits="zTBankItem" id="40"/>
+			<Button name="zBagBItem41" inherits="zTBankItem" id="41"/>
+			<Button name="zBagBItem42" inherits="zTBankItem" id="42"/>
+			<Button name="zBagBItem43" inherits="zTBankItem" id="43"/>
+			<Button name="zBagBItem44" inherits="zTBankItem" id="44"/>
+			<Button name="zBagBItem45" inherits="zTBankItem" id="45"/>
+			<Button name="zBagBItem46" inherits="zTBankItem" id="46"/>
+			<Button name="zBagBItem47" inherits="zTBankItem" id="47"/>
+			<Button name="zBagBItem48" inherits="zTBankItem" id="48"/>
+			<Button name="zBagBItem49" inherits="zTBankItem" id="49"/>
+			<Button name="zBagBItem50" inherits="zTBankItem" id="50"/>
+			<Button name="zBagBItem51" inherits="zTBankItem" id="51"/>
+			<Button name="zBagBItem52" inherits="zTBankItem" id="52"/>
+			<Button name="zBagBItem53" inherits="zTBankItem" id="53"/>
+			<Button name="zBagBItem54" inherits="zTBankItem" id="54"/>
+			<Button name="zBagBItem55" inherits="zTBankItem" id="55"/>
+			<Button name="zBagBItem56" inherits="zTBankItem" id="56"/>
+			<Button name="zBagBItem57" inherits="zTBankItem" id="57"/>
+			<Button name="zBagBItem58" inherits="zTBankItem" id="58"/>
+			<Button name="zBagBItem59" inherits="zTBankItem" id="59"/>
+			<Button name="zBagBItem60" inherits="zTBankItem" id="60"/>
+			<Button name="zBagBItem61" inherits="zTBankItem" id="61"/>
+			<Button name="zBagBItem62" inherits="zTBankItem" id="62"/>
+			<Button name="zBagBItem63" inherits="zTBankItem" id="63"/>
+			<Button name="zBagBItem64" inherits="zTBankItem" id="64"/>
+			<Button name="zBagBItem65" inherits="zTBankItem" id="65"/>
+			<Button name="zBagBItem66" inherits="zTBankItem" id="66"/>
+			<Button name="zBagBItem67" inherits="zTBankItem" id="67"/>
+			<Button name="zBagBItem68" inherits="zTBankItem" id="68"/>
+			<Button name="zBagBItem69" inherits="zTBankItem" id="69"/>
+			<Button name="zBagBItem70" inherits="zTBankItem" id="70"/>
+			<Button name="zBagBItem71" inherits="zTBankItem" id="71"/>
+			<Button name="zBagBItem72" inherits="zTBankItem" id="72"/>
+			<Button name="zBagBItem73" inherits="zTBankItem" id="73"/>
+			<Button name="zBagBItem74" inherits="zTBankItem" id="74"/>
+			<Button name="zBagBItem75" inherits="zTBankItem" id="75"/>
+			<Button name="zBagBItem76" inherits="zTBankItem" id="76"/>
+			<Button name="zBagBItem77" inherits="zTBankItem" id="77"/>
+			<Button name="zBagBItem78" inherits="zTBankItem" id="78"/>
+			<Button name="zBagBItem79" inherits="zTBankItem" id="79"/>
+			<Button name="zBagBItem80" inherits="zTBankItem" id="80"/>
+			<Button name="zBagBItem81" inherits="zTBankItem" id="81"/>
+			<Button name="zBagBItem82" inherits="zTBankItem" id="82"/>
+			<Button name="zBagBItem83" inherits="zTBankItem" id="83"/>
+			<Button name="zBagBItem84" inherits="zTBankItem" id="84"/>
+			<Button name="zBagBItem85" inherits="zTBankItem" id="85"/>
+			<Button name="zBagBItem86" inherits="zTBankItem" id="86"/>
+			<Button name="zBagBItem87" inherits="zTBankItem" id="87"/>
+			<Button name="zBagBItem88" inherits="zTBankItem" id="88"/>
+			<Button name="zBagBItem89" inherits="zTBankItem" id="89"/>
+			<Button name="zBagBItem90" inherits="zTBankItem" id="90"/>
+			<Button name="zBagBItem91" inherits="zTBankItem" id="91"/>
+			<Button name="zBagBItem92" inherits="zTBankItem" id="92"/>
+			<Button name="zBagBItem93" inherits="zTBankItem" id="93"/>
+			<Button name="zBagBItem94" inherits="zTBankItem" id="94"/>
+			<Button name="zBagBItem95" inherits="zTBankItem" id="95"/>
+			<Button name="zBagBItem96" inherits="zTBankItem" id="96"/>
+			<Button name="zBagBItem97" inherits="zTBankItem" id="97"/>
+			<Button name="zBagBItem98" inherits="zTBankItem" id="98"/>
+			<Button name="zBagBItem99" inherits="zTBankItem" id="99"/>
+			<Button name="zBagBItem100" inherits="zTBankItem" id="100"/>
+			<Button name="zBagBItem101" inherits="zTBankItem" id="101"/>
+			<Button name="zBagBItem102" inherits="zTBankItem" id="102"/>
+			<Button name="zBagBItem103" inherits="zTBankItem" id="103"/>
+			<Button name="zBagBItem104" inherits="zTBankItem" id="104"/>
+			<Button name="zBagBItem105" inherits="zTBankItem" id="105"/>
+			<Button name="zBagBItem106" inherits="zTBankItem" id="106"/>
+			<Button name="zBagBItem107" inherits="zTBankItem" id="107"/>
+			<Button name="zBagBItem108" inherits="zTBankItem" id="108"/>
+			<Button name="zBagBItem109" inherits="zTBankItem" id="109"/>
+			<Button name="zBagBItem110" inherits="zTBankItem" id="110"/>
+			<Button name="zBagBItem111" inherits="zTBankItem" id="111"/>
+			<Button name="zBagBItem112" inherits="zTBankItem" id="112"/>
+			<Button name="zBagBItem113" inherits="zTBankItem" id="113"/>
+			<Button name="zBagBItem114" inherits="zTBankItem" id="114"/>
+			<Button name="zBagBItem115" inherits="zTBankItem" id="115"/>
+			<Button name="zBagBItem116" inherits="zTBankItem" id="116"/>
+			<Button name="zBagBItem117" inherits="zTBankItem" id="117"/>
+			<Button name="zBagBItem118" inherits="zTBankItem" id="118"/>
+			<Button name="zBagBItem119" inherits="zTBankItem" id="119"/>
+			<Button name="zBagBItem120" inherits="zTBankItem" id="120"/>
+			<Button name="zBagBItem121" inherits="zTBankItem" id="121"/>
+			<Button name="zBagBItem122" inherits="zTBankItem" id="122"/>
+			<Button name="zBagBItem123" inherits="zTBankItem" id="123"/>
+			<Button name="zBagBItem124" inherits="zTBankItem" id="124"/>
+			<Button name="zBagBItem125" inherits="zTBankItem" id="125"/>
+			<Button name="zBagBItem126" inherits="zTBankItem" id="126"/>
+			<Button name="zBagBItem127" inherits="zTBankItem" id="127"/>
+			<Button name="zBagBItem128" inherits="zTBankItem" id="128"/>
+			<Button name="zBagBItem129" inherits="zTBankItem" id="129"/>
+			<Button name="zBagBItem130" inherits="zTBankItem" id="130"/>
+			<Button name="zBagBItem131" inherits="zTBankItem" id="131"/>
+			<Button name="zBagBItem132" inherits="zTBankItem" id="132"/>
+			<Button name="zBagBItem133" inherits="zTBankItem" id="133"/>
+			<Button name="zBagBItem134" inherits="zTBankItem" id="134"/>
+			<Button name="zBagBItem135" inherits="zTBankItem" id="135"/>
+			<Button name="zBagBItem136" inherits="zTBankItem" id="136"/>
+			<Button name="zBagBItem137" inherits="zTBankItem" id="137"/>
+			<Button name="zBagBItem138" inherits="zTBankItem" id="138"/>
+			<Button name="zBagBItem139" inherits="zTBankItem" id="139"/>
+			<Button name="zBagBItem140" inherits="zTBankItem" id="140"/>
+			<Button name="zBagBItem141" inherits="zTBankItem" id="141"/>
+			<Button name="zBagBItem142" inherits="zTBankItem" id="142"/>
+			<Button name="zBagBItem143" inherits="zTBankItem" id="143"/>
+			<Button name="zBagBItem144" inherits="zTBankItem" id="144"/>
+			<Button name="zBagBItem145" inherits="zTBankItem" id="145"/>
+			<Button name="zBagBItem146" inherits="zTBankItem" id="146"/>
+			<Button name="zBagBItem147" inherits="zTBankItem" id="147"/>
+			<Button name="zBagBItem148" inherits="zTBankItem" id="148"/>
+			<Button name="zBagBItem149" inherits="zTBankItem" id="149"/>
+			<Button name="zBagBItem150" inherits="zTBankItem" id="150"/>
+			<Button name="zBagBItem151" inherits="zTBankItem" id="151"/>
+			<Button name="zBagBItem152" inherits="zTBankItem" id="152"/>
+			<Button name="zBagBItem153" inherits="zTBankItem" id="153"/>
+			<Button name="zBagBItem154" inherits="zTBankItem" id="154"/>
+			<Button name="zBagBItem155" inherits="zTBankItem" id="155"/>
+			<Button name="zBagBItem156" inherits="zTBankItem" id="156"/>
+			<Button name="zBagBItem157" inherits="zTBankItem" id="157"/>
+			<Button name="zBagBItem158" inherits="zTBankItem" id="158"/>
+			<Button name="zBagBItem159" inherits="zTBankItem" id="159"/>
+			<Button name="zBagBItem160" inherits="zTBankItem" id="160"/>
+			<Button name="zBagBItem161" inherits="zTBankItem" id="161"/>
+			<Button name="zBagBItem162" inherits="zTBankItem" id="162"/>
+			<Button name="zBagBItem163" inherits="zTBankItem" id="163"/>
+			<Button name="zBagBItem164" inherits="zTBankItem" id="164"/>
+			<Button name="zBagBItem165" inherits="zTBankItem" id="165"/>
+			<Button name="zBagBItem166" inherits="zTBankItem" id="166"/>
+			<Button name="zBagBItem167" inherits="zTBankItem" id="167"/>
+			<Button name="zBagBItem168" inherits="zTBankItem" id="168"/>
+			<Button name="zBagBItem169" inherits="zTBankItem" id="169"/>
+			<Button name="zBagBItem170" inherits="zTBankItem" id="170"/>
+			<Button name="zBagBItem171" inherits="zTBankItem" id="171"/>
+			<Button name="zBagBItem172" inherits="zTBankItem" id="172"/>
+			<Button name="zBagBItem173" inherits="zTBankItem" id="173"/>
+			<Button name="zBagBItem174" inherits="zTBankItem" id="174"/>
+			<Button name="zBagBItem175" inherits="zTBankItem" id="175"/>
+			<Button name="zBagBItem176" inherits="zTBankItem" id="176"/>
+			<Button name="zBagBItem177" inherits="zTBankItem" id="177"/>
+			<Button name="zBagBItem178" inherits="zTBankItem" id="178"/>
+			<Button name="zBagBItem179" inherits="zTBankItem" id="179"/>
+			<Button name="zBagBItem180" inherits="zTBankItem" id="180"/>
+			<Button name="zBagBItem181" inherits="zTBankItem" id="181"/>
+			<Button name="zBagBItem182" inherits="zTBankItem" id="182"/>
+			<Button name="zBagBItem183" inherits="zTBankItem" id="183"/>
+			<Button name="zBagBItem184" inherits="zTBankItem" id="184"/>
+			<Button name="zBagBItem185" inherits="zTBankItem" id="185"/>
+			<Button name="zBagBItem186" inherits="zTBankItem" id="186"/>
+			<Button name="zBagBItem187" inherits="zTBankItem" id="187"/>
+			<Button name="zBagBItem188" inherits="zTBankItem" id="188"/>
+			<Button name="zBagBItem189" inherits="zTBankItem" id="189"/>
+			<Button name="zBagBItem190" inherits="zTBankItem" id="190"/>
+			<Button name="zBagBItem191" inherits="zTBankItem" id="191"/>
+			<Button name="zBagBItem192" inherits="zTBankItem" id="192"/>
+			<Button name="zBagBItem193" inherits="zTBankItem" id="193"/>
+			<Button name="zBagBItem194" inherits="zTBankItem" id="194"/>
+			<Button name="zBagBItem195" inherits="zTBankItem" id="195"/>
+			<Button name="zBagBItem196" inherits="zTBankItem" id="196"/>
+			<Button name="zBagBItem197" inherits="zTBankItem" id="197"/>
+			<Button name="zBagBItem198" inherits="zTBankItem" id="198"/>
+			<Button name="zBagBItem199" inherits="zTBankItem" id="199"/>
+			<Button name="zBagBItem200" inherits="zTBankItem" id="200"/>
+			
+			<Button name="zBagBItem201" inherits="zTBankItem" id="201"/>
+			<Button name="zBagBItem202" inherits="zTBankItem" id="202"/>
+			<Button name="zBagBItem203" inherits="zTBankItem" id="203"/>
+			<Button name="zBagBItem204" inherits="zTBankItem" id="204"/>
+			<Button name="zBagBItem205" inherits="zTBankItem" id="205"/>
+			<Button name="zBagBItem206" inherits="zTBankItem" id="206"/>
+			<Button name="zBagBItem207" inherits="zTBankItem" id="207"/>
+			<Button name="zBagBItem208" inherits="zTBankItem" id="208"/>
+			<Button name="zBagBItem209" inherits="zTBankItem" id="209"/>
+			<Button name="zBagBItem210" inherits="zTBankItem" id="210"/>
+			<Button name="zBagBItem211" inherits="zTBankItem" id="211"/>
+			<Button name="zBagBItem212" inherits="zTBankItem" id="212"/>
+			<Button name="zBagBItem213" inherits="zTBankItem" id="213"/>
+			<Button name="zBagBItem214" inherits="zTBankItem" id="214"/>
+			<Button name="zBagBItem215" inherits="zTBankItem" id="215"/>
+			<Button name="zBagBItem216" inherits="zTBankItem" id="216"/>
+			<Button name="zBagBItem217" inherits="zTBankItem" id="217"/>
+			<Button name="zBagBItem218" inherits="zTBankItem" id="218"/>
+			<Button name="zBagBItem219" inherits="zTBankItem" id="219"/>
+			<Button name="zBagBItem220" inherits="zTBankItem" id="220"/>
+			<Button name="zBagBItem221" inherits="zTBankItem" id="221"/>
+			<Button name="zBagBItem222" inherits="zTBankItem" id="222"/>
+			<Button name="zBagBItem223" inherits="zTBankItem" id="223"/>
+			<Button name="zBagBItem224" inherits="zTBankItem" id="224"/>
+			<Button name="zBagBItem225" inherits="zTBankItem" id="225"/>
+			<Button name="zBagBItem226" inherits="zTBankItem" id="226"/>
+			<Button name="zBagBItem227" inherits="zTBankItem" id="227"/>
+			<Button name="zBagBItem228" inherits="zTBankItem" id="228"/>
+			<Button name="zBagBItem229" inherits="zTBankItem" id="229"/>
+			<Button name="zBagBItem230" inherits="zTBankItem" id="230"/>
+			<Button name="zBagBItem231" inherits="zTBankItem" id="231"/>
+			<Button name="zBagBItem232" inherits="zTBankItem" id="232"/>
+			<Button name="zBagBItem233" inherits="zTBankItem" id="233"/>
+			<Button name="zBagBItem234" inherits="zTBankItem" id="234"/>
+			<Button name="zBagBItem235" inherits="zTBankItem" id="235"/>
+			<Button name="zBagBItem236" inherits="zTBankItem" id="236"/>
+			<Button name="zBagBItem237" inherits="zTBankItem" id="237"/>
+			<Button name="zBagBItem238" inherits="zTBankItem" id="238"/>
+			<Button name="zBagBItem239" inherits="zTBankItem" id="239"/>
+			<Button name="zBagBItem240" inherits="zTBankItem" id="240"/>
+			<Button name="zBagBItem241" inherits="zTBankItem" id="241"/>
+			<Button name="zBagBItem242" inherits="zTBankItem" id="242"/>
+			<Button name="zBagBItem243" inherits="zTBankItem" id="243"/>
+			<Button name="zBagBItem244" inherits="zTBankItem" id="244"/>
+			<Button name="zBagBItem245" inherits="zTBankItem" id="245"/>
+			<Button name="zBagBItem246" inherits="zTBankItem" id="246"/>
+			<Button name="zBagBItem247" inherits="zTBankItem" id="247"/>
+			<Button name="zBagBItem248" inherits="zTBankItem" id="248"/>
+			<Button name="zBagBItem249" inherits="zTBankItem" id="249"/>
+			<Button name="zBagBItem250" inherits="zTBankItem" id="250"/>
+			<Button name="zBagBItem251" inherits="zTBankItem" id="251"/>
+			<Button name="zBagBItem252" inherits="zTBankItem" id="252"/>
+			<Button name="zBagBItem253" inherits="zTBankItem" id="253"/>
+			<Button name="zBagBItem254" inherits="zTBankItem" id="254"/>
+			<Button name="zBagBItem255" inherits="zTBankItem" id="255"/>
+			<Button name="zBagBItem256" inherits="zTBankItem" id="256"/>
+			<Button name="zBagBItem257" inherits="zTBankItem" id="257"/>
+			<Button name="zBagBItem258" inherits="zTBankItem" id="258"/>
+			<Button name="zBagBItem259" inherits="zTBankItem" id="259"/>
+			<Button name="zBagBItem260" inherits="zTBankItem" id="260"/>
+			<Button name="zBagBItem261" inherits="zTBankItem" id="261"/>
+			<Button name="zBagBItem262" inherits="zTBankItem" id="262"/>
+			<Button name="zBagBItem263" inherits="zTBankItem" id="263"/>
+			<Button name="zBagBItem264" inherits="zTBankItem" id="264"/>
+			<Button name="zBagBItem265" inherits="zTBankItem" id="265"/>
+			<Button name="zBagBItem266" inherits="zTBankItem" id="266"/>
+			<Button name="zBagBItem267" inherits="zTBankItem" id="267"/>
+			<Button name="zBagBItem268" inherits="zTBankItem" id="268"/>
+			<Button name="zBagBItem269" inherits="zTBankItem" id="269"/>
+			<Button name="zBagBItem270" inherits="zTBankItem" id="270"/>
+			<Button name="zBagBItem271" inherits="zTBankItem" id="271"/>
+			<Button name="zBagBItem272" inherits="zTBankItem" id="272"/>
+			<Button name="zBagBItem273" inherits="zTBankItem" id="273"/>
+			<Button name="zBagBItem274" inherits="zTBankItem" id="274"/>
+			<Button name="zBagBItem275" inherits="zTBankItem" id="275"/>
+			<Button name="zBagBItem276" inherits="zTBankItem" id="276"/>
+			<Button name="zBagBItem277" inherits="zTBankItem" id="277"/>
+			<Button name="zBagBItem278" inherits="zTBankItem" id="278"/>
+			<Button name="zBagBItem279" inherits="zTBankItem" id="279"/>
+			<Button name="zBagBItem280" inherits="zTBankItem" id="280"/>
+			<Button name="zBagBItem281" inherits="zTBankItem" id="281"/>
+			<Button name="zBagBItem282" inherits="zTBankItem" id="282"/>
+			<Button name="zBagBItem283" inherits="zTBankItem" id="283"/>
+			<Button name="zBagBItem284" inherits="zTBankItem" id="284"/>
+			<Button name="zBagBItem285" inherits="zTBankItem" id="285"/>
+			<Button name="zBagBItem286" inherits="zTBankItem" id="286"/>
+			<Button name="zBagBItem287" inherits="zTBankItem" id="287"/>
+			<Button name="zBagBItem288" inherits="zTBankItem" id="288"/>
+			<Button name="zBagBItem289" inherits="zTBankItem" id="289"/>
+			<Button name="zBagBItem290" inherits="zTBankItem" id="290"/>
+			<Button name="zBagBItem291" inherits="zTBankItem" id="291"/>
+			<Button name="zBagBItem292" inherits="zTBankItem" id="292"/>
+			<Button name="zBagBItem293" inherits="zTBankItem" id="293"/>
+			<Button name="zBagBItem294" inherits="zTBankItem" id="294"/>
+			<Button name="zBagBItem295" inherits="zTBankItem" id="295"/>
+			<Button name="zBagBItem296" inherits="zTBankItem" id="296"/>
+			<Button name="zBagBItem297" inherits="zTBankItem" id="297"/>
+			<Button name="zBagBItem298" inherits="zTBankItem" id="298"/>
+			<Button name="zBagBItem299" inherits="zTBankItem" id="299"/>
+			<Button name="zBagBItem300" inherits="zTBankItem" id="300"/>
+		</Frames>
+		<Scripts>
+			<OnLoad>zBagB_OnLoad(this);</OnLoad>
+			<OnShow>zBagB_OnShow(this);</OnShow>
+			<OnHide>zBag_OnHide(this);</OnHide> 
+			<OnEvent>zBagB_OnEvent(this,event,arg1,arg2);</OnEvent>
+			<OnUpdate>zBagB_OnUpdate();</OnUpdate>
+		</Scripts> 
+	</Frame>
+</Ui>

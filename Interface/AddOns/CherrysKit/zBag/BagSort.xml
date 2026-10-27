@@ -1,0 +1,140 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+
+    
+    <Frame name="BagSortDropdownTemplate" inherits="UIDropDownMenuTemplate" virtual="true">
+        <Scripts>
+            <OnShow>
+                -- Workaround to keep the game from setting incorrect text for a DD
+                local selectedID = UIDropDownMenu_GetSelectedID(this)
+                local text = BagSort.SortModeDisplayNames[selectedID]
+                local cb = function() 
+                    _G[this:GetName() .. "Text"]:SetText(text) 
+                end
+                Sol.timers.ScheduleTimer("BagSort", 0.01, cb)
+            </OnShow>
+        </Scripts>
+    </Frame>
+                
+    <Frame name="BagSortConfigFrame" parent="BagFrame" hidden="true" >
+        <Size>
+            <AbsDimension x="220" y="220"/>
+        </Size>
+        <Anchors>
+            <Anchor point="TOPRIGHT" relativeTo="BagFrame" relativePoint="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="-5" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Backdrop edgeFile="Interface\Tooltips\Tooltip-border" bgFile="Interface\Tooltips\Tooltip-Background">
+            <BackgroundInsets>
+                <AbsInset top="4" left="4" bottom="4" right="4"/>
+            </BackgroundInsets>
+            <EdgeSize>
+                <AbsValue val="16"/>
+            </EdgeSize>
+            <TileSize>
+                <AbsValue val="16"/>
+            </TileSize>
+        </Backdrop>
+        <Layers>
+            <Layer>
+                <FontString name="$parentTitle" inherits="GameTitleFont" text="BagSort - Select sort mode">
+                    <Anchors>
+                        <Anchor point="TOP" relativePoint="TOP">
+                            <Offset>
+                                <AbsDimension x="-10" y="8"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        
+        <Frames>
+            <Frame name="$parentSortType1" inherits="BagSortDropdownTemplate" id="1">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="15" y="35" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </Frame>
+            <Frame name="$parentSortType2" inherits="BagSortDropdownTemplate" id="2">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentSortType1" relativePoint="BOTTOM" />
+                </Anchors>
+            </Frame>
+            <Frame name="$parentSortType3" inherits="BagSortDropdownTemplate" id="3">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentSortType2" relativePoint="BOTTOM" />
+                </Anchors>
+            </Frame>
+            <Frame name="$parentSortType4" inherits="BagSortDropdownTemplate" id="4">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentSortType3" relativePoint="BOTTOM" />
+                </Anchors>
+            </Frame>
+            <Frame name="$parentSortType5" inherits="BagSortDropdownTemplate" id="5">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentSortType4" relativePoint="BOTTOM" />
+                </Anchors>
+            </Frame>
+            
+            <Button name="$parentCloseButton" inherits="UIPanelButtonTemplate" text="Close">
+                <Size>
+                    <AbsDimension x="80" y="30"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="-5" y="-5" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        HideUIPanel(BagSortConfigFrame)
+                    </OnClick>
+                </Scripts>
+            </Button>
+            
+            <Button name="$parentSaveButton" inherits="UIPanelButtonTemplate" text="Save">
+                <Size>
+                    <AbsDimension x="80" y="30"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="RIGHT" relativeTo="$parentCloseButton" relativePoint="LEFT" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        BagSort.Save()
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+        
+        <Scripts>
+            <OnLoad>
+				BagSort.OnLoad(this)
+			</OnLoad>
+			<OnEvent>
+				BagSort.OnEvent(this, event, arg1)
+			</OnEvent>
+            <OnShow>
+                BagSort.OnShow(this)
+            </OnShow>
+		</Scripts>
+    </Frame>
+    
+    <Frame name="BagSortUpdateFrame" hidden="false">
+        <Scripts>
+            <OnUpdate>
+                BagSort_OnUpdate()
+            </OnUpdate>
+        </Scripts>
+    </Frame>
+    
+	<GameTooltip name="BagSortTooltip" frameStrata="TOOLTIP" hidden="true" inherits="GameTooltipTemplate" parent="UIParent"/>
+</Ui>

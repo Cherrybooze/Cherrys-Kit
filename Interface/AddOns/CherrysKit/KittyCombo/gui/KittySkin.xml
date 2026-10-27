@@ -1,0 +1,68 @@
+<!-- Cherry's KittyCombo: corner grip that resizes a window (Kitty.Skin in lib/KittySkin.lua) -->
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+	<Button name="KittyResizeGripTemplate" virtual="true" enableMouse="true">
+		<Size><AbsDimension x="18" y="18" /></Size>
+		<Anchors>
+			<Anchor point="BOTTOMRIGHT">
+				<Offset><AbsDimension x="-4" y="-4" /></Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture name="$parentTexture">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.Skin.gripLoad(this);
+				end)();
+				]]>
+			</OnLoad>
+			<OnEnter>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.Skin.gripHighlight(this, true);
+					Kitty.Skin.gripTooltip(this);
+				end)();
+				]]>
+			</OnEnter>
+			<OnLeave>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.Skin.gripHighlight(this, false);
+					Kitty.hideGameTooltip(this);
+				end)();
+				]]>
+			</OnLeave>
+			<OnMouseDown>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					CloseDropDownMenus();
+					Kitty.Skin.gripStart(this);
+				end)();
+				]]>
+			</OnMouseDown>
+			<OnMouseUp>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.Skin.gripStop(this);
+				end)();
+				]]>
+			</OnMouseUp>
+			<OnUpdate>
+				<![CDATA[
+				if(Kitty.Skin.drag ~= nil) then
+					Kitty.Skin.gripUpdate(this);
+				end
+				]]>
+			</OnUpdate>
+		</Scripts>
+	</Button>
+</Ui>

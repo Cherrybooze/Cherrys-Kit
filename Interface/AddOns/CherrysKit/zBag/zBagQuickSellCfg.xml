@@ -1,0 +1,770 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<!-- author adisadicul -->
+	
+	
+	<!--Quick Sell Config Frame -->
+	
+	<Frame name="zBagQuickSellConfigFrame" parent="UIParent" inherits="UICommonFrameTemplate" enableMouse="true" frameStrata="MEDIUM" hidden="true">
+		<Size><AbsDimension x="550" y="320"/></Size>
+		<Anchors><Anchor point="CENTER"/>
+		</Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="zBagQuickSellConfigTitleText" inherits="GameTitleFont"> <!-- "zBag Quick Sell Configuration" -->
+					<Anchors><Anchor point="TOP"><Offset><AbsDimension x="-24" y="7"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="zBagVersionText" inherits="GameFontHighlight" justifyH="RIGHT">
+					<Size>
+						<AbsDimension x="178" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset><AbsDimension x="-40" y="-2"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+<!-- zBag Quick Sell Left Column Configuration Text -->
+			<Layer level="OVERLAY">
+				<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Options:" -->
+					<Anchors><Anchor point="TOPLEFT">
+					<Offset><AbsDimension x="15" y="35"/></Offset>
+					</Anchor></Anchors>
+				</FontString>				
+			</Layer>
+<!-- zBag Quick Sell Right Column Configuration Text -->
+			<Layer level="OVERLAY">
+				<FontString name="$parentTxt2" inherits="GameFontLabelYellow"> <!-- "Don't sell if:" -->
+					<Anchors><Anchor point="TOPLEFT">
+					<Offset><AbsDimension x="295" y="35"/></Offset>
+					</Anchor></Anchors>
+				</FontString>				
+			</Layer>
+		</Layers>
+		<Frames>
+<!-- Left side options -->
+		<EditBox name="$parentquicksellstartslotnumber" inherits="UIPanelEditBoxTemplate" letters="3" numeric="true">
+			<Size><AbsDimension x="32" y="22"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="1"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Quick sell start slot" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="35" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<Scripts>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Quick sell start slot", 1, 1, 1);
+					GameTooltip:AddLine("First bag slot to sell when you click the quick sell button.  To enable, enter a number between 1 and 180.  0 means no effect.", 0, 0.75, 0.95);
+					GameTooltip:Show();
+					zBagQuickSellConfig_showBagSlotNumbers();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+					zBagQuickSellConfig_hideBagSlotNumbers();
+				</OnLeave>		
+				<OnTextChanged>
+					zBagQuickSellConfig_Save();
+				</OnTextChanged>					
+			</Scripts>
+			<FontString inherits="GameEditFont"/>
+		</EditBox>	
+		<EditBox name="$parentquicksellendslotnumber" inherits="UIPanelEditBoxTemplate" letters="3" numeric="true">
+			<Size><AbsDimension x="32" y="22"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="20"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Quick sell end slot" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="35" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<Scripts>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Quick sell end slot", 1, 1, 1);
+					GameTooltip:AddLine("Last backpack item to sell when you push the quick sell button.  To enable, enter a number between 1 and 180.  0 means no effect.", 0, 0.75, 0.95);
+					GameTooltip:Show();
+					zBagQuickSellConfig_showBagSlotNumbers();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+					zBagQuickSellConfig_hideBagSlotNumbers();
+				</OnLeave>		
+				<OnTextChanged>
+					zBagQuickSellConfig_Save();
+				</OnTextChanged>					
+			</Scripts>
+			<FontString inherits="GameEditFont"/>
+		</EditBox>		
+		<CheckButton name="$parentquickSellIgnoreOptions">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="40"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Ignore Don't Sell Options" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagQuickSellConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Ignore Don't Sell Options", 1, 1, 1);
+					GameTooltip:AddLine("Enables very quick sell by selling ALL items within your quick sell start and end slot.  This option overrides the options on the right of this config window.", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>			
+		<Button name="AlwaysNeverSellConfigButton" inherits="UIPanelButtonTemplate"> <!-- "Always/Never Sell Config" -->
+			<Size>
+				<AbsDimension x="150" y="20"/>
+			</Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="60"/></Offset>
+			</Anchor></Anchors>
+			<Scripts>
+				<OnClick>
+					ToggleUIFrame(QSItemFilterFrame);
+				</OnClick>
+			</Scripts>
+		</Button>			
+<!-- Right side options -->
+<!--
+Ideas:
+Don't sell if durability is over x
+Don't sell if rarity is x (Quality)
+Don't sell if level above x
+Don't sell if yellow stat
+-->
+		<EditBox name="$parentdontQuickSellDurability" inherits="UIPanelEditBoxTemplate" letters="3" numeric="true">
+			<Size><AbsDimension x="32" y="22"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="1"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Durability Higher Than" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="35" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<Scripts>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Durability", 1, 1, 1);
+					GameTooltip:AddLine("Will not sell items with durability as high or higher than specified.  0 means no effect.", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>		
+				<OnTextChanged>
+					zBagQuickSellConfig_Save();
+				</OnTextChanged>					
+			</Scripts>
+			<FontString inherits="GameEditFont"/>
+		</EditBox>				
+		<EditBox name="$parentdontQuickSellLevel" inherits="UIPanelEditBoxTemplate" letters="3" numeric="true">
+			<Size><AbsDimension x="32" y="22"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="20"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Required Level Higher Than" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="35" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<Scripts>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Level", 1, 1, 1);
+					GameTooltip:AddLine("Will not sell items with a level as high or higher than specified.  0 means no effect.", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>		
+				<OnTextChanged>
+					zBagQuickSellConfig_Save();
+				</OnTextChanged>					
+			</Scripts>
+			<FontString inherits="GameEditFont"/>
+		</EditBox>		
+		<CheckButton name="$parentdontQuickSellRarity0">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="40"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "|cfffdfdfdWhite Rarity|r" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagQuickSellConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("White Rarity", 1, 1, 1);
+					GameTooltip:AddLine("Checking this box disables selling items of white rarity", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>			
+
+<CheckButton name="$parentdontQuickSellRarity1">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="60"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "|cff00fd00Normal Rarity|r" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagQuickSellConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Normal Rarity", 1, 1, 1);
+					GameTooltip:AddLine("Checking this box disables selling items of normal rarity", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>			
+
+<CheckButton name="$parentdontQuickSellRarity2">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="80"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "|cff0072bbGood Rarity|r" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagQuickSellConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Good Rarity", 1, 1, 1);
+					GameTooltip:AddLine("Checking this box disables selling items of good rarity", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>	
+
+<CheckButton name="$parentdontQuickSellRarity3">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="100"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "|cffc705f7Rare Rarity|r" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagQuickSellConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Rare Rarity", 1, 1, 1);
+					GameTooltip:AddLine("Checking this box disables selling items of rare rarity", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>	
+
+<CheckButton name="$parentdontQuickSellRarity4">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="120"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "|cfff58d56Epic Rarity|r" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagQuickSellConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Epic Rarity", 1, 1, 1);
+					GameTooltip:AddLine("Checking this box disables selling items of epic rarity", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>	
+
+<CheckButton name="$parentdontQuickSellRarity5">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="140"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "|cffa27d50Legendary Rarity|r" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagQuickSellConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Legendary Rarity", 1, 1, 1);
+					GameTooltip:AddLine("Checking this box disables selling items of legendary rarity", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>			
+		
+		</Frames>
+		<Scripts>
+			<OnShow>
+				zBagQuickSellConfig_Load();
+			</OnShow>
+			<OnHide>
+				zBagQuickSellConfig_Save();
+			</OnHide>
+		</Scripts>
+	</Frame>
+	
+
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ zBagQSItemFilter ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+	<Frame name="QSItemFilterFrame" inherits="UIPanelBackdropFrame" enableMouse="true" hidden="true" frameStrata="HIGH" parent="UIParent">
+		<Size><AbsDimension x="500" y="500"/></Size>
+		<Scripts>
+			<OnMouseDown>QSItemFilterFrame:StartMoving("CENTER");</OnMouseDown>
+			<OnMouseUp>QSItemFilterFrame:StopMovingOrSizing();</OnMouseUp>
+		</Scripts>
+		<Layers>
+			<Layer>
+				<Texture name="$parent_Image" file="Interface/AddOns/CherrysKit/zBag/Textures/minimap-normal.tga">
+					<Size><AbsDimension x="64" y="64"/></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+							<Offset><AbsDimension x="-20" y="-20"/></Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parent_Header" justifyH="CENTER" justifyV="MIDDLE" inherits="Font_Normal">
+					<FontHeight><AbsValue val="16"/></FontHeight>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+							<Offset><AbsDimension x="0" y="0"/></Offset>
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+							<Offset><AbsDimension x="0" y="26"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<ResizeBounds>
+			<minResize><AbsDimension x="400" y="300"/></minResize>
+			<maxResize><AbsDimension x="800" y="800"/></maxResize>
+		</ResizeBounds>
+		<Frames>
+			<Button name="$parent_CloseButton" inherits="UIPanelCloseButtonTemplate">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="-1" y="1" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts><OnClick>HideUIPanel(QSItemFilterFrame); QSItemFilterFrame_Itemname:ClearFocus();</OnClick></Scripts>
+			</Button>
+			<Frame name="$parent_ResizeButton" enableMouse="true">
+				<Size><AbsDimension x="16" y="16"/></Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-3" y="-3" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer>
+						<Texture name="$parent_Image" file="Interface/AddOns/CherrysKit/zBag/Textures/resize.tga">
+							<Size><AbsDimension x="16" y="16"/></Size>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnMouseDown>
+						QSItemFilterFrame:StartSizing("BOTTOMRIGHT");
+						QSData.Resizing = true;
+					</OnMouseDown>
+					<OnMouseUp>
+						QSItemFilterFrame:StopMovingOrSizing();
+						QSData.Resizing = false;
+						QSItemFilterX,QSItemFilterY = QSItemFilterFrame:GetSize();
+					</OnMouseUp>
+					<OnEnter>SetHyperlinkCursor(true);  QSTooltip(this);</OnEnter>
+					<OnLeave>SetHyperlinkCursor(false); GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Frame>
+
+			<Button name="$parent_ItemAdd" inherits="UIPlusButtonTemplate" enableMouse="true">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="60"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>this:RegisterForClicks("LeftButton","RightButton");</OnLoad>
+					<OnClick>QSItemFilter_AddItem(key,QSItemFilterFrame_Itemname:GetText(),UIDropDownMenu_GetSelectedID(QSItemFilterFrame_Looting),UIDropDownMenu_GetSelectedID(QSItemFilterFrame_Rolling));</OnClick>
+					<OnEnter>QSTooltip(this);</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parent_ItemRemove" inherits="UIMinusButtonTemplate">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parent_ItemAdd" relativePoint="RIGHT">
+						<Offset><AbsDimension x="2" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>QSItemFilter_RemoveItem();</OnClick>
+					<OnEnter>QSTooltip(this);</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+
+			<Frame name="$parent_Rolling" inherits="UIDropDownMenuTemplate" enableMouse="true">
+				<Size><AbsDimension x="100" y="28"/></Size>
+				<Anchors>
+					<Anchor point="RIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="-20" y="60"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer>
+						<FontString name="$parent_Title" justifyH="LEFT" inherits="Font_Normal">
+							<FontHeight><AbsValue val="12"/></FontHeight>
+							<Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+								<Offset><AbsDimension x="5" y="0"/></Offset>
+							</Anchor></Anchors>
+					</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>a,b=this:GetSize(); UIDropDownMenu_SetWidth(this,100); this:SetSize(a,b);</OnLoad>
+					<OnEnter>QSTooltip(this);</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Frame>
+			<Frame name="$parent_Looting" inherits="UIDropDownMenuTemplate" enableMouse="true">
+				<Size><AbsDimension x="100" y="28"/></Size>
+				<Anchors>
+					<Anchor point="RIGHT" relativeTo="$parent_Rolling" relativePoint="LEFT">
+						<Offset><AbsDimension x="-5" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer>
+						<FontString name="$parent_Title" justifyH="LEFT" inherits="Font_Normal">
+							<FontHeight><AbsValue val="12"/></FontHeight>
+							<Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+								<Offset><AbsDimension x="5" y="0"/></Offset>
+							</Anchor></Anchors>
+					</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>a,b=this:GetSize(); UIDropDownMenu_SetWidth(this,100); this:SetSize(a,b);</OnLoad>
+					<OnEnter>QSTooltip(this);</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Frame>
+			<EditBox name="$parent_Itemname">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent_ItemRemove" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="-14"/></Offset>
+					</Anchor>
+					<Anchor point="BOTTOMRIGHT" relativeTo="$parent_Looting" relativePoint="LEFT">
+						<Offset><AbsDimension x="-5" y="14"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Backdrop edgeFile="Interface\Tooltips\Tooltip-border" tile="true">
+					<EdgeSize><AbsValue val="10"/></EdgeSize>
+					<TileSize><AbsValue val="5"/></TileSize>
+				</Backdrop>
+				<FontString name="$parent_Text" inherits="GameTooltipFont" justifyH="LEFT">
+					<FontHeight><AbsValue val="13" /></FontHeight>
+				</FontString>
+				<TextInsets>
+					<AbsInset left="8" right="4" top="7" bottom="0" />
+				</TextInsets>
+				<Layers>
+					<Layer>
+						<FontString name="$parent_Title" justifyH="LEFT" inherits="Font_Normal">
+							<FontHeight><AbsValue val="12"/></FontHeight>
+							<Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+								<Offset><AbsDimension x="5" y="0"/></Offset>
+							</Anchor></Anchors>
+					</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEscapePressed>this:ClearFocus();</OnEscapePressed>
+					<OnKeyUp>QSItemFilter_SearchName(); QSItemFilter_SetValues();</OnKeyUp>
+					<OnEnter>QSTooltip(this);</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+					<OnClick>QSItemFilter_ReceiveDrag(this);</OnClick>
+					<OnReceiveDrag>QSItemFilter_ReceiveDrag(this);</OnReceiveDrag>
+				</Scripts>
+			</EditBox>
+
+			<Frame name="$parent_Filterlist" enableMouse="true">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="80"/></Offset>
+					</Anchor>
+					<Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-40" y="-10"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Backdrop edgeFile="Interface\Tooltips\Tooltip-border" bgFile="Interface\SocialFrame\SocialFrame_Contextborder_bg">
+					<EdgeSize><AbsValue val="10"/></EdgeSize>
+					<TileSize><AbsValue val="5"/></TileSize>
+				</Backdrop>
+
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parent_Highlight" file="Interface\Login\Common\ServerlistButton-Highlight"/>
+					</Layer>
+				</Layers>
+
+				<Frames>
+					<Button name="$parent_Item1"  inherits="QSItemFilterFrame_Template" id="1" />
+					<Button name="$parent_Item2"  inherits="QSItemFilterFrame_Template" id="2" />
+					<Button name="$parent_Item3"  inherits="QSItemFilterFrame_Template" id="3" />
+					<Button name="$parent_Item4"  inherits="QSItemFilterFrame_Template" id="4" />
+					<Button name="$parent_Item5"  inherits="QSItemFilterFrame_Template" id="5" />
+					<Button name="$parent_Item6"  inherits="QSItemFilterFrame_Template" id="6" />
+					<Button name="$parent_Item7"  inherits="QSItemFilterFrame_Template" id="7" />
+					<Button name="$parent_Item8"  inherits="QSItemFilterFrame_Template" id="8" />
+					<Button name="$parent_Item9"  inherits="QSItemFilterFrame_Template" id="9" />
+					<Button name="$parent_Item10" inherits="QSItemFilterFrame_Template" id="10"/>
+					<Button name="$parent_Item11" inherits="QSItemFilterFrame_Template" id="11"/>
+					<Button name="$parent_Item12" inherits="QSItemFilterFrame_Template" id="12"/>
+					<Button name="$parent_Item13" inherits="QSItemFilterFrame_Template" id="13"/>
+					<Button name="$parent_Item14" inherits="QSItemFilterFrame_Template" id="14"/>
+					<Button name="$parent_Item15" inherits="QSItemFilterFrame_Template" id="15"/>
+					<Button name="$parent_Item16" inherits="QSItemFilterFrame_Template" id="16"/>
+					<Button name="$parent_Item17" inherits="QSItemFilterFrame_Template" id="17"/>
+					<Button name="$parent_Item18" inherits="QSItemFilterFrame_Template" id="18"/>
+					<Button name="$parent_Item19" inherits="QSItemFilterFrame_Template" id="19"/>
+					<Button name="$parent_Item20" inherits="QSItemFilterFrame_Template" id="20"/>
+					<Button name="$parent_Item21" inherits="QSItemFilterFrame_Template" id="21"/>
+					<Button name="$parent_Item22" inherits="QSItemFilterFrame_Template" id="22"/>
+					<Button name="$parent_Item23" inherits="QSItemFilterFrame_Template" id="23"/>
+					<Button name="$parent_Item24" inherits="QSItemFilterFrame_Template" id="24"/>
+					<Button name="$parent_Item25" inherits="QSItemFilterFrame_Template" id="25"/>
+					<Button name="$parent_Item26" inherits="QSItemFilterFrame_Template" id="26"/>
+					<Button name="$parent_Item27" inherits="QSItemFilterFrame_Template" id="27"/>
+					<Button name="$parent_Item28" inherits="QSItemFilterFrame_Template" id="28"/>
+					<Button name="$parent_Item29" inherits="QSItemFilterFrame_Template" id="29"/>
+					<Button name="$parent_Item30" inherits="QSItemFilterFrame_Template" id="30"/>
+				</Frames>
+				<Scripts>
+					<OnLoad>
+						for n=1,30 do
+							getglobal("QSItemFilterFrame_Filterlist_Item"..n):ClearAllAnchors();
+							getglobal("QSItemFilterFrame_Filterlist_Item"..n):SetAnchor("TOPLEFT", "TOPLEFT", "QSItemFilterFrame_Filterlist", 0, n*20-10);
+							getglobal("QSItemFilterFrame_Filterlist_Item"..n):SetAnchor("BOTTOMRIGHT", "TOPRIGHT", "QSItemFilterFrame_Filterlist", 0, n*20+10);
+						end;
+					</OnLoad>
+					<OnShow>QSItemFilter_Repaint();</OnShow>
+					<OnMouseWheel>QSItemFilter_Scroll(delta);</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<Slider name="$parent_ScrollBar" inherits="QSScrollbarTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="-35" y="100"/></Offset>
+					</Anchor>
+					<Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-25" y="-30"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>this:SetValueStepMode("INT");</OnLoad>
+					<OnValueChanged>QSItemFilter_Repaint();</OnValueChanged>
+				</Scripts>
+			</Slider>
+		</Frames>
+	</Frame>	
+
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DROPTAB ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+<Button name="QS_DropTab_Button" parent="BagFrame" frameStrata="MEDIUM">
+	<Size><AbsDimension y="24" x="24"/></Size>
+	<Anchors>
+		<Anchor point="CENTER" relativePoint="CENTER" relativeTo="BagFrameCloseButton">
+			<Offset><RelDimension x="-50" y="1"/></Offset>
+		</Anchor>
+	</Anchors>
+	<Scripts>
+		<OnEnter>
+			if (CursorHasItem()) then
+				QS_DropTab:Show();
+			end;
+		</OnEnter>
+		<OnClick>
+			if (not CursorHasItem()) then
+				GameTooltip:SetOwner(this,"ANCHOR_TOP",0,0);
+				GameTooltip:SetText(QSData.Name.." "..zBLocale.QSStrings.DropTab1,1,1,0.5);
+				GameTooltip:AddLine(zBLocale.QSStrings.DropTab2);
+			end;
+		</OnClick>
+	</Scripts>
+	<NormalTexture    file="Interface/AddOns/CherrysKit/zBag/Textures/minimap-normal.tga"/>
+	<HighlightTexture file="Interface/Minimap/MinimapButton_Highlight" alphaMode="ADD"/>
+</Button>
+
+<Frame name="QSDropTab"         inherits="QSDropTabTemplate" hidden="true" frameStrata="HIGH"/>
+
+
+
+	
+	
+</Ui>

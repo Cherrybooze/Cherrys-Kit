@@ -1,0 +1,761 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<!-- author adisadicul -->
+	<Frame name="zBag" parent="UIParent" hidden="false" enableMouse="true" frameStrata="LOW">
+		<Size> <AbsDimension x="10" y="10"/></Size>
+		<Anchors>
+			<Anchor point="TOPRIGHT">
+				<Offset><AbsDimension x="-400" y="200"/></Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+
+			
+			<Frame name="zBagBackground" inherits="UIPanelBackdropFrame" enableMouse="true" frameStrata="LOW">
+				<Size><AbsDimension x="250" y="250"/></Size>
+				<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="-14" y="-16"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+				<OnLoad>UIPanelBackdropFrame_SetTexture(this,"Interface/Common/PanelCommonBorder",64,64);</OnLoad>
+				<OnMouseDown>				
+				--this code makes sure you only move the bag when grabbing any of the 15 pixels on the edge of the frame
+				local frameX, frameY	= this:GetPos(); --get top left corner of bag frame
+				local frameW, frameH	= this:GetSize();  --get size of frame
+				
+				--allow grabbing from 15 pixels on any edge
+				local leftXGrabMin, leftXGrabMax, topYGrabMin, topYGrabMax, rightXGrabMin, rightXGrabMax, bottomYGrabMin, bottomYGrabMax;
+				leftXGrabMin = frameX;
+				leftXGrabMax = leftXGrabMin+15;
+				topYGrabMin = frameY;
+				topYGrabMax = topYGrabMin + 15;
+				rightXGrabMax = leftXGrabMin + frameW;
+				rightXGrabMin = rightXGrabMax - 15;
+				bottomYGrabMax = topYGrabMin + frameH;
+				bottomYGrabMin = bottomYGrabMax -30;
+				
+				-- get mouse position
+				local cursorX, cursorY = GetCursorPos();
+				
+				--figure out if your cursor is on an edge
+				local withinPixelsFromTop, withinPixelsFromLeft, withinPixelsFromRight, withinPixelsFromBottom;
+				withinPixelsFromTop = math.max(topYGrabMax - cursorY, 0);
+				withinPixelsFromLeft = math.max(leftXGrabMax - cursorX, 0);
+				withinPixelsFromRight = math.max(cursorX - rightXGrabMin, 0);
+				withinPixelsFromBottom = math.max(cursorY - bottomYGrabMin, 0);
+				
+				if ((withinPixelsFromTop ==0) and (withinPixelsFromLeft ==0) and (withinPixelsFromRight ==0) and (withinPixelsFromBottom ==0)) then
+					--if your cursor is in the middle, do nothing
+				else
+					--if your cursor is on an edge
+					if IsShiftKeyDown() then
+						zBag:SetFrameStrata( "MEDIUM" );
+						if (BagSearchInstalled == 1) then
+							BagSearchEditBox:SetFrameStrata( "MEDIUM" );
+							BankSearchEditBox:SetFrameStrata( "MEDIUM" );
+						end
+					else
+						zBag:SetFrameStrata( "LOW" );
+						if (BagSearchInstalled == 1) then
+							BagSearchEditBox:SetFrameStrata( "LOW" );
+							BankSearchEditBox:SetFrameStrata( "LOW" );
+						end						
+					end
+					this:StartMoving("TOPLEFT");
+				end
+				</OnMouseDown>
+				<OnMouseUp>
+				
+				this:StopMovingOrSizing();
+				local xx,yy = zBag:GetPos();
+				zBag_VAR["bx"],zBag_VAR["by"] = zBagBackground:GetPos();
+				zBag_VAR["bx"] = zBag_VAR["bx"] - xx;
+				zBag_VAR["by"] = zBag_VAR["by"] - yy;
+				this:ClearAllAnchors();
+				this:SetAnchor("TOPLEFT","TOPLEFT","zBag",zBag_VAR["bx"]/GetUIScale(),zBag_VAR["by"]/GetUIScale());
+				SaveVariablesPerCharacter("zBag_VAR");
+				SaveVariables("zBag_VAR");
+				</OnMouseUp>
+				</Scripts>
+			</Frame>
+			<Button name="zBagBackgroundCloseButton"  inherits="UIPanelCloseButtonTemplate"> <!-- override default close button -->
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="zBagBackground" relativePoint="TOPRIGHT">					
+						<Offset><AbsDimension x="-5" y="5"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+					if (BagFrame:IsVisible()) then
+						HideUIPanel(BagFrame);
+					end
+					</OnClick>
+				</Scripts>
+			</Button>				
+			<Button name="zBagInspectBank">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="zBagBackgroundCloseButton" relativePoint="TOPLEFT">					
+						<Offset><AbsDimension x="0" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+					if (zBagB:IsVisible()) then
+						HideUIPanel(zBagB);
+					else
+						ZBAG_BANKINSPECT=1;
+						if (not zBagConfigFrame:IsVisible()) then
+							ShowUIPanel(zBagConfigFrame);
+							HideUIPanel(zBagConfigFrame);
+						end
+						ShowUIPanel(zBagB);
+					end
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT",4,0);
+						GameTooltip:SetText(zBLocale.zBagStrings.zBagInspectBankTooltip);
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\MainMenuFrame\MainMenu-Bagbutton-Normal">
+					<Size><AbsDimension x="34" y="34"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</NormalTexture>
+				<PushedTexture file="Interface\MainMenuFrame\MainMenu-Bagbutton-Depress">
+					<Size><AbsDimension x="34" y="34"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</PushedTexture>
+				<HighlightTexture file="Interface\MainMenuFrame\MainMenu-BagButton-Highlight" alphaMode="ADD">
+					<Size><AbsDimension x="34" y="34"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</HighlightTexture>
+			</Button>
+		<Button name="zBagConfig"  frameStrata="MEDIUM">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="zBagInspectBank" relativePoint="TOPLEFT">					
+						<Offset><AbsDimension x="0" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="HIGHLIGHT">
+						<FontString name="$parentzBText" inherits="GameTitleFont" text="zB">
+							<Anchors>
+								<Anchor point="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-1"/></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>
+					if( IsAltKeyDown() ) then
+						yecho(zBLocale.zBagStrings.zBagAltKeyDownDeveloperConfigOpened);
+						ToggleUIFrame(zBagDeveloperConfigFrame);					
+					else
+						if (zBagConfigFrame:IsVisible()) then
+							HideUIPanel(zBagConfigFrame);
+						else
+							ShowUIPanel(zBagConfigFrame);
+						end
+					end
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT",4,0);
+						GameTooltip:SetText(zBLocale.zBagStrings.zBagConfigTooltip);
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\MainMenuFrame\MainMenu-Systembutton-Normal">
+					<Size><AbsDimension x="46" y="46"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</NormalTexture>
+				<PushedTexture file="Interface\MainMenuFrame\MainMenu-Systembutton-Depress">
+					<Size><AbsDimension x="46" y="46"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</PushedTexture>
+				<HighlightTexture file="Interface\MainMenuFrame\MainMenu-SystemButton-Highlight" alphaMode="ADD">
+					<Size><AbsDimension x="46" y="46"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</HighlightTexture>
+			</Button>		
+			
+			<Button name="zBagShop">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="zBagBackground" relativePoint="TOPLEFT">					
+						<Offset><AbsDimension x="15" y="5"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Size>
+					<AbsDimension x="24" y="24"/>
+				</Size>				
+				<Scripts>
+					<OnClick>
+						ToggleUIFrame(GoodsFrame);
+						if (GoodsFrame:IsVisible()) then
+							GoodsFrame:ClearAllAnchors();
+							GoodsFrame:SetAnchor("TOPRIGHT","TOPLEFT","zBag",-10,0);
+						end
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(OPENGOODS_TIPS);
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\GoodsButton-Normal"/>
+				<PushedTexture file="Interface\BagFrame\GoodsButton-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\GoodsButton-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			
+			<Button name="zBagPartner">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagShop" relativePoint="TOPRIGHT">
+					<Offset><AbsDimension x="1" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenPartnerFrameButton_OnClick();
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText( PARTNERFRAME_TITLE );
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\PartnerFrame\PartnerBut-Normal"/>
+				<PushedTexture file="Interface\PartnerFrame\PartnerBut-Depress"/>
+				<DisabledTexture file="Interface\PartnerFrame\PartnerBut-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			
+			<Button name="zBagTransmutor">
+				<Size>
+					<AbsDimension x="24" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="zBagPartner" relativePoint="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="1" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenMagicBoxButton_OnClick();
+						if (MagicBoxFrame:IsVisible()) then
+							MagicBoxFrame:ClearAllAnchors();
+							MagicBoxFrame:SetAnchor("TOPRIGHT","TOPLEFT","zBag",-10,0);
+						end
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText( OPENMAGICBOX_TIPS );
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\MagicBox-Normal"/>
+				<PushedTexture file="Interface\BagFrame\MagicBox-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\MagicBox-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			
+			<Button name="zBagGarbage">
+				<Size>
+					<AbsDimension x="24" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="zBagTransmutor" relativePoint="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="1" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ToggleUIFrame(GarbageFrame);
+						if (GarbageFrame:IsVisible()) then
+							GarbageFrame:ClearAllAnchors();
+							GarbageFrame:SetAnchor("TOPRIGHT","TOPLEFT","zBag",-10,0);
+						end
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(OPENGARBAGE_TIPS);
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\GarbageCan-Normal"/>
+				<PushedTexture file="Interface\BagFrame\GarbageCan-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\GarbageCan-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			
+			<Button name="zBagSort">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagGarbage" relativePoint="TOPRIGHT">
+					<Offset><AbsDimension x="1" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+					zBag_Sort();
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBagStrings.zBagSortTooltip);
+						GameTooltip:AddLine(zBLocale.zBagStrings.zBagSortTooltipAddline);
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\BagRefresh-Normal"/>
+				<PushedTexture file="Interface\BagFrame\BagRefresh-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\BagRefresh-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+
+			<Button name="zBagSortFull">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagSort" relativePoint="TOPRIGHT">
+					<Offset><AbsDimension x="1" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="HIGHLIGHT">
+						<FontString name="$parentSFText" inherits="GameFontHighlight" text="Full">
+							<Anchors>
+								<Anchor point="BOTTOMRIGHT"><Offset><AbsDimension x="-2" y="-1"/></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>
+					zBag_SortFull();
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBagStrings.zBagSortFullTooltip);
+						GameTooltip:AddLine(zBLocale.zBagStrings.zBagSortFullTooltipAddline);
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\BagRefresh-Normal"/>
+				<PushedTexture file="Interface\BagFrame\BagRefresh-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\BagRefresh-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			
+		
+			<Button name="zBagQuickSell">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagSortFull" relativePoint="TOPRIGHT">
+					<Offset><AbsDimension x="1" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="HIGHLIGHT">
+						<FontString name="$parentQSText" inherits="GameFontHighlight" text="QS">
+							<Anchors>
+								<Anchor point="BOTTOMRIGHT"><Offset><AbsDimension x="-2" y="-1"/></Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>
+					zBag_SellLots();
+					</OnClick>
+					<OnEnter>
+						if (CursorHasItem()) then
+							QSDropTab:Show();
+						end
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBagStrings.zBagQuickSellTooltip);
+						GameTooltip:AddLine(zBLocale.zBagStrings.zBagQuickSellTooltipAddLine);
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\LootFrame\GroupLoot-Greed-Normal"/>
+				<PushedTexture file="Interface\LootFrame\GroupLoot-Greed-Depress"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			
+
+			<Button name="zBagRent3">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagShop" relativePoint="BOTTOMLEFT">
+					<Offset><AbsDimension x="0" y="2"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenTimeFlagStoreUpFrame("BagLet3");
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBagStrings.zBagRent3Tooltip);
+						GameTooltip:AddLine(zBag_LetTime(3,false));
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\ClockButton-Normal"/>
+				<PushedTexture file="Interface\BagFrame\ClockButton-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\ClockButton-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="zBagRent4">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagRent3" relativePoint="TOPRIGHT">
+					<Offset><AbsDimension x="1" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenTimeFlagStoreUpFrame("BagLet4");
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBagStrings.zBagRent4Tooltip);
+						GameTooltip:AddLine(zBag_LetTime(4,false));
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\ClockButton-Normal"/>
+				<PushedTexture file="Interface\BagFrame\ClockButton-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\ClockButton-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="zBagRent5">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagRent4" relativePoint="TOPRIGHT">
+					<Offset><AbsDimension x="1" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenTimeFlagStoreUpFrame("BagLet5");
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBagStrings.zBagRent5Tooltip);
+						GameTooltip:AddLine(zBag_LetTime(5,false));
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\ClockButton-Normal"/>
+				<PushedTexture file="Interface\BagFrame\ClockButton-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\ClockButton-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			<Button name="zBagRent6">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagRent5" relativePoint="TOPRIGHT">
+					<Offset><AbsDimension x="1" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						OpenTimeFlagStoreUpFrame("BagLet6");
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 4, 0);
+						GameTooltip:SetText(zBLocale.zBagStrings.zBagRent6Tooltip);
+						GameTooltip:AddLine(zBag_LetTime(6,false));
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\BagFrame\ClockButton-Normal"/>
+				<PushedTexture file="Interface\BagFrame\ClockButton-Depress"/>
+				<DisabledTexture file="Interface\BagFrame\ClockButton-Disable"/>
+				<HighlightTexture file="Interface\Buttons\PanelSmallButtonHighlight" alphaMode="ADD"/>
+			</Button>
+			
+			
+			<Button name="zBagItem1" inherits="zTBagItem" id="1"/>
+			<Button name="zBagItem2" inherits="zTBagItem" id="2"/>
+			<Button name="zBagItem3" inherits="zTBagItem" id="3"/>
+			<Button name="zBagItem4" inherits="zTBagItem" id="4"/>
+			<Button name="zBagItem5" inherits="zTBagItem" id="5"/>
+			<Button name="zBagItem6" inherits="zTBagItem" id="6"/>
+			<Button name="zBagItem7" inherits="zTBagItem" id="7"/>
+			<Button name="zBagItem8" inherits="zTBagItem" id="8"/>
+			<Button name="zBagItem9" inherits="zTBagItem" id="9"/>
+			<Button name="zBagItem10" inherits="zTBagItem" id="10"/>
+			<Button name="zBagItem11" inherits="zTBagItem" id="11"/>
+			<Button name="zBagItem12" inherits="zTBagItem" id="12"/>
+			<Button name="zBagItem13" inherits="zTBagItem" id="13"/>
+			<Button name="zBagItem14" inherits="zTBagItem" id="14"/>
+			<Button name="zBagItem15" inherits="zTBagItem" id="15"/>
+			<Button name="zBagItem16" inherits="zTBagItem" id="16"/>
+			<Button name="zBagItem17" inherits="zTBagItem" id="17"/>
+			<Button name="zBagItem18" inherits="zTBagItem" id="18"/>
+			<Button name="zBagItem19" inherits="zTBagItem" id="19"/>
+			<Button name="zBagItem20" inherits="zTBagItem" id="20"/>
+			<Button name="zBagItem21" inherits="zTBagItem" id="21"/>
+			<Button name="zBagItem22" inherits="zTBagItem" id="22"/>
+			<Button name="zBagItem23" inherits="zTBagItem" id="23"/>
+			<Button name="zBagItem24" inherits="zTBagItem" id="24"/>
+			<Button name="zBagItem25" inherits="zTBagItem" id="25"/>
+			<Button name="zBagItem26" inherits="zTBagItem" id="26"/>
+			<Button name="zBagItem27" inherits="zTBagItem" id="27"/>
+			<Button name="zBagItem28" inherits="zTBagItem" id="28"/>
+			<Button name="zBagItem29" inherits="zTBagItem" id="29"/>
+			<Button name="zBagItem30" inherits="zTBagItem" id="30"/>
+			<Button name="zBagItem31" inherits="zTBagItem" id="31"/>
+			<Button name="zBagItem32" inherits="zTBagItem" id="32"/>
+			<Button name="zBagItem33" inherits="zTBagItem" id="33"/>
+			<Button name="zBagItem34" inherits="zTBagItem" id="34"/>
+			<Button name="zBagItem35" inherits="zTBagItem" id="35"/>
+			<Button name="zBagItem36" inherits="zTBagItem" id="36"/>
+			<Button name="zBagItem37" inherits="zTBagItem" id="37"/>
+			<Button name="zBagItem38" inherits="zTBagItem" id="38"/>
+			<Button name="zBagItem39" inherits="zTBagItem" id="39"/>
+			<Button name="zBagItem40" inherits="zTBagItem" id="40"/>
+			<Button name="zBagItem41" inherits="zTBagItem" id="41"/>
+			<Button name="zBagItem42" inherits="zTBagItem" id="42"/>
+			<Button name="zBagItem43" inherits="zTBagItem" id="43"/>
+			<Button name="zBagItem44" inherits="zTBagItem" id="44"/>
+			<Button name="zBagItem45" inherits="zTBagItem" id="45"/>
+			<Button name="zBagItem46" inherits="zTBagItem" id="46"/>
+			<Button name="zBagItem47" inherits="zTBagItem" id="47"/>
+			<Button name="zBagItem48" inherits="zTBagItem" id="48"/>
+			<Button name="zBagItem49" inherits="zTBagItem" id="49"/>
+			<Button name="zBagItem50" inherits="zTBagItem" id="50"/>
+			<Button name="zBagItem51" inherits="zTBagItem" id="51"/>
+			<Button name="zBagItem52" inherits="zTBagItem" id="52"/>
+			<Button name="zBagItem53" inherits="zTBagItem" id="53"/>
+			<Button name="zBagItem54" inherits="zTBagItem" id="54"/>
+			<Button name="zBagItem55" inherits="zTBagItem" id="55"/>
+			<Button name="zBagItem56" inherits="zTBagItem" id="56"/>
+			<Button name="zBagItem57" inherits="zTBagItem" id="57"/>
+			<Button name="zBagItem58" inherits="zTBagItem" id="58"/>
+			<Button name="zBagItem59" inherits="zTBagItem" id="59"/>
+			<Button name="zBagItem60" inherits="zTBagItem" id="60"/>
+			<Button name="zBagItem61" inherits="zTBagItem" id="61"/>
+			<Button name="zBagItem62" inherits="zTBagItem" id="62"/>
+			<Button name="zBagItem63" inherits="zTBagItem" id="63"/>
+			<Button name="zBagItem64" inherits="zTBagItem" id="64"/>
+			<Button name="zBagItem65" inherits="zTBagItem" id="65"/>
+			<Button name="zBagItem66" inherits="zTBagItem" id="66"/>
+			<Button name="zBagItem67" inherits="zTBagItem" id="67"/>
+			<Button name="zBagItem68" inherits="zTBagItem" id="68"/>
+			<Button name="zBagItem69" inherits="zTBagItem" id="69"/>
+			<Button name="zBagItem70" inherits="zTBagItem" id="70"/>
+			<Button name="zBagItem71" inherits="zTBagItem" id="71"/>
+			<Button name="zBagItem72" inherits="zTBagItem" id="72"/>
+			<Button name="zBagItem73" inherits="zTBagItem" id="73"/>
+			<Button name="zBagItem74" inherits="zTBagItem" id="74"/>
+			<Button name="zBagItem75" inherits="zTBagItem" id="75"/>
+			<Button name="zBagItem76" inherits="zTBagItem" id="76"/>
+			<Button name="zBagItem77" inherits="zTBagItem" id="77"/>
+			<Button name="zBagItem78" inherits="zTBagItem" id="78"/>
+			<Button name="zBagItem79" inherits="zTBagItem" id="79"/>
+			<Button name="zBagItem80" inherits="zTBagItem" id="80"/>
+			<Button name="zBagItem81" inherits="zTBagItem" id="81"/>
+			<Button name="zBagItem82" inherits="zTBagItem" id="82"/>
+			<Button name="zBagItem83" inherits="zTBagItem" id="83"/>
+			<Button name="zBagItem84" inherits="zTBagItem" id="84"/>
+			<Button name="zBagItem85" inherits="zTBagItem" id="85"/>
+			<Button name="zBagItem86" inherits="zTBagItem" id="86"/>
+			<Button name="zBagItem87" inherits="zTBagItem" id="87"/>
+			<Button name="zBagItem88" inherits="zTBagItem" id="88"/>
+			<Button name="zBagItem89" inherits="zTBagItem" id="89"/>
+			<Button name="zBagItem90" inherits="zTBagItem" id="90"/>
+			<Button name="zBagItem91" inherits="zTBagItem" id="91"/>
+			<Button name="zBagItem92" inherits="zTBagItem" id="92"/>
+			<Button name="zBagItem93" inherits="zTBagItem" id="93"/>
+			<Button name="zBagItem94" inherits="zTBagItem" id="94"/>
+			<Button name="zBagItem95" inherits="zTBagItem" id="95"/>
+			<Button name="zBagItem96" inherits="zTBagItem" id="96"/>
+			<Button name="zBagItem97" inherits="zTBagItem" id="97"/>
+			<Button name="zBagItem98" inherits="zTBagItem" id="98"/>
+			<Button name="zBagItem99" inherits="zTBagItem" id="99"/>
+			<Button name="zBagItem100" inherits="zTBagItem" id="100"/>
+			<Button name="zBagItem101" inherits="zTBagItem" id="101"/>
+			<Button name="zBagItem102" inherits="zTBagItem" id="102"/>
+			<Button name="zBagItem103" inherits="zTBagItem" id="103"/>
+			<Button name="zBagItem104" inherits="zTBagItem" id="104"/>
+			<Button name="zBagItem105" inherits="zTBagItem" id="105"/>
+			<Button name="zBagItem106" inherits="zTBagItem" id="106"/>
+			<Button name="zBagItem107" inherits="zTBagItem" id="107"/>
+			<Button name="zBagItem108" inherits="zTBagItem" id="108"/>
+			<Button name="zBagItem109" inherits="zTBagItem" id="109"/>
+			<Button name="zBagItem110" inherits="zTBagItem" id="110"/>
+			<Button name="zBagItem111" inherits="zTBagItem" id="111"/>
+			<Button name="zBagItem112" inherits="zTBagItem" id="112"/>
+			<Button name="zBagItem113" inherits="zTBagItem" id="113"/>
+			<Button name="zBagItem114" inherits="zTBagItem" id="114"/>
+			<Button name="zBagItem115" inherits="zTBagItem" id="115"/>
+			<Button name="zBagItem116" inherits="zTBagItem" id="116"/>
+			<Button name="zBagItem117" inherits="zTBagItem" id="117"/>
+			<Button name="zBagItem118" inherits="zTBagItem" id="118"/>
+			<Button name="zBagItem119" inherits="zTBagItem" id="119"/>
+			<Button name="zBagItem120" inherits="zTBagItem" id="120"/>
+			<Button name="zBagItem121" inherits="zTBagItem" id="121"/>
+			<Button name="zBagItem122" inherits="zTBagItem" id="122"/>
+			<Button name="zBagItem123" inherits="zTBagItem" id="123"/>
+			<Button name="zBagItem124" inherits="zTBagItem" id="124"/>
+			<Button name="zBagItem125" inherits="zTBagItem" id="125"/>
+			<Button name="zBagItem126" inherits="zTBagItem" id="126"/>
+			<Button name="zBagItem127" inherits="zTBagItem" id="127"/>
+			<Button name="zBagItem128" inherits="zTBagItem" id="128"/>
+			<Button name="zBagItem129" inherits="zTBagItem" id="129"/>
+			<Button name="zBagItem130" inherits="zTBagItem" id="130"/>
+			<Button name="zBagItem131" inherits="zTBagItem" id="131"/>
+			<Button name="zBagItem132" inherits="zTBagItem" id="132"/>
+			<Button name="zBagItem133" inherits="zTBagItem" id="133"/>
+			<Button name="zBagItem134" inherits="zTBagItem" id="134"/>
+			<Button name="zBagItem135" inherits="zTBagItem" id="135"/>
+			<Button name="zBagItem136" inherits="zTBagItem" id="136"/>
+			<Button name="zBagItem137" inherits="zTBagItem" id="137"/>
+			<Button name="zBagItem138" inherits="zTBagItem" id="138"/>
+			<Button name="zBagItem139" inherits="zTBagItem" id="139"/>
+			<Button name="zBagItem140" inherits="zTBagItem" id="140"/>
+			<Button name="zBagItem141" inherits="zTBagItem" id="141"/>
+			<Button name="zBagItem142" inherits="zTBagItem" id="142"/>
+			<Button name="zBagItem143" inherits="zTBagItem" id="143"/>
+			<Button name="zBagItem144" inherits="zTBagItem" id="144"/>
+			<Button name="zBagItem145" inherits="zTBagItem" id="145"/>
+			<Button name="zBagItem146" inherits="zTBagItem" id="146"/>
+			<Button name="zBagItem147" inherits="zTBagItem" id="147"/>
+			<Button name="zBagItem148" inherits="zTBagItem" id="148"/>
+			<Button name="zBagItem149" inherits="zTBagItem" id="149"/>
+			<Button name="zBagItem150" inherits="zTBagItem" id="150"/>
+			<Button name="zBagItem151" inherits="zTBagItem" id="151"/>
+			<Button name="zBagItem152" inherits="zTBagItem" id="152"/>
+			<Button name="zBagItem153" inherits="zTBagItem" id="153"/>
+			<Button name="zBagItem154" inherits="zTBagItem" id="154"/>
+			<Button name="zBagItem155" inherits="zTBagItem" id="155"/>
+			<Button name="zBagItem156" inherits="zTBagItem" id="156"/>
+			<Button name="zBagItem157" inherits="zTBagItem" id="157"/>
+			<Button name="zBagItem158" inherits="zTBagItem" id="158"/>
+			<Button name="zBagItem159" inherits="zTBagItem" id="159"/>
+			<Button name="zBagItem160" inherits="zTBagItem" id="160"/>
+			<Button name="zBagItem161" inherits="zTBagItem" id="161"/>
+			<Button name="zBagItem162" inherits="zTBagItem" id="162"/>
+			<Button name="zBagItem163" inherits="zTBagItem" id="163"/>
+			<Button name="zBagItem164" inherits="zTBagItem" id="164"/>
+			<Button name="zBagItem165" inherits="zTBagItem" id="165"/>
+			<Button name="zBagItem166" inherits="zTBagItem" id="166"/>
+			<Button name="zBagItem167" inherits="zTBagItem" id="167"/>
+			<Button name="zBagItem168" inherits="zTBagItem" id="168"/>
+			<Button name="zBagItem169" inherits="zTBagItem" id="169"/>
+			<Button name="zBagItem170" inherits="zTBagItem" id="170"/>
+			<Button name="zBagItem171" inherits="zTBagItem" id="171"/>
+			<Button name="zBagItem172" inherits="zTBagItem" id="172"/>
+			<Button name="zBagItem173" inherits="zTBagItem" id="173"/>
+			<Button name="zBagItem174" inherits="zTBagItem" id="174"/>
+			<Button name="zBagItem175" inherits="zTBagItem" id="175"/>
+			<Button name="zBagItem176" inherits="zTBagItem" id="176"/>
+			<Button name="zBagItem177" inherits="zTBagItem" id="177"/>
+			<Button name="zBagItem178" inherits="zTBagItem" id="178"/>
+			<Button name="zBagItem179" inherits="zTBagItem" id="179"/>
+			<Button name="zBagItem180" inherits="zTBagItem" id="180"/>
+
+
+			<Button name="zEqItem1" inherits="zTEqItem" id="1"/>
+			<Button name="zEqItem2" inherits="zTEqItem" id="2"/>
+			<Button name="zEqItem3" inherits="zTEqItem" id="3"/>
+			<Button name="zEqItem4" inherits="zTEqItem" id="4"/>
+			<Button name="zEqItem5" inherits="zTEqItem" id="5"/>
+			<Button name="zEqItem6" inherits="zTEqItem" id="6"/>
+			<Button name="zEqItem7" inherits="zTEqItem" id="7"/>
+			<Button name="zEqItem8" inherits="zTEqItem" id="8"/>
+			<Button name="zEqItem9" inherits="zTEqItem" id="9"/>
+			<Button name="zEqItem10" inherits="zTEqItem" id="10"/>
+			<Button name="zEqItem11" inherits="zTEqItem" id="11"/>
+			<Button name="zEqItem12" inherits="zTEqItem" id="12"/>
+			<Button name="zEqItem13" inherits="zTEqItem" id="13"/>
+			<Button name="zEqItem14" inherits="zTEqItem" id="14"/>
+			<Button name="zEqItem15" inherits="zTEqItem" id="15"/>
+			<Button name="zEqItem16" inherits="zTEqItem" id="16"/>
+			<Button name="zEqItem17" inherits="zTEqItem" id="17"/>
+			<Button name="zEqItem18" inherits="zTEqItem" id="18"/>
+			<Button name="zEqItem19" inherits="zTEqItem" id="19"/>
+			<Button name="zEqItem20" inherits="zTEqItem" id="20"/>
+			<Button name="zEqItem21" inherits="zTEqItem" id="21"/>
+			
+			<Frame name="zBagBackgroundFrameAccountMoney" inherits="MoneyFrameTemplate"  frameStrata="MEDIUM">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="zBagBackground" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-16" y="-40"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						MoneyFrameTemplate_OnLoad(this);
+						MoneyFrameTemplate_SetMode(this, "account");
+						MoneyFrameTemplate_SetType(this, "PLAYER");
+					</OnLoad>			
+				</Scripts>
+			</Frame>
+			<Frame name="zBagBackgroundFrameCostBackMoney" inherits="MoneyFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="zBagBackgroundFrameAccountMoney" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						MoneyFrameTemplate_OnLoad(this);
+						MoneyFrameTemplate_SetMode(this, "bonus");
+						MoneyFrameTemplate_SetType(this, "PLAYER");
+					</OnLoad>
+				</Scripts>
+			</Frame>
+			<Frame name="zBagBackgroundFrameMoney" inherits="MoneyFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="zBagBackgroundFrameCostBackMoney" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnLoad>zBag_OnLoad(this);</OnLoad>
+			<OnShow>zBag_OnShow(this);</OnShow>
+			<OnHide>
+			zBag_OnHide(this);</OnHide> 
+			<OnEvent>zBag_OnEvent(this,event,arg1,arg2);</OnEvent>
+		</Scripts> 
+	</Frame>
+</Ui>

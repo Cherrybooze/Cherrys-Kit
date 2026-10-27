@@ -1,0 +1,17 @@
+Cherry's Grid
+
+1.1.0 (2026-10-27)
+- Clicks: every button + key now has two actions run in order: a 1st action (target, assist,
+  member menu, follow; "Nothing" is left out) and a 2nd action: use a kitty, use a macro (kitty
+  macros listed first, they run their kitty on the member) or cast a spell picked from the
+  spellbook. A delay in ms can sit between them (0 = both at once). The Clicks page picks one key
+  at a time and lists what every key of that button does. 1.0.0 bindings keep working.
+- Long lists (spells, macros, kitties) come in pages instead of being cut off.
+- Layout page: a Lock tick at the top that also hides the "Grid (drag)" tab; all six raid groups
+  are on the first screen. The options window shows 20 rows and says when there are more below.
+- Health percent is shown as a number on each member by default (status "Health percent").
+
+1.0.0 (2026-10-27)
+- First version for Cherry's Kit: Grid-style party and raid frames, statuses on any indicator,
+  debuff filters, kitty click bindings per class pair (KittyCombo 1.7.5 Kitty.attackOn), member
+  tooltip, options window (/grid), profiles per character and group type, /grid test and /grid probe.

@@ -1,0 +1,98 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+	<Frame name="PocketMaidFrame" parent="UIParent" enableMouse="false">
+		<Scripts>
+			<OnLoad>PocketMaid_OnLoad(this);</OnLoad>
+			<OnEvent>PocketMaid_OnEvent(this, event);</OnEvent>
+		</Scripts>
+	</Frame>
+	<Button name="HouseServantItem41" inherits="HouseServantEquipItemButtonTemplate" id="41" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="TOP" relativeTo="HouseServantItem36" relativePoint="BOTTOM">
+				<Offset>
+					<AbsDimension x="0" y="6"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+	<Button name="HouseServantItem42" inherits="HouseServantEquipItemButtonTemplate" id="42" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="HouseServantItem41" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="6" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+	<Button name="HouseServantItem43" inherits="HouseServantEquipItemButtonTemplate" id="43" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="HouseServantItem42" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="6" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+	<Button name="HouseServantItem44" inherits="HouseServantEquipItemButtonTemplate" id="44" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="HouseServantItem43" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="6" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+	<Button name="HouseServantItem45" inherits="HouseServantEquipItemButtonTemplate" id="45" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="HouseServantItem44" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="6" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+	<Button name="HouseServantItem46" inherits="HouseServantEquipItemButtonTemplate" id="46" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="TOP" relativeTo="HouseServantItem41" relativePoint="BOTTOM">
+				<Offset>
+					<AbsDimension x="0" y="6"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+	<Button name="HouseServantItem47" inherits="HouseServantEquipItemButtonTemplate" id="47" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="HouseServantItem46" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="6" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+	<Button name="HouseServantItem48" inherits="HouseServantEquipItemButtonTemplate" id="48" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="HouseServantItem47" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="6" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+	<Button name="HouseServantItem49" inherits="HouseServantEquipItemButtonTemplate" id="49" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="HouseServantItem48" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="6" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+	<Button name="HouseServantItem30" inherits="HouseServantEquipItemButtonTemplate" id="30" parent="HouseServantPageEquip" >
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="HouseServantItem49" relativePoint="RIGHT">
+				<Offset>
+					<AbsDimension x="6" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+	</Button>
+</Ui>

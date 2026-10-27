@@ -1,0 +1,64 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+	<Frame name="ZShopEvents" parent="UIParent">
+		<Size><AbsDimension x="1" y="1" /></Size>
+		<Anchors><Anchor point="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnLoad>ZShop.OnLoad(this);</OnLoad>
+			<OnEvent>ZShop.OnEvent(event, arg1);</OnEvent>
+			<OnUpdate>ZShop.OnUpdate(elapsedTime);</OnUpdate>
+		</Scripts>
+	</Frame>
+	<Frame name="ZShopFrame" parent="UIParent" frameStrata="DIALOG" enableMouse="true" movable="true" hidden="true">
+		<Size><AbsDimension x="300" y="250" /></Size>
+		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
+		<Backdrop bgFile="Interface/Tooltips/Tooltip-Background" edgeFile="Interface/Tooltips/Tooltip-border">
+			<EdgeSize><AbsValue val="16" /></EdgeSize>
+			<TileSize><AbsValue val="32" /></TileSize>
+			<BackgroundInsets><AbsInset top="4" left="4" bottom="4" right="4" /></BackgroundInsets>
+		</Backdrop>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="ZShopFrameTitle" inherits="GameFontNormal" justifyH="LEFT" text="ZShop"><Size><AbsDimension x="200" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="12" /></Offset></Anchor></Anchors></FontString>
+				<FontString name="ZShopFrameStatus" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="268" y="32" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="208" /></Offset></Anchor></Anchors></FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="ZShopFrameClose" inherits="UIPanelButtonTemplate" text="X"><Size><AbsDimension x="28" y="26" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="262" y="8" /></Offset></Anchor></Anchors><Scripts><OnClick>ZShopFrame:Hide();</OnClick></Scripts></Button>
+			<Button name="ZShopFrameDaily" inherits="UIPanelButtonTemplate" text="Daily loyalty reward"><Size><AbsDimension x="268" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="40" /></Offset></Anchor></Anchors><Scripts><OnClick>ZShop.Open("daily");</OnClick></Scripts></Button>
+			<Button name="ZShopFrameShop" inherits="UIPanelButtonTemplate" text="Item shop"><Size><AbsDimension x="130" y="26" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="76" /></Offset></Anchor></Anchors><Scripts><OnClick>ZShop.Open("home");</OnClick></Scripts></Button>
+			<Button name="ZShopFrameDepot" inherits="UIPanelButtonTemplate" text="Item depot"><Size><AbsDimension x="130" y="26" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="154" y="76" /></Offset></Anchor></Anchors><Scripts><OnClick>ZShop.Open("depot");</OnClick></Scripts></Button>
+			<Button name="ZShopFrameBrowser" inherits="UIPanelButtonTemplate" text="Opens in: web browser"><Size><AbsDimension x="268" y="26" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="108" /></Offset></Anchor></Anchors><Scripts><OnClick>ZShop.SetBrowser(ZShop.config.browser == false);</OnClick></Scripts></Button>
+			<CheckButton name="ZShopFrameShowButton" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="27" y="27" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="142" /></Offset></Anchor></Anchors>
+				<Layers><Layer level="BACKGROUND"><FontString name="$parentLabel" inherits="GameFontHighlight" text="Show daily reward button"><FontHeight><AbsValue val="13" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT"><Offset><AbsDimension x="5" y="0" /></Offset></Anchor></Anchors></FontString></Layer></Layers>
+				<Scripts><OnClick>ZShop.Button.SetShown(this:GetChecked() and true or false);</OnClick></Scripts>
+			</CheckButton>
+			<CheckButton name="ZShopFrameLockButton" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="27" y="27" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="172" /></Offset></Anchor></Anchors>
+				<Layers><Layer level="BACKGROUND"><FontString name="$parentLabel" inherits="GameFontHighlight" text="Lock the button in place"><FontHeight><AbsValue val="13" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT"><Offset><AbsDimension x="5" y="0" /></Offset></Anchor></Anchors></FontString></Layer></Layers>
+				<Scripts><OnClick>ZShop.Button.SetLocked(this:GetChecked() and true or false);</OnClick></Scripts>
+			</CheckButton>
+		</Frames>
+		<Scripts>
+			<OnShow>ZShop.UpdateWindow();</OnShow>
+			<OnMouseDown>this:StartMoving();</OnMouseDown>
+			<OnMouseUp>this:StopMovingOrSizing();</OnMouseUp>
+		</Scripts>
+	</Frame>
+	<!-- Daily loyalty reward button: action button size, like KittyCombo's mode button (ZShopButton.lua) -->
+	<Button name="ZShopDailyButton" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" movable="true" hidden="true">
+		<Size><AbsDimension x="36" y="36" /></Size>
+		<Anchors><Anchor point="TOPRIGHT" relativeTo="UIParent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-230" y="204" /></Offset></Anchor></Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentIcon"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
+			</Layer>
+		</Layers>
+		<HighlightTexture name="$parentHighlight" alphaMode="ADD" />
+		<Scripts>
+			<OnLoad>ZShop.Button.OnLoad(this);</OnLoad>
+			<OnMouseDown>ZShop.Button.OnMouseDown(this, key);</OnMouseDown>
+			<OnMouseUp>ZShop.Button.OnMouseUp(this, key);</OnMouseUp>
+			<OnEnter>ZShop.Button.OnEnter(this);</OnEnter>
+			<OnLeave>ZShop.Button.OnLeave(this);</OnLeave>
+		</Scripts>
+	</Button>
+</Ui>

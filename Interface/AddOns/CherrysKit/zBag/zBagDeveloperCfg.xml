@@ -1,0 +1,127 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<!-- author adisadicul -->
+	<Frame name="zBagDeveloperConfigFrame" parent="UIParent" inherits="UICommonFrameTemplate" enableMouse="true" frameStrata="MEDIUM" hidden="true">
+		<Size><AbsDimension x="400" y="320"/></Size>
+		<Anchors><Anchor point="CENTER"/>
+		</Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="zBagDeveloperConfigTitleText" inherits="GameTitleFont" text="zBag Developer Configuration">
+					<Anchors><Anchor point="TOP"><Offset><AbsDimension x="-24" y="7"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="zBagVersionText" inherits="GameFontHighlight" justifyH="RIGHT">
+					<Size>
+						<AbsDimension x="178" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset><AbsDimension x="-40" y="-2"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+<!-- zBag Quick Sell Left Column Configuration Text -->
+			<Layer level="OVERLAY">
+				<FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Options:">
+					<Anchors><Anchor point="TOPLEFT">
+					<Offset><AbsDimension x="15" y="35"/></Offset>
+					</Anchor></Anchors>
+				</FontString>				
+			</Layer>
+<!-- zBag Quick Sell Right Column Configuration Text -->
+			<Layer level="OVERLAY">
+				<FontString name="$parentTxt2" inherits="GameFontLabelYellow" text="">
+					<Anchors><Anchor point="TOPLEFT">
+					<Offset><AbsDimension x="210" y="35"/></Offset>
+					</Anchor></Anchors>
+				</FontString>				
+			</Layer>
+		</Layers>
+		<Frames>
+<!-- Left side options -->
+		<CheckButton name="$parentDisplayWackyBagIndex">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="1"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Display bag index for each bag item">
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagDeveloperConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Bag Index", 1, 1, 1);
+					GameTooltip:AddLine("Enables displaying the bag index for each item in your backpack.  The number displays in the top-right of each bag item (above the item count).  This feature is only useful for addon developers.", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+
+		<CheckButton name="$parentDisplayDebugMessages">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="20"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Display debug messages">
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagDeveloperConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText("Debug Messages", 1, 1, 1);
+					GameTooltip:AddLine("Enables displaying debug messages in your chat window.  Currently this feature outputs string matching information which is useful for addon developers and people translating this addon into different languages.", 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+		
+		<!-- Right side options -->
+		<!-- see zBagQuickSellCfg.xml for examples -->
+	
+		</Frames>
+		<Scripts>
+			<OnShow>
+				zBagDeveloperConfig_Load();
+			</OnShow>
+			<OnHide>
+				zBagDeveloperConfig_Save();
+			</OnHide>
+		</Scripts>
+	</Frame>
+</Ui>

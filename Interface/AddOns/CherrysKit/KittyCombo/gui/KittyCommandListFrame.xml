@@ -1,0 +1,750 @@
+<!-- (C) 2012-2013 Miranda -->
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+<!--
+-->
+
+	<!-- List row (template) -->
+	<Button name="KittyCommandListDetailTemplate" virtual="true" enableMouse="true">
+		<!-- Highlight texture -->
+		<HighlightTexture file="Interface/AuctionFrame/AuctionFrameItem-Highlight" alphaMode="ADD">
+			<Anchors>
+				<Anchor point="TOPLEFT" />
+				<Anchor point="BOTTOMRIGHT" />
+			</Anchors>
+		</HighlightTexture>
+
+		<Layers>
+			<Layer>
+				<!-- List row (command list name) -->
+				<FontString name="$parentName" justifyH="LEFT" inherits="Font_Normal" text="Name">
+					<Size><AbsDimension x="150" /></Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+							<Offset><AbsDimension x="12" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12" /></FontHeight>
+				</FontString>
+
+				<!-- List row (class icon) -->
+				<Texture name="$parentClassIcon" hidden="true">
+					<Size><AbsDimension x="24" y="24" /></Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+							<Offset><AbsDimension x="166" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+
+				<!-- List row (class) -->
+				<FontString name="$parentClass" justifyH="LEFT" inherits="Font_Normal" text="Class">
+					<Size><AbsDimension x="64" /></Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+							<Offset><AbsDimension x="196" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12" /></FontHeight>
+				</FontString>
+
+				<!-- List row (target) -->
+				<FontString name="$parentTarget" justifyH="LEFT" inherits="Font_Normal" text="Target">
+					<Size><AbsDimension x="64" /></Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+							<Offset><AbsDimension x="266" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12" /></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+
+		<Frames>
+			<!-- Button (edit) -->
+			<Button name="$parentEditButton" inherits="UIPanelButtonTemplate" text="EditButton">
+				<Size><AbsDimension x="90" y="26" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Offset><AbsDimension x="340" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local index = KittyCommandListFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+							local commandList = Kitty.CommandListFrame.allCommandList[index]
+							local strList = Kitty.ComboManager.commandListHelp(commandList);
+
+							GameTooltip:SetOwner(this, "ANCHOR_RIGHT", 4, 0);
+							if(commandList.info ~= nil) then
+								-- Command list name
+								GameTooltip:SetText(commandList.info.name);
+							end
+							for index, value in ipairs(strList) do
+								if(index == 1) then
+									GameTooltip:AddSeparator();
+								end
+
+								if(type(value) ~= "table") then
+									-- Command name
+									GameTooltip:AddLine(tostring(value));
+								else
+									-- Conditions
+									for index, str in ipairs(value) do
+										GameTooltip:AddDoubleLine(" ", tostring(str));
+									end
+								end
+							end
+							GameTooltip:Show();
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							GameTooltip:Hide();
+						end)();
+						]]>
+					</OnLeave>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandListFrame.onClick(this);
+						end)();
+						]]>
+					</OnClick>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandListFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Button>
+
+			<!-- Button (up) -->
+			<Button name="$parentUpButton">
+				<Size>
+					<AbsDimension x="18" y="17" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="442" y="1" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local fromIndex = KittyCommandListFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+							local toIndex = fromIndex - 1;
+							if(Kitty.CommandListFrame.allCommandList:swap(fromIndex, toIndex)) then
+								Kitty.CommandListFrame.onRedraw(CommandListFrame, tonumber(KittyCommandListFrame_ScrollBar:GetValue()), 10);
+							end
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "MoveUp"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandListFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+				<NormalTexture file="Interface/Buttons/PanelUpButton-Normal">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</NormalTexture>
+				<PushedTexture file="Interface/Buttons/PanelUpButton-Depress">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</PushedTexture>
+				<DisabledTexture file="Interface/Buttons/PanelUpButton-Disable">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</DisabledTexture>
+				<HighlightTexture file="Interface/Buttons/PanelUpButton-Highlight" alphaMode="ADD" />
+			</Button>
+
+			<!-- Button (down) -->
+			<Button name="$parentDownButton">
+				<Size>
+					<AbsDimension x="18" y="17" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="$parentUpButton" relativePoint="BOTTOM">
+						<Offset><AbsDimension x="0" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local fromIndex = KittyCommandListFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+							local toIndex = fromIndex + 1;
+							if(Kitty.CommandListFrame.allCommandList:swap(fromIndex, toIndex)) then
+								Kitty.CommandListFrame.onRedraw(CommandListFrame, tonumber(KittyCommandListFrame_ScrollBar:GetValue()), 10);
+							end
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "MoveDown"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandListFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+				<NormalTexture file="Interface/Buttons/PanelDownButton-Normal">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</NormalTexture>
+				<PushedTexture file="Interface/Buttons/PanelDownButton-Depress">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</PushedTexture>
+				<DisabledTexture file="Interface/Buttons/PanelDownButton-Disable">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</DisabledTexture>
+				<HighlightTexture file="Interface/Buttons/PanelUpButton-Highlight" alphaMode="ADD" />
+			</Button>
+
+			<!-- Button (plus) -->
+			<Button name="$parentPlusButton" inherits="UIPlusButtonTemplate">
+				<Size>
+					<AbsDimension x="18" y="17" />
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentUpButton" relativePoint="RIGHT">
+						<Offset><AbsDimension x="4" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local index = KittyCommandListFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+							Kitty.CommandListFrame.allCommandList:copy(index);
+							-- Update the command list name
+							local commandListName = Kitty.CommandListFrame.allCommandList[index+1].info.name;
+							Kitty.CommandListFrame.allCommandList[index+1].info.name = commandListName .. "_copy";
+							Kitty.CommandListFrame.onRedraw(KittyCommandListFrame, tonumber(KittyCommandListFrame_ScrollBar:GetValue()), 10);
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "Copy"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandListFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Button>
+
+			<!-- Button (minus) -->
+			<Button name="$parentMinusButton" inherits="UIMinusButtonTemplate">
+				<Size>
+					<AbsDimension x="18" y="17" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="$parentPlusButton" relativePoint="BOTTOM">
+						<Offset><AbsDimension x="0" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local index = KittyCommandListFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+							Kitty.CommandListFrame.allCommandList:remove(index);
+							Kitty.CommandListFrame.onRedraw(KittyCommandListFrame, tonumber(KittyCommandListFrame_ScrollBar:GetValue()), 10);
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "Remove"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandListFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+			</OnLoad>
+			<OnClick>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					local messageList = {
+						Kitty.T("message", "CommandListSelection01"),
+						Kitty.T("message", "CommandListSelection02"),
+						Kitty.T("message", "CommandListSelection03"),
+						Kitty.T("message", "CommandListSelection04"),
+						Kitty.T("message", "CommandListSelection05"),
+						Kitty.T("message", "CommandListSelection06"),
+						Kitty.T("message", "CommandListSelection07"),
+						Kitty.T("message", "CommandListSelection08"),
+						Kitty.T("message", "CommandListSelection09"),
+						Kitty.T("message", "CommandListSelection10"),
+						Kitty.T("message", "CommandListSelection11"),
+						Kitty.T("message", "CommandListSelection12"),
+						Kitty.T("message", "CommandListSelection13"),
+						Kitty.T("message", "CommandListSelection14"),
+						Kitty.T("message", "CommandListSelection15"),
+						Kitty.T("message", "CommandListSelection16"),
+						Kitty.T("message", "CommandListSelection17"),
+						Kitty.T("message", "CommandListSelection18"),
+						Kitty.T("message", "CommandListSelection19"),
+						Kitty.T("message", "CommandListSelection20"),
+					};
+					Kitty.showGameTooltip(this, messageList);
+				end)();
+				]]>
+			</OnClick>
+			<OnEnter>
+			</OnEnter>
+			<OnLeave>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.hideGameTooltip(this);
+				end)();
+				]]>
+			</OnLeave>
+			<OnMouseWheel>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					if(delta > 0) then
+						KittyCommandListFrame_ScrollBar:SetValue(KittyCommandListFrame_ScrollBar:GetValue() - 1);
+					elseif(delta < 0) then
+						KittyCommandListFrame_ScrollBar:SetValue(KittyCommandListFrame_ScrollBar:GetValue() + 1);
+					end
+				end)();
+				]]>
+			</OnMouseWheel>
+		</Scripts>
+	</Button>
+
+	<!-- Slider (template) -->
+	<Slider name="KittyCommandListSliderTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentTop" file="Interface/Common/PanelScrollBar-Broder">
+					<Size><AbsDimension x="16" y="16" /></Size>
+					<Anchors>
+						<Anchor point="TOP" relativeTo="$parent" relativePoint="TOP">
+							<Offset><AbsDimension x="0" y="-20" /></Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0" right="1" top="0" bottom="0.25" />
+				</Texture>
+				<Texture name="$parentBottom" file="Interface/Common/PanelScrollBar-Broder">
+					<Size><AbsDimension x="16" y="16" /></Size>
+					<Anchors>
+						<Anchor point="BOTTOM" relativeTo="$parent" relativePoint="BOTTOM">
+							<Offset><AbsDimension x="0" y="20" /></Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0" right="1" top="0.75" bottom="1" />
+				</Texture>
+				<Texture name="$parentMiddle" file="Interface/Common/PanelScrollBar-Broder">
+					<Size><AbsDimension x="16" y="1" /></Size>
+					<Anchors>
+						<Anchor point="TOP" relativeTo="$parentTop" relativePoint="BOTTOM" />
+						<Anchor point="BOTTOM" relativeTo="$parentBottom" relativePoint="TOP" />
+					</Anchors>
+					<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<!-- Scroll up button -->
+			<Button name="$parentScrollUpButton" inherits="UIPanelScrollUpButtonTemplate">
+				<Anchors><Anchor point="BOTTOM" relativePoint="TOP" relativeTo="$parent" /></Anchors>
+			</Button>
+			<!-- Scroll down button -->
+			<Button name="$parentScrollDownButton" inherits="UIPanelScrollDownButtonTemplate">
+				<Anchors><Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parent" /></Anchors>
+			</Button>
+		</Frames>
+		<ThumbTexture file="Interface/Buttons/ScrollBar-Knob">
+			<Size><AbsDimension x="16" y="42" /></Size>
+			<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+		</ThumbTexture>
+	</Slider>
+
+
+
+	<!-- Command lists window (look: Kitty.Skin.SPECS.KittyCommandListFrame) -->
+	<Frame name="KittyCommandListFrame" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<!-- Window size -->
+		<Size><AbsDimension x="580" y="556" /></Size>
+		<!-- Position -->
+		<Anchors>
+			<Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" />
+			<Offset><AbsDimension x="0" y="0" /></Offset>
+		</Anchors>
+
+		<Layers>
+			<Layer level="BACKGROUND">
+				<!-- Cherry's KittyCombo skin: panel colour, set by Kitty.Skin -->
+				<Texture name="$parent_SkinBg">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+				<!-- Addon name and version, next to the kitty -->
+				<FontString name="KittyCommandListFrame_VersionLabel" inherits="GameTitleFont" justifyH="LEFT" text="VersionLabel">
+					<Size><AbsDimension x="400" y="24" /></Size>
+					<FontHeight><AbsValue val="18" /></FontHeight>
+				</FontString>
+
+				<!-- Title: "Command lists" -->
+				<FontString name="KittyCommandListFrame_TitleLabel" inherits="GameFontNormal" justifyH="LEFT" text="TitleLabel">
+					<Size><AbsDimension x="300" y="24" /></Size>
+					<FontHeight><AbsValue val="17" /></FontHeight>
+				</FontString>
+
+				<!-- Footer: "10 command lists" -->
+				<FontString name="KittyCommandListFrame_FooterLabel" inherits="GameFontNormal" justifyH="LEFT" text="">
+					<Size><AbsDimension x="250" y="20" /></Size>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT">
+							<Offset><AbsDimension x="22" y="-22" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12" /></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+
+		<Frames>
+			<!-- Corner grip: window size -->
+			<Button name="$parent_Grip" inherits="KittyResizeGripTemplate" />
+
+			<!-- Button (new) -->
+			<Button name="KittyCommandListFrame_CreateButton" inherits="UIPanelButtonTemplate" text="CreateButton">
+				<Size><AbsDimension x="150" y="28" /></Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="-130" y="58" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						Kitty.CommandListFrame.onClick(this, true);
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.L("CreateTip", "Make a new command list: the skills to use, from most to least important."));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</Button>
+
+			<!-- Button (import): new kitty from a share code. Replaces 0.973's "Initialization",
+			     which swapped every kitty for the defaults without asking. -->
+			<Button name="KittyCommandListFrame_ImportButton" inherits="UIPanelButtonTemplate" text="ImportButton">
+				<Size><AbsDimension x="100" y="28" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="KittyCommandListFrame_CreateButton" relativePoint="RIGHT">
+						<Offset><AbsDimension x="10" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandListFrame.onImport(this);
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.L("ImportNewTip", "Add a kitty from a share code (CKC2!...)."));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+				</Scripts>
+			</Button>
+
+			<!-- List -->
+			<Frame name="KittyCommandListFrame_List" enableMouse="true">
+				<Size><AbsDimension x="520" y="404" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="96" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<!-- Cherry's KittyCombo skin: panel colour, set by Kitty.Skin -->
+						<Texture name="$parent_SkinBg">
+							<Anchors>
+								<Anchor point="TOPLEFT" />
+								<Anchor point="BOTTOMRIGHT" />
+							</Anchors>
+						</Texture>
+						<Texture name="$parent_Highlight" file="Interface/Login/Common/ServerlistButton-Highlight" hidden="true" />
+					</Layer>
+					<Layer level="ARTWORK">
+						<!-- Column headers -->
+						<FontString name="KittyCommandListFrame_CommandListNameLabel" inherits="GameFontNormal" justifyH="LEFT" text="CommandListNameLabel">
+							<Size><AbsDimension x="150" y="20" /></Size>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+									<Offset><AbsDimension x="12" y="6" /></Offset>
+								</Anchor>
+							</Anchors>
+							<FontHeight><AbsValue val="13" /></FontHeight>
+						</FontString>
+						<FontString name="KittyCommandListFrame_CommandListClassLabel" inherits="GameFontNormal" justifyH="LEFT" text="CommandListClassLabel">
+							<Size><AbsDimension x="90" y="20" /></Size>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+									<Offset><AbsDimension x="168" y="6" /></Offset>
+								</Anchor>
+							</Anchors>
+							<FontHeight><AbsValue val="13" /></FontHeight>
+						</FontString>
+						<FontString name="KittyCommandListFrame_CommandListTargetLabel" inherits="GameFontNormal" justifyH="LEFT" text="CommandListTargetLabel">
+							<Size><AbsDimension x="70" y="20" /></Size>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+									<Offset><AbsDimension x="266" y="6" /></Offset>
+								</Anchor>
+							</Anchors>
+							<FontHeight><AbsValue val="13" /></FontHeight>
+						</FontString>
+						<FontString name="KittyCommandListFrame_ActionsLabel" inherits="GameFontNormal" justifyH="LEFT" text="">
+							<Size><AbsDimension x="100" y="20" /></Size>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+									<Offset><AbsDimension x="340" y="6" /></Offset>
+								</Anchor>
+							</Anchors>
+							<FontHeight><AbsValue val="13" /></FontHeight>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="KittyCommandListFrame_Button1"  inherits="KittyCommandListDetailTemplate" id="1" />
+					<Button name="KittyCommandListFrame_Button2"  inherits="KittyCommandListDetailTemplate" id="2" />
+					<Button name="KittyCommandListFrame_Button3"  inherits="KittyCommandListDetailTemplate" id="3" />
+					<Button name="KittyCommandListFrame_Button4"  inherits="KittyCommandListDetailTemplate" id="4" />
+					<Button name="KittyCommandListFrame_Button5"  inherits="KittyCommandListDetailTemplate" id="5" />
+					<Button name="KittyCommandListFrame_Button6"  inherits="KittyCommandListDetailTemplate" id="6" />
+					<Button name="KittyCommandListFrame_Button7"  inherits="KittyCommandListDetailTemplate" id="7" />
+					<Button name="KittyCommandListFrame_Button8"  inherits="KittyCommandListDetailTemplate" id="8" />
+					<Button name="KittyCommandListFrame_Button9"  inherits="KittyCommandListDetailTemplate" id="9" />
+					<Button name="KittyCommandListFrame_Button10" inherits="KittyCommandListDetailTemplate" id="10" />
+				</Frames>
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							-- Position the rows in the list, under the column headers
+							for index=1, 10 do
+								getglobal("KittyCommandListFrame_Button" .. index):ClearAllAnchors();
+								getglobal("KittyCommandListFrame_Button" .. index):SetAnchor("TOPLEFT", "TOPLEFT", "KittyCommandListFrame_List", 0, (index-1)*37 + 30);
+								getglobal("KittyCommandListFrame_Button" .. index):SetAnchor("BOTTOMRIGHT", "TOPRIGHT", "KittyCommandListFrame_List", 0, index*37 + 30);
+							end;
+						end)();
+						]]>
+					</OnLoad>
+					<OnShow>
+					</OnShow>
+				</Scripts>
+			</Frame>
+			<!-- Slider -->
+			<Slider name="KittyCommandListFrame_ScrollBar" inherits="KittyCommandListSliderTemplate">
+				<Size><AbsDimension x="10" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="KittyCommandListFrame_List" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="10" y="20" /></Offset>
+					</Anchor>
+					<Anchor point="BOTTOMLEFT" relativeTo="KittyCommandListFrame_List" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="10" y="-20" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							this:SetValueStepMode("INT");
+							this:SetMinMaxValues(1, 1);
+						end)();
+						]]>
+					</OnLoad>
+					<OnValueChanged>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandListFrame.onShowList(KittyCommandListFrame_ScrollBar, tonumber(this:GetValue()), 10);
+						end)();
+						]]>
+					</OnValueChanged>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							if(delta > 0) then
+								this:SetValue(this:GetValue() - 1);
+							elseif(delta < 0) then
+								this:SetValue(this:GetValue() + 1);
+							end
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Slider>
+
+			<!-- Button (save and close) -->
+			<Button name="KittyCommandListFrame_CloseButton" inherits="UIPanelButtonTemplate" text="CloseButton">
+				<Size><AbsDimension x="130" y="30" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-140" y="-14" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandListFrame.save();
+							Kitty.CommandListFrame.close();
+							KittyBasicConfigFrame:Show();
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+
+			<!-- Button (cancel) -->
+			<Button name="KittyCommandListFrame_CancelButton" inherits="UIPanelButtonTemplate" text="CancelButton">
+				<Size><AbsDimension x="110" y="30" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-22" y="-14" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandListFrame.close();
+							KittyBasicConfigFrame:Show();
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+
+		<!-- Scripts -->
+		<Scripts>
+			<OnShow>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.Skin.onShow(this);
+				end)();
+				]]>
+			</OnShow>
+			<OnHide>
+			</OnHide>
+			<OnMouseDown>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					-- A click on the window closes an open KittyCombo menu
+					CloseDropDownMenus();
+					if(key=="LBUTTON") then
+						this:StartMoving();
+					end
+				end)();
+				]]>
+			</OnMouseDown>
+			<OnMouseUp>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					this:StopMovingOrSizing();
+					Kitty.savePosition(this);
+				end)();
+				]]>
+			</OnMouseUp>
+		</Scripts>
+	</Frame>
+</Ui>

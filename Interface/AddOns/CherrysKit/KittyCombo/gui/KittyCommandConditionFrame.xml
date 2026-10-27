@@ -1,0 +1,1280 @@
+<!-- (C) 2012-2013 Miranda -->
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+<!--
+-->
+
+	<!-- List row (template) -->
+	<Button name="KittyCommandConditionDetailTemplate" virtual="true" enableMouse="true">
+		<!-- Highlight texture -->
+		<HighlightTexture file="Interface/AuctionFrame/AuctionFrameItem-Highlight" alphaMode="ADD">
+			<Anchors>
+				<Anchor point="TOPLEFT" />
+				<Anchor point="BOTTOMRIGHT" />
+			</Anchors>
+		</HighlightTexture>
+		<Layers>
+			<Layer level="ARTWORK">
+				<!-- What the row checks, in one plain sentence (Kitty.CommandConditionFrame.summary) -->
+				<FontString name="$parentSummary" inherits="GameFontNormal" justifyH="LEFT" text="">
+					<Size><AbsDimension x="490" y="14" /></Size>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT">
+							<Offset><AbsDimension x="12" y="-4" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="11" /></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<!-- Dropdown (condition type) -->
+			<Frame name="$parentDropDownMenu" inherits="UIDropDownMenuTemplate" enableMouse="true">
+				<Size><AbsDimension x="80" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Offset><AbsDimension x="5" y="-7" /></Offset>
+					</Anchor>
+				</Anchors>
+
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							-- Build the condition list (grouped, see Kitty.ComboManager.getConditionMenu)
+							local level1, level2 = Kitty.ComboManager.getConditionMenu();
+							local dropDown = Kitty.DropDown(this, 150);
+							dropDown:setListData(
+								function(this, button, value, text, previousValue, previousText)
+									-- Update the picked value (the menu shows friendly names)
+									local index = KittyCommandConditionFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+									Kitty.CommandConditionFrame.targetConditionList[index] = {["conditionType"] = Kitty.ComboManager.conditionFromLabel(button:GetText())};
+									Kitty.CommandConditionFrame.onShowList(KittyCommandConditionFrame_ScrollBar, tonumber(KittyCommandConditionFrame_ScrollBar:GetValue()), 10);
+								end,
+								level1,
+								function(index, item)
+									return level2[index] or nil;
+								end
+							);
+						end)();
+						]]>
+					</OnLoad>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							-- Describe the chosen condition (the grouped menu has no room for it)
+							local label = UIDropDownMenu_GetText(this);
+							local conditionType = Kitty.ComboManager.conditionFromLabel(label);
+							local describe = conditionType and conditionType ~= "" and Kitty.ComboManager[conditionType .. "Describe"];
+							if(not describe) then
+								Kitty.showGameTooltip(this, {Kitty.L("ConditionPickTitle", "What to check"),
+									Kitty.L("ConditionPickHint", "Pick what to check from the menu on the left.")});
+							else
+								local lines = {label};
+								for _, line in ipairs(describe(nil, nil)) do
+									if(line ~= "") then
+										table.insert(lines, line);
+									end
+								end
+								Kitty.showGameTooltip(this, lines);
+							end
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<!-- Dropdown (effect kind) -->
+			<Frame name="$parentEffectTypeDropDownMenu" inherits="UIDropDownMenuTemplate">
+				<Size><AbsDimension x="110" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local dropDown = Kitty.DropDown(this, 60);
+							dropDown:setListData(
+								function(this, button, value, text, previousValue, previousText)
+									Kitty.CommandConditionFrame.updateData(this:GetParent());
+									Kitty.CommandConditionFrame.onShowList(KittyCommandConditionFrame_ScrollBar, tonumber(KittyCommandConditionFrame_ScrollBar:GetValue()), 10);
+								end,
+								{"name", "id", "original"}
+							);
+						end)();
+						]]>
+					</OnLoad>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<!-- Dropdown (buff kind) -->
+			<Frame name="$parentConditionDropDownMenu" inherits="UIDropDownMenuTemplate">
+				<Size><AbsDimension x="80" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentEffectTypeDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							-- Get the buff kind list
+							local getBuffList = function(isBuff)
+								local list = {};
+								for key, value in pairs(Kitty.BuffManager.effectNameList) do
+									if(value.isBuff == isBuff) then
+										table.insert(list, key);
+									end
+								end
+								table.sort(list);
+
+								-- Split the table (menus hold at most 32 entries)
+								local list1 = {};
+								for index = 1, 30 do
+									table.insert(list1, list[index]);
+								end
+								local list2 = {};
+								for index = 31, 60 do
+									table.insert(list2, list[index]);
+								end
+								local list3 = {};
+								for index = 61, #list do
+									table.insert(list3, list[index]);
+								end
+
+								return list1, list2, list3;
+							end;
+
+							local buffList1, buffList2, buffList3 = getBuffList(true);
+							local debuffList1, debuffList2, debuffList3 = getBuffList(false);
+
+							local dropDown = Kitty.DropDown(this, 120);
+							dropDown:setListData(
+								function(this, button, value, text, previousValue, previousText)
+									Kitty.CommandConditionFrame.updateData(this:GetParent());
+								end,
+								{"buff1", "buff2", "buff3", "debuff1", "debuff2", "debuff3"},
+								{buffList1, buffList2, buffList3, debuffList1, debuffList2, debuffList3}
+							);
+						end)();
+						]]>
+					</OnLoad>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<!-- Edit box (value) -->
+			<EditBox name="$parentConditionValueEditBox" inherits="UIPanelEditBoxTemplate" numeric="false" letters="48" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="140" y="20" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentEffectTypeDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "CompleteInput"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnTextChanged>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandConditionFrame.updateData(this:GetParent());
+						end)();
+						]]>
+					</OnTextChanged>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</EditBox>
+
+			<!-- Edit box (threshold) -->
+			<EditBox name="$parentConditionThresholdEditBox" inherits="UIPanelEditBoxTemplate" numeric="false" letters="8" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="50" y="20" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentConditionValueEditBox" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "CompleteInput"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnTextChanged>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandConditionFrame.updateData(this:GetParent());
+						end)();
+						]]>
+					</OnTextChanged>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</EditBox>
+
+			<!-- Edit box (min) -->
+			<EditBox name="$parentMinEditBox" inherits="UIPanelEditBoxTemplate" numeric="true" letters="8" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="50" y="20" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "CompleteInput"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnTextChanged>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandConditionFrame.updateData(this:GetParent());
+						end)();
+						]]>
+					</OnTextChanged>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</EditBox>
+
+			<!-- Edit box (max) -->
+			<EditBox name="$parentMaxEditBox" inherits="UIPanelEditBoxTemplate" numeric="true" letters="8" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="50" y="20" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentMinEditBox" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "CompleteInput"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnTextChanged>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandConditionFrame.updateData(this:GetParent());
+						end)();
+						]]>
+					</OnTextChanged>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</EditBox>
+
+			<!-- Dropdown (yes/no) -->
+			<Frame name="$parentBooleanDropDownMenu" inherits="UIDropDownMenuTemplate">
+				<Size><AbsDimension x="110" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local dropDown = Kitty.DropDown(this, 80);
+							local row = this:GetParent();
+							dropDown:setListData(
+								function(this, button, value, text, previousValue, previousText)
+									Kitty.CommandConditionFrame.updateData(this:GetParent());
+								end,
+								function()
+									-- yes/no, or ready/on cooldown, on/off... for this row's condition
+									return Kitty.CommandConditionFrame.choiceLabels(Kitty.CommandConditionFrame.rowConditionType(row));
+								end
+							);
+						end)();
+						]]>
+					</OnLoad>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<!-- Dropdown (mode name) for "Mode is on": every mode, then Add new mode... -->
+			<Frame name="$parentModeDropDownMenu" inherits="UIDropDownMenuTemplate" hidden="true">
+				<Size><AbsDimension x="140" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentBooleanDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local dropDown = Kitty.DropDown(this, 110);
+							dropDown:setListData(
+								function(this, button, value, text, previousValue, previousText)
+									Kitty.CommandConditionFrame.onModePicked(this:GetParent(), text);
+								end,
+								Kitty.CommandConditionFrame.modeChoices
+							);
+						end)();
+						]]>
+					</OnLoad>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<!-- Dropdown (shortcut) -->
+			<Frame name="$parentActionDropDownMenu" inherits="UIDropDownMenuTemplate">
+				<Size><AbsDimension x="80" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentEffectTypeDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local dropDown = Kitty.DropDown(this, 120);
+							dropDown:setListData(
+								function(this, button, value, text, previousValue, previousText)
+									Kitty.CommandConditionFrame.updateData(this:GetParent());
+								end,
+								{"action1", "action2", "action3", "action4"},
+								function(index, text)
+									if(index == 1) then
+										return Kitty.SlotManager.getList(1, 20);
+									elseif(index == 2) then
+										return Kitty.SlotManager.getList(21, 40);
+									elseif(index == 3) then
+										return Kitty.SlotManager.getList(41, 60);
+									else
+										return Kitty.SlotManager.getList(61, 80);
+									end
+								end
+							);
+						end)();
+						]]>
+					</OnLoad>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<!-- Dropdown (build) -->
+			<Frame name="$parentBuildDropDownMenu" inherits="UIDropDownMenuTemplate">
+				<Size><AbsDimension x="80" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentEffectTypeDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							-- Level-1 list
+							local level1List = {};
+							local groupedList = Kitty.BuildManager.getGroupedList();
+							for key, value in pairs(groupedList) do
+								table.insert(level1List, key);
+							end
+							table.sort(level1List);
+
+							local level2List = {};
+							for index, key in ipairs(level1List) do
+								level2List[index] = {};
+								for _, value in ipairs(groupedList[key]) do
+									table.insert(level2List[index], value);
+								end
+							end
+
+							-- Level-2 list
+							local dropDown = Kitty.DropDown(this);
+							dropDown:setListData(
+								function(button)
+									Kitty.CommandConditionFrame.updateData(this:GetParent());
+								end,
+								level1List,
+								level2List
+							);
+						end)();
+						]]>
+					</OnLoad>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<!-- rom weakauras: aura picker -->
+			<Frame name="$parentWeakAuraDropDownMenu" inherits="UIDropDownMenuTemplate">
+				<Size><AbsDimension x="80" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local dropDown = Kitty.DropDown(this, 80);
+							dropDown:setListData(
+								function(this, button, value, text, previousValue, previousText)
+									Kitty.CommandConditionFrame.updateData(this:GetParent());
+								end,
+								Kitty.CommandConditionFrame.weakAuraMenuLevel1,
+								Kitty.CommandConditionFrame.weakAuraMenuLevel2
+							);
+						end)();
+						]]>
+					</OnLoad>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<!-- rom weakauras: what to check (true / false / a number field) -->
+			<Frame name="$parentWeakAuraFieldDropDownMenu" inherits="UIDropDownMenuTemplate">
+				<Size><AbsDimension x="55" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentWeakAuraDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local dropDown = Kitty.DropDown(this, 55);
+							dropDown:setListData(
+								function(this, button, value, text, previousValue, previousText)
+									Kitty.CommandConditionFrame.updateData(this:GetParent());
+									Kitty.CommandConditionFrame.onShowList(KittyCommandConditionFrame_ScrollBar, tonumber(KittyCommandConditionFrame_ScrollBar:GetValue()), 10);
+								end,
+								Kitty.ComboManager.WEAKAURA_FIELDS
+							);
+						end)();
+						]]>
+					</OnLoad>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Frame>
+
+			<EditBox name="$parentWeakAuraMinEditBox" inherits="UIPanelEditBoxTemplate" numeric="false" letters="8" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="40" y="20" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentWeakAuraFieldDropDownMenu" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.L("WeakAuraRangeTooltip", "Lowest allowed value (blank = no limit)"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnTextChanged>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandConditionFrame.updateData(this:GetParent());
+						end)();
+						]]>
+					</OnTextChanged>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</EditBox>
+
+			<EditBox name="$parentWeakAuraMaxEditBox" inherits="UIPanelEditBoxTemplate" numeric="false" letters="8" historyLines="0" autoFocus="false" multiLine="false">
+				<Size><AbsDimension x="40" y="20" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentWeakAuraMinEditBox" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.L("WeakAuraRangeTooltip", "Highest allowed value (blank = no limit)"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnTextChanged>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandConditionFrame.updateData(this:GetParent());
+						end)();
+						]]>
+					</OnTextChanged>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</EditBox>
+
+			<!-- Button (up) -->
+			<Button name="$parentUpButton">
+				<Size>
+					<AbsDimension x="20" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="512" y="3" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local fromIndex = KittyCommandConditionFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+							local toIndex = fromIndex - 1;
+							if(Kitty.CommandConditionFrame.targetConditionList:swap(fromIndex, toIndex)) then
+								Kitty.CommandConditionFrame.onRedraw(KittyCommandConditionFrame, tonumber(KittyCommandConditionFrame_ScrollBar:GetValue()), 10);
+							end
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "MoveUp"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+				<NormalTexture file="Interface/Buttons/PanelUpButton-Normal">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</NormalTexture>
+				<PushedTexture file="Interface/Buttons/PanelUpButton-Depress">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</PushedTexture>
+				<DisabledTexture file="Interface/Buttons/PanelUpButton-Disable">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</DisabledTexture>
+				<HighlightTexture file="Interface/Buttons/PanelUpButton-Highlight" alphaMode="ADD" />
+			</Button>
+
+			<!-- Button (down) -->
+			<Button name="$parentDownButton">
+				<Size>
+					<AbsDimension x="20" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="$parentUpButton" relativePoint="BOTTOM">
+						<Offset><AbsDimension x="0" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local fromIndex = KittyCommandConditionFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+							local toIndex = fromIndex + 1;
+							if(Kitty.CommandConditionFrame.targetConditionList:swap(fromIndex, toIndex)) then
+								Kitty.CommandConditionFrame.onRedraw(KittyCommandConditionFrame, tonumber(KittyCommandConditionFrame_ScrollBar:GetValue()), 10);
+							end
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "MoveDown"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+				<NormalTexture file="Interface/Buttons/PanelDownButton-Normal">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</NormalTexture>
+				<PushedTexture file="Interface/Buttons/PanelDownButton-Depress">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</PushedTexture>
+				<DisabledTexture file="Interface/Buttons/PanelDownButton-Disable">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875" />
+				</DisabledTexture>
+				<HighlightTexture file="Interface/Buttons/PanelUpButton-Highlight" alphaMode="ADD" />
+			</Button>
+
+			<!-- Button (plus) -->
+			<Button name="$parentPlusButton" inherits="UIPlusButtonTemplate">
+				<Size>
+					<AbsDimension x="20" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentUpButton" relativePoint="RIGHT">
+						<Offset><AbsDimension x="0" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local index = KittyCommandConditionFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+							if(IsShiftKeyDown() ~= true) then
+								Kitty.CommandConditionFrame.targetConditionList:insert(index, {["conditionType"]=""});
+							else
+								Kitty.CommandConditionFrame.targetConditionList:copy(index);
+							end
+							Kitty.CommandConditionFrame.onRedraw(KittyCommandConditionFrame, tonumber(KittyCommandConditionFrame_ScrollBar:GetValue()), 10);
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "NewCreation"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Button>
+
+			<!-- Button (minus) -->
+			<Button name="$parentMinusButton" inherits="UIMinusButtonTemplate">
+				<Size>
+					<AbsDimension x="20" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="$parentPlusButton" relativePoint="BOTTOM">
+						<Offset><AbsDimension x="0" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							local index = KittyCommandConditionFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
+							if(IsShiftKeyDown() ~= true) then
+								Kitty.CommandConditionFrame.targetConditionList:remove(index);
+							else
+								Kitty.CommandConditionFrame.targetConditionList:update(index, {["conditionType"]=""});
+							end
+							Kitty.CommandConditionFrame.onRedraw(KittyCommandConditionFrame, tonumber(KittyCommandConditionFrame_ScrollBar:GetValue()), 10);
+						end)();
+						]]>
+					</OnClick>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.showGameTooltip(this, Kitty.T("message", "Delete"));
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.scrollList(KittyCommandConditionFrame_ScrollBar, delta);
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					this:RegisterForClicks("LeftButton", "RightButton")
+				end)();
+				]]>
+			</OnLoad>
+			<OnClick>
+			</OnClick>
+			<OnEnter>
+			</OnEnter>
+			<OnLeave>
+			</OnLeave>
+			<OnMouseWheel>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					if(delta > 0) then
+						KittyCommandConditionFrame_ScrollBar:SetValue(KittyCommandConditionFrame_ScrollBar:GetValue() - 1);
+					elseif(delta < 0) then
+						KittyCommandConditionFrame_ScrollBar:SetValue(KittyCommandConditionFrame_ScrollBar:GetValue() + 1);
+					end
+				end)();
+				]]>
+			</OnMouseWheel>
+		</Scripts>
+	</Button>
+
+	<!-- Slider (template) -->
+	<Slider name="KittyCommandConditionSliderTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentTop" file="Interface/Common/PanelScrollBar-Broder">
+					<Size><AbsDimension x="16" y="16" /></Size>
+					<Anchors>
+						<Anchor point="TOP" relativeTo="$parent" relativePoint="TOP">
+							<Offset><AbsDimension x="0" y="-20" /></Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0" right="1" top="0" bottom="0.25" />
+				</Texture>
+				<Texture name="$parentBottom" file="Interface/Common/PanelScrollBar-Broder">
+					<Size><AbsDimension x="16" y="16" /></Size>
+					<Anchors>
+						<Anchor point="BOTTOM" relativeTo="$parent" relativePoint="BOTTOM">
+							<Offset><AbsDimension x="0" y="20" /></Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0" right="1" top="0.75" bottom="1" />
+				</Texture>
+				<Texture name="$parentMiddle" file="Interface/Common/PanelScrollBar-Broder">
+					<Size><AbsDimension x="16" y="1" /></Size>
+					<Anchors>
+						<Anchor point="TOP" relativeTo="$parentTop" relativePoint="BOTTOM" />
+						<Anchor point="BOTTOM" relativeTo="$parentBottom" relativePoint="TOP" />
+					</Anchors>
+					<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<!-- Scroll up button -->
+			<Button name="$parentScrollUpButton" inherits="UIPanelScrollUpButtonTemplate">
+				<Anchors><Anchor point="BOTTOM" relativePoint="TOP" relativeTo="$parent" /></Anchors>
+			</Button>
+			<!-- Scroll down button -->
+			<Button name="$parentScrollDownButton" inherits="UIPanelScrollDownButtonTemplate">
+				<Anchors><Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parent" /></Anchors>
+			</Button>
+		</Frames>
+		<ThumbTexture file="Interface/Buttons/ScrollBar-Knob">
+			<Size><AbsDimension x="16" y="42" /></Size>
+			<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+		</ThumbTexture>
+	</Slider>
+
+
+
+	<!-- Condition editor window -->
+	<Frame name="KittyCommandConditionFrame" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<!-- Window size -->
+		<Size><AbsDimension x="620" y="616" /></Size>
+		<!-- Position -->
+		<Anchors>
+			<Anchor point="CENTER" relativePoint="CENTER" />
+			<Offset><AbsDimension x="0" y="0" /></Offset>
+		</Anchors>
+
+
+		<Layers>
+			<Layer level="BACKGROUND">
+				<!-- Cherry's KittyCombo skin: panel colour, set by Kitty.Skin -->
+				<Texture name="$parent_SkinBg">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+				<!-- Version -->
+				<FontString name="KittyCommandConditionFrame_VersionLabel" inherits="GameTitleFont" justifyH="LEFT" text="VersionLabel">
+					<Size><AbsDimension x="400" y="-14" /></Size>
+					<FontHeight><AbsValue val="14" /></FontHeight>
+				</FontString>
+
+				<!-- Title -->
+				<FontString name="KittyCommandConditionFrame_TitleLabel" inherits="GameFontNormal" justifyH="LEFT" text="TitleLabel">
+					<Size><AbsDimension x="560" y="50" /></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="20" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="14" /></FontHeight>
+				</FontString>
+
+				<!-- Command list name (label) -->
+				<FontString name="KittyCommandConditionFrame_CommandListLabel" inherits="GameFontNormal" justifyH="LEFT" text="CommandListLabel">
+					<FontHeight><AbsValue val="14" /></FontHeight>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+							<Offset><AbsDimension x="20" y="50" /></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<!-- Command list name -->
+				<FontString name="KittyCommandConditionFrame_CommandListNameLabel" inherits="GameTitleFont" text="CommandListNameLabel">
+					<FontHeight><AbsValue val="14" /></FontHeight>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="KittyCommandConditionFrame_CommandListLabel" relativePoint="RIGHT">
+							<Offset><AbsDimension x="5" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+
+				<!-- Class name (label) -->
+				<FontString name="KittyCommandConditionFrame_BuildLabel" inherits="GameFontNormal" justifyH="LEFT" text="BuildLabel">
+					<FontHeight><AbsValue val="14" /></FontHeight>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="KittyCommandConditionFrame_CommandListNameLabel" relativePoint="RIGHT">
+							<Offset><AbsDimension x="5" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<!-- Class name -->
+				<FontString name="KittyCommandConditionFrame_BuildNameLabel" inherits="GameTitleFont" text="BuildNameLabel">
+					<FontHeight><AbsValue val="14" /></FontHeight>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="KittyCommandConditionFrame_BuildLabel" relativePoint="RIGHT">
+							<Offset><AbsDimension x="5" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+
+				<!-- Target (label) -->
+				<FontString name="KittyCommandConditionFrame_TargetLabel" inherits="GameFontNormal" justifyH="LEFT" text="TargetLabel">
+					<FontHeight><AbsValue val="14" /></FontHeight>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="KittyCommandConditionFrame_BuildNameLabel" relativePoint="RIGHT">
+							<Offset><AbsDimension x="5" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<!-- Target -->
+				<FontString name="KittyCommandConditionFrame_TargetNameLabel" inherits="GameTitleFont" text="TargetNameLabel">
+					<FontHeight><AbsValue val="14" /></FontHeight>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="KittyCommandConditionFrame_TargetLabel" relativePoint="RIGHT">
+							<Offset><AbsDimension x="5" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+
+				<!-- Command name (label) -->
+				<FontString name="KittyCommandConditionFrame_CommandLabel" inherits="GameFontNormal" justifyH="LEFT" text="CommandLabel">
+					<FontHeight><AbsValue val="14" /></FontHeight>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="KittyCommandConditionFrame_TargetNameLabel" relativePoint="RIGHT">
+							<Offset><AbsDimension x="5" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<!-- Command name -->
+				<FontString name="KittyCommandConditionFrame_CommandNameLabel" inherits="GameTitleFont" text="CommandNameLabel">
+					<FontHeight><AbsValue val="14" /></FontHeight>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="KittyCommandConditionFrame_CommandLabel" relativePoint="RIGHT">
+							<Offset><AbsDimension x="5" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<!-- How the rows work, for players new to KittyCombo -->
+				<FontString name="KittyCommandConditionFrame_HintLabel" inherits="GameFontNormal" justifyH="LEFT" text="">
+					<Size><AbsDimension x="580" y="18" /></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+							<Offset><AbsDimension x="20" y="74" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12" /></FontHeight>
+				</FontString>
+				<!-- "2 conditions, all must be true" -->
+				<FontString name="KittyCommandConditionFrame_FooterLabel" inherits="GameFontNormal" justifyH="LEFT" text="">
+					<Size><AbsDimension x="330" y="20" /></Size>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT">
+							<Offset><AbsDimension x="22" y="-22" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="12" /></FontHeight>
+				</FontString>
+				<!-- Icon of the command being edited -->
+				<Texture name="KittyCommandConditionFrame_CommandIcon" hidden="true">
+					<Size><AbsDimension x="28" y="28" /></Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="KittyCommandConditionFrame_CommandNameLabel" relativePoint="RIGHT">
+							<Offset><AbsDimension x="8" y="0" /></Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+
+		<Frames>
+			<!-- Corner grip: window size -->
+			<Button name="$parent_Grip" inherits="KittyResizeGripTemplate" />
+			<!-- List -->
+			<Frame name="KittyCommandConditionFrame_List" enableMouse="true">
+				<Size><AbsDimension x="560" y="468" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+						<Offset><AbsDimension x="20" y="96" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<!-- Cherry's KittyCombo skin: panel colour, set by Kitty.Skin -->
+						<Texture name="$parent_SkinBg">
+							<Anchors>
+								<Anchor point="TOPLEFT" />
+								<Anchor point="BOTTOMRIGHT" />
+							</Anchors>
+						</Texture>
+						<Texture name="$parent_Highlight" file="Interface/Login/Common/ServerlistButton-Highlight" hidden="true" />
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="KittyCommandConditionFrame_Button1"  inherits="KittyCommandConditionDetailTemplate" id="1" />
+					<Button name="KittyCommandConditionFrame_Button2"  inherits="KittyCommandConditionDetailTemplate" id="2" />
+					<Button name="KittyCommandConditionFrame_Button3"  inherits="KittyCommandConditionDetailTemplate" id="3" />
+					<Button name="KittyCommandConditionFrame_Button4"  inherits="KittyCommandConditionDetailTemplate" id="4" />
+					<Button name="KittyCommandConditionFrame_Button5"  inherits="KittyCommandConditionDetailTemplate" id="5" />
+					<Button name="KittyCommandConditionFrame_Button6"  inherits="KittyCommandConditionDetailTemplate" id="6" />
+					<Button name="KittyCommandConditionFrame_Button7"  inherits="KittyCommandConditionDetailTemplate" id="7" />
+					<Button name="KittyCommandConditionFrame_Button8"  inherits="KittyCommandConditionDetailTemplate" id="8" />
+					<Button name="KittyCommandConditionFrame_Button9"  inherits="KittyCommandConditionDetailTemplate" id="9" />
+					<Button name="KittyCommandConditionFrame_Button10" inherits="KittyCommandConditionDetailTemplate" id="10" />
+				</Frames>
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							-- Position the rows in the list
+							for index=1, 10 do
+								getglobal("KittyCommandConditionFrame_Button" .. index):ClearAllAnchors();
+								getglobal("KittyCommandConditionFrame_Button" .. index):SetAnchor("TOPLEFT", "TOPLEFT", "KittyCommandConditionFrame_List", 0, (index-1)*46 + 4);
+								getglobal("KittyCommandConditionFrame_Button" .. index):SetAnchor("BOTTOMRIGHT", "TOPRIGHT", "KittyCommandConditionFrame_List", 0, index*46 + 4);
+							end;
+						end)();
+						]]>
+					</OnLoad>
+					<OnShow>
+					</OnShow>
+				</Scripts>
+			</Frame>
+
+			<!-- Slider -->
+			<Slider name="KittyCommandConditionFrame_ScrollBar" inherits="KittyCommandConditionSliderTemplate">
+				<Size><AbsDimension x="10" /></Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="KittyCommandConditionFrame_List" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="10" y="20" /></Offset>
+					</Anchor>
+					<Anchor point="BOTTOMLEFT" relativeTo="KittyCommandConditionFrame_List" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="10" y="-20" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							this:SetValueStepMode("INT");
+							this:SetMinMaxValues(1, 1);
+						end)();
+						]]>
+					</OnLoad>
+					<OnValueChanged>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandConditionFrame.onShowList(this, tonumber(this:GetValue()), 10);
+						end)();
+						]]>
+					</OnValueChanged>
+					<OnMouseWheel>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							if(delta > 0) then
+								this:SetValue(this:GetValue() - 1);
+							elseif(delta < 0) then
+								this:SetValue(this:GetValue() + 1);
+							end
+						end)();
+						]]>
+					</OnMouseWheel>
+				</Scripts>
+			</Slider>
+
+			<!-- Button (close) -->
+			<Button name="KittyCommandConditionFrame_CloseButton" inherits="UIPanelButtonTemplate" text="CloseButton">
+				<Size><AbsDimension x="100" y="30" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-128" y="-14" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.CommandConditionFrame.save();
+							if(Kitty.CommandConditionFrame.callbackFunc ~= nil) then
+								Kitty.CommandConditionFrame.callbackFunc(Kitty.CommandConditionFrame.commandList);
+							else
+								Kitty.sendMessage("callbackFunc is nil.", "DEFAULT", 1, 0, 0);
+							end
+							Kitty.CommandConditionFrame.close();
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+
+			<!-- Button (cancel) -->
+			<Button name="KittyCommandConditionFrame_CancelButton" inherits="UIPanelButtonTemplate" text="CancelButton">
+				<Size><AbsDimension x="100" y="30" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-22" y="-14" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							if(Kitty.CommandConditionFrame.callbackFunc ~= nil) then
+								Kitty.CommandConditionFrame.callbackFunc(Kitty.CommandConditionFrame.commandList);
+							else
+								Kitty.sendMessage("callbackFunc is nil.", "DEFAULT", 1, 0, 0);
+							end
+							Kitty.CommandConditionFrame.close();
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+
+		<!-- Scripts -->
+		<Scripts>
+			<OnShow>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.Skin.onShow(this);
+				end)();
+				]]>
+			</OnShow>
+			<OnHide>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					-- Hide the level-1 list
+					CloseDropDownMenus();
+				end)();
+				]]>
+			</OnHide>
+			<OnLoad>
+			</OnLoad>
+			<OnEvent>
+			</OnEvent>
+			<OnMouseDown>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					-- A click on the window closes an open KittyCombo menu
+					CloseDropDownMenus();
+					if(key=="LBUTTON") then
+						this:StartMoving();
+					end
+				end)();
+				]]>
+			</OnMouseDown>
+			<OnMouseUp>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					this:StopMovingOrSizing();
+					Kitty.savePosition(this);
+				end)();
+				]]>
+			</OnMouseUp>
+		</Scripts>
+	</Frame>
+</Ui>

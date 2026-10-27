@@ -1,0 +1,94 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+  <!-- Cherry's Kit: Ultimate Mail Mod settings window (/umm). All handlers live here in XML:
+       RoM ignores script handlers set from Lua. -->
+
+  <CheckButton name="UMMSettingsCheckTemplate" inherits="CommonOptionsCheckButtonTemplate" virtual="true">
+    <Size><AbsDimension x="25" y="25"/></Size>
+    <Scripts>
+      <OnClick>UMMSettingsUI_Check(this:GetID(), this:IsChecked());</OnClick>
+    </Scripts>
+  </CheckButton>
+
+  <Frame name="UMMSettingsNumberRowTemplate" virtual="true">
+    <Size><AbsDimension x="300" y="28"/></Size>
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString name="$parentLabel" inherits="GameFontHighlight" justifyH="LEFT" text="">
+          <Size><AbsDimension x="190" y="28"/></Size>
+          <Anchors><Anchor point="LEFT"/></Anchors>
+        </FontString>
+        <FontString name="$parentValue" inherits="GameFontNormal" justifyH="CENTER" text="">
+          <Size><AbsDimension x="44" y="28"/></Size>
+          <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="222" y="0"/></Offset></Anchor></Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames>
+      <Button name="$parentMinus" inherits="UIPanelButtonTemplate" text="-">
+        <Size><AbsDimension x="26" y="22"/></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="194" y="0"/></Offset></Anchor></Anchors>
+        <Scripts><OnClick>UMMSettingsUI_Step(this:GetParent():GetID(), -1);</OnClick></Scripts>
+      </Button>
+      <Button name="$parentPlus" inherits="UIPanelButtonTemplate" text="+">
+        <Size><AbsDimension x="26" y="22"/></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="268" y="0"/></Offset></Anchor></Anchors>
+        <Scripts><OnClick>UMMSettingsUI_Step(this:GetParent():GetID(), 1);</OnClick></Scripts>
+      </Button>
+    </Frames>
+  </Frame>
+
+  <Frame name="UMMSettingsFrame" parent="UIParent" inherits="UICommonFrameTemplate" enableMouse="true" frameStrata="DIALOG" hidden="true">
+    <Size><AbsDimension x="340" y="392"/></Size>
+    <Anchors><Anchor point="CENTER"/></Anchors>
+    <Frames>
+      <Frame name="$parentRow1" inherits="UMMSettingsNumberRowTemplate" id="1">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="40"/></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="$parentRow2" inherits="UMMSettingsNumberRowTemplate" id="2">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="74"/></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="$parentRow3" inherits="UMMSettingsNumberRowTemplate" id="3">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="108"/></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="$parentRow4" inherits="UMMSettingsNumberRowTemplate" id="4">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="142"/></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="$parentRow5" inherits="UMMSettingsNumberRowTemplate" id="5">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="176"/></Offset></Anchor></Anchors>
+      </Frame>
+      <CheckButton name="$parentCheck1" inherits="UMMSettingsCheckTemplate" id="1">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="219"/></Offset></Anchor></Anchors>
+      </CheckButton>
+      <CheckButton name="$parentCheck2" inherits="UMMSettingsCheckTemplate" id="2">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="249"/></Offset></Anchor></Anchors>
+      </CheckButton>
+      <CheckButton name="$parentCheck3" inherits="UMMSettingsCheckTemplate" id="3">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="279"/></Offset></Anchor></Anchors>
+      </CheckButton>
+      <Button name="$parentCheck" inherits="UIPanelButtonTemplate" text="">
+        <Size><AbsDimension x="120" y="24"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="320"/></Offset></Anchor></Anchors>
+        <Scripts><OnClick>UMMSettingsUI_Button("check");</OnClick></Scripts>
+      </Button>
+      <Button name="$parentTrace" inherits="UIPanelButtonTemplate" text="">
+        <Size><AbsDimension x="120" y="24"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="150" y="320"/></Offset></Anchor></Anchors>
+        <Scripts><OnClick>UMMSettingsUI_Button("trace");</OnClick></Scripts>
+      </Button>
+      <Button name="$parentDefaults" inherits="UIPanelButtonTemplate" text="">
+        <Size><AbsDimension x="120" y="24"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="350"/></Offset></Anchor></Anchors>
+        <Scripts><OnClick>UMMSettingsUI_Button("defaults");</OnClick></Scripts>
+      </Button>
+      <Button name="$parentReset" inherits="UIPanelButtonTemplate" text="">
+        <Size><AbsDimension x="120" y="24"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="150" y="350"/></Offset></Anchor></Anchors>
+        <Scripts><OnClick>UMMSettingsUI_Button("resetchars");</OnClick></Scripts>
+      </Button>
+    </Frames>
+    <Scripts>
+      <OnLoad>UMMSettingsUI_OnLoad(this);</OnLoad>
+      <OnShow>UMMSettingsUI_Refresh();</OnShow>
+    </Scripts>
+  </Frame>
+</Ui>

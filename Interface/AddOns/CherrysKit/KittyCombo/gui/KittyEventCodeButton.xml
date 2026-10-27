@@ -1,0 +1,58 @@
+<!-- (C) 2012-2013 Miranda -->
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+<!--
+-->
+
+	<!-- Event code exchange button -->
+	<Button name="KittyEventCodeButton" parent="OpenMailFrame" hidden="true">
+		<Size><AbsDimension x="28" y="28" /></Size>
+		<Anchors>
+			<Anchor point="RIGHT" relativeTo="OpenMailReplyButton" relativePoint="LEFT">
+				<Offset><AbsDimension x="-6" y="0" /></Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.EventCodeButton.onLoad(this);
+				end)();
+				]]>
+			</OnLoad>
+			<OnEvent>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.EventCodeButton.onEvent(this, event, arg1, arg2, arg3, arg4);
+				end)();
+				]]>
+			</OnEvent>
+			<OnEnter>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.EventCodeButton.onEnter(this);
+				end)();
+				]]>
+			</OnEnter>
+			<OnLeave>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.EventCodeButton.onLeave(this);
+				end)();
+				]]>
+			</OnLeave>
+			<OnClick>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.EventCodeButton.onClick(this);
+				end)();
+				]]>
+			</OnClick>
+		</Scripts>
+		<NormalTexture file="Interface/ItemMall/Itemchange-normal" />
+		<PushedTexture file="Interface/ItemMall/Itemchange-pushed" />
+		<DisabledTexture file="Interface/ItemMall/ItemChange-Disable" />
+		<HighlightTexture file="Interface/Minimap/MinimapButton_Highlight" alphaMode="ADD">
+			<TexCoords left="0"  top="0" right="1" bottom="1" />
+		</HighlightTexture>
+	</Button>
+</Ui>
