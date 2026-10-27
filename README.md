@@ -1,3 +1,5 @@
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.77/CherrysKit-Full-0.11.77.zip)
+
 # Cherry's Kit
 
 ## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.77/CherrysKit-Full-0.11.77.zip)
