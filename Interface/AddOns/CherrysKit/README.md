@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.9** · Kit release **0.11.77** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.10** · Kit release **0.11.78** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Updated in kit 0.11.78
+
+This release updates rom weakauras, Cherry's KittyCombo, Cherry's Chat, PortraitHP and the hub. It adds draft-backed aura editing, selected-display controls, richer conditions and icon selection, and fixes startup diagnostics and long-copy recovery. The individual addon READMEs describe the changes and current test limits.
 
 ## Features
 

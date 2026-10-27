@@ -10,7 +10,7 @@ Use Python 3.10 or later and no extra packages:
 python tools/build_release.py
 ```
 
-Outputs go to `dist/`, which is ignored by Git:
+Outputs go to `dist/<kit version>/`, which is ignored by Git. Each version gets its own folder so old and new release files cannot be mixed:
 
 - `CherrysKit-Full-<kit version>.zip`: the complete installed tree.
 - `CherrysKit-Hub-<kit version>.zip`: shared root files, KitLoad, Media, hub reference docs, and LoadTimes.
@@ -45,9 +45,9 @@ Each addon includes its own README, local reference notes and the original combi
 
 ## Publish a version
 
-1. Update the source versions and `release-packages.json`. The kit version must match `CherrysKit.toc`; keep README version labels current.
+1. Bump the runtime version of every changed addon and the hub when changed, then the kit version and `release-packages.json`. The kit version must match `CherrysKit.toc`; keep the affected README version labels current. Carry unchanged addon packages forward byte for byte under their existing versions.
 2. Update the release summary and runtime-validation notes in the package metadata, affected README limits, and the [CurseForge descriptions](curseforge/README.md) where the behaviour changed.
-3. Run the builder and check the relevant changes in game. In release notes, distinguish offline checks from in-game checks.
+3. Run the builder and Lua regression suite, then use the relevant [in-game checks](TESTING.md). In release notes, distinguish offline checks from in-game checks.
 4. Commit and push to `main`. Let the packaging check pass.
 5. Tag that commit, for example `v0.11.77`, and push the tag.
 6. Build again from the clean tagged checkout so `release-manifest.json` records the right source commit.

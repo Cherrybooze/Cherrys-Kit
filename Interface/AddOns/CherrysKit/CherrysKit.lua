@@ -8,7 +8,7 @@
 CherrysKit = CherrysKit or {}
 local Kit = CherrysKit
 
-Kit.version = "0.4.9"
+Kit.version = "0.4.10"
 Kit.MAX_ROWS = 16
 
 if SaveVariables then
@@ -19,7 +19,9 @@ local function db()
   if type(CherrysKit_DB) ~= "table" then
     CherrysKit_DB = {}
   end
-  CherrysKit_DB.disabled = CherrysKit_DB.disabled or {}
+  if type(CherrysKit_DB.disabled) ~= "table" then
+    CherrysKit_DB.disabled = {}
+  end
   return CherrysKit_DB
 end
 
@@ -32,14 +34,12 @@ Kit.Print = print
 
 local function runSlash(key, msg)
   local fn = SlashCmdList and SlashCmdList[key]
-  if not fn then
-    return false
+  if type(fn) ~= "function" then
+    return false, "slash handler " .. tostring(key) .. " is not available"
   end
-  local ok, err = pcall(fn, nil, msg or "")
-  if not ok then
-    print("error: " .. tostring(err))
-  end
-  return ok
+  -- The hub's open handler supplies the addon/action context if this call fails.
+  fn(nil, msg or "")
+  return true
 end
 
 -- Addons in the kit. Each one can also call CherrysKit.Register itself to replace its entry.
@@ -289,20 +289,50 @@ function Kit.Refresh()
   setText(CherrysKit_FrameTitle, "Cherry's Kit  " .. Kit.version .. "   |cffaaaaaa" .. Kit.CommandText("ControlHub") .. "|r")
 end
 
+local function openEntry(entry, source)
+  local ok, result, reason
+  if type(entry.open) == "function" then
+    ok, result, reason = pcall(entry.open)
+  else
+    ok, result, reason = true, false, "no settings handler is registered"
+  end
+  if not ok or result == false then
+    local detail
+    if not ok then detail = result else detail = reason end
+    if detail == nil then
+      detail = not ok and "the client supplied no error detail (nil)" or "the settings handler was not ready"
+    end
+    Kit.lastOpenError = {
+      folder = entry.folder,
+      source = source,
+      detail = tostring(detail),
+    }
+    print(tostring(entry.title or entry.folder) .. " [" .. tostring(entry.folder) .. ", " .. source
+      .. "] could not be opened: " .. tostring(detail))
+    return false
+  end
+  Kit.lastOpenError = nil
+  return true
+end
+
 function Kit.OnRowClick(i, what)
   local entry = Kit.visible[i]
   if not entry then
-    return
+    return false
   end
   if what == "open" then
-    if not entry.open() then
-      print(entry.title .. " could not be opened")
+    if not Kit.IsEnabled(entry.folder) then
+      print(entry.title .. " is turned off. Turn it on here and Reload UI.")
+      return false
     end
-  else
+    return openEntry(entry, "hub row " .. tostring(i))
+  elseif what == "toggle" then
     local on = not Kit.IsEnabled(entry.folder)
     Kit.SetEnabled(entry.folder, on)
     print(entry.title .. (on and " will be on" or " will be off") .. " after Reload UI.")
+    return true
   end
+  return false
 end
 
 function Kit.Toggle()
@@ -501,17 +531,18 @@ end
 function Kit.OpenWindow(window)
   if window == "ControlHub" then
     Kit.Toggle()
-    return
+    return true
   end
   local entry = entryFor(window)
-  if not entry or (entry.installed and not entry.installed()) then
-    print(Kit.WINDOW_TITLES[window] .. " is not installed")
+  if not entry or not installed(entry) then
+    print((Kit.WINDOW_TITLES[window] or tostring(window)) .. " is not installed")
   elseif not Kit.IsEnabled(window) then
     print(entry.title .. " is turned off. Turn it on here and Reload UI.")
     Kit.Toggle()
   else
-    entry.open()
+    return openEntry(entry, "command")
   end
+  return false
 end
 
 function Kit.CommandsFor(window)

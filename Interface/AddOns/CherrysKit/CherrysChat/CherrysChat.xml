@@ -6589,7 +6589,7 @@
 			</Layer>
 		</Layers>
 	</Frame>
-	<Frame name="CherrysChat_WinCopyBar" parent="UIParent" frameStrata="DIALOG" hidden="true">
+	<Frame name="CherrysChat_WinCopyBar" parent="UIParent" frameStrata="DIALOG" enableMouse="true" hidden="true">
 		<Size><AbsDimension x="380" y="26" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Backdrop name="CherrysChat_WinCopyBar_Backdrop" bgFile="Interface/Tooltips/Tooltip-Background" edgeFile="Interface/Tooltips/Tooltip-border">
@@ -6611,12 +6611,16 @@
 				<Size><AbsDimension x="164" y="20" /></Size>
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="6" y="3" /></Offset></Anchor></Anchors>
 				<Scripts>
+					<OnMouseUp>CherrysChat.Win.SelectCopy();</OnMouseUp>
+					<OnEditFocusGained>CherrysChat.Win.HighlightCopy();</OnEditFocusGained>
+					<OnEditFocusLost>CherrysChat.Win.CopyGuard();</OnEditFocusLost>
 					<OnEscapePressed>CherrysChat.Win.CopyDone();</OnEscapePressed>
 					<OnEnterPressed>CherrysChat.Win.CopyDone();</OnEnterPressed>
 					<OnTextChanged>CherrysChat.Win.CopyGuard();</OnTextChanged>
 				</Scripts>
 			</EditBox>
 		</Frames>
+		<Scripts><OnMouseUp>CherrysChat.Win.SelectCopy();</OnMouseUp></Scripts>
 	</Frame>
 	<Frame name="CherrysChat_Menu" parent="UIParent" frameStrata="TOOLTIP" enableMouse="true" hidden="true">
 		<Size><AbsDimension x="212" y="168" /></Size>

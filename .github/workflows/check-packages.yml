@@ -19,3 +19,7 @@ jobs:
           persist-credentials: false
       - name: Build and verify all packages and documentation links
         run: python3 tools/build_release.py
+      - name: Install Lua regression-test runtime
+        run: python3 -m pip install -r tests/requirements.txt
+      - name: Run Lua 5.1 regressions
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v

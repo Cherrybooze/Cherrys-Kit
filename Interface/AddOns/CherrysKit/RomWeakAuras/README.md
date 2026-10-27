@@ -1,10 +1,37 @@
 # rom weakauras
 
-Version **0.9.15** · Kit release **0.11.77** · [All addons / hub](../README.md)
+Version **0.9.16** · Kit release **0.11.78** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Editing an aura
+
+Changes stay in a draft as you type. You can move between fields, triggers, displays and Load settings without pressing Enter. **Save** commits the draft; **Revert** restores the saved aura. Closing and reopening the window keeps the draft for that session. Reload UI discards unsaved drafts.
+
+**New** and **Copy** create enabled auras. The first display is marked **Main display**. Pick a display to edit only that display, then use **Side** and **Type** for its placement and appearance. **+** offers Text, Bar, Icon or Graphic; **-** removes a display. An aura keeps at least one display.
+
+The selected display's size, text or icon controls sit below the selectors. **Look** holds its colours, transparency, borders, applicable textures and animations, with a preview. Clicking **Icon** opens a small scrollable picker. Automatic uses the buff or skill's own picture; Extended Macro Icons adds its categories when installed and enabled.
+
+The draft preview stays visible while editing, even if its real trigger is false. Close the editor to check actual reminder visibility.
+
+### Target Area reminder (500934)
+
+1. Create an Icon aura, or copy an example, and keep it enabled.
+2. Use one Buff / debuff trigger on **player**, looking for **Buff**, with ID **500934**.
+3. Add a condition: **remaining**, **<**, **3**. Choose the **Show** action (or a visual action such as Colour).
+4. Leave the icon Automatic and press **Save**.
+
+For a buff trigger, a remaining-time condition is true when the buff is **missing OR has less than the chosen time left**. At exactly three seconds, a < 3 rule is false. Other triggers, Load settings and the aura's enabled state still apply. Remove an unused example trigger if **All of** would otherwise require it too.
+
+The actual buff icon is remembered when observed, including while the trigger is false, and kept for missing-buff reminders. The editor's preview uses that same icon. If the client has not exposed a buff's icon yet, apply the buff once or choose its icon manually.
+
+### Condition actions
+
+Two condition cards are visible at a time; add more with **+**, remove with **-**, and use the page controls to browse them. A rule names its trigger, what to check, the comparison and value. **When condition met…** offers Show, Hide, Play sound, Grow, Blink, Colour and Draw icon on top.
+
+Actions stop and normal appearance returns when the rule stops matching. A sound plays once when its rule becomes true, and automatic sounds stay silent in editor/test previews. Multiple remaining-time rules for one buff use any matching rule for visibility; Hide takes precedence over Show. Existing colour-only rules remain supported.
 
 ## Features
 
@@ -12,7 +39,7 @@ rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras
 - **Displays**: Icon, Bar, Text, Texture, Kitty tracker or **Threat meter** (the top names on your target's threat list, with bars and values; the one with aggro in red, your own bar in gold). One aura can draw up to four displays (like WeakAuras' sub-elements), and an extra display can have its own trigger.
 - **Look**: every texture from WeakAuras (shapes, bars, symbols and all 145 Power Auras textures) in a picture grid, the WeakAuras fonts (Fira Sans, Fira Mono, PT Sans Narrow), colours, fade/slide in and out, pulse/flash/bounce loops.
 - **Text codes** as in WeakAuras: `%n` name, `%p` time left, `%t` duration, `%s` stacks, `%v` value, `%pct` percent, `%e` time since start (combat timer), plus `%rate`, `%fight`, `%avg` for Past second.
-- **Conditions**: change colour when time left, stacks, percent or value crosses a number. **Load** only in or out of combat, or for one class.
+- **Conditions**: add multiple rules with Show, Hide, Play sound, Grow, Blink, Colour or Draw icon on top. A buff remaining-time rule is true when it is missing OR below the chosen time. **Load** only in or out of combat, or for one class.
 - **Sounds**: the 64 WeakAuras sounds, with an "All auras volume" setting that works even when your game sounds are turned down, and an Unmute button when interface sound is off.
 - **Editor with live preview**, hover help on every box, dropdowns with a description of every choice. While the window is open every aura is on screen in move mode with looping test data, so you can drag it into place.
 - **Export / Import**: compressed `RWA2!` codes (one aura is usually 110 to 240 characters), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.
@@ -41,7 +68,7 @@ In Cherry's Kit, `/wa` opens rom weakauras (`/rwa` alone opens the kit hub; `/rw
 
 ## Install
 
-Requires the [Cherry's Kit hub](../README.md). Download ZIPs from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/releases).
+Requires [Cherry's Kit hub 0.4.10 or later](../README.md), included in kit 0.11.78. Its updated manifest loads the new editor, display and condition modules. Download ZIPs from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/releases).
 
 1. Install the full kit, or install the hub ZIP and this addon's ZIP.
 2. Extract into your game's `Interface/AddOns/` folder, merging the `CherrysKit` folders. This addon must end up at `Interface/AddOns/CherrysKit/RomWeakAuras/`.

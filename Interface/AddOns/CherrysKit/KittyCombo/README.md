@@ -1,10 +1,14 @@
 # Cherry's KittyCombo
 
-Version **1.7.7** · Kit release **0.11.77** · [All addons / hub](../README.md)
+Version **1.7.8** · Kit release **0.11.78** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
+
+## Updated in 1.7.8
+
+The mode widgets wait for saved settings before restoring their positions. Startup diagnostics now identify the widget and retain native errors even when the client provides no error text. If a mode button still fails, include the new chat message and `/kc probe` output with the report.
 
 ## Features
 

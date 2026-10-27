@@ -1,8 +1,8 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.77/CherrysKit-Full-0.11.77.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.78/CherrysKit-Full-0.11.78.zip)
 
 # Cherry's Kit
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.77/CherrysKit-Full-0.11.77.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.78/CherrysKit-Full-0.11.78.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -20,12 +20,12 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.77/CherrysKit-Full-0.11.77.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.78/CherrysKit-Full-0.11.78.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
 
-Extract the selected ZIPs into your game's **`Interface/AddOns/`** folder. They all contain a top-level `CherrysKit/` folder: merge those folders, keeping `CherrysKit.toc` directly inside `CherrysKit/`. Start the game or Reload UI, then type **`/ck`** (or **`rwa`**).
+Extract the selected ZIPs into your game's **`Interface/AddOns/`** folder. They all contain a top-level `CherrysKit/` folder: merge those folders, keeping `CherrysKit.toc` directly inside `CherrysKit/`. Start the game or Reload UI, then type **`/ck`** (or **`/rwa`**).
 
 The resulting layout should be:
 
@@ -50,10 +50,10 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.9 |
-| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.7 |
-| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.15 |
-| [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.5 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.10 |
+| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.8 |
+| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.16 |
+| [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.6 |
 | [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck10 |
 | [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold. | `/gb` | 1.4.1 |
 | [Extended Macro Icons](Interface/AddOns/CherrysKit/ExtendedMacroIcons/README.md) | A larger, categorised macro icon picker. | `/emi` | 3.0.3 |
@@ -63,7 +63,7 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 | [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Loading times and memory use for the kit and other addons. | `/ckload` | 1.2.0 |
 | [ZShop](Interface/AddOns/CherrysKit/ZShop/README.md) | Item-shop access and a daily loyalty reward shortcut. | `/zshop` | 1.2.0-ck1 |
 | [pbInfo](Interface/AddOns/CherrysKit/pbInfo/README.md) | Richer tooltips, quest tracking, chat filters and cast-bar options. | `/pbinfo` | 0.60-ck2 |
-| [PortraitHP](Interface/AddOns/CherrysKit/PortraitHP/README.md) | Your target's health percentage on its portrait. | `/php` | 2019.07.14-ck1 |
+| [PortraitHP](Interface/AddOns/CherrysKit/PortraitHP/README.md) | Your target's health percentage on its portrait. | `/php` | 2019.07.14-ck2 |
 | [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click. | `/grid` | 1.1.0 |
 
 Some integrations need both addons: for example, running a kitty from Grid needs KittyCombo. Each addon's README lists its requirements and current limits. Features still being tested are labelled there.
@@ -94,9 +94,11 @@ Python 3.10 or later is enough; there are no Python package dependencies:
 python tools/build_release.py
 ```
 
-This creates sixteen ZIPs in `dist/`, a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
+This creates sixteen ZIPs in `dist/<kit version>/`, a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
 
-These are **packaging checks**, not an emulation of the game. The initial 0.11.77 import keeps the existing runtime code unchanged; source READMEs referring to older tests or generators are preserved as reference notes, but those development tools were not included in the handoff. Confirm runtime changes in the actual RoM client and say what you checked.
+The original 0.11.77 import preserved the supplied runtime code. Earlier READMEs referring to old tests or generators are kept as reference notes, but those development tools were not included in the handoff. Current tests simulate client APIs; native drawing, input, sound and event timing still need in-game checks.
+
+The current fixes also have Lua 5.1 regression coverage: install `tests/requirements.txt`, then run `python -m unittest discover -s tests -p 'test_*.py' -v`. The [in-game check list](docs/TESTING.md) describes the remaining native-client checks.
 
 ## Credits and licences
 

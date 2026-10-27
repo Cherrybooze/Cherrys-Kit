@@ -34,7 +34,7 @@ function C.MarkOurs(wrapper)
   return wrapper
 end
 
-C.version = "0.10.5"
+C.version = "0.10.6"
 C.MAX_WINDOWS = 10
 C.MIN_FONT, C.MAX_FONT = 6, 40
 C.MIN_W, C.MIN_H = 120, 60
@@ -130,6 +130,40 @@ local function has(obj, method)
 end
 
 C.Has = has
+
+-- RoM links encode an opaque target followed by a separately localized label.
+-- ItemLink.lua in the bundled auction addon emits |Hitem:<hex fields>|h<label>|h.
+-- Scan delimiters, never item names; doubled pipes are literal text, not control tags.
+local function controlEnd(msg, tag, first, rejectLink)
+  local i = first
+  while i <= #msg do
+    local p = string.find(msg, "|", i, true)
+    if not p then return nil end
+    local token = string.sub(msg, p, p + 1)
+    if token == "||" then
+      i = p + 2
+    elseif token == tag then
+      return p
+    elseif rejectLink and token == "|H" then
+      return nil -- an incomplete link must not swallow the next complete one
+    else
+      i = p + 2
+    end
+  end
+end
+
+function C.ReadLink(msg, first)
+  first = first or 1
+  if type(msg) ~= "string" or string.sub(msg, first, first + 1) ~= "|H" then return nil end
+  local middle = controlEnd(msg, "|h", first + 2, true)
+  if not middle then return nil end
+  local last = controlEnd(msg, "|h", middle + 2, true)
+  if not last then return nil end
+  local target = string.sub(msg, first + 2, middle - 1)
+  if not string.match(target, "^[%a_][%w_]*:") or string.find(target, "[\r\n]") then return nil end
+  return { target = target, text = string.sub(msg, middle + 2, last - 1),
+    full = string.sub(msg, first, last + 1), first = first, last = last + 1 }
+end
 
 function C.Chat(i)
   return _G["ChatFrame" .. i]
@@ -255,7 +289,7 @@ end
 
 -- Swaps known emoji for symbols, text or (with pics, for Cherry's chat) picture marks. Skin tones
 -- and joined sequences show their first emoji; an emoji we have no picture for is left as it is.
-function C.Decorate(msg, pics)
+local function decorateText(msg, pics)
   local d = db()
   if d.emoji == "off" or type(msg) ~= "string" then
     return msg
@@ -309,6 +343,29 @@ function C.Decorate(msg, pics)
     end)
   end
   return out
+end
+
+function C.Decorate(msg, pics)
+  if type(msg) ~= "string" or not string.find(msg, "|H", 1, true) then
+    return decorateText(msg, pics)
+  end
+  -- Preserve both link metadata and the sender's exact label. Decoration outside links
+  -- still works; shift-click and native tooltips receive the original complete link.
+  local parts, first, i = {}, 1, 1
+  while i <= #msg do
+    local link = C.ReadLink(msg, i)
+    if link then
+      parts[#parts + 1] = decorateText(string.sub(msg, first, i - 1), pics)
+      parts[#parts + 1] = link.full
+      i, first = link.last + 1, link.last + 1
+    elseif string.sub(msg, i, i + 1) == "||" then
+      i = i + 2
+    else
+      i = i + 1
+    end
+  end
+  parts[#parts + 1] = decorateText(string.sub(msg, first), pics)
+  return table.concat(parts)
 end
 
 -- Finds :code and :code: (the closing colon is optional) for codes we know. The colon must start a
@@ -381,12 +438,26 @@ end
 -- Chat text without colours, links and pictures: what you would type.
 function C.Plain(msg)
   local s = tostring(msg or "")
-  s = string.gsub(s, "|c%x%x%x%x%x%x%x%x", "")
-  s = string.gsub(s, "|r", "")
-  s = string.gsub(s, "|H.-|h(.-)|h", "%1")
-  s = string.gsub(s, "|T.-|t", "")
-  s = string.gsub(s, "||", "|")
-  return s
+  local parts, i = {}, 1
+  while i <= #s do
+    local token = string.sub(s, i, i + 1)
+    local link = token == "|H" and C.ReadLink(s, i)
+    if token == "||" then
+      parts[#parts + 1], i = "|", i + 2
+    elseif link then
+      parts[#parts + 1], i = C.Plain(link.text), link.last + 1
+    elseif string.match(s, "^|c%x%x%x%x%x%x%x%x", i) then
+      i = i + 10
+    elseif token == "|r" then
+      i = i + 2
+    elseif token == "|T" and controlEnd(s, "|t", i + 2) then
+      i = controlEnd(s, "|t", i + 2) + 2
+    else
+      local nextPipe = string.find(s, "|", i + 1, true) or (#s + 1)
+      parts[#parts + 1], i = string.sub(s, i, nextPipe - 1), nextPipe
+    end
+  end
+  return table.concat(parts)
 end
 
 function C.CopyText(i, lines)
@@ -1350,6 +1421,8 @@ function C.Slash(msg)
     print("texts longer than " .. db().clipMax .. " letters are copied through the box (Ctrl+C).")
   elseif cmd == "linktest" then
     C.Win.LinkTest()
+  elseif cmd == "linkprobe" then
+    C.Win.LinkProbe(i)
   elseif cmd == "lab" then
     C.Lab()
   elseif cmd == "symbols" then
@@ -1363,7 +1436,7 @@ function C.Slash(msg)
   elseif cmd == "reset" then
     C.ResetWindow(i)
   else
-    print("/cchat (settings), /cchat window, /cchat linktest, /cchat cliptest, /cchat clipmax <n>, /cchat select, /cchat symbols, /cchat copy, /cchat font <size>, /cchat size <w> <h>, /cchat resize, /cchat emoji, /cchat emojis, /cchat key <channel> <key>, /cchat measure <n>, /cchat probe, /cchat reset")
+    print("/cchat (settings), /cchat window, /cchat linktest, /cchat linkprobe, /cchat cliptest, /cchat clipmax <n>, /cchat select, /cchat symbols, /cchat copy, /cchat font <size>, /cchat size <w> <h>, /cchat resize, /cchat emoji, /cchat emojis, /cchat key <channel> <key>, /cchat measure <n>, /cchat probe, /cchat reset")
   end
 end
 
