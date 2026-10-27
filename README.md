@@ -17,7 +17,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 - **Full kit:** download `CherrysKit-Full-<version>.zip` for the hub and every addon.
 - **Choose your addons:** download `CherrysKit-Hub-<version>.zip` and whichever addon ZIPs you want.
 
-Extract the selected ZIPs into your game's **`Interface/AddOns/`** folder. They all contain a top-level `CherrysKit/` folder: merge those folders, keeping `CherrysKit.toc` directly inside `CherrysKit/`. Start the game or Reload UI, then type **`/ck`**.
+Extract the selected ZIPs into your game's **`Interface/AddOns/`** folder. They all contain a top-level `CherrysKit/` folder: merge those folders, keeping `CherrysKit.toc` directly inside `CherrysKit/`. Start the game or Reload UI, then type **`/ck`** (or **`rwa`**).
 
 Remove old separate copies of the same addons from `Interface/AddOns/` first; the hub keeps its copy idle if another copy is detected. Your saved settings live outside the addon folders. The [hub README](Interface/AddOns/CherrysKit/README.md) explains this in more detail.
 
@@ -27,7 +27,7 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck` | 0.4.9 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.9 |
 | [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.7 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.15 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.5 |
