@@ -201,6 +201,11 @@ def build(output: Path) -> None:
     tick = chr(96)
     notes = [
         f"# Cherry's Kit {version}", "",
+        f"## [Download the full kit — install ZIP]({release_url}/CherrysKit-Full-{version}.zip)", "",
+        f"**Extract this ZIP straight into your game's {tick}Interface/AddOns/{tick} folder.** "
+        f"It creates {tick}CherrysKit/CherrysKit.toc{tick}; start the game or Reload UI and type {tick}/ck{tick}.", "",
+        "> **Use the install ZIP above.** GitHub's green **Code → Download ZIP** button and "
+        "**Source code (zip)** links download the repository with an extra wrapper folder.", "",
         metadata["release_summary"], "",
         "## Install", "",
         f"Choose **Full** for everything, or **Hub** plus the addon ZIPs you want. "

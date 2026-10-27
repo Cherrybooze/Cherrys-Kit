@@ -1,5 +1,11 @@
 # Cherry's Kit
 
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.77/CherrysKit-Full-0.11.77.zip)
+
+**Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
+
+> **Installing the addon? Use the download above.** GitHub's green **Code → Download ZIP** button and **Source code (zip)** links download the repository, with an extra `Cherrys-Kit-main` or version folder. Those downloads are for working on the source.
+
 **Runes of Magic addons that work together, with one small control hub.**
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
@@ -12,12 +18,27 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the latest release](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)** — use the named ZIP assets.
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.77/CherrysKit-Full-0.11.77.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
-- **Full kit:** download `CherrysKit-Full-<version>.zip` for the hub and every addon.
-- **Choose your addons:** download `CherrysKit-Hub-<version>.zip` and whichever addon ZIPs you want.
+- **Full kit:** the install ZIP above includes the hub and every addon.
+- **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
 
 Extract the selected ZIPs into your game's **`Interface/AddOns/`** folder. They all contain a top-level `CherrysKit/` folder: merge those folders, keeping `CherrysKit.toc` directly inside `CherrysKit/`. Start the game or Reload UI, then type **`/ck`** (or **`rwa`**).
+
+The resulting layout should be:
+
+```text
+Interface/
+  AddOns/
+    CherrysKit/
+      CherrysKit.toc
+      CherrysKit.lua
+      KittyCombo/
+      RomWeakAuras/
+      ...
+```
+
+If you already downloaded `Cherrys-Kit-main.zip`, use the install ZIP linked above instead. If Windows offers an extraction folder named after the ZIP, change that destination to your existing `Interface/AddOns/` folder.
 
 Remove old separate copies of the same addons from `Interface/AddOns/` first; the hub keeps its copy idle if another copy is detected. Your saved settings live outside the addon folders. The [hub README](Interface/AddOns/CherrysKit/README.md) explains this in more detail.
 
