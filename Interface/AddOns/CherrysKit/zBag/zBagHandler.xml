@@ -1,0 +1,41 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<!-- author adisadicul -->
+	<Frame name="zBagHandler" parent="UIParent">
+		<Size><AbsDimension x="32" y="32"/></Size>
+		<Anchors><Anchor point="BOTTOMRIGHT">
+				<Offset><AbsDimension x="224" y="200"/></Offset>
+			</Anchor>
+		</Anchors>
+	<Frames>
+    <Button name="zBagMiniButton" hidden="true" inherits="UIPanelButtonTemplate" parent="AddonManagerMiniFrame">
+		<Size>
+			<AbsDimension y="24" x="24"/>
+		</Size>
+		<Scripts>
+			<OnClick>
+				AddonManager.MiniButton_OnClick(this)
+			</OnClick>
+			<OnEnter>
+				AddonManager.MiniButton_OnEnter(this)
+			</OnEnter>
+			<OnLeave>
+				AddonManager.MiniButton_OnLeave(this)
+			</OnLeave>
+		</Scripts>
+	    <NormalTexture file="Interface\\Icons\\chest_001.dds"/>
+	    <PushedTexture file="Interface\\Icons\\chest_001.dds"/>
+	</Button>
+	</Frames>
+		<Scripts>
+			<OnLoad>
+				this:RegisterEvent("VARIABLES_LOADED");
+			</OnLoad>
+			<OnUpdate>
+				zBagHandler_OnUpdate(this);
+			</OnUpdate>
+			<OnEvent>
+				zBagHandler_OnEvent(this,event,arg1,arg2);
+			</OnEvent>
+		</Scripts>
+	</Frame>
+</Ui>

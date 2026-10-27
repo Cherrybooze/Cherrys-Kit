@@ -1,0 +1,86 @@
+Advanced AuctionHouse v6.1.2 (Cherry's Kit) - changes by Cherry on top of v6.0.2
+
+Window
+- Resizable: drag the corner grip at the bottom right to make the window wider and taller.
+  The size is remembered. The small up/down arrows still change the height one row at a time.
+  /aah size reset goes back to the default size, /aah size 1100 600 sets one.
+- Taller windows show more rows everywhere (Browse up to 16, Bids up to 17, Auctions up to 15).
+- Wider windows give the room to the Item Name and Stats columns and to the filter boxes.
+
+Reload UI
+- Every hook (tooltips, bag clicks, chat links, CloseAllWindows, the game's messages, the
+  dropdown keep-open) now goes through AAH.Hook: one wrapper per hook, kept across Reload UI,
+  so reloading no longer wraps the previous session's wrappers again.
+
+Browse
+- Searches stop at 1000 items (20 pages of 50) because the server sends no more; the 6.0.2 cache
+  was also fixed at 20 pages. The cache now grows to whatever page count the server reports,
+  and /aah probe shows the server's item and page count for the last search.
+- New Stats column after Item Name, Level and Tier: the item's added stats by slot (the named
+  stats that come off when it is sharded, up to 6), not its own stats. Each slot is short tags with
+  values, for example "1:Dex472+Patt1178  2:Dex472+Patt1178  3:Str472+Patt1178" over "4: 5: 6:";
+  two slots a line (three lines) when the column is narrower, values as 1.2k if still too wide.
+  Hover a cell for the slot names with full stat names and the totals, hover the Stats header for
+  the legend, click the header to sort by added Str+Dex+Sta+Int+Wis. The $str/30 style filters
+  also use the added stats.
+  Values are always shown without the power modifier bonus that items with more than 101
+  maximum durability get (+20%: 471.6 Dex at 102 durability shows as 393), so they compare
+  across items. The percentage on the tooltip's "Power Modifier" line is used when there is one.
+  /aah stats off hides it. It shows when the window is wider than the old 846.
+- Filters are dropdowns now: pick what to filter by (Keyword, 1-6 stats, green/yellow/orange
+  stats, Tier/Plus/Durability at least, pet eggs, vendor profit, below average price, or
+  "Stat at least" with every stat), then type the value in the box next to it.
+  Keyword works like before (! in front inverts it, a typed $command still works).
+  Saved searches made with the old text boxes load into the dropdowns.
+- New Dura column between Tier and Stats: the item's maximum durability, green over 101 (the
+  items whose stats get the power modifier bonus). Click the header to sort by it.
+- "Buyout" next to the buyout price is "BO" now, to save room.
+- Six filters instead of three, in two columns (1-3 and 4-6); "or" on a filter joins it to
+  the ones before it, left to right as before. The window is at least 1150 wide (default 1150), so the filters and all 6 stat slots always fit.
+- "Stat at most" next to "Stat at least" (items that have the stat, up to the value), typeable
+  as $maxstr/425, $maxsta/300 and so on. Together they make a range.
+- New stat filters, also typeable: $str/30, $int/25, $patt/100, $matt, $pdef, $mdef, $hp, $mp,
+  $sta, $dex, $wis, $pcrit, $mcrit, $acc, $macc, $dodge, $parry, $heal, $dmg, $mdmg.
+- Each filter has a red X that clears it. The filter menus stay open until you click
+  something else or close the window. Green, yellow and orange stats are coloured in the menu.
+- Rarity is two dropdowns under the Rarity header, max and min, so you can pick a range
+  (Epic to Legendary, say). The names are Uncommon (green), Rare (blue), Epic (purple),
+  Legendary (orange), Mythic (the game's Legendary and Level 6-10 rarities) and Item Shop.
+  Saved searches keep the range; old saved searches load their rarity as min = max.
+  The search panel is 20 taller for them (saved window heights grow by 20 to keep the rows).
+- The Usable tick box no longer slides under the filter panel on wider windows.
+- Alt+click an auction: search for every auction of that item.
+
+Scanning
+- Never asks the server for two things at once: the next result page waits while a price
+  history request is out, and price history waits while a page is on its way.
+- Paging starts at the 6.0.2 pace (6 seconds a page) and goes down to 4 while the server keeps
+  up. When it says "Currently busy. Please try again later." (or refuses a page), AAH waits 1.5
+  seconds longer from then on and retries after the whole pause, not every second; a repeated
+  "busy" message within 5 seconds is not shown again. A fixed pause can be set in the settings
+  or with /aah pagedelay 6 (0 = auto). (Kit 0.11.7 paged faster and spammed that message.)
+- A page is read as soon as it arrives instead of on the next 1-second retry.
+- Each item's tooltip is read once. 6.0.2 read it twice per item and again for every item on
+  every filter change; changing a filter now re-checks the items already read about five times
+  faster, and only loads tooltips when the filter needs them (keywords, colour/count filters,
+  egg aptitude).
+- Sorting while results fill in happens at most twice a second instead of on every frame.
+
+Settings window
+- /aah (or Settings next to Advanced AuctionHouse in /ck) opens a settings window anywhere, no
+  auctioneer needed: Stats column, filter speed, pause between pages, price per white, average
+  price suggestion, bid confirmation limit, price history tooltip and size, Reset window size
+  and Defaults. The Settings tab in the auction window still works and both stay in step.
+  /aah help prints the commands.
+
+Fixes
+- A class the stat table does not know printed "ERROR: please report your language and class"
+  once per item while filtering; now it says it once.
+- The .toc listed a file that does not exist (Xml/AAH_Exchange.xml).
+
+Cherry's Kit
+- Lives in Interface/AddOns/CherrysKit/AdvancedAuctionHouse/ (also works alone in
+  Interface/AddOns/AdvancedAuctionHouse/). Turn it off in the kit hub (/ck) to get the game's own
+  auction window back. Saved searches, price history and settings carry over from 6.0.2.
+- /aah probe prints what the addon sees in your client (for bug reports).
+- Title and credits: Mavoc, TellTod, Noguai, Graves, Cherry.

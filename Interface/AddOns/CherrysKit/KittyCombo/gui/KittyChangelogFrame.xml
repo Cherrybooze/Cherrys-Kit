@@ -1,0 +1,174 @@
+<!-- Cherry's KittyCombo: Changelog window -->
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+
+	<Frame name="KittyChangelogFrame" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="560" y="584" /></Size>
+		<Anchors>
+			<Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" />
+		</Anchors>
+
+
+		<Layers>
+			<Layer level="BACKGROUND">
+				<!-- Cherry's KittyCombo skin: panel colour, set by Kitty.Skin -->
+				<Texture name="$parent_SkinBg">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+				<!-- Title -->
+				<FontString name="KittyChangelogFrame_TitleLabel" inherits="GameFontNormal" justifyH="LEFT" text="Changelog">
+					<Size><AbsDimension x="520" y="30" /></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+							<Offset><AbsDimension x="20" y="12" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="16" /></FontHeight>
+				</FontString>
+
+				<!-- Page text -->
+				<FontString name="KittyChangelogFrame_BodyLabel" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP" text="">
+					<Size><AbsDimension x="520" y="380" /></Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+							<Offset><AbsDimension x="20" y="50" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="13" /></FontHeight>
+				</FontString>
+
+				<!-- Page number -->
+				<FontString name="KittyChangelogFrame_PageLabel" inherits="GameFontNormal" justifyH="CENTER" text="1 / 5">
+					<Size><AbsDimension x="80" y="30" /></Size>
+					<Anchors>
+						<Anchor point="BOTTOM" relativeTo="$parent" relativePoint="BOTTOM">
+							<Offset><AbsDimension x="0" y="-15" /></Offset>
+						</Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="14" /></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+
+		<Frames>
+			<!-- Corner grip: window size -->
+			<Button name="$parent_Grip" inherits="KittyResizeGripTemplate" />
+			<!-- Contact, to copy with Ctrl+C -->
+			<EditBox name="KittyChangelogFrame_ContactEditBox" inherits="UIPanelEditBoxTemplate" letters="200" historyLines="0" autoFocus="false" multiLine="false" hidden="true">
+				<Size><AbsDimension x="400" y="20" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT">
+						<Offset><AbsDimension x="25" y="-60" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEditFocusGained>
+						<![CDATA[
+						this:HighlightText();
+						]]>
+					</OnEditFocusGained>
+					<OnTextChanged>
+						<![CDATA[
+						-- Read only: put the contact back if it is edited
+						if(this:GetText() ~= Kitty.Changelog.getContactText()) then
+							this:SetText(Kitty.Changelog.getContactText());
+						end
+						]]>
+					</OnTextChanged>
+					<OnEscapePressed>
+						<![CDATA[
+						this:ClearFocus();
+						]]>
+					</OnEscapePressed>
+				</Scripts>
+			</EditBox>
+
+			<!-- Previous page -->
+			<Button name="KittyChangelogFrame_PrevButton" inherits="UIPanelButtonTemplate" text="&lt; Back">
+				<Size><AbsDimension x="100" y="30" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT">
+						<Offset><AbsDimension x="20" y="-14" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.Changelog.turn(-1);
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+
+			<!-- Next page -->
+			<Button name="KittyChangelogFrame_NextButton" inherits="UIPanelButtonTemplate" text="Next &gt;">
+				<Size><AbsDimension x="100" y="30" /></Size>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="KittyChangelogFrame_PrevButton" relativePoint="RIGHT">
+						<Offset><AbsDimension x="5" y="0" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.Changelog.turn(1);
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+
+			<!-- Close: back to the settings window -->
+			<Button name="KittyChangelogFrame_CloseButton" inherits="UIPanelButtonTemplate" text="Close">
+				<Size><AbsDimension x="100" y="30" /></Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+						<Offset><AbsDimension x="-22" y="-14" /></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							KittyChangelogFrame:Hide();
+							KittyBasicConfigFrame:Show();
+						end)();
+						]]>
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+
+		<Scripts>
+			<OnShow>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.Skin.onShow(this);
+				end)();
+				]]>
+			</OnShow>
+			<OnMouseDown>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					if(key=="LBUTTON") then
+						this:StartMoving();
+					end
+				end)();
+				]]>
+			</OnMouseDown>
+			<OnMouseUp>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					this:StopMovingOrSizing();
+					Kitty.savePosition(this);
+				end)();
+				]]>
+			</OnMouseUp>
+		</Scripts>
+	</Frame>
+</Ui>

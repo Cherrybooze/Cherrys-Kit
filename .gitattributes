@@ -1,0 +1,2 @@
+# Preserve the bytes of the imported release and packaged assets.
+* -text

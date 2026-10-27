@@ -1,0 +1,120 @@
+{
+  "kit_version": "0.11.77",
+  "hub_version": "0.4.9",
+  "release_summary": "Initial GitHub release of the existing Runes of Magic addon collection. The runtime code is unchanged from the supplied 0.11.77 bundle. This release adds organised READMEs and reproducible release packaging.",
+  "runtime_validation": "No new in-game checks. All 1,382 original runtime and media files match the supplied 0.11.77 bundle byte for byte.",
+  "addons": [
+    {
+      "folder": "KittyCombo",
+      "title": "Cherry's KittyCombo",
+      "version": "1.7.7",
+      "command": "/kc",
+      "description_file": "02-cherrys-kittycombo.md",
+      "summary": "One-key priority combos and shared rotation codes."
+    },
+    {
+      "folder": "RomWeakAuras",
+      "title": "rom weakauras",
+      "version": "0.9.15",
+      "command": "/wa",
+      "description_file": "03-rom-weakauras.md",
+      "summary": "Custom buff, debuff, cooldown, cast and status displays."
+    },
+    {
+      "folder": "CherrysChat",
+      "title": "Cherry's Chat",
+      "version": "0.10.5",
+      "command": "/cchat",
+      "description_file": "04-cherrys-chat.md",
+      "summary": "Selectable chat, copying, emoji and chat display settings."
+    },
+    {
+      "folder": "zBag",
+      "title": "zBag",
+      "version": "5.07-ck10",
+      "command": "/zb",
+      "description_file": "05-zbag.md",
+      "summary": "Bags, searching, sorting, quick sell and an All bags view."
+    },
+    {
+      "folder": "GlobalBank",
+      "title": "Global Bank",
+      "version": "1.4.1",
+      "command": "/gb",
+      "description_file": "06-global-bank.md",
+      "summary": "A searchable view of your characters' bags, banks and gold."
+    },
+    {
+      "folder": "ExtendedMacroIcons",
+      "title": "Extended Macro Icons",
+      "version": "3.0.3",
+      "command": "/emi",
+      "description_file": "07-extended-macro-icons.md",
+      "summary": "A larger, categorised macro icon picker."
+    },
+    {
+      "folder": "TooltipIds",
+      "title": "TooltipIds",
+      "version": "1.0b3-ck2",
+      "command": "/ti",
+      "description_file": "08-tooltipids.md",
+      "summary": "ID numbers for items, buffs, skills and other game data."
+    },
+    {
+      "folder": "UltimateMailMod",
+      "title": "Ultimate Mail Mod",
+      "version": "7.0.1-ck5",
+      "command": "/umm",
+      "description_file": "09-ultimate-mail-mod.md",
+      "summary": "Mail management and mass sending."
+    },
+    {
+      "folder": "AdvancedAuctionHouse",
+      "title": "Advanced AuctionHouse",
+      "version": "6.1.2",
+      "command": "/aah",
+      "description_file": "10-advanced-auctionhouse.md",
+      "summary": "Auction searching, stat filters, history and a resizable window."
+    },
+    {
+      "folder": "LoadTimes",
+      "title": "Cherry's Addon LoadTimes",
+      "version": "1.2.0",
+      "command": "/ckload",
+      "description_file": "11-cherrys-addon-loadtimes.md",
+      "summary": "Loading times and memory use for the kit and other addons."
+    },
+    {
+      "folder": "ZShop",
+      "title": "ZShop",
+      "version": "1.2.0-ck1",
+      "command": "/zshop",
+      "description_file": "12-zshop.md",
+      "summary": "Item-shop access and a daily loyalty reward shortcut."
+    },
+    {
+      "folder": "pbInfo",
+      "title": "pbInfo",
+      "version": "0.60-ck2",
+      "command": "/pbinfo",
+      "description_file": "13-pbinfo.md",
+      "summary": "Richer tooltips, quest tracking, chat filters and cast-bar options."
+    },
+    {
+      "folder": "PortraitHP",
+      "title": "PortraitHP",
+      "version": "2019.07.14-ck1",
+      "command": "/php",
+      "description_file": "14-portraithp.md",
+      "summary": "Your target's health percentage on its portrait."
+    },
+    {
+      "folder": "CherrysGrid",
+      "title": "Cherry's Grid",
+      "version": "1.1.0",
+      "command": "/grid",
+      "description_file": "15-cherrys-grid.md",
+      "summary": "Party and raid frames, with KittyCombo actions on click."
+    }
+  ]
+}

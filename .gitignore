@@ -1,0 +1,10 @@
+dist/
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+# Local game state is never source.
+SaveVariables.lua
+GlobalBankHelper/
+.env
+.env.*

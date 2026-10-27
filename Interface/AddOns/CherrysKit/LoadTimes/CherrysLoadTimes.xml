@@ -1,0 +1,12 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+	<!-- Cherry's Addon LoadTimes: this frame registers its events before every other kit addon (the kit's first files). -->
+	<Frame name="CherrysLoadTimes_Frame" parent="UIParent">
+		<Size><AbsDimension x="1" y="1" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnLoad>this:RegisterEvent("VARIABLES_LOADED"); this:RegisterEvent("LOADING_END");</OnLoad>
+			<OnEvent>CherrysKit_Load.Event("first", event);</OnEvent>
+			<OnUpdate>CherrysKit_Load.Update(this);</OnUpdate>
+		</Scripts>
+	</Frame>
+</Ui>

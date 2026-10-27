@@ -1,0 +1,156 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+	<Script file="BagSearch.lua"/>
+	<EditBox name="BagSearchEditBoxTemplate" virtual="true" letters="50" historyLines="1" enableMouse="true">
+		<Layers>
+			<Layer>
+				<Texture name="$parentBorderLeft" file="Interface\ChatFrame\ChatEditBox-Border">
+					<Size>
+						<AbsDimension x="16" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="22" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0" right="0.25" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentBorderRight" file="Interface\ChatFrame\ChatEditBox-Border">
+					<Size>
+						<AbsDimension x="16" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPRIGHT"/>
+					</Anchors>
+					<TexCoords left="0.75" right="1" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture file="Interface\ChatFrame\ChatEditBox-Border">
+					<Size>
+						<AbsDimension x="0" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parentBorderLeft" relativePoint="RIGHT"/>
+						<Anchor point="RIGHT" relativeTo="$parentBorderRight" relativePoint="LEFT"/>
+					</Anchors>
+					<TexCoords left="0.25" right="0.75" top="0" bottom="0.6875"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString name="$parentHeader" inherits="GameEditFont">
+					<Anchors>
+						<Anchor point="LEFT">
+							<Offset>
+								<AbsDimension x="26" y="-1"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<TextInsets>
+			<AbsInset left="27" right="4" top="5" bottom="0"/>
+		</TextInsets>
+		<FontString inherits="GameEditFont"/>
+	</EditBox>
+	
+	<EditBox name="BagSearchEditBox" parent="BagFrame" inherits="BagSearchEditBoxTemplate">
+		<Size>
+			<AbsDimension x="100" y="18"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOMLEFT" Relativepoint="BOTTOMLEFT" RelativeTo="BagFrame">
+				<Offset>
+					<AbsDimension x="-5" y="-4"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				ModifyBagUpdate()
+			</OnLoad>
+			<OnEnterPressed>
+				this:ClearFocus();
+			</OnEnterPressed>
+			<OnEscapePressed>
+				this:SetText("");
+				this:ClearFocus();
+			</OnEscapePressed>
+			<OnTextChanged>
+				BagFrame_Update()
+				BagCrossTextUpdate()
+			</OnTextChanged>
+		</Scripts>
+		<TextInsets>
+			<AbsInset left="27" right="4" top="5" bottom="0"/>
+		</TextInsets>
+		<FontString inherits="GameEditFont"/>
+	</EditBox>
+	
+	<EditBox name="GoodsSearchEditBox" parent="GoodsFrame" inherits="BagSearchEditBoxTemplate">
+		<Size>
+			<AbsDimension x="100" y="18"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOMLEFT" Relativepoint="BOTTOMLEFT" RelativeTo="GoodsItemFrame">
+				<Offset>
+					<AbsDimension x="40" y="-42"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				ModifyGoodsUpdate()
+			</OnLoad>
+			<OnEnterPressed>
+				this:ClearFocus();
+			</OnEnterPressed>
+			<OnEscapePressed>
+				this:SetText("");
+				this:ClearFocus();
+			</OnEscapePressed>
+			<OnTextChanged>
+				GoodsFrame_Update()
+				GoodsCrossTextUpdate()
+			</OnTextChanged>
+		</Scripts>
+		<TextInsets>
+			<AbsInset left="27" right="4" top="5" bottom="0"/>
+		</TextInsets>
+		<FontString inherits="GameEditFont"/>
+	</EditBox>
+	
+	<EditBox name="BankSearchEditBox" parent="BankFrame" inherits="BagSearchEditBoxTemplate">
+		<Size>
+			<AbsDimension x="100" y="18"/>
+		</Size>
+		<Anchors>
+			<Anchor point="BOTTOMRIGHT" Relativepoint="BOTTOMRIGHT" RelativeTo="BankFrame">
+				<Offset>
+					<AbsDimension x="-5" y="-32"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				ModifyBankUpdate()
+			</OnLoad>
+			<OnEnterPressed>
+				this:ClearFocus();
+			</OnEnterPressed>
+			<OnEscapePressed>
+				this:SetText("");
+				this:ClearFocus();
+			</OnEscapePressed>
+			<OnTextChanged>
+				BankFrame_Update()
+				BankCrossTextUpdate()
+			</OnTextChanged>
+		</Scripts>
+		<TextInsets>
+			<AbsInset left="27" right="4" top="5" bottom="0"/>
+		</TextInsets>
+		<FontString inherits="GameEditFont"/>
+	</EditBox>
+	
+</Ui>

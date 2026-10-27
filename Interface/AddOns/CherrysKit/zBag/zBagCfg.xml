@@ -1,0 +1,948 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<!-- author adisadicul -->
+	<Frame name="zBagConfigFrame" parent="UIParent" inherits="UICommonFrameTemplate" enableMouse="true" frameStrata="MEDIUM" hidden="true">
+		<Size><AbsDimension x="500" y="545"/></Size>
+		<Anchors><Anchor point="CENTER"/>
+		</Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="zBagConfigTitleText" inherits="GameTitleFont">
+					<Anchors><Anchor point="TOP"><Offset><AbsDimension x="-24" y="7"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="zBagVersionText" inherits="GameFontHighlight" justifyH="RIGHT">
+					<Size>
+						<AbsDimension x="178" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset><AbsDimension x="-40" y="-2"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+<!-- zBag configuration text -->
+			<Layer level="OVERLAY">
+				<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- show backpack tab -->
+					<Anchors><Anchor point="TOPLEFT">
+					<Offset><AbsDimension x="15" y="35"/></Offset>
+					</Anchor></Anchors>
+				</FontString>				
+			</Layer>
+<!-- zBank configuration text -->
+			<Layer level="OVERLAY">
+				<FontString name="$parentTxt2" inherits="GameFontLabelYellow"> <!-- show bank tab -->
+					<Anchors><Anchor point="TOPLEFT">
+					<Offset><AbsDimension x="265" y="35"/></Offset>
+					</Anchor></Anchors>
+				</FontString>				
+			</Layer>
+		</Layers>
+		<Frames>
+<!-- zBag configuration options -->
+		<CheckButton name="$parentBagP3">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="1"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- 3 -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentBagP4">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagP3" relativePoint="TOPRIGHT">
+				<Offset><AbsDimension x="14" y="0"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- 4 -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentBagP5">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagP4" relativePoint="TOPRIGHT">
+				<Offset><AbsDimension x="14" y="0"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow" > <!-- 5 -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentBagP6">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagP5" relativePoint="TOPRIGHT">
+				<Offset><AbsDimension x="14" y="0"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- 6 -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentalwaysshow">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="68"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow" > <!-- "Always show content" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.AlwaysShowContent, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.AlwaysShowContentTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentshoweq">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="129"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Show equipment slots" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.ShowEquipmentSlots, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.ShowEquipmentSlotsTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentshowback">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="150"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Show background" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.ShowBackground, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.ShowBackgroundBagTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parenthighlighteven">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="170"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Highlight even tabs" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.HighlightEvenTabs, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.HighlightEvenTabsBagTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentshowitemshop">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="190"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Show item shop buttons" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>
+					zBagConfig_Save();
+					zBankConfig_Save();
+				</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.ShowItemShopButtons, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.ShowItemShopButtonsTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+			<Slider name="zBagRowSlider" orientation="HORIZONTAL">
+						<Size><AbsDimension x="150" y="10"/></Size>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentTxt1">
+								<Offset><AbsDimension x="10" y="44"/></Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer>
+								<Texture file="Interface\BagFrame\BagFrame-Slider-Border"/>
+							</Layer>
+							<Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlight" name="$parentTxt1" > <!-- "Number of items on a row" -->
+									<Anchors>
+										<Anchor point="BOTTOM" relativePoint="TOP">
+											<Offset>
+												<AbsDimension x="0" y="-4"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString inherits="GameFontHighlight" name="$parentTxt2"> <!-- 2 -->
+									<Anchors>
+										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"/>
+									</Anchors>
+								</FontString>
+								<FontString inherits="GameFontHighlight" name="$parentTxt3"> <!-- 20 -->
+									<Anchors>
+										<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<ThumbTexture file="Interface\BagFrame\BagFrame-Slider-Knob">
+							<Size>
+								<AbsDimension x="16" y="16"/>
+							</Size>
+						</ThumbTexture>
+						<Scripts>
+							<OnShow>
+							this.loading=1;
+							this:SetValueStepMode("INT");
+							this:SetMinMaxValues(2,20);
+							this.loading=0;
+							this:SetValue(ZBAG_ROW_ITEMS);
+							</OnShow>
+							<OnValueChanged>
+							if (this:IsVisible() and this.loading and this.loading==0) then
+								ZBAG_ROW_ITEMS=zBagRowSlider:GetValue();
+								zBag_Resize(this);
+								zBag_Update();
+							end
+							</OnValueChanged>
+						</Scripts>
+					</Slider>
+			<Slider name="zBagScaleSlider" orientation="HORIZONTAL">
+						<Size><AbsDimension x="150" y="10"/></Size>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentTxt1">
+								<Offset><AbsDimension x="10" y="105"/></Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer>
+								<Texture file="Interface\BagFrame\BagFrame-Slider-Border"/>
+							</Layer>
+							<Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlight" name="$parentTxt1"> <!-- "Bag items scale" -->
+									<Anchors>
+										<Anchor point="BOTTOM" relativePoint="TOP">
+											<Offset>
+												<AbsDimension x="0" y="-4"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString inherits="GameFontHighlight" name="$parentTxt2"> <!-- 0.5 -->
+									<Anchors>
+										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"/>
+									</Anchors>
+								</FontString>
+								<FontString inherits="GameFontHighlight" name="$parentTxt3"> <!-- 1.5 -->
+									<Anchors>
+										<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<ThumbTexture file="Interface\BagFrame\BagFrame-Slider-Knob">
+							<Size>
+								<AbsDimension x="16" y="16"/>
+							</Size>
+						</ThumbTexture>
+						<Scripts>
+							<OnShow>
+							this.loading=1;
+							this:SetValueStepMode("FLOAT");
+							this:SetMinMaxValues(0.5,1.5);
+							this.loading=0;
+							this:SetValue(ZBAG_SCALE);
+							</OnShow>
+							<OnValueChanged>
+							if (this:IsVisible() and this.loading and this.loading==0) then
+								ZBAG_SCALE=zBagScaleSlider:GetValue();
+								zBag_Resize(this);
+								zBag_Update();
+							end
+							</OnValueChanged>
+						</Scripts>
+					</Slider>
+<!-- zBank configuration options -->
+		<CheckButton name="$parentBankP2">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="1"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- 2 -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentBankP3">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBankP2" relativePoint="TOPRIGHT">
+				<Offset><AbsDimension x="14" y="0"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- 3 -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentBankP4">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBankP3" relativePoint="TOPRIGHT">
+				<Offset><AbsDimension x="14" y="0"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- 4 -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentBankP5">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBankP4" relativePoint="TOPRIGHT">
+				<Offset><AbsDimension x="14" y="0"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- 5 -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentBankP6">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBankP5" relativePoint="TOPRIGHT">
+				<Offset><AbsDimension x="14" y="0"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- 6 -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.Six, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.ItemShopBankItems, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>			
+		</CheckButton>		
+		<CheckButton name="$parentbankshowback">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="150"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Show background" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.ShowBackground, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.ShowBackgroundBankTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentbankhighlighteven">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="170"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow" > <!-- "Highlight even tabs" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.HighlightEvenTabs, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.HighlightEvenTabsBankTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentbankhighlightinspecting">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="190"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow" > <!-- "Show preview highlight" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.ShowPreviewHighlight, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.ShowPreviewHighlightTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>
+		<CheckButton name="$parentbankopenwithbag">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt2" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="210"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Open with backpack" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.OpenWithBackpack, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.OpenWithBackpackTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>	
+		
+		<CheckButton name="$parenthighlightitemquality">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="210"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Highlight item quality" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBagConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.HighlightItemQuality, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.HighlightItemQualityTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>	
+		
+		<CheckButton name="$parentallowaltrightclickdelete">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="230"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Allow alt + rclick delete" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.AllowAltRightClickDelete, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.AllowAltRightClickDeleteTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>		
+
+		<CheckButton name="$parentusebagsearch">
+			<Size><AbsDimension x="24" y="24"/></Size>
+			<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTxt1" relativePoint="BOTTOMLEFT">
+				<Offset><AbsDimension x="0" y="250"/></Offset>
+			</Anchor></Anchors>
+			<HitRectInsets>
+				<AbsInset top="0" left="8" bottom="8" right="0"/>
+			</HitRectInsets>
+			<Layers>
+				<Layer level="OVERLAY">
+					<FontString name="$parentTxt1" inherits="GameFontLabelYellow"> <!-- "Use BagSearch" -->
+						<Anchors><Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="24" y="6"/></Offset>
+						</Anchor></Anchors>
+					</FontString>				
+				</Layer>
+			</Layers>
+			<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+			<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+			<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+			<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+			<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+			<Scripts>
+				<OnClick>zBankConfig_Save();</OnClick>
+				<OnEnter>				
+					GameTooltip:SetOwner(this, "ANCHOR_LEFT", 4, 0);
+					GameTooltip:SetText(zBLocale.zBagConfigFrame.UseBagSearchAddon, 1, 1, 1);
+					GameTooltip:AddLine(zBLocale.zBagConfigFrame.UseBagSearchAddonTooltipDetail, 0, 0.75, 0.95);
+					GameTooltip:Show();
+				</OnEnter>
+				<OnLeave>
+					GameTooltip:Hide();
+				</OnLeave>
+			</Scripts>
+		</CheckButton>	
+		
+			<Slider name="zBagBRowSlider" orientation="HORIZONTAL">
+						<Size><AbsDimension x="150" y="10"/></Size>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentTxt2">
+								<Offset><AbsDimension x="10" y="44"/></Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer>
+								<Texture file="Interface\BagFrame\BagFrame-Slider-Border"/>
+							</Layer>
+							<Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlight" name="$parentTxt1"> <!-- "Number of items on a row" -->
+									<Anchors>
+										<Anchor point="BOTTOM" relativePoint="TOP">
+											<Offset>
+												<AbsDimension x="0" y="-4"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString inherits="GameFontHighlight" name="$parentTxt2"> <!-- 2 -->
+									<Anchors>
+										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"/>
+									</Anchors>
+								</FontString>
+								<FontString inherits="GameFontHighlight" name="$parentTxt3"> <!-- 20 -->
+									<Anchors>
+										<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<ThumbTexture file="Interface\BagFrame\BagFrame-Slider-Knob">
+							<Size>
+								<AbsDimension x="16" y="16"/>
+							</Size>
+						</ThumbTexture>
+						<Scripts>
+							<OnShow>
+							this.loading=1;
+							this:SetValueStepMode("INT");
+							this:SetMinMaxValues(2,20);
+							this.loading=0;
+							this:SetValue(zBag_VAR["bankrowitems"]);
+							</OnShow>
+							<OnValueChanged>
+							if (this:IsVisible() and this.loading and this.loading==0) then
+								zBag_VAR["bankrowitems"]=zBagBRowSlider:GetValue();
+								zBagB_Resize(this);
+								zBagB_Update();
+							end
+							</OnValueChanged>
+						</Scripts>
+					</Slider>
+			<Slider name="zBagBScaleSlider" orientation="HORIZONTAL">
+						<Size><AbsDimension x="150" y="10"/></Size>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentTxt2">
+								<Offset><AbsDimension x="10" y="105"/></Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer>
+								<Texture file="Interface\BagFrame\BagFrame-Slider-Border"/>
+							</Layer>
+							<Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlight" name="$parentTxt1"> <!-- "Bank items scale" -->
+									<Anchors>
+										<Anchor point="BOTTOM" relativePoint="TOP">
+											<Offset>
+												<AbsDimension x="0" y="-4"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString inherits="GameFontHighlight" name="$parentTxt2"> <!-- 0.5 -->
+									<Anchors>
+										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"/>
+									</Anchors>
+								</FontString>
+								<FontString inherits="GameFontHighlight" name="$parentTxt3"> <!-- 1.5 -->
+									<Anchors>
+										<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<ThumbTexture file="Interface\BagFrame\BagFrame-Slider-Knob">
+							<Size>
+								<AbsDimension x="16" y="16"/>
+							</Size>
+						</ThumbTexture>
+						<Scripts>
+							<OnShow>
+							this.loading=1;
+							this:SetValueStepMode("FLOAT");
+							this:SetMinMaxValues(0.5,1.5);
+							this.loading=0;
+							this:SetValue(zBag_VAR["bankscale"]);
+							</OnShow>
+							<OnValueChanged>
+							if (this:IsVisible() and this.loading and this.loading==0) then
+								zBag_VAR["bankscale"]=zBagBScaleSlider:GetValue();
+								zBagB_Resize(this);
+								zBagB_Update();
+							end
+							</OnValueChanged>
+						</Scripts>
+					</Slider>
+
+		</Frames>
+		<Scripts>
+			<OnShow>
+				zBagConfig_Load();
+				zBankConfig_Load();
+				zBagKit.LoadConfig();
+			</OnShow>
+			<OnHide>
+				zBagConfig_Save();
+				zBankConfig_Save();
+			</OnHide>
+		</Scripts>
+	</Frame>
+</Ui>

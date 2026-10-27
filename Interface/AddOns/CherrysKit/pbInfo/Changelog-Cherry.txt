@@ -1,0 +1,26 @@
+pbInfo v0.60-ck2 for Cherry's Kit (2026-10-27)
+- New "Hide default castbar" tick in the CastingBar settings, on by default: the game's own cast bar
+  stays hidden (rom weakauras' "My cast" and "Target's cast" auras replace it). Not hidden while
+  "Move CastingBar" shows it. /pbinfo probe reports it.
+
+pbInfo v0.60-ck1 for Cherry's Kit (2026-10-27)
+Based on pbInfo v0.60 by p.b. a.k.a. novayuna (later versions by odie2), released under the
+Creative Commons License BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/).
+These changes are shared under the same licence.
+
+Removed, because Cherry's Kit already has it:
+- Threat meter and the "target of target of target = me" aggro warning (Includes/inc.ThreatMeter.lua,
+  Xml/ThreatMeter.xml, the ThreatMeter settings tab). Use the "Threat meter" aura of rom weakauras.
+- Target frame health bar numbers, percent and colour fade (Includes/inc.TargetFrame.lua, its timer
+  and the TargetFrame settings tab). PortraitHP shows the target's health percent.
+
+Changed for the kit:
+- Files load from the kit folder (CherrysKit_Paths.pbInfo); texture paths point to
+  Interface\AddOns\CherrysKit\pbInfo\.
+- Reload UI safe: the game functions pbInfo wraps (chat event, whisper windows, quest track button,
+  clock tooltip) are remembered, so a reload no longer wraps pbInfo's own wrapper again (that loop
+  froze the chat).
+- On/off switch in the Cherry's Kit hub (/ck): when off, nothing loads and every pbInfo frame
+  script returns at once.
+- /pbinfo opens the settings (/pbic still works), /pbinfo probe prints what pbInfo sees.
+- Hub row "pbInfo".

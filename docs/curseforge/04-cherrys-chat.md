@@ -1,0 +1,51 @@
+# Cherry's Chat
+
+**Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
+
+Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
+
+## Features
+
+- **Copy chat**: hold the left mouse button and drag over lines (they turn blue; drag past the edge to scroll), then right-click and pick **Copy to clipboard**. Paste anywhere with Ctrl+V.
+- **Right-click menu** on a line: Copy line(s), Copy name, Whisper, Add friend, Ignore.
+- **Clicks work like the normal chat**: click a name to whisper, click an item link for its tooltip, Shift+click to put a name or item into the chat box.
+- **Emoji pictures**: 415 emoji drawn as small colour pictures in the chat, both real emoji and typed codes like `:skull` or `:cat:` (the closing colon is optional, except for one- or two-letter codes like `:x:`). Copying gives back what was typed. `/cchat emojis` lists them all.
+- **Emoji in the game's own chat** (where Cherry's Chat is off): they become hearts, stars, suns, notes and faces like (^_^) that the chat font can show, or `:shortcode:`. Optional: turn `:) <3` into emoji, and send `:heart:` as a real emoji.
+- **Encrypted chat**: pick a channel (guild, party, raid, whisper, say, yell, zone or a numbered channel) in the settings and type a key. What you send there goes out scrambled, and players with the same key read it as normal text, marked with a lock. An empty key means normal chat. This keeps casual readers out; it is not strong security (keys are stored as plain text).
+- **Font size and window size** per chat window, kept after login and Reload UI ("All windows" applies a change to every tab).
+- **Select mode** (the C button) and a **copy window** with the last 200 lines, as a fallback.
+- **Safe**: if anything goes wrong it switches itself off and the game draws the chat again until the next Reload UI. Safe with Reload UI.
+
+**Still being tested in game:** encrypted chat, the exact place of emoji pictures in a line (they show, and their position is being fine-tuned), Shift+click into the chat box, Add friend / Ignore from the menu, and copying straight to the clipboard (there is a copy box fallback). If item link clicks do nothing, run `/cchat linktest` once.
+
+## Chat commands
+
+- `/cchat`: settings window
+- `/cchat window`: switch Cherry's own chat drawing off (the game draws again) or back on
+- `/cchat select`: select mode (same as the C button)
+- `/cchat copy`: copy window for the tab you are looking at
+- `/cchat font 18`: chat font size (6 to 40)
+- `/cchat size 600 300`: chat window width and height
+- `/cchat resize`: drag corner on the chat window
+- `/cchat linktest`: teach it how your client clicks item links
+- `/cchat emojis`: list every emoji picture and its code
+- `/cchat key guild <key>`: set the encryption key for a channel; `/cchat key guild` clears it
+- `/cchat symbols`: numbered test of the emoji symbols
+- `/cchat probe`: what this client supports (send it with bug reports)
+- `/cchat reset`: forget saved window sizes
+
+## Install
+
+- **Requires Cherry's Kit** (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\CherrysChat\`.
+- **Delete any old `Interface\AddOns\CherrysChat` folder.** While it is there, Cherry's Kit keeps this version turned off.
+- Turn it on or off in the Cherry's Kit window (`/ck`).
+
+## Bug reports
+
+Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat probe` if you can.
+
+## Credits and licence
+
+- Written by Cherry, under the **GNU GPL v2**.
+- Emoji pictures rendered from **Noto Color Emoji**, Copyright 2013-2017 Google Inc. and Arjen Nienhuis: font under the SIL Open Font License 1.1, images under the Apache License 2.0.
+- Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.

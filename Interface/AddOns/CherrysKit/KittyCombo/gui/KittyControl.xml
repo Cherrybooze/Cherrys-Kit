@@ -1,0 +1,159 @@
+<!-- (C) 2012-2013 Miranda -->
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+<!--
+-->
+
+	<!-- Control frame (no UI) -->
+	<Frame name="KittyControlFrame">
+		<Scripts>
+			<OnLoad>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					if(Kitty.onLoad ~= nil) then
+						Kitty.onLoad(this);
+					end
+				end)();
+				]]>
+			</OnLoad>
+			<OnEvent>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					if(Kitty.onEvent ~= nil) then
+						Kitty.onEvent(this, event, arg1, arg2, arg3, arg4);
+					end
+				end)();
+				]]>
+			</OnEvent>
+			<OnUpdate>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					if(Kitty.onUpdate ~= nil) then
+						Kitty.onUpdate(this, elapsedTime);
+					end
+				end)();
+				]]>
+			</OnUpdate>
+		</Scripts>
+	</Frame>
+
+	<!-- Tooltip (no UI) -->
+	<GameTooltip name="KittyComboGameTooltip" inherits="GameTooltipTemplate" parent="UIParent" frameStrata="DIALOG" hidden="true">
+		<Scripts>
+			<OnLoad>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					this:SetSize(1, 1);
+					this:SetAlpha(0);
+				end)();
+				]]>
+			</OnLoad>
+		</Scripts>
+	</GameTooltip>
+
+	<!-- Minimap button -->
+	<Button name="KittyMinimap" inherits="MinimapButtonTemplate" parent="UIParent" hidden="true">
+		<Size><AbsDimension y="24" x="24" /></Size>
+		<Anchors>
+			<Anchor point="CENTER" relativePoint="CENTER" relativeTo="MinimapViewFrame">
+				<Offset><RelDimension x="-100" y="50" /></Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					this:RegisterEvent("VARIABLES_LOADED");
+				end)();
+				]]>
+			</OnLoad>
+			<OnEvent>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					if(event == "VARIABLES_LOADED") then
+						-- Show the minimap button
+						if(Kitty.SettingManager.setting.window ~= nil and Kitty.SettingManager.setting.window.showMinimap ~= false) then
+							if not XBARVERSION then
+								Kitty.showMinimap();
+							end
+						end
+					end
+				end)();
+				]]>
+			</OnEvent>
+			<OnClick>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					if(KittyBasicConfigFrame:IsVisible()) then
+						KittyBasicConfigFrame:Hide();
+					else
+						KittyBasicConfigFrame:Show();
+					end
+				end)();
+				]]>
+			</OnClick>
+			<OnEnter>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					GameTooltip:Show();
+					GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT", 0, 0);
+					GameTooltip:SetText("Kitty Combo");
+					GameTooltip:AddSeparator();
+					GameTooltip:AddLine(UI_MINIMAPBUTTON_MOVE, 0, 0.75, 0.95);
+				end)();
+				]]>
+			</OnEnter>
+			<OnLeave>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					GameTooltip:Hide();
+				end)();
+				]]>
+			</OnLeave>
+		</Scripts>
+		<NormalTexture file="Interface/TargetFrame/TargetFrameIcon-THIEF" />
+		<HighlightTexture file="Interface/TargetFrame/TargetFrameIcon-THIEF" alphaMode="ADD" />
+	</Button>
+
+	<!-- AddonManager button -->
+	<Button name="KittyAddonManagerMiniButton" inherits="UIPanelButtonTemplate" parent="AddonManagerMiniFrame" hidden="true">
+		<Size><AbsDimension y="24" x="24" /></Size>
+		<Scripts>
+			<OnClick>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.debugPrint("KittyAddonManagerMiniButton:OnClick.");
+
+					if(KittyBasicConfigFrame:IsVisible()) then
+						KittyBasicConfigFrame:Hide();
+					else
+						KittyBasicConfigFrame:Show();
+					end
+				end)();
+				]]>
+			</OnClick>
+			<OnEnter>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.debugPrint("KittyAddonManagerMiniButton:OnEnter.");
+
+					GameTooltip:Show();
+					GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT", 0, 0);
+					GameTooltip:SetText("Kitty Combo");
+				end)();
+				]]>
+			</OnEnter>
+			<OnLeave>
+				<![CDATA[
+				Kitty.protectFunction(function()
+					Kitty.debugPrint("KittyAddonManagerMiniButton:OnLeave.");
+
+					GameTooltip:Hide();
+				end)();
+				]]>
+			</OnLeave>
+		</Scripts>
+
+		<NormalTexture file="Interface/TargetFrame/TargetFrameIcon-THIEF" />
+		<HighlightTexture file="Interface/TargetFrame/TargetFrameIcon-THIEF" alphaMode="ADD" />
+	</Button>
+</Ui>

@@ -1,0 +1,168 @@
+zBLocale = {}
+zBLocale.BagSortMatchStrings = {
+	CurrentEquipment = "當前裝備",
+	Bound = "綁定",
+	BindsWhenEquipped = "裝備後綁定", 
+	ItemShopItem = "商城物品",
+	NotDroppedOnPKDeath = "PK死亡不掉落",
+	StackedNumber = "堆疊數: (%d+)",
+	TimeTillExpiration = "到期時間: (%d+)",
+	DailyQuest  = "(每日任務)",
+	Tier = "階層(%d+)",
+	Durability = "耐久度 (%d+)/(%d+)",
+	PowerModifier = "強化 %+?(-?%d+)%%",
+	Level = "等級 (%d+)",
+	PhysicalDefense = "物理防禦 (%d+)",
+	MagicalDefense = "魔法防禦 (%d+)",
+	PhysicalDamage = "物理傷害 (%d+)",
+	AttackSpeed = "攻擊速度 (%d+)",
+	MagicalDamage = "魔法傷害 (%d+)",
+	Worth = "價值: (%d+)",
+	Rune = "符文 %((%d)/(%d)%)",
+}
+
+zBLocale.BagSortSortModeDisplayNames = {
+    "無條件",
+    "名稱",
+    "種類",
+    "耐久度",
+    "等級",
+    "價值",
+    "物理傷害",
+    "魔法傷害",
+    "物理防禦",
+    "魔法防禦",
+    "屬性",
+	"符文", 
+	"稀有度",
+}
+
+zBLocale.BagSortConfigFrame= {
+	BagSortUsageTitle = "背包排序 - 選擇排序模式",
+}
+	
+--strings in the main zBag backpack frame
+zBLocale.zBagStrings = {
+	zBagInspectBankTooltip = "查看銀行",
+	zBagConfigTooltip = "zBag配置",
+	zBagSortTooltip = "物品排序",
+	zBagSortTooltipAddline = "提示: 系統預設的排序",
+	zBagSortFullTooltip = "完整排序完整排序",
+	zBagSortFullTooltipAddline = "將你的背包進行重新排序，預設將空的位子移到最後方。按下Shift + 滑鼠左鍵點擊此按鈕，可以打開排序條件配置", 
+	zBagQuickSellTooltip = "快速販售背包內的物品",
+	zBagQuickSellTooltipAddLine = "當商店介面打開的時候，點擊此按鈕來自動販售背包中的物品，按下Shift + 滑鼠左鍵 點擊此按鈕，可以打開快速販售配置。預設禁用，將背包內的物品拖曳到這個按鈕上可以快速將此物品（種類）加入清單。",
+	zBagRent3Tooltip = "租用第三背包",
+	zBagRent4Tooltip = "租用第四背包",
+	zBagRent5Tooltip = "租用第五背包",
+	zBagRent6Tooltip = "租用第六背包",
+	zBagConfigzBText2Letters = "設定",
+	zBagSortFullSFText4Letters = "排序",
+	zBagQuickSellQSText2Letters = "販賣",
+	
+	zBagSellLotsShiftKeyDown = "開啟快速販售配置",
+	zBagQuickSellDisabled = "禁用快速販售。(開始檢查位置為 0)，按下Shift + 滑鼠左鍵 點擊此按鈕，可以打開快速販售配置",
+	zBagInvalidQuickSellEndSlot = "檢查位置上輸入了無效的號碼. 要啟用快速販售，請將檢查位置上的號碼設置在1到180之間",
+	zBagLoaded = "ZBag載入完成",
+	zBagAltKeyDownDeveloperConfigOpened = "Alt 按鍵已按下：開發者配置開啟",
+}
+
+--strings in the main zBag bank frame
+zBLocale.zBankStrings = {
+	BankSortTooltip = "排序物品",
+	BankSortTooltipAddline = "提示： 系統預設的排序",
+	BankRentTab2Tooltip = "租用第二頁銀行空間",
+	BankRentTab3Tooltip = "租用第三頁銀行空間",
+	BankRentTab4Tooltip = "租用第四頁銀行空間",
+	BankRentTab5Tooltip = "租用第五頁銀行空間",
+	BankPREVIEW7Letters = "預覽",
+	BankPREVIEW5Letters = "預覽",
+	BankPREVIEW3Letters = "預",
+	BankPREVIEW1Letter = "預",
+}
+
+--strings used in the zBag configuration frame
+zBLocale.zBagConfigFrame= {
+	zBagConfigTitleText = "zBag 配置",
+	zBagConfigFrameTxt1 = "顯示背包頁:",
+	zBagConfigFrameTxt2 = "顯示銀行頁:",
+	ZeroPointFive = "0.5",
+	One = "1",
+	OnePointFive = "1.5",
+	Two = "2",
+	Three = "3",
+	Four = "4",
+	Five = "5",
+	Six = "6",
+	Twenty = "20",
+	BagItemsScale = "背包頁面縮放比例",
+	AlwaysShowContent = "永遠顯示背包頁面",
+	AlwaysShowContentTooltipDetail = "永遠顯示你的背包頁面，即使你把背包頁面關掉。",
+	ShowEquipmentSlots = "顯示裝備欄位",
+	ShowEquipmentSlotsTooltipDetail = "在你的背包頁面最後面顯示你的裝備欄位",
+	ShowBackground = "顯示背景",
+	ShowBackgroundBagTooltipDetail = "顯示背包頁面的背景圖片",
+	ShowBackgroundBankTooltipDetail = "顯示銀行頁面的背景圖片",
+	HighlightEvenTabs = "高亮顯示偶數背包空間",
+	HighlightEvenTabsBagTooltipDetail = "在偶數背包空間上增加黃色的高亮提示",
+	HighlightEvenTabsBankTooltipDetail = "在偶數銀行空間上增加黃色的高亮提示",
+	ShowItemShopButtons = "顯示租用背包(銀行)的按鈕",
+	ShowItemShopButtonsTooltipDetail = "在背包(銀行)頁面顯示租用空間的按鈕",
+	NumberOfItemsOnARow = "每行物品數量",
+	ShowPreviewHighlight = "用高亮提示預覽中",
+	ShowPreviewHighlightTooltipDetail = "在銀行空間上增加紅色的高亮提示，已表示你現在是預覽中（不是真的開啟銀行）",
+	OpenWithBackpack = "打開背包時同時打開",
+	OpenWithBackpackTooltipDetail = "當你打開背包時，同時打開銀行預覽頁面",
+	UseBagSearchAddon = "Use BagSearch Addon",
+	UseBagSearchAddonTooltipDetail = "BagSearch adds a text box to the bottom of your zBag window. Type to find items in your bag that match the characters you enter",
+	HighlightItemQuality = "依照物品稀有度添加高亮邊框",
+	HighlightItemQualityTooltipDetail = "在物品的邊框上添加物品稀有度顏色的高亮提示",
+	AllowAltRightClickDelete = "允許 alt + 右鍵 刪除物品",
+	AllowAltRightClickDeleteTooltipDetail = "允許 按下 alt + 滑鼠右鍵點擊物品，來快速刪除該物品",
+	BankItemsScale = "銀行頁面縮放比例",
+	ItemShopBankItems = "Item Shop Bank Items",
+}
+
+--strings used for the quick sell feature
+zBLocale.zBagQuickSellConfigFrame = {
+	zBagQuickSellConfigTitleText = "zBag 快速販售 配置",
+	Options = "設置:",
+	DontSellIf = "不可販售如下條件:",
+	QuickSellStartSlot = "開始檢查位置",
+	QuickSellEndSlot = "結束檢查位置",
+	IgnoreDontSellOptions = "忽略所有不可販售設定",
+	AlwaysNeverSellConfig = "總是/從不 販售設定",
+	DurabilityHigherThan = "耐久度高於",
+	RequiredLevelHigherThan = "需求等級高於",
+	WhiteRarity = "白色稀有",
+	NormalRarity = "綠色稀有",
+	GoodRarity = "藍色稀有",
+	RareRarity = "紫色稀有",
+	EpicRarity = "史詩稀有",
+	LegendaryRarity = "傳說稀有",
+	
+	zBagQuickSellItemFilterFrameTitle = "zBag - 快速販售物品過濾",
+	ItemOrCategoryName = "物品/種類 名稱",
+	AtStore = "商店",
+	EntryType = "類型",
+	AlwaysSell = ""總是販售",
+	NeverSell = "從不販售",
+	Item = "物品",
+	ItemType="物品類型",	
+	QuickSellItemFilter = "快速販售物品過濾",
+	CannotDetermineItemType = "無法確定物品類型，添加失敗",
+	
+	TotalSale = "總計銷售",
+	UnableToSell = "無法出售，沒有開啟商店頁面",
+}
+
+-- Quick Sell Strings Written to the chat frame
+zBLocale.QSStrings = {
+	DropTab1	= "拖曳頁面",
+	DropTab2	= "從你的背包拖曳一個物品到添加視窗內，將此物品或類別添加到物品過濾中。左鍵拖曳將添加該物品或該物品種類，右鍵拖曳將添加該物品名稱為特定字串。",
+	Added1		= "\"<ITEM>\" 已經添加設置 <SETTINGS>.",
+	Added2		= "\"<ITEM>\" 特定字串已經添加設置 <SETTINGS>.",
+	Removed1	= "\"<ITEM>\" 已經被移除.",
+	Removed2	= "\"<ITEM>\" 特定字串已經被移除",
+	NotFound1	= "\"<ITEM>\" 沒有在物品過濾中找到",
+	NotFound2	= "\"<ITEM>\" 沒有在特定字串物品過濾中找到",
+}
