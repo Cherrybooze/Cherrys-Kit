@@ -432,13 +432,13 @@ TH.EXAMPLE = {
   color = { 1, 0.82, 0.2, 1 },
   bgColor = { 0.05, 0.04, 0.02, 0.72 },
   texture = "Statusbar_Clean",
-  triggers = {
-    mode = "all",
-    { type = "threat", showOn = "combat", count = 5, valueAs = "threat" },
-  },
-  conditions = {},
+  schemaVersion = 2, defaultVisible = false, primarySourceId = "s1",
+  sources = { { id = "s1", type = "threat", showOn = "combat", count = 5, valueAs = "threat" } },
+  rules = { { id = "r1", name = "Show threat", when = { mode = "all", checks = {
+    { id = "c1", sourceId = "s1", field = "active" } } }, set = { visible = true } } },
   animation = { start = "fade", main = "none", finish = "fade" },
 }
+RWA.ApplyDefaultPosition(TH.EXAMPLE)
 
 function TH.AddExample()
   local s = RWA_DB and RWA_DB.settings

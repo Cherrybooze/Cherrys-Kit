@@ -65,7 +65,7 @@ function T.InvalidateAuras()
   cache = {}
 end
 
-local function scan(unit, filter)
+local function scan(unit, filter, observedNow)
   local cacheKey = unit .. "|" .. filter
   local list = cache[cacheKey]
   if list then
@@ -82,7 +82,7 @@ local function scan(unit, filter)
   if not getAura then
     return list
   end
-  local now = RWA.Now()
+  local now = observedNow or RWA.Now()
   local who = unitKey(unit)
   scanSerial = scanSerial + 1
   for i = 1, 100 do
@@ -216,7 +216,7 @@ function T.AuraInfo(trigger)
   if name and T.FindSkill and GetSkillDetail then
     local page, slot = T.FindSkill(name)
     if page then
-      local ok, _, _, icon = pcall(GetSkillDetail, page, slot)
+      local ok, _, icon = pcall(GetSkillDetail, page, slot)
       if ok and type(icon) == "string" and icon ~= "" then
         return { name = name, icon = icon, id = id }
       end
@@ -233,7 +233,7 @@ evaluators.aura = function(trigger, now)
   r.names = r.names or lowerSet(trigger.names)
   r.ids = r.ids or lowerSet(trigger.ids)
   local found, count = nil, 0
-  for _, aura in ipairs(scan(unit, filter)) do
+  for _, aura in ipairs(scan(unit, filter, now)) do
     if r.names[string.lower(aura.name)] or (aura.id and r.ids[tostring(aura.id)]) then
       count = count + 1
       if not found then
@@ -284,6 +284,57 @@ evaluators.aura = function(trigger, now)
   return state
 end
 
+-- Unfiltered observations for version 2 rules. Buff presence is read before
+-- any legacy showOn, remaining or stacks filters are applied.
+function T.Observe(source, now, env)
+  local kind = source.type or "aura"
+  if kind ~= "aura" then
+    if not evaluators[kind] then return nil end
+    local state = T.Evaluate(source, now, env)
+    if type(state) ~= "table" then return nil end
+    -- Typed resources are already normalized, shared observations. Keep their
+    -- availability (including active zero) and immutable cache intact.
+    if kind=="resource" then return state end
+    state.available = state.available ~= false
+    state.unitAvailable = unitExists(source.unit or "player") and true or false
+    state.active = state.show == true
+    state.present = state.active
+    state.timed = state.progressType == "timed" and tonumber(state.expirationTime) ~= nil
+    if state.timed then state.remaining = math.max(0, state.expirationTime - now) end
+    return state
+  end
+  local unit = source.unit or "player"
+  local available = unitExists(unit) and true or false
+  local state = { available = available, unitAvailable = available, present = false, timed = false, unit = unit }
+  if not available then return state end
+  local r = rt(source)
+  r.names, r.ids = r.names or lowerSet(source.names), r.ids or lowerSet(source.ids)
+  local found
+  for _, aura in ipairs(scan(unit, source.filter == "HARMFUL" and "HARMFUL" or "HELPFUL", now)) do
+    if r.names[string.lower(aura.name)] or (aura.id and r.ids[tostring(aura.id)]) then
+      found = aura
+      break
+    end
+  end
+  if found then
+    state.present, state.active, state.show = true, true, true
+    state.name, state.icon, state.stacks, state.buffId, state.auraId = found.name, found.icon, found.stacks, found.id, found.id
+    if found.expirationTime then
+      state.timed, state.progressType = true, "timed"
+      state.duration, state.expirationTime = found.duration, found.expirationTime
+      state.remaining = math.max(0, found.expirationTime - now)
+    else
+      state.progressType, state.value, state.total = "static", 1, 1
+    end
+  else
+    local info = T.AuraInfo(source)
+    state.name, state.icon, state.buffId, state.auraId = info.name, info.icon, info.id, info.id
+    state.show, state.active, state.stacks = false, false, 0
+    state.progressType, state.value, state.total = "static", 0, 1
+  end
+  return state
+end
+
 ---------------------------------------------------------------------------
 -- Status triggers: health, mana, secondary resource, combat, target, cast, cooldown
 ---------------------------------------------------------------------------
@@ -310,8 +361,10 @@ function T.FindSkill(name)
     end
   end
   local key = string.lower(name or "")
-  if skillCache[key] then
-    return skillCache[key][1], skillCache[key][2]
+  local cached = skillCache[key]
+  if cached then
+    if cached[1] then return cached[1], cached[2] end
+    if RWA.Now() < cached.retryAt then return end
   end
   if not GetSkillDetail then
     return
@@ -329,6 +382,9 @@ function T.FindSkill(name)
       end
     end
   end
+  -- A missing skill may become available after a class or skill change.
+  -- Avoid scanning the whole skill book on every aura update in the meantime.
+  skillCache[key] = { retryAt = RWA.Now() + 5 }
 end
 
 local function resource(trigger, getValue, getMax)
@@ -350,9 +406,67 @@ local function resource(trigger, getValue, getMax)
   return state
 end
 
+-- The client can expose NPC health as a percentage. pbInfo learns a maximum
+-- at full health; scaling its recorded maximum is an estimate, not exact HP.
+local targetHealthKey,targetHealthMax
+local function targetHealthText(state)
+  local isPlayer=call(rawget(_G,"UnitIsPlayer"),"target")
+  if isPlayer==nil or isPlayer==true or (type(isPlayer)=="number" and isPlayer~=0) then return end
+  if state.total~=100 or state.value<0 or state.value>100 then return end
+  local guid=call(rawget(_G,"UnitGUID"),"target")
+  if guid~=targetHealthKey then targetHealthKey,targetHealthMax=guid,nil end
+  local changed=tonumber(call(rawget(_G,"UnitChangeHealth"),"target"))
+  if state.value==100 and changed and changed>0 and guid then targetHealthMax=changed end
+  local max=targetHealthMax
+  local mobdb=type(pbInfo)=="table" and pbInfo.MobDB
+  if type(mobdb)=="table" then
+    if type(mobdb.Update)=="function" then pcall(mobdb.Update,"target") end
+    local name=call(rawget(_G,"UnitName"),"target")
+    local level=call(rawget(_G,"UnitLevel"),"target")
+    local class=call(rawget(_G,"UnitClass"),"target")
+    local byName=type(mobdb.Mobs)=="table" and mobdb.Mobs[name]
+    local byLevel=type(byName)=="table" and byName[level]
+    local byClass=type(byLevel)=="table" and byLevel[class]
+    local known=type(byClass)=="table" and tonumber(byClass.healthpoints)
+    if known and known>0 then max=known end
+  end
+  if not max and state.value==100 and changed and changed>0 then max=changed end
+  state.healthText=max and ("~"..math.ceil(max*state.value/100).." / "..max) or (tostring(state.value).."%")
+end
 local status = {}
+-- Read equipped durability at most once per second, shared by all durability
+-- sources. Compare the raw values, not percentages or localized tooltip text.
+local durabilitySlots={0,1,2,3,4,5,6,7,8,9,11,12,13,14,16,17,21,15,10}
+local durabilityItems,durabilityAt={},nil
+local function equippedDurability(now)
+  now=tonumber(now) or RWA.Now()
+  if durabilityAt and now>=durabilityAt and now-durabilityAt<1 then return durabilityItems end
+  durabilityAt,durabilityItems=now,{}
+  local get=rawget(_G,"GetInventoryItemDurable")
+  if type(get)~="function" then return durabilityItems end
+  for _,slot in ipairs(durabilitySlots) do
+    local ok,current,maximum,name=pcall(get,"player",slot)
+    current,maximum=tonumber(current),tonumber(maximum)
+    if ok and type(name)=="string" and name~="" and current and maximum and maximum>0 and current>=0 then
+      durabilityItems[#durabilityItems+1]={value=current,total=maximum,name=name,slot=slot}
+    end
+  end
+  return durabilityItems
+end
+status.durability = function(trigger,now)
+  local minimum=tonumber(trigger.minimumMax) or 101
+  local lowest
+  for _,item in ipairs(equippedDurability(now)) do
+    if item.total>=minimum and (not lowest or item.value<lowest.value) then lowest=item end
+  end
+  if not lowest then return {show=false,available=false,unit="player",progressType="static"} end
+  return {show=true,available=true,unit="player",progressType="static",name=lowest.name,
+    value=lowest.value,total=lowest.total,percent=lowest.value/lowest.total*100,slot=lowest.slot}
+end
 status.health = function(trigger)
-  return resource(trigger, UnitHealth, UnitMaxHealth)
+  local state=resource(trigger, UnitHealth, UnitMaxHealth)
+  if state.show and state.unit=="target" then targetHealthText(state) end
+  return state
 end
 status.mana = function(trigger)
   return resource(trigger, UnitMana, UnitMaxMana)
@@ -389,13 +503,17 @@ end
 status.class = function(trigger)
   local unit = trigger.unit or "player"
   if not unitExists(unit) then
-    return { show = false }
+    return { show = false, available = false }
   end
   local main, sub = call(UnitClass, unit)
   main, sub = main or "", sub or ""
   local name = (sub ~= "" and sub ~= main) and (main .. " / " .. sub) or main
+  local mainToken,subToken=call(UnitClassToken,unit)
+  local normalize=RWA.ClassToken or function(value) return value end
   return {
     show = main ~= "",
+    available = main ~= "",
+    class1 = normalize(mainToken or main), class2 = normalize(subToken or sub),
     unit = unit,
     name = name,
     icon = RWA.ClassIcon and RWA.ClassIcon(main, sub) or nil,
@@ -419,13 +537,13 @@ end
 -- UnitCastingTime(unit) -> spell name, total cast time, time already cast.
 status.cast = function(trigger, now)
   local unit = trigger.unit or "player"
-  local state = { unit = unit, show = false }
+  local state = { unit = unit, show = false, casting = 0 }
   if not unitExists(unit) then
     return state
   end
   local name, total, done = call(UnitCastingTime, unit)
   if name and total and total > 0 then
-    state.show = true
+    state.show, state.casting = true, 1
     state.name = name
     state.progressType = "timed"
     state.duration = total
@@ -438,13 +556,16 @@ status.cooldown = function(trigger, now)
   local state = { name = trigger.skill or "?", show = false }
   local page, slot = T.FindSkill(trigger.skill)
   if not page then
+    state.available = false
     return state
   end
   local total, remaining = call(GetSkillCooldown, page, slot)
-  remaining = tonumber(remaining) or 0
+  remaining = tonumber(remaining)
+  if not remaining then state.available = false; return state end
   local _, icon = call(GetSkillDetail, page, slot)
   state.icon = type(icon) == "string" and icon or nil
   local onCooldown = remaining > 0.05
+  state.skillAvailable, state.cooldown, state.ready, state.remaining = true, onCooldown, not onCooldown, remaining
   if onCooldown then
     state.progressType = "timed"
     state.duration = tonumber(total) and total > 0 and total or remaining
@@ -463,6 +584,18 @@ status.cooldown = function(trigger, now)
   end
   return state
 end
+
+local function auraCount(trigger,now,filter)
+  local unit=trigger.unit or "player"
+  local available=unitExists(unit) and true or false
+  -- The same unit/filter cache is shared with named-buff checks in this poll.
+  -- Count aura entries, not stacks. An absent target is unavailable, not zero.
+  return {show=available,available=available,unit=unit,progressType="static",
+    value=available and #scan(unit,filter,now) or nil,total=100,
+    name=filter=="HELPFUL" and "Buff count" or "Debuff count"}
+end
+status.buffcount=function(trigger,now) return auraCount(trigger,now,"HELPFUL") end
+status.debuffcount=function(trigger,now) return auraCount(trigger,now,"HARMFUL") end
 
 evaluators.status = function(trigger, now)
   local fn = status[trigger.check or "health"]

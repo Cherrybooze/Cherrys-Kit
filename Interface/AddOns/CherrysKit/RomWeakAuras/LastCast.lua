@@ -214,18 +214,19 @@ LC.EXAMPLE = {
   text = "%n",
   fontSize = 18,
   color = { 1, 0.6, 0.25, 1 },
-  triggers = {
-    mode = "all",
-    { type = "lastcast", unit = "target", showOn = "seen" },
+  schemaVersion = 2, defaultVisible = false, primarySourceId = "s1",
+  sources = { { id = "s1", type = "lastcast", unit = "target", showOn = "seen" } },
+  rules = {
+    { id = "r1", name = "Show last cast", when = { mode = "all", checks = {
+      { id = "c1", sourceId = "s1", field = "active" } } }, set = { visible = true } },
+    { id = "r2", name = "Currently casting", when = { mode = "all", checks = {
+      { id = "c2", sourceId = "s1", field = "casting", op = "==", value = 1 } } },
+      set = { color = { 1, 0.25, 0.25, 1 } } },
   },
-  elements = {
-    { type = "text", from = 0, side = "BOTTOM", text = "%e ago", size = 13 },
-  },
-  conditions = {
-    { trigger = 1, var = "casting", op = "==", value = 1, set = { color = { 1, 0.25, 0.25, 1 } } },
-  },
+  elements = { { type = "text", side = "BOTTOM", text = "%e ago", size = 13 } },
   animation = { start = "fade", main = "none", finish = "fade" },
 }
+RWA.ApplyDefaultPosition(LC.EXAMPLE)
 
 function LC.AddExample()
   local s = RWA_DB and RWA_DB.settings

@@ -14,9 +14,9 @@ S.INDICATORS = {
   { key = "cornerBL", title = "Bottom left corner", kind = "color" },
   { key = "cornerBR", title = "Bottom right corner", kind = "color" },
   { key = "icon", title = "Centre icon", kind = "icon" },
-  { key = "text", title = "Text (top)", kind = "text" },
-  { key = "text2", title = "Text 2 (middle)", kind = "text" },
-  { key = "text3", title = "Text 3 (bottom)", kind = "text" },
+  { key = "text", title = "Text 1", kind = "text" },
+  { key = "text2", title = "Text 2", kind = "text" },
+  { key = "text3", title = "Text 3", kind = "text" },
   { key = "barColor", title = "Health bar colour", kind = "color" },
   { key = "alpha", title = "Fade the member", kind = "alpha" },
   { key = "flash", title = "Flash", kind = "color" },
@@ -43,26 +43,26 @@ G.STATUS_DEFAULTS = {
   classColor = { on = true, prio = 10, ind = ind("barColor"), color = c(0.6, 0.6, 0.6) },
   healthColor = { on = false, prio = 15, ind = ind("barColor"), color = c(0.1, 0.9, 0.1) },
   name = { on = true, prio = 1, ind = ind("text"), color = c(1, 1, 1) },
-  deficit = { on = true, prio = 50, ind = ind("text2"), color = c(1, 1, 1), threshold = 90, format = "number" },
+  deficit = { on = true, prio = 50, ind = ind("text3"), color = c(1, 1, 1), threshold = 100, format = "number" },
   percent = { on = true, prio = 55, ind = ind("text2"), color = c(1, 1, 1) },
-  dead = { on = true, prio = 90, ind = ind("text2", "barColor", "alpha"), color = c(0.5, 0.5, 0.5), alpha = 0.6 },
-  offline = { on = true, prio = 95, ind = ind("text2", "barColor", "alpha"), color = c(0.4, 0.4, 0.4), alpha = 0.4 },
+  dead = { on = true, prio = 90, ind = ind("text", "barColor", "alpha"), color = c(0.5, 0.5, 0.5), alpha = 0.6 },
+  offline = { on = true, prio = 95, ind = ind("text", "barColor", "alpha"), color = c(0.4, 0.4, 0.4), alpha = 0.4 },
   lowHealth = { on = true, prio = 70, ind = ind("border"), color = c(1, 0, 0), threshold = 40 },
   lowMana = { on = false, prio = 40, ind = ind("border"), color = c(0.3, 0.5, 1), threshold = 20 },
   target = { on = true, prio = 99, ind = ind("border"), color = c(1, 1, 1) },
-  targetOfTarget = { on = true, prio = 60, ind = ind("cornerBL"), color = c(1, 0.15, 0.15) },
-  leader = { on = true, prio = 30, ind = ind("cornerTL"), color = c(1, 0.82, 0) },
-  assistant = { on = true, prio = 20, ind = ind("cornerTL"), color = c(0.75, 0.75, 0.75) },
+  targetOfTarget = { on = true, prio = 60, ind = ind(), color = c(1, 0.15, 0.15) },
+  leader = { on = true, prio = 30, ind = ind(), color = c(1, 0.82, 0) },
+  assistant = { on = true, prio = 20, ind = ind(), color = c(0.75, 0.75, 0.75) },
   looter = { on = false, prio = 10, ind = ind("cornerTL"), color = c(0.9, 0.6, 0.2) },
-  role = { on = true, prio = 40, ind = ind("cornerTR"), color = c(0.3, 0.6, 1), color2 = c(1, 0.4, 0.2) },
-  raidIcon = { on = true, prio = 60, ind = ind("icon"), color = c(1, 0.9, 0.3) },
-  debuff = { on = true, prio = 70, ind = ind("icon"), color = c(0.9, 0.2, 0.2) },
-  debuffAlert = { on = true, prio = 85, ind = ind("border", "cornerBR"), color = c(0.75, 0.2, 1) },
+  role = { on = true, prio = 40, ind = ind(), color = c(0.3, 0.6, 1), color2 = c(1, 0.4, 0.2) },
+  raidIcon = { on = true, prio = 60, ind = ind(), color = c(1, 0.9, 0.3) },
+  debuff = { on = true, prio = 70, ind = ind(), color = c(0.9, 0.2, 0.2) },
+  debuffAlert = { on = true, prio = 85, ind = ind("border"), color = c(0.75, 0.2, 1) },
   anyDebuff = { on = false, prio = 30, ind = {}, color = c(0.8, 0.1, 0.1) },
-  hots = { on = true, prio = 50, ind = ind("cornerTR"), color = c(1, 0.95, 0.2) },
-  hotTimers = { on = true, prio = 50, ind = ind("text3"), color = c(0.6, 1, 0.6) },
-  shields = { on = true, prio = 50, ind = ind("cornerBR"), color = c(0.25, 0.5, 1) },
-  salves = { on = true, prio = 30, ind = ind("cornerBL"), color = c(1, 1, 1) },
+  hots = { on = true, prio = 50, ind = ind(), color = c(1, 0.95, 0.2) },
+  hotTimers = { on = false, prio = 50, ind = ind("text3"), color = c(0.6, 1, 0.6) },
+  shields = { on = true, prio = 50, ind = ind(), color = c(0.25, 0.5, 1) },
+  salves = { on = true, prio = 30, ind = ind(), color = c(1, 1, 1) },
   casting = { on = false, prio = 45, ind = ind("text3"), color = c(1, 0.8, 0.3) },
   range = { on = true, prio = 50, ind = ind("alpha"), alpha = 0.45, color = c(0.5, 0.5, 0.5) },
   damageFlash = { on = true, prio = 50, ind = ind("flash"), color = c(1, 0, 0) },
@@ -144,12 +144,10 @@ S.HealthFraction = healthFraction
 
 local function shortNumber(n)
   n = math.abs(n)
-  if n >= 1000000 then
-    return string.format("%.1fm", n / 1000000)
-  elseif n >= 10000 then
-    return string.format("%.0fk", n / 1000)
-  elseif n >= 1000 then
-    return string.format("%.1fk", n / 1000)
+  if n > 999000 then
+    return (string.format("%.1fm", n / 1000000):gsub("%.0m$", "m"))
+  elseif n > 1000 then
+    return (string.format("%.1fk", n / 1000):gsub("%.0k$", "k"))
   end
   return tostring(math.floor(n))
 end

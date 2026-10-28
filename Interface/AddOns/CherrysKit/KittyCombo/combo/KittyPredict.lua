@@ -102,26 +102,37 @@ end
 -- A ComboManager whose skill checks look LOOKAHEAD seconds ahead and whose procs see the masked lists.
 local function predictor(masked, icons)
 	local comboManager = Kitty.ComboManager(Kitty.slotManager, Kitty.cooldownManager, Kitty.macroManager);
+    local liveCooldowns = comboManager.cooldownManager;
+    rawset(comboManager, "cooldownManager", setmetatable({
+        canCast = function(_, name, threshold)
+            return liveCooldowns:canCast(name, threshold, true);
+        end,
+    }, {__index=liveCooldowns}));
 	local realSkills = comboManager.skillManager;
 	rawset(comboManager, "skillManager", setmetatable({
 		["canCast"] = function(self, skillName, threshold)
-			return Kitty.SkillManager.canCast(self, skillName, math.max(threshold or 0.6, Kitty.Predict.LOOKAHEAD));
+			return Kitty.SkillManager.canCast(self, skillName, math.max(threshold or 0.6, Kitty.Predict.LOOKAHEAD), true);
 		end,
 	}, {__index=realSkills}));
-	local procs = {};
+	local procs, lists = {}, {};
+	local function filteredOnce(commandList)
+		if(lists[commandList] == nil) then lists[commandList] = filtered(commandList, masked, icons); end
+		return lists[commandList];
+	end
+	rawset(comboManager, "filteredList", function(_, commandList) return filteredOnce(commandList); end);
 	rawset(comboManager, "findProc", function(self, name)
 		local found = procs[name];
 		if(found == nil) then
 			found = {};
 			for i, commandList in ipairs(Kitty.ComboManager.selectCommandListByName({name})) do
-				found[i] = filtered(commandList, masked, icons);
+				found[i] = filteredOnce(commandList);
 			end
 			procs[name] = found;
 		end
 		return found;
 	end);
 	rawset(comboManager, "resetProcs", function()
-		procs = {};
+		procs, lists = {}, {};
 	end);
 	return comboManager;
 end
@@ -136,7 +147,7 @@ Kitty.Predict.compute = function(kittyName, count)
 	local result = {};
 	for round = 1, (count or 1) do
 		comboManager.resetProcs();
-		local commandType, commandName, procName = comboManager:check(filtered(commandList, masked, icons));
+		local commandType, commandName, procName = comboManager:check(comboManager:filteredList(commandList));
 		if(commandType == nil) then
 			break;
 		end
@@ -155,7 +166,7 @@ Kitty.Predict.compute = function(kittyName, count)
 	return result;
 end;
 
--- Throttled, and held while the player is casting (Kitty.attack does nothing then).
+-- Throttled, including while the player is casting.
 Kitty.Predict.next = function(kittyName, count)
 	if(Kitty.isTurnedOff and Kitty.isTurnedOff()) then
 		return {}, "off";
@@ -166,8 +177,7 @@ Kitty.Predict.next = function(kittyName, count)
 	local entry = Kitty.Predict.cache[key];
 	if(entry ~= nil) then
 		local fresh = (now - entry.time) < Kitty.Predict.THROTTLE;
-		local casting = UnitCastingTime and UnitCastingTime("player") ~= nil;
-		if(fresh or casting) then
+		if(fresh) then
 			return entry.result, entry.reason;
 		end
 	end

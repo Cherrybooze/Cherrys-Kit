@@ -1,10 +1,14 @@
 # Cherry's KittyCombo
 
-Version **1.7.8** · Kit release **0.11.78** · [All addons / hub](../README.md)
+Version **1.7.9** · Kit release **0.11.79** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
+
+## Updated in 1.7.9
+
+Prediction no longer changes live cooldowns, including during casts. Imports reject unknown conditions instead of removing them, and retain non-skill icons. Editor drafts, proc cycles, cooldown conditions, named priorities, action slots and macro matching have focused fixes.
 
 ## Updated in 1.7.8
 

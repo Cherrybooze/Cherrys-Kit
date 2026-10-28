@@ -245,7 +245,7 @@ end;
 --   0-9                   a one-digit whole number
 --   v<index>;             a common string value from VALUE_ALIASES
 --   { values | key value ... }   array items first, then named fields
--- Icons are left out (the importer fills them in from its own skill book) and
+-- Skill icons can be restored from the skill book; other icons are preserved.
 -- enable=true is the default. The alias lists are append-only: changing an
 -- entry would break codes already shared.
 Kitty.Share.PREFIX2 = "CKC2";
@@ -451,12 +451,13 @@ Kitty.Share.checksum2 = function(data)
 	return string.sub(Kitty.Share.checksum(data), 1, 4);
 end;
 
--- What goes into a version 2 code: no icons, no enable=true
+-- Skill icons can be restored locally; retain icons for other command types.
 Kitty.Share.slim = function(commandList)
 	local list = Kitty.Share.clean(commandList);
 	for _, command in ipairs(list) do
 		if(type(command) == "table") then
-			command.icon = nil;
+            -- Only skill icons are reconstructed from the player's skill book.
+            if(command.commandType == "skill" or command.commandType == "suitskill") then command.icon = nil; end
 			if(command.enable == true) then
 				command.enable = nil;
 			end
@@ -635,7 +636,7 @@ Kitty.Share.importCommandList = function(code)
 				if(type(conditionType) == "string" and type(Kitty.ComboManager[conditionType .. "Type"]) == "function") then
 					table.insert(newCommand, condition);
 				else
-					dropped = dropped + 1;
+                    return nil, Kitty.L("ImportUnknownCondition", "Cannot import: unsupported condition <<1>>.", tostring(conditionType or "(missing)"));
 				end
 			end
 			table.insert(result, newCommand);

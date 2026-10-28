@@ -1,0 +1,184 @@
+{
+  "diamond": {
+    "path": "Resources/soul-diamond",
+    "width": 64,
+    "height": 64,
+    "content": {
+      "x": 0.109375,
+      "y": 0.03125,
+      "w": 0.765625,
+      "h": 0.9375
+    },
+    "source_sha256": "7d8a366463e85b4d5afc922fc8affc1b1c3df5ba5faff8adef3a6aefbda68fc2",
+    "source_content": [
+      222,
+      123,
+      1032,
+      1126
+    ],
+    "source_crop": [
+      214,
+      115,
+      1040,
+      1134
+    ],
+    "export_content": [
+      7,
+      2,
+      56,
+      62
+    ],
+    "alpha_trim_threshold": 8,
+    "source_padding": 8,
+    "canvas_padding": 2,
+    "sha256": "ba36bf548494aab27bcbe8b304ec1297ee84c875a0e579d4d486f6825743bf26"
+  },
+  "maxLabel": {
+    "path": "Resources/max-label",
+    "width": 256,
+    "height": 128,
+    "content": {
+      "x": 0.01171875,
+      "y": 0.1171875,
+      "w": 0.9765625,
+      "h": 0.7578125
+    },
+    "source_sha256": "5313380b616ad1efd03b8ea13d810112bc835acebf9d1a5c2e109395659c7837",
+    "source_content": [
+      72,
+      109,
+      1712,
+      746
+    ],
+    "source_crop": [
+      64,
+      101,
+      1720,
+      754
+    ],
+    "export_content": [
+      3,
+      15,
+      253,
+      112
+    ],
+    "alpha_trim_threshold": 8,
+    "source_padding": 8,
+    "canvas_padding": 2,
+    "sha256": "79201f50f78a15db70b173a972ac0057228f7ff4770b36a0d0e7c4b6292b6c03"
+  },
+  "metalFrame": {
+    "path": "Resources/bar-frame-metal",
+    "width": 512,
+    "height": 64,
+    "content": {
+      "x": 0.0078125,
+      "y": 0.1875,
+      "w": 0.984375,
+      "h": 0.609375
+    },
+    "source_sha256": "6b76205cd904f8d651d89a59768d292bbd1dc33c9d39c5ade36a33c86d43081c",
+    "source_content": [
+      25,
+      281,
+      2147,
+      443
+    ],
+    "source_crop": [
+      17,
+      273,
+      2155,
+      451
+    ],
+    "export_content": [
+      4,
+      12,
+      508,
+      51
+    ],
+    "alpha_trim_threshold": 8,
+    "source_padding": 8,
+    "canvas_padding": 2,
+    "opening": {
+      "x": 0.07676566884939195,
+      "y": 0.3599016853932584,
+      "w": 0.8464686623012161,
+      "h": 0.2654494382022472
+    },
+    "source_opening": [
+      174,
+      324,
+      1998,
+      396
+    ],
+    "sha256": "a05e2bd671b1409aeb0b0dc9ed461e7ff30565cf00ecae4cd0f652900b88a4a5"
+  },
+  "bevelFill": {
+    "path": "Resources/bar-fill-bevel",
+    "width": 256,
+    "height": 32,
+    "content": {
+      "x": 0.01171875,
+      "y": 0.3125,
+      "w": 0.9765625,
+      "h": 0.375
+    },
+    "source_sha256": "34e25f1c3dea69cb6c26021d7fe51a3ce02eab7f89866493ce9a53218da8e1d6",
+    "source_content": [
+      73,
+      313,
+      2099,
+      411
+    ],
+    "source_crop": [
+      65,
+      305,
+      2107,
+      419
+    ],
+    "export_content": [
+      3,
+      10,
+      253,
+      22
+    ],
+    "alpha_trim_threshold": 8,
+    "source_padding": 8,
+    "canvas_padding": 2,
+    "sha256": "ed2f39a7f6c2b596fe6ff5976a976008c35e7171a13c05bb7fc9397a5c8719ac"
+  },
+  "glassFill": {
+    "path": "Resources/bar-fill-glass",
+    "width": 256,
+    "height": 32,
+    "content": {
+      "x": 0.0078125,
+      "y": 0.21875,
+      "w": 0.984375,
+      "h": 0.53125
+    },
+    "source_sha256": "48697ea2e8cb49d22507d3580585af8bfcce196b9e8f69aa196bfa4c1fb0f8ea",
+    "source_content": [
+      30,
+      289,
+      2142,
+      435
+    ],
+    "source_crop": [
+      22,
+      281,
+      2150,
+      443
+    ],
+    "export_content": [
+      2,
+      7,
+      254,
+      24
+    ],
+    "alpha_trim_threshold": 8,
+    "source_padding": 8,
+    "canvas_padding": 2,
+    "sha256": "66743dfecde653488db6b96ea5ac594be3bdbf2b44b48117112a114855a9972b"
+  }
+}

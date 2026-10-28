@@ -12,7 +12,7 @@
 ZShop = ZShop or {}
 local me = ZShop
 
-me.version = "1.2.0-ck1"
+me.version = "1.2.0-ck2"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.ZShop) or "Interface/AddOns/ZShop/"
 me.DAILY_LEVEL = 100
 
@@ -205,6 +205,7 @@ function me.OnEvent(event, arg1)
   if event == "VARIABLES_LOADED" then
     me.Take()
     if me.Button and me.Button.Place then
+      if me.Button.InitializePosition then me.Button.InitializePosition() end
       me.Button.Place()
       me.Button.Refresh()
     end
@@ -359,7 +360,7 @@ function me.Probe()
   local B = me.Button or {}
   local button = _G["ZShopDailyButton"]
   add("daily button: " .. (button and "loaded" or "MISSING") .. ", shown " .. tostring(button and button:IsVisible())
-    .. ", state " .. tostring(B.State and B.State()) .. ", claimed stamp " .. tostring(type(ZShop_Char) == "table" and ZShop_Char.claimed)
+    .. ", state " .. tostring(B.State and B.State()) .. ", clock " .. tostring(B.clockSource or "unchecked") .. ", claimed stamp " .. tostring(type(ZShop_Char) == "table" and ZShop_Char.claimed)
     .. ", RegisterForClicks " .. tostring(button and button.RegisterForClicks ~= nil) .. ", StartMoving " .. tostring(button and button.StartMoving ~= nil)
     .. ", last mouse key " .. tostring(B.lastKey) .. " (right-click the button, then /zshop probe again: want RBUTTON or RightButton)")
   local found = {}

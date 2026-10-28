@@ -38,9 +38,10 @@ Kitty.ExtraActionManager.getExtraActionName = function(gameTooltip, index)
 		gameTooltip:SetExtraActionItem(index);
 		gameTooltip:Hide();
 		local name = _G[gameTooltip:GetName() .. "TextLeft1"]:GetText();
+        if(name == nil or name == "") then return nil; end
 		return tostring(name);
 	else
-		return "";
+		return nil;
 	end
 end;
 -- Instance methods

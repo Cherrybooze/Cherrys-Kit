@@ -458,19 +458,20 @@ R.EXAMPLE = {
   text = "%rate hits/s",
   fontSize = 20,
   color = { 1, 0.85, 0.35, 1 },
-  triggers = {
-    mode = "all",
-    { type = "recent", measure = "white", window = 3, showOn = "combat" },
+  schemaVersion = 2, defaultVisible = false, primarySourceId = "s1",
+  sources = { { id = "s1", type = "recent", measure = "white", window = 3, showOn = "combat" } },
+  rules = {
+    { id = "r1", name = "Show in combat", when = { mode = "all", checks = {
+      { id = "c1", sourceId = "s1", field = "active" } } }, set = { visible = true } },
+    -- Green near the cap of one weapon (4/s); for dual wield, change this to 7.6.
+    { id = "r2", name = "Near cap", when = { mode = "all", checks = {
+      { id = "c2", sourceId = "s1", field = "perSecond", op = ">=", value = 3.8 } } },
+      set = { color = { 0.4, 1, 0.4, 1 } } },
   },
-  elements = {
-    { type = "text", from = 0, side = "BOTTOM", text = "%fight hits in %ft = %avg/s", size = 13 },
-  },
-  conditions = {
-    -- green near the cap of one weapon (4/s); dual wield can reach 8, raise it to 7.6 there
-    { trigger = 1, var = "perSecond", op = ">=", value = 3.8, set = { color = { 0.4, 1, 0.4, 1 } } },
-  },
+  elements = { { type = "text", side = "BOTTOM", text = "%fight hits in %ft = %avg/s", size = 13 } },
   animation = { start = "fade", main = "none", finish = "fade" },
 }
+RWA.ApplyDefaultPosition(R.EXAMPLE)
 
 -- 0.9.11: the first version showed whole hits per 1 s window; switch saved copies that were
 -- not edited to the auto attack rate with decimals.
@@ -488,10 +489,10 @@ function R.UpgradeExample()
   local new = R.EXAMPLE
   a.text = new.text
   a.desc = new.desc
-  t.measure, t.window = new.triggers[1].measure, new.triggers[1].window
+  t.measure, t.window = new.sources[1].measure, new.sources[1].window
   local c = a.conditions and a.conditions[1]
   if c and c.var == "value" and c.op == ">=" and c.value == 3 then
-    a.conditions[1] = RWA.CopyTable(new.conditions[1])
+    a.conditions[1] = { trigger = 1, var = "perSecond", op = ">=", value = 3.8, set = { color = { 0.4, 1, 0.4, 1 } } }
   end
   if Triggers.Reset then
     Triggers.Reset(t)

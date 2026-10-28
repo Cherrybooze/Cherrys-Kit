@@ -45,13 +45,34 @@ RWA.REGION_DEFAULTS = {
   texture = { width = 64, height = 64, texture = "Circle_White", color = { 1, 0.8, 0.2, 0.8 } },
 }
 
+-- Factory placement only. Saved positions are never reapplied during loading,
+-- editing or polling; copying a template is the other caller of these factories.
+RWA.DEFAULT_AURA_POSITIONS = {
+  ["Player health"]={-390,90}, ["Target health"]={-390,-215},
+  ["Target's cast"]={-390,-245}, ["My cast"]={-20,260},
+  ["In combat"]={80,-320}, ["Target's last cast"]={215,-320},
+  ["Hits per second"]={260,-170}, ["Threat meter"]={-510,-150},
+  ["KittyCombo mode"]={-20,320}, ["Example: debuff on target"]={-150,-305},
+  ["Kitty Hook"]={170,-225},
+  ["Example: buff on me"]={260,-70}, ["Example: missing buff reminder"]={70,10},
+  ["Resource: Upper bar"]={-360,-60}, ["Resource: Lower bar"]={-360,-32},
+  ["Resource: PSI"]={-310,-125}, ["High durability repair"]={0,-265},
+}
+function RWA.ApplyDefaultPosition(data)
+  local position=data and RWA.DEFAULT_AURA_POSITIONS[data.id]
+  if position then data.point,data.x,data.y="CENTER",position[1],position[2] end
+  return data
+end
+
 -- Descriptions for the example auras, also added to examples saved by older versions.
 local EXAMPLE_DESC = {
+  ["High durability repair"] = "Warns when an equipped item with maximum durability of at least 101 drops below 101",
   ["Player health"] = "Your health as a bar with your class icon; red under 30%",
+  ["Target health"] = "Your target's health, below its cast bar; hides when you have no target",
   ["Class icon"] = "Your class combo; changes when you switch class",
   ["KittyCombo mode"] = "The KittyCombo mode that is on (mode button), as text and picture; in combat only",
   ["In combat"] = "Pulsing text and how long you have been fighting",
-  ["Example: my buff"] = "Edit: type your buff's name or ID",
+  ["Example: buff on me"] = "Choose a buff; show its icon when it is missing on you",
   ["Example: debuff on target"] = "Edit: type a debuff you put on enemies",
   ["Example: missing buff reminder"] = "Shows when a buff is missing",
 }
@@ -65,25 +86,37 @@ return true, { name = "Mode: " .. (mode or "none"), icon = ui.iconPath and ui.ic
 
 local EXAMPLES = {
   {
-    id = "Player health",
-    regionType = "aurabar",
-    x = 0,
-    y = 220,
-    text = "%n",
-    text2 = "%v / %t",
-    showIcon = false,
-    triggers = {
-      mode = "all",
-      { type = "status", check = "health", unit = "player" },
-      { type = "status", check = "class", unit = "player" },
+    id="High durability repair",enabled=true,schemaVersion=3,load={},
+    primarySourceId="s1",nextSourceId=2,nextRuleId=2,nextCheckId=2,nextActionId=2,nextOutputId=2,
+    sources={{id="s1",type="status",check="durability",unit="player",minimumMax=101}},
+    rules={{id="r1",name="High durability below 101",enabled=true,
+      when={mode="all",checks={{id="c1",sourceId="s1",field="value",op="<",value=101}}},
+      actions={{id="a1",type="show",sourceId="s1",output={id="o1",regionType="text",width=420,height=34,
+        text="Repair: %n (%v / %t)",fontSize=18,color={1,.8,.2,1},animation={start="none",main="none",finish="none"}}}}}},
+  },
+  {
+    id = "Player health", enabled=true, schemaVersion=3, point="CENTER", x=0, y=220, load={},
+    primarySourceId="s1",nextSourceId=3,nextRuleId=3,nextCheckId=4,nextActionId=4,nextOutputId=3,
+    sources={{id="s1",type="status",check="health",unit="player"},{id="s2",type="status",check="class",unit="player"}},
+    rules={
+      {id="r1",name="My health",enabled=true,when={mode="all",checks={{id="c1",sourceId="s1",field="active"}}},
+        actions={
+          {id="a1",type="show",sourceId="s1",output={id="o1",regionType="aurabar",width=220,height=22,text="%n",text2="%v / %t",showIcon=false,color={.2,.7,.3,1},animation={start="none",main="none",finish="none"}}},
+          {id="a2",type="show",sourceId="s2",output={id="o2",regionType="icon",parentOutputId="o1",offsetX=-124,offsetY=0,width=24,height=24,text="",text2="",animation={start="none",main="none",finish="none"}}}
+        }},
+      {id="r2",name="Low health",enabled=true,when={mode="all",checks={
+        {id="c2",field="rule",ruleId="r1",value=true},{id="c3",sourceId="s1",field="percent",op="<",value=30}}},
+        actions={{id="a3",type="color",targetId="o1",value={.9,.15,.15,1}}}}
     },
-    elements = {
-      { type = "icon", from = 2, side = "LEFT" },
-    },
-    conditions = {
-      { trigger = 1, var = "percent", op = "<", value = 30, set = { color = { 0.9, 0.15, 0.15, 1 } } },
-    },
-    animation = { start = "none", main = "none", finish = "none" },
+  },
+  {
+    id="Target health",enabled=true,schemaVersion=3,load={},
+    primarySourceId="s1",nextSourceId=2,nextRuleId=2,nextCheckId=2,nextActionId=2,nextOutputId=2,
+    sources={{id="s1",type="status",check="health",unit="target"}},
+    rules={{id="r1",name="Target health",enabled=true,
+      when={mode="all",checks={{id="c1",sourceId="s1",field="unitAvailable"}}},
+      actions={{id="a1",type="show",sourceId="s1",output={id="o1",regionType="aurabar",width=240,height=22,
+        text="%n",text2="%v / %t",showIcon=false,color={.2,.7,.3,1},animation={start="none",main="none",finish="none"}}}}}},
   },
   {
     id = "In combat",
@@ -93,28 +126,21 @@ local EXAMPLES = {
     text = "IN COMBAT",
     fontSize = 22,
     color = { 1, 0.3, 0.3, 1 },
-    triggers = {
-      mode = "all",
-      { type = "status", check = "combat" },
-    },
-    elements = {
-      { type = "text", from = 0, side = "BOTTOM", text = "%e", size = 16 },
-    },
+    schemaVersion = 2, defaultVisible = false, primarySourceId = "s1",
+    sources = { { id = "s1", type = "status", check = "combat" } },
+    rules = { { id = "r1", name = "Show in combat", when = { mode = "all", checks = {
+      { id = "c1", sourceId = "s1", field = "active" } } }, set = { visible = true } } },
+    elements = { { type = "text", side = "BOTTOM", text = "%e", size = 16 } },
     animation = { start = "fade", main = "pulse", finish = "fade" },
   },
   {
-    id = "Example: my buff",
-    enabled = false,
-    regionType = "icon",
-    x = -60,
-    y = 150,
-    triggers = {
-      mode = "all",
-      { type = "aura", unit = "player", filter = "HELPFUL", names = { "Put a buff name here" }, showOn = "active" },
-    },
-    conditions = {
-      { trigger = 1, var = "remaining", op = "<", value = 5, set = { color = { 1, 0.4, 0.4, 1 } } },
-    },
+    id="Example: buff on me",enabled=false,schemaVersion=3,load={},
+    primarySourceId="s1",nextSourceId=2,nextRuleId=2,nextCheckId=2,nextActionId=2,nextOutputId=2,
+    sources={{id="s1",type="aura",unit="player",filter="HELPFUL",ids={},names={}}},
+    rules={{id="r1",name="Buff missing on me",enabled=true,
+      when={mode="all",checks={{id="c1",sourceId="s1",field="missing"}}},
+      actions={{id="a1",type="show",sourceId="s1",output={id="o1",regionType="icon",width=48,height=48,
+        text="",text2="",animation={start="none",main="none",finish="none"}}}}}},
   },
   {
     id = "Example: debuff on target",
@@ -122,10 +148,10 @@ local EXAMPLES = {
     regionType = "aurabar",
     x = 0,
     y = 260,
-    triggers = {
-      mode = "all",
-      { type = "aura", unit = "target", filter = "HARMFUL", names = { "Put a debuff name here" }, showOn = "active" },
-    },
+    schemaVersion = 2, defaultVisible = false, primarySourceId = "s1",
+    sources = { { id = "s1", type = "aura", unit = "target", filter = "HARMFUL", names = { "Put a debuff name here" } } },
+    rules = { { id = "r1", name = "Show when present", when = { mode = "all", checks = {
+      { id = "c1", sourceId = "s1", field = "present" } } }, set = { visible = true } } },
   },
   {
     id = "Example: missing buff reminder",
@@ -134,10 +160,10 @@ local EXAMPLES = {
     x = 60,
     y = 150,
     text = "MISSING",
-    triggers = {
-      mode = "all",
-      { type = "aura", unit = "player", filter = "HELPFUL", names = { "Put a buff name here" }, showOn = "missing" },
-    },
+    schemaVersion = 2, defaultVisible = false, primarySourceId = "s1",
+    sources = { { id = "s1", type = "aura", unit = "player", filter = "HELPFUL", names = { "Put a buff name here" } } },
+    rules = { { id = "r1", name = "Show when missing", when = { mode = "all", checks = {
+      { id = "c1", sourceId = "s1", field = "missing" } } }, set = { visible = true } } },
     animation = { start = "fade", main = "flash", finish = "fade" },
   },
   {
@@ -151,10 +177,10 @@ local EXAMPLES = {
     height = 40,
     text = "",
     text2 = "",
-    triggers = {
-      mode = "all",
-      { type = "status", check = "class", unit = "player" },
-    },
+    schemaVersion = 2, defaultVisible = false, primarySourceId = "s1",
+    sources = { { id = "s1", type = "status", check = "class", unit = "player" } },
+    rules = { { id = "r1", name = "Show class", when = { mode = "all", checks = {
+      { id = "c1", sourceId = "s1", field = "active" } } }, set = { visible = true } } },
     animation = { start = "none", main = "none", finish = "none" },
   },
   {
@@ -168,27 +194,140 @@ local EXAMPLES = {
     fontSize = 18,
     color = { 1, 0.85, 0.4, 1 },
     load = { combat = true },
-    triggers = {
-      mode = "all",
-      {
-        type = "custom",
-        code = KITTY_MODE_CODE,
-      },
-    },
-    elements = {
-      -- Follow the main mode state. A positive source would make trigger 1 belong
-      -- exclusively to this extra icon, leaving the main text without a trigger.
-      { type = "icon", from = 0, side = "LEFT" },
-    },
+    schemaVersion = 2, defaultVisible = false, primarySourceId = "s1",
+    sources = { { id = "s1", type = "custom", code = KITTY_MODE_CODE } },
+    rules = { { id = "r1", name = "Show Kitty mode", when = { mode = "all", checks = {
+      { id = "c1", sourceId = "s1", field = "active" } } }, set = { visible = true } } },
+    elements = { { type = "icon", side = "LEFT" } },
     animation = { start = "fade", main = "none", finish = "fade" },
   },
 }
 
+for _,example in ipairs(EXAMPLES) do RWA.ApplyDefaultPosition(example) end
+
+-- The gallery reads immutable factory examples, never a player's edited copies.
+RWA.BuiltinExamples = EXAMPLES
+RWA.BuiltinExampleDescriptions = EXAMPLE_DESC
+
 function RWA.ApplyAuraDefaults(data)
+  -- A version 3 aura is a group of action-owned outputs. Apply appearance
+  -- defaults only to the individual output definitions passed by the renderer.
+  if data.schemaVersion == 3 and type(data.rules) == "table" then
+    if data.enabled == nil then data.enabled = true end
+    if data.point == nil then data.point = "CENTER" end
+    if data.x == nil then data.x = 0 end
+    if data.y == nil then data.y = 0 end
+    if type(data.load) ~= "table" then data.load = {} end
+    return data
+  end
   local region = RWA.REGION_DEFAULTS[data.regionType or "icon"] or {}
   RWA.MergeDefaults(data, region)
-  RWA.MergeDefaults(data, RWA.AURA_DEFAULTS)
+  if data.schemaVersion == 2 or data.schemaVersion == 3 then
+    for key, value in pairs(RWA.AURA_DEFAULTS) do
+      if key ~= "triggers" and key ~= "conditions" and data[key] == nil then
+        data[key] = RWA.CopyTable(value)
+      end
+    end
+  else
+    RWA.MergeDefaults(data, RWA.AURA_DEFAULTS)
+  end
   return data
+end
+
+local function exampleCopy(id)
+  for _,example in ipairs(EXAMPLES) do
+    if example.id==id then
+      local copy=RWA.CopyTable(example)
+      copy.desc=EXAMPLE_DESC[id]
+      return RWA.ApplyAuraDefaults(copy)
+    end
+  end
+end
+
+local function onlyKeys(value,allowed)
+  for key in pairs(value) do if not allowed[key] then return false end end
+  return true
+end
+
+-- Adopt only the known plain reminder. Richer edited auras keep their name and
+-- full logic; the new empty example is installed beside them instead.
+local function remakeTargetArea(original)
+  if type(original)~="table" or not RWA.Rules then return nil end
+  local backup={}
+  for key,value in pairs(original) do
+    if key~="previousDefinition" then backup[key]=RWA.CopyTable(value) end
+  end
+  local ok,data=pcall(RWA.Rules.Normalize,RWA.CopyTable(backup))
+  if not ok or type(data)~="table" or type(data.sources)~="table" or type(data.rules)~="table" then return nil end
+  local sources={}
+  for _,source in ipairs(data.sources) do
+    if type(source)~="table" or type(source.id)~="string" or source.type~="aura" or source.unit~="player" or source.filter~="HELPFUL"
+      or type(source.ids)~="table" or #source.ids~=1 or tonumber(source.ids[1])~=500934
+      or source.names~=nil and (type(source.names)~="table" or next(source.names)~=nil)
+      -- Converted legacy filters are inert source metadata: any actual filter
+      -- became a rule check, and non-Missing checks below reject adoption.
+      or not onlyKeys(source,{id=true,type=true,unit=true,filter=true,ids=true,names=true,
+        showOn=true,remainingOp=true,remaining=true,stacksOp=true,stacks=true}) then return nil end
+    sources[source.id]=true
+  end
+  if not next(sources) then return nil end
+  local missingRules,output={},nil
+  for _,rule in ipairs(data.rules) do
+    local when=type(rule)=="table" and rule.when
+    if type(rule)~="table" or type(rule.id)~="string" or rule.enabled==false or type(when)~="table" or when.mode~="all"
+      or type(when.checks)~="table" or #when.checks==0 or type(rule.actions)~="table" then return nil end
+    for _,check in ipairs(when.checks) do
+      if type(check)~="table" then return nil end
+      if check.field=="missing" and sources[check.sourceId] then
+        if not onlyKeys(check,{id=true,field=true,sourceId=true}) then return nil end
+      elseif check.field=="rule" and check.value==true and missingRules[check.ruleId] then
+        if not onlyKeys(check,{id=true,field=true,ruleId=true,value=true}) then return nil end
+      else return nil end
+    end
+    missingRules[rule.id]=true
+    for _,action in ipairs(rule.actions) do
+      if type(action)~="table" or action.type~="show" or output
+        or action.sourceId~=nil and not sources[action.sourceId]
+        or type(action.output)~="table" or action.output.regionType~="icon"
+        or action.output.parentOutputId~=nil
+        or action.output.elements~=nil and (type(action.output.elements)~="table" or next(action.output.elements)~=nil)
+        or action.sourceChoices~=nil and type(action.sourceChoices)~="table" then return nil end
+      for _,choice in ipairs(action.sourceChoices or {}) do
+        if type(choice)~="table" or not sources[choice.sourceId] or not missingRules[choice.ruleId] then return nil end
+      end
+      output=action.output
+    end
+  end
+  if not output then return nil end
+  local copy=exampleCopy("Example: buff on me")
+  for _,key in ipairs({"enabled","point","x","y","load"}) do
+    if original[key]~=nil then copy[key]=RWA.CopyTable(original[key]) end
+  end
+  copy.sources[1].ids={500934}
+  copy.rules[1].actions[1].output=RWA.CopyTable(output)
+  copy.rules[1].actions[1].output.id="o1"
+  copy.previousDefinition=backup
+  return copy
+end
+
+function RWA.InstallStarterFlowDefaults()
+  local settings=RWA_DB.settings
+  if (tonumber(settings.starterFlowDefaultsVersion) or 0)>=1 then return end
+  local buffId="Example: buff on me"
+  if not RWA_DB.auras[buffId] then
+    local remade=remakeTargetArea(RWA_DB.auras["Target Area"])
+    if remade then
+      RWA_DB.auras["Target Area"],RWA_DB.auras[buffId]=nil,remade
+      for i,id in ipairs(RWA_DB.order) do if id=="Target Area" then RWA_DB.order[i]=buffId end end
+    end
+  end
+  for _,id in ipairs({"Target health",buffId}) do
+    if not RWA_DB.auras[id] then
+      RWA_DB.auras[id]=exampleCopy(id)
+      RWA_DB.order[#RWA_DB.order+1]=id
+    end
+  end
+  settings.starterFlowDefaultsVersion=1
 end
 
 function RWA.InitDB()
@@ -244,6 +383,23 @@ function RWA.InitDB()
   RWA.AddCombatTimerExample()
   RWA.AddKittyModeExample()
   RWA.FixKittyModeExample()
+  RWA.InstallStarterFlowDefaults()
+  -- Install once for existing profiles; later deletion is a player's choice.
+  if not RWA_DB.settings.durabilityReminderAdded then
+    local id="High durability repair"
+    if not RWA_DB.auras[id] then
+      RWA_DB.auras[id]=exampleCopy(id)
+      RWA_DB.order[#RWA_DB.order+1]=id
+    end
+    RWA_DB.settings.durabilityReminderAdded=true
+  end
+  if RWA.Resources and RWA.Resources.InstallDefaults then RWA.Resources.InstallDefaults() end
+  -- These same guarded installers run on RWA_READY. Calling them here also
+  -- gives /rwa reset confirm the complete factory set without firing gameplay events.
+  if RWA.Recent and RWA.Recent.AddExample then RWA.Recent.AddExample() end
+  if RWA.LastCast and RWA.LastCast.AddExample then RWA.LastCast.AddExample() end
+  if RWA.Threat and RWA.Threat.AddExample then RWA.Threat.AddExample() end
+  if RWA.CastBars and RWA.CastBars.AddExamples then RWA.CastBars.AddExamples() end
   RWA_DB.version = RWA.DB_VERSION
 end
 
@@ -255,7 +411,7 @@ function RWA.AddCombatTimerExample()
   end
   s.combatTimerAdded = true
   local ic = RWA_DB.auras["In combat"]
-  if ic and not ic.elements and ic.triggers[1] and ic.triggers[1].check == "combat" then
+  if ic and not ic.elements and ic.triggers and ic.triggers[1] and ic.triggers[1].check == "combat" then
     ic.elements = { { type = "text", from = 0, side = "BOTTOM", text = "%e", size = 16 } }
     if ic.desc == "Text that pulses while you fight" then
       ic.desc = EXAMPLE_DESC["In combat"]
@@ -349,7 +505,7 @@ function RWA.AddClassIconExamples()
     end
   end
   local hp = RWA_DB.auras["Player health"]
-  if hp and #hp.triggers == 1 and hp.triggers[1].check == "health" and not hp.elements then
+  if hp and hp.triggers and #hp.triggers == 1 and hp.triggers[1].check == "health" and not hp.elements then
     table.insert(hp.triggers, { type = "status", check = "class", unit = "player" })
     hp.elements = { { type = "icon", from = 2, side = "LEFT" } }
     if hp.desc == "Your health as a bar; turns red under 30%" then
@@ -376,6 +532,9 @@ function RWA.UniqueAuraId(base)
 end
 
 function RWA.AddAura(data)
+  local normalized, err = RWA.Rules.Normalize(data)
+  if not normalized then return nil, err end
+  data = normalized
   data.id = RWA.UniqueAuraId(data.id)
   RWA.ApplyAuraDefaults(data)
   RWA_DB.auras[data.id] = data
@@ -385,15 +544,11 @@ function RWA.AddAura(data)
 end
 
 function RWA.NewAura(regionType)
-  return RWA.AddAura({
-    id = "New aura",
-    enabled = true,
-    regionType = regionType or "icon",
-    triggers = {
-      mode = "all",
-      { type = "aura", unit = "player", filter = "HELPFUL", names = {}, showOn = "active" },
-    },
-  })
+  local data = { id = "New aura", enabled = true, regionType = regionType or "icon" }
+  RWA.Rules.InitializeActions(data)
+  RWA.Rules.AddAction(data, data.rules[1], {type="show", output={regionType=regionType or "icon"}})
+  data.regionType = nil
+  return RWA.AddAura(data)
 end
 
 function RWA.DuplicateAura(id)
@@ -410,6 +565,8 @@ end
 
 function RWA.DeleteAura(id)
   RWA.UnloadAura(id)
+  if RWA.ResetRuleSoundHistory then RWA.ResetRuleSoundHistory(id) end
+  if RWA.Editor and RWA.Editor.Forget then RWA.Editor.Forget(id) end
   RWA_DB.auras[id] = nil
   for i = #RWA_DB.order, 1, -1 do
     if RWA_DB.order[i] == id then
@@ -428,6 +585,7 @@ function RWA.RenameAura(oldId, newId)
   end
   local data = RWA_DB.auras[oldId]
   RWA.UnloadAura(oldId)
+  if RWA.MoveRuleSoundHistory then RWA.MoveRuleSoundHistory(oldId, newId) end
   RWA_DB.auras[oldId] = nil
   data.id = newId
   RWA_DB.auras[newId] = data
