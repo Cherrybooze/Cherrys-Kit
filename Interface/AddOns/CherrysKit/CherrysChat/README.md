@@ -10,11 +10,11 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 
 The default native click dispatch now sends the complete original hyperlink, including its encoded item data and localized label. Previously learned click signatures remain in use. This change has simulated-client coverage and still needs an in-game check.
 
+Item links retain supplied native colours across wrapped lines; uncoloured links in the known native format use the client quality APIs.
+
 ## Updated in 0.10.6
 
 The long-text copy box keeps its payload when focus moves elsewhere and no longer disappears after twenty seconds. Click the text, hint or border to select the complete payload again, then press Ctrl+C. Escape or Enter still closes the box.
-
-Item links retain supplied native colours across wrapped lines; uncoloured links in the known native format use the client quality APIs.
 
 ## Features
 

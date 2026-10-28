@@ -8,7 +8,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Preparing kit 0.11.79
 
-This development snapshot updates Cherry's Chat, rom weakauras and the hub. Cherry's Chat forwards complete item hyperlinks to the native click handler by default. RomWeakAuras adds a unified rules workspace and searchable list. The combined update is prepared for a manual playtest before release.
+This development snapshot updates rom weakauras, Cherry's KittyCombo, Cherry's Chat, Cherry's Grid, ZShop and the hub. It adds a unified aura editor and fixes to combat predictions, chat links and party-frame defaults. ZShop can use a helper clock once the separate Global Bank helper update is available. The combined update still needs in-game testing before release.
 
 ## Features
 
