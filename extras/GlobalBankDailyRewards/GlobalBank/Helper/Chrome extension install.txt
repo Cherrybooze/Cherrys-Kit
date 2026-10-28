@@ -11,6 +11,8 @@ YOU NEED: Cherry's Kit with Global Bank, Google Chrome, and the separate Daily R
 7. Double-click Start Global Bank helper.bat in the Helper folder. Keep its window open and log in to each character so the helper can build current snapshots. For the record to be saved, the displayed character must match one unambiguous level 100 snapshot.
 8. In game open the daily loyalty page through ZShop using Chrome. If a reward is available, the extension tries to collect it and records the result locally after Gameforge confirms collection. Click the extension icon for status. When the helper is stopped, the page can offer to start it.
 
+UPGRADING: Extract the new ZIP over the old files, run the installer again, and click the reload icon on the extension card at chrome://extensions/.
+
 The extension is not currently on the Chrome Web Store. Windows PowerShell is used for the local bridge; setup registers it for your current Windows user. The installer does not store your Gameforge password.
 
 PRIVACY: Automatic page processing runs only on the Gameforge daily shop page. The extension reads the displayed character name, server and reward state there. Temporary extension status is held in Chrome session storage. The local bridge writes confirmed character, server, day and time to Interface\GlobalBankHelper\DailyRewards.json. The extension does not send these details to the developer or another third party; collecting interacts with Gameforge. The separate GlobalBank.json contains inventory data; keep the GlobalBankHelper folder private.

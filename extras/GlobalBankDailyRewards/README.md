@@ -15,6 +15,8 @@ This optional Windows extension collects an available Daily Loyalty Bonus when y
 7. Double-click **Start Global Bank helper.bat** in the same folder. Keep its window open and log in to your characters so the helper can build their snapshots. A single unambiguous matching level 100 character is required to save the local record.
 8. In game, open the daily loyalty page through ZShop using Chrome. The extension tries to collect an available reward and records it locally after Gameforge confirms it. Click the extension icon for status. The page can offer to start the helper if it is stopped.
 
+If you are upgrading an already loaded extension, extract the new ZIP over the old files, run the installer again, then click the reload icon on the extension card at `chrome://extensions/`.
+
 The extension is not on the Chrome Web Store. The installer registers a native messaging bridge for the current Windows user; the game and helper remain separate. To install from source instead, copy this folder's `GlobalBank/Helper/` contents into the installed `CherrysKit/GlobalBank/Helper/`, then run the installer there.
 
 ## Privacy and scope
