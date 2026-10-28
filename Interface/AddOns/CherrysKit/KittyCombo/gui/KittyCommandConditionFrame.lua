@@ -366,15 +366,6 @@ Kitty.CommandConditionFrame.open = function(commandList, index, callbackFunc)
 end;
 
 Kitty.CommandConditionFrame.save = function()
-	-- new mode names go to the mode list (the mode button shows them)
-	for _, row in ipairs(Kitty.CommandConditionFrame.targetConditionList or {}) do
-		if(type(row) == "table" and row.conditionType == "modeOn" and Kitty.ModeUI) then
-			Kitty.ModeUI.add(row.name);
-		end
-	end
-	if(Kitty.ModeUI) then
-		Kitty.ModeUI.refresh();
-	end
 	-- Merge
 	local mergedList = Kitty.CommandConditionFrame.merge(Kitty.CommandConditionFrame.targetConditionList);
 	Kitty.CommandConditionFrame.commandList[Kitty.CommandConditionFrame.targetCommandIndex] = mergedList;

@@ -96,6 +96,7 @@ local function placeholder(token, state, now)
 end
 
 function Regions.FormatText(template, state, now)
+  if template=="%v / %t" and state.healthText then return state.healthText end
   if not template or template == "" then
     return ""
   end
@@ -118,6 +119,7 @@ function Regions.Progress(state, now)
   if not state then
     return 0
   end
+  if state._placement and state._placementProgress then return state._placementProgress end
   if state.progressType == "timed" then
     if not state.duration or state.duration <= 0 then
       return 1
@@ -136,6 +138,13 @@ end
 
 function Base:Place(dx, dy)
   local d = self.data
+  if self.owner and d.parentOutputId then
+    local childDy=dy or 0
+    if RWA_DB and RWA_DB.settings and RWA_DB.settings.yUp then childDy=-childDy end
+    W.Place(self.frame, d.point or "CENTER", self.owner.frame, d.point or "CENTER",
+      (tonumber(d.offsetX) or 0) + (dx or 0), (tonumber(d.offsetY) or 0) + childDy)
+    return
+  end
   if self.owner then
     local side = SIDES[d.side or "LEFT"] or SIDES.LEFT
     W.SetPoint(self.frame, side[1], self.owner.frame, side[2],
@@ -183,6 +192,10 @@ function Base:Show()
 end
 
 function Base:Hide()
+  if W.activeTooltipOwner == self.frame then
+    W.activeTooltipOwner = nil
+    RWA.Try(GameTooltip, "Hide")
+  end
   if self.shown ~= false then
     self.shown = false
     RWA.Try(self.frame, "Hide")
@@ -373,7 +386,8 @@ function Regions.ElementState(owner, index, states)
   if not e then return {}, false end
   local from = tonumber(e.from) or 0
   local state
-  if from > 0 then state = states and states[from] else state = owner.state end
+  if e.sourceId then state = states and states[e.sourceId]
+  elseif from > 0 then state = states and states[from] else state = owner.state end
   local active = type(state) == "table" and state.show ~= false
   if type(state) ~= "table" then state = {} end
   if (e.type == nil or e.type == "icon" or e.type == "aurabar") and not (e.icon and e.icon ~= "")
@@ -504,6 +518,7 @@ function Icon:LayoutParts(d)
   W.SetColor(self.shade, 0, 0, 0, 0.6)
   for _, fs in ipairs({ self.text, self.text2 }) do
     W.SetFont(fs.obj, fs == self.text and d.fontSize or math.max(9, d.fontSize - 2), "NORMAL", d.font)
+    W.SetColor(fs.obj, colorOf(d.textColor))
     W.SetSize(fs.obj, w, d.fontSize + 6)
     fs.lastText = nil
   end
@@ -525,7 +540,12 @@ function Icon:Update(now)
   end
   local explicit = d.icon and d.icon ~= "" and W.TexturePath(d.icon) or nil
   local iconPath = explicit or state.icon
-  if not extra then iconPath = iconPath or d.previewIcon or W.TexturePath("exclamation-mark") end
+  if not explicit and tonumber(d.kittyPick) and type(state.kittyIcons)=="table" then
+    iconPath = state.kittyIcons[tonumber(d.kittyPick)]
+  end
+  if not extra and not (tonumber(d.kittyPick) and state.kittyIcons) then
+    iconPath = iconPath or d.previewIcon or W.TexturePath("exclamation-mark")
+  end
   if state._elementNoIcon and not explicit then iconPath = nil end
   if iconPath ~= self.lastIcon then
     self.lastIcon = iconPath
@@ -577,12 +597,26 @@ function Bar:LayoutParts(d)
   end
   W.SetFont(self.text.obj, d.fontSize, "NORMAL", d.font)
   W.SetFont(self.text2.obj, d.fontSize, "NORMAL", d.font)
+  W.SetJustify(self.text.obj,"LEFT"); W.SetJustify(self.text2.obj,"RIGHT")
+  W.SetColor(self.text.obj, colorOf(d.textColor))
+  W.SetColor(self.text2.obj, colorOf(d.textColor))
   W.SetSize(self.text.obj, math.max(1, self.barW * 0.7 - 6), h)
   W.SetSize(self.text2.obj, math.max(1, self.barW * 0.3 - 4), h)
   W.SetPoint(self.text.obj, "LEFT", self.frame, "LEFT", iconW + 4, 0)
   W.SetPoint(self.text2.obj, "RIGHT", self.frame, "RIGHT", -4, 0)
   self.text.lastText, self.text2.lastText, self.lastIcon, self.lastFill = nil, nil, nil, nil
+  if RWA.ResourceDisplays then
+    if d.resource or self.regionType=="soulpoints" then RWA.ResourceDisplays.LayoutBar(self,d)
+    else RWA.ResourceDisplays.ClearBar(self) end
+  end
   self:ApplyColor()
+end
+
+function Bar:LayoutBorder(d)
+  if d.resource or self.regionType=="soulpoints" then
+    for _,edge in ipairs(self.borderParts or {}) do W.SetShown(edge,false) end
+    self.borderCount=0
+  else Base.LayoutBorder(self,d) end
 end
 
 function Bar:ApplyColor()
@@ -591,19 +625,29 @@ end
 
 function Bar:Update(now)
   local d, state = self.data, self.state or {}
+  local resource=d.resource and RWA.ResourceDisplays
+  if resource then
+    if not resource.NeedsUpdate(self,state) then return end
+    if not resource.BeginBarUpdate(self,state) then resource.Updated(self);return end
+  end
   local width = math.floor(self.barW * Regions.Progress(state, now) + 0.5)
   if width ~= self.lastFill then
     self.lastFill = width
-    setTexSize(self.fill, width, d.height)
+    if resource then resource.SetFill(self,width) else setTexSize(self.fill, width, d.height) end
   end
-  if d.showIcon then
+  if d.showIcon and not resource then
     local extra = self.isElement or d._element
     if not extra and state.icon and d.previewIcon ~= state.icon then
       d.previewIcon = state.icon -- remembered for the preview in the /rwa list
     end
     local explicit = d.icon and d.icon ~= "" and W.TexturePath(d.icon) or nil
     local iconPath = explicit or state.icon
-    if not extra then iconPath = iconPath or d.previewIcon or W.TexturePath("exclamation-mark") end
+    if not explicit and tonumber(d.kittyPick) and type(state.kittyIcons)=="table" then
+      iconPath = state.kittyIcons[tonumber(d.kittyPick)]
+    end
+    if not extra and not (tonumber(d.kittyPick) and state.kittyIcons) then
+      iconPath = iconPath or d.previewIcon or W.TexturePath("exclamation-mark")
+    end
     if state._elementNoIcon and not explicit then iconPath = nil end
     if iconPath ~= self.lastIcon then
       self.lastIcon = iconPath
@@ -611,8 +655,11 @@ function Bar:Update(now)
     end
     setTexSize(self.icon, iconPath and self.barX or 0, iconPath and d.height or 0)
   end
-  setText(self.text, Regions.FormatText(d.text, state, now))
-  setText(self.text2, Regions.FormatText(d.text2, state, now))
+  if resource then resource.UpdateBarText(self,state,now);resource.Updated(self)
+  else
+    setText(self.text, Regions.FormatText(d.text, state, now))
+    setText(self.text2, Regions.FormatText(d.text2, state, now))
+  end
 end
 
 ---------------------------------------------------------------------------
@@ -642,7 +689,8 @@ function Text:ApplyColor()
 end
 
 function Text:Update(now)
-  setText(self.text, Regions.FormatText(self.data.text, self.state or {}, now))
+  local state=self.state or {}
+  setText(self.text, state._placement and state._placementText or Regions.FormatText(self.data.text, state, now))
 end
 
 ---------------------------------------------------------------------------
@@ -687,7 +735,7 @@ acquireElement = function(owner, data, index)
   local region = pool and table.remove(pool)
   if not region then
     region = setmetatable({ regionType = data.regionType, isElement = true, owner = owner }, Regions.types[data.regionType])
-    region.frame = W.Frame(nil, owner.frame)
+    region.frame = W.ChildRegionFrame(owner.frame)
     W.EnableMouse(region.frame, false)
     childRegistry[#childRegistry + 1] = region
     region:Build()
@@ -698,6 +746,10 @@ acquireElement = function(owner, data, index)
   region:SetAlpha(data.alpha)
   region:Hide()
   return region
+end
+
+function Regions.AcquireChild(owner, data)
+  return acquireElement(owner, data)
 end
 
 function Regions.Acquire(data)

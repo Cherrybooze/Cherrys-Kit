@@ -55,17 +55,45 @@ Kitty.Macro.isKittyBody = function(body, kittyName)
 	if(body == Kitty.Macro.getBody(kittyName)) then
 		return true;
 	end
-	-- Hand-written macros: Kitty.attack(...) naming this kitty in any quote style
-	local lower = string.lower(body);
-	if(string.find(lower, "kitty.attack", 1, true) == nil) then
-		return false;
-	end
-	for _, quoted in ipairs({"[[" .. kittyName .. "]]", "\"" .. kittyName .. "\"", "'" .. kittyName .. "'"}) do
-		if(string.find(body, quoted, 1, true)) then
-			return true;
-		end
-	end
-	return false;
+    -- Only recognize a literal Kitty.attack call at the start of a /run or
+    -- /script line. Arguments must all be simple quoted strings; never execute it.
+    for line in string.gmatch(body .. "\n", "([^\n]*)\n") do
+        local code = string.match(line, "^%s*/[Rr][Uu][Nn]%s+(.+)$")
+            or string.match(line, "^%s*/[Ss][Cc][Rr][Ii][Pp][Tt]%s+(.+)$");
+        local args = code and string.match(code, "^[Kk][Ii][Tt][Tt][Yy]%.attack%s*%(([^()]*)%)");
+        if(args) then
+            local pos, found, valid = 1, false, true;
+            while(pos <= #args) do
+                local _, space = string.find(args, "^%s*", pos); pos = (space or pos - 1) + 1;
+                local quote = string.sub(args, pos, pos);
+                local value, last;
+                if(quote == "'" or quote == '\"') then
+                    last = string.find(args, quote, pos + 1, true);
+                    if(last) then value = string.sub(args, pos + 1, last - 1); end
+                    if(value and string.find(value, "\\", 1, true)) then value = nil; end
+                elseif(quote == "[") then
+                    local equals = string.match(string.sub(args, pos), "^%[(=*)%[");
+                    if(equals) then
+                        local start = pos + #equals + 2;
+                        local close = "]" .. equals .. "]";
+                        local ending = string.find(args, close, start, true);
+                        if(ending) then value, last = string.sub(args, start, ending - 1), ending + #close - 1; end
+                    end
+                end
+                if(not value) then valid = false; break; end
+                if(value == kittyName) then found = true; end
+                pos = last + 1;
+                local _, trailing = string.find(args, "^%s*", pos); pos = (trailing or pos - 1) + 1;
+                if(pos <= #args) then
+                    if(string.sub(args, pos, pos) ~= ",") then valid = false; break; end
+                    pos = pos + 1;
+                    if(not string.find(string.sub(args, pos), "%S")) then valid = false; break; end
+                end
+            end
+            if(valid and found) then return true; end
+        end
+    end
+    return false;
 end;
 
 -- Returns slot, macroName of the first macro that fires this kitty, or nil.

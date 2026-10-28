@@ -46,6 +46,12 @@ local function classToken(value)
   return localized[value] or value
 end
 
+RWA.ClassToken=classToken
+RWA.ClassNames={WARRIOR="Warrior",RANGER="Scout",THIEF="Rogue",MAGE="Mage",AUGUR="Priest",KNIGHT="Knight",
+  WARDEN="Warden",DRUID="Druid",HARPSYN="Warlock",PSYRON="Champion",any="Any"}
+RWA.ClassChoices={{label="Any",value="any"}}
+for _,token in ipairs(CLASS_IDS) do RWA.ClassChoices[#RWA.ClassChoices+1]={label=RWA.ClassNames[token],value=token} end
+
 function RWA.ClassIcon(main, sub)
   if Kitty and type(Kitty.ClassIcon) == "function" then
     local ok, path = pcall(Kitty.ClassIcon, classToken(main), classToken(sub))

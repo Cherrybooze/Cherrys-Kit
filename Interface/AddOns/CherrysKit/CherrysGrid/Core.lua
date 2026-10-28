@@ -10,7 +10,7 @@
 CherrysGrid = {}
 local G = CherrysGrid
 
-G.version = "1.1.0"
+G.version = "1.1.1"
 G.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.CherrysGrid) or "Interface/AddOns/CherrysGrid/"
 G.MEDIA = G.BASE_PATH .. "Media/"
 G.MAX_UNITS = 48 -- 36 members + 12 pets; the frames are declared in CherrysGrid.xml
@@ -93,8 +93,8 @@ G.DEFAULTS = {
   hidePlayerFrame = false,
 
   -- One member
-  width = 56,
-  height = 36,
+  width = 100,
+  height = 52,
   scale = 1,
   orientation = "VERTICAL", -- VERTICAL fills bottom to top (Grid), HORIZONTAL left to right
   texture = "gradient",     -- gradient | flat | glass | smooth
@@ -113,12 +113,14 @@ G.DEFAULTS = {
   manaSize = 3,             -- 0 hides the mana bar
   manaWho = "healers",      -- all | healers | me
   skillBar = false,         -- rage / energy / focus as a second thin bar
-  debuffRow = 2,            -- small debuff icons along the bottom edge (0 to 4)
+  separatedLayout = true, -- name centre; health at top, separate aura rows
+  buffRow = 3,             -- tracked buff icons at the upper right
+  debuffRow = 4,            -- small debuff icons along the bottom edge (0 to 4)
   debuffRowSize = 11,
   debuffRowTop = false,
   rangeFade = false,
   rangeDistance = 250,
-  hotTimers = true,         -- seconds left of tracked heals over time on the third text line
+  hotTimers = false,        -- seconds left of tracked heals over time on the third text line
 
   -- Statuses: [key] = { on, color = {r,g,b}, prio, ind = { indicator = true }, ... }
   statuses = {},            -- filled from G.STATUS_DEFAULTS by Statuses.lua
@@ -198,6 +200,62 @@ function G.ProfileNames()
   return list
 end
 
+-- Update untouched old layouts, but do not overwrite an edited profile's indicators.
+local function prepareProfile(profile)
+  if profile.separatedLayout ~= nil or next(profile) == nil then return end
+  local old = {
+    name = { text = true }, deficit = { text2 = true }, percent = { text2 = true },
+    dead = { text2 = true, barColor = true, alpha = true },
+    offline = { text2 = true, barColor = true, alpha = true },
+    targetOfTarget = { cornerBL = true }, leader = { cornerTL = true },
+    assistant = { cornerTL = true }, role = { cornerTR = true },
+    raidIcon = { icon = true }, debuff = { icon = true },
+    debuffAlert = { border = true, cornerBR = true }, hots = { cornerTR = true },
+    hotTimers = { text3 = true }, shields = { cornerBR = true }, salves = { cornerBL = true },
+  }
+  local stock = (profile.width == nil or profile.width == 56) and (profile.height == nil or profile.height == 36)
+  if (profile.debuffRow ~= nil and profile.debuffRow ~= 2)
+    or (profile.debuffRowSize ~= nil and profile.debuffRowSize ~= 11)
+    or profile.debuffRowTop == true or profile.hotTimers == false then stock = false end
+  for key, cfg in pairs(profile.statuses or {}) do
+    local def = G.STATUS_DEFAULTS[key]
+    local oldOn = key == "hotTimers" and true or (def and def.on)
+    if type(cfg) == "table" and def and cfg.on ~= nil and cfg.on ~= oldOn then stock = false end
+  end
+  local deficit = profile.statuses and profile.statuses.deficit
+  if deficit and ((deficit.threshold ~= nil and deficit.threshold ~= 90)
+    or (deficit.format ~= nil and deficit.format ~= "number")) then stock = false end
+  for key, expected in pairs(old) do
+    local cfg = profile.statuses and profile.statuses[key]
+    if type(cfg) == "table" and type(cfg.ind) == "table" then
+      for k, v in pairs(cfg.ind) do if v and not expected[k] then stock = false end end
+      for k in pairs(expected) do if cfg.ind[k] ~= true then stock = false end end
+    end
+  end
+  profile.separatedLayout = stock
+  if stock then
+    profile.width, profile.height, profile.debuffRow, profile.buffRow, profile.hotTimers = 100, 52, 4, 3, false
+    for key in pairs(old) do
+      local cfg = profile.statuses and profile.statuses[key]
+      if type(cfg) == "table" then
+        cfg.ind = G.Copy(G.STATUS_DEFAULTS[key].ind)
+        if key == "deficit" and cfg.threshold == 90 then cfg.threshold = 100 end
+        if key == "hotTimers" then cfg.on = false end
+      end
+    end
+  else
+    profile.buffRow = profile.buffRow or 0
+    -- FillStatusDefaults merges defaults into existing maps; prevent new mappings being added
+    -- to a user's customised indicator selections.
+    for key, cfg in pairs(profile.statuses or {}) do
+      local def = G.STATUS_DEFAULTS[key]
+      if def and type(cfg.ind) == "table" then
+        for ind in pairs(def.ind or {}) do if cfg.ind[ind] == nil then cfg.ind[ind] = false end end
+      end
+    end
+  end
+end
+
 -- Makes G.P the profile chosen for this character and group type.
 function G.LoadProfile()
   local d = db()
@@ -206,6 +264,7 @@ function G.LoadProfile()
     name = "Default"
   end
   G.profileName = name
+  prepareProfile(d.profiles[name])
   G.P = G.Merge(d.profiles[name], G.DEFAULTS)
   if G.FillStatusDefaults then
     G.FillStatusDefaults(G.P)

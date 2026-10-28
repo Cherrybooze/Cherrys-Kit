@@ -1,0 +1,81 @@
+{
+  "document_kind": "resource_aura_design_specification",
+  "version": 2,
+  "importable_rwa_profile": false,
+  "runtime_implemented": false,
+  "handoff_target": "Astra GPT 6.0 Max",
+  "delivered_artwork": "five_transparent_png_masters",
+  "native_exports_delivered": false,
+  "reviewed_source": {
+    "kit": "0.11.79",
+    "rwa": "0.9.17",
+    "kittycombo": "1.7.9"
+  },
+  "resources": ["mana", "rage", "focus", "energy", "psi"],
+  "additional_resources": "Reuse tintable assets only after a verified provider is added.",
+  "naturepower_provider_implemented": false,
+  "preset_strategy": "One automatic preset per available resource identity; no per-class duplicates.",
+  "availability": {
+    "separate_from_current_amount": true,
+    "active_zero_is_valid": true,
+    "inactive_hides_all_outputs": true,
+    "type_ids": {"1": "mana", "2": "rage", "3": "focus", "4": "energy"},
+    "slots": [
+      {"type": "UnitManaType", "current": "UnitMana", "capacity": "UnitMaxMana"},
+      {"type": "UnitSkillType", "current": "UnitSkill", "capacity": "UnitMaxSkill"}
+    ],
+    "require_valid_readings_and_positive_capacity": true,
+    "recheck_on_class_change": true
+  },
+  "psi": {
+    "primary_class_token_under_standard_contract": "HARPSYN",
+    "verify_eligibility_on_target_client": true,
+    "count_api": "GetSoulPoint",
+    "second_return": "status_or_mode_not_capacity",
+    "capacity_policy": "Prefer separately verified provider capacity; reviewed fallback 6 requires client validation.",
+    "reviewed_fallback_capacity": 6,
+    "capacity_baked_into_art": false,
+    "default_display": "native_number_and_exactly_n_filled_diamonds",
+    "active_zero_display": "only_native_text_0",
+    "empty_or_ghost_diamonds": false,
+    "reuse_one_diamond_sprite": true,
+    "pool_diamond_widgets": true,
+    "optional_bar_style": true
+  },
+  "max_label": {
+    "text": "Max",
+    "style": "yellow_cartoon_italic",
+    "separate_texture_layer": true,
+    "show_when": "available AND valid_capacity > 0 AND current >= capacity AND resource != mana AND NOT(resource == energy AND in_combat)",
+    "mana": "never",
+    "energy": "only_at_cap_out_of_combat",
+    "other_supported_resources": "at_cap",
+    "update_on_combat_change_even_if_amount_unchanged": true
+  },
+  "bar_styles": ["Beveled Metal", "Glass", "Minimal"],
+  "style_composition": {
+    "Beveled Metal": ["bar-frame-metal", "bar-fill-bevel"],
+    "Glass": ["bar-fill-glass", "restrained_native_border"],
+    "Minimal": ["existing_Square_FullWhite", "thin_native_border"]
+  },
+  "minimal_requires_new_generated_assets": false,
+  "render_layers": ["fixed_background_and_frame", "variable_fill", "native_numeric_text", "conditional_max_label"],
+  "reviewed_renderer": "Resizes the entire fill texture width; does not dynamically crop its UVs.",
+  "assets": [
+    {"master": "masters/soul-diamond.png", "approved_design_must_remain_unchanged": true, "suggested_runtime_size": [64, 64]},
+    {"master": "masters/max-label.png", "suggested_runtime_size": [256, 128]},
+    {"master": "masters/bar-frame-metal.png", "suggested_runtime_size": [512, 64]},
+    {"master": "masters/bar-fill-bevel.png", "suggested_runtime_size": [256, 32]},
+    {"master": "masters/bar-fill-glass.png", "suggested_runtime_size": [256, 32]}
+  ],
+  "reference_boards": ["references/resource-defaults.png", "references/bar-styles-and-psi.png"],
+  "export_plan": {
+    "status": "integration_task_not_yet_delivered",
+    "native_format": "TGA_RGBA_32bit",
+    "optional_inspection_format": "downscaled_PNG",
+    "runtime_sizes_are_suggestions_not_master_dimensions": true,
+    "preserve_alpha_and_approved_diamond_design": true
+  },
+  "performance": ["shared_small_textures", "cached_resource_reads", "pooled_diamonds", "update_on_relevant_changes"],
+  "native_integration_and_validation_pending": true
+}

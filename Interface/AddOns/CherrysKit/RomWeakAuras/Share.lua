@@ -14,7 +14,9 @@ local RWA = RWA
 local Share = {}
 RWA.Share = Share
 
-Share.PREFIX = "RWA2"
+Share.PREFIX = "RWA3"
+Share.ACTION_PREFIX = "RWA4"
+Share.COMPACT_PREFIX = "RWA2"
 Share.OLD_PREFIX = "RWA1"
 Share.MAX_DEPTH = 16
 Share.KEY_ALIASES = {
@@ -540,8 +542,14 @@ local function strip(value, default)
 end
 
 local function compactAura(data)
-  local copy = RWA.CopyTable(data)
-  copy.previewIcon = nil
+  local exported = {}
+  for key,value in pairs(data) do
+    -- Exclude recovery data before copying: share codes must not contain it,
+    -- and building one should not allocate a second copy of the backup.
+    if key ~= "previewIcon" and key ~= "previousDefinition" then exported[key]=value end
+  end
+  local copy = RWA.CopyTable(exported)
+  if copy.schemaVersion == 2 or copy.schemaVersion == 3 then return copy end
   local defaults = RWA.CopyTable(RWA.REGION_DEFAULTS[copy.regionType or "icon"] or {})
   RWA.MergeDefaults(defaults, RWA.AURA_DEFAULTS)
   defaults.regionType, defaults.id = nil, nil -- always kept
@@ -567,8 +575,12 @@ function Share.Export(ids)
   if #list == 0 then
     return nil, "there is no aura to export"
   end
-  local data = Share.Pack({ auras = list })
-  return Share.PREFIX .. "!" .. Share.Base85Encode(Share.Compress(data)) .. "!" .. Share.ShortChecksum(data), #list
+  local prefix, version = Share.PREFIX, 3
+  for _, aura in ipairs(list) do
+    if aura.schemaVersion == 3 then prefix, version = Share.ACTION_PREFIX, 4; break end
+  end
+  local data = Share.Pack({ formatVersion = version, auras = list })
+  return prefix .. "!" .. Share.Base85Encode(Share.Compress(data)) .. "!" .. Share.ShortChecksum(data), #list
 end
 
 -- Adds the auras in a code. Returns the list of new ids, or nil and a message.
@@ -579,40 +591,100 @@ function Share.Import(code)
     return nil, "paste a code into the Import box first"
   end
   local prefix, body, check = string.match(code, "^(%w+)!([^!]+)!(%x+)$")
-  if prefix ~= Share.PREFIX and prefix ~= Share.OLD_PREFIX then
-    return nil, "that is not a rom weakauras code (it should start with " .. Share.PREFIX .. "!)"
+  if prefix ~= Share.ACTION_PREFIX and prefix ~= Share.PREFIX and prefix ~= Share.COMPACT_PREFIX and prefix ~= Share.OLD_PREFIX then
+    return nil, "that is not a rom weakauras code (it should start with RWA1!, RWA2!, RWA3! or RWA4!)"
   end
-  local data
-  if prefix == Share.PREFIX then
-    data = Share.Base85Decode(body)
-  else
-    data = Share.Base64Decode(body)
-  end
-  if data and prefix == Share.PREFIX then
+  local compact = prefix == Share.ACTION_PREFIX or prefix == Share.PREFIX or prefix == Share.COMPACT_PREFIX
+  local data = compact and Share.Base85Decode(body) or Share.Base64Decode(body)
+  if data and compact then
     local ok, plain = pcall(Share.Decompress, data)
     data = ok and plain or nil
   end
-  local sum = data and (prefix == Share.PREFIX and Share.ShortChecksum(data) or Share.Checksum(data))
+  local sum = data and (compact and Share.ShortChecksum(data) or Share.Checksum(data))
   if not data or sum ~= string.lower(check) then
     return nil, "the code is damaged or was cut off; copy the whole code and try again"
   end
-  local ok, value = pcall(prefix == Share.PREFIX and Share.Unpack or Share.Parse, data)
+  local ok, value = pcall(compact and Share.Unpack or Share.Parse, data)
   if not ok or type(value) ~= "table" or type(value.auras) ~= "table" then
     return nil, "the code could not be read"
   end
-  local ids = {}
+  if (prefix == Share.PREFIX and value.formatVersion ~= 3) or (prefix == Share.ACTION_PREFIX and value.formatVersion ~= 4) then
+    return nil, "this code requires a newer version of rom weakauras"
+  end
+  -- Validate the complete envelope before adding any aura, so a bad later entry
+  -- cannot leave a partially imported set behind.
   for _, aura in ipairs(value.auras) do
-    if type(aura) == "table" and type(aura.triggers) == "table" then
-      aura.id = RWA.Trim(type(aura.id) == "string" and aura.id or "Imported")
-      if aura.id == "" then
-        aura.id = "Imported"
+    if type(aura) ~= "table" then return nil, "the code contains an invalid aura" end
+    if aura.schemaVersion ~= nil and aura.schemaVersion ~= 1 and aura.schemaVersion ~= 2 and aura.schemaVersion ~= 3 then
+      return nil, "this aura requires a newer version of rom weakauras"
+    end
+    if aura.schemaVersion == 2 or aura.schemaVersion == 3 then
+      if (prefix ~= Share.PREFIX and prefix ~= Share.ACTION_PREFIX) or (aura.schemaVersion == 3 and prefix ~= Share.ACTION_PREFIX) or type(aura.sources) ~= "table" or type(aura.rules) ~= "table"
+        or (aura.schemaVersion == 2 and type(aura.primarySourceId) ~= "string")
+        or (aura.schemaVersion == 3 and aura.primarySourceId ~= nil and type(aura.primarySourceId) ~= "string") then
+        return nil, "the code contains an invalid rule definition"
       end
-      ids[#ids + 1] = RWA.AddAura(aura)
+      local sources, rules, actions, outputs = {}, {}, {}, {}
+      for _, source in ipairs(aura.sources) do
+        if type(source) ~= "table" or type(source.id) ~= "string" or sources[source.id] then
+          return nil, "the code contains invalid source IDs"
+        end
+        if (source.type or "aura") == "aura" then
+          if (source.names ~= nil and type(source.names) ~= "table") or (source.ids ~= nil and type(source.ids) ~= "table") then
+            return nil, "the code contains an invalid buff source"
+          end
+          for _, name in ipairs(source.names or {}) do if type(name) ~= "string" then return nil, "the code contains an invalid buff name" end end
+          for _, id in ipairs(source.ids or {}) do if type(id) ~= "number" and type(id) ~= "string" then return nil, "the code contains an invalid buff ID" end end
+        end
+        sources[source.id] = true
+      end
+      for _, rule in ipairs(aura.rules) do
+        if type(rule) ~= "table" or type(rule.id) ~= "string" or rules[rule.id]
+          or type(rule.when) ~= "table" or type(rule.when.checks) ~= "table"
+          or (aura.schemaVersion == 2 and type(rule.set) ~= "table")
+          or (aura.schemaVersion == 3 and type(rule.actions) ~= "table") then
+          return nil, "the code contains invalid rules"
+        end
+        if rule.when.mode ~= "all" and rule.when.mode ~= "any" then return nil, "the code contains an invalid rule mode" end
+        for _, check in ipairs(rule.when.checks) do
+          if type(check) ~= "table" or (check.sourceId ~= nil and type(check.sourceId) ~= "string") then
+            return nil, "the code contains an invalid rule check"
+          end
+        end
+        if aura.schemaVersion == 3 then
+          for _, action in ipairs(rule.actions) do
+            if type(action) ~= "table" or type(action.id) ~= "string" or actions[action.id] then
+              return nil, "the code contains invalid action IDs"
+            end
+            actions[action.id] = true
+            if action.output ~= nil then
+              if type(action.output) ~= "table" or type(action.output.id) ~= "string" or outputs[action.output.id] then
+                return nil, "the code contains invalid output IDs"
+              end
+              outputs[action.output.id] = true
+            end
+          end
+        end
+        rules[rule.id] = true
+      end
+    elseif type(aura.triggers) ~= "table" then
+      return nil, "the code contains an invalid legacy aura"
     end
   end
-  if #ids == 0 then
-    return nil, "the code has no auras in it"
+  -- Conversion is also performed for the whole envelope before any write.
+  local converted = {}
+  for _, aura in ipairs(value.auras) do
+    local normalized, err = RWA.Rules.Normalize(aura)
+    if not normalized then return nil, "could not convert aura: " .. tostring(err or "unsupported definition") end
+    converted[#converted + 1] = normalized
   end
+  local ids = {}
+  for _, aura in ipairs(converted) do
+    aura.id = RWA.Trim(type(aura.id) == "string" and aura.id or "Imported")
+    if aura.id == "" then aura.id = "Imported" end
+    ids[#ids + 1] = RWA.AddAura(aura)
+  end
+  if #ids == 0 then return nil, "the code has no auras in it" end
   return ids
 end
 
@@ -627,7 +699,7 @@ local LINK_TYPE = "rwa"
 -- The link carries the code without its "RWA2!" prefix (the link type says what it is); the
 -- visible "[RWA: name]" is cut to fit the 255 characters of a chat line, down to "[RWA]".
 function Share.MakeLink(code, name)
-  local body = string.gsub(code, "^" .. Share.PREFIX .. "!", "")
+  local body = code -- retain the format prefix so old and new links stay distinguishable
   local head = "|H" .. LINK_TYPE .. ":" .. body .. "|h[RWA"
   local tail = "]|h"
   local room = 255 - string.len(head) - string.len(tail)
@@ -679,7 +751,7 @@ function Share.OnHyperlinkClick(...)
   local code = Share.LinkCode(...)
   if code then
     if not string.find(code, "^RWA%d!") then
-      code = Share.PREFIX .. "!" .. code
+      code = Share.COMPACT_PREFIX .. "!" .. code
     end
     RWA.OfferImport(code)
     return

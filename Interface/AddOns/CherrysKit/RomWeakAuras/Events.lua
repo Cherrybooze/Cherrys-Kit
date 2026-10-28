@@ -185,6 +185,7 @@ function RWA.SlashCommand(msg)
   elseif cmd == "reset" and rest == "confirm" then
     RWA_DB = nil
     RWA.InitDB()
+    RWA.NormalizeSavedAuras()
     RWA.ReloadAll()
     RWA.Print("all auras reset to the examples")
   else

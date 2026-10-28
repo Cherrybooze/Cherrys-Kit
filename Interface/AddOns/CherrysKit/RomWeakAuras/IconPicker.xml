@@ -4,180 +4,180 @@
 		<Anchors><Anchor point="TOPRIGHT" relativeTo="RWA_OptionsWindow" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-16" y="72" /></Offset></Anchor></Anchors>
 		<Backdrop bgFile="Interface/Tooltips/Tooltip-Background" edgeFile="Interface/Tooltips/Tooltip-border"><EdgeSize><AbsValue val="16" /></EdgeSize><TileSize><AbsValue val="32" /></TileSize><BackgroundInsets><AbsInset top="4" left="4" bottom="4" right="4" /></BackgroundInsets></Backdrop>
 		<Frames>
-			<Button name="RWA_IconPickCategory" inherits="UIPanelButtonTemplate" text="Game icons">
+			<Button name="RWA_IconPickCategory" enableMouse="true" text="Game icons">
 				<Size><AbsDimension x="302" y="22" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="14" y="36" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.StepCategory(key);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.StepCategory(key);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false);</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick1" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick1" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="14" y="66" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(1);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(1, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(1);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(1, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick2" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick2" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="64" y="66" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(2);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(2, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(2);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(2, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick3" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick3" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="114" y="66" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(3);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(3, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(3);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(3, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick4" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick4" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="164" y="66" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(4);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(4, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(4);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(4, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick5" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick5" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="214" y="66" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(5);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(5, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(5);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(5, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick6" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick6" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="264" y="66" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(6);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(6, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(6);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(6, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick7" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick7" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="14" y="112" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(7);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(7, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(7);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(7, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick8" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick8" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="64" y="112" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(8);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(8, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(8);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(8, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick9" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick9" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="114" y="112" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(9);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(9, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(9);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(9, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick10" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick10" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="164" y="112" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(10);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(10, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(10);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(10, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick11" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick11" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="214" y="112" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(11);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(11, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(11);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(11, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick12" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick12" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="264" y="112" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(12);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(12, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(12);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(12, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick13" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick13" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="14" y="158" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(13);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(13, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(13);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(13, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick14" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick14" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="64" y="158" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(14);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(14, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(14);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(14, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick15" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick15" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="114" y="158" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(15);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(15, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(15);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(15, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick16" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick16" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="164" y="158" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(16);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(16, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(16);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(16, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick17" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick17" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="214" y="158" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(17);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(17, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(17);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(17, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick18" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick18" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="264" y="158" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(18);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(18, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(18);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(18, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick19" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick19" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="14" y="204" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(19);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(19, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(19);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(19, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick20" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick20" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="64" y="204" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(20);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(20, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(20);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(20, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick21" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick21" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="114" y="204" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(21);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(21, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(21);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(21, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick22" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick22" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="164" y="204" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(22);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(22, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(22);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(22, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick23" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick23" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="214" y="204" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(23);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(23, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(23);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(23, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick24" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick24" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="264" y="204" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(24);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(24, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(24);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(24, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick25" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick25" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="14" y="250" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(25);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(25, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(25);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(25, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick26" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick26" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="64" y="250" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(26);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(26, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(26);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(26, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick27" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick27" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="114" y="250" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(27);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(27, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(27);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(27, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick28" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick28" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="164" y="250" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(28);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(28, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(28);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(28, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick29" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick29" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="214" y="250" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(29);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(29, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(29);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(29, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPick30" inherits="UIPanelButtonTemplate" text="">
+			<Button name="RWA_IconPick30" enableMouse="true" text="">
 				<Size><AbsDimension x="46" y="42" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="264" y="250" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose(30);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.IconPicker.Tooltip(30, this);</OnEnter><OnLeave>if GameTooltip then GameTooltip:Hide(); end</OnLeave></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose(30);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true); RWA.IconPicker.Tooltip(30, this);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false); if GameTooltip then GameTooltip:Hide(); end</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPickUp" inherits="UIPanelButtonTemplate" text="^">
+			<Button name="RWA_IconPickUp" enableMouse="true" text="^">
 				<Size><AbsDimension x="28" y="22" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="14" y="326" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Scroll(1);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Scroll(1);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false);</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPickDown" inherits="UIPanelButtonTemplate" text="v">
+			<Button name="RWA_IconPickDown" enableMouse="true" text="v">
 				<Size><AbsDimension x="28" y="22" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="326" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Scroll(-1);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Scroll(-1);</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false);</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPickAuto" inherits="UIPanelButtonTemplate" text="Automatic">
+			<Button name="RWA_IconPickAuto" enableMouse="true" text="Automatic">
 				<Size><AbsDimension x="110" y="22" /></Size>
 				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="112" y="326" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Choose();</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel></Scripts>
+				<Scripts><OnClick>RWA.IconPicker.Choose();</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false);</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
-			<Button name="RWA_IconPickClose" inherits="UIPanelButtonTemplate" text="Close">
-				<Size><AbsDimension x="78" y="22" /></Size>
-				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="238" y="326" /></Offset></Anchor></Anchors>
-				<Scripts><OnClick>RWA.IconPicker.Close();</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel></Scripts>
+			<Button name="RWA_IconPickClose" enableMouse="true" text="X">
+				<Size><AbsDimension x="24" y="22" /></Size>
+				<Anchors><Anchor point="TOPRIGHT"><Offset><AbsDimension x="-10" y="8" /></Offset></Anchor></Anchors>
+				<Scripts><OnClick>RWA.IconPicker.Close();</OnClick><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnEnter>RWA.W.HoverSkin(this,true);</OnEnter><OnLeave>RWA.W.HoverSkin(this,false);</OnLeave><OnMouseDown>RWA.W.PressSkin(this,true);</OnMouseDown><OnMouseUp>RWA.W.PressSkin(this,false);</OnMouseUp></Scripts>
 			</Button>
 		</Frames>
 		<Scripts><OnMouseWheel>RWA.IconPicker.Scroll(delta or arg1);</OnMouseWheel><OnHide>if RWA and RWA.IconPicker then RWA.IconPicker.OnHide(); end</OnHide></Scripts>

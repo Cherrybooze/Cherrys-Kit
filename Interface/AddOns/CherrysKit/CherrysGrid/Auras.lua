@@ -216,6 +216,31 @@ function A.ShownDebuffs(unit)
   return out
 end
 
+-- Buffs selected by the enabled tracked-buff lists and present-buff watches.
+function A.ShownBuffs(unit)
+  local P = G.P
+  local lists = {}
+  for _, pair in ipairs({ { "hots", "hotList" }, { "shields", "shieldList" }, { "salves", "salveList" } }) do
+    local status = P.statuses and P.statuses[pair[1]]
+    if status and status.on then lists[#lists + 1] = A.ParseList(P[pair[2]]) end
+  end
+  for _, watch in ipairs(P.watches or {}) do
+    if watch.on and watch.kind ~= "debuff" and not watch.missing and watch.name and watch.name ~= "" then
+      lists[#lists + 1] = A.ParseList(watch.name)
+    end
+  end
+  local out = {}
+  for _, aura in ipairs(A.Get(unit).buffs) do
+    for _, list in ipairs(lists) do
+      if A.InList(list, aura) then
+        out[#out + 1] = aura
+        break
+      end
+    end
+  end
+  return out
+end
+
 -- Short text for a time: 1d, 3h, 12m, 9 (seconds)
 function A.FormatTime(left)
   if not left then

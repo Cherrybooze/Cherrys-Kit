@@ -498,8 +498,8 @@
 							-- Level-2 list
 							local dropDown = Kitty.DropDown(this);
 							dropDown:setListData(
-								function(button)
-									Kitty.CommandConditionFrame.updateData(this:GetParent());
+								function(owner)
+									Kitty.CommandConditionFrame.updateData(owner:GetParent());
 								end,
 								level1List,
 								level2List
