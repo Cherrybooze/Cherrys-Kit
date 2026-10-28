@@ -23,6 +23,7 @@ class ModeExampleTests(unittest.TestCase):
         )
         self.load("Database.lua")
         self.load("Triggers.lua")
+        self.load("Rules.lua")
         self.load("Engine.lua")
         self.lua.execute(
             """
@@ -40,19 +41,26 @@ class ModeExampleTests(unittest.TestCase):
     def legacy(self, extra=""):
         self.lua.execute(
             """
+            -- Construct the historical saved shape for the legacy repair tests.
+            local source = mode.sources[1]
+            mode.triggers = { mode = "all", { type = "custom", code = source.code } }
+            mode.conditions = {}
+            mode.schemaVersion, mode.sources, mode.rules, mode.primarySourceId = nil, nil, nil, nil
             mode.elements[1].from = 1
             RWA_DB.settings.kittyModeSourceFixed = nil
             """ + extra
         )
 
     def evaluate(self):
-        return self.lua.eval("RWA.Triggers.Evaluate(mode.triggers[1], 100, {})")
+        return self.lua.eval("RWA.Triggers.Evaluate((mode.sources or mode.triggers)[1], 100, {})")
 
     def test_builtin_custom_trigger_is_owned_by_main_and_icon_follows_it(self):
-        self.assertEqual(self.lua.eval("#mode.triggers"), 1)
-        self.assertEqual(self.lua.eval("mode.triggers[1].type"), "custom")
-        self.assertEqual(self.lua.eval("mode.elements[1].from"), 0)
-        self.assertIsNone(self.lua.eval("RWA.OwnedTriggers(mode)[1]"))
+        self.assertEqual(self.lua.eval("mode.schemaVersion"), 2)
+        self.assertEqual(self.lua.eval("#mode.sources"), 1)
+        self.assertEqual(self.lua.eval("mode.sources[1].type"), "custom")
+        self.assertEqual(self.lua.eval("mode.primarySourceId"), "s1")
+        self.assertIsNone(self.lua.eval("mode.elements[1].sourceId"))
+        self.assertEqual(self.lua.eval("mode.rules[1].when.checks[1].field"), "active")
         self.assertTrue(self.lua.eval("mode.load.combat"))
         self.assertFalse(self.lua.eval("mode.enabled"))
 
@@ -210,27 +218,29 @@ class ModeExampleTests(unittest.TestCase):
         self.assertEqual(self.lua.eval("mode.elements[1].from"), 1)
         self.assertEqual(self.lua.eval("#mode.triggers"), 2)
 
-    def test_new_auras_start_enabled_with_an_editable_buff_trigger(self):
+    def test_new_auras_start_with_an_incomplete_check_and_selected_output(self):
         for region in ("icon", "text", "aurabar", "texture"):
             with self.subTest(region=region):
                 aura_id = self.lua.globals().RWA.NewAura(region)
                 data = self.lua.globals().RWA.GetAura(aura_id)
                 self.assertTrue(data.enabled)
-                self.assertEqual(data.regionType, region)
-                self.assertEqual(data.triggers[1].type, "aura")
-                self.assertEqual(len(data.triggers[1].names), 0)
+                self.assertEqual(data.schemaVersion, 3)
+                check = data.rules[1].when.checks[1]
+                self.assertIsNone(check.field)
+                self.assertEqual(data.rules[1].actions[1].output.regionType, region)
         self.assertEqual(self.lua.eval("#loadedIds"), 4)
 
     def test_copy_of_disabled_example_starts_enabled_and_keeps_original_disabled(self):
-        aura_id = self.lua.globals().RWA.DuplicateAura("Example: my buff")
+        aura_id = self.lua.globals().RWA.DuplicateAura("Example: buff on me")
         data = self.lua.globals().RWA.GetAura(aura_id)
         self.assertTrue(data.enabled)
-        self.assertFalse(self.lua.eval('RWA_DB.auras["Example: my buff"].enabled'))
-        self.assertEqual(data.triggers[1].names[1], "Put a buff name here")
-        self.assertEqual(data.y, 180)
-        data.triggers[1].names[1] = "My buff"
-        self.assertEqual(self.lua.eval('RWA_DB.auras["Example: my buff"].triggers[1].names[1]'),
-                         "Put a buff name here")
+        self.assertFalse(self.lua.eval('RWA_DB.auras["Example: buff on me"].enabled'))
+        self.assertIsNone(data.sources[1].names[1])
+        self.assertEqual(data.rules[1].when.checks[1].field, "missing")
+        self.assertEqual((data.x, data.y), (260, -40))
+        self.assertEqual(self.lua.eval('RWA_DB.auras["Example: buff on me"].y'), -70)
+        data.sources[1].names[1] = "My buff"
+        self.assertIsNone(self.lua.eval('RWA_DB.auras["Example: buff on me"].sources[1].names[1]'))
 
     def test_existing_saved_and_builtin_disabled_flags_remain_disabled(self):
         self.lua.execute(

@@ -34,7 +34,7 @@ function C.MarkOurs(wrapper)
   return wrapper
 end
 
-C.version = "0.10.6"
+C.version = "0.10.7"
 C.MAX_WINDOWS = 10
 C.MIN_FONT, C.MAX_FONT = 6, 40
 C.MIN_W, C.MIN_H = 120, 60
@@ -53,6 +53,7 @@ C.DEFAULTS = {
   smileys = false, -- also turn :) :( <3 ... into pictures
   sendShortcodes = false, -- :heart: in a message you send becomes the emoji itself
   copyButton = true, -- the C button on the chat: select mode for copying
+  classColors = true, -- colour player names when their primary class is known
   allWindows = true, -- font and size changes go to every chat window
   logLines = 500,
   copyLines = 200,
@@ -163,6 +164,156 @@ function C.ReadLink(msg, first)
   if not string.match(target, "^[%a_][%w_]*:") or string.find(target, "[\r\n]") then return nil end
   return { target = target, text = string.sub(msg, middle + 2, last - 1),
     full = string.sub(msg, first, last + 1), first = first, last = last + 1 }
+end
+
+-- Match Cherry's Grid's default RoM palette, including when Grid is disabled.
+local classColors = {
+  WARRIOR = { .95, .27, .08 }, RANGER = { .62, .84, .12 }, THIEF = { .05, .82, .76 },
+  MAGE = { .98, .47, .1 }, AUGUR = { .2, .55, .95 }, KNIGHT = { .88, .88, .32 },
+  WARDEN = { .7, .15, .7 }, DRUID = { .1, .62, .1 }, PSYRON = { .3, .3, .95 },
+  HARPSYN = { .45, .2, .9 }, BARD = { .95, .5, .75 },
+}
+local classRoster, classRosterTime = {}, nil
+
+local localizedClasses
+local function classFromValue(value)
+  if (type(value) == "number" or (type(value) == "string" and string.match(value, "^%d+$")))
+      and type(GetClassInfoByID) == "function" then
+    local ok, name, token = pcall(GetClassInfoByID, tonumber(value))
+    if ok then value = token or name end
+  end
+  if type(value) ~= "string" or value == "" then return nil end
+  if value == "RUNEDANCER" then return "WARDEN" end
+  if classColors[value] then return value end
+  if not localizedClasses and type(GetSystemString) == "function" then
+    localizedClasses = {}
+    for class in pairs(classColors) do
+      local ok, localized = pcall(GetSystemString, "SYS_CLASSNAME_" .. class)
+      if ok and type(localized) == "string" and localized ~= "" then localizedClasses[localized] = class end
+    end
+    local ok, localized = pcall(GetSystemString, "SYS_CLASSNAME_RUNEDANCER")
+    if ok and type(localized) == "string" and localized ~= "" then localizedClasses[localized] = "WARDEN" end
+  end
+  return localizedClasses and localizedClasses[value]
+end
+
+local function refreshClassRoster()
+  local now = type(GetTime) == "function" and GetTime() or nil
+  if now and classRosterTime and now >= classRosterTime and now - classRosterTime < 2 then return end
+  classRoster, classRosterTime = {}, now
+  if type(GetNumGuildMembers) == "function" and type(GetGuildRosterInfo) == "function" then
+    local ok, count = pcall(GetNumGuildMembers)
+    if ok and type(count) == "number" then
+      for i = 1, count do
+        local valid, name, rank, class = pcall(GetGuildRosterInfo, i)
+        local token = classFromValue(class)
+        if valid and type(name) == "string" and token then classRoster[name] = token end
+      end
+    end
+  end
+  if type(UnitName) ~= "function" or type(UnitClassToken) ~= "function" then return end
+  local units = { "player", "target", "mouseover" }
+  for i = 1, 5 do units[#units + 1] = "party" .. i end
+  for i = 1, 36 do units[#units + 1] = "raid" .. i end
+  for _, unit in ipairs(units) do
+    local okName, name = pcall(UnitName, unit)
+    local okClass, token = pcall(UnitClassToken, unit)
+    local isPlayer = true
+    if (unit == "target" or unit == "mouseover") and type(UnitIsPlayer) == "function" then
+      local ok, result = pcall(UnitIsPlayer, unit)
+      isPlayer = ok and result and result ~= 0
+    end
+    token = classFromValue(token)
+    if okName and okClass and isPlayer and type(name) == "string" and token then
+      classRoster[name] = token
+    end
+  end
+end
+
+-- Incoming player chat carries the sender name and class in arg4 and arg5. Keep a bounded
+-- in-session cache so rows can be rewrapped without re-querying the server.
+local chatClasses, chatClassOrder = {}, {}
+local playerChatEvents = {
+  CHAT_MSG_SAY = true, CHAT_MSG_ZONE = true, CHAT_MSG_PARTY = true,
+  CHAT_MSG_GUILD = true, CHAT_MSG_YELL = true, CHAT_MSG_RAID = true,
+  CHAT_MSG_WHISPER = true, CHAT_MSG_CHANNEL = true,
+}
+function C.ObserveChatClass(ev, name, class, senderLink)
+  if not playerChatEvents[ev] then return end
+  local token = classFromValue(class)
+  if not token or type(name) ~= "string" or name == "" then return end
+  local function remember(key)
+    if type(key) ~= "string" or key == "" then return end
+    if not chatClasses[key] then
+      chatClassOrder[#chatClassOrder + 1] = key
+      if #chatClassOrder > 500 then chatClasses[table.remove(chatClassOrder, 1)] = nil end
+    end
+    chatClasses[key] = token
+  end
+  remember(name)
+  if type(senderLink) == "string" then
+    local start = string.find(senderLink, "|Hplayer:", 1, true)
+    local link = start and C.ReadLink(senderLink, start)
+    local linkedName = link and string.match(link.target, "^player:([^:]+)")
+    if linkedName then remember(linkedName) end
+  end
+end
+
+-- Use the sender's chat class first, then current units/guild and pbInfo's optional database.
+function C.PlayerClassColour(target)
+  if not db().classColors or type(target) ~= "string" then return nil end
+  local name = string.match(target, "^player:([^:]+)")
+  if not name then return nil end
+  local token = chatClasses[name]
+  if not token then
+    refreshClassRoster()
+    token = classRoster[name]
+  end
+  if not token and type(pbInfo) == "table" and type(pbInfo.PlayerDB) == "table" then
+    local realms = pbInfo.PlayerDB.Players
+    local realm = type(realms) == "table" and realms[pbInfo.RealmName]
+    local player = type(realm) == "table" and realm[name]
+    local stored = type(player) == "table" and player.mC
+    token = classFromValue(stored)
+  end
+  local rgb = token and classColors[token]
+  if not rgb then return nil end
+  return string.format("|cff%02x%02x%02x", math.floor(rgb[1] * 255 + .5),
+    math.floor(rgb[2] * 255 + .5), math.floor(rgb[3] * 255 + .5))
+end
+
+-- For the native chat fallback, change only player labels, preserving all link targets.
+function C.ColourPlayerLinks(msg)
+  if type(msg) ~= "string" or not db().classColors then return msg end
+  local parts, i, active = {}, 1, nil
+  while i <= #msg do
+    local link = C.ReadLink(msg, i)
+    local colour = link and C.PlayerClassColour(link.target)
+    if link then
+      if colour then
+        local label, j = {}, 1
+        while j <= #link.text do
+          local code = string.match(link.text, "^|c%x%x%x%x%x%x%x%x", j)
+          local pair = string.sub(link.text, j, j + 1)
+          if pair == "||" then label[#label + 1] = pair; j = j + 2
+          elseif code then j = j + 10
+          elseif pair == "|r" then j = j + 2
+          else label[#label + 1] = string.sub(link.text, j, j); j = j + 1 end
+        end
+        parts[#parts + 1] = "|H" .. link.target .. "|h" .. colour .. table.concat(label) .. "|r|h"
+        if active then parts[#parts + 1] = active end
+      else parts[#parts + 1] = link.full end
+      i = link.last + 1
+    else
+      local pair = string.sub(msg, i, i + 1)
+      local code = string.match(msg, "^|c%x%x%x%x%x%x%x%x", i)
+      if pair == "||" then parts[#parts + 1] = pair; i = i + 2
+      elseif code then parts[#parts + 1] = code; active = code; i = i + 10
+      elseif pair == "|r" then parts[#parts + 1] = pair; active = nil; i = i + 2
+      else parts[#parts + 1] = string.sub(msg, i, i); i = i + 1 end
+    end
+  end
+  return table.concat(parts)
 end
 
 function C.Chat(i)
@@ -502,6 +653,8 @@ local function wrapAddMessage(i)
       if good then
         msg = shown
       end
+      local colored, result = pcall(C.ColourPlayerLinks, msg)
+      if colored then msg = result end
     end
     return orig(self, msg, ...)
   end
@@ -524,11 +677,14 @@ local function wrapChatEvent()
   C.eventWrapped = true
   local orig = C.Real("ChatFrame_OnEvent", ChatFrame_OnEvent)
   ChatFrame_OnEvent = C.MarkOurs(function(...)
+    -- RoM chat events provide a formatted sender link, sender name, and class in arg2/4/5.
+    local first, second = ...
+    local ev = type(first) == "string" and first or (type(second) == "string" and second or event)
+    C.ObserveChatClass(ev, arg4, arg5, arg2)
     -- Which channel the lines printed now belong to (encrypted chat opens only that channel's key).
     local was = C.Crypt and C.Crypt.current
     if C.Crypt then
-      local ev = (select(1, ...))
-      C.Crypt.current = C.Crypt.ChannelFromEvent(type(ev) == "string" and ev or event)
+      C.Crypt.current = C.Crypt.ChannelFromEvent(ev)
     end
     local results = { pcall(C.OnChatEvent, orig, ...) }
     if C.Crypt then
@@ -999,6 +1155,7 @@ function C.Refresh()
   setText(CherrysChat_FontLabel, "Font size: " .. C.GetFontSize(i))
   setText(CherrysChat_WidthLabel, "Width: " .. w)
   setText(CherrysChat_HeightLabel, "Height: " .. h)
+  setText(CherrysChat_ClassColorsButton, "Class-coloured names: " .. onOff(d.classColors))
   setText(CherrysChat_AllButton, "All windows: " .. onOff(d.allWindows))
   setText(CherrysChat_GripButton, "Drag to resize: " .. onOff(C.gripOn))
   setText(CherrysChat_EmojiButton, "Game chat emoji: " .. EMOJI_LABELS[d.emoji])
@@ -1040,6 +1197,13 @@ function C.Settings(action)
       h = h + step
     end
     C.ChangeSize(i, w, h)
+  elseif action == "classcolors" then
+    d.classColors = not d.classColors
+    if C.Win then
+      for j = 1, C.MAX_WINDOWS do
+        if C.Chat(j) and C.Win.Owns(j) then C.Win.Rewrap(j) end
+      end
+    end
   elseif action == "all" then
     d.allWindows = not d.allWindows
   elseif action == "grip" then

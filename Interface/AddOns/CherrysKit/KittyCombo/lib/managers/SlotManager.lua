@@ -32,9 +32,10 @@ Kitty.SlotManager.getActionName = function(gameTooltip, index)
 		if(name) then
 			name = Kitty.SlotManager.getPureName(name);
 		end
+        if(name == nil or name == "") then return nil; end
 		return tostring(name);
 	else
-		return "";
+		return nil;
 	end
 end;
 Kitty.SlotManager.getList = function(startIndex, endIndex)
@@ -84,6 +85,12 @@ Kitty.SlotManager.canUse = function(self, name, threshold)
 
 	return false, 0;
 end;
+Kitty.SlotManager.isOnCooldown = function(self, name, threshold)
+    local index = self.slotTable[name];
+    if(index == nil) then return false; end
+    local _, remaining = GetActionCooldown(index);
+    return (tonumber(remaining) or 0) > (tonumber(threshold) or 0);
+end;
 Kitty.SlotManager.use = function(self, name)
 	local index = self.slotTable[name];
 	if(index ~= nil) then
@@ -103,10 +110,15 @@ Kitty.SlotManager.inRange = function(self, name)
 end;
 -- Refresh slot info
 Kitty.SlotManager.onUpdate = function(self, index)
+    self.slotNames = self.slotNames or {};
+    self.slotNames[index] = nil;
 	-- Clear
 	for name, slotIndex in pairs(self.slotTable) do
 		if(slotIndex == index) then
 			self.slotTable[name] = nil;
+            for otherIndex, otherName in pairs(self.slotNames) do
+                if(otherName == name) then self.slotTable[name] = otherIndex; break; end
+            end
 			-- Debug
 --			Kitty.debugPrint("Delete Index:[" .. tostring(index) .. "], Name:[" .. tostring(name) .. "]");
 		end
@@ -116,6 +128,7 @@ Kitty.SlotManager.onUpdate = function(self, index)
 	if(path ~= nil) then
 		local name = Kitty.SlotManager.getActionName(KittyComboGameTooltip, index);
 		if(name) then
+            self.slotNames[index] = name;
 			self.slotTable[name] = index;
 			-- Debug
 --			Kitty.debugPrint("Add Index:[" .. tostring(index) .. "], Name:[" .. tostring(name) .. "]");
@@ -158,6 +171,7 @@ Kitty.SlotManager.constructor = function(self)
 	-- Fields
 	local obj = {};
 	obj.slotTable = {};
+    obj.slotNames = {};
 
 	-- Constructor
 	-- Read shortcut info (shortcuts are valid only after LOADING_END)
@@ -166,6 +180,7 @@ Kitty.SlotManager.constructor = function(self)
 		if(path ~= nil) then
 			local name = Kitty.SlotManager.getActionName(KittyComboGameTooltip, index);
 			if(name) then
+                obj.slotNames[index] = name;
 				obj.slotTable[name] = index;
 				-- Debug
 				Kitty.debugPrint("Index:[" .. tostring(index) .. "], Name:[" .. tostring(name) .. "]");

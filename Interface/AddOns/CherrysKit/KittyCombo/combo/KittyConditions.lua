@@ -124,9 +124,9 @@ end;
 --------------------------------------------------------------------------------
 -- Condition: Target Effect Counter
 Kitty.ComboManager.targetEffectCounter = function(self, condition) 
-	local result = false;
-	local counter = 0;
+    if(#condition == 0) then return false; end
 	for index, value in ipairs(condition) do
+        local counter = 0;
 		-- Stops at the first empty debuff slot (0.973 asked all 100 slots
 		-- every time)
 		for i=1,100,1 do
@@ -144,12 +144,9 @@ Kitty.ComboManager.targetEffectCounter = function(self, condition)
 				counter = counter + 1;
 			end
 		end
-		if(counter >= value.threshold)
-		then
-			result = true;
-		end
+        if(counter < (tonumber(value.threshold) or 0)) then return false; end
 	end
-	return result;
+	return true;
 end;
 Kitty.ComboManager.targetEffectCounterHelp = function(self, condition)
 	local resultList = {};
@@ -591,6 +588,13 @@ Kitty.ComboManager.targetNameType = function(self, value)
 	return Kitty.ComboManager.TYPE_STRING;
 end;
 
+-- MatchlessState is bracketed in the English locale and plain in older locales.
+local function fearlessLabel()
+  local name = Kitty.T("message", "MatchlessState");
+  name = string.match(name, "^%[(.-)%]$") or name;
+  return Kitty.colorCyan(name);
+end;
+
 -- Condition: Player Is Fearless
 Kitty.ComboManager.playerIsFearless = function(self, value)
 	if(self.playerBuffManager:isFearless(Kitty.ClassManager.isCaster("target"))) then
@@ -601,9 +605,9 @@ Kitty.ComboManager.playerIsFearless = function(self, value)
 end;
 Kitty.ComboManager.playerIsFearlessHelp = function(self, value)
 	if(value) then
-		return Kitty.T("message", "PlayerState1", Kitty.T("message", "MatchlessState"));
+		return Kitty.T("message", "PlayerState1", fearlessLabel());
 	else
-		return Kitty.T("message", "PlayerState2", Kitty.T("message", "MatchlessState"));
+		return Kitty.T("message", "PlayerState2", fearlessLabel());
 	end
 end;
 Kitty.ComboManager.playerIsFearlessDescribe = function(self, value)
@@ -627,9 +631,9 @@ Kitty.ComboManager.targetIsFearless = function(self, value)
 end;
 Kitty.ComboManager.targetIsFearlessHelp = function(self, value)
 	if(value) then
-		return Kitty.T("message", "TargetState1", Kitty.T("message", "MatchlessState"));
+		return Kitty.T("message", "TargetState1", fearlessLabel());
 	else
-		return Kitty.T("message", "TargetState2", Kitty.T("message", "MatchlessState"));
+		return Kitty.T("message", "TargetState2", fearlessLabel());
 	end
 end;
 Kitty.ComboManager.targetIsFearlessDescribe = function(self, value)
@@ -1027,8 +1031,10 @@ end;
 -- Each entry: value = true (default) needs the skill ready, false needs it on cooldown
 Kitty.ComboManager.canCast = function(self, condition)
 	for index, value in ipairs(condition) do
-		local ready = self.skillManager:canCast(value.name) and true or false;
-		if(ready ~= (value.value ~= false)) then
+        local threshold = tonumber(value.threshold);
+        local matches = value.value == false and self.skillManager:isOnCooldown(value.name, threshold)
+            or value.value ~= false and self.skillManager:canCast(value.name, threshold);
+		if(not matches) then
 			return false;
 		end
 	end
@@ -1039,8 +1045,8 @@ Kitty.ComboManager.canCastHelp = function(self, condition)
 	local ready, notReady = "", "";
 	for index, value in ipairs(condition) do
 		local item;
-		if(value.threshold > 0.0) then
-			item = Kitty.colorCyan(value.name .. Kitty.T("message", "OverDuration", value.threshold));
+		if((tonumber(value.threshold) or 0) > 0) then
+            item = Kitty.colorCyan(value.name .. (value.value == false and " (> " or " (<= ") .. tostring(value.threshold) .. "s left)");
 		else
 			item = Kitty.colorCyan(value.name);
 		end
@@ -1061,9 +1067,8 @@ Kitty.ComboManager.canCastHelp = function(self, condition)
 end;
 Kitty.ComboManager.canCastDescribe = function(self, condition)
 	return {
-		Kitty.T("message", "canCastDescription1"),
-		Kitty.T("message", "canCastDescription2"),
-		Kitty.T("message", "canCastDescription3"),
+        "Ready: available with cooldown at or below the threshold, with sufficient resources.",
+        "On cooldown: the skill exists and its remaining cooldown exceeds the threshold.",
 	};
 end;
 Kitty.ComboManager.canCastType = function(self, condition)
@@ -1074,8 +1079,10 @@ end;
 -- Each entry: value = true (default) needs the slot ready, false needs it on cooldown
 Kitty.ComboManager.canUse = function(self, condition)
 	for index, value in ipairs(condition) do
-		local ready = self.slotManager:canUse(value.name) and true or false;
-		if(ready ~= (value.value ~= false)) then
+        local threshold = tonumber(value.threshold);
+        local matches = value.value == false and self.slotManager:isOnCooldown(value.name, threshold)
+            or value.value ~= false and self.slotManager:canUse(value.name, threshold);
+		if(not matches) then
 			return false;
 		end
 	end
@@ -1086,8 +1093,8 @@ Kitty.ComboManager.canUseHelp = function(self, condition)
 	local ready, notReady = "", "";
 	for index, value in ipairs(condition) do
 		local item;
-		if(value.threshold > 0.0) then
-			item = Kitty.colorCyan(value.name .. Kitty.T("message", "OverDuration", value.threshold));
+		if((tonumber(value.threshold) or 0) > 0) then
+            item = Kitty.colorCyan(value.name .. (value.value == false and " (> " or " (<= ") .. tostring(value.threshold) .. "s left)");
 		else
 			item = Kitty.colorCyan(value.name);
 		end
@@ -1108,9 +1115,8 @@ Kitty.ComboManager.canUseHelp = function(self, condition)
 end;
 Kitty.ComboManager.canUseDescribe = function(self, condition)
 	return {
-		Kitty.T("message", "canUseDescription1"),
-		Kitty.T("message", "canUseDescription2"),
-		Kitty.T("message", "canUseDescription3"),
+        "Ready: an action slot exists and its cooldown is at or below the threshold.",
+        "On cooldown: the action slot exists and its remaining cooldown exceeds the threshold.",
 	};
 end;
 Kitty.ComboManager.canUseType = function(self, condition)

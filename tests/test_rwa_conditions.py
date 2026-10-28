@@ -34,6 +34,14 @@ class ConditionTests(unittest.TestCase):
     def aura(self, name="Reminder"):
         return self.lua.globals().RWA.loaded[name]
 
+    def reconvert(self, name="Reminder"):
+        self.lua.globals().testName = name
+        self.lua.execute('''
+          local legacy=RWA.GetAura(testName).previousDefinition
+          RWA_DB.auras[testName]=RWA.ApplyAuraDefaults(assert(RWA.Rules.ConvertLegacy(legacy)))
+          RWA.LoadAura(testName)
+        ''')
+
     def capture_sounds(self):
         self.lua.execute("soundPaths = {}; PlaySoundByPath = function(path) table.insert(soundPaths, path); end;")
 
@@ -52,8 +60,8 @@ class ConditionTests(unittest.TestCase):
                     self.tick()
                     self.assertEqual(self.aura(name).realActive, expected)
                     self.assertEqual(self.aura(name).region.shown, expected)
-            self.assertEqual(saved.triggers[1].showOn, show_on)
-            self.assertEqual(saved.triggers[1].remaining, 3)
+            self.assertEqual(saved.previousDefinition.triggers[1].showOn, show_on)
+            self.assertEqual(saved.previousDefinition.triggers[1].remaining, 3)
 
     def test_absent_target_and_stack_rejected_buff_are_not_missing(self):
         self.lua.globals().fixtureUnits.target = False
@@ -63,8 +71,8 @@ class ConditionTests(unittest.TestCase):
         self.lua.globals().fixtureUnits.target = True
         self.buffs(2, present=True, unit="target")
         data = self.lua.globals().RWA.GetAura("Reminder")
-        data.triggers[1].stacksOp, data.triggers[1].stacks = ">", 5
-        self.lua.globals().RWA.LoadAura("Reminder")
+        data.previousDefinition.triggers[1].stacksOp, data.previousDefinition.triggers[1].stacks = ">", 5
+        self.reconvert()
         self.tick()
         self.assertFalse(self.aura().realActive)
         self.buffs(unit="target")
@@ -80,7 +88,7 @@ class ConditionTests(unittest.TestCase):
         self.tick()
         self.assertTrue(self.aura().realActive)
         self.assertEqual(self.aura().region.frame.scale, 1.5)
-        self.assertEqual(self.aura().region.color[1], data.color[1])
+        self.assertEqual(self.aura().region.color[1], data.previousDefinition.color[1] if data.previousDefinition.color else 1)
         self.buffs(5, present=True)
         self.tick()
         self.assertFalse(self.aura().realActive)
@@ -93,8 +101,8 @@ class ConditionTests(unittest.TestCase):
         self.tick()
         self.assertTrue(self.aura().realActive)
         self.assertEqual(self.aura().region.frame.scale, 1.5)
-        data.conditions[3] = self.condition("hide")
-        self.lua.globals().RWA.LoadAura("Reminder")
+        data.previousDefinition.conditions[3] = self.condition("hide")
+        self.reconvert()
         self.tick()
         self.assertFalse(self.aura().realActive)
         self.assertFalse(self.aura().region.shown)
@@ -121,8 +129,10 @@ class ConditionTests(unittest.TestCase):
         self.assertAlmostEqual(region.alpha, 0.8)
         self.assertFalse(region.conditionOverlay.visible)
         self.assertIsNone(region.conditionOverlay.texture)
-        self.assertEqual(saved.color[2], 1)
-        self.assertEqual(saved.alpha, 0.8)
+        visual = self.lua.globals().RWA.Rules.PrepareActions(saved)
+        definition = visual.outputs[visual.order[1]].definition
+        self.assertEqual(definition.color[2], 1)
+        self.assertEqual(definition.alpha, 0.8)
         self.lua.globals().RWA.UnloadAura("Reminder")
         self.add_aura("Pool reuse", trigger=self.table({"type": "custom", "code": "return true"}))
         self.tick()
@@ -162,7 +172,8 @@ class ConditionTests(unittest.TestCase):
         self.tick()
         self.assertTrue(self.aura().realActive)
         self.assertEqual(len(self.sounds()), 1)
-        self.lua.execute('RWA.GetAura("Reminder").triggers[2] = {type = "custom", code = "return false"}; RWA.LoadAura("Reminder");')
+        self.lua.execute('RWA.GetAura("Reminder").previousDefinition.triggers[2] = {type = "custom", code = "return false"}')
+        self.reconvert()
         self.tick()
         self.assertFalse(self.aura().realActive)
         self.assertEqual(len(self.sounds()), 1)
@@ -187,14 +198,14 @@ class ConditionTests(unittest.TestCase):
         self.reminder(conditions=[self.condition("grow")])
         self.buffs(2, present=True)
         self.tick()
-        self.lua.execute('previewRegion = RWA.Regions.Acquire(RWA.CopyTable(RWA.GetAura("Reminder")));')
+        self.lua.execute('previewRegion = RWA.Regions.Acquire(RWA.CopyTable(RWA.loaded.Reminder.outputs[1].data));')
         region = self.lua.globals().previewRegion
         helper = self.lua.globals().RWA.ApplyConditionVisuals
-        helper(region, self.aura().conditionEffects, self.lua.globals().fixtureNow)
+        helper(region, self.aura().outputs[1].conditionEffects, self.lua.globals().fixtureNow)
         self.assertEqual(region.frame.scale, 1.25)
         self.buffs(10, present=True)
         self.tick()
-        helper(region, self.aura().conditionEffects, self.lua.globals().fixtureNow)
+        helper(region, self.aura().outputs[1].conditionEffects, self.lua.globals().fixtureNow)
         self.assertEqual(region.frame.scale, 1)
 
     def test_disabling_an_already_loaded_aura_does_not_bypass_the_gate(self):
@@ -242,19 +253,23 @@ class ConditionTests(unittest.TestCase):
         show = self.condition("show", var="percent", op=">", value=50)
         data = self.reminder(trigger=self.table({"type": "status", "check": "health", "unit": "player",
                                                 "op": "<", "value": 10}), conditions=[show])
-        data.triggers[2] = self.table({"type": "custom", "code": "return false"})
-        self.lua.globals().RWA.LoadAura("Reminder")
+        data.previousDefinition.triggers[2] = self.table({"type": "custom", "code": "return false"})
+        self.reconvert()
         self.tick()
         self.assertFalse(self.aura().realActive)
-        data.triggers[2].code = "return true"
-        self.lua.globals().RWA.LoadAura("Reminder")
+        data = self.lua.globals().RWA.GetAura("Reminder")
+        data.previousDefinition.triggers[2].code = "return true"
+        self.reconvert()
         self.tick()
         self.assertTrue(self.aura().realActive)
-        data.conditions[2] = self.condition("hide", var="percent", op=">", value=50)
+        data = self.lua.globals().RWA.GetAura("Reminder")
+        data.previousDefinition.conditions[2] = self.condition("hide", var="percent", op=">", value=50)
+        self.reconvert()
         self.lua.globals().RWA.SetEditMode(True)
         self.tick()
         self.assertFalse(self.aura().realActive)
-        self.assertFalse(self.aura().region.shown)
+        # Move mode deliberately exposes output frames so they can be placed.
+        self.assertTrue(self.aura().region.shown)
 
     def test_condition_action_helpers_choose_defaults_and_preserve_extensions(self):
         actions = self.lua.globals().RWA.Conditions

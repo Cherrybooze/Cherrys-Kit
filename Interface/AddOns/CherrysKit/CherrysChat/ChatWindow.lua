@@ -217,7 +217,7 @@ function Wn.PicGap()
   return Wn.gap
 end
 
-local function tokenize(list, msg, link, full, pics)
+local function tokenize(list, msg, link, full, pics, classColour)
   local i, n = 1, string.len(msg)
   while i <= n do
     local ps, pe, num = string.find(msg, "^\1(%d+)\2", i)
@@ -232,13 +232,16 @@ local function tokenize(list, msg, link, full, pics)
       end
       i = pe + 1
     elseif itemLink then
-      tokenize(list, itemLink.text, itemLink.target, itemLink.full, pics)
+      local playerColour = C.PlayerClassColour(itemLink.target)
+      list[#list + 1] = { kind = "link_start", target = itemLink.target, text = itemLink.text, classColour = playerColour }
+      tokenize(list, itemLink.text, itemLink.target, itemLink.full, pics, playerColour)
+      list[#list + 1] = { kind = "link_end" }
       i = itemLink.last + 1
     elseif c then
-      list[#list + 1] = { kind = "colour", raw = c }
+      if not classColour then list[#list + 1] = { kind = "colour", raw = c } end
       i = i + 10
     elseif string.sub(msg, i, i + 1) == "|r" then
-      list[#list + 1] = { kind = "reset", raw = "|r" }
+      if not classColour then list[#list + 1] = { kind = "reset", raw = "|r" } end
       i = i + 2
     elseif string.sub(msg, i, i + 1) == "||" then
       list[#list + 1] = { kind = "word", raw = "||", vis = "|", link = link, full = full }
@@ -299,11 +302,42 @@ local function fittingTokens(tokens, maxW)
   return result
 end
 
-function Wn.WrapMessage(msg, maxW, pics)
+-- AAH's ItemLink generator documents the 12 hexadecimal fields: the third field
+-- contains the instance rarity modifier in the upper bits of its second byte.
+-- Only use that known format and native APIs; unknown links keep their supplied colour.
+local qualityColours = {}
+local function itemColour(target)
+ if qualityColours[target] ~= nil then return qualityColours[target] or nil end
+ local fields = {}
+ local payload = string.match(target or "", "^item:(.+)$")
+ if payload then for field in string.gmatch(payload, "%S+") do fields[#fields + 1] = field end end
+ local colour
+ if #fields == 12 and GetQualityByGUID and GetItemQualityColor then
+  local valid = true
+  for _, field in ipairs(fields) do if not string.match(field, "^%x+$") then valid = false end end
+  local id, flags = tonumber(fields[1], 16), tonumber(fields[3], 16)
+  if valid and id and flags then
+   local ok, quality = pcall(GetQualityByGUID, id)
+   if ok and type(quality) == "number" then
+    local modifier = math.floor((math.floor(flags / 256) % 256) / 32)
+    local success, r, g, b = pcall(GetItemQualityColor, quality + modifier)
+    if success and type(r) == "number" and type(g) == "number" and type(b) == "number" and r >= 0 and r <= 1 and g >= 0 and g <= 1 and b >= 0 and b <= 1 then
+     colour = string.format("|cff%02x%02x%02x", math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+    end
+   end
+  end
+ end
+ qualityColours[target] = colour or false
+ return colour
+end
+
+function Wn.WrapMessage(msg, maxW, pics, baseColour)
   maxW = math.max(1, tonumber(maxW) or 1)
   local tokens, links = Wn.Tokens(msg, pics)
   local list = fittingTokens(tokens, maxW)
-  local rows, parts, plain, spans, rowPics, width, colour = {}, {}, {}, {}, {}, 0, nil
+  local rows, parts, plain, spans, rowPics, width, colour = {}, {}, {}, {}, {}, 0, baseColour
+  local colourStack, linkStack = {}, {}
+  if colour then parts[1] = colour end
   local function finish()
     if colour then parts[#parts + 1] = "|r" end
     rows[#rows + 1] = { text = table.concat(parts), plain = table.concat(plain), spans = spans, pics = rowPics }
@@ -311,12 +345,32 @@ function Wn.WrapMessage(msg, maxW, pics)
     if colour then parts[1] = colour end
   end
   for _, t in ipairs(list) do
-    if t.kind == "colour" then
+    if t.kind == "link_start" then
+      linkStack[#linkStack + 1] = { colour = colour, depth = #colourStack }
+      if t.classColour or (not string.find(t.text, "|c%x%x%x%x%x%x%x%x") and (not colour or colour == baseColour)) then
+        local native = t.classColour or itemColour(t.target)
+        if native then
+          colourStack[#colourStack + 1] = colour or false
+          colour = native
+          parts[#parts + 1] = native
+        end
+      end
+    elseif t.kind == "link_end" then
+      local scope = table.remove(linkStack)
+      if scope and (colour ~= scope.colour or #colourStack > scope.depth) then
+        while #colourStack > scope.depth do table.remove(colourStack) end
+        parts[#parts + 1] = "|r"
+        colour = scope.colour
+        if colour then parts[#parts + 1] = colour end
+      end
+    elseif t.kind == "colour" then
+      colourStack[#colourStack + 1] = colour or false
       colour = t.raw
       parts[#parts + 1] = t.raw
     elseif t.kind == "reset" then
-      colour = nil
+      colour = table.remove(colourStack) or baseColour
       parts[#parts + 1] = "|r"
+      if colour then parts[#parts + 1] = colour end
     else
       local prefix = table.concat(parts)
       -- Measure the same complete visible prefix that the FontString draws. Summed word
@@ -360,8 +414,12 @@ local function wrapInto(rows, i, k, maxW)
   else
     pics = nil
   end
-  local wrapped, links = Wn.WrapMessage(shown, maxW, pics)
   local colour = C.logColor[i] and C.logColor[i][k] or false
+  local function component(v)
+    return math.floor(math.max(0, math.min(1, tonumber(v) or 1)) * 255 + 0.5)
+  end
+  local baseColour = colour and string.format("|cff%02x%02x%02x", component(colour[1]), component(colour[2]), component(colour[3])) or "|cffffffff"
+  local wrapped, links = Wn.WrapMessage(shown, maxW, pics, baseColour)
   for _, r in ipairs(wrapped) do
     rows[#rows + 1] = { text = r.text, plain = r.plain, spans = r.spans, pics = r.pics, m = k, links = links,
       colour = colour }
@@ -491,9 +549,9 @@ function Wn.Draw(i)
       try(fs, "ClearAllAnchors")
       try(fs, "SetAnchor", "TOPLEFT", "TOPLEFT", o, Wn.PAD_LEFT, y)
       try(fs, "SetSize", w, Wn.LINE_H)
+      -- The channel colour is markup in the row; white avoids tinting item colours.
+      try(fs, "SetColor", 1, 1, 1)
       fs:SetText(rows[idx].text)
-      local c = rows[idx].colour
-      try(fs, "SetColor", c and c[1] or 1, c and c[2] or 1, c and c[3] or 1)
       fs:Show()
       for _, p in ipairs(rows[idx].pics or {}) do
         local pt = _G["CherrysChat_W" .. i .. "Pic" .. (used + 1)]
@@ -657,7 +715,8 @@ end
 -- Hands a link click to the game's chat, as if it had been clicked there.
 -- RoM does not document ChatFrame_OnHyperlinkClick, so the game's own calls are watched (see
 -- Wn.WatchLinkClicks): once a real click in the game's chat has been seen, the same argument
--- layout is used. Until then the guess is (frame, link, key), with this/arg1/arg2/arg3 set too.
+-- layout is used. Until then pass the complete encoded hyperlink, including its item data and
+-- localized label, as (frame, full hyperlink, key), with matching event globals.
 local function linkValue(kind, chat, span, key)
   if kind == "frame" then return chat end
   if kind == "link" then return span.link end
@@ -677,7 +736,7 @@ function Wn.LinkArgs(chat, span, key)
     for p = 1, sig.n do args[p] = linkValue(sig[p], chat, span, key) end
     return args, sig.n
   end
-  return { chat, span.link, key }, 3
+  return { chat, span.full, key }, 3
 end
 
 local function itemTooltip(span)
@@ -705,7 +764,8 @@ function Wn.ClickLink(i, span, key)
       this = linkValue(globals.this, chat, span, key)
       arg1, arg2, arg3 = linkValue(globals.arg1, chat, span, key), linkValue(globals.arg2, chat, span, key), linkValue(globals.arg3, chat, span, key)
     else
-      this, arg1, arg2, arg3 = chat, span.link, span.full, key
+      -- Default event globals carry the same complete encoded hyperlink and key.
+      this, arg1, arg2, arg3 = chat, span.full, key, nil
     end
     Wn.callingLink = true
     ok, result = pcall(fn, unpack(args, 1, n))
@@ -957,12 +1017,23 @@ local function nameOf(link)
   return link and string.match(link, "^player:([^:]+)")
 end
 
--- Like the game's chat: a name whispers, Shift puts the name or item link into the chat box, and
--- any other link (an item) goes to the game, which shows its tooltip.
+-- Modified player clicks insert the name into an open chat box, or inquire when closed.
+-- Shift-clicking an item still inserts the complete encoded link into chat.
 function Wn.LinkLeftClick(i, span, key)
   local name = nameOf(span.link)
-  if shiftDown() then
-    Wn.InsertIntoChat(name or span.full, not name)
+  local ctrl = type(IsCtrlKeyDown) == "function" and IsCtrlKeyDown()
+  if name and (ctrl or shiftDown()) then
+    local box = Wn.ChatBox()
+    local visible, isOpen = try(box, "IsVisible")
+    if visible and isOpen and isOpen ~= 0 then
+      Wn.InsertIntoChat(name, false)
+    else
+      local ok, result = false, nil
+      if type(AskPlayerInfo) == "function" then ok, result = pcall(AskPlayerInfo, name) end
+      if not ok or result == false then C.Print("could not request player information for " .. name) end
+    end
+  elseif shiftDown() then
+    Wn.InsertIntoChat(span.full, true)
   elseif name then
     Wn.Whisper(name)
   else
@@ -979,15 +1050,19 @@ end
 -- The game's chat typing box: RoM names it ChatFrameEditBox like WoW (unverified), so the
 -- known names are tried.
 function Wn.ChatBox()
-  for _, n in ipairs({ "ChatFrameEditBox", "ChatFrame1EditBox", "DEFAULT_CHAT_FRAME_EDITBOX" }) do
-    local box = _G[n]
-    if has(box, "GetText") or has(box, "InsertText") then
-      return box
-    end
+  local fallback
+  local function candidate(box)
+    if not (has(box, "GetText") or has(box, "InsertText")) then return nil end
+    fallback = fallback or box
+    local ok, visible = try(box, "IsVisible")
+    if ok and visible and visible ~= 0 then return box end
+  end
+  for _, n in ipairs({ "ChatFrameEditBox", "ChatFrame1EditBox", "DEFAULT_CHAT_FRAME_EDITBOX", "DEFAULT_CHAT_EDITBOX" }) do
+    local box = candidate(_G[n])
+    if box then return box end
   end
   local f = DEFAULT_CHAT_FRAME
-  local box = f and f.editBox
-  return (has(box, "GetText") or has(box, "InsertText")) and box or nil
+  return candidate(f and f.editBox) or fallback
 end
 
 -- Puts text at the cursor of the chat typing box, opening it if needed. Item links go through the

@@ -3,6 +3,28 @@
 local D = { MAX_EXTRA = 3 }
 RWA.DisplayEditor = D
 
+-- This retired data editor is kept for its standalone regression fixtures;
+-- it is not loaded by the current addon runtime.
+local function ownedTriggers(data)
+  local owned = {}
+  local auxiliary = type(data.triggers.auxiliary) == "table" and data.triggers.auxiliary or {}
+  for _, element in ipairs(data.elements or {}) do
+    local from = tonumber(element.from) or 0
+    if from > 0 and data.triggers[from] then owned[from] = true end
+  end
+  local hasMain, fallback = false, nil
+  for i = 1, #data.triggers do
+    if auxiliary[i] == true or auxiliary[tostring(i)] == true then
+      owned[i] = true
+    else
+      fallback = fallback or i
+      if not owned[i] then hasMain = true end
+    end
+  end
+  if not hasMain and fallback then owned[fallback] = nil end
+  return owned
+end
+
 local function elements(data)
   if type(data) ~= "table" then
     return false, "Select an aura first."
@@ -68,7 +90,7 @@ function D.Remove(data, index)
   local source = type(removed) == "table" and tonumber(removed.from) or 0
   source = source or 0
   local wasOwned = source > 0 and type(data.triggers) == "table" and data.triggers[source]
-    and RWA.OwnedTriggers(data)[source]
+    and ownedTriggers(data)[source]
   if index == 0 then
     if not list or #list == 0 then
       return false, "An aura must keep at least one display."
@@ -93,7 +115,9 @@ function D.Remove(data, index)
     -- the main display's normal combined trigger state. Its former exclusively-owned
     -- source stays auxiliary when there is no remaining extra using it.
     -- Never remove, reorder or rewrite triggers or conditions to force a particular source.
-    if (tonumber(extra.from) or 0) > 0 then
+    if data.schemaVersion == 2 and extra.sourceId then
+      data.primarySourceId = extra.sourceId
+    elseif (tonumber(extra.from) or 0) > 0 then
       reason = "The promoted display now uses the main display's triggers. All triggers and conditions were kept."
     end
     index = 1

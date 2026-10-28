@@ -189,20 +189,17 @@ Kitty.ComboManager.selectCommandList = function(mainClass, subClass)
 	return nil;
 end;
 Kitty.ComboManager.selectCommandListByName = function(commandListNames)
-	local list = {};
-	for _, name in ipairs(commandListNames) do
-		list[name] = true;
-	end
-
-	local resultList = {};
-	for _, commandList in pairs(Kitty.SettingManager.setting.command) do
-		if(commandList.info ~= nil) then
-			if(list[commandList.info.name] ~= nil) then
-				table.insert(resultList, commandList);
-			end
-		end
-	end
-	return resultList;
+    local resultList, seen = {}, {};
+    -- Requested names define priority. Existing duplicate names retain saved-list order.
+    for _, name in ipairs(commandListNames) do
+        if(not seen[name]) then
+            seen[name] = true;
+            for _, commandList in ipairs(Kitty.SettingManager.setting.command) do
+                if(commandList.info and commandList.info.name == name) then table.insert(resultList, commandList); end
+            end
+        end
+    end
+    return resultList;
 end;
 
 Kitty.ComboManager.getSupportedClass = function(allCommandList)
@@ -309,6 +306,27 @@ Kitty.ComboManager.commandListHelp = function(targetList)
 
 	return resultList;
 end;
+-- Colour actor labels without touching already-coloured skill or effect names.
+local function colorConditionActors(text)
+  local startTag = "|H|h|c[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]";
+  local tokens = Kitty.Tokenizer(text, {startTag, "|r|h"});
+  local parts, depth = {}, 0;
+  while(true) do
+    local isText, token = tokens:nextToken();
+    if(isText == nil) then break; end
+    if(isText and depth == 0) then
+      local function actor(label)
+        return Kitty.color(label, Kitty.PURPLE[1], Kitty.PURPLE[2], Kitty.PURPLE[3]);
+      end
+      token = string.gsub(token, "%[my target%]", actor);
+      token = string.gsub(token, "%[me%]", actor);
+    elseif(not isText) then
+      if(string.match(token, startTag)) then depth = depth + 1; else depth = depth - 1; end
+    end
+    table.insert(parts, token);
+  end
+  return table.concat(parts);
+end;
 Kitty.ComboManager.commandHelp = function(command)
 	local resultList = {};
 	if(command ~= nil) then
@@ -321,9 +339,10 @@ Kitty.ComboManager.commandHelp = function(command)
 				conditionMessage = {conditionMessage};
 			end
 
-			-- lines with a teal [name] stay white, the others are bright purple
+			-- Actor names stay purple; colour the sentence white for teal values and targeting.
 			for _, value in ipairs(conditionMessage) do
-				if(Kitty.hasTeal(value)) then
+				value = colorConditionActors(value);
+				if(Kitty.hasTeal(value) or condition.conditionType == "isTargeted") then
 					table.insert(resultList, Kitty.color(value, 255, 255, 255));
 				else
 					table.insert(resultList, Kitty.color(value, Kitty.PURPLE[1], Kitty.PURPLE[2], Kitty.PURPLE[3]));

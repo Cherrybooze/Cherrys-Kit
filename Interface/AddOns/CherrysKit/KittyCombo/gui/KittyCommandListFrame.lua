@@ -51,6 +51,19 @@ end;
 Kitty.CommandListFrame.save = function()
 	Kitty.SettingManager.setting.command = nil;	-- GC
 	Kitty.SettingManager.setting.command = Kitty.CommandListFrame.allCommandList;
+    if(Kitty.ModeUI) then
+        for _, list in ipairs(Kitty.SettingManager.setting.command or {}) do
+            for _, command in ipairs(list) do
+                for _, condition in ipairs(command) do
+                    if(condition.conditionType == "modeOn") then
+                        if(condition.name) then Kitty.ModeUI.add(condition.name); end
+                        for _, entry in ipairs(condition) do if(entry.name) then Kitty.ModeUI.add(entry.name); end end
+                    end
+                end
+            end
+        end
+        Kitty.ModeUI.refresh();
+    end
 end;
 Kitty.CommandListFrame.close = function()
 	Kitty.CommandListFrame.allCommandList = nil;
