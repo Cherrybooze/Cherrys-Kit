@@ -4,7 +4,7 @@ This optional Windows extension collects an available Daily Loyalty Bonus when y
 
 ## Install
 
-1. Download `CherrysKit-GlobalBankDailyRewards-1.0.1.zip` from the release assets when this version is published. Extract it into the game's `Interface/AddOns/` folder and merge `CherrysKit/`.
+1. [Download the Global Bank Daily Rewards installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/globalbank-daily-rewards-v1.0.1/CherrysKit-GlobalBankDailyRewards-1.0.1.zip). Extract it into the game's `Interface/AddOns/` folder and merge `CherrysKit/`.
 2. Run `Interface/AddOns/CherrysKit/GlobalBank/Helper/Install Chrome extension.bat`. The window shows each step and stays open.
 3. In Chrome, enable Developer mode, select **Load unpacked**, and paste the path copied by the installer into the folder picker with **Alt+D**, then **Ctrl+V** and **Enter**. Click **Select Folder**, even if the file list looks empty. Chrome requires this one-time step for an unpacked extension.
 4. Run the Global Bank helper and log in to your characters so it can create their snapshots. Open the daily page in Chrome via ZShop. A matching level 100 character is required for the local record. The daily page can offer to start the helper if it is stopped.
