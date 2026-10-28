@@ -8,7 +8,7 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
 ## Features
 
-- **Daily reward button**: a small button on screen. Left click opens the item shop right on the daily loyalty reward page. Its picture marks when this level 100 character opened the page today; opening it does not itself confirm a collection. Characters below level 100 get a separate icon. The day resets at midnight German time. Move it with right-drag or Shift+drag; show, hide and lock it in the ZShop window.
+- **Daily reward button**: a small button on screen. Left click opens the item shop right on the daily loyalty reward page. Its picture marks when this level 100 character opened the page today; opening it does not itself confirm a collection. Characters below level 100 get a separate icon. The day resets at midnight German time. Move it with right-drag or Shift+drag; show, hide and lock it in the ZShop window. Its saved position scales when the game window or UI scale changes, and an off-screen position is brought back into view.
 - **Item shop in your web browser** or in the game's own shop window, your choice.
 - **Item depot** command to open your depot page.
 - ZShop window with its settings, and a row in Cherry's Kit. No other library needed (the original needed aaa_pylib).

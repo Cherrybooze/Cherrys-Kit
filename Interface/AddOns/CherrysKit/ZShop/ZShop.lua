@@ -205,6 +205,7 @@ function me.OnEvent(event, arg1)
   if event == "VARIABLES_LOADED" then
     me.Take()
     if me.Button and me.Button.Place then
+      if me.Button.InitializePosition then me.Button.InitializePosition() end
       me.Button.Place()
       me.Button.Refresh()
     end

@@ -1,2 +1,5 @@
 # Preserve the bytes of the imported release and packaged assets.
 * -text
+
+# Windows batch files use CRLF.
+*.bat -text whitespace=cr-at-eol
