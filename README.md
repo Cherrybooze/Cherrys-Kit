@@ -72,7 +72,7 @@ Some integrations need both addons: for example, running a kitty from Grid needs
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/globalbank-daily-rewards-v1.0.1/CherrysKit-GlobalBankDailyRewards-1.0.1.zip) — a separate Windows package that collects an available reward on the Gameforge daily shop page and records confirmed collections in local helper data. See the [extension guide](extras/GlobalBankDailyRewards/README.md) for its one-time Chrome setup, privacy, and Global Bank requirements. Chrome Web Store installation is not yet available.
+[Download Global Bank Daily Rewards for Chrome](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/globalbank-daily-rewards-v1.0.2/CherrysKit-GlobalBankDailyRewards-1.0.2.zip) — a separate Windows package that collects an available reward on the Gameforge daily shop page and records confirmed collections in local helper data. See the [extension guide](extras/GlobalBankDailyRewards/README.md) for its one-time Chrome setup, privacy, and Global Bank requirements. Chrome Web Store installation is not yet available.
 
 ## Support and pull requests
 
