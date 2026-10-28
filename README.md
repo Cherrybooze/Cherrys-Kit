@@ -70,6 +70,10 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 
 Some integrations need both addons: for example, running a kitty from Grid needs KittyCombo. Each addon's README lists its requirements and current limits. Features still being tested are labelled there.
 
+## Optional Chrome extension
+
+[Global Bank Daily Rewards](extras/GlobalBankDailyRewards/README.md) collects an available reward on the Gameforge daily shop page and records confirmed collections in local helper data. It is a separate download; the guide explains its one-time Chrome setup, privacy, and Global Bank requirements. Chrome Web Store installation is not yet available.
+
 ## Support and pull requests
 
 Support and PR reviews are **best effort**. This is a small personal project; there is no promised response time, release schedule, or guarantee that every request will be taken on.
@@ -96,7 +100,7 @@ Python 3.10 or later is enough; there are no Python package dependencies:
 python tools/build_release.py
 ```
 
-This creates sixteen ZIPs in `dist/<kit version>/`, a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
+This creates sixteen addon ZIPs and one optional Chrome extension ZIP in `dist/<kit version>/`, a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
 
 The original 0.11.77 import preserved the supplied runtime code. Earlier READMEs referring to old tests or generators are kept as reference notes, but those development tools were not included in the handoff. Current tests simulate client APIs; native drawing, input, sound and event timing still need in-game checks.
 

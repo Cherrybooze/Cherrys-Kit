@@ -1,0 +1,11 @@
+Global Bank Daily Rewards - installation (Windows and Google Chrome)
+
+1. Install Cherry's Kit and Global Bank first. Extract this ZIP into your game\Interface\AddOns folder, merging CherrysKit. This adds the extension and its bridge to GlobalBank\Helper; it does not replace the addon.
+2. Open game\Interface\AddOns\CherrysKit\GlobalBank\Helper and run Install Chrome extension.bat. Keep the window open and follow the one-time Chrome steps it displays: enable Developer mode, choose Load unpacked, paste the copied folder path in the folder picker with Alt+D and Ctrl+V, then choose Select Folder. The folder picker may appear empty; that is normal.
+3. Start the Global Bank helper, log in to each character and let it update its snapshots. A matching level 100 character is required. Open the Daily Loyalty Bonus page through ZShop in Chrome. An available reward is collected automatically; the extension records a confirmed collection locally.
+
+Chrome Web Store installation is not available yet. This setup registers a local native messaging bridge for the current Windows user. If the helper is not running, the daily page offers a button to start it. Click the extension icon for status.
+
+Privacy: the content script runs only on the Gameforge daily shop page and does no automatic page processing on other websites. It reads the displayed character name, server and reward state there. Temporary extension state is held for the Chrome session; the local bridge writes confirmed character, server, day and time to game\Interface\GlobalBankHelper\DailyRewards.json. The extension does not transmit that data to the developer or another third party; collecting the reward communicates with Gameforge. No game password is needed. GlobalBank.json also contains your characters' inventory data; keep the GlobalBankHelper folder private.
+
+This is an independent community project, not an official Gameforge extension. If Gameforge changes its page or the account/character cannot be identified safely, verify collection on the website and update the local snapshot.

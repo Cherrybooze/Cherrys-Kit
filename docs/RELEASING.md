@@ -15,6 +15,7 @@ Outputs go to `dist/<kit version>/`, which is ignored by Git. Each version gets 
 - `CherrysKit-Full-<kit version>.zip`: the complete installed tree.
 - `CherrysKit-Hub-<kit version>.zip`: shared root files, KitLoad, Media, hub reference docs, and LoadTimes.
 - One `CherrysKit-<folder>-<addon version>.zip` per addon, including LoadTimes.
+- `CherrysKit-GlobalBankDailyRewards-<extension version>.zip`: optional Chrome extension and local bridge, installed separately on top of Global Bank.
 - `release-manifest.json`: package versions, dependency notes, file inventories and hashes.
 - `SHA256SUMS.txt`: hashes of every ZIP and the release manifest.
 - `RELEASE_NOTES.md`: notes ready for the GitHub release.
@@ -27,7 +28,7 @@ The hub alone and hub-plus-addon selections deliberately lack the unselected add
 
 ## ZIP installation layout
 
-Every install ZIP starts with `CherrysKit/`. Extract it into `<game>/Interface/AddOns/` and merge folders:
+Every install ZIP, including the optional extension ZIP, starts with `CherrysKit/`. Extract it into `<game>/Interface/AddOns/` and merge folders:
 
 ```text
 <game>/Interface/AddOns/
@@ -51,7 +52,7 @@ Each addon includes its own README, local reference notes and the original combi
 4. Commit and push to `main`. Let the packaging check pass.
 5. Tag that commit, for example `v0.11.77`, and push the tag.
 6. Build again from the clean tagged checkout so `release-manifest.json` records the right source commit.
-7. Create a GitHub release for the tag with the generated notes. Upload all sixteen ZIPs, `release-manifest.json` and `SHA256SUMS.txt`.
+7. Create a GitHub release for the tag with the generated notes. Upload all seventeen ZIPs (sixteen addon ZIPs and the optional extension ZIP), `release-manifest.json` and `SHA256SUMS.txt`.
 8. Compare uploaded asset sizes and SHA-256 digests with the local files before publishing.
 9. Update the direct full-kit ZIP links at the top of the project README and the repository's About website. Keep the full-kit asset labelled as the installer, and start the release notes with its direct download. Test a downloaded asset by extracting it directly into an empty `Interface/AddOns/` folder: `CherrysKit/CherrysKit.toc` must appear there, with no repository or version wrapper.
 
