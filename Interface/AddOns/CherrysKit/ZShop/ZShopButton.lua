@@ -74,8 +74,51 @@ function B.BerlinOffset(utc)
   return 3600
 end
 
+-- Some clients do not expose os.time. The Global Bank helper writes UTC seconds
+-- every 30 seconds; trust it only after observing a new heartbeat in this session.
+local beatPath = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua"
+local lastBeat, anchorBeat, anchorTick, lastRead, lastTick
+local function helperNow()
+  if type(GetTime) ~= "function" or type(dofile) ~= "function" then
+    return nil
+  end
+  local ok, tick = pcall(GetTime)
+  tick = ok and tonumber(tick) or nil
+  if not tick then return nil end
+  if lastTick and tick < lastTick then
+    lastBeat, anchorBeat, anchorTick, lastRead = nil, nil, nil, nil
+  end
+  lastTick = tick
+  if not lastRead or tick - lastRead >= 5 then
+    lastRead = tick
+    GlobalBank_HelperBeat = nil
+    local readOK = pcall(dofile, beatPath)
+    local beat = readOK and tonumber(GlobalBank_HelperBeat) or nil
+    GlobalBank_HelperBeat = nil
+    if beat and beat >= 946684800 then
+      if lastBeat and beat ~= lastBeat then
+        anchorBeat, anchorTick = beat, tick
+      end
+      lastBeat = beat
+    end
+  end
+  if anchorTick and tick - anchorTick <= 75 then
+    return anchorBeat + math.max(0, tick - anchorTick)
+  end
+  return nil
+end
+
 function B.Now()
-  return os and os.time and os.time() or nil
+  if os and type(os.time) == "function" then
+    local ok, now = pcall(os.time)
+    if ok and type(now) == "number" then
+      B.clockSource = "client"
+      return now
+    end
+  end
+  local now = helperNow()
+  B.clockSource = now and "Global Bank helper" or "unavailable"
+  return now
 end
 
 -- Epoch seconds of the last and the next 00:00 in Germany
@@ -247,15 +290,15 @@ function B.StatusText()
     local _, level = me.CanDaily()
     text = "|cff9ea8baNeeds level " .. me.DAILY_LEVEL .. " (this character " .. tostring(level) .. ")|r"
   elseif state == "claimed" then
-    text = "|cff40ff40Claimed today on this character|r"
+    text = "|cff40ff40Daily page opened today on this character|r"
   else
-    text = "|cffffd100Not claimed today|r"
+    text = "|cffffd100Daily page not marked as opened today|r"
   end
   if now then
     local _, nextReset = B.ResetTimes(now)
     text = text .. "\n|cff9ea8baResets in " .. hm(nextReset - now) .. " (00:00 German time)|r"
   else
-    text = text .. "\n|cffff6060No clock in this client: the claimed mark can't be kept.|r"
+    text = text .. "\n|cffff6060No clock yet: start the Global Bank helper and wait up to a minute.|r"
   end
   return text
 end
@@ -295,6 +338,12 @@ end
 -- Every 30 seconds: the icon changes at the reset or when the character reaches level 100.
 B.tick = 0
 function B.OnUpdate(elapsed)
+  -- Sample the helper clock even while the daily button is hidden or below level.
+  B.clockTick = (B.clockTick or 0) + (tonumber(elapsed) or 0)
+  if B.clockTick >= 5 then
+    B.clockTick = 0
+    B.Now()
+  end
   B.tick = B.tick + (tonumber(elapsed) or 0)
   if B.tick >= 30 then
     B.tick = 0

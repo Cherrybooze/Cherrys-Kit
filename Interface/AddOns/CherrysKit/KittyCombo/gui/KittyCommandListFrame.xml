@@ -255,7 +255,7 @@
 							Kitty.CommandListFrame.allCommandList:copy(index);
 							-- Update the command list name
 							local commandListName = Kitty.CommandListFrame.allCommandList[index+1].info.name;
-							Kitty.CommandListFrame.allCommandList[index+1].info.name = commandListName .. "_copy";
+							Kitty.CommandListFrame.allCommandList[index+1].info.name = Kitty.CommandConfigFrame.copyName(commandListName .. "_copy", Kitty.CommandListFrame.allCommandList);
 							Kitty.CommandListFrame.onRedraw(KittyCommandListFrame, tonumber(KittyCommandListFrame_ScrollBar:GetValue()), 10);
 						end)();
 						]]>

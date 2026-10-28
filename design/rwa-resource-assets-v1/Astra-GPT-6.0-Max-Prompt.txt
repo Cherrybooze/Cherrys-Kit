@@ -1,0 +1,130 @@
+# Implement default RWA resource auras — Astra GPT-6.0 Max
+
+Implement this in the latest Cherrys-Kit working checkout. Deliver the working local change, integrated assets and a concise verification report. This is an implementation task, not a request for another plan.
+
+The goal is a small, polished set of default resource auras that works across the game's classes and class combinations, only loads applicable resources, and stays consistent with the current RWA editor. Keep the implementation focused. Reuse existing systems and remove redundant paths where appropriate; do not introduce a general resource framework, another rules engine, or a large new testing project.
+
+## 1. Establish the current source first
+
+Read the applicable AGENTS.md instructions and inspect the actual checkout, working changes and current addon versions before editing. Preserve the newer work Terra and Astra have already made. Earlier analysis used kit 0.11.79 / RWA 0.9.17; that is reference context, not the version to restore or assume is current.
+
+Relevant RWA files include Triggers.lua, Engine.lua, Regions.lua, Database.lua, Events.lua, MediaList.lua, Widgets.lua, Rules.lua, Editor.lua and UnifiedEditor.lua, plus the XML and media registration files actually loaded by the current TOC. Follow the current module boundaries and callback conventions. KittyCombo/lib/managers/BuildManager.lua and KittyCombo/combo/KittyConditions.lua provide useful resource-reading examples, but these auras must not acquire a hard dependency on KittyCombo.
+
+Keep the accepted RWA design: one canonical rules system per aura, display as part of rule actions, readable conditions and branches, and one contextual Field editor. Add relevant style/settings controls there. Do not reintroduce legacy tabs or parallel resource-only configuration systems.
+
+## 2. Supplied artwork and reference images
+
+Use this asset package as the visual specification. The cyan soul diamond is explicitly approved: preserve its design and colour.
+
+Transparent PNG masters:
+
+- masters/soul-diamond.png
+- masters/max-label.png
+- masters/bar-frame-metal.png
+- masters/bar-fill-bevel.png
+- masters/bar-fill-glass.png
+
+Reference boards:
+
+- references/resource-defaults.png
+- references/bar-styles-and-psi.png
+
+The boards illustrate composition and options; their sample numbers are not gameplay data. The written behavior in this prompt takes precedence over decorative details in the reference images. Reference-board titles, captions and the full example stack are not part of the in-game HUD. Use separate live text and fill values. Never bake the numbers, resource names, full diamond rows or Max visibility into a composite runtime image.
+
+Keep the original masters intact. Produce appropriately sized runtime textures with alpha in the format supported by the target client. The expected exports are uncompressed 32-bit RGBA TGA, using these power-of-two canvases:
+
+- Soul diamond: 64 x 64.
+- Max label: 256 x 128.
+- Metal frame: 512 x 64.
+- Bevel and glass fills: 256 x 32 each.
+
+Preserve proportions with transparent padding where needed. Trim excess transparent source margins before fitting the runtime canvas, and record the actual content/opening bounds so fills align with their frames. Check the alpha edges and actual in-game-scale readability. Do not stretch the diamond into a square or distort the italic Max lettering. Do not redraw, recolour or substitute the approved diamond. Do not load the large PNG masters as runtime textures. Register the small runtime files through the existing media mechanism and use native texture paths.
+
+## 3. Resources and availability
+
+Provide one default preset for each resource type: Mana, Rage, Focus, Energy and PSI / Soul Points. This covers the relevant classes dynamically; do not create a duplicate aura for every class combination.
+
+Availability is separate from value. An active resource at zero is still an active resource. Never use current > 0 as the loading condition. On class changes, login and other relevant lifecycle changes, resolve which resource pools are actually active and update or unload the matching auras.
+
+In RoM, UnitMana is the primary-class resource slot and UnitSkill is the secondary-class resource slot. They are not synonyms for mana and energy. Resolve the slots using UnitManaType and UnitSkillType: the existing project's mapping is 1 = mana, 2 = rage, 3 = focus, 4 = energy. Read the corresponding current and maximum values from the matching slot. Inspect the current implementation and client conventions rather than relying on old comments or guessing from class names.
+
+Account for primary and secondary resources. Avoid displaying the same typed resource twice when both slots describe the same pool. Treat a missing API, invalid value, unsupported type or unavailable pool as unavailable, not as a full resource. Obtain bar maxima from the actual resource data instead of assuming every bar has a maximum of 100.
+
+PSI needs its own applicability check. For standard RoM, it belongs to the active primary Warlock, whose class token is HARPSYN. Verify the available class API and current client contract. A Warlock secondary class, the existence of the global GetSoulPoint function, or a returned zero must not by themselves activate a PSI aura. Non-Warlocks must not load an empty soul-point display.
+
+GetSoulPoint returns the current count and a Willpower status; its second return is not the resource maximum. The reviewed project uses a standard range of 0–6. Keep the cap in one small resource provider/configuration point, using a reliable native maximum if the target client exposes one, otherwise the verified standard cap of six. Do not invent an API or encode the cap into the artwork. Normalize the provider's output once so rendering and conditions consume the same valid count, cap and availability.
+
+## 4. Required PSI presentation
+
+The default PSI style is a native number plus exactly one instance of the approved cyan diamond for each existing soul point.
+
+- Unavailable resource: hide the whole aura.
+- Available with zero points: show only the number 0. No diamonds, empty diamond outlines, ghost cells, bar, background frame, glow or Max label.
+- Available with N points: show the native count N and exactly N cyan diamonds.
+- Available at its valid maximum: show the number, those diamonds and the separate yellow italic cartoon-style Max label.
+
+Do not render six fixed empty slots and light some of them. The user specifically wants a diamond added for each point that exists. Keep the number's positioning stable and use consistent pip spacing. Render the count with the existing native text facilities, not image digits or a new font dependency.
+
+Also offer a PSI bar option in the same aura's existing display/style controls. This changes the presentation of the same resource; it does not create another independently configured aura or evaluator. The zero rule still applies: at zero, the PSI bar and frame disappear and only 0 remains. At nonzero values, show the selected bar style and live count. The same Max policy applies.
+
+## 5. Max label rules
+
+Use the supplied yellow italic Max artwork as a separate overlay. It is eligible only when the resource is available, its maximum is valid and greater than zero, and current >= maximum.
+
+Apply these exact exceptions:
+
+- Mana: never show Max.
+- Energy: show Max at full only while out of combat. Suppress it throughout combat, including when energy stays full.
+- Rage, Focus and PSI: show Max at full while the resource is applicable.
+
+A combat transition must update the Energy Max overlay even if the resource value did not change. Hide the overlay as soon as the resource drops below cap or becomes unavailable. Reuse the existing combat state/events or shared update mechanism. Do not play sounds, execute custom code or animate a permanent attention-grabbing effect merely because the resource is full.
+
+## 6. Three useful bar styles
+
+Add a small, coherent set of options to the existing bar style selector:
+
+1. Beveled Metal: separate metal frame with the bevel fill.
+2. Glass: glass fill with a restrained native border.
+3. Minimal: existing Square_FullWhite/flat fill with a native border.
+
+Use the reference boards for proportions, layering and palette. Tint fill layers through the existing rendering facilities where suitable. The artwork is shared across resource types and classes. Avoid creating many redundant colour files.
+
+Keep the frame and ornaments at their full display size while the fill changes. In the reviewed renderer, changing fill width resizes the whole fill texture; inspect the latest implementation and ensure decorative ends stay in the separate fixed frame layer. Reuse width-based filling for these simple stretch-safe textures where it already works. Add UV cropping only if a concrete visual problem requires it; do not replace the bar renderer just to add these styles. Preserve vertical/reverse options if the current renderer already supports them.
+
+Expose only controls that help users: style, colour where appropriate, dimensions, text, and the PSI diamonds/bar choice. Give each relevant selection a concise mouseover explanation. Keep these in the established Field editor and retain the current section scrolling/collapse behavior.
+
+## 7. Built-in defaults and saved data
+
+Integrate presets into the current database lifecycle for both existing and new users. Use stable built-in identifiers so installation is idempotent and never creates another copy on each login, reset or class switch.
+
+Preserve user edits to installed defaults. A user who deletes a default must not have it silently resurrect on the next login. Reuse the existing preset/version/installation markers if available; otherwise add the smallest durable marker needed to distinguish initial installation from a deliberate deletion. An explicit restore-defaults operation may recreate missing defaults when requested.
+
+Presets must remain normal, editable canonical auras with the current rules and output ownership. Import/export must preserve the relevant resource/style settings and stable identities without replacing unrelated auras or creating conflicting output owners. Inspect the existing import and reset paths before choosing the integration point.
+
+## 8. Rendering, preview and cost
+
+Reuse the current region lifecycle, pooling, cached reads and shared resource sampling. Do not create a timer per pip or poll every class resource independently. Reuse up to six diamond widgets for the standard PSI provider, show the required count and hide the rest. Avoid creating tables, textures or strings repeatedly on every update when nothing changed.
+
+Update the relevant parts when resource value, cap, availability, class or combat state changes. Keep unused defaults unloaded or inactive using the current engine's normal lifecycle. No speculative benchmark framework or general-purpose event bus is needed.
+
+Provide useful editor previews for zero, partial, full and unavailable states, plus the Energy full/in-combat exception. Preview must be isolated from live values and must not execute sounds, hooks or custom action code. Keep the display and its readable explanation in agreement.
+
+## 9. Focused verification and completion
+
+Use the existing relevant tests or a small focused fixture, plus normal Lua/XML and package checks required by the repository. Cover the concrete risks: typed primary/secondary resource selection; active zero versus inactive; PSI count/diamonds/zero behavior; Max exceptions and combat transitions; class switching; and idempotent preset installation that respects edits and deletion. Group related cases in a few meaningful checks. Do not add dozens of UI snapshots or tests that only restate implementation details.
+
+Check runtime texture alpha, sizes and paths, and that fixed frame details do not distort with partial fill. Report simulated validation separately from actual in-game validation. Do not claim native rendering or drag/input testing that was not performed.
+
+Follow applicable repository instructions for local addon/kit version metadata, README and release-package consistency. Finish the implementation and local package preparation rather than stopping at a proposal. Do not push, tag remotely or publish a release as part of this task.
+
+Your completion report should state what changed, where the assets/defaults were integrated, the resource and Max behavior, relevant validation results, and any specific remaining client-side uncertainty. Keep it concise and actionable.
+
+## Reference evidence
+
+Primary/secondary resource-slot explanation by the TirasMacros author on the official game forum:
+https://forum.runesofmagic.gameforge.com/forum/thread/11861-tirasmacros-de-eng/
+
+GetSoulPoint example returning points and Willpower status, with a six-point example:
+https://forum.runesofmagic.gameforge.com/forum/thread/8221-saces-knackzauber-per-makro-und-psi-abfrage/
+
+These are useful primary author reports hosted on the official forum, not a substitute for inspecting the actual current client and working source.

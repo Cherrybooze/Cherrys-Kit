@@ -56,6 +56,21 @@ Kitty.CommandConfigFrame.createUniqueName = function(base, list)
 	return name;
 end;
 
+-- Set all header controls without allowing their change handlers to rewrite the draft.
+Kitty.CommandConfigFrame.populateInfo = function(info)
+    local previous = Kitty.CommandConfigFrame.allowUpdateData;
+    Kitty.CommandConfigFrame.allowUpdateData = false;
+    local ok, problem = pcall(Kitty.settingToComponent, info, Kitty.CommandConfigFrame.relativeList);
+    Kitty.CommandConfigFrame.allowUpdateData = previous;
+    if(not ok) then error(problem, 0); end
+end;
+
+Kitty.CommandConfigFrame.copyName = function(base, all)
+    local names = {};
+    for _, list in ipairs(all or {}) do if(list.info) then names[list.info.name] = true; end end
+    if(not names[base]) then return base; end
+    return Kitty.CommandConfigFrame.createUniqueName(base .. "_", names);
+end;
 --------------------------------------------------------------------------------
 -- Show window
 Kitty.CommandConfigFrame.open = function(allCommandList, index, callbackFunc)
@@ -84,7 +99,7 @@ Kitty.CommandConfigFrame.open = function(allCommandList, index, callbackFunc)
 		Kitty.CommandConfigFrame.targetCommandList = Kitty.ListManager(command);
 	end
 
-	Kitty.settingToComponent(Kitty.CommandConfigFrame.targetCommandList.info, Kitty.CommandConfigFrame.relativeList);
+	Kitty.CommandConfigFrame.populateInfo(Kitty.CommandConfigFrame.targetCommandList.info);
 
 	-- Show rows
 	Kitty.CommandConfigFrame.onRedraw(this, 1, 10);
@@ -213,7 +228,7 @@ Kitty.CommandConfigFrame.importCode = function()
 	end
 
 	Kitty.CommandConfigFrame.targetCommandList = Kitty.ListManager(commandList);
-	Kitty.settingToComponent(Kitty.CommandConfigFrame.targetCommandList.info, Kitty.CommandConfigFrame.relativeList);
+	Kitty.CommandConfigFrame.populateInfo(Kitty.CommandConfigFrame.targetCommandList.info);
 	Kitty.CommandConfigFrame.onRedraw(KittyCommandConfigFrame, 1, 10);
 	KittyCommandConfigFrame_ImportEditBox:SetText("");
 	Kitty.CommandConfigFrame.refreshExport(false);

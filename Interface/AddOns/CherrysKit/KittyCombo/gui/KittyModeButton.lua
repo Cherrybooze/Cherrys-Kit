@@ -101,6 +101,11 @@ M.names = function()
 	end
 	local setting = Kitty.SettingManager and Kitty.SettingManager.setting;
 	collect(found, setting and setting.command);
+    -- Modes in an unsaved rotation remain available in the draft editor.
+    local staged = Kitty.CommandListFrame and Kitty.CommandListFrame.allCommandList;
+    if(type(staged) == "table") then collect(found, staged); end
+    local draft = Kitty.CommandConfigFrame and Kitty.CommandConfigFrame.targetCommandList;
+    if(type(draft) == "table") then collect(found, {draft}); end
 	-- rows open in the condition editor
 	local editing = Kitty.CommandConditionFrame and Kitty.CommandConditionFrame.targetConditionList;
 	if(type(editing) == "table") then

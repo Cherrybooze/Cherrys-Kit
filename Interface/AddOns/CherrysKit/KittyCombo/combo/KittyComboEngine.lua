@@ -9,7 +9,18 @@ end
 
 --------------------------------------------------------------------------------
 Kitty.ComboManager.debugSkillList = {};
-Kitty.ComboManager.check = function(self, targetList)
+Kitty.ComboManager.check = function(self, targetList, path)
+    path = path or {};
+    if(path[targetList]) then
+        local now = Kitty.getTime and Kitty.getTime() or 0;
+        if(not Kitty.ComboManager.cycleWarning or now - Kitty.ComboManager.cycleWarning >= 5) then
+            Kitty.ComboManager.cycleWarning = now;
+            Kitty.sendMessage("KittyCombo: cyclic proc skipped: " .. tostring(targetList.info and targetList.info.name or "unknown"), "DEFAULT", 1, 0, 0);
+        end
+        return nil;
+    end
+    path[targetList] = true;
+    local function walk()
 	-- Skill check
 	-- Each command, in priority order
 	for _, command in ipairs(targetList) do
@@ -71,7 +82,7 @@ Kitty.ComboManager.check = function(self, targetList)
 					-- Check the command's conditions
 					result = self:checkCondition(command);
 					if(result) then
-						local commandType, commandName = self:check(commandLists[1]);	-- Recursive call
+						local commandType, commandName = self:check(commandLists[1], path);	-- Recursive call
 						if(commandType ~= nil) then
 							if(Kitty.isDebugFlag) then
 								Kitty.debugPrint("Check result. CommandType:[" .. commandType .. "], CommandName:[" .. commandName .. "], ProcName:[" .. command.commandName .. "]");
@@ -114,6 +125,10 @@ Kitty.ComboManager.check = function(self, targetList)
 		Kitty.debugPrint("SelectedCommand:[nil], CommandName:[" .. tostring(targetList.info and targetList.info.name) .. "]");
 	end
 	return nil;
+    end
+    local commandType, commandName, procName = walk();
+    path[targetList] = nil;
+    return commandType, commandName, procName;
 end;
 -- Command lists used by "proc" commands, looked up once per key press
 Kitty.ComboManager.findProc = function(self, name)

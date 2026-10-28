@@ -73,7 +73,7 @@ end
 ---------------------------------------------------------------------------
 
 local function castBar(id, desc, unit, y, color)
-  return {
+  return RWA.ApplyDefaultPosition({
     id = id,
     desc = desc,
     regionType = "aurabar",
@@ -89,13 +89,12 @@ local function castBar(id, desc, unit, y, color)
     texture = "Statusbar_Clean",
     color = color,
     bgColor = { 0.05, 0.04, 0.02, 0.72 },
-    triggers = {
-      mode = "all",
-      { type = "status", check = "cast", unit = unit, fillUp = true },
-    },
-    conditions = {},
+    schemaVersion = 2, defaultVisible = false, primarySourceId = "s1",
+    sources = { { id = "s1", type = "status", check = "cast", unit = unit, fillUp = true } },
+    rules = { { id = "r1", name = "Show cast", when = { mode = "all", checks = {
+      { id = "c1", sourceId = "s1", field = "active" } } }, set = { visible = true } } },
     animation = { start = "fade", main = "none", finish = "fade" },
-  }
+  })
 end
 
 CB.EXAMPLES = {
