@@ -21,11 +21,16 @@ class SentenceBranchTests(unittest.TestCase):
         self.fail('row missing')
 
     def pick(self,kind,value=None):
-        for b in self.editor.menu.buttons.values():
-            item=b.flowChoice
-            if item and hasattr(item.value,'kind') and item.value.kind==kind and (value is None or item.value.value==value):
-                self.h.script(b.name,'OnClick',key='LBUTTON');return
-        self.fail('catalogue option missing')
+        # Choices can span several pages after the operator category was added.
+        while True:
+            for b in self.editor.menu.buttons.values():
+                item=b.flowChoice
+                if item and hasattr(item.value,'kind') and item.value.kind==kind and (value is None or item.value.value==value):
+                    self.h.script(b.name,'OnClick',key='LBUTTON');return
+            page=self.editor.menu.page
+            self.h.script(self.editor.menu.buttons[42].name,'OnClick',key='LBUTTON')
+            if self.editor.menu.page==page:
+                self.fail('catalogue option missing from all pages')
 
     def test_overview_is_readable_and_idle_field_editor_is_compact(self):
         self.assertIsNone(self.editor.selection)
@@ -58,6 +63,7 @@ class SentenceBranchTests(unittest.TestCase):
         i,_=self.row(kind='check',check='c1');self.editor.RowClick(i,'more')
         values=list(self.editor.menu['values'].values())
         self.assertEqual({v.group for v in values},{'Operators','Effects & timing','Unit status','Logic & addons','Displays','Actions','Display settings','Continue'})
+        self.assertEqual(self.editor.menu['values'][1].group,'Operators')
         self.assertEqual(len([v for v in values if v.value.kind=='check']),19)
         self.assertTrue(any(v.value.kind=='check' and v.value.value=='durability' for v in values))
         self.assertTrue(any(v.value.kind=='check' and v.value.value=='resource' for v in values))
@@ -68,6 +74,23 @@ class SentenceBranchTests(unittest.TestCase):
         self.assertEqual(len(self.rwa.Editor.Get('Flow').rules[1].when.checks),2)
         i,_=self.row(kind='check',check=self.editor.selection.check);self.editor.RowClick(i,'more')
         self.assertTrue(any(v.value.kind=='check' and v.value.value=='aura' for v in self.editor.menu['values'].values()))
+
+    def test_continuation_pages_expose_all_choices_once(self):
+        i,_=self.row(kind='action',action='a1');self.editor.RowClick(i,'more')
+        menu=self.editor.menu
+        def identity(item):
+            return (item.group,item.label,item.value.kind,item.value.value)
+        expected=[identity(item) for item in menu['values'].values()]
+        seen=[]
+        while True:
+            seen.extend(identity(button.flowChoice) for button in menu.buttons.values() if button.flowChoice)
+            page=menu.page
+            self.h.script(menu.buttons[42].name,'OnClick',key='LBUTTON')
+            if menu.page==page: break
+        self.assertGreater(menu.page,0)
+        self.assertEqual(len(seen),len(expected))
+        self.assertEqual(set(seen),set(expected))
+        self.assertEqual(len(seen),len(set(seen)))
 
     def test_display_insertion_allocates_a_real_stable_output_id(self):
         i,_=self.row(kind='check',check='c1');self.editor.RowClick(i,'more');self.pick('display','text')
