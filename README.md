@@ -72,7 +72,7 @@ Some integrations need both addons: for example, running a kitty from Grid needs
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/globalbank-daily-rewards-v1.0.1/CherrysKit-GlobalBankDailyRewards-1.0.1.zip) — a separate Windows package that collects an available reward on the Gameforge daily shop page and records confirmed collections in local helper data. See the [extension guide](extras/GlobalBankDailyRewards/README.md) for its one-time Chrome setup, privacy, and Global Bank requirements. Chrome Web Store installation is not yet available.
+[Download Global Bank Daily Rewards for Chrome](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/globalbank-daily-rewards-v1.0.2/CherrysKit-GlobalBankDailyRewards-1.0.2.zip) — a separate Windows package that collects an available reward on the Gameforge daily shop page and records confirmed collections in local helper data. See the [extension guide](extras/GlobalBankDailyRewards/README.md) for its one-time Chrome setup, privacy, and Global Bank requirements. Chrome Web Store installation is not yet available.
 
 ## Support and pull requests
 
@@ -94,7 +94,7 @@ All addon source lives on **`main`**. Use short-lived branches for changes and t
 
 ## Development and checks
 
-Python 3.10 or later is enough; there are no Python package dependencies:
+Players do **not** need Python to run the addons, the Global Bank helper, or its Chrome extension. Python is only needed for development tools and tests. On Windows, get Python 3.10 or later from [Python's official downloads](https://www.python.org/downloads/windows/); the release builder has no extra Python package dependencies:
 
 ```sh
 python tools/build_release.py
@@ -104,7 +104,7 @@ This creates sixteen addon ZIPs and one optional Chrome extension ZIP in `dist/<
 
 The original 0.11.77 import preserved the supplied runtime code. Earlier READMEs referring to old tests or generators are kept as reference notes, but those development tools were not included in the handoff. Current tests simulate client APIs; native drawing, input, sound and event timing still need in-game checks.
 
-The current fixes also have Lua 5.1 regression coverage: install `tests/requirements.txt`, then run `python -m unittest discover -s tests -p 'test_*.py' -v`. The [in-game check list](docs/TESTING.md) describes the remaining native-client checks.
+The current fixes also have Lua 5.1 regression coverage: run `python -m pip install -r tests/requirements.txt`, then `python -m unittest discover -s tests -p 'test_*.py' -v`. The [in-game check list](docs/TESTING.md) describes the remaining native-client checks.
 
 ## Credits and licences
 
