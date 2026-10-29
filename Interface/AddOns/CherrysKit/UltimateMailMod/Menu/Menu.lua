@@ -6,14 +6,60 @@
 -- ###################################
 
 local hideMailFrame = true;
+-- Preserve Tab3's public mass-send names; History is third in visual order.
+local TAB_ORDER = {1, 2, 4, 3};
+
+local function positive(fn, ...)
+  if (type(fn) ~= "function") then return; end
+  local ok, value = pcall(fn, ...);
+  if (ok and type(value) == "number" and value > 0 and value < math.huge) then return value; end
+end
+
+-- Grow only the mass-send page for its sidebar. Fit the whole window when
+-- necessary and keep its screen position inside the viewport at every scale.
+function UMMMenuLayout(id)
+  local frame = UMMFrame;
+  id = id or frame.ummTab or 1;
+  frame.ummTab = id;
+  local width = id == 3 and 985 or 805;
+  local uiScale = positive(GetUIScale) or 1;
+  local screenW, screenH = positive(GetScreenWidth), positive(GetScreenHeight);
+  if (not screenW) then local w = positive(UIParent.GetWidth, UIParent);screenW = w and w * uiScale; end
+  if (not screenH) then local h = positive(UIParent.GetHeight, UIParent);screenH = h and h * uiScale; end
+  local key = table.concat({width, uiScale, screenW or 0, screenH or 0}, ":");
+  if (key == frame.ummLayoutKey) then return; end
+  frame.ummLayoutKey = key;
+  frame.ummBaseScale = frame.ummBaseScale or positive(frame.GetScale, frame) or 1;
+  local ok, x, y;
+  if (type(frame.GetPos) == "function") then ok, x, y = pcall(frame.GetPos, frame); end
+  frame:SetWidth(width);
+  UMMFrameBody:SetWidth(width - 20);
+  UMMFrameTab3:SetWidth(960);
+  for _, name in ipairs({"UMMFrameStatus", "UMMFrameModVersion"}) do
+    local label = getglobal(name);
+    if (label) then label:SetWidth(width - 5); end
+  end
+  local scale = frame.ummBaseScale;
+  if (screenW) then scale = math.min(scale, math.max(1, screenW - 8) / width / uiScale); end
+  if (screenH) then scale = math.min(scale, math.max(1, screenH - 8) / frame:GetHeight() / uiScale); end
+  scale = math.max(.1, scale);
+  frame:SetScale(scale);
+  if (ok and type(x) == "number" and type(y) == "number") then
+    if (screenW) then x = math.max(0, math.min(x, math.max(0, screenW - width * uiScale * scale))); end
+    if (screenH) then y = math.max(0, math.min(y, math.max(0, screenH - frame:GetHeight() * uiScale * scale))); end
+    frame:ClearAllAnchors();
+    frame:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", x / uiScale / scale, y / uiScale / scale);
+  end
+end
 
 local function SetupTabs(this)
   local i, tab, tabBody, title;
   
-  for i = 1, 3 do
+  local previous;
+  for _, i in ipairs(TAB_ORDER) do
     tab = getglobal(this:GetName().."Tab"..i.."Button");
     tabBody = getglobal(this:GetName().."Tab"..i);
-    title = getglobal("UMM_MENU_TAB"..i);
+    title = i == 4 and UMM_MENU_HISTORY or getglobal("UMM_MENU_TAB"..i);
     tab:ClearAllAnchors();
     if (i == 1) then
 	-- Test Ticket 9 -- release 5.0.1.2553
@@ -21,20 +67,23 @@ local function SetupTabs(this)
 	-- End of Test ---
       tab:SetAnchor("TOPLEFT", "TOPLEFT", this:GetName(), 10, 30);
     else
-      tab:SetAnchor("TOPLEFT", "TOPRIGHT", this:GetName().."Tab"..(i-1).."Button", 0, 0);
+      tab:SetAnchor("TOPLEFT", "TOPRIGHT", previous, 0, 0);
     end
     tab:SetText(title);
     PanelTemplates_TabResize(tab, 9.5/GetUIScale())
     tab:Show();
     tabBody:ClearAllAnchors();
     tabBody:SetAnchor("TOPLEFT", "TOPLEFT", "UMMFrameBody", 5, 5);
+    previous = tab:GetName();
   end
 end
 
 function UMMMenuSelectTab(id)
+  if (type(UMMCancelMassSelection) == "function") then UMMCancelMassSelection(); end
   local i, tab, tabBody;
+  UMMMenuLayout(id);
   
-  for i = 1, 3 do
+  for _, i in ipairs(TAB_ORDER) do
     tab = getglobal("UMMFrameTab"..i.."Button");
     tabBody = getglobal("UMMFrameTab"..i);
     if (i == id) then
@@ -58,6 +107,7 @@ end
 function UMMFrame_OnLoad(this)
   getglobal(this:GetName().."Title"):SetText("|cff"..UMMColor.Medium..UMM_TITLE.."|r");
   SetupTabs(this);
+  UMMMenuLayout(1);
   
   this.CheckSetting = function(self, checkBox, entry)
     if (checkBox:IsChecked()) then
@@ -93,6 +143,7 @@ function UMMFrame_OnShow(this)
 end
 
 function UMMFrame_OnHide(this)
+  if (type(UMMCancelMassSelection) == "function") then UMMCancelMassSelection(); end
   -- mailbox closed in the middle of a mail: stop and hand the item back instead of leaving it
   -- stuck in the send slot
   local status = getglobal(this:GetName().."Tab3Status");

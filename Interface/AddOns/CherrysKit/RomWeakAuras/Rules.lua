@@ -741,7 +741,8 @@ function Rules.ConvertV2(original)
   data.schemaVersion, data.nextActionId, data.nextOutputId = 3, 1, 1
   local excluded = {id=true,enabled=true,desc=true,schemaVersion=true,rules=true,sources=true,primarySourceId=true,
     nextRuleId=true,nextCheckId=true,nextSourceId=true,nextActionId=true,nextOutputId=true,previousDefinition=true,
-    load=true,defaultVisible=true,x=true,y=true,point=true,sound=true}
+    load=true,defaultVisible=true,x=true,y=true,point=true,sound=true,clickThrough=true,scale=true,
+    autoScaleScreen=true,screenReferenceWidth=true,screenReferenceHeight=true}
   local visual = { regionType = data.regionType or "icon" }
   for key, value in pairs(data) do
     if not excluded[key] then visual[key] = RWA.CopyTable(value) end

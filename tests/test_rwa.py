@@ -51,7 +51,7 @@ class RWATests(unittest.TestCase):
 
     def load_xml(self, filename):
         tree = ET.parse(RWA / filename)
-        widget_tags = {"Frame", "Button", "EditBox", "Texture", "FontString"}
+        widget_tags = {"Frame", "Button", "CheckButton", "EditBox", "Texture", "FontString"}
 
         def visit(node, parent="UIParent"):
             kind = node.tag.split("}")[-1]

@@ -1,10 +1,10 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.81/CherrysKit-Full-0.11.81.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.83/CherrysKit-Full-0.11.83.zip)
 
 # Cherry's Kit
 
-> Playtest prerelease: kit 0.11.81 includes the PR #4 fixes and is available below for in-game testing. Visit Releases for the latest stable build.
+> Playtest build: kit **0.11.83**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.81/CherrysKit-Full-0.11.81.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.83/CherrysKit-Full-0.11.83.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -12,17 +12,27 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest release: **0.11.81** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.81)
+Current playtest build: **0.11.83** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.83)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
-## What’s new in 0.11.81
+## What’s new in 0.11.83
 
-- RWA restores case-insensitive class restrictions, observes referenced sources only, and bounds both remembered-buff caches while preserving compatibility metadata.
-- Grid verifies target storage/restoration for spells and ordinary macros, and reuses one roster scan per refresh. Unsupported preservation skips the action with an explanation.
-- ZShop marks the daily-page reminder after a valid link handoff; chat ends cross-window drags; the bank's 0.2-second timer uses real elapsed time; missing Kitty range names fail cleanly; pbInfo reuses mouseover facts within an update.
-- The 0.2-second Kitty dispatch window, action eligibility, resource semantics and 1.1-second prediction lookahead remain. Successful-cast throughput gains have not been measured; the 0.6-second A/B toggle remains available.
-- Earlier auction, display-copy, helper, tooltip, macro-icon and loader fixes from the PR carry forward. Unchanged addon packages retain their own versions and package-release labels.
+- UMM adds **drag-box selection** across all six bags. Ctrl/Shift-drag adds, Escape/right-click cancels, and the original click/group controls remain available. Bound items keep their red marks and are excluded from sending.
+- A right-side **Recently sent** pane fills the mass-send recipient without clearing committed selections. It shares the same 20-name history across characters. The wider mail window fits the viewport; sending/C.O.D. locks recipient changes and queue sending locks all four tabs.
+- Kitty's mode picker rejects delayed clicks after closing or native hiding, preserving the live mode when an editor pick is cancelled.
+
+## Earlier 0.11.82 development features included
+
+- RWA adds a default-on **Make clickthrough** checkbox for every aura. Normal gameplay passes clicks through and hides its hover tooltip; editing and placement views keep their interaction.
+- **Position** now includes whole-aura **Scale**, a percentage field and quick −/+ adjustments. Linked displays inherit it once, and scaling preserves the chosen anchor. Section headers use **Expand / Collapse**.
+- Optional **Auto scale position and size with screen size** starts off for every aura. Unlocked previews have a top-left move/Shift-scale grip and per-aura **Reset position**; factory positions use the approved layout while existing saved placements are preserved.
+- Target health shows HP and percentage on a readable line: available HP directly, `~` for learned NPC estimates, and `?` for unknown HP.
+- UMM adds default-on **Mail shortcuts**: **Use last** beside To and two editable gold buttons below Send Gold. The third main tab, **History**, lists the 20 most recent distinct successful recipients. All values are shared across characters; Mass Send Items is the fourth tab.
+- Kitty's mode button and readout share a screen-aware icon picker: it opens top-down near the left edge when space allows, adapts to other corners/UI scales, and pages extra modes.
+- The new main action **changemode** selects a mode icon and adds an editable **Mode is off** guard. Execution switches on that press; prediction simulates subsequent mode conditions privately.
+- [Overhead emoji pictures need a client-side bubble hook](docs/CHAT_BUBBLES.md) absent from the inspected client. This candidate does not implement overhead rendering.
+- The 0.11.81 fixes, 0.2-second dispatch, 0.6-second A/B toggle and 1.1-second lookahead carry forward. Unchanged addon packages retain their versions and package-release labels. Successful-cast throughput gains remain unmeasured.
 
 Some features still need confirmation in the game client; see the release notes and individual addon guides for details.
 
@@ -34,7 +44,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.81/CherrysKit-Full-0.11.81.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.83/CherrysKit-Full-0.11.83.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -64,15 +74,15 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.16 |
-| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.11 |
-| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.24 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.18 |
+| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.13 |
+| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.25 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.9 |
 | [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck13 |
 | [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold. | `/gb` | 1.4.6 |
 | [Extended Macro Icons](Interface/AddOns/CherrysKit/ExtendedMacroIcons/README.md) | A larger, categorised macro icon picker. | `/emi` | 3.0.4 |
 | [TooltipIds](Interface/AddOns/CherrysKit/TooltipIds/README.md) | ID numbers for items, buffs, skills and other game data. | `/ti` | 1.0b3-ck3 |
-| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management and mass sending. | `/umm` | 7.0.1-ck5 |
+| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck7 |
 | [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Auction searching, stat filters, history and a resizable window. | `/aah` | 6.2.3 |
 | [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Loading times and memory use for the kit and other addons. | `/ckload` | 1.2.1 |
 | [ZShop](Interface/AddOns/CherrysKit/ZShop/README.md) | Item-shop access and a daily loyalty reward shortcut. | `/zshop` | 1.2.0-ck4 |
@@ -84,7 +94,7 @@ Some integrations need both addons: for example, running a kitty from Grid needs
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome 1.0.8](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.81/CherrysKit-GlobalBankDailyRewards-1.0.8.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
+[Download Global Bank Daily Rewards for Chrome 1.0.8](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.83/CherrysKit-GlobalBankDailyRewards-1.0.8.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
 
 Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step. Automatic page processing is limited to the Gameforge daily shop page; the extension does not send your local data to the developer.
 

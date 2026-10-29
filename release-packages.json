@@ -1,13 +1,13 @@
 {
-  "kit_version": "0.11.81",
-  "hub_version": "0.4.16",
-  "release_summary": "Completes PR #4's focused corrections: case-insensitive RWA class gates, reference-aware source polling and bounded buff caches; verified Grid target preservation and one roster scan per refresh; daily-page marking after a valid shop-link handoff; cross-window chat drag cleanup; elapsed-time bank refreshes; safe missing KittyCombo range probes; and per-update pbInfo mouseover reuse. The 0.2-second Kitty dispatch window and earlier kit fixes carry forward. Combat throughput gains have not been measured.",
-  "runtime_validation": "Lua 5.1 simulated-client suite: 512 tests, 486 passed and 26 pre-existing skips. Focused checks cover target storage/restoration failures, class aliases and cache bounds, shop errors/timeouts, cross-window input, 15-144 FPS bank timing, missing range names, dispatch/action/resource/prediction parity and pbInfo snapshots. A read-only audit of 18 saved RWA definitions passed 3456 observation/load cases; none had class restrictions, so those are covered by dedicated fixtures. Native input, timing, browser handoff and successful-cast A/B measurements still need in-game validation.",
+  "kit_version": "0.11.83",
+  "hub_version": "0.4.18",
+  "release_summary": "UMM adds Windows-style drag-box selection across all six bags and a right-side Recently sent pane using the shared 20-recipient history. Ctrl/Shift-drag adds, Escape/right-click cancels, existing click/group toggles remain, and unfinished selections stop on bag changes, navigation or close. The mass-send window expands and fits the viewport; recipient selection preserves committed marks. C.O.D./sending blocks recipient changes, and active queue sending locks all four tabs. Kitty's mode picker rejects delayed clicks after closing/native hiding. The 0.11.82 development features carry forward: RWA clickthrough, scale/screen transforms, grips/reset and HP/percentage; UMM shared last-recipient/gold shortcuts and History tab; Kitty mode pickers/changemode actions. Earlier fixes and 0.2-second dispatch/1.1-second prediction carry forward. Overhead emoji pictures remain unimplemented because the inspected client lacks the required hook.",
+  "runtime_validation": "Lua 5.1 simulated-client suite: 596 tests, 570 passed and 26 pre-existing skips. The 34 focused UMM tests include 23 new drag-box/sidebar cases covering native click-before-mouseup ordering, modifiers, scaled geometry, cancellation, bag replacements, bound-item exclusions, bounded widgets, queue startup/stop, shared recent recipients and viewport fitting. A reproduced Kitty regression now rejects delayed HUD/editor picker clicks after close or native hiding. Native drawing, mouse capture/focus, sidebar layout and live mail timing still need in-game validation. Earlier RWA/Kitty native-client limits and the unimplemented overhead emoji limitation remain documented.",
   "addons": [
     {
       "folder": "KittyCombo",
       "title": "Cherry's KittyCombo",
-      "version": "1.7.11",
+      "version": "1.7.13",
       "command": "/kc",
       "description_file": "02-cherrys-kittycombo.md",
       "summary": "One-key priority combos, safer prediction and shared rotation codes."
@@ -15,7 +15,7 @@
     {
       "folder": "RomWeakAuras",
       "title": "rom weakauras",
-      "version": "0.9.24",
+      "version": "0.9.25",
       "command": "/wa",
       "description_file": "03-rom-weakauras.md",
       "summary": "Custom buff, debuff, cooldown, cast and status displays.",
@@ -64,10 +64,11 @@
     {
       "folder": "UltimateMailMod",
       "title": "Ultimate Mail Mod",
-      "version": "7.0.1-ck5",
+      "version": "7.0.1-ck7",
       "command": "/umm",
       "description_file": "09-ultimate-mail-mod.md",
-      "summary": "Mail management and mass sending."
+      "summary": "Mail management, drag-box selection, shared recipients, gold presets and mass sending.",
+      "minimum_hub_version": "0.4.17"
     },
     {
       "folder": "AdvancedAuctionHouse",

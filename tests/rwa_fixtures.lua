@@ -22,6 +22,10 @@ function FixtureWidget(kind, name, parent, template)
   local obj = setmetatable({ kind = kind, name = name, parent = parent,
     visible = true, text = "", width = 48, height = 48, scripts = {}, events = {} }, Widget)
   fixtureWidgets[name], _G[name] = obj, obj
+  if kind == "CheckButton" then
+    function obj:SetChecked(value) self.checked = value and true or false end
+    function obj:IsChecked() return self.checked == true end
+  end
   if template and fixtureXmlScripts[template] then fixtureXmlScripts[name] = fixtureXmlScripts[template] end
   return obj
 end

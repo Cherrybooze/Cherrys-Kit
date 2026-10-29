@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Fifteen package descriptions for Cherry's Kit 0.11.81, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Fifteen package descriptions for Cherry's Kit 0.11.83, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -60,7 +60,7 @@ Each one is its own download and needs Cherry's Kit:
 - **Global Bank**: every character's bags, bank and gold in one window (`/gb`)
 - **Extended Macro Icons**: thousands more macro icons (`/emi`)
 - **TooltipIds**: ID numbers of buffs, items, skills and more (`/ti`)
-- **Ultimate Mail Mod**: mail window with reliable mass send (`/umm`)
+- **Ultimate Mail Mod**: mail window with shared recipient history, configurable gold shortcuts and reliable mass send (`/umm`)
 - **Advanced AuctionHouse**: resizable auction house with stat filters (`/aah`)
 - **ZShop**: item shop and daily loyalty reward in one click (`/zshop`)
 - **pbInfo**: richer tooltips, quest tracker, chat filters and cast bar options (`/pbinfo`)
@@ -103,7 +103,15 @@ Some kit addons contain parts under Creative Commons **NonCommercial** licences 
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
-Version 1.7.11 makes imported range conditions with no probe name fail cleanly. It retains the 0.2-second dispatch window, live action eligibility, missing-versus-zero mana handling, condition thresholds, anti-repeat behavior and 1.1-second prediction lookahead. `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6` selects the old A/B window; use `0.2` to restore the default. Successful-cast throughput gains have not been measured. 1.7.9's prediction, import, editor, proc, cooldown and action-slot fixes carry forward.
+## Updated in 1.7.13
+
+Closed or natively hidden mode pickers reject delayed clicks, so cancelling an editor pick cannot change the live HUD mode.
+
+## Updated in 1.7.12
+
+The mode button and readout share a screen-aware mode-icon picker, with a top-down left-edge layout when it fits, viewport/UI-scale handling and pages for extra modes. The main action menu adds **changemode**: select its mode icon and get an editable **Mode is off** condition automatically. Picking while editing changes only the draft. Execution switches on that press; the next press skips the default guarded switch. Prediction simulates following mode conditions on a private snapshot without changing live modes, settings or cooldowns. Shared mode actions require 1.7.12; existing CKC1/CKC2/CKC3 imports remain supported. Native popup/row interaction still needs in-game testing.
+
+Version 1.7.11's missing range-probe guard remains, alongside the 0.2-second dispatch window, live action eligibility, missing-versus-zero mana handling, condition thresholds, anti-repeat behavior and 1.1-second prediction lookahead. `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6` selects the old A/B window; use `0.2` to restore the default. Successful-cast throughput gains have not been measured. 1.7.9's prediction, import, editor, proc, cooldown and action-slot fixes carry forward.
 
 ## Features
 
@@ -112,7 +120,7 @@ Version 1.7.11 makes imported range conditions with no probe name fail cleanly. 
 - **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on (switch modes with `/kc toggle aoe`, also from macros).
 - **Modes**: switch your kitties between aoe, single, burst, dps, tank, heal, interrupt, pvp, farm, boss, request or your own modes, and let "Mode is on" rows decide what fires.
   - **Mode button** near the minimap (Kitty options > Show the mode button): shows the mode that is on as a picture. Click it to see every mode, click one to switch (the others turn off).
-  - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for a dropdown menu of every mode and "No mode".
+  - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for the same screen-aware mode-icon picker, including "No mode".
   - Both move with right-drag (or Shift+drag) and can be locked. Also `/kc mode <name>` in chat or macros.
   - Request mode is now a mode called request; the new condition "Shift is held" checks the Shift key.
 - **canCast / canUse** can also check that something is *on cooldown*.
@@ -168,6 +176,14 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Updated in 0.9.25
+
+Every aura now defaults to **Make clickthrough**, a tickable editor field that passes gameplay clicks through and suppresses aura hover tooltips. Editing and placement remain interactive; opting out restores hover. **Position** has whole-aura Scale (10–400%, default 100%), a numeric field and five-percentage-point −/+ buttons. Scaling preserves the chosen anchor, scales relative offsets and is inherited once by linked children. Section headers use **Expand / Collapse** instead of maximizers. The new fields support draft Save/Revert and sharing; native click pass-through and geometry still need in-game checks.
+
+**Auto scale position and size with screen size** is off by default. Enabling it captures the viewport; later resolution/UI-scale changes transform position and uniformly scale size without rewriting authored values. Unlocked placement previews have a top-left grip: drag to move, Shift-drag sideways to scale. **Reset position** restores recognized factory placements or centres custom auras while retaining size, screen reference and relative offsets. Factory placements use the approved layout; existing saved coordinates are preserved.
+
+**Target health** shows HP and percentage on a readable line below the bar. Directly exposed HP is used as provided; learned NPC maxima yield `~` estimates, and unavailable HP uses `?`. Original rule values and bar progress are retained. These controls, layout and real HP observations still need in-game playtesting.
 
 ## Updated in 0.9.24
 
@@ -542,6 +558,20 @@ Write to **cherry** on the Runes of Magic Discord.
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
 
+## Updated in 7.0.1-ck7
+
+**Drag-box selection** works across all six bag grids. Drag from a slot/background to replace the selection; **Ctrl/Shift-drag** adds. Escape/right-click cancels and restores the starting selection. Normal clicks and Ctrl-click group toggles remain; empty background clears marks. Bound items remain red and are excluded from sending. Bag changes, focus loss, navigation and closing cancel unfinished gestures.
+
+The right-side **Recently sent** pane shares the existing **20 distinct successful recipients**, newest first and available across characters. Click a name to fill mass-send To while retaining committed item selections. The mass-send window expands/fits the viewport. C.O.D./sending blocks recipient changes, and queue sending locks all four tabs. Native selection drawing, release/focus handling and layout still need in-game playtesting.
+
+## Updated in 7.0.1-ck6
+
+**Mail shortcuts** is on by default. **Use last** beside To fills the last successfully mailed recipient. Two buttons below Send Gold fill configurable amounts (defaults **100,000** and **1,000,000**); change both in `/umm` and click **Save presets**. Whole amounts from 1 to 999,999,999 are accepted. Gold shortcuts select Send Gold and clear C.O.D.; sending uses the existing Send/confirmation controls.
+
+**History**, the third main tab, lists up to **20 distinct successful recipients**, newest first. Repeated recipients move to the top without duplicates. Click a name to compose; Mass Send Items is the fourth tab. Failed/cancelled/timed-out sends do not replace the last recipient. Single and mass sends share this history.
+
+Shortcut settings, amounts and history live in **UMMConfig in the shared SaveVariables.lua**, available to every character. Turning shortcuts off hides the compose buttons; history remains available. The native layout, money confirmation and cross-character persistence still need in-game checks.
+
 ## Features
 
 From the original:
@@ -556,7 +586,7 @@ New in the Cherry's Kit version:
 - **Send fast or Send safely**: under 40 mails there is one Send button (fast). From 40 mails you choose: *Send fast* (quick pace, stops at the first failure) or *Send safely* (paced, with a short pause every 20 mails). C.O.D. mails always go the safe way. A **Stop** button stops after the current mail; unsent items stay marked.
 - **Bound items in red**, also when several are marked; they are skipped with "(N bound, not sent)".
 - **Ctrl+click** a marked item to unmark its whole group.
-- **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
+- **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, mail shortcuts and gold presets, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
 - Faster bag handling (the bag list is no longer rebuilt on every bag change) and a faster loading screen.
 
 **Please help test:** after a big mass send, `/umm trace` shows what happened. If sending waits forever, run `/umm x` with an item in the send slot and send the output; `/umm slotcheck off` is the workaround.
@@ -573,12 +603,14 @@ New in the Cherry's Kit version:
 - `/umm trace [on|off|clear|all]`: the last mail events, for finding problems
 - `/umm x`: check the send slot, cursor and send state
 - `/umm slotcheck on|off`: wait for the item to show in the send slot (default on)
+- `/umm shortcuts on|off`: Use last and gold buttons (default on)
+- `/umm gold <amount1> <amount2>`: save both shared gold presets
 - `/umm sound`: new-mail sound on or off
 - `/umm reset`: forget your saved characters
 
 ## Install
 
-- **Requires Cherry's Kit** (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
+- **Requires Cherry's Kit hub 0.4.17 or later** for the History manifest entries (installed automatically by CurseForge once configured as a Required dependency). This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
 - **Delete the old `Interface\AddOns\UltimateMailMod` folder.** While it is there, Cherry's Kit keeps this version turned off.
 - Turn it on or off in the Cherry's Kit window (`/ck`).
 
@@ -590,7 +622,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 - **Ultimate Mail Mod** originally by **Shardea of Siochain**, later maintained by **Maxeem of Muinin, mvoigt and Jagodragon**, with 2019-2021 changes by **Raihir** and a French translation by **Claralouise**. It has no licence statement, so its copyright stays with its authors and those parts are not covered by the GPL.
 - Bundles **LibStub** (public domain; Kaelten, Cladhaire, ckknight, Mikk, Ammo, Nevcairiel, joshborke) and **Sol by Alleris** (no licence statement).
-- Cherry's changes (send queue rewrite, bag handling, ctrl+click toggle, bound items in red, settings window, kit switch, /umm commands) are offered under the **GNU GPL v2**.
+- Cherry's changes (send queue rewrite, drag-box selection, bag handling, ctrl+click toggle, bound items in red, shared history/recipient panes/mail shortcuts, settings window, kit switch, /umm commands) are offered under the **GNU GPL v2**.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
 

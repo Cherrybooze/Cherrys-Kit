@@ -1,4 +1,4 @@
--- 2021-05-17, Cherry's Kit rework 2026-10-26 (send queue, ctrl+click toggle, bound items in red)
+-- 2021-05-17, Cherry's Kit rework 2026-10-29 (send queue, item selection, recent recipients)
 
 -- #######################
 -- ##                   ##
@@ -64,13 +64,13 @@ function UMMMassSendItemsStatusTemplate_OnLoad(this)
   this.priv_StopAsked   = nil;
 
   this.AutoDisableTabs = function(self)
-    for i = 1, 3 do
+    for i = 1, 4 do
       getglobal("UMMFrameTab"..i.."Button"):Disable();
     end
   end;
   
   this.AutoEnableTabs = function(self)
-    for i = 1, 3 do
+    for i = 1, 4 do
       getglobal("UMMFrameTab"..i.."Button"):Enable();
     end
   end;
@@ -319,6 +319,7 @@ function UMMMassSendItemsStatusTemplate_OnLoad(this)
   end;
   
   this.BuildSendList = function(self)
+    getglobal(self:GetParent():GetName().."Bags"):CancelBoxSelection();
     self.priv_SendTable = {};
     UMMBagManager:Ensure();
     local list = UMMBagManager.ItemList;
@@ -386,6 +387,8 @@ function UMMMassSendItemsStatusTemplate_OnLoad(this)
 end
 
 function UMMMassSendItemsStatusTemplate_OnShow(this)
+  getglobal(this:GetParent():GetName().."Recent").priv_Blocked = true;
+  UMMHistory_Refresh();
   getglobal(this:GetParent():GetName().."Action"):Hide();
   getglobal(this:GetParent():GetName().."Recipient"):Hide();
   getglobal(this:GetParent():GetName().."Bags"):Hide();
@@ -393,6 +396,8 @@ function UMMMassSendItemsStatusTemplate_OnShow(this)
 end
 
 function UMMMassSendItemsStatusTemplate_OnHide(this)
+  getglobal(this:GetParent():GetName().."Recent").priv_Blocked = false;
+  UMMHistory_Refresh();
   -- marks of mails that went out are already cleared; what was not sent stays marked
   getglobal(this:GetParent():GetName().."Action"):Show();
   getglobal(this:GetParent():GetName().."Recipient"):Show();
@@ -419,10 +424,199 @@ local function LinkColor(link)
 end
 UMMLinkColor = LinkColor;
 
+-- Rectangles and cursor positions are native screen pixels. The overlay uses
+-- grid-local units, derived from GetRealSize/GetWidth (including all UI scales).
+local Selection = {};
+local function finite(value)
+  return type(value) == "number" and value == value and math.abs(value) < math.huge;
+end
+local function physicalRect(frame)
+  if (not frame or type(frame.GetPos) ~= "function" or type(frame.GetRealSize) ~= "function") then return; end
+  local ok, x, y = pcall(frame.GetPos, frame);
+  local sized, w, h = pcall(frame.GetRealSize, frame);
+  if (ok and sized and finite(x) and finite(y) and finite(w) and finite(h) and w > 0 and h > 0) then
+    return x, y, w, h;
+  end
+end
+local function cursor()
+  if (type(GetCursorPos) ~= "function") then return; end
+  local ok, x, y = pcall(GetCursorPos);
+  if (ok and finite(x) and finite(y)) then return x, y; end
+end
+local function held(fn)
+  if (type(fn) ~= "function") then return false; end
+  local ok, value = pcall(fn);
+  return ok and value and value ~= 0 and true or false;
+end
+local function left(key) return key == nil or key == "LBUTTON" or key == "LeftButton"; end
+local function canSelect(grid)
+  return grid.priv_Shown and grid:IsVisible() and UMMFrame:IsVisible() and not UMMMailShortcutsBusy();
+end
+local function clamp(value, low, high) return math.max(low, math.min(high, value)); end
+local function selectionStatus(grid)
+  getglobal(grid:GetParent():GetName().."Action"):CheckStatus();
+end
+local function sameItem(entry, saved)
+  return entry == saved.item and entry.Index == saved.index and entry.Link == saved.link;
+end
+local function clearSelectionUI(grid)
+  getglobal(grid:GetName().."Selection"):Hide();
+  local input = getglobal(grid:GetName().."SelectionKeys");
+  input:ClearFocus();
+  input:SetKeyboardEnable(false);
+  input:SetText("");
+end
+
+function Selection.CancelBoxSelection(self)
+  local drag = self.priv_BoxDrag;
+  if (not drag) then return; end
+  self.priv_BoxDrag = nil;
+  self.priv_BoxClickBlock = drag.source;
+  if (drag.active) then
+    for index, saved in ipairs(drag.items) do
+      local item = UMMBagManager.ItemList[index];
+      -- A replaced item must not inherit the previous item's selection.
+      if (item and sameItem(item, saved) and (item.Marked == true) ~= saved.marked) then
+        item.Marked = saved.marked;
+        self:DrawMark(index, item);
+      end
+    end
+  end
+  clearSelectionUI(self);
+  selectionStatus(self);
+end
+
+function Selection.BeginBoxSelection(self, source, key, bagIndex, slotIndex)
+  if (not left(key)) then
+    if (key == "RBUTTON" or key == "RightButton") then self:CancelBoxSelection(); end
+    return;
+  end
+  self:CancelBoxSelection();
+  self.priv_BoxClickBlock = nil;
+  if (not canSelect(self)) then return; end
+  local cx, cy = cursor();
+  local gx, gy, gw, gh = physicalRect(self);
+  local width, height = self:GetWidth(), self:GetHeight();
+  if (not cx or not gx or not finite(width) or not finite(height) or width <= 0 or height <= 0) then return; end
+  UMMBagManager:Ensure();
+  local drag = {source = source, cx = cx, cy = cy, gx = gx, gy = gy, gw = gw, gh = gh,
+    sx = gw / width, sy = gh / height, revision = UMMBagManager.Revision, items = {},
+    ctrl = held(IsCtrlKeyDown), shift = held(IsShiftKeyDown),
+    bagIndex = bagIndex, slotIndex = slotIndex};
+  drag.additive = drag.ctrl or drag.shift;
+  for b = 1, 6 do
+    local x, y, w, h = physicalRect(getglobal(self:GetName().."Bag"..b));
+    if (x) then
+      drag.left, drag.top = math.min(drag.left or x, x), math.min(drag.top or y, y);
+      drag.right, drag.bottom = math.max(drag.right or x + w, x + w), math.max(drag.bottom or y + h, y + h);
+    end
+  end
+  if (not drag.left) then return; end
+  drag.left, drag.top = math.max(gx, drag.left), math.max(gy, drag.top);
+  drag.right, drag.bottom = math.min(gx + gw, drag.right), math.min(gy + gh, drag.bottom);
+  drag.ax, drag.ay = clamp(cx, drag.left, drag.right), clamp(cy, drag.top, drag.bottom);
+  for index = 1, 180 do
+    local item = UMMBagManager.ItemList[index];
+    local x, y, w, h = physicalRect(self:GetButton(index));
+    drag.items[index] = {item = item, index = item and item.Index, link = item and item.Link,
+      marked = item and item.Marked == true or false, x = x, y = y, w = w, h = h};
+  end
+  self.priv_BoxDrag = drag;
+  GameTooltip:Hide();
+  local input = getglobal(self:GetName().."SelectionKeys");
+  input:SetKeyboardEnable(true);
+  input:SetFocus(); -- EditBox focus is exposed by RoM; Frame:SetFocus is not.
+  selectionStatus(self);
+end
+
+function Selection.UpdateBoxSelection(self)
+  local drag = self.priv_BoxDrag;
+  if (not drag) then return; end
+  local gx, gy, gw, gh = physicalRect(self);
+  local cx, cy = cursor();
+  if (not canSelect(self) or UMMBagManager:IsDirty() or drag.revision ~= UMMBagManager.Revision
+      or not gx or not cx or math.abs(gx - drag.gx) > .01 or math.abs(gy - drag.gy) > .01
+      or math.abs(gw - drag.gw) > .01 or math.abs(gh - drag.gh) > .01) then
+    self:CancelBoxSelection();return;
+  end
+  local dx, dy = (cx - drag.cx) / drag.sx, (cy - drag.cy) / drag.sy;
+  if (not drag.active and dx * dx + dy * dy < 16) then return; end
+  drag.active = true;
+  cx, cy = clamp(cx, drag.left, drag.right), clamp(cy, drag.top, drag.bottom);
+  local l, t, r, b = math.min(drag.ax, cx), math.min(drag.ay, cy), math.max(drag.ax, cx), math.max(drag.ay, cy);
+  local box = getglobal(self:GetName().."Selection");
+  box:ClearAllAnchors();
+  box:SetAnchor("TOPLEFT", "TOPLEFT", self:GetName(), (l - gx) / drag.sx, (t - gy) / drag.sy);
+  box:SetSize(math.max(.1, (r - l) / drag.sx), math.max(.1, (b - t) / drag.sy));
+  box:Show();
+  local changed = false;
+  for index, saved in ipairs(drag.items) do
+    local item = UMMBagManager.ItemList[index];
+    if (not item or not sameItem(item, saved)) then self:CancelBoxSelection();return; end
+    local inside = saved.x and l < r and t < b and saved.x < r and saved.x + saved.w > l and saved.y < b and saved.y + saved.h > t;
+    local marked = not item.Empty and item.Link ~= nil and (inside or drag.additive and saved.marked) and true or false;
+    if ((item.Marked == true) ~= marked) then
+      item.Marked = marked;
+      self:DrawMark(index, item);
+      changed = true;
+    end
+  end
+  if (changed) then selectionStatus(self); end
+end
+
+function Selection.ConsumeSelectionClick(self, source)
+  local drag = self.priv_BoxDrag;
+  if (drag) then
+    -- Native RoM calls OnClick before OnMouseUp. Defer both clicks and boxes
+    -- to mouse-up so a completed rectangle cannot toggle its starting slot.
+    if (drag.source == source) then drag.nativeClick = true; end
+    return true;
+  end
+  if (self.priv_BoxClickBlock == source) then self.priv_BoxClickBlock = nil;return true; end
+  return not canSelect(self);
+end
+
+function Selection.EndBoxSelection(self, key)
+  if (not left(key)) then return; end
+  self:UpdateBoxSelection(); -- include the release position, even between frames
+  local drag = self.priv_BoxDrag;
+  if (not drag) then return; end
+  self.priv_BoxDrag = nil;
+  self.priv_BoxClickBlock = not drag.nativeClick and drag.source or nil;
+  clearSelectionUI(self);
+  local cx, cy = cursor();
+  local x, y, w, h = physicalRect(drag.source);
+  local clicked = drag.nativeClick or x and cx and cx >= x and cy >= y and cx <= x + w and cy <= y + h;
+  if (not drag.active and clicked) then
+    if (drag.bagIndex and drag.slotIndex) then
+      if (drag.ctrl) then self:ToggleGroup(drag.bagIndex, drag.slotIndex);
+      else self:ToggleMark(drag.bagIndex, drag.slotIndex); end
+    elseif (not drag.additive) then
+      UMMBagManager:ClearMarks();
+      for index, item in ipairs(UMMBagManager.ItemList) do self:DrawMark(index, item); end
+    end
+  end
+  selectionStatus(self);
+end
+
+function UMMCancelMassSelection()
+  local bags = getglobal("UMMFrameTab3Bags");
+  if (bags and bags.CancelBoxSelection) then bags:CancelBoxSelection(); end
+end
+
+function UMMMassSelectionTip(this)
+  if (UMMFrameTab3Bags.priv_BoxDrag) then return; end
+  GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT", 0, 0);
+  GameTooltip:SetText(UMM_MSI_SELECT_TITLE);
+  GameTooltip:AddLine(UMM_MSI_SELECT_HELP, 1, 1, 1);
+  GameTooltip:Show();
+end
+
 function UMMMassSendItemsBagsTemplate_OnLoad(this)
   
   this.priv_Shown = nil;
   this.priv_Buttons = {};
+  for name, fn in pairs(Selection) do this[name] = fn; end
   
   -- slot buttons are looked up once, not by name on every redraw
   this.GetButton = function(self, index)
@@ -473,6 +667,7 @@ function UMMMassSendItemsBagsTemplate_OnLoad(this)
   
   -- Plain click: mark / unmark one slot
   this.ToggleMark = function(self, bagIndex, slotIndex)
+    self:CancelBoxSelection();
     local index = (bagIndex - 1) * 30 + slotIndex;
     local item = self:GetItem(bagIndex, slotIndex);
     if (item and item.Empty == false) then
@@ -489,6 +684,7 @@ function UMMMassSendItemsBagsTemplate_OnLoad(this)
   -- Ctrl+click: mark every stack of the same item; on an item that is already marked,
   -- unmark them all instead
   this.ToggleGroup = function(self, bagIndex, slotIndex)
+    self:CancelBoxSelection();
     local clicked = self:GetItem(bagIndex, slotIndex);
     if (not clicked or clicked.Empty or not clicked.Name) then
       return;
@@ -514,6 +710,7 @@ function UMMMassSendItemsBagsTemplate_OnLoad(this)
   end;
   
   this.PopulateBags = function(self)
+    self:CancelBoxSelection();
     if (self.priv_Shown and UMMFrame:IsVisible()) then
       UMMBagManager:Ensure();
       local list = UMMBagManager.ItemList;
@@ -526,7 +723,8 @@ function UMMMassSendItemsBagsTemplate_OnLoad(this)
           button.ummInvalid:Hide();
           SetItemButtonTexture(button, nil);
           SetItemButtonCount(button, 0);
-          button:Disable();
+          -- Empty slots are still a valid starting point for a selection box.
+          button:Enable();
         else
           local R, G, B = LinkColor(item.Link);
           if (R and not (R == 255 and G == 255 and B == 255)) then
@@ -550,6 +748,7 @@ function UMMMassSendItemsBagsTemplate_OnLoad(this)
   end;
   
   this.HideBags = function(self)
+    self:CancelBoxSelection();
     self.priv_Shown = nil;
   end;
   
@@ -602,6 +801,7 @@ end
 -- ##### Bag Slot Buttons ####
 
 function UMMMassSendItemsSlotTemplate_OnEnter(this)
+  if (this:GetParent():GetParent().priv_BoxDrag) then GameTooltip:Hide();return; end
   local slotIndex = this:GetID();
   local bagIndex = this:GetParent():GetID();
   local itemLink = this:GetParent():GetParent():GetBagLink(bagIndex, slotIndex);
@@ -610,6 +810,7 @@ function UMMMassSendItemsSlotTemplate_OnEnter(this)
     GameTooltip:ClearAllAnchors();
     GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT", 0, 0);
     GameTooltip:SetHyperLink(itemLink);
+    GameTooltip:AddLine(UMM_MSI_SELECT_HELP, .7, .8, 1);
     GameTooltip:Show();
   end
 end
@@ -619,6 +820,7 @@ function UMMMassSendItemsSlotTemplate_OnClick(this)
   local slotIndex = this:GetID();
   local bagIndex = this:GetParent():GetID();
   local bags = this:GetParent():GetParent();
+  if (bags:ConsumeSelectionClick(this)) then return; end
   if (IsCtrlKeyDown()) then
     bags:ToggleGroup(bagIndex, slotIndex);
   else
@@ -642,7 +844,8 @@ function UMMMassSendItemsActionTemplate_OnLoad(this)
     
     local mailCount, boundCount = UMMBagManager:CountMarked();
     local label = getglobal(self:GetName().."Label");
-    local canSend = mailCount > 0 and recipient ~= "";
+    local bags = getglobal(self:GetParent():GetName().."Bags");
+    local canSend = mailCount > 0 and recipient ~= "" and not (bags and bags.priv_BoxDrag);
     
     if (mailCount > 0) then
       local text = "|cff"..UMMColor.White..string.format(UMM_MSI_MAILSTOSEND, mailCount).."|r";
@@ -766,6 +969,7 @@ function UMMMassSendItemsRecipientTemplate_OnLoad(this)
   end;
   
   this.Reset = function(self)
+    getglobal(self:GetParent():GetName().."Bags"):CancelBoxSelection();
     UMMBagManager:ClearMarks();
     getglobal(this:GetParent():GetName().."Bags"):PopulateBags();
     getglobal(this:GetName().."Recipient"):SetText("");
@@ -860,6 +1064,7 @@ end
 function UMMMassSendItemsMarkButtonsTemplate_OnLoad(this)
 
   this.ButtonClick = function(self, id)
+    getglobal(self:GetParent():GetName().."Bags"):CancelBoxSelection();
     local sendTo = getglobal("UMM_MSI_RECIPE_SEND_TO"..id);
     if (sendTo ~= nil and sendTo ~= "") then
       getglobal(this:GetParent():GetName().."RecipientRecipient"):SetText(sendTo);
@@ -920,6 +1125,26 @@ end
 
 -- ##### Main Mass Send Items Frame #####
 
+function UMMMassRecent_OnLoad(this)
+  UIPanelBackdropFrame_SetTexture(this, "Interface/Common/PanelCommonBorder", 40, 40);
+  getglobal(this:GetName().."Title"):SetText(UMM_MSI_RECENT_TITLE);
+  UMMHistory_Refresh();
+end
+
+function UMMMassRecent_Select(index)
+  local pane = getglobal("UMMFrameTab3Recent");
+  if (not pane or not pane:IsVisible() or pane.priv_Blocked or UMMMailShortcutsBusy()) then return; end
+  local recipient = UMMSettings:History()[index];
+  if (not recipient) then return; end
+  UMMCancelMassSelection();
+  local chooser = getglobal("UMMFrameTab3Recipient");
+  if (not UMMFrameTab3Bags:IsVisible()) then chooser:ShowBody(); end
+  local field = getglobal(chooser:GetName().."Recipient");
+  field:SetText(recipient);
+  field:SetFocus();
+  getglobal("UMMFrameTab3Action"):CheckStatus();
+end
+
 function UMMMassSendItemsTemplate_OnShow(this)
   UMMFriends:Load();
   getglobal(this:GetName().."Action"):Show();
@@ -928,9 +1153,12 @@ function UMMMassSendItemsTemplate_OnShow(this)
   getglobal(this:GetName().."Mark"):Show();
   getglobal(this:GetName().."Status"):Hide();
   getglobal(this:GetName().."People"):Hide();
+  getglobal(this:GetName().."Recent"):Show();
+  UMMHistory_Refresh();
 end
 
 function UMMMassSendItemsTemplate_OnHide(this)
+  getglobal(this:GetName().."Bags"):CancelBoxSelection();
   getglobal(this:GetName().."Action"):Hide();
   getglobal(this:GetName().."RecipientRecipient"):SetText("");
   getglobal(this:GetName().."RecipientRecipient"):ClearFocus();
@@ -938,4 +1166,5 @@ function UMMMassSendItemsTemplate_OnHide(this)
   getglobal(this:GetName().."Bags"):Hide();
   getglobal(this:GetName().."Mark"):Hide();
   getglobal(this:GetName().."Status"):Hide();
+  getglobal(this:GetName().."Recent"):Hide();
 end

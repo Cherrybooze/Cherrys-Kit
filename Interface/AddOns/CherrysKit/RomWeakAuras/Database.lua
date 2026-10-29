@@ -4,6 +4,64 @@
 local RWA = RWA
 
 RWA.DB_VERSION = 1
+RWA.MIN_AURA_SCALE, RWA.MAX_AURA_SCALE = 0.1, 4
+
+function RWA.ValidAuraScale(value)
+  return type(value)=="number" and value==value and value>=RWA.MIN_AURA_SCALE and value<=RWA.MAX_AURA_SCALE
+end
+
+function RWA.AuraScale(data)
+  local value=tonumber(data and data.scale) or 1
+  if value~=value or value<=0 or value==math.huge then return 1 end
+  return math.max(RWA.MIN_AURA_SCALE,math.min(RWA.MAX_AURA_SCALE,value))
+end
+
+local function positiveRead(fn,...)
+  if type(fn)~="function" then return nil end
+  local ok,value=pcall(fn,...)
+  if ok and type(value)=="number" and value==value and value>0 and value<math.huge then return value end
+end
+
+function RWA.ValidScreenDimension(value)
+  return type(value)=="number" and value==value and value>=1 and value<=10000000
+end
+
+function RWA.ViewportSize()
+  local scale=positiveRead(GetUIScale) or 1
+  local width,height=positiveRead(GetScreenWidth),positiveRead(GetScreenHeight)
+  if width and height then width,height=width/scale,height/scale
+  else
+    width=positiveRead(UIParent and UIParent.GetWidth,UIParent)
+    height=positiveRead(UIParent and UIParent.GetHeight,UIParent)
+  end
+  if RWA.ValidScreenDimension(width) and RWA.ValidScreenDimension(height) then return width,height end
+end
+
+function RWA.ValidScreenReference(data)
+  return RWA.ValidScreenDimension(data.screenReferenceWidth) and RWA.ValidScreenDimension(data.screenReferenceHeight)
+end
+
+function RWA.SetAutoScaleScreen(data,on)
+  if not on then data.autoScaleScreen=false; return true end
+  if data.autoScaleScreen==true and RWA.ValidScreenReference(data) then return true end
+  local width,height=RWA.ViewportSize()
+  if not width then return false end
+  data.screenReferenceWidth,data.screenReferenceHeight=width,height
+  data.autoScaleScreen=true
+  return true
+end
+
+-- Authored coordinates/scale stay at their reference viewport. Only derived
+-- render values change on resize; uniform size scaling avoids stretching art.
+function RWA.AuraTransform(data,width,height)
+  local x,y=tonumber(data.x) or 0,tonumber(data.y) or 0
+  local scale,rx,ry=RWA.AuraScale(data),1,1
+  if data.autoScaleScreen==true and RWA.ValidScreenReference(data) then
+    if not RWA.ValidScreenDimension(width) or not RWA.ValidScreenDimension(height) then width,height=RWA.ViewportSize() end
+    if width and height then rx,ry=width/data.screenReferenceWidth,height/data.screenReferenceHeight end
+  end
+  return x*rx,y*ry,scale*math.min(rx,ry),rx,ry
+end
 
 RWA.SETTING_DEFAULTS = {
   texExt = ".tga",
@@ -20,6 +78,9 @@ RWA.SETTING_DEFAULTS = {
 -- Values every aura gets, then per region type extras.
 RWA.AURA_DEFAULTS = {
   enabled = true,
+  clickThrough = true,
+  scale = 1,
+  autoScaleScreen = false,
   regionType = "icon",
   point = "CENTER",
   x = 0,
@@ -45,30 +106,37 @@ RWA.REGION_DEFAULTS = {
   texture = { width = 64, height = 64, texture = "Circle_White", color = { 1, 0.8, 0.2, 0.8 } },
 }
 
--- Factory placement only. Saved positions are never reapplied during loading,
--- editing or polling; copying a template is the other caller of these factories.
+-- Factory placement from the approved saved layout. Only factories and an
+-- explicit Reset position use this map; loading never reapplies saved positions.
 RWA.DEFAULT_AURA_POSITIONS = {
-  ["Player health"]={-390,90}, ["Target health"]={-390,-215},
-  ["Target's cast"]={-390,-245}, ["My cast"]={-20,260},
-  ["In combat"]={80,-320}, ["Target's last cast"]={215,-320},
-  ["Hits per second"]={260,-170}, ["Threat meter"]={-510,-150},
-  ["KittyCombo mode"]={-20,320}, ["Example: debuff on target"]={-150,-305},
-  ["Kitty Hook"]={170,-225},
-  ["Example: buff on me"]={260,-70}, ["Example: missing buff reminder"]={70,10},
+  ["Player health"]={44,291}, ["Target health"]={-390,-215},
+  ["Target's cast"]={0,-250}, ["My cast"]={34,254},
+  ["In combat"]={153,-363}, ["Target's last cast"]={291,-363},
+  ["Hits per second"]={338,-201}, ["Threat meter"]={-343,-202},
+  ["KittyCombo mode"]={48,314}, ["Example: debuff on target"]={-106,-349},
+  ["Kitty Hook"]={205,-263}, ["Class icon"]={-421,428,"TOPRIGHT"},
+  ["Example: buff on me"]={341,-91}, ["Example: missing buff reminder"]={-98,-208},
   ["Resource: Upper bar"]={-360,-60}, ["Resource: Lower bar"]={-360,-32},
   ["Resource: PSI"]={-310,-125}, ["High durability repair"]={0,-265},
 }
-function RWA.ApplyDefaultPosition(data)
-  local position=data and RWA.DEFAULT_AURA_POSITIONS[data.id]
-  if position then data.point,data.x,data.y="CENTER",position[1],position[2] end
+function RWA.ApplyDefaultPosition(data,factoryId)
+  local position=data and RWA.DEFAULT_AURA_POSITIONS[factoryId or data.id]
+  if position then data.point,data.x,data.y=position[3] or "CENTER",position[1],position[2] end
   return data
+end
+
+function RWA.ResetAuraPosition(data,factoryId)
+  -- Custom auras return to the centre. Keep size, screen reference, rules and
+  -- all relative output offsets intact; auto scaling still follows its reference.
+  data.point,data.x,data.y="CENTER",0,0
+  return RWA.ApplyDefaultPosition(data,factoryId)
 end
 
 -- Descriptions for the example auras, also added to examples saved by older versions.
 local EXAMPLE_DESC = {
   ["High durability repair"] = "Warns when an equipped item with maximum durability of at least 101 drops below 101",
   ["Player health"] = "Your health as a bar with your class icon; red under 30%",
-  ["Target health"] = "Your target's health, below its cast bar; hides when you have no target",
+  ["Target health"] = "Your target's health as HP and percentage; ~ marks learned estimates, ? unknown HP. Hides when you have no target",
   ["Class icon"] = "Your class combo; changes when you switch class",
   ["KittyCombo mode"] = "The KittyCombo mode that is on (mode button), as text and picture; in combat only",
   ["In combat"] = "Pulsing text and how long you have been fighting",
@@ -210,10 +278,14 @@ RWA.BuiltinExamples = EXAMPLES
 RWA.BuiltinExampleDescriptions = EXAMPLE_DESC
 
 function RWA.ApplyAuraDefaults(data)
+  if data.autoScaleScreen==nil then data.autoScaleScreen=false end
+  if data.autoScaleScreen==true and not RWA.ValidScreenReference(data) then RWA.SetAutoScaleScreen(data,true) end
   -- A version 3 aura is a group of action-owned outputs. Apply appearance
   -- defaults only to the individual output definitions passed by the renderer.
   if data.schemaVersion == 3 and type(data.rules) == "table" then
     if data.enabled == nil then data.enabled = true end
+    if data.clickThrough == nil then data.clickThrough = true end
+    if data.scale == nil then data.scale = 1 end
     if data.point == nil then data.point = "CENTER" end
     if data.x == nil then data.x = 0 end
     if data.y == nil then data.y = 0 end

@@ -87,6 +87,10 @@ local function validNumber(value)
   local n=tonumber(value)
   if not n or n~=n or math.abs(n)>1000000 then return "Enter a number." end
 end
+local function validScale(value)
+  local number=tonumber(value)
+  if not number or not RWA.ValidAuraScale(number/100) then return "Enter a scale from 10 to 400%." end
+end
 local function pendingError()
   local prefix=key("")
   for k,entry in pairs(F.pending) do
@@ -105,6 +109,7 @@ function F.Flush()
   return pendingError()
 end
 function F.BeforeClick(obj)
+  if RWA.CancelAuraPlacement then RWA.CancelAuraPlacement() end
   F.Flush()
   if F.menu and F.menu.open and not F.menu.choices[obj] and obj~=F.menu.anchor then closeMenu() end
 end
@@ -113,10 +118,23 @@ local function changed()
   if F.context.changed then F.context.changed(false) end
   refresh()
 end
+local function setPosition(axis,value)
+  local d=data(); if not d then return end
+  local _,_,_,rx,ry=RWA.AuraTransform(d)
+  d[axis]=tonumber(value)/(axis=="x" and rx or ry)
+end
 local function stepPosition(axis,amount)
   local d=data(); if not d then return end
   clearPending(key("position:"..axis))
-  d[axis]=(tonumber(d[axis]) or 0)+amount
+  local x,y=RWA.AuraTransform(d)
+  setPosition(axis,(axis=="x" and x or y)+amount)
+  changed()
+end
+local function stepScale(amount)
+  local d=data(); if not d then return end
+  clearPending(key("position:scale"))
+  d.scale=math.max(RWA.MIN_AURA_SCALE,math.min(RWA.MAX_AURA_SCALE,
+    math.floor((RWA.AuraScale(d)+amount)*10000+.5)/10000))
   changed()
 end
 closeMenu=function()
@@ -358,6 +376,15 @@ function F.Build(context)
   F.back=button("common","< Back to auras",14,42,122,function() F.Flush(); F.context.back() end)
   F.title=label("common","Editing",146,44,430,22,14)
   F.summary=label("common","",18,78,1020,38,15)
+  F.clickThrough=add("common",W.UseXmlScripts(_G.RWA_FlowClickThrough))
+  F.clickThroughLabel=label("common","Make clickthrough",800,80,190,24,14)
+  W.SetSize(F.clickThrough,24,24); at(F.clickThrough,1002,78)
+  W.SetScript(F.clickThrough,"OnClick",function()
+    F.BeforeClick(F.clickThrough)
+    local d=data(); if d then d.clickThrough=d.clickThrough==false; changed() end
+  end)
+  W.Tooltip(F.clickThrough,"Make clickthrough",
+    "Pass mouse clicks through every display in this aura during gameplay and hide its hover tooltip. Editing and placement controls remain available.")
   F.validation=label("common","",16,524,475,20)
   F.status=label("common","Changes stay in this draft.",16,550,400,20)
   F.revert=button("common","Revert",570,546,96,function()
@@ -379,19 +406,13 @@ function F.Build(context)
     local sec={name=name,group=group,x=x,y=y,width=width}
     F.sections[group]=sec
     sec.title=button("common",name,x,y,width-64,function()
-      if group=="rules" and F.cancelThumbDrag then F.cancelThumbDrag() end
+      if F.cancelThumbDrag then F.cancelThumbDrag() end
       F.sectionState[group]=not F.sectionState[group]; refresh()
     end,help)
     sec.collapse=button("common","-",x+width-60,y,26,function()
-      if group=="rules" and F.cancelThumbDrag then F.cancelThumbDrag() end
+      if F.cancelThumbDrag then F.cancelThumbDrag() end
       F.sectionState[group]=not F.sectionState[group]; refresh()
     end,"Collapse or expand this section.")
-    sec.max=button("common","[]",x+width-30,y,28,function()
-      if F.cancelThumbDrag then F.cancelThumbDrag() end
-      if F.maxSection==group then F.maxSection=nil
-      else F.maxSection=group; F.sectionState[group]=false end
-      F.previewDirty=true; refresh()
-    end,"Maximize or restore this section.")
     sec.help=button("common","?",x+width-88,y,24,function() end,help)
     sec.close=button("common","X",x+width-30,y,24,function() F.CloseSection(group) end,
       group=="field" and "Close these settings. Draft values are kept." or "Close this section; click its header to reopen.")
@@ -401,7 +422,7 @@ function F.Build(context)
   section("Rules",14,148,464,"Build connected WHEN checks and THEN actions. Checks in a rule use All or Any.")
   section("Field",14,337,464,"Select a field in a rule to edit its settings here.")
   section("Preview",490,148,286,"Live uses game observations; Test uses sample data without playing sounds or running actions.")
-  section("Position",490,380,286,"Place all outputs together. Each step is one UI pixel.")
+  section("Position",490,380,286,"Place and scale all outputs together. Position steps are one UI pixel; scale steps are five percentage points.")
   label("general","Name",18,99,42); F.name=field("general",64,96,215)
   F.idLabel=label("general","",310,99,135)
   F.enabled=button("general","Enabled",450,96,90,function()
@@ -430,12 +451,42 @@ function F.Build(context)
   F.y=field("position",682,414,56)
   F.yPlus=button("position","+",742,413,28,function() stepPosition("y",1) end,"Move down by one UI pixel with the default coordinate setting.")
   F.xLabel=label("position","X",495,416,18); F.yLabel=label("position","Y",632,416,18)
+  F.scaleLabel=label("position","Scale",495,454,50)
+  F.scaleMinus=button("position","-",550,451,28,function() stepScale(-.05) end,"Reduce the aura scale by five percentage points.")
+  F.scale=field("position",584,452,76)
+  F.scalePlus=button("position","+",664,451,28,function() stepScale(.05) end,"Increase the aura scale by five percentage points.")
+  F.scaleUnit=label("position","%",696,454,20)
+  F.autoScaleScreen=add("position",W.UseXmlScripts(_G.RWA_FlowAutoScaleScreen))
+  F.autoScaleScreenLabel=label("position","Auto scale position and size with screen size",530,476,206,36,11)
+  W.SetScript(F.autoScaleScreen,"OnClick",function()
+    F.BeforeClick(F.autoScaleScreen)
+    local d=data(); if not d then return end
+    if not RWA.SetAutoScaleScreen(d,d.autoScaleScreen~=true) then
+      F.notice="Screen size is not available yet."; refresh(); return
+    end
+    F.viewportWidth,F.viewportHeight=nil,nil
+    changed()
+  end)
+  W.Tooltip(F.autoScaleScreen,function()
+    local d=data(); if not d then return end
+    local reference=d.autoScaleScreen==true and RWA.ValidScreenReference(d)
+      and string.format("Reference viewport: %g x %g UI units.",d.screenReferenceWidth,d.screenReferenceHeight) or "Off by default; enabling captures the current viewport."
+    return "Auto scale position and size",reference,
+      "Position follows each viewport axis; size scales uniformly. Saved base values are preserved. Turning this off returns to fixed base values."
+  end)
   F.move=button("position","Move in game",510,453,150,function()
     RWA.SetEditMode(not RWA.IsEditMode())
     if RWA.IsEditMode() and RWA.Editor.new[F.id] then RWA.LoadAura(F.id) end
     refresh()
   end)
-  label("position","1 click = 1 UI pixel",510,486,220)
+  F.resetPosition=button("position","Reset position",638,453,116,function()
+    local d=data();if not d then return end
+    clearPending(key("position:x"));clearPending(key("position:y"))
+    local seed=RWA.Editor.seeds[F.id]
+    RWA.ResetAuraPosition(d,seed and seed.id)
+    changed()
+  end,"Restore this aura's factory position, or centre a custom aura. Size, screen-scaling choice, rules and relative output offsets are kept. Save aura to keep the change.")
+  F.positionHint=label("position","Corner: drag / Shift-drag to scale",510,486,240,22,11)
   F.previewMode=button("preview","Live",500,177,110,function()
     local choices={{label="Live conditions",value="live"}}
     local resource=false
@@ -1388,7 +1439,7 @@ local function ruleLabel(d,id)
 end
 local presentation={
   data=data,key=key,findOwner=findOwner,matches=matches,renderPanel=renderPanel,pendingError=pendingError,
-  validNumber=validNumber,
+  validNumber=validNumber,validScale=validScale,setPosition=setPosition,
   sourceLabel=sourceLabel,outputLabel=outputLabel,nameOf=nameOf,numeric=numeric,colors=colors,
   actionKinds=actionKinds,stateKinds=stateKinds,operatorChoices=operatorChoices,choiceHelp=choiceHelp,stateDescription=stateDescription,
 }
@@ -1415,6 +1466,7 @@ function F.Open(id,context)
     F.ruleTop=view and view.top or 0; F.selection=view and view.selection or nil; F.scenario="live"; F.notice=nil
   end
   F.id,F.open=id,true
+  F.viewportWidth,F.viewportHeight=nil,nil
   F.sectionState.preview=false
   if not data() or data().schemaVersion~=3 then F.open=false; return false end
   F.previewDirty,F.previewPoll=true,nil
@@ -1422,6 +1474,7 @@ function F.Open(id,context)
 end
 function F.Close()
   if not F.built then return end
+  if RWA.CancelAuraPlacement then RWA.CancelAuraPlacement() end
   if F.cancelThumbDrag then F.cancelThumbDrag() end
   F.Flush(); closeMenu()
   F.viewState[F.id]={top=F.ruleTop,selection=F.selection}
@@ -1434,6 +1487,18 @@ function F.Close()
 end
 function F.Refresh() refresh() end
 
+-- World placement updates geometry directly. Mark/rebind only this draft,
+-- without a reload, navigation or action evaluation while the mouse is held.
+function F.PlacementChanged(id,kind)
+  F.dirty[id]=true
+  if F.id~=id or not F.open then return end
+  if kind=="scale" then clearPending(key("position:scale"))
+  else clearPending(key("position:x"));clearPending(key("position:y")) end
+  F.previewDirty,F.previewPoll=true,nil
+  RWA.SentenceLayout.BindPosition(F,presentation)
+  F.UpdateRevertLabel()
+end
+
 local function previewRegion(kind,index)
   F.previewPools=F.previewPools or {}
   F.previewRegions=F.previewRegions or {}
@@ -1442,9 +1507,11 @@ local function previewRegion(kind,index)
   local region=pool[index]
   if not region then
     region=setmetatable({regionType=kind},RWA.Regions.types[kind])
-    region.frame=W.Frame("RWA_FlowPreview_"..kind.."_"..index,F.root)
-    region.Place=function(self,dx,dy)
-      W.SetPoint(self.frame,"CENTER",F.root,"TOPLEFT",self.flowX+(dx or 0),self.flowY+(dy or 0))
+      region.frame=W.Frame("RWA_FlowPreview_"..kind.."_"..index,F.root)
+      region.Place=function(self,dx,dy)
+        self.placeDX,self.placeDY=dx or 0,dy or 0
+        local scale=RWA.Regions.PositionScale(self)
+        W.SetPoint(self.frame,"CENTER",F.root,"TOPLEFT",(self.flowX+(dx or 0))/scale,(self.flowY+(dy or 0))/scale)
     end
     region:Build(); pool[index]=region; F.previewRegions[#F.previewRegions+1]=region
   end
@@ -1466,8 +1533,8 @@ local function preparePreview(d)
     minX=math.min(minX or x-w/2,x-w/2); maxX=math.max(maxX or x-w/2+right,x-w/2+right)
     minY=math.min(minY or y-h/2,y-h/2); maxY=math.max(maxY or y+h/2,y+h/2)
   end
-  local scale=1
-  if minX then scale=math.min(1,220/math.max(1,maxX-minX),68/math.max(1,maxY-minY)) end
+  local _,_,scale=RWA.AuraTransform(d,F.viewportWidth,F.viewportHeight)
+  if minX then scale=math.min(scale,220/math.max(1,maxX-minX),68/math.max(1,maxY-minY)) end
   local centerX=minX and (minX+maxX)/2 or 0
   local centerY=minY and (minY+maxY)/2 or 0
   local used,counts={},{}
@@ -1482,8 +1549,10 @@ local function preparePreview(d)
       region=RWA.Regions.AcquireChild(parent,p)
       F.previewChildren[#F.previewChildren+1]=region
       region.Place=function(self,dx,dy)
+        self.placeDX,self.placeDY=dx or 0,dy or 0
+        local scale=RWA.Regions.PositionScale(self)
         W.SetPoint(self.frame,"CENTER",self.owner.frame,"CENTER",
-          (tonumber(self.data.offsetX) or 0)+(dx or 0), (tonumber(self.data.offsetY) or 0)+(dy or 0))
+          ((tonumber(self.data.offsetX) or 0)+(dx or 0))/scale, ((tonumber(self.data.offsetY) or 0)+(dy or 0))/scale)
       end
     else
       counts[kind]=(counts[kind] or 0)+1
@@ -1509,10 +1578,10 @@ local function preparePreview(d)
       p.offsetY=((tonumber(def.offsetY) or 0)-adjustY)*scale
       p.point="CENTER"
     end
-    local dx,dy=0,0
-    if F.maxSection=="preview" then dx,dy=-350,-20 end
-    region.flowX=915+dx+((tonumber(def.offsetX) or 0)-centerX)*scale
-    region.flowY=(F.sections.preview.y+122)+dy+((tonumber(def.offsetY) or 0)-centerY)*scale
+    region.flowX=915+((tonumber(def.offsetX) or 0)-centerX)*scale
+    region.flowY=(F.sections.preview.y+122)+((tonumber(def.offsetY) or 0)-centerY)*scale
+    region.conditionBaseScale,region.conditionScale=1,nil
+    RWA.Try(region.frame,"SetScale",1)
     region:Layout(p); region:Hide()
     F.previewById[id]=region
     F.previewOutputs[id]={region=region,data=p,active=false,placementCache={},
@@ -1523,15 +1592,23 @@ local function preparePreview(d)
 end
 function F.UpdatePreview(now)
   if not F.open or not data() then return end
+  local d=data()
+  if d.autoScaleScreen==true then
+    local width,height=RWA.ViewportSize()
+    if width~=F.viewportWidth or height~=F.viewportHeight then
+      F.viewportWidth,F.viewportHeight=width,height
+      F.previewDirty=true
+      RWA.SentenceLayout.BindPosition(F,presentation)
+    end
+  end
   if F.textDirty then F.textDirty=nil; RWA.SentenceLayout.UpdateText(F,presentation) end
   if F.menu.open and F.menu.dragUpdate then F.menu.dragUpdate() end
   if F.thumbUpdate then F.thumbUpdate() end
-  local hideVisual=F.sectionState.preview or (F.maxSection and F.maxSection~="preview")
+  local hideVisual=F.sectionState.preview
   if hideVisual then
     for _,region in ipairs(F.previewRegions or {}) do region:Hide() end
     for _,region in ipairs(F.previewChildren or {}) do region:Hide() end
   end
-  local d=data()
   if F.previewDirty or not F.previewPrepared then preparePreview(d); F.previewPoll=nil end
   if not F.previewPoll or now>=F.previewPoll then
     local resourceMode=string.match(F.scenario or "","^resource%-(.+)$")
@@ -1845,7 +1922,6 @@ function F.CloseSection(group)
   if RWA.HotbarPicker then RWA.HotbarPicker.Close() end
   F.sectionState[group]=true
   if group=="field" then F.selection=nil end
-  if F.maxSection==group then F.maxSection=nil end
   refresh()
 end
 function F.OpenDisplaySettings(anchor,entry)

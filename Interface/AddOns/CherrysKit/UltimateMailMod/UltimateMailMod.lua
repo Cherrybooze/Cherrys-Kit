@@ -42,7 +42,7 @@ UMM_VERSION = {
   Minor     = 0,
   Revision  = 2,
   Build     = 20211118,	-- 2787
-  ummRev    = '023-ck5';	-- Cherry's Kit 2026-10-26
+  ummRev    = '023-ck7';	-- Cherry's Kit 2026-10-29
 }
 
 -- ##### Local Variables #####
@@ -250,6 +250,7 @@ function UMMMasterFrame_OnUpdate(this, elapsedTime)
     return;
   end
   UMMClock = UMMClock + elapsedTime;
+  if (UMMFrame:IsVisible()) then UMMMenuLayout(); end
   if (UMMFrame:IsVisible() and not MailFrame:IsVisible()) then
     HideUIPanel(UMMFrame);
     UMMComposeConfirm:Clear();
@@ -334,6 +335,8 @@ local function ShowHelp()
   UMMPrompt("/umm trace [on|off|clear|all] : the last mail events, for finding problems");
   UMMPrompt("/umm x : check (probe) - mail slot, cursor and send state");
   UMMPrompt("/umm slotcheck on|off : wait for the item to show in the send slot (default on)");
+  UMMPrompt("/umm shortcuts on|off : Use last and gold preset buttons (default on)");
+  UMMPrompt("/umm gold <amount1> <amount2> : set both shared gold presets");
   PrintPacing();
 end
 UMMShowHelp = ShowHelp;
@@ -428,6 +431,14 @@ SlashCmdList["UMM"] = function(editBox, msg)
   elseif (cmd == "slotcheck") then
     UMMSettings:Set("NoSlotCheck", arg1 == "off");
     UMMPrompt("send slot check: "..((arg1 == "off") and "off" or "on"));
+  elseif (cmd == "shortcuts") then
+    if (arg1 == "on" or arg1 == "off") then UMMSettings:Set("MailShortcuts", arg1 == "on"); end
+    UMMPrompt("mail shortcuts: "..(UMMSettings:ShortcutsEnabled() and "on" or "off").." (/umm shortcuts on|off)");
+    if (type(UMMSettingsUI_Refresh) == "function") then UMMSettingsUI_Refresh(); end
+  elseif (cmd == "gold") then
+    if (arg1 ~= "" and not UMMSettings:SetGoldPresets(arg1, arg2)) then UMMPrompt(UMM_SETTINGS_PRESETERROR); end
+    UMMPrompt("gold presets: "..UMMFormatNumber(UMMSettings:GoldPreset(1)).." / "..UMMFormatNumber(UMMSettings:GoldPreset(2)));
+    if (type(UMMSettingsUI_Refresh) == "function") then UMMSettingsUI_Refresh(true); end
   elseif (cmd == "x" or cmd == "probe") then
     Probe();
   else

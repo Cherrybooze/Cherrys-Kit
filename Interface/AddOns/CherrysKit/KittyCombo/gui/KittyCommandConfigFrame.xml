@@ -92,6 +92,10 @@
 						Kitty.protectFunction(function()
 							local index = KittyCommandConfigFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
 							local command = Kitty.CommandConfigFrame.targetCommandList[index];
+							if(command.commandType == "changemode") then
+								Kitty.showGameTooltip(this,{"Change kitty mode",tostring(command.commandName or "Choose mode..."),"Click to pick the mode icon."});
+								return;
+							end
 							if(command.commandName ~= nil and command.commandName ~= "") then
 								local actionType, index1, index2 = Kitty.CommandConfigFrame.getActionType(command.commandName);
 
@@ -129,6 +133,7 @@
 					<OnShow>
 					</OnShow>
 					<OnClick>
+						Kitty.protectFunction(function() Kitty.CommandConfigFrame.openModePicker(this:GetParent()); end)();
 					</OnClick>
 					<OnMouseWheel>
 						<![CDATA[
@@ -156,11 +161,10 @@
 							local dropDown = Kitty.DropDown(this);
 							dropDown:setListData(
 								function(this, button, value, text, previousValue, previousText)
-									Kitty.CommandConfigFrame.updateData(this:GetParent());
-									Kitty.CommandConfigFrame.onShowList(KittyCommandConfigFrame_ScrollBar, tonumber(KittyCommandConfigFrame_ScrollBar:GetValue()), 10);
+									Kitty.CommandConfigFrame.onTypeChanged(this:GetParent());
 								end,
-								{"skill", "suitskill", "action", "extra", "macro", "emote", "proc", "other"},
-								{[8]={"break", "debug"}}
+								{"skill", "suitskill", "action", "extra", "macro", "emote", "proc", "changemode", "other"},
+								{[9]={"break", "debug"}}
 							);
 						end)();
 						]]>
@@ -215,6 +219,15 @@
 				</Scripts>
 			</EditBox>
 
+			<!-- A mode action selects its named mode through the shared icon picker. -->
+			<Button name="$parentModeButton" inherits="UIPanelButtonTemplate" text="Choose mode..." hidden="true">
+				<Size><AbsDimension x="150" y="22" /></Size>
+				<Anchors><Anchor point="LEFT" relativeTo="$parentDropDownMenu" relativePoint="RIGHT"><Offset><AbsDimension x="5" y="0" /></Offset></Anchor></Anchors>
+				<Scripts><OnClick>Kitty.protectFunction(function() Kitty.CommandConfigFrame.openModePicker(this:GetParent()); end)();</OnClick>
+				<OnEnter>Kitty.showGameTooltip(this,{"Change kitty mode","Pick a mode icon. Its default condition is Mode is off; the condition remains editable."});</OnEnter>
+				<OnLeave>Kitty.hideGameTooltip(this);</OnLeave>
+				<OnMouseWheel>Kitty.scrollList(KittyCommandConfigFrame_ScrollBar,delta);</OnMouseWheel></Scripts>
+			</Button>
 			<!-- Dropdown (proc list) -->
 			<Frame name="$parentCommandDropDownMenu" inherits="UIDropDownMenuTemplate">
 				<Size><AbsDimension x="80" /></Size>

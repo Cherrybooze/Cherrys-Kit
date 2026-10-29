@@ -21,6 +21,32 @@
 local ATTACH_TIMEOUT = 6;   -- seconds to wait for the attachment to show up
 local SEND_TIMEOUT   = 15;  -- seconds to wait for the server to answer SendMail
 
+local composers = {}; -- fixed XML-created compose/reply forms, keyed by name
+
+function UMMMailShortcutsBusy()
+  return (UMMMailComposer and UMMMailComposer:Busy()) or (type(UMMIsSending) == "function" and UMMIsSending());
+end
+
+function UMMRefreshMailShortcuts()
+  for _, composer in pairs(composers) do composer:RefreshShortcuts(); end
+  if (type(UMMHistory_Refresh) == "function") then UMMHistory_Refresh(); end
+end
+
+function UMMComposeShortcutTooltip(button, kind, index)
+  if (not GameTooltip) then return; end
+  GameTooltip:SetOwner(button, "ANCHOR_BOTTOMRIGHT", 0, 0);
+  if (kind == "last") then
+    GameTooltip:SetText(UMM_COMPOSER_USELAST);
+    GameTooltip:AddLine(UMM_COMPOSER_TIP_USELAST, 1, 1, 1);
+    GameTooltip:AddLine(UMMSettings:LastRecipient() or UMM_HISTORY_EMPTY, 1, 0.8, 0);
+  else
+    local amount = UMMSettings:GoldPreset(index);
+    GameTooltip:SetText(string.format(UMM_SETTINGS_GOLDPRESET, index));
+    GameTooltip:AddLine(string.format(UMM_COMPOSER_TIP_GOLDPRESET, UMMFormatNumber(amount)), 1, 1, 1);
+  end
+  GameTooltip:Show();
+end
+
 UMMClock = 0;               -- seconds, advanced by the master frame
 
 -- Does the send slot hold an item? nil when the client gives no answer we understand.
@@ -212,7 +238,9 @@ UMMMailComposer = {
     UMMTraceAdd("finish", status..(reason and (" "..reason) or ""));
     local returnFrame = self.priv_ComposerReturn;
     local wasRunning = self.priv_AutoRunning;
+    local recipient = status == "ok" and self.priv_State == "sending" and wasRunning and self.priv_Recipient;
     self:Clear();
+    if (recipient) then UMMSettings:RememberRecipient(recipient); end
     if (wasRunning and returnFrame) then
       local frame = getglobal(returnFrame);
       if (frame and frame.SendCompleted) then
@@ -333,6 +361,44 @@ function UMMComposeMailTemplate_OnLoad(this)
   this.AttachMoney        = 0;
   this.CODMoney           = 0;
   this.AutoSubject        = nil;
+  this.ComposerDisabled   = false;
+  composers[this:GetName()] = this;
+
+  this.RefreshShortcuts = function(self)
+    local enabled = UMMSettings:ShortcutsEnabled();
+    local busy = self.ComposerDisabled or UMMMailShortcutsBusy();
+    local last = getglobal(self:GetName().."HeaderUseLast");
+    if (last) then
+      last:SetText(UMM_COMPOSER_USELAST);
+      if (enabled) then last:Show(); else last:Hide(); end
+      if (not busy and UMMSettings:LastRecipient()) then last:Enable(); else last:Disable(); end
+    end
+    for i = 1, 2 do
+      local preset = getglobal(self:GetName().."FooterGoldPreset"..i);
+      if (preset) then
+        preset:SetText(UMMFormatNumber(UMMSettings:GoldPreset(i)));
+        if (enabled) then preset:Show(); else preset:Hide(); end
+        if (busy) then preset:Disable(); else preset:Enable(); end
+      end
+    end
+    getglobal(self:GetName().."Footer"):SetHeight(enabled and 112 or 85);
+    self:SetHeight(enabled and 505 or 475);
+  end;
+
+  this.UseLastRecipient = function(self)
+    if (not UMMSettings:ShortcutsEnabled() or self.ComposerDisabled or UMMMailShortcutsBusy()) then return; end
+    local recipient = UMMSettings:LastRecipient();
+    if (recipient) then self:SetRecipient(recipient); end
+  end;
+
+  this.UseGoldPreset = function(self, index)
+    if (not UMMSettings:ShortcutsEnabled() or self.ComposerDisabled or UMMMailShortcutsBusy()) then return; end
+    local amount = UMMSettings:GoldPreset(index);
+    if (not amount) then return; end
+    self:SetOption("money", true); -- never put a Send Gold preset into C.O.D.
+    getglobal(self:GetName().."FooterMoney"):SetText(string.format("%.0f", amount));
+    self:CheckSendStatus();
+  end;
   
   this.CheckSendStatus = function(self)
     local recipient = getglobal(self:GetName().."HeaderAuthor"):GetText();
@@ -471,6 +537,7 @@ function UMMComposeMailTemplate_OnLoad(this)
   end;
   
   this.DisableComposer = function(self)
+    self.ComposerDisabled = true;
     self:ClearAllEditFocus();
     getglobal(self:GetName().."HeaderAuthor"):Disable();
     getglobal(self:GetName().."HeaderSubject"):Disable();
@@ -482,9 +549,11 @@ function UMMComposeMailTemplate_OnLoad(this)
     getglobal(self:GetName().."FooterOptionCOD"):Disable();
     getglobal(self:GetName().."FooterMoney"):Disable();
     getglobal(self:GetName().."FooterCOD"):Disable();
+    self:RefreshShortcuts();
   end;
   
   this.EnableComposer = function(self)
+    self.ComposerDisabled = false;
     getglobal(self:GetName().."HeaderAuthor"):Enable();
     getglobal(self:GetName().."HeaderSubject"):Enable();
     getglobal(self:GetName().."Reset"):Enable();
@@ -495,6 +564,7 @@ function UMMComposeMailTemplate_OnLoad(this)
     getglobal(self:GetName().."FooterOptionCOD"):Enable();
     getglobal(self:GetName().."FooterMoney"):Enable();
     getglobal(self:GetName().."FooterCOD"):Enable();
+    self:RefreshShortcuts();
   end;
   
   this.Send = function(self)
@@ -635,11 +705,13 @@ function UMMComposeMailTemplate_OnLoad(this)
   getglobal(this:GetName().."FooterAttachmentLabel"):SetText("|cff"..UMMColor.White..UMM_COMPOSER_ATTACHMENT.."|r");
   getglobal(this:GetName().."FooterOptionMoneyLabel"):SetText("|cff"..UMMColor.White..UMM_COMPOSER_SENDGOLD.."|r");
   getglobal(this:GetName().."FooterOptionCODLabel"):SetText("|cff"..UMMColor.White..UMM_COMPOSER_SENDCOD.."|r");
+  this:RefreshShortcuts();
 end
 
 function UMMComposeMailTemplate_OnShow(this)
   this:ClearMail(true);
   this:CheckSendStatus();
+  this:RefreshShortcuts();
   getglobal(this:GetName().."HeaderAuthor"):SetFocus();
 end
 

@@ -1,10 +1,24 @@
 # rom weakauras
 
-Version **0.9.24** · Kit release **0.11.81** · [All addons / hub](../README.md)
+Version **0.9.25** · Kit release **0.11.82** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Updated in 0.9.25
+
+**Make clickthrough** is a checkbox above General, enabled by default for existing and new auras. During normal gameplay it passes clicks through every display in that aura and suppresses its hover tooltip. Turning it off restores hover interaction. Opening /wa, its editor/selectors, or an unlocked placement view keeps editing interaction available; closing returns to the saved gameplay choice. The checkbox participates in normal draft Save/Revert and sharing.
+
+Expand **Position** to edit **X**, **Y** and **Scale**. Scale defaults to **100%**, accepts **10–400%**, and has **− / +** buttons that change it by five percentage points (100 → 105). It scales all outputs and their relative offsets together while keeping the chosen aura position fixed. Linked children inherit the scale once, and conditional Grow composes with it. Width/height settings and saved positions are preserved; invalid scale text blocks Save until corrected. The small panel preview is fitted to its available area; world placement shows the actual aura scale.
+
+**Auto scale position and size with screen size** is **off by default** for existing and new auras. Enabling it captures the current viewport in that aura's draft. Later resolution/UI-scale changes move X/Y proportionally along their axes and uniformly scale size by the smaller ratio. The authored coordinates and manual Scale stay unchanged; position fields/buttons use current UI units. Turning the option off returns to fixed authored values. Choice and reference dimensions support Save/Revert and sharing.
+
+Each unlocked placement preview has a small **top-left grip**: drag to move the entire aura; **Shift-drag sideways** to scale it. Grips keep a usable size, cover independent/linked outputs together, and disappear when positions are locked or normal gameplay resumes. Interrupted drags stop on navigation, reload, lock or close. **Reset position** restores recognized factory placements or centres a custom aura, retaining its scale, screen-scaling reference, rules and relative offsets. Both operations remain draft-only until Save aura. New presets/reset positions use the approved saved layout; startup never reapplies factory coordinates to existing auras.
+
+**Target health** now shows HP **and** percentage on a full-width line below its bar. It uses directly exposed HP where available; unowned NPCs often expose only rounded percentages. A learned maximum from the current target or pbInfo's optional cache yields a `~` estimate, such as `~3000 / 4000 (75%)`; unknown HP is `? / ? (75%)`. Rule values and bar progress retain the original API values. See [health source details](https://github.com/Cherrybooze/Cherrys-Kit/blob/main/docs/TARGET_HEALTH.md).
+
+Section headers now use **Expand / Collapse** in place of maximizers. Collapsing or closing a section preserves its draft input. These input/geometry changes have simulated-client coverage; native click pass-through, scaling and placement still need in-game validation.
 
 ## Updated in 0.9.24
 

@@ -421,6 +421,11 @@ function T.FindSkill(name)
   skillCache[key] = { retryAt = RWA.Now() + 5 }
 end
 
+local function resourceNumber(value)
+  value=tonumber(value)
+  if value and value==value and value>=0 and value<math.huge then return value end
+end
+
 local function resource(trigger, getValue, getMax)
   local unit = trigger.unit or "player"
   local state = { unit = unit, progressType = "static" }
@@ -428,8 +433,9 @@ local function resource(trigger, getValue, getMax)
     state.show = false
     return state
   end
-  state.value = tonumber(call(getValue, unit)) or 0
-  state.total = tonumber(call(getMax, unit)) or 0
+  local value,total=resourceNumber(call(getValue,unit)),resourceNumber(call(getMax,unit))
+  state.valueKnown,state.totalKnown=value~=nil,total~=nil and total>0
+  state.value,state.total=value or 0,total or 0
   state.name = call(UnitName, unit) or unit
   state.percent = state.total > 0 and (state.value / state.total * 100) or 0
   state.show = true
@@ -440,32 +446,54 @@ local function resource(trigger, getValue, getMax)
   return state
 end
 
--- The client can expose NPC health as a percentage. pbInfo learns a maximum
--- at full health; scaling its recorded maximum is an estimate, not exact HP.
-local targetHealthKey,targetHealthMax
+-- Unowned NPCs expose rounded percentages; players/owned pets expose HP.
+-- UnitChangeHealth is a DELTA, not max HP. Like pbInfo, only full-health
+-- positive observations can seed an estimate; smaller heals must not shrink it.
+local targetHealthKey,targetHealthName,targetHealthLevel,targetHealthClass,targetHealthMax
+local function resetTargetHealth()
+  targetHealthKey,targetHealthName,targetHealthLevel,targetHealthClass,targetHealthMax=nil,nil,nil,nil,nil
+end
 local function targetHealthText(state)
+  if state.value==nil then resetTargetHealth();return end
+  local percent=state.valueKnown and state.totalKnown and tostring(math.floor(state.percent+.5)) or "?"
+  local suffix=" ("..percent.."%)"
   local isPlayer=call(rawget(_G,"UnitIsPlayer"),"target")
-  if isPlayer==nil or isPlayer==true or (type(isPlayer)=="number" and isPlayer~=0) then return end
-  if state.total~=100 or state.value<0 or state.value>100 then return end
+  local master=call(rawget(_G,"UnitMaster"),"target")
+  local absolute=isPlayer==true or (type(isPlayer)=="number" and isPlayer~=0)
+    or type(master)=="string" and master~="" or state.totalKnown and state.total~=100
+  if absolute then
+    resetTargetHealth()
+    state.healthText=(state.valueKnown and string.format("%.0f",state.value) or "?").." / "
+      ..(state.totalKnown and string.format("%.0f",state.total) or "?")..suffix
+    return
+  end
+  state.healthText="? / ?"..suffix
+  if not state.valueKnown or not state.totalKnown or state.total~=100 or state.value>100 then resetTargetHealth();return end
+  -- Unknown unit classification must not turn an ambiguous 100 into HP.
+  if isPlayer~=false and isPlayer~=0 then resetTargetHealth();return end
   local guid=call(rawget(_G,"UnitGUID"),"target")
-  if guid~=targetHealthKey then targetHealthKey,targetHealthMax=guid,nil end
-  local changed=tonumber(call(rawget(_G,"UnitChangeHealth"),"target"))
-  if state.value==100 and changed and changed>0 and guid then targetHealthMax=changed end
+  if type(guid)~="string" and type(guid)~="number" or guid==""
+    or type(guid)=="number" and (not resourceNumber(guid) or guid==0) then guid=nil end
+  local name,level,class=state.name,call(rawget(_G,"UnitLevel"),"target"),call(rawget(_G,"UnitClass"),"target")
+  if not guid or guid~=targetHealthKey or name~=targetHealthName or level~=targetHealthLevel or class~=targetHealthClass then
+    targetHealthMax=nil
+  end
+  targetHealthKey,targetHealthName,targetHealthLevel,targetHealthClass=guid,name,level,class
   local max=targetHealthMax
   local mobdb=type(pbInfo)=="table" and pbInfo.MobDB
   if type(mobdb)=="table" then
-    if type(mobdb.Update)=="function" then pcall(mobdb.Update,"target") end
-    local name=call(rawget(_G,"UnitName"),"target")
-    local level=call(rawget(_G,"UnitLevel"),"target")
-    local class=call(rawget(_G,"UnitClass"),"target")
     local byName=type(mobdb.Mobs)=="table" and mobdb.Mobs[name]
     local byLevel=type(byName)=="table" and byName[level]
     local byClass=type(byLevel)=="table" and byLevel[class]
-    local known=type(byClass)=="table" and tonumber(byClass.healthpoints)
-    if known and known>0 then max=known end
+    local known=type(byClass)=="table" and resourceNumber(byClass.healthpoints)
+    if known and known>=1 then max=math.max(max or 0,math.floor(known)) end
   end
-  if not max and state.value==100 and changed and changed>0 then max=changed end
-  state.healthText=max and ("~"..math.ceil(max*state.value/100).." / "..max) or (tostring(state.value).."%")
+  if state.value==100 then
+    local changed=resourceNumber(call(rawget(_G,"UnitChangeHealth"),"target"))
+    if changed and changed>=1 then max=math.max(max or 0,math.floor(changed)) end
+  end
+  if guid then targetHealthMax=max end
+  if max then state.healthText=string.format("~%.0f / %.0f",math.ceil(max*state.value/100),max)..suffix end
 end
 local status = {}
 -- Read equipped durability at most once per second, shared by all durability
@@ -499,7 +527,7 @@ status.durability = function(trigger,now)
 end
 status.health = function(trigger)
   local state=resource(trigger, UnitHealth, UnitMaxHealth)
-  if state.show and state.unit=="target" then targetHealthText(state) end
+  if state.unit=="target" then targetHealthText(state) end
   return state
 end
 status.mana = function(trigger)

@@ -26,6 +26,25 @@ default("UMM_MSI_DONE", "Mass send finished: %d of %d mails sent.");
 default("UMM_MSI_STOPPED", "Mass send stopped: %d of %d mails sent. The items not sent are still marked.");
 default("UMM_MSI_GAVEUP", "Mail for %s failed %d times (%s). Stopped so nothing gets stuck.");
 default("UMM_MSI_SKIPPED", "Skipped %s: it is no longer in that bag slot.");
+default("UMM_COMPOSER_USELAST", "Use last");
+default("UMM_COMPOSER_TIP_USELAST", "Fill To with the last successfully mailed recipient. Shared across your characters.");
+default("UMM_COMPOSER_TIP_GOLDPRESET", "Fill Send Gold with %s gold. Change both amounts in /umm. This button only fills the form.");
+default("UMM_SETTINGS_MAILSHORTCUTS", "Mail shortcuts");
+default("UMM_SETTINGS_TIP_MAILSHORTCUTS", "Show Use last beside To and two gold preset buttons below Send Gold. On by default; settings and recipient history are shared across characters.");
+default("UMM_SETTINGS_GOLDPRESET", "Gold preset %d");
+default("UMM_SETTINGS_SAVEPRESETS", "Save presets");
+default("UMM_SETTINGS_PRESETHELP", "Shared across characters. Enter whole gold amounts, then Save presets.");
+default("UMM_SETTINGS_PRESETERROR", "Enter whole gold amounts from 1 to 999,999,999.");
+default("UMM_SETTINGS_PRESETSAVED", "Gold presets saved.");
+default("UMM_MENU_HISTORY", "History");
+default("UMM_HISTORY_TITLE", "Recipient history");
+default("UMM_HISTORY_HELP", "Your last 20 distinct recipients, newest first. Shared across characters. Click a name to compose mail.");
+default("UMM_HISTORY_EMPTY", "No successfully sent mail yet.");
+default("UMM_HISTORY_COUNT", "%d / 20 recipients");
+default("UMM_MSI_RECENT_TITLE", "Recently sent");
+default("UMM_MSI_RECENT_HELP", "Use this recipient for Mass Send Items. Selected items stay selected; sending still uses Send or C.O.D.");
+default("UMM_MSI_SELECT_TITLE", "Item selection");
+default("UMM_MSI_SELECT_HELP", "Drag a box to select items. Ctrl/Shift-drag adds; Esc cancels. Ctrl-click toggles matching stacks.");
 
 -- ### Send pacing ###
 -- Defaults are deliberately gentle: the old 0.2 s spacing with no pauses is what ran into

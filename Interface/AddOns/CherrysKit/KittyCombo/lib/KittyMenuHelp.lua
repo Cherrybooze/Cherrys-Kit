@@ -103,6 +103,7 @@ Kitty.MenuHelp.commandTypes = {
 	["macro"] = "Runs one of your macros (only macros that do not cast skills or use items).",
 	["emote"] = "Does an emote.",
 	["proc"] = "Runs another kitty here: its first ready command fires. Lets you reuse a rotation.",
+	["changemode"] = "Changes Kitty's active mode. Pick its mode icon; an editable Mode is off condition is added automatically. The switch uses this press; the next press continues under the new mode.",
 	["other"] = "break and debug.",
 	["break"] = "Stops here: nothing below this row fires while its conditions pass.",
 	["debug"] = "Prints a message instead of casting. For testing a kitty.",

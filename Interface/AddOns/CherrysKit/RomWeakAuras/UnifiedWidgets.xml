@@ -2,6 +2,25 @@
 <!-- Fixed native pools: allocating controls during scrolling leaks frames in RoM. -->
 <Frame name="RWA_UnifiedRoot" parent="RWA_OptionsWindow" enableMouse="true" hidden="true"><Size><AbsDimension x="1060" y="748" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" /></Anchors><Frames>
 <Frame name="RWA_FlowRulesSurface" enableMouse="true" frameLevel="3"><Size><AbsDimension x="714" y="298" /></Size><Scripts><OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel></Scripts></Frame>
+<CheckButton name="RWA_FlowClickThrough" enableMouse="true" hidden="true" frameLevel="4">
+ <Size><AbsDimension x="24" y="24" /></Size>
+ <NormalTexture file="Interface/Buttons/CheckBox-Normal2" />
+ <PushedTexture file="Interface/Buttons/CheckBox-Depress2" />
+ <HighlightTexture file="Interface/Buttons/CheckBox-Highlight" alphaMode="ADD" />
+ <CheckedTexture file="Interface/Buttons/CheckBox-Checked" />
+ <DisabledCheckedTexture file="Interface/Buttons/CheckBox-Checked-Disabled" />
+ <Scripts><OnClick>RWA_Script("RWA_FlowClickThrough","OnClick",key);</OnClick>
+ <OnEnter>RWA_Script("RWA_FlowClickThrough","OnEnter");</OnEnter>
+ <OnLeave>RWA_Script("RWA_FlowClickThrough","OnLeave");</OnLeave></Scripts>
+</CheckButton>
+<CheckButton name="RWA_FlowAutoScaleScreen" enableMouse="true" hidden="true" frameLevel="4">
+ <Size><AbsDimension x="24" y="24" /></Size>
+ <NormalTexture file="Interface/Buttons/CheckBox-Normal2" /><PushedTexture file="Interface/Buttons/CheckBox-Depress2" />
+ <HighlightTexture file="Interface/Buttons/CheckBox-Highlight" alphaMode="ADD" />
+ <CheckedTexture file="Interface/Buttons/CheckBox-Checked" /><DisabledCheckedTexture file="Interface/Buttons/CheckBox-Checked-Disabled" />
+ <Scripts><OnClick>RWA_Script("RWA_FlowAutoScaleScreen","OnClick",key);</OnClick>
+ <OnEnter>RWA_Script("RWA_FlowAutoScaleScreen","OnEnter");</OnEnter><OnLeave>RWA_Script("RWA_FlowAutoScaleScreen","OnLeave");</OnLeave></Scripts>
+</CheckButton>
 <Button name="RWA_UniBtn1" enableMouse="true" hidden="true"><Size><AbsDimension x="80" y="24" /></Size><Scripts>
  <OnClick>RWA_Script("RWA_UniBtn1", "OnClick", key);</OnClick>
  <OnEnter>RWA.W.HoverSkin(this,true); RWA_Script("RWA_UniBtn1", "OnEnter");</OnEnter>
@@ -1744,7 +1763,15 @@
  <OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel><OnEditFocusGained>RWA_Script("RWA_UniEdit8","OnEditFocusGained");</OnEditFocusGained>
  <OnEnterPressed>RWA_Script("RWA_UniEdit8","OnEnterPressed");</OnEnterPressed>
  <OnEscapePressed>this:ClearFocus();</OnEscapePressed>
- <OnEnter>RWA_Script("RWA_UniEdit8","OnEnter");</OnEnter><OnLeave>RWA_Script("RWA_UniEdit8","OnLeave");</OnLeave>
+  <OnEnter>RWA_Script("RWA_UniEdit8","OnEnter");</OnEnter><OnLeave>RWA_Script("RWA_UniEdit8","OnLeave");</OnLeave>
+  </Scripts></EditBox>
+<EditBox name="RWA_UniEdit9" inherits="UIPanelEditBoxTemplate" letters="1000" autoFocus="false" multiLine="false" hidden="true">
+ <Size><AbsDimension x="120" y="24" /></Size><Scripts>
+ <OnTextChanged>RWA_Script("RWA_UniEdit9","OnTextChanged");</OnTextChanged>
+ <OnMouseWheel>RWA_ListWheel(delta or arg1);</OnMouseWheel><OnEditFocusGained>RWA_Script("RWA_UniEdit9","OnEditFocusGained");</OnEditFocusGained>
+ <OnEnterPressed>RWA_Script("RWA_UniEdit9","OnEnterPressed");</OnEnterPressed>
+ <OnEscapePressed>this:ClearFocus();</OnEscapePressed>
+ <OnEnter>RWA_Script("RWA_UniEdit9","OnEnter");</OnEnter><OnLeave>RWA_Script("RWA_UniEdit9","OnLeave");</OnLeave>
  </Scripts></EditBox>
 
 

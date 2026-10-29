@@ -84,11 +84,11 @@
       <Frame name="UMMFrameTab1" parent="$parentBody" inherits="UMMInboxTemplate" hidden="true" />
       <Frame name="UMMFrameTab2" parent="$parentBody" inherits="UMMComposeTemplate" hidden="true" />
       <Frame name="UMMFrameTab3" parent="$parentBody" inherits="UMMMassSendItemsTemplate" hidden="true" />
-      <!-- <Frame name="UMMFrameTab4" parent="$parentBody" inherits="UMMComposeMailTemplateMultiSend" hidden="true" /> -->
+      <Frame name="UMMFrameTab4" parent="$parentBody" inherits="UMMHistoryTemplate" hidden="true" />
       <Button name="UMMFrameTab1Button" parent="UMMFrame" inherits="UMMMenuTabTemplate" id="1" text="" />
       <Button name="UMMFrameTab2Button" parent="UMMFrame" inherits="UMMMenuTabTemplate" id="2" text="" />
       <Button name="UMMFrameTab3Button" parent="UMMFrame" inherits="UMMMenuTabTemplate" id="3" text="" />
-      <!-- <Button name="UMMFrameTab4Button" parent="UMMFrame" inherits="UMMMenuTabTemplate" id="4" text="" /> -->
+      <Button name="UMMFrameTab4Button" parent="UMMFrame" inherits="UMMMenuTabTemplate" id="4" text="" />
       <CheckButton name="$parentSettingAudioAlert" inherits="UIPanelCheckButtonTemplate">
         <Size>
           <AbsDimension x="25" y="25" />

@@ -91,7 +91,7 @@ class FlowEditorTests(unittest.TestCase):
         self.assertEqual(self.editor.ruleRows[2].entry.kind,"check")
         self.assertEqual(self.editor.ruleRows[3].entry.kind,"action")
 
-    def test_tokens_follow_focused_text_and_maximize_expands(self):
+    def test_tokens_follow_focused_text_and_expand_preserves_inputs(self):
         output=self.lua.globals().draft.rules[1].actions[1].output
         output.text="PRIMARY"; output.text2="SECONDARY"
         self.output_field("first")
@@ -101,9 +101,9 @@ class FlowEditorTests(unittest.TestCase):
         self.assertEqual(output.text2,"SECONDARY%s")
         self.h.script(self.editor.sections.field.collapse.name,"OnClick",key="LBUTTON")
         self.assertTrue(self.editor.sectionState.field)
-        self.h.script(self.editor.sections.field.max.name,"OnClick",key="LBUTTON")
+        self.h.script(self.editor.sections.field.collapse.name,"OnClick",key="LBUTTON")
         self.assertFalse(self.editor.sectionState.field)
-        self.assertEqual(self.editor.maxSection,"field")
+        self.assertIsNone(self.editor.sections.field.max)
         self.assertTrue(self.editor.fieldInput1.box.visible)
 
     def test_list_can_open_and_save_through_replacement_editor(self):
@@ -204,15 +204,18 @@ class FlowEditorTests(unittest.TestCase):
         self.lua.execute("draft.rules[1].actions[1].sourceId='missing-source'; p=RWA.Rules.PrepareActions(draft)")
         self.assertFalse(self.lua.globals().p.actionValid[output])
 
-    def test_rules_maximize_expands_local_view_and_restores_it(self):
+    def test_rules_expand_restores_local_rows_and_scroll(self):
+        window=self.lua.globals().RWA_OptionsWindow
+        window.Show(window)
         self.lua.execute('for i=1,4 do RWA.Rules.Duplicate(draft,draft.rules[1].id) end')
         self.editor.Refresh()
         before=sum(1 for row in self.editor.ruleRows.values() if row.entry)
-        self.h.script(self.editor.sections.rules.max.name,"OnClick",key="LBUTTON")
-        self.assertGreater(sum(1 for row in self.editor.ruleRows.values() if row.entry),before)
-        self.assertEqual(self.editor.sections.rules.title.anchor[5],78)
-        self.h.script(self.editor.sections.rules.max.name,"OnClick",key="LBUTTON")
-        self.assertIsNone(self.editor.maxSection)
+        self.h.script(self.editor.sections.rules.collapse.name,"OnClick",key="LBUTTON")
+        self.assertEqual(self.editor.sections.rules.collapse.text,"Expand")
+        self.assertFalse(self.editor.ruleRows[1].first.IsVisible(self.editor.ruleRows[1].first))
+        self.assertTrue(self.editor.previewMode.IsVisible(self.editor.previewMode))
+        self.h.script(self.editor.sections.rules.collapse.name,"OnClick",key="LBUTTON")
+        self.assertEqual(self.editor.sections.rules.collapse.text,"Collapse")
         self.assertEqual(sum(1 for row in self.editor.ruleRows.values() if row.entry),before)
         self.editor.Scroll(2)
         self.assertEqual(self.editor.ruleTop,2)
@@ -275,7 +278,7 @@ class FlowEditorTests(unittest.TestCase):
         self.assertEqual(self.lua.globals().draft.y,-1)
         self.assertIsNone(self.editor.Flush())
 
-    def test_linked_text_settings_keep_owner_during_scroll_and_maximize(self):
+    def test_linked_text_settings_keep_owner_during_scroll_and_section_expansion(self):
         self.output_field("first")
         self.lua.execute("for i=1,3 do RWA.Rules.Duplicate(draft,draft.rules[1].id) end")
         self.editor.Refresh()
@@ -283,9 +286,9 @@ class FlowEditorTests(unittest.TestCase):
         self.assertEqual(self.editor.selection.action,"a1")
         self.assertEqual(self.editor.selection.field,"text")
         self.assertEqual(self.editor.fieldTitle.text,"Field editor - Text")
-        self.h.script(self.editor.sections.rules.max.name,"OnClick",key="LBUTTON")
+        self.h.script(self.editor.sections.rules.collapse.name,"OnClick",key="LBUTTON")
         self.assertEqual(self.editor.selection.action,"a1")
-        self.h.script(self.editor.sections.rules.max.name,"OnClick",key="LBUTTON")
+        self.h.script(self.editor.sections.rules.collapse.name,"OnClick",key="LBUTTON")
         self.assertEqual(self.editor.fieldInput1.box.text,"MISSING")
 
     def test_compact_rows_show_unit_comparison_and_sound_mode(self):
@@ -331,6 +334,8 @@ class FlowEditorTests(unittest.TestCase):
         child=self.editor.previewById[self.editor.previewPrepared.order[2]]
         self.assertEqual(child.frame.parent,parent.frame.name)
         self.assertEqual(parent.frame.scale,2)
+        self.assertAlmostEqual(parent.frame.anchor[4]*parent.frame.scale,parent.flowX)
+        self.assertAlmostEqual(parent.frame.anchor[5]*parent.frame.scale,parent.flowY)
         self.assertTrue(child.shown)
         self.assertGreaterEqual(parent.alpha,0.35)
         self.assertGreaterEqual(child.alpha,0.35)

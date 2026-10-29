@@ -280,7 +280,7 @@ class WindowPreviewLifecycleTests(unittest.TestCase):
 
     def test_scroll_drag_cannot_keep_closing_selectors_after_revert_navigation_or_section_close(self):
         editor=self.open_flow(duplicates=4)
-        for route in ('revert','back','rules-close','native-hide','rules-title','rules-collapse','other-max'):
+        for route in ('revert','back','rules-close','native-hide','rules-title','rules-collapse','other-expand'):
             with self.subTest(route=route):
                 self.lua.execute('cursorX,cursorY=100,100')
                 self.assertTrue(editor.thumb.IsVisible(editor.thumb))
@@ -291,8 +291,8 @@ class WindowPreviewLifecycleTests(unittest.TestCase):
                 elif route=='native-hide':
                     window=self.lua.globals().RWA_OptionsWindow
                     window.Hide(window);self.rwa.ToggleOptions()
-                elif route in ('rules-title','rules-collapse','other-max'):
-                    button=editor.sections.general.max if route=='other-max' else editor.sections.rules[route[6:]]
+                elif route in ('rules-title','rules-collapse','other-expand'):
+                    button=editor.sections.general.collapse if route=='other-expand' else editor.sections.rules[route[6:]]
                     self.h.script(button.name,'OnClick',key='LBUTTON')
                     self.h.script(button.name,'OnClick',key='LBUTTON')
                 else:
@@ -365,4 +365,3 @@ class WindowPreviewLifecycleTests(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
-

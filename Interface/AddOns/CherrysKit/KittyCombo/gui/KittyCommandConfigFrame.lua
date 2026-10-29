@@ -288,10 +288,36 @@ Kitty.CommandConfigFrame.onShow = function(this)
 	Kitty.CommandConfigFrame.dragAndDropManager:startHook();
 end;
 Kitty.CommandConfigFrame.onHide = function(this)
+	if(Kitty.ModeUI and Kitty.ModeUI.pickHandler) then Kitty.ModeUI.closeFlyout(); end
 	-- End hooks
 	if(Kitty.CommandConfigFrame.dragAndDropManager ~= nil) then
 		Kitty.CommandConfigFrame.dragAndDropManager:endHook()
 	end
+end;
+
+Kitty.CommandConfigFrame.openModePicker = function(row)
+	local F = Kitty.CommandConfigFrame;
+	local list = F.targetCommandList;
+	local index = KittyCommandConfigFrame_ScrollBar:GetValue() + row:GetID() - 1;
+	local command = list and list[index];
+	if(not command or command.commandType ~= "changemode") then return false; end
+	if(type(CloseDropDownMenus) == "function") then CloseDropDownMenus(); end
+	local anchor = getglobal(row:GetName() .. "ModeButton") or row;
+	return Kitty.ModeUI.openPicker(anchor, function(name)
+		if(F.targetCommandList ~= list or list[index] ~= command or command.commandType ~= "changemode") then return end
+		if(KittyCommandConfigFrame_ScrollBar:GetValue() + row:GetID() - 1 ~= index) then return end
+		if(row.IsVisible and not row:IsVisible()) then return end
+		if(Kitty.ModeUI.configureCommand(command,name)) then
+			F.onShowList(KittyCommandConfigFrame_ScrollBar,tonumber(KittyCommandConfigFrame_ScrollBar:GetValue()),10);
+		end
+	end, command.commandName, false);
+end;
+
+Kitty.CommandConfigFrame.onTypeChanged = function(row)
+	local F = Kitty.CommandConfigFrame;
+	F.updateData(row);
+	F.onShowList(KittyCommandConfigFrame_ScrollBar,tonumber(KittyCommandConfigFrame_ScrollBar:GetValue()),10);
+	F.openModePicker(row);
 end;
 
 -- Drop
@@ -312,6 +338,7 @@ Kitty.CommandConfigFrame.onDrop = function(this)
 	-- Get the command
 	local index = KittyCommandConfigFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
 	local command = Kitty.CommandConfigFrame.targetCommandList[index];
+	local previousType = command.commandType;
 
 	-- Handle each kind of drop
 	if(cursorType == Kitty.DragAndDropManager.SKILL) then
@@ -436,6 +463,9 @@ Kitty.CommandConfigFrame.onDrop = function(this)
 		Kitty.sendMessage("Error: Not support. CursorType:[" .. cursorType .. "]", "DEFAULT", 1, 0, 0);
 	end
 
+	if(previousType == "changemode" and command.commandType ~= "changemode") then
+		Kitty.ModeUI.clearCommandGuard(command);
+	end
 	-- Update row
 	Kitty.CommandConfigFrame.onRedraw(KittyCommandConfigFrame, tonumber(KittyCommandConfigFrame_ScrollBar:GetValue()), 10);
 
@@ -471,6 +501,7 @@ Kitty.CommandConfigFrame.updateData = function(this)
 	if(this ~= nil) then
 		-- Update the row in the list
 		local index = KittyCommandConfigFrame_ScrollBar:GetValue() + this:GetID() - 1;
+		local previous = Kitty.CommandConfigFrame.targetCommandList[index];
 		local command = {};
 		for index, condition in ipairs(Kitty.CommandConfigFrame.targetCommandList[index]) do
 			command[index] = condition;
@@ -486,7 +517,9 @@ Kitty.CommandConfigFrame.updateData = function(this)
 		assert(dropDownMenu, this:GetName() .. "DropDownMenu is nil");
 		command.commandType = UIDropDownMenu_GetText(dropDownMenu);
 
-		if(command.commandType ~= "proc") then
+		if(command.commandType == "changemode") then
+			command.commandName = previous.commandType == "changemode" and previous.commandName or "";
+		elseif(command.commandType ~= "proc") then
 			-- Edit box (command name)
 			local commandNameEditBox = getglobal(this:GetName() .. "CommandNameEditBox");
 			assert(commandNameEditBox, this:GetName() .. "CommandNameEditBox is nil");
@@ -499,7 +532,9 @@ Kitty.CommandConfigFrame.updateData = function(this)
 		end
 
 		-- Command icon
-		if(command.commandType == "extra" or command.commandType == "proc" or command.commandType == "break" or command.commandType == "debug") then
+		if(command.commandType == "changemode") then
+			command.icon = Kitty.ModeUI.validModeName(command.commandName) and Kitty.ModeUI.iconPath(command.commandName) or "";
+		elseif(command.commandType == "extra" or command.commandType == "proc" or command.commandType == "break" or command.commandType == "debug") then
 			command.icon = nil;
 		else
 			command.icon = Kitty.CommandConfigFrame.targetCommandList[index].icon;
@@ -509,6 +544,7 @@ Kitty.CommandConfigFrame.updateData = function(this)
 --		local conditionButton = getglobal(this:GetName() .. "ConditionButton");
 --		assert(conditionButton, this:GetName() .. "ConditionButton is nil");
 
+		if(previous.commandType == "changemode" and command.commandType ~= "changemode") then Kitty.ModeUI.clearCommandGuard(command); end
 		Kitty.CommandConfigFrame.targetCommandList[index] = command;
 	end
 end;
@@ -622,7 +658,15 @@ Kitty.CommandConfigFrame.showDetail = function(this, command, index, total)
 	-- Dropdown (command name)
 	local commandDropDownMenu = getglobal(this:GetName() .. "CommandDropDownMenu");
 	assert(dropDownMenu, this:GetName() .. "CommandDropDownMenu is nil");
-	if(command.commandType ~= "proc") then
+	local modeButton = getglobal(this:GetName() .. "ModeButton");
+	if(modeButton) then modeButton:Hide(); end
+	if(command.commandType == "changemode") then
+		editBox:SetText(""); editBox:Hide(); commandDropDownMenu:Hide();
+		if(modeButton) then
+			modeButton:SetText(Kitty.ModeUI.validModeName(command.commandName) and command.commandName or Kitty.L("ModeActionChoose", "Choose mode..."));
+			modeButton:Show();
+		end
+	elseif(command.commandType ~= "proc") then
 		-- Show the edit box
 		editBox:SetText(tostring(command.commandName));
 		UIDropDownMenu_SetText(commandDropDownMenu, tostring(""));

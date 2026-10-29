@@ -237,8 +237,8 @@ class ModeExampleTests(unittest.TestCase):
         self.assertFalse(self.lua.eval('RWA_DB.auras["Example: buff on me"].enabled'))
         self.assertIsNone(data.sources[1].names[1])
         self.assertEqual(data.rules[1].when.checks[1].field, "missing")
-        self.assertEqual((data.x, data.y), (260, -40))
-        self.assertEqual(self.lua.eval('RWA_DB.auras["Example: buff on me"].y'), -70)
+        self.assertEqual((data.x, data.y), (341, -61))
+        self.assertEqual(self.lua.eval('RWA_DB.auras["Example: buff on me"].y'), -91)
         data.sources[1].names[1] = "My buff"
         self.assertIsNone(self.lua.eval('RWA_DB.auras["Example: buff on me"].sources[1].names[1]'))
 

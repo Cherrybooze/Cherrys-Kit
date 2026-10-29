@@ -1592,8 +1592,10 @@ Kitty.toggleMode = function(name, on)
 	return Kitty.Modes[name];
 end;
 Kitty.ComboManager.modeOn = function(self, condition)
+	-- Prediction supplies an isolated mode snapshot; execution reads live modes.
+	local modes = (type(self) == "table" and rawget(self, "modeState")) or Kitty.Modes;
 	for _, value in ipairs(condition) do
-		local on = Kitty.Modes[string.lower(tostring(value.name or ""))] == true;
+		local on = modes[string.lower(tostring(value.name or ""))] == true;
 		if(on ~= (value.value ~= false)) then
 			return false;
 		end

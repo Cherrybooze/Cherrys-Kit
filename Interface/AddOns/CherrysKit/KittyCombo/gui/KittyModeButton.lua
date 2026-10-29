@@ -11,6 +11,7 @@ end
 Kitty.Modes = Kitty.Modes or {};
 Kitty.ModeUI = Kitty.ModeUI or {};
 local M = Kitty.ModeUI;
+M.pickHandler, M.pickerChoices, M.flyoutAnchor, M.page = nil, nil, nil, 0;
 
 M.MAX = 15;	-- flyout buttons for modes (plus one for "no mode")
 M.PER_ROW = 4;
@@ -70,6 +71,10 @@ local function collect(found, kitties)
 	end
 	for _, kitty in ipairs(kitties) do
 		for _, command in ipairs(type(kitty) == "table" and kitty or {}) do
+			if(type(command) == "table" and command.commandType == "changemode" and type(command.commandName) == "string") then
+				local name = M.clean(command.commandName);
+				if(name ~= "") then found[name] = true; end
+			end
 			for _, condition in ipairs(type(command) == "table" and command or {}) do
 				if(type(condition) == "table" and condition.conditionType == "modeOn") then
 					if(condition.name ~= nil) then
@@ -184,10 +189,48 @@ M.set = function(name, quiet)
 	else
 		M.setting().current = nil;
 	end
+	if(Kitty.Predict) then Kitty.Predict.cache = {}; end
 	if(not quiet) then
 		Kitty.sendMessage(Kitty.L("ModeNow", "Kitty mode: <<1>>", name ~= "" and ("|cff40ff40" .. name .. "|r") or Kitty.L("ModeNone", "none")));
 	end
 	M.refresh();
+end
+
+M.validModeName = function(name)
+	return type(name) == "string" and M.clean(name) ~= "" and M.clean(name) ~= M.clean(M.ADD_NEW);
+end
+
+-- The marker lives on the ordinary modeOn entry, so split/merge and share
+-- formats retain it. Boolean edits remain meaningful when the action is retargeted.
+M.configureCommand = function(command, name)
+	if(type(command) ~= "table" or not M.validModeName(name)) then return false; end
+	name = M.clean(name);
+	local owned;
+	for _, condition in ipairs(command) do
+		if(type(condition) == "table" and condition.conditionType == "modeOn") then
+			for _, entry in ipairs(condition) do
+				if(type(entry) == "table" and entry.modeActionGuard == true) then entry.name = name; owned = true; end
+			end
+		end
+	end
+	if(not owned) then
+		table.insert(command, {conditionType="modeOn", {name=name,value=false,threshold=0,modeActionGuard=true}});
+	end
+	command.commandType, command.commandName, command.icon = "changemode", name, M.iconPath(name);
+	return true;
+end
+
+M.clearCommandGuard = function(command)
+	for i = #command, 1, -1 do
+		local condition = command[i];
+		if(type(condition) == "table" and condition.conditionType == "modeOn") then
+			local removed;
+			for j = #condition, 1, -1 do
+				if(type(condition[j]) == "table" and condition[j].modeActionGuard == true) then table.remove(condition,j); removed = true; end
+			end
+			if(removed and #condition == 0) then table.remove(command,i); end
+		end
+	end
 end
 -- After logging in: the mode picked last time is on again
 M.restore = function()
@@ -234,6 +277,7 @@ M.afterLoad = function()
 	if(setting and type(setting.command) == "table") then
 		M.migrate(setting.command);
 	end
+	M.closeFlyout();
 	M.place();
 	M.restore();
 end
@@ -320,7 +364,7 @@ M.refresh = function()
 	end
 	if(not M.isShown()) then
 		button:Hide();
-		M.closeFlyout();
+		if(not M.pickHandler or (Kitty.isTurnedOff and Kitty.isTurnedOff())) then M.closeFlyout(); end
 		return;
 	end
 	M.paint(button, M.current() or "");
@@ -391,30 +435,91 @@ end
 M.flyoutList = function()
 	local list = {""};	-- "" = no mode
 	for _, name in ipairs(M.names()) do
-		if(#list > M.MAX) then
-			break;
-		end
 		table.insert(list, name);
 	end
 	return list;
 end
+
+local function numericCall(fn, ...)
+	if(type(fn) ~= "function") then return nil; end
+	local ok, value = pcall(fn, ...);
+	if(ok and type(value) == "number" and value == value and value > 0 and value < math.huge) then return value; end
+end
+
+-- GetPos is in screen pixels; popup anchors and dimensions are UI units.
+-- Keep the saved button/readout positions independent of popup placement.
+local function fitFlyout(flyout, anchor, count, footer)
+	local scale = numericCall(GetUIScale) or 1;
+	local width = numericCall(GetScreenWidth);
+	local height = numericCall(GetScreenHeight);
+	width = width and width / scale or numericCall(UIParent and UIParent.GetWidth, UIParent) or 1024;
+	height = height and height / scale or numericCall(UIParent and UIParent.GetHeight, UIParent) or 768;
+	local ok, x, y = try(anchor, "GetPos");
+	x, y = ok and tonumber(x) or 0, ok and tonumber(y) or 0;
+	x, y = (x or 0) / scale, (y or 0) / scale;
+	local aw = numericCall(anchor and anchor.GetWidth, anchor) or 36;
+	local ah = numericCall(anchor and anchor.GetHeight, anchor) or 36;
+	local real, rw, rh = try(anchor, "GetRealSize");
+	if(real and tonumber(rw) and tonumber(rh)) then aw, ah = rw / scale, rh / scale; end
+	local available = math.max(y - 8, height - y - ah - 8);
+	local preferred = math.min(M.PER_ROW, count);
+	if(x <= M.SIZE + M.GAP and footer == 0 and 12 + count * (M.SIZE + M.GAP) - M.GAP <= available) then
+		preferred = 1; -- left-edge selectors read top-down when a full column fits
+	end
+	local columns, best = preferred, nil;
+	for candidate = 1, count do
+		local w = 12 + candidate * (M.SIZE + M.GAP) - M.GAP;
+		local h = 12 + math.ceil(count / candidate) * (M.SIZE + M.GAP) - M.GAP + footer;
+		if(w <= width - 8 and h <= height - 8 and (footer == 0 or w >= 100)) then
+			local score = math.abs(candidate - preferred) + (h > available and 100 or 0);
+			if(best == nil or score < best) then columns, best = candidate, score; end
+		end
+	end
+	local rows = math.ceil(count / columns);
+	local w = 12 + columns * (M.SIZE + M.GAP) - M.GAP;
+	local h = 12 + rows * (M.SIZE + M.GAP) - M.GAP + footer;
+	local fit = math.max(0.01, math.min(1, math.max(1, width - 8) / w, math.max(1, height - 8) / h));
+	try(flyout, "SetScale", fit);
+	flyout:SetSize(w, h);
+	local px = x + aw - w * fit;
+	if(px < 4) then px = x; end
+	px = math.max(0, math.min(width - w * fit, math.max(4, px)));
+	local py = y + ah + 4;
+	if(py + h * fit > height - 4) then py = y - h * fit - 4; end
+	py = math.max(0, math.min(height - h * fit, math.max(4, py)));
+	flyout:ClearAllAnchors();
+	flyout:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", px / fit, py / fit);
+	try(flyout, "SetFrameStrata", "DIALOG");
+	return columns, w, h;
+end
+
 M.fillFlyout = function()
 	local flyout = find("KittyModeFlyout");
-	local button = find("KittyModeButton");
+	local button = M.flyoutAnchor or find("KittyModeButton");
 	if(flyout == nil or button == nil) then
 		return;
 	end
-	local list = M.flyoutList();
+	local all = M.pickerChoices or M.flyoutList();
+	local capacity = M.MAX + 1;
+	M.pageCount = math.max(1, math.ceil(#all / capacity));
+	M.page = math.max(0, math.min(M.page or 0, M.pageCount - 1));
+	local list = {};
+	for i = 1, capacity do
+		local name = all[M.page * capacity + i];
+		if(name ~= nil) then list[#list + 1] = name; end
+	end
 	M.shownList = list;
-	local current = M.current() or "";
+	local footer = M.pageCount > 1 and 26 or 0;
+	local columns, width, height = fitFlyout(flyout, button, math.max(1, #list), footer);
+	local current = M.pickHandler and M.pickerCurrent or M.current() or "";
 	for index = 1, M.MAX + 1 do
 		local choice = find("KittyModeFlyout_Button" .. index);
 		if(choice) then
 			if(list[index] ~= nil) then
-				local column = math.mod and math.mod(index - 1, M.PER_ROW) or ((index - 1) % M.PER_ROW);
-				local row = math.floor((index - 1) / M.PER_ROW);
+				local column = (index - 1) % columns;
+				local row = math.floor((index - 1) / columns);
 				choice:ClearAllAnchors();
-				choice:SetAnchor("TOPLEFT", "TOPLEFT", flyout, 6 + column * (M.SIZE + M.GAP), 6 + row * (M.SIZE + M.GAP));
+				choice:SetAnchor("TOPLEFT", "TOPLEFT", flyout:GetName(), 6 + column * (M.SIZE + M.GAP), 6 + row * (M.SIZE + M.GAP));
 				M.paint(choice, list[index]);
 				local glow = find(choice:GetName() .. "Glow");
 				if(glow) then
@@ -426,60 +531,77 @@ M.fillFlyout = function()
 			end
 		end
 	end
-	local columns = math.min(#list, M.PER_ROW);
-	local rows = math.ceil(#list / M.PER_ROW);
-	flyout:SetSize(12 + columns * M.SIZE + (columns - 1) * M.GAP, 12 + rows * M.SIZE + (rows - 1) * M.GAP);
+	for _, spec in ipairs({{"Prev",6,"<"},{"Next",width - 36,">"},{"Page",width / 2 - 20,tostring(M.page + 1) .. "/" .. M.pageCount}}) do
+		local control = find("KittyModeFlyout_" .. spec[1]);
+		if(control) then
+			if(footer > 0) then
+				control:ClearAllAnchors();
+				control:SetAnchor("TOPLEFT", "TOPLEFT", flyout:GetName(), spec[2], height - footer);
+				try(control, "SetText", spec[3]); control:Show();
+			else control:Hide(); end
+		end
+	end
 	try(find("KittyModeFlyout_SkinBg"), "SetTexture", Kitty.Skin.path("inner"));
 	if(not flyout.kittyBox and Kitty.Skin.box) then
 		flyout.kittyBox = true;
 		Kitty.Skin.box(flyout, "gold", 0, 1, "BORDER");
 	end
-	-- open downwards, or upwards when the button is in the lower half of the screen
-	flyout:ClearAllAnchors();
-	local _, y = button:GetPos();
-	local height = (UIParent and UIParent.GetHeight and UIParent:GetHeight()) or 768;
-	local scale = (type(GetUIScale) == "function" and GetUIScale()) or 1;
-	if(y and y / scale > height / 2) then
-		flyout:SetAnchor("BOTTOMRIGHT", "TOPRIGHT", button, 0, -4);
-	else
-		flyout:SetAnchor("TOPRIGHT", "BOTTOMRIGHT", button, 0, 4);
-	end
 end
-M.toggleFlyout = function()
+
+-- The editor reuses the same icon picker with a selection callback. Picking an
+-- action's mode must not switch the player's live mode while editing a draft.
+M.openPicker = function(anchor, onPick, current, includeNone)
 	local flyout = find("KittyModeFlyout");
-	if(flyout == nil) then
-		return;
+	if(flyout == nil) then return false; end
+	M.flyoutAnchor, M.pickHandler, M.pickerCurrent, M.page = anchor or find("KittyModeButton"), onPick, current or "", 0;
+	M.pickerChoices = nil;
+	if(onPick) then
+		M.pickerChoices = includeNone == false and {} or {""};
+		for _, name in ipairs(M.names()) do table.insert(M.pickerChoices, name); end
+		if(#M.pickerChoices == 0) then M.closeFlyout(); return false; end
 	end
-	if(flyout:IsVisible()) then
-		flyout:Hide();
-	else
-		M.fillFlyout();
-		flyout:Show();
-	end
+	try(flyout, "SetParent", "UIParent");
+	M.fillFlyout(); flyout:Show(); return true;
+end
+M.toggleFlyout = function(anchor)
+	local flyout = find("KittyModeFlyout");
+	anchor = anchor or find("KittyModeButton");
+	if(flyout and flyout:IsVisible() and M.flyoutAnchor == anchor and not M.pickHandler) then
+		M.closeFlyout();
+	else M.openPicker(anchor, nil, M.current() or "", true); end
+end
+M.changePage = function(delta)
+	M.page = math.max(0, math.min((M.page or 0) + delta, (M.pageCount or 1) - 1));
+	M.fillFlyout();
 end
 M.closeFlyout = function()
 	local flyout = find("KittyModeFlyout");
 	if(flyout) then
 		flyout:Hide();
 	end
+	M.pickHandler, M.pickerChoices, M.flyoutAnchor, M.pickerCurrent, M.page = nil, nil, nil, nil, 0;
+	M.shownList = nil;
 end
 M.pick = function(index)
+	local flyout = find("KittyModeFlyout");
+	if(not flyout or not flyout:IsVisible()) then return; end
 	local name = M.shownList and M.shownList[index];
 	if(name == nil) then
 		return;
 	end
-	M.set(name);
+	local choose = M.pickHandler;
 	M.closeFlyout();
+	if(choose) then choose(name); else M.set(name); end
 end
 M.onChoiceEnter = function(choice)
 	local name = M.shownList and M.shownList[choice:GetID()];
 	if(name == nil) then
 		return;
 	end
-	local current = M.current() or "";
+	local current = M.pickHandler and M.pickerCurrent or M.current() or "";
 	local title = (name == "") and Kitty.L("ModeNoneButton", "No mode (all off)") or name;
 	if(name == current) then
-		title = title .. Kitty.L("ModeCurrent", "  |cff40ff40(now)|r");
+		title = title .. (M.pickHandler and "  |cff40ff40(selected)|r" or Kitty.L("ModeCurrent", "  |cff40ff40(now)|r"));
 	end
 	Kitty.showGameTooltip(choice, {title, Kitty.L("ModeChoiceClick", "|cff9ea8baClick to switch to this mode|r")});
 end
@@ -533,27 +655,7 @@ M.onMenuPick = function(text)
 	end
 end
 M.openMenu = function()
-	local menu = find("KittyModeTextMenu");
-	if(menu == nil or type(ToggleDropDownMenu) ~= "function") then
-		return;
-	end
-	local function toggle()
-		-- RoM: ToggleDropDownMenu(frame, level); WoW puts level first
-		if(not pcall(ToggleDropDownMenu, menu, 1)) then
-			pcall(ToggleDropDownMenu, 1, nil, menu);
-		end
-	end
-	local list = find("DropDownList1");
-	toggle();
-	if(list and list.IsVisible and not list:IsVisible() and not menu:IsVisible() and not M.menuWasOpen) then
-		-- the menu may need its frame shown: show it invisible, without its arrow
-		try(menu, "SetAlpha", 0);
-		try(find(menu:GetName() .. "Button"), "Hide");
-		menu:Show();
-		M.menuShownFrame = true;
-		toggle();
-	end
-	M.menuWasOpen = list and list.IsVisible and list:IsVisible() or nil;
+	M.toggleFlyout(find("KittyModeText"));
 end
 M.onTextEnter = function(readout)
 	local lines = {M.textLabel(), Kitty.L("ModeTextClick", "|cff9ea8baClick: pick a mode|r")};

@@ -136,22 +136,32 @@ end
 -- Shared region behaviour
 ---------------------------------------------------------------------------
 
+-- RoM multiplies anchor offsets by the anchored widget's own real scale.
+-- Divide by its local scale so scaling/growing does not move the chosen
+-- position; children still inherit their parent's transform exactly once.
+function Regions.PositionScale(region)
+  local scale=tonumber(region.conditionScale or region.conditionBaseScale) or 1
+  return scale>0 and scale or 1
+end
+
 function Base:Place(dx, dy)
   local d = self.data
+  self.placeDX,self.placeDY=dx or 0,dy or 0
+  local scale=Regions.PositionScale(self)
   if self.owner and d.parentOutputId then
     local childDy=dy or 0
     if RWA_DB and RWA_DB.settings and RWA_DB.settings.yUp then childDy=-childDy end
     W.Place(self.frame, d.point or "CENTER", self.owner.frame, d.point or "CENTER",
-      (tonumber(d.offsetX) or 0) + (dx or 0), (tonumber(d.offsetY) or 0) + childDy)
+      ((tonumber(d.offsetX) or 0) + (dx or 0))/scale, ((tonumber(d.offsetY) or 0) + childDy)/scale)
     return
   end
   if self.owner then
     local side = SIDES[d.side or "LEFT"] or SIDES.LEFT
     W.SetPoint(self.frame, side[1], self.owner.frame, side[2],
-      side[3] + (tonumber(d.x) or 0) + (dx or 0), side[4] + (tonumber(d.y) or 0) + (dy or 0))
+      (side[3] + (tonumber(d.x) or 0) + (dx or 0))/scale, (side[4] + (tonumber(d.y) or 0) + (dy or 0))/scale)
     return
   end
-  W.Place(self.frame, d.point or "CENTER", "UIParent", d.point or "CENTER", (d.x or 0) + (dx or 0), (d.y or 0) + (dy or 0))
+  W.Place(self.frame, d.point or "CENTER", "UIParent", d.point or "CENTER", ((d.x or 0) + (dx or 0))/scale, ((d.y or 0) + (dy or 0))/scale)
 end
 
 function Base:Layout(data)
@@ -578,6 +588,17 @@ function Bar:Build()
   self.text2 = makeText(f, 12, "RIGHT")
 end
 
+local function layoutBarText(region,data,health)
+  local w,h=region.barW,data.height
+  W.SetSize(region.text.obj,math.max(1,w*(health and 1 or .7)-6),h)
+  W.SetSize(region.text2.obj,math.max(1,w*(health and 1 or .3)-4),h)
+  W.SetPoint(region.text.obj,"LEFT",region.frame,"LEFT",region.barX+4,0)
+  W.SetJustify(region.text2.obj,health and "CENTER" or "RIGHT")
+  if health then W.SetPoint(region.text2.obj,"TOP",region.frame,"BOTTOM",0,2)
+  else W.SetPoint(region.text2.obj,"RIGHT",region.frame,"RIGHT",-4,0) end
+  region.healthTextLayout=health
+end
+
 function Bar:LayoutParts(d)
   local w, h = d.width, d.height
   local iconW = d.showIcon and math.min(w, h) or 0
@@ -600,10 +621,7 @@ function Bar:LayoutParts(d)
   W.SetJustify(self.text.obj,"LEFT"); W.SetJustify(self.text2.obj,"RIGHT")
   W.SetColor(self.text.obj, colorOf(d.textColor))
   W.SetColor(self.text2.obj, colorOf(d.textColor))
-  W.SetSize(self.text.obj, math.max(1, self.barW * 0.7 - 6), h)
-  W.SetSize(self.text2.obj, math.max(1, self.barW * 0.3 - 4), h)
-  W.SetPoint(self.text.obj, "LEFT", self.frame, "LEFT", iconW + 4, 0)
-  W.SetPoint(self.text2.obj, "RIGHT", self.frame, "RIGHT", -4, 0)
+  layoutBarText(self,d,false)
   self.text.lastText, self.text2.lastText, self.lastIcon, self.lastFill = nil, nil, nil, nil
   if RWA.ResourceDisplays then
     if d.resource or self.regionType=="soulpoints" then RWA.ResourceDisplays.LayoutBar(self,d)
@@ -657,6 +675,10 @@ function Bar:Update(now)
   end
   if resource then resource.UpdateBarText(self,state,now);resource.Updated(self)
   else
+    -- Give the stock target HP/percentage pair a readable full-width line;
+    -- its original 30% text slot clips values as soon as HP is known.
+    local health=state.healthText~=nil and d.text=="%n" and d.text2=="%v / %t"
+    if health~=self.healthTextLayout then layoutBarText(self,d,health) end
     setText(self.text, Regions.FormatText(d.text, state, now))
     setText(self.text2, Regions.FormatText(d.text2, state, now))
   end

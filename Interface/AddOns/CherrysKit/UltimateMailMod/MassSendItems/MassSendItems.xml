@@ -40,13 +40,15 @@
       <OnClick>
         UMMMassSendItemsSlotTemplate_OnClick(this);
       </OnClick>
+      <OnMouseDown>this:GetParent():GetParent():BeginBoxSelection(this, key, this:GetParent():GetID(), this:GetID());</OnMouseDown>
+      <OnMouseUp>this:GetParent():GetParent():EndBoxSelection(key);</OnMouseUp>
       <OnLeave>
         UMMMassSendItemsSlotTemplate_OnLeave(this);
       </OnLeave>
     </Scripts>
   </Button>
 
-  <Frame name="UMMMassSendItemsBagTemplate" inherits="UIPanelBackdropFrame" virtual="true">
+  <Frame name="UMMMassSendItemsBagTemplate" inherits="UIPanelBackdropFrame" virtual="true" enableMouse="true">
     <Size>
       <AbsDimension x="255" y="215" />
     </Size>
@@ -87,12 +89,16 @@
         UIPanelBackdropFrame_SetTexture(this, "Interface/Common/PanelCommonBorder", 40, 40);
         UMMMassSendItemsBagTemplate_OnLoad(this);
       </OnLoad>
+      <OnMouseDown>this:GetParent():BeginBoxSelection(this, key);</OnMouseDown>
+      <OnMouseUp>this:GetParent():EndBoxSelection(key);</OnMouseUp>
+      <OnEnter>UMMMassSelectionTip(this);</OnEnter>
+      <OnLeave>GameTooltip:Hide();</OnLeave>
     </Scripts>
   </Frame>
   
   <!-- Mass Mail Items Bags Template -->
   
-  <Frame name="UMMMassSendItemsBagsTemplate" virtual="true">
+  <Frame name="UMMMassSendItemsBagsTemplate" virtual="true" enableMouse="true">
     <Size>
       <AbsDimension x="780" y="470" />
     </Size>
@@ -110,6 +116,51 @@
       <Frame name="$parentBag4" id="4" inherits="UMMMassSendItemsBagTemplate" />
       <Frame name="$parentBag5" id="5" inherits="UMMMassSendItemsBagTemplate" />
       <Frame name="$parentBag6" id="6" inherits="UMMMassSendItemsBagTemplate" />
+      <!-- Reuse a near-white opaque sample in the bundled border texture.
+           Fixed XML textures keep the rubber band independent of optional addons. -->
+      <Frame name="$parentSelection" enableMouse="false" frameLevel="20" hidden="true">
+        <Size><AbsDimension x="1" y="1"/></Size>
+        <Layers><Layer level="OVERLAY">
+          <Texture name="$parentFill" file="Interface/AddOns/CherrysKit/UltimateMailMod/Textures/ItemTaggedBorder" alphaMode="BLEND">
+            <Anchors><Anchor point="TOPLEFT"/><Anchor point="BOTTOMRIGHT"/></Anchors>
+            <TexCoords left="0.2420" top="0.1014" right="0.2424" bottom="0.1017"/>
+            <Color r="0.15" g="0.45" b="1" a="0.18"/>
+          </Texture>
+          <Texture name="$parentTop" file="Interface/AddOns/CherrysKit/UltimateMailMod/Textures/ItemTaggedBorder" alphaMode="BLEND">
+            <Size><AbsDimension x="1" y="1"/></Size>
+            <Anchors><Anchor point="TOPLEFT"/><Anchor point="TOPRIGHT"/></Anchors>
+            <TexCoords left="0.2420" top="0.1014" right="0.2424" bottom="0.1017"/>
+            <Color r="0.15" g="0.45" b="1" a="1"/>
+          </Texture>
+          <Texture name="$parentBottom" file="Interface/AddOns/CherrysKit/UltimateMailMod/Textures/ItemTaggedBorder" alphaMode="BLEND">
+            <Size><AbsDimension x="1" y="1"/></Size>
+            <Anchors><Anchor point="BOTTOMLEFT"/><Anchor point="BOTTOMRIGHT"/></Anchors>
+            <TexCoords left="0.2420" top="0.1014" right="0.2424" bottom="0.1017"/>
+            <Color r="0.15" g="0.45" b="1" a="1"/>
+          </Texture>
+          <Texture name="$parentLeft" file="Interface/AddOns/CherrysKit/UltimateMailMod/Textures/ItemTaggedBorder" alphaMode="BLEND">
+            <Size><AbsDimension x="1" y="1"/></Size>
+            <Anchors><Anchor point="TOPLEFT"/><Anchor point="BOTTOMLEFT"/></Anchors>
+            <TexCoords left="0.2420" top="0.1014" right="0.2424" bottom="0.1017"/>
+            <Color r="0.15" g="0.45" b="1" a="1"/>
+          </Texture>
+          <Texture name="$parentRight" file="Interface/AddOns/CherrysKit/UltimateMailMod/Textures/ItemTaggedBorder" alphaMode="BLEND">
+            <Size><AbsDimension x="1" y="1"/></Size>
+            <Anchors><Anchor point="TOPRIGHT"/><Anchor point="BOTTOMRIGHT"/></Anchors>
+            <TexCoords left="0.2420" top="0.1014" right="0.2424" bottom="0.1017"/>
+            <Color r="0.15" g="0.45" b="1" a="1"/>
+          </Texture>
+        </Layer></Layers>
+      </Frame>
+      <EditBox name="$parentSelectionKeys" enableMouse="false" alpha="0" letters="1" historylines="0">
+        <Size><AbsDimension x="1" y="1"/></Size>
+        <Anchors><Anchor point="TOPLEFT"/></Anchors>
+        <Scripts>
+          <OnLoad>this:SetKeyboardEnable(false);</OnLoad>
+          <OnEscapePressed>this:GetParent():CancelBoxSelection();</OnEscapePressed>
+          <OnEditFocusLost>local grid=this:GetParent(); if grid.CancelBoxSelection then grid:CancelBoxSelection(); end</OnEditFocusLost>
+        </Scripts>
+      </EditBox>
     </Frames>
     <Scripts>
       <OnLoad>
@@ -121,6 +172,11 @@
       <OnHide>
         UMMMassSendItemsBagsTemplate_OnHide(this);
       </OnHide>
+      <OnMouseDown>this:BeginBoxSelection(this, key);</OnMouseDown>
+      <OnMouseUp>this:EndBoxSelection(key);</OnMouseUp>
+      <OnUpdate>if this.priv_BoxDrag then this:UpdateBoxSelection(); end</OnUpdate>
+      <OnEnter>UMMMassSelectionTip(this);</OnEnter>
+      <OnLeave>GameTooltip:Hide();</OnLeave>
     </Scripts>
   </Frame>
   
@@ -615,9 +671,9 @@
       <AbsDimension x="430" y="440" />
     </Size>
     <Anchors>
-      <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+      <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
         <Offset>
-          <AbsDimension x="-15" y="10" />	<!-- x="-15" y="10"   xxxxxxxxxxxxxx -->
+          <AbsDimension x="335" y="10" />
         </Offset>
       </Anchor>
     </Anchors>
@@ -749,11 +805,68 @@
     </Scripts>
   </Frame>
   
+  <!-- Recently sent: same shared 20-name history, compact mass-send target. -->
+  <Button name="UMMMassRecentEntryTemplate" inherits="UIPanelButtonTemplate" virtual="true" text="">
+    <Size><AbsDimension x="158" y="19"/></Size>
+    <Layers><Layer level="ARTWORK">
+      <FontString name="$parentName" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="142" y="19"/></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="8" y="0"/></Offset></Anchor></Anchors>
+      </FontString>
+    </Layer></Layers>
+    <Scripts>
+      <OnClick>UMMMassRecent_Select(this:GetID());</OnClick>
+      <OnEnter>UMMHistory_Enter(this, true);</OnEnter>
+      <OnLeave>GameTooltip:Hide();</OnLeave>
+    </Scripts>
+  </Button>
+  <Frame name="UMMMassRecentTemplate" inherits="UIPanelBackdropFrame" virtual="true">
+    <Size><AbsDimension x="170" y="435"/></Size>
+    <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="790" y="30"/></Offset></Anchor></Anchors>
+    <Layers><Layer level="ARTWORK">
+      <FontString name="$parentTitle" inherits="GameTitleFont" justifyH="LEFT" text="">
+        <Size><AbsDimension x="154" y="24"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="8" y="3"/></Offset></Anchor></Anchors>
+      </FontString>
+      <FontString name="$parentEmpty" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="150" y="60"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="10" y="32"/></Offset></Anchor></Anchors>
+      </FontString>
+    </Layer></Layers>
+    <Frames>
+      <Button name="$parentEntry1" inherits="UMMMassRecentEntryTemplate" id="1"><Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="6" y="32"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry2" inherits="UMMMassRecentEntryTemplate" id="2"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry1" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry3" inherits="UMMMassRecentEntryTemplate" id="3"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry2" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry4" inherits="UMMMassRecentEntryTemplate" id="4"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry3" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry5" inherits="UMMMassRecentEntryTemplate" id="5"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry4" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry6" inherits="UMMMassRecentEntryTemplate" id="6"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry5" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry7" inherits="UMMMassRecentEntryTemplate" id="7"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry6" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry8" inherits="UMMMassRecentEntryTemplate" id="8"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry7" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry9" inherits="UMMMassRecentEntryTemplate" id="9"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry8" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry10" inherits="UMMMassRecentEntryTemplate" id="10"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry9" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry11" inherits="UMMMassRecentEntryTemplate" id="11"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry10" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry12" inherits="UMMMassRecentEntryTemplate" id="12"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry11" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry13" inherits="UMMMassRecentEntryTemplate" id="13"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry12" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry14" inherits="UMMMassRecentEntryTemplate" id="14"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry13" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry15" inherits="UMMMassRecentEntryTemplate" id="15"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry14" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry16" inherits="UMMMassRecentEntryTemplate" id="16"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry15" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry17" inherits="UMMMassRecentEntryTemplate" id="17"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry16" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry18" inherits="UMMMassRecentEntryTemplate" id="18"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry17" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry19" inherits="UMMMassRecentEntryTemplate" id="19"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry18" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry20" inherits="UMMMassRecentEntryTemplate" id="20"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry19" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+    </Frames>
+    <Scripts>
+      <OnLoad>UMMMassRecent_OnLoad(this);</OnLoad>
+      <OnShow>UMMHistory_Refresh();</OnShow>
+      <OnHide>GameTooltip:Hide();</OnHide>
+    </Scripts>
+  </Frame>
+
   <!-- Main Mass Send Items Template -->
   
   <Frame name="UMMMassSendItemsTemplate" virtual="true">
     <Size>
-      <AbsDimension x="780" y="490" />
+      <AbsDimension x="960" y="490" />
     </Size>
     <Anchors>
       <Anchor point="TOPLEFT">
@@ -769,6 +882,7 @@
       <Frame name="$parentPeople" inherits="UMMMassSendItemsPeopleTemplate" hidden="true" />
       <Frame name="$parentMark" inherits="UMMMassSendItemsMarkButtonsTemplate" hidden="true" />
       <Frame name="$parentStatus" inherits="UMMMassSendItemsStatusTemplate" hidden="true" />
+      <Frame name="$parentRecent" inherits="UMMMassRecentTemplate" hidden="true" />
     </Frames>
     <Scripts>
       <OnShow>

@@ -52,6 +52,9 @@ Kitty.ComboManager.check = function(self, targetList, path)
 				if(Kitty.ComboManager.debugSkillList[command.commandName] == true) then
 					Kitty.print("canDispatch Result:[" .. tostring(result) .. "], Command:[" .. tostring(command.commandName) .. "]");
 				end
+			elseif(command.commandType == "changemode") then
+				result = Kitty.ModeUI and type(Kitty.ModeUI.set) == "function"
+					and Kitty.ModeUI.validModeName(command.commandName);
 			elseif(command.commandType == "extra") then
 				-- Can the extra action be used?
 				local extraActionIndex = tonumber(command.commandName);
@@ -179,6 +182,10 @@ Kitty.ComboManager.cast = function(self, commandType, command)
 	elseif(commandType == "action") then
 		-- Use an action slot
 		self.slotManager:use(command);
+	elseif(commandType == "changemode") then
+		if(Kitty.ModeUI and Kitty.ModeUI.validModeName(command)) then
+			Kitty.ModeUI.set(command, true);
+		end
 	elseif(commandType == "extra") then
 		-- Can the extra action be used?
 		local extraActionIndex = tonumber(command);
