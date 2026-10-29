@@ -2,7 +2,7 @@
 
 # Cherry's Kit
 
-> Development snapshot: kit 0.11.81 is not published yet. Visit Releases for the current public build.
+> Playtest prerelease: kit 0.11.81 includes the PR #4 fixes and is available below for in-game testing. Visit Releases for the latest stable build.
 
 ## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.81/CherrysKit-Full-0.11.81.zip)
 
@@ -12,7 +12,7 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current kit candidate: **0.11.81** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.81)
+Current playtest release: **0.11.81** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.81)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
