@@ -1198,13 +1198,21 @@ Kitty.ComboManager.isShieldType = function(self, value)
 end;
 
 -- Condition: Is in Range
+-- A probe skill that is not on the action bar fails and warns once, then stays
+-- quiet for ten seconds so evaluations and predictions do not repeat it.
+Kitty.ComboManager.inRangeWarnAt = {};
 Kitty.ComboManager.inRange = function(self, skill)
 	local result = self.slotManager:inRange(skill);
 	if(result ~= nil) then
-		return self.slotManager:inRange(skill);
+		return result;
 	else
 		-- Not on the action bar
-		SendWarningMsg(Kitty.format("Shortcut for inRange is not registered. SkillName:[<<1>>]", tostring(skill)));
+		local now = Kitty.getTime and Kitty.getTime() or 0;
+		local last = Kitty.ComboManager.inRangeWarnAt[skill];
+		if(last == nil or (now - last) >= 10) then
+			Kitty.ComboManager.inRangeWarnAt[skill] = now;
+			SendWarningMsg(Kitty.format("Shortcut for inRange is not registered. SkillName:[<<1>>]", tostring(skill)));
+		end
 		return false;
 	end
 end;
@@ -1512,9 +1520,11 @@ Kitty.ComboManager.targetDebuffStacksType = function(self, condition)
 end;
 
 -- Condition: Cast In Last X Seconds
--- Each entry: name = skill, threshold = seconds. Counts casts KittyCombo made
--- (Kitty.lastCast, set by SkillManager.cast). value = false: NOT cast in that time,
--- so a damage over time skill is not cast twice while the first is on its way.
+-- Each entry: name = skill, threshold = seconds. Counts the cast attempts
+-- KittyCombo made at send time (Kitty.lastCast, set by SkillManager.cast) -
+-- an attempt, not a confirmation the cast went through. value = false: NOT
+-- attempted in that time, so a damage over time skill is not cast twice while
+-- the first is on its way.
 Kitty.lastCast = Kitty.lastCast or {};
 Kitty.ComboManager.castWithin = function(name, seconds)
 	local at = Kitty.lastCast[name];
@@ -1533,16 +1543,16 @@ Kitty.ComboManager.castRecentlyHelp = function(self, condition)
 	for _, value in ipairs(condition) do
 		local seconds = tostring(tonumber(value.threshold) or 0);
 		if(value.value == false) then
-			table.insert(lines, Kitty.L("NotCastRecently", "When I did not cast <<1>> in the last [<<2>>] s", Kitty.colorCyan(tostring(value.name)), seconds));
+			table.insert(lines, Kitty.L("NotCastRecently", "When Kitty did not try to cast <<1>> in the last [<<2>>] s", Kitty.colorCyan(tostring(value.name)), seconds));
 		else
-			table.insert(lines, Kitty.L("CastRecentlyHelp", "When I cast <<1>> in the last [<<2>>] s", Kitty.colorCyan(tostring(value.name)), seconds));
+			table.insert(lines, Kitty.L("CastRecentlyHelp", "When Kitty tried to cast <<1>> in the last [<<2>>] s", Kitty.colorCyan(tostring(value.name)), seconds));
 		end
 	end
 	return table.concat(lines, " ");
 end;
 Kitty.ComboManager.castRecentlyDescribe = function(self, condition)
 	return {
-		Kitty.L("castRecentlyDescription1", "Skill name, then seconds. Counts casts KittyCombo made."),
+		Kitty.L("castRecentlyDescription1", "Skill name, then seconds. Counts KittyCombo's cast attempts when they are sent, not confirmed activations."),
 		Kitty.L("castRecentlyDescription2", "\"not cast\" stops a skill from being cast twice in a row,"),
 		Kitty.L("castRecentlyDescription3", "for example a debuff that takes a moment to land."),
 	};

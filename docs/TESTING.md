@@ -1,4 +1,4 @@
-# In-game checks for kit 0.11.79
+# In-game checks for kit 0.11.80
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
@@ -58,3 +58,4 @@ The richer editor has a higher fixed cost: the fixture retained approximately 0.
 - In game, compare item-link colours in native chat and Cherry's Chat (including the reported Mythic earring), test wrapped links and Shift-click. In AAH, toggle the Stats header, reload, and compare full localized stat colours and normalized values with the native tooltip.
 
 - KittyCombo: compare predicted and selected skills during a cast; import a supported rotation, exercise class/build menus, cancel and save a new mode, and test duplicate action slots and Create/Pick up macro.
+- KittyCombo timing (1.7.10): spam the rotation key and confirm skills fire as their cooldown ends instead of being refused early; run `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6` mid-session to compare the old window. Confirm an action row with an empty item stack or no bar slot is skipped, that a valid action still wins, and that "Item is ready" conditions keep their meaning.

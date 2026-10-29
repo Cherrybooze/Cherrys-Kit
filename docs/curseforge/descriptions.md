@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Fifteen package descriptions for Cherry's Kit 0.11.79, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Fifteen package descriptions for Cherry's Kit 0.11.80, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -103,7 +103,7 @@ Some kit addons contain parts under Creative Commons **NonCommercial** licences 
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
-Version 1.7.9 fixes prediction, import restrictions, editor drafts, proc cycles, cooldown conditions, named priorities and action-slot handling.
+Version 1.7.10 fires skills closer to ready (0.2 s window) and skips action rows that are gone, unusable or out of stock. 1.7.9 fixed prediction, import restrictions, editor drafts, proc cycles, cooldown conditions, named priorities and action-slot handling.
 
 ## Features
 

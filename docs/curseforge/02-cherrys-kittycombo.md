@@ -4,7 +4,7 @@
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
-Version 1.7.9 fixes prediction, import restrictions, editor drafts, proc cycles, cooldown conditions, named priorities and action-slot handling.
+Version 1.7.10 fires skills closer to ready (0.2 s window) and skips action rows that are gone, unusable or out of stock. 1.7.9 fixed prediction, import restrictions, editor drafts, proc cycles, cooldown conditions, named priorities and action-slot handling.
 
 ## Features
 

@@ -1,10 +1,14 @@
 # Cherry's KittyCombo
 
-Version **1.7.9** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **1.7.10** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
+
+## Updated in 1.7.10
+
+Key presses now fire a skill only when it is nearly ready (0.2 s instead of 0.6 s), so fewer presses are refused by the client's short repeat-cast guard. Action rows also skip a press when their slot is gone or unusable, or when an item stack is empty. Prediction, condition thresholds, cooldown tracking and saved rotations are unchanged.
 
 ## Updated in 1.7.9
 

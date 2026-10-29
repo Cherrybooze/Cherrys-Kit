@@ -91,6 +91,43 @@ Kitty.SlotManager.isOnCooldown = function(self, name, threshold)
     local _, remaining = GetActionCooldown(index);
     return (tonumber(remaining) or 0) > (tonumber(threshold) or 0);
 end;
+-- Dispatch check for "action" commands. The "Item is ready" condition keeps
+-- using canUse(); dispatch additionally needs the resolved slot to still hold
+-- a recognised action, the client's usability result where it is meaningful
+-- for the kind, and a live count for item entries. A missing required slot
+-- blocks; missing optional evidence keeps the previous behaviour.
+Kitty.SlotManager.canDispatch = function(self, name, threshold)
+	local index = self.slotTable[name];
+	if(index == nil) then
+		return false, 0;
+	end
+
+	local result, remaining = self:canUse(name, threshold);
+	if(not result) then
+		return false, remaining;
+	end
+
+	local path, _, count, _, wearable = GetActionInfo(index);
+	if(path == nil) then
+		-- The slot does not hold an action any more
+		return false, remaining;
+	end
+
+	-- Skills, suit skills, skill plates, teleports and partners report a real
+	-- usability result; other kinds always report usable.
+	if(GetActionUsable ~= nil and GetActionUsable(index) == false) then
+		return false, remaining;
+	end
+
+	-- Item entries report how many copies the bag holds. Zero blocks unless
+	-- the entry is an equipped instance (gear actions), where zero counts are
+	-- not "empty".
+	if(type(count) == "number" and count == 0 and wearable ~= true) then
+		return false, remaining;
+	end
+
+	return true, remaining;
+end;
 Kitty.SlotManager.use = function(self, name)
 	local index = self.slotTable[name];
 	if(index ~= nil) then

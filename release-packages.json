@@ -1,13 +1,13 @@
 {
-  "kit_version": "0.11.79",
+  "kit_version": "0.11.80",
   "hub_version": "0.4.14",
-  "release_summary": "RomWeakAuras adds a unified editor and resource displays; KittyCombo, Cherry's Chat, Cherry's Grid and zBag receive usability fixes; Global Bank adds character tracking, notes and an optional Chrome extension; Advanced AuctionHouse adds broad search.",
-  "runtime_validation": "Focused offline data-format, helper and extension checks were run. In-game rendering, input, audio and events, live auction searches, and daily reward collection need player confirmation.",
+  "release_summary": "KittyCombo gets tighter skill dispatch timing and action-row eligibility checks; the other addons carry over unchanged from 0.11.79.",
+  "runtime_validation": "The full Lua 5.1 regression suite passed (477 tests), including focused KittyCombo checks for the dispatch window, action-slot eligibility, missing/zero mana resources, the in-range probe and prediction parity. In-game rotation timing and the comparison with the old 0.6 s window still need player confirmation.",
   "addons": [
     {
       "folder": "KittyCombo",
       "title": "Cherry's KittyCombo",
-      "version": "1.7.9",
+      "version": "1.7.10",
       "command": "/kc",
       "description_file": "02-cherrys-kittycombo.md",
       "summary": "One-key priority combos, safer prediction and shared rotation codes."

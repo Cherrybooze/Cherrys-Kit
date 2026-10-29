@@ -1,8 +1,10 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-Full-0.11.79.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.80/CherrysKit-Full-0.11.80.zip)
 
 # Cherry's Kit
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-Full-0.11.79.zip)
+> Development snapshot: kit 0.11.80 is not published yet. Visit Releases for the current public build.
+
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.80/CherrysKit-Full-0.11.80.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -10,15 +12,15 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current kit release: **0.11.79** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.79)
+Current kit release: **0.11.80** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.80)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
-## What’s new in 0.11.79
+## What’s new in 0.11.80
 
-- Create and adjust displays in the updated rom weakauras editor.
-- Enjoy usability fixes for KittyCombo, Cherry's Chat, Cherry's Grid and zBag.
-- Use Global Bank's expanded character tracking and optional Chrome tools, and search auctions with Advanced AuctionHouse's broad search.
+- KittyCombo fires skills only when they are nearly ready (0.2 s instead of 0.6 s), so fewer key presses are refused by the client's short repeat-cast guard.
+- KittyCombo action rows skip a press when the slot is gone or unusable, or when an item stack is empty.
+- Everything else carries over unchanged from 0.11.79.
 
 Some features still need confirmation in the game client; see the release notes and individual addon guides for details.
 
@@ -30,7 +32,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-Full-0.11.79.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.80/CherrysKit-Full-0.11.80.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -61,7 +63,7 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
 | [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.14 |
-| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.9 |
+| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.10 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.22 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.7 |
 | [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck11 |
@@ -80,7 +82,7 @@ Some integrations need both addons: for example, running a kitty from Grid needs
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome 1.0.7](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-GlobalBankDailyRewards-1.0.7.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
+[Download Global Bank Daily Rewards for Chrome 1.0.7](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.80/CherrysKit-GlobalBankDailyRewards-1.0.7.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
 
 Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step. Automatic page processing is limited to the Gameforge daily shop page; the extension does not send your local data to the developer.
 

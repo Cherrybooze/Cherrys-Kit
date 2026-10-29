@@ -29,25 +29,28 @@ Kitty.ComboManager.check = function(self, targetList, path)
 			local result = false;
 
 			if(command.commandType == "skill") then
-				-- Can the skill be cast?
-				result = self.skillManager:canCast(command.commandName);
+				-- Can the skill be cast? A press may use the execution tolerance
+				-- instead of an early wider window, so candidates that are not
+				-- close enough to ready fall through to the next command.
+				result = self.skillManager:canCast(command.commandName, Kitty.SkillManager.EXECUTION_TOLERANCE);
 				-- Debug.
 				if(Kitty.ComboManager.debugSkillList[command.commandName] == true) then
 					Kitty.print("canCast Result:[" .. tostring(result) .. "], Command:[" .. tostring(command.commandName) .. "]");
 				end
 			elseif(command.commandType == "suitskill") then
 				-- Can the skill be cast?
-				result = self.skillManager:canCast(command.commandName);
+				result = self.skillManager:canCast(command.commandName, Kitty.SkillManager.EXECUTION_TOLERANCE);
 				-- Debug.
 				if(Kitty.ComboManager.debugSkillList[command.commandName] == true) then
 					Kitty.print("canCast Result:[" .. tostring(result) .. "], Command:[" .. tostring(command.commandName) .. "]");
 				end
 			elseif(command.commandType == "action") then
-				-- Can the action slot be used?
-				result = self.slotManager:canUse(command.commandName);
+				-- Can the action slot be used right now? Dispatch additionally
+				-- requires the slot to hold a usable action; see SlotManager.
+				result = self.slotManager:canDispatch(command.commandName);
 				-- Debug.
 				if(Kitty.ComboManager.debugSkillList[command.commandName] == true) then
-					Kitty.print("canUse Result:[" .. tostring(result) .. "], Command:[" .. tostring(command.commandName) .. "]");
+					Kitty.print("canDispatch Result:[" .. tostring(result) .. "], Command:[" .. tostring(command.commandName) .. "]");
 				end
 			elseif(command.commandType == "extra") then
 				-- Can the extra action be used?
