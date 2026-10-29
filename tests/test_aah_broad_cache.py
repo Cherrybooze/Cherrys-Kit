@@ -74,6 +74,19 @@ class BroadCacheTests(unittest.TestCase):
         self.assertNotIn('lastSeenRelative', wire['entries'][0])
         self.assertEqual(wire['runs'], [])
 
+    def test_item_details_are_scalar_and_survive_snapshot(self):
+        self.lua.execute('''
+          r=C.Begin({}); n=listing(); a=C.Observe(r,n); n.cacheEntry=a
+          n.dura=120; n.tier=6; n.plus=3; n.statsum=42
+          n.slots={{name="Test stat",stats={{key="str",value=42}}}}
+          n.raw={str=42,patt=1234,unknown=9}; C.RecordDetails(n)
+        ''')
+        data = self.outbox()['entries'][0]['data']
+        self.assertEqual((data['details'], data['dura'], data['tier'], data['plus']), (True, 120, 6, 3))
+        self.assertEqual((data['statNames'], data['raw_str'], data['raw_patt']), ('Test stat', 42, 1234))
+        self.assertNotIn('raw_unknown', data)
+        self.assertNotIn('slots', data)
+
     def test_content_signature_uses_full_link_seller_native_count_currency_price(self):
         self.lua.execute('''
           r=C.Begin({}); original=listing(); a,key=C.Observe(r,original)

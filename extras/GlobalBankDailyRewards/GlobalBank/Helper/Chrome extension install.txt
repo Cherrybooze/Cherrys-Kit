@@ -22,3 +22,5 @@ PRIVACY: Automatic page processing runs only on the Gameforge daily shop page. T
 This is an independent community tool, not an official Gameforge extension. If collection or local recording fails, check the page and the extension status; refresh your character snapshot by logging in and running the helper.
 
 UPDATING: After replacing the installed extension files, click the extension icon and choose Reload extension. If your older copy does not have that button, use Reload on its card in chrome://extensions once. Reopen the popup or local tools page afterwards. Reloading uses files already installed; it does not download an update.
+
+AUCTION CACHE (version 1.0.7 or later): Choose Show whole cache to browse saved auctions, or search by name, item ID or named stat. Select a stat and optional minimum or maximum to filter; sort by name, level, tier, durability, selected stat, estimated end or buyout. End times are estimates from the game's rounded remaining time. Old entries can lack durability and stats; search again in game and let the helper import the results. These are saved observations, not live listings.

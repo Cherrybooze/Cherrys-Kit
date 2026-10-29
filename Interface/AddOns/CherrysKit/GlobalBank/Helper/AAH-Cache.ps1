@@ -226,7 +226,7 @@ function Import-AAHBroadOutbox([string]$File, [string]$Text, [string]$DataFolder
                 $key = Get-AAHString $entry.key
                 if (-not $key -or $entry.data -isnot [System.Collections.IDictionary] -or $entry.memberships -isnot [System.Collections.IDictionary]) { throw 'Invalid auction cache entry.' }
                 $core = New-AAHMap
-                foreach ($field in @('itemid','link','name','count','rarity','texture','level','leftTime','seller','isBuyer','moneyMode','bidPrice','buyoutPrice')) {
+                foreach ($field in @('itemid','link','name','count','rarity','texture','level','leftTime','seller','isBuyer','moneyMode','bidPrice','buyoutPrice','details','dura','tier','plus','statNames','statsum','raw_str','raw_dex','raw_sta','raw_int','raw_wis','raw_patt','raw_matt','raw_pdam','raw_mdam','raw_pdef','raw_mdef','raw_hp','raw_mp','raw_pcrit','raw_mcrit','raw_pacc','raw_macc','raw_pdod','raw_parry','raw_heal')) {
                     if (-not $entry.data.Contains($field) -or $null -eq $entry.data[$field]) { continue }
                     $v = $entry.data[$field]
                     if ($v -is [string]) { $core[$field] = Get-AAHString $v }

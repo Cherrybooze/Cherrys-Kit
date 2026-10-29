@@ -84,6 +84,31 @@ class AAHHelperTests(unittest.TestCase):
         self.assertEqual(mirror['realms']['Realm']['entries'][1]['data']['name'], 'Säljer 雪')
         self.assertIsNone(lua.globals()['evil'])
 
+    def test_details_import_and_auction_pages_keep_old_records_usable(self):
+        detailed = self.entry('detailed')
+        detailed['data'].update(name='Amber blade', details=True, dura=120, tier=6,
+                                statNames='Test Might', raw_str=42, raw_patt=1234,
+                                leftTime=30, moneyMode='copper', buyoutPrice=500)
+        old = self.entry('old')
+        old['data'].update(name='Old shield', leftTime=10)
+        self.write([detailed, old]); self.import_file()
+        entries = self.state()['realms']['Realm']['entries']
+        item = next(e['data'] for e in entries if e['key'] == 'detailed')
+        self.assertEqual((item['dura'], item['raw_str'], item['statNames']), (120, 42, 'Test Might'))
+        control = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/GlobalBank-Control.ps1'
+        quoted = "'" + str(control).replace("'", "''") + "'"
+        result = self.run_ps('. ' + quoted + "\n" +
+            "$p=Get-ControlAuctionPage $data '' '' 'name' 'asc' '' '' '' 0; " +
+            "$q=Get-ControlAuctionPage $data '' '' 'stat' 'desc' 'str' '40' '50' 0; " +
+            "@{page=$p; filtered=$q} | ConvertTo-Json -Depth 8 -Compress")
+        pages = json.loads(result)
+        self.assertEqual(pages['page']['total'], 2)
+        self.assertEqual(pages['page']['rows'][0]['name'], 'Amber blade')
+        self.assertIsNone(pages['page']['rows'][1]['dura'])
+        self.assertEqual(pages['filtered']['total'], 1)
+        self.assertEqual(pages['filtered']['rows'][0]['statValue'], 42)
+        self.assertTrue(pages['filtered']['rows'][0]['end'])
+
     def test_complete_scope_prunes_only_matching_older_entries(self):
         shared = self.entry('shared', self.now-20)
         shared['memberships']['other'] = True

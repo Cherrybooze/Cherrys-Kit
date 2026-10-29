@@ -11,7 +11,16 @@ button { cursor: pointer; color: #101820; background: #f1c85e; border: 1px solid
 button:disabled { cursor: default; opacity: .55; }
 .command { display: flex; align-items: center; gap: 8px; }
 .command span { font-family: monospace; color: #f1c85e; }
-#auction-form button { display: block; margin-top: 12px; }
+select { font: inherit; color: #f4f6f8; background: #0d1620; border: 1px solid #708698; border-radius: 4px; padding: 8px; }
+.auction-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.auction-filters label { font-size: .9rem; }
+.auction-filters input, .auction-filters select { display: block; width: auto; max-width: 150px; }
+.auction-buttons { display: flex; gap: 8px; margin-top: 12px; }
+.auction-table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid #405468; vertical-align: top; }
+th { color: #ffdc7c; white-space: nowrap; }
+td { overflow-wrap: anywhere; }
 pre { max-height: 360px; overflow: auto; padding: 12px; color: #e8ecf0; background: #0b121b; border: 1px solid #334657; white-space: pre-wrap; overflow-wrap: anywhere; }
 .hint { color: #bdc9d5; }
 code { color: #ffdc7c; }

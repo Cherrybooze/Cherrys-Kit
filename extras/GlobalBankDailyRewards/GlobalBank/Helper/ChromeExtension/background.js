@@ -32,9 +32,9 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
   if (control && (message?.type === 'bank-query' || message?.type === 'auction-query')) {
     const request = message.type === 'bank-query'
       ? {type:'bank-query', command:message.command}
-      : {type:'auction-query', search:message.search, realm:message.realm};
+      : {type:'auction-query', search:message.search, realm:message.realm, pageOptions:message.pageOptions};
     if (message.type === 'bank-query' && (typeof request.command !== 'string' || !request.command.trim() || request.command.length > 256)) return;
-    if (message.type === 'auction-query' && (typeof request.search !== 'string' || !request.search.trim() || request.search.length > 128 || typeof request.realm !== 'string' || request.realm.length > 120)) return;
+    if (message.type === 'auction-query' && (typeof request.search !== 'string' || (!request.search.trim() && !request.pageOptions) || request.search.length > 128 || typeof request.realm !== 'string' || request.realm.length > 120)) return;
     chrome.runtime.sendNativeMessage(HOST, request, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);

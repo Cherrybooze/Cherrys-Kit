@@ -74,6 +74,15 @@ try {
             $output = Get-ControlBankQuery $data $message.command
         } else {
             if ($message.search -isnot [string] -or $message.realm -isnot [string]) { throw 'Invalid auction search.' }
+            if ($message.pageOptions) {
+                $opts = $message.pageOptions
+                foreach ($field in @('sort','order','stat','minimum','maximum')) { if ($opts.$field -isnot [string] -or $opts.$field.Length -gt 40) { throw 'Invalid auction options.' } }
+                $offset = 0
+                if (-not [int]::TryParse([string]$opts.offset, [ref]$offset)) { throw 'Invalid auction page.' }
+                $page = Get-ControlAuctionPage $data $message.search $message.realm $opts.sort $opts.order $opts.stat $opts.minimum $opts.maximum $offset
+                Send-Response @{ok=$true;page=$page}
+                exit 0
+            }
             $output = Get-ControlAuctionQuery $data $message.search $message.realm
         }
         Send-Response @{ok=$true;output=$output}

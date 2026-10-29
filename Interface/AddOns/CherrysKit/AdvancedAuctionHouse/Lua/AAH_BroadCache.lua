@@ -10,6 +10,11 @@ local CACHE_PATH = "Interface/GlobalBankHelper/AAHBroadCache.lua"
 local BEAT_LATE, POLL_INTERVAL = 75, 10
 local nativeFields = { "itemid", "link", "name", "count", "rarity", "texture", "level",
     "leftTime", "seller", "isBuyer", "moneyMode", "bidPrice", "buyoutPrice" }
+-- Parsed tooltip details are optional; old caches remain readable.
+local detailFields = { "details", "dura", "tier", "plus", "statNames", "statsum",
+    "raw_str", "raw_dex", "raw_sta", "raw_int", "raw_wis", "raw_patt", "raw_matt",
+    "raw_pdam", "raw_mdam", "raw_pdef", "raw_mdef", "raw_hp", "raw_mp", "raw_pcrit",
+    "raw_mcrit", "raw_pacc", "raw_macc", "raw_pdod", "raw_parry", "raw_heal" }
 local scopeFields = { "name", "minlvl", "maxlvl", "rarity", "rune", "usable", "cat1", "cat2", "cat3" }
 local initialized, data, session
 local lastPoll, candidateBeat, trustedBeat, trustedAt, helperProtocol
@@ -272,6 +277,7 @@ local function cleanEntry(source)
     if type(source) ~= "table" or type(source.data) ~= "table" or type(source.data.link) ~= "string" then return nil end
     local entry = { data = {}, memberships = {}, origin = copyScope(type(source.origin) == "table" and source.origin or {}) }
     for _, field in ipairs(nativeFields) do entry.data[field] = scalar(source.data[field]) end
+    for _, field in ipairs(detailFields) do entry.data[field] = scalar(source.data[field]) end
     entry.key = Cache.Key(entry.data)
     if type(source.lastSeenTrustedUTC) == "number" and scalar(source.lastSeenTrustedUTC) then
         entry.lastSeenTrustedUTC = source.lastSeenTrustedUTC
@@ -307,6 +313,7 @@ local function mergeEntries(entries)
                 or (old.lastSeenSession ~= session and not pendingKeys[entry.key]
                     and (entry.lastSeenTrustedUTC or 0) == (old.lastSeenTrustedUTC or 0)) then
                 for _, field in ipairs(nativeFields) do old.data[field] = entry.data[field] end
+                for _, field in ipairs(detailFields) do old.data[field] = entry.data[field] end
                 old.origin, old.memberships, old.lastSeenTrustedUTC = entry.origin, entry.memberships, entry.lastSeenTrustedUTC
                 old.lastSeenSession, old.lastSeenRelative = nil, nil
             end
@@ -449,6 +456,30 @@ function Cache.Observe(run, native)
     run.seen[key] = true
     markDirty()
     return entry, key, isNew
+end
+
+-- Save only values AAH already parsed from this listing's tooltip; never scan extra items.
+function Cache.RecordDetails(listing)
+    if type(listing) ~= "table" or not listing.parsed or type(listing.cacheEntry) ~= "table" then return end
+    local entry = listing.cacheEntry
+    if not data or data.entries[entry.key] ~= entry then return end
+    local values = { details = true, dura = listing.dura, tier = listing.tier, plus = listing.plus,
+        statsum = listing.statsum }
+    local names = {}
+    for _, slot in ipairs(listing.slots or {}) do
+        if type(slot.name) == "string" and slot.name ~= "" then names[#names + 1] = slot.name end
+    end
+    local statNames = table.concat(names, "; ")
+    if #statNames <= 4096 then values.statNames = statNames end
+    for key, value in pairs(listing.raw or {}) do
+        if type(key) == "string" then values["raw_" .. key] = value end
+    end
+    local changed = false
+    for _, field in ipairs(detailFields) do
+        local value = scalar(values[field])
+        if entry.data[field] ~= value then entry.data[field] = value; changed = true end
+    end
+    if changed then markDirty() end
 end
 
 function Cache.Finish(run, complete)

@@ -35,3 +35,9 @@ This page reads local data when you ask it to. It cannot buy items or change cha
 Automatic page processing runs only on the Gameforge daily shop page; no content script runs on other websites. The local tools page opens inside the extension and reads your helper data only when you request a search. On that page the extension reads the displayed character name, server, and reward state. Temporary extension status lives in Chrome session storage. The local bridge stores confirmed names, servers, reward days and timestamps in `Interface/GlobalBankHelper/DailyRewards.json`; it does not send them to the developer or another third party. Collecting communicates with Gameforge. No password or saved login link is needed. The nearby `GlobalBank.json` contains character inventory data and should remain private.
 
 The extension and bridge need Windows, Chrome, and the Global Bank helper. If the character is absent or ambiguous in the helper data, collection can still occur on Gameforge but the bridge refuses to record it. Check the extension status and refresh the character snapshot. In-game and browser behavior should be verified with your own client; this is an independent community project.
+
+### Browse the auction cache
+
+In the local tools page, choose **Show whole cache** to browse saved auctions, or search by item name, ID, or named stat. Choose a stat and optional minimum and maximum values to filter the added stats, and use **Sort by** and **Order** to arrange the results. Use **Previous** and **Next** to move through the cache.
+
+The table includes the seller, buyout, tier, maximum durability, added stats and an estimated end time. End times use the game’s rounded remaining time; prices and availability may have changed since the auction was seen. Older entries can lack item details. Search in game with the updated auction addon and let the helper import the new observations to fill them in. Restart the helper after updating its files.

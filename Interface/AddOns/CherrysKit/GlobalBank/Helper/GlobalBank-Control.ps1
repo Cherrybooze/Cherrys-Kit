@@ -145,3 +145,47 @@ function Get-ControlAuctionQuery([string]$dataDirectory, [string]$search, [strin
     elseif ($matches -gt 150) { $lines.Add("Showing 150 of $matches matches. Narrow your search to see more.") }
     return Limit-ControlLines $lines
 }
+
+
+# Structured, bounded pages for the local auction viewer. All fields come from
+# saved observations; the remaining time from the client is rounded.
+function Get-ControlAuctionPage([string]$dataDirectory, [string]$search, [string]$realmFilter,
+    [string]$sort, [string]$order, [string]$stat, [string]$minimum, [string]$maximum, [int]$offset) {
+    if ($search.Length -gt 128 -or $search -match '[\x00-\x1f]' -or $realmFilter.Length -gt 120 -or $realmFilter -match '[\x00-\x1f]') { throw 'The search or realm is too long or contains an invalid character.' }
+    $stats = @('str','dex','sta','int','wis','patt','matt','pdam','mdam','pdef','mdef','hp','mp','pcrit','mcrit','pacc','macc','pdod','parry','heal')
+    $sorts = @('name','level','tier','dura','end','price','stat')
+    if ($sorts -notcontains $sort -or @('asc','desc') -notcontains $order -or ($stat -and $stats -notcontains $stat) -or $offset -lt 0 -or $offset -gt 1000000) { throw 'Invalid auction filter or sort.' }
+    if (($minimum -or $maximum -or $sort -eq 'stat') -and -not $stat) { throw 'Choose a stat for the stat filter or sort.' }
+    $lo = 0.0; $hi = 0.0
+    $style = [Globalization.NumberStyles]::Float; $culture = [Globalization.CultureInfo]::InvariantCulture
+    if ($minimum -and -not [double]::TryParse($minimum, $style, $culture, [ref]$lo)) { throw 'The minimum stat value must be a number.' }
+    if ($maximum -and -not [double]::TryParse($maximum, $style, $culture, [ref]$hi)) { throw 'The maximum stat value must be a number.' }
+    if (($minimum -and ([double]::IsNaN($lo) -or [double]::IsInfinity($lo))) -or ($maximum -and ([double]::IsNaN($hi) -or [double]::IsInfinity($hi))) -or ($minimum -and $maximum -and $lo -gt $hi)) { throw 'Enter a valid minimum and maximum range.' }
+    $data = Read-ControlJson $dataDirectory 'AAHBroadCache.json'
+    if ($data.schemaVersion -ne 1 -or $null -eq $data.realms) { throw 'The auction cache has an unsupported format.' }
+    $found = New-Object 'System.Collections.Generic.List[object]'
+    foreach ($realm in $data.realms.PSObject.Properties) {
+        if ($realmFilter -and $realm.Name.IndexOf($realmFilter, [StringComparison]::OrdinalIgnoreCase) -lt 0) { continue }
+        foreach ($entry in @($realm.Value.entries)) {
+            if (-not $entry -or -not $entry.data) { continue }
+            $item = $entry.data
+            if ($search -and ([string]$item.name).IndexOf($search, [StringComparison]::OrdinalIgnoreCase) -lt 0 -and ([string]$item.itemid).IndexOf($search, [StringComparison]::OrdinalIgnoreCase) -lt 0 -and ([string]$item.statNames).IndexOf($search, [StringComparison]::OrdinalIgnoreCase) -lt 0) { continue }
+            $statValue = $null
+            if ($item.details -and $stat) { $prop = $item.PSObject.Properties['raw_' + $stat]; if ($prop -and $null -ne $prop.Value) { $statValue = [double]$prop.Value } }
+            if (($minimum -or $maximum) -and ($null -eq $statValue -or ($minimum -and $statValue -lt $lo) -or ($maximum -and $statValue -gt $hi))) { continue }
+            $end = $null; $seen = [double]$entry.lastSeenTrustedUTC; $left = $item.leftTime
+            if ($seen -gt 0 -and $null -ne $left -and [double]$left -ge 0) {
+                try { $end = [DateTimeOffset]::FromUnixTimeSeconds([long]($seen + ([double]$left * 60))).ToString('o') } catch { $end = $null }
+            }
+            $statsText = @($stats | ForEach-Object { $key=$_; $v=$item.PSObject.Properties['raw_'+$key]; if ($v -and $null -ne $v.Value -and [double]$v.Value -ne 0) { "$($key.ToUpperInvariant()) $($v.Value)" } }) -join ', '
+            $found.Add([pscustomobject]@{ name=[string]$item.name; itemid=[string]$item.itemid; count=$item.count; realm=$realm.Name;
+                level=$item.level; tier=$(if ($item.details) {$item.tier} else {$null}); dura=$(if ($item.details) {$item.dura} else {$null});
+                stats=$(if ($item.details) {$statsText} else {''}); statNames=[string]$item.statNames; statValue=$statValue;
+                end=$end; seen=$seen; seller=[string]$item.seller; price=$item.buyoutPrice; currency=[string]$item.moneyMode })
+        }
+    }
+    $sortKey = switch ($sort) { 'end' {'end'} 'price' {'price'} 'stat' {'statValue'} default {$sort} }
+    $sorted = @($found | Sort-Object @{Expression={ if ($null -eq $_.$sortKey -or $_.$sortKey -eq '') { 1 } else { 0 } }}, @{Expression={ $_.$sortKey }; Descending=($order -eq 'desc')}, name)
+    $size=50; $page=@($sorted | Select-Object -Skip $offset -First $size)
+    return @{ rows=$page; total=$sorted.Count; offset=$offset; pageSize=$size }
+}

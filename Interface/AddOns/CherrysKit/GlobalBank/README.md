@@ -116,3 +116,9 @@ Keep the helper window open while you play. Its commands let you search your cha
 The extension popup also shows helper status and, when known, your most recent confirmed daily collection. It displays the recorded time in your computer's local time and notes when the next 01:00 local-time boundary has passed; this is not a guarantee of the game's reset time. After updating the extension, reload it on Chrome's extensions page. Restart the helper after updating its files.
 
 If the helper reports an error, its local diagnostic log is at `Interface/GlobalBankHelper/GlobalBankHelper-errors.log`.
+
+### Browse the auction cache
+
+In the local tools page, choose **Show whole cache** to browse saved auctions, or search by item name, ID, or named stat. Choose a stat and optional minimum and maximum values to filter the added stats, and use **Sort by** and **Order** to arrange the results. Use **Previous** and **Next** to move through the cache.
+
+The table includes the seller, buyout, tier, maximum durability, added stats and an estimated end time. End times use the game’s rounded remaining time; prices and availability may have changed since the auction was seen. Older entries can lack item details. Search in game with the updated auction addon and let the helper import the new observations to fill them in. Restart the helper after updating its files.

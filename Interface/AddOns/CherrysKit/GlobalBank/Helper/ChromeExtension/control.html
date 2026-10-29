@@ -31,13 +31,23 @@
       <h2 id="auction-title">Auction cache search</h2>
       <p>Search the last auction data collected by the helper. Results are saved observations and may no longer be available or have the same price.</p>
       <form id="auction-form">
-        <label for="auction-search">Item name or ID</label>
-        <input id="auction-search" name="search" maxlength="128" autocomplete="off" placeholder="For example: mana stone" required>
+        <label for="auction-search">Item name, ID or named stat</label>
+        <input id="auction-search" name="search" maxlength="128" autocomplete="off" placeholder="For example: mana stone">
         <label for="auction-realm">Realm <span class="hint">(optional; blank searches all realms)</span></label>
         <input id="auction-realm" name="realm" maxlength="120" autocomplete="off" placeholder="For example: Gaia">
-        <button type="submit">Search cache</button>
+        <div class="auction-filters">
+          <label>Stat <select id="auction-stat"><option value="">Any stat</option></select></label>
+          <label>Minimum <input id="auction-min" type="number" step="any" placeholder="Any"></label>
+          <label>Maximum <input id="auction-max" type="number" step="any" placeholder="Any"></label>
+          <label>Sort by <select id="auction-sort"><option value="name">Name</option><option value="level">Level</option><option value="tier">Tier</option><option value="dura">Durability</option><option value="stat">Selected stat</option><option value="end">Estimated end</option><option value="price">Buyout</option></select></label>
+          <label>Order <select id="auction-order"><option value="asc">Low to high / A–Z</option><option value="desc">High to low / Z–A</option></select></label>
+        </div>
+        <div class="auction-buttons"><button type="submit">Search cache</button><button id="auction-all" type="button">Show whole cache</button></div>
       </form>
-      <pre id="auction-output" aria-live="polite">No auction search has been run yet.</pre>
+      <p class="hint">End times are estimates based on the game's rounded remaining time. Older saved entries may not contain durability or stat details; search again in game to collect them.</p>
+      <p id="auction-output" aria-live="polite">No auction search has been run yet.</p>
+      <div class="auction-table-wrap"><table id="auction-table" hidden><thead><tr><th>Name</th><th>Realm</th><th>Level</th><th>Tier</th><th>Durability</th><th>Added stats</th><th>Estimated end</th><th>Seller</th><th>Buyout</th></tr></thead><tbody id="auction-rows"></tbody></table></div>
+      <div class="auction-buttons"><button id="auction-prev" type="button" disabled>Previous</button><button id="auction-next" type="button" disabled>Next</button></div>
     </section>
     <p class="hint">This page reads local helper files only when you ask it to. It never asks for your password.</p>
   </main>
