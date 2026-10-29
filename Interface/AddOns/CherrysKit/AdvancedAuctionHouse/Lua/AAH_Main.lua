@@ -23,7 +23,7 @@ end
 LoadLocales()
 
 
-local VERSION = "v6.1.2"
+local VERSION = "v6.2.2"
 local DEFAULT_SETTINGS = { -- NB: all settings without default value will be deleted!
 	HistoryMaxSaved = 10,
 	PriceHistoryAutoshow = false,
@@ -43,19 +43,22 @@ local DEFAULT_SETTINGS = { -- NB: all settings without default value will be del
     Width = 1150,          -- window size, dragged with the corner grip (AAH.Layout)
     Height = 509,
     LayoutVersion = 2,     -- AAH.Layout.Init migrations (2 = kit 0.11.8 layout)
+    StatsDisplay = "values", -- names or normalized values in the Stats column
     StatsColumn = true,    -- compact Stats column in Browse
     PageDelay = 0,         -- seconds between result pages; 0 = learn the pace (AAH.Browse.PageDelay)
 }
 
 AdvancedAuctionHouse = true
+local previousBroadCache=type(AAH)=="table" and AAH.BroadCache or nil
 AAH = {
+	BroadCache = previousBroadCache, -- unacknowledged character outbox survives Reload UI
 	Manifest = {
 		Name = "Advanced AuctionHouse",
 		Author = "Mavoc, TellTod, Noguai, Graves, Cherry",
 		Source = "http://rom.curseforge.com/addons/advancedauctionhouse/",
 		Root = string.gsub(ROOT, "/$", ""),
 		Licence = "GNU General Public License version 3 (GPLv3)",
-		Build = 20261026000000,
+		Build = 20261029010000,
 		Version = VERSION,
 	},
 	-- Cherry's Kit: each data file is read the first time it is used (the auction window), not
@@ -153,6 +156,7 @@ function Main.OnLoad(this)
 		AAH_AuctionFrame:RegisterEvent(event)
 	end
 	AAH_AuctionFrame:RegisterEvent("VARIABLES_LOADED")
+	AAH_AuctionFrame:RegisterEvent("SAVE_VARIABLES")
 end
 
 function Main.Toggle(mode, quiet)
@@ -184,11 +188,23 @@ end
 
 
 function AAH.Events.AUCTION_CLOSE(this)
-	HideUIPanel(this)
+	Main.sessionOpen=false
+	-- A native session timeout is not a request to discard the auction browser.
+	-- Keep its cache/filter UI visible; explicit X/Escape still hides normally.
+	if this:IsVisible() then
+		if AAH.Browse.PauseSession then AAH.Browse.PauseSession() end
+		AAH.Browse.List_UpdateItems()
+		AAH.Browse.InfoLabelUpdate()
+	end
 end
 
 function AAH.Events.AUCTION_OPEN(this)
-	ShowUIPanel(this)
+	local retained=Main.sessionOpen==false and this:IsVisible()
+	Main.sessionOpen=true
+	if retained then
+		if AAH.Browse.ResumeSession then AAH.Browse.ResumeSession() end
+		AAH.Browse.List_UpdateItems()
+	else ShowUIPanel(this) end
 	PlaySoundByPath("Sound\\Interface\\shop_open.mp3")
 end
 
@@ -200,6 +216,9 @@ function AAH.Events.VARIABLES_LOADED(this)
 		return
 	end
 	dofile(ROOT.."Lua/AAH_Hooks.lua")
+    dofile(ROOT.."Lua/AAH_BroadCache.lua")
+    AAH.BroadCache.Init()
+    dofile(ROOT.."Lua/AAH_BroadUI.lua")
     Main.InitSaveVariables()
     AAH.History.Init()
     Main.InitGUI(this)
@@ -259,7 +278,7 @@ end
 
 
 function Main.InitGUI(this)
-	PanelTemplates_SetNumTabs(this, 4)
+	PanelTemplates_SetNumTabs(this, 5)
 
 	AAH_AuctionTitleText:SetText(string.gsub(string.gsub(AAHLocale.Messages.AUCTION_FRAME_TITLE, "<AUTHOR>", AAH.Manifest.Author), "<VERSION>", AAH.Manifest.Version))
 	AAH_AuctionForumsButton:SetText(AAHLocale.Messages.AUCTION_FORUMS_BUTTON)
@@ -292,6 +311,7 @@ function Main.OnShow(this)
 end
 
 function Main.OnHide(this)
+	Main.sessionOpen=false
 	CloseDropDownMenus()
 	AAH_HistoryList:Hide()
 	AAH_BrowseInfoLabel:SetText("")
@@ -299,6 +319,7 @@ function Main.OnHide(this)
 	AAH.SavedSearch.MinimizeButton_OnClick()
 
     AAH.Browse.Frame_StopUpdates()
+	if AAH.BroadCache then AAH.BroadCache.Flush() end
 	AAH.History.ClearQueue()
 
 	SetSellMoneyType(0)
@@ -306,7 +327,10 @@ function Main.OnHide(this)
     AuctionClose()
 end
 
-function Main.ClickTab(tab)
+function Main.ClickTab(tab,keepInputs)
+	if Main.sessionOpen==false and (tab==2 or tab==3) then
+		AAH.Browse.InfoLabelUpdate();return
+	end
 	PanelTemplates_SetTab(AAH_AuctionFrame, tab)
 	AAH_BrowseFrame:Hide()
 	AAH_BidFrame:Hide()
@@ -315,6 +339,11 @@ function Main.ClickTab(tab)
 	if tab == 1 then
 		AAH.Main.CurrentTab = "BROWSE"
 		AAH_BrowseFrame:Show()
+		if AAH.BroadUI then AAH.BroadUI.Switch("normal",keepInputs) end
+	elseif tab == 5 then
+		AAH.Main.CurrentTab = "BROAD"
+		AAH_BrowseFrame:Show()
+		if AAH.BroadUI then AAH.BroadUI.Switch("broad",keepInputs) end
 	elseif tab == 2 then
 		AAH.Main.CurrentTab = "BUY"
 		AAH_BidFrame:Show()
@@ -325,6 +354,10 @@ function Main.ClickTab(tab)
 		AAH.Main.CurrentTab = "SETTINGS"
 		AAH_SettingsFrame:Show()
 	end
+end
+
+function AAH.Events.SAVE_VARIABLES()
+	if AAH.BroadCache then AAH.BroadCache.Flush() end
 end
 
 -- Old step resize (the arrow buttons): now one row (44) taller or shorter per click.

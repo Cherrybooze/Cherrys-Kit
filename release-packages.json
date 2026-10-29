@@ -1,30 +1,30 @@
 {
-  "kit_version": "0.11.78",
-  "hub_version": "0.4.10",
-  "release_summary": "RWA editor drafts, missing/low-time buff reminders, automatic and selectable icons, editable displays and condition actions; startup fixes for KittyCombo and PortraitHP; long-copy recovery and stronger item-link handling in Cherry's Chat.",
-  "runtime_validation": "Lua 5.1 regression tests exercise production modules and XML handlers with simulated client APIs. New runtime behaviour still needs confirmation in the actual RoM client.",
+  "kit_version": "0.11.79",
+  "hub_version": "0.4.14",
+  "release_summary": "RomWeakAuras adds a unified editor and resource displays; KittyCombo, Cherry's Chat, Cherry's Grid and zBag receive usability fixes; Global Bank adds character tracking, notes and an optional Chrome extension; Advanced AuctionHouse adds broad search.",
+  "runtime_validation": "Focused offline data-format, helper and extension checks were run. In-game rendering, input, audio and events, live auction searches, and daily reward collection need player confirmation.",
   "addons": [
     {
       "folder": "KittyCombo",
       "title": "Cherry's KittyCombo",
-      "version": "1.7.8",
+      "version": "1.7.9",
       "command": "/kc",
       "description_file": "02-cherrys-kittycombo.md",
-      "summary": "One-key priority combos and shared rotation codes."
+      "summary": "One-key priority combos, safer prediction and shared rotation codes."
     },
     {
       "folder": "RomWeakAuras",
       "title": "rom weakauras",
-      "version": "0.9.16",
+      "version": "0.9.22",
       "command": "/wa",
       "description_file": "03-rom-weakauras.md",
       "summary": "Custom buff, debuff, cooldown, cast and status displays.",
-      "minimum_hub_version": "0.4.10"
+      "minimum_hub_version": "0.4.14"
     },
     {
       "folder": "CherrysChat",
       "title": "Cherry's Chat",
-      "version": "0.10.6",
+      "version": "0.10.7",
       "command": "/cchat",
       "description_file": "04-cherrys-chat.md",
       "summary": "Selectable chat, copying, emoji and chat display settings."
@@ -32,7 +32,7 @@
     {
       "folder": "zBag",
       "title": "zBag",
-      "version": "5.07-ck10",
+      "version": "5.07-ck11",
       "command": "/zb",
       "description_file": "05-zbag.md",
       "summary": "Bags, searching, sorting, quick sell and an All bags view."
@@ -40,7 +40,7 @@
     {
       "folder": "GlobalBank",
       "title": "Global Bank",
-      "version": "1.4.1",
+      "version": "1.4.5",
       "command": "/gb",
       "description_file": "06-global-bank.md",
       "summary": "A searchable view of your characters' bags, banks and gold."
@@ -72,7 +72,7 @@
     {
       "folder": "AdvancedAuctionHouse",
       "title": "Advanced AuctionHouse",
-      "version": "6.1.2",
+      "version": "6.2.2",
       "command": "/aah",
       "description_file": "10-advanced-auctionhouse.md",
       "summary": "Auction searching, stat filters, history and a resizable window."
@@ -88,7 +88,7 @@
     {
       "folder": "ZShop",
       "title": "ZShop",
-      "version": "1.2.0-ck1",
+      "version": "1.2.0-ck2",
       "command": "/zshop",
       "description_file": "12-zshop.md",
       "summary": "Item-shop access and a daily loyalty reward shortcut."
@@ -112,7 +112,7 @@
     {
       "folder": "CherrysGrid",
       "title": "Cherry's Grid",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "command": "/grid",
       "description_file": "15-cherrys-grid.md",
       "summary": "Party and raid frames, with KittyCombo actions on click."

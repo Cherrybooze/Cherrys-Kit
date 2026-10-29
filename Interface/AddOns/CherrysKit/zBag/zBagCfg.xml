@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <!-- author adisadicul -->
 	<Frame name="zBagConfigFrame" parent="UIParent" inherits="UICommonFrameTemplate" enableMouse="true" frameStrata="MEDIUM" hidden="true">
-		<Size><AbsDimension x="500" y="545"/></Size>
+		<Size><AbsDimension x="500" y="593"/></Size>
 		<Anchors><Anchor point="CENTER"/>
 		</Anchors>
 		<Layers>

@@ -41,8 +41,12 @@ local function setup()
     return false
   end
   P.frame = frame
+  for _,item in ipairs({{"RWA_IconPickCategory","Game icons"},{"RWA_IconPickUp","^"},{"RWA_IconPickDown","v"},
+      {"RWA_IconPickAuto","Automatic"},{"RWA_IconPickClose","X"}}) do
+    W.SetText(_G[item[1]],item[2]); W.Skin(_G[item[1]],"action")
+  end
   P.title = W.FontString(frame, "OVERLAY", 14)
-  W.SetSize(P.title, 312, 22)
+  W.SetSize(P.title, 268, 22)
   W.SetPoint(P.title, "TOPLEFT", frame, "TOPLEFT", 14, 10)
   W.SetText(P.title, "Choose an icon")
   P.info = W.FontString(frame, "OVERLAY", 11)
@@ -50,7 +54,8 @@ local function setup()
   W.SetPoint(P.info, "TOPLEFT", frame, "TOPLEFT", 14, 302)
   for i = 1, P.columns * P.rows do
     local button = _G["RWA_IconPick" .. i]
-    local texture = W.Texture(button, "OVERLAY")
+    W.SetText(button,""); W.Skin(button,"choice")
+    local texture = W.Texture(button, "ARTWORK")
     W.SetSize(texture, 38, 38)
     W.SetPoint(texture, "CENTER", button, "CENTER", 0, 0)
     P.cells[i] = { button = button, texture = texture }

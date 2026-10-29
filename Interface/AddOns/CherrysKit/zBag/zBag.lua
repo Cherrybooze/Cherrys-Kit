@@ -4,7 +4,7 @@ ZBAG_SCALE = 0.99;
 ZBAG_MAXBAG = 180;
 ZBAG_MAXEQ = 21;
 ZBAG_SHOWEQ = 1;
-ZBAG_VERSION = "5.07";
+ZBAG_VERSION = zBagKit.version;
 ZBAG_SORTSTARTED=0;
 ZBAG_SLOTS = {
 "Ring0Slot",
@@ -247,26 +247,8 @@ for i = 1, ZBAG_MAXBAG do
 			zBagBackgroundFrameMoney:SetAnchor("BOTTOMRIGHT","BOTTOMRIGHT",zBagBackground,-16,-8);	
 		end
 							
-		--check if BagSearch addon should be used
-		if (not zBagKit.IsOneBag()) then
-			zBagKit.PlaceSearchBoxes();
-		elseif ((zBag_VAR["usebagsearch"] == 1) and zBagKit.IsOn())then
-			--yecho("Use Bag Search Enabled");
-			BagSearchInstalled = 1;
-			BagSearchEditBox:Show();
-			BankSearchEditBox:Show();
-			BagSearchEditBox:ClearAllAnchors();
-			BagSearchEditBox:SetAnchor("BOTTOMLEFT","BOTTOMLEFT",zBagBackground,-5,-5);	
-			BagSearchEditBox:SetFrameStrata( "LOW" );
-			BankSearchEditBox:ClearAllAnchors();
-			BankSearchEditBox:SetAnchor("BOTTOMLEFT","BOTTOMLEFT",zBagBBackground,-5,-5);	
-			BankSearchEditBox:SetFrameStrata( "LOW" );
-		else
-			--yecho("Use Bag Search Disabled");
-			BagSearchInstalled = 0;
-			BagSearchEditBox:Hide();
-			BankSearchEditBox:Hide();
-		end
+		-- Place search boxes according to the independently selected bag and bank layouts.
+		zBagKit.PlaceSearchBoxes();
 		
 		
 	end
@@ -627,14 +609,13 @@ function zBag_OnEvent(this,event,arg1,arg2)
 			zBag_VAR["displayDebugMessages"]=0;
 		end		
 		zBag_SetItemShop();
-		--save both per character, and generically so alts will have a preset
-		SaveVariablesPerCharacter("zBag_VAR");
-		SaveVariables("zBag_VAR");
+		-- Register the shared and per-character settings stores.
+		zBagKit.SaveSettings();
 		zBag_Resize(this);
 		if (this:IsVisible()) then
 			zBag_Update();
 		end
-		getglobal("zBagVersionText"):SetText("v. "..ZBAG_VERSION);
+		getglobal("zBagVersionText"):SetText("v. "..zBagKit.version);
 		yecho("zBag v".. ZBAG_VERSION .. " " .. zBLocale.zBagStrings.zBagLoaded);
 
 	end	

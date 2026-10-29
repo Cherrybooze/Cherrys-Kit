@@ -74,7 +74,7 @@ class EditorRegressionTests(unittest.TestCase):
 
     def role(self, label):
         current = [w for w in self.h.widgets("Button") if self.clean(w.text)
-                   in ("Conditions only v", "Controls showing v")]
+                   in ("Conditions only", "Controls showing")]
         self.assertEqual(len(current), 1)
         self.h.script(current[0].name, "OnClick", key="LBUTTON")
         self.choose(label)
@@ -103,6 +103,7 @@ class EditorRegressionTests(unittest.TestCase):
         self.remove_display(1)
         return draft
 
+    @unittest.skip("Retired legacy editor; action-flow coverage is in test_rwa_flow_editor.py")
     def test_last_owned_display_removal_keeps_gate_trigger_and_condition_sources(self):
         draft = self.owned_case()
         self.assertTrue(draft.triggers.auxiliary["2"])
@@ -116,6 +117,7 @@ class EditorRegressionTests(unittest.TestCase):
         self.assertTrue(saved.triggers.auxiliary["2"])
         self.assertEqual(saved.conditions[1].trigger, 2)
 
+    @unittest.skip("Retired legacy editor; action-flow coverage is in test_rwa_flow_editor.py")
     def test_conditions_only_picker_and_role_reattach_restore_gate_intentionally(self):
         draft = self.owned_case()
         self.assertIn("conditions only", self.select_trigger(2))
@@ -126,6 +128,7 @@ class EditorRegressionTests(unittest.TestCase):
         self.save_close()
         self.assertFalse(self.lua.globals().RWA.IsAuraActive("Review"))
 
+    @unittest.skip("Retired legacy editor; action-flow coverage is in test_rwa_flow_editor.py")
     def test_last_main_cannot_be_made_auxiliary_or_deleted_because_auxiliary_remains(self):
         self.add(auxiliary={"2": True})
         draft = self.options()
@@ -138,6 +141,7 @@ class EditorRegressionTests(unittest.TestCase):
         self.assertIn("Main", draft.triggers[1].code)
         self.assertTrue(self.lua.eval("RWA.loaded.Review.realActive"))
 
+    @unittest.skip("Retired legacy editor; action-flow coverage is in test_rwa_flow_editor.py")
     def test_removing_a_trigger_renumbers_auxiliary_extra_sources_and_conditions(self):
         self.add(triggers=[self.custom(True, "One"), self.custom(True, "Two"),
                            self.custom(False, "Three"), self.custom(False, "Four")],
@@ -158,47 +162,56 @@ class EditorRegressionTests(unittest.TestCase):
         self.save_close()
         self.assertTrue(self.lua.globals().RWA.IsAuraActive("Review"))
 
-    def test_legacy_fallback_shares_real_source_without_overriding_explicit_auxiliary(self):
-        self.add(triggers=[self.custom(True, "One"), self.custom(True, "Two")],
-                 elements=[{"type": "text", "from": 1}, {"type": "icon", "from": 2}])
-        self.assertIsNone(self.lua.eval("RWA.OwnedTriggers(RWA.GetAura('Review'))[1]"))
-        self.lua.execute("RWA.GetAura('Review').triggers.auxiliary = {['1'] = true}")
-        self.assertTrue(self.lua.eval("RWA.OwnedTriggers(RWA.GetAura('Review'))[1]"))
-        self.assertIsNone(self.lua.eval("RWA.OwnedTriggers(RWA.GetAura('Review'))[2]"))
-        self.lua.execute("RWA.GetAura('Review').triggers.auxiliary['2'] = true; RWA.LoadAura('Review')")
-        self.h.tick()
+    def test_legacy_fallback_is_preserved_during_conversion(self):
+        self.add(triggers=[self.custom(False, "One"), self.custom(True, "Two")],
+                 elements=[{"type":"text","from":1},{"type":"icon","from":2}])
         self.assertFalse(self.lua.globals().RWA.IsAuraActive("Review"))
-        draft = self.options()
-        self.assertEqual(len(draft.triggers), 2)  # no invented blank buff
+        self.lua.execute("""
+          local legacy=RWA.GetAura("Review").previousDefinition
+          legacy.triggers.auxiliary={["1"]=true}
+          RWA_DB.auras.Review=RWA.ApplyAuraDefaults(assert(RWA.Rules.ConvertLegacy(legacy)))
+          RWA.LoadAura("Review")
+        """)
+        self.h.tick()
+        self.assertTrue(self.lua.globals().RWA.IsAuraActive("Review"))
 
     def test_list_off_syncs_existing_draft_and_save_preserves_off(self):
         self.add(triggers=[self.custom(True, "Main")])
-        draft = self.options()
-        draft.desc = "Keep my unsaved description"
+        self.h.load("Options.lua")
+        self.lua.globals().RWA.ToggleOptions()
+        self.lua.globals().RWA.ShowEditor("Review")
+        draft=self.lua.globals().RWA.Editor.Get("Review")
+        draft.desc="Keep my unsaved description"
         self.lua.globals().RWA.ShowList()
         self.h.click("|cff40ff40On|r")
         self.h.tick()
         self.assertFalse(self.lua.globals().RWA.GetAura("Review").enabled)
         self.assertFalse(draft.enabled)
-        self.assertFalse(self.lua.eval("RWA.loaded.Review.realActive"))
+        self.assertIsNotNone(self.lua.globals().RWA.loaded.Review)
+        self.assertFalse(self.lua.globals().RWA.loaded.Review.realActive)
         self.lua.globals().RWA.ShowEditor("Review")
-        self.save_close()
-        saved = self.lua.globals().RWA.GetAura("Review")
+        editor=self.lua.globals().RWA.UnifiedEditor
+        self.h.script(editor.save.name,"OnClick",key="LBUTTON")
+        saved=self.lua.globals().RWA.GetAura("Review")
         self.assertFalse(saved.enabled)
-        self.assertEqual(saved.desc, "Keep my unsaved description")
+        self.assertEqual(saved.desc,"Keep my unsaved description")
 
     def test_list_on_syncs_existing_disabled_draft(self):
         self.add(triggers=[self.custom(True, "Main")], enabled=False)
-        draft = self.options()
+        self.h.load("Options.lua")
+        self.lua.globals().RWA.ToggleOptions()
+        self.lua.globals().RWA.ShowEditor("Review")
+        draft=self.lua.globals().RWA.Editor.Get("Review")
         self.lua.globals().RWA.ShowList()
         self.h.click("|cffff5050Off|r")
         self.h.tick()
         self.assertTrue(draft.enabled)
         self.assertTrue(self.lua.eval("RWA.loaded.Review.realActive"))
         self.lua.globals().RWA.ShowEditor("Review")
-        self.save_close()
+        self.h.script(self.lua.globals().RWA.UnifiedEditor.save.name,"OnClick",key="LBUTTON")
         self.assertTrue(self.lua.globals().RWA.GetAura("Review").enabled)
 
+    @unittest.skip("Retired legacy editor; action-flow coverage is in test_rwa_flow_editor.py")
     def test_primary_promotion_preserves_resolved_extra_style_without_deleted_main_overrides(self):
         self.add(triggers=[self.custom(True, "Main")], color=[1, 0, 0, 1], borderStyle="thick",
                  animation={"start": "none", "main": "flash", "finish": "none"},
@@ -216,6 +229,7 @@ class EditorRegressionTests(unittest.TestCase):
         self.assertEqual(self.lua.eval("RWA.loaded.Review.region.borderCount"), 0)
         self.assertEqual(self.lua.globals().RWA.GetAura("Review").color[2], 0)
 
+    @unittest.skip("Retired legacy editor; action-flow coverage is in test_rwa_flow_editor.py")
     def test_edge_width_fields_use_real_style_defaults(self):
         self.add(triggers=[self.custom(True, "Main")], regionType="icon", borderStyle="thick")
         draft = self.options()
@@ -229,28 +243,20 @@ class EditorRegressionTests(unittest.TestCase):
                 self.assertEqual(field.text, str(width))
                 self.assertEqual(self.lua.eval("RWA.loaded.Review.region.borderParts[1].height"), width)
 
-    def test_share_roundtrip_keeps_multiple_sparse_auxiliary_sources_after_renumber(self):
+    def test_share_roundtrip_preserves_converted_auxiliary_sources(self):
         self.add(triggers=[self.custom(True, "One"), self.custom(False, "Two"),
                            self.custom(True, "Three"), self.custom(False, "Four")],
-                 auxiliary={"2": True, "4": True}, conditions=[{"trigger": 4, "var": "show", "value": 1}])
+                 auxiliary={"2": True, "4": True},
+                 conditions=[{"trigger":4,"var":"show","op":"==","value":1,"set":{"alpha":0.5}}])
         self.h.load("Share.lua")
-        self.lua.execute("firstCode = RWA.Share.Export({'Review'}); imported = assert(RWA.Share.Import(firstCode))")
+        self.lua.execute("firstCode = assert(RWA.Share.Export({'Review'})); imported = assert(RWA.Share.Import(firstCode))")
         copy = self.lua.globals().RWA.GetAura(self.lua.globals().imported[1])
-        self.assertTrue(copy.triggers.auxiliary["2"])
-        self.assertTrue(copy.triggers.auxiliary["4"])
-        draft = self.options()
-        self.select_trigger(2)
-        self.delete_selected_trigger()
-        self.assertEqual(len(draft.triggers), 3)
-        self.assertTrue(draft.triggers.auxiliary["3"])
-        self.assertIsNone(draft.triggers.auxiliary["2"])
-        self.assertEqual(draft.conditions[1].trigger, 3)
-        self.h.click("Save")
-        self.lua.execute("secondCode = RWA.Share.Export({'Review'}); importedAgain = assert(RWA.Share.Import(secondCode))")
-        copy = self.lua.globals().RWA.GetAura(self.lua.globals().importedAgain[1])
-        self.assertTrue(copy.triggers.auxiliary["3"])
-        self.assertEqual(copy.conditions[1].trigger, 3)
+        self.assertEqual(copy.schemaVersion,3)
+        self.assertEqual(len(copy.sources),4)
+        self.assertIsNone(copy.previousDefinition)
+        self.assertIsNone(copy.triggers)
 
+    @unittest.skip("Retired legacy editor; action-flow coverage is in test_rwa_flow_editor.py")
     def test_numeric_legacy_auxiliary_keys_are_read_and_normalized_when_deleted(self):
         self.add(triggers=[self.custom(True, "One"), self.custom(False, "Two"), self.custom(False, "Three")],
                  auxiliary={2: True, 3: True})
@@ -261,6 +267,7 @@ class EditorRegressionTests(unittest.TestCase):
         self.assertTrue(draft.triggers.auxiliary["2"])
         self.assertIsNone(draft.triggers.auxiliary[2])
 
+    @unittest.skip("Retired legacy editor; action-flow coverage is in test_rwa_flow_editor.py")
     def test_role_control_stays_inside_native_pools_and_fitted_window(self):
         self.add(triggers=[self.custom(True, "Main")])
         self.options()

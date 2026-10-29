@@ -1,5 +1,7 @@
 # Global Bank
 
+Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, adds coloured command help and fatal-error logs, and supports the extension popup helper status/start button and confirmed daily-collection/reset display.
+
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
@@ -35,7 +37,9 @@ The window shows each character it adds or updates and how many it tracks, and t
 
 It reads `Documents\Runes of Magic\<Name>\SaveVariables.lua` and writes the results to `Interface\GlobalBankHelper\`, which it creates next to `Interface\AddOns`. It never changes the game's files, needs no admin rights and doesn't use the internet. In game, `/gb` and the window tell you if the helper isn't running.
 
-For your own tools: `Interface\GlobalBankHelper\GlobalBank.json` holds every character's bags, bank and gold and is rewritten after every change.
+For your own tools: `Interface\GlobalBankHelper\GlobalBank.json` holds character data and confirmed daily reward records. The optional Chrome extension collects available daily rewards and can start the helper; see the installed Helper README for setup and the JSON format.
+
+The extension works only on the Gameforge Runes of Magic daily loyalty page. Its temporary status is kept in memory for the browser session; the helper saves confirmed reward data locally. The extension sends no data to Cherry or analytics services; the Collect action communicates with Gameforge.
 
 **Sharing:** the CherrysKit folder is safe to share; it never contains your characters. **Don't share `Interface\GlobalBankHelper`**: it shows what all your characters own.
 

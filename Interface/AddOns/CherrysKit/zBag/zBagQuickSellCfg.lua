@@ -226,8 +226,7 @@ function zBagQuickSellConfig_Save()
 				else 
 					zBag_VAR["dontQuickSellRarity5"]=0; 
 				end
-				SaveVariablesPerCharacter("zBag_VAR");
-				SaveVariables("zBag_VAR");
+				zBagKit.SaveSettings();
 			end
 end
 

@@ -158,8 +158,7 @@ function zBagConfig_Save()
 			x,y = zBagBBackground:GetPos();
 			zBag_VAR["bankx"] = x;
 			zBag_VAR["banky"] = y;
-			SaveVariablesPerCharacter("zBag_VAR");
-			SaveVariables("zBag_VAR");
+			zBagKit.SaveSettings();
 			zBag_Resize(this);
 			zBag_Update();
 end
@@ -278,14 +277,11 @@ function zBankConfig_Save()
 			else 
 				zBag_VAR["usebagsearch"]=0; 
 			end
-			if (not zBagKit.IsOneBag()) then
-				zBagKit.PlaceSearchBoxes(); -- Cherry's Kit: individual bags
-			end
+			zBagKit.PlaceSearchBoxes();
 			local x,y = zBagBBackground:GetPos();
 			zBag_VAR["bankx"] = x;
 			zBag_VAR["banky"] = y;
-			SaveVariablesPerCharacter("zBag_VAR");
-			SaveVariables("zBag_VAR");
+			zBagKit.SaveSettings();
 			zBagB_Resize(this);
 			zBagB_Update();
 end

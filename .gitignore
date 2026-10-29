@@ -8,3 +8,14 @@ SaveVariables.lua
 GlobalBankHelper/
 .env
 .env.*
+
+# Private helper exports must never be committed, even if copied out of their normal folder.
+GlobalBankDatabase.lua
+GlobalBank.json
+ExcludedCharacters.json
+DailyRewards.json
+CharacterLinks.json
+GlobalBankHelperBeat.lua
+GlobalBankHelper*.log
+AAHBroadCache.json
+AAHBroadCache.lua

@@ -431,8 +431,7 @@ function zBagB_OnEvent(this,event,arg1,arg2)
 		if (not zBag_VAR["bank6"]) then 
 			zBag_VAR["bank6"]=1;
 		end		
-		SaveVariablesPerCharacter("zBag_VAR");
-		SaveVariables("zBag_VAR");
+		zBagKit.SaveSettings();
 		zBagB_Resize(this);
 		--yecho("zbank loaded");
 		if (this:IsVisible()) then

@@ -18,10 +18,11 @@ function FixtureDispatch(name, script)
   this = previous
 end
 
-function FixtureWidget(kind, name, parent)
+function FixtureWidget(kind, name, parent, template)
   local obj = setmetatable({ kind = kind, name = name, parent = parent,
     visible = true, text = "", width = 48, height = 48, scripts = {}, events = {} }, Widget)
   fixtureWidgets[name], _G[name] = obj, obj
+  if template and fixtureXmlScripts[template] then fixtureXmlScripts[name] = fixtureXmlScripts[template] end
   return obj
 end
 function Widget:GetName() return self.name end
@@ -53,7 +54,13 @@ function Widget:SetColor(...) self.color = {...} end
 function Widget:SetAlpha(value) self.alpha = value end
 function Widget:SetScale(value) self.scale = value end
 function Widget:SetFrameStrata(value) self.strata = value end
-function Widget:SetLayers(...) self.layers = {...} end
+function Widget:SetFrameLevel(value) self.frameLevel=value end
+function Widget:GetFrameLevel()
+  if self.frameLevel~=nil then return self.frameLevel end
+  local parent=self.parent and _G[self.parent]
+  return parent and parent~=self and parent:GetFrameLevel()+((self.kind=="Texture" or self.kind=="FontString") and 0 or 1) or 0
+end
+function Widget:SetLayers(level,obj) self.layers={level,obj}; obj.layer=level end
 function Widget:SetScripts(script, code) self.scripts[script] = code end
 function Widget:EnableMouse(value) self.mouse = value end
 function Widget:RegisterForClicks(...) self.clicks = {...} end

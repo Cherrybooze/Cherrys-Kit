@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Fifteen package descriptions for Cherry's Kit 0.11.78, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Fifteen package descriptions for Cherry's Kit 0.11.79, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -103,6 +103,8 @@ Some kit addons contain parts under Creative Commons **NonCommercial** licences 
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
+Version 1.7.9 fixes prediction, import restrictions, editor drafts, proc cycles, cooldown conditions, named priorities and action-slot handling.
+
 ## Features
 
 - **Visible priority**: every command has a rank number. 1 (green, top) is checked first.
@@ -167,18 +169,24 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
+## Updated in 0.9.22
+
+Faster Back navigation, step-by-step removal, two automatic resource bars, a PSI diamond pyramid, and updated starter aura positions.
+
+The searchable aura list opens a rule-flow editor with a shared contextual field panel, preview and position controls. Older definitions are converted to the action model; unsupported definitions remain available for recovery. RWA4 exports retain older RWA1/RWA2/RWA3 import support. The new editor still needs in-game playtesting.
+
 ## Features
 
 - **Triggers**: Buff / debuff by name or ID (player, target, party or pet; show when active, missing or always), Status (health, mana, rage/energy/focus, in combat, has target, casting, skill cooldown, class), Custom Lua, Kitty (next Cherry's KittyCombo skill), **Past second** (hits, white hits, skills or damage per second, dealt or taken), **Threat** (your target's hate list: your threat, rank, whether you have aggro) and **Last cast** (what your target, its target or you cast last, and how long ago). Several triggers per aura with "All of / Any of".
-- **Displays**: Icon, Bar, Text, Texture, Kitty tracker or **Threat meter** (the top names on your target's threat list, with bars and values; the one with aggro in red, your own bar in gold). One aura can draw up to four displays (like WeakAuras' sub-elements), and an extra display can have its own trigger.
-- **Look**: every texture from WeakAuras (shapes, bars, symbols and all 145 Power Auras textures) in a picture grid, the WeakAuras fonts (Fira Sans, Fira Mono, PT Sans Narrow), colours, fade/slide in and out, pulse/flash/bounce loops.
+- **Displays**: Icon, Bar, Text, Texture, Kitty tracker or **Threat meter** (the top names on your target's threat list, with bars and values; the one with aggro in red, your own bar in gold). Each Show action owns a display and its data binding.
+- **Look**: every texture from WeakAuras (shapes, bars, symbols and all 145 Power Auras textures) with a picker, the WeakAuras fonts (Fira Sans, Fira Mono, PT Sans Narrow), colours, fade/slide in and out, pulse/flash/bounce loops.
 - **Text codes** as in WeakAuras: `%n` name, `%p` time left, `%t` duration, `%s` stacks, `%v` value, `%pct` percent, `%e` time since start (combat timer), plus `%rate`, `%fight`, `%avg` for Past second.
-- **Conditions**: add multiple rules with Show, Hide, Play sound, Grow, Blink, Colour or Draw icon on top. A buff remaining-time rule is true when it is missing OR below the chosen time. **Load** only in or out of combat, or for one class.
+- **Rules**: combine source checks with All or Any and apply Show/Hide, sound, size, blink, colour, opacity or an icon overlay. Legacy remaining-time conditions retain their missing-or-time behaviour. **Load** only in or out of combat, or for one class.
 - **Sounds**: the 64 WeakAuras sounds, with an "All auras volume" setting that works even when your game sounds are turned down, and an Unmute button when interface sound is off.
-- **Editor with live preview**, hover help on every box, dropdowns with a description of every choice. While the window is open every aura is on screen in move mode with looping test data, so you can drag it into place.
-- **Export / Import**: compressed `RWA2!` codes (one aura is usually 110 to 240 characters), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.
+- **Editor and preview**: inspect live observations or labelled samples and use Move to position displays.
+- **Export / Import**: compressed `RWA4!` codes (also imports `RWA1!`, `RWA2!` and `RWA3!`), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.
 - **Ready-made examples**, including Player health with class icon, In combat timer, Class icon, **Hits per second**, **Threat meter** (top 5, in combat), **My cast** and **Target's cast** (cast bars with the spell's icon, name and time left, filling up as the cast runs), **Target's last cast** and **KittyCombo mode** (the mode Cherry's KittyCombo has on).
-- **Gold and navy look** shared with Cherry's KittyCombo. Resize the window with the - and + buttons or by dragging its bottom right corner (60% to 160%). The aura list shows 12 at a time and scrolls.
+- **Gold and navy look** shared with Cherry's KittyCombo. Resize the window with the - and + buttons or by dragging its bottom right corner (60% to 160%). The aura list is searchable and scrolls.
 - **API for other addons**: `RWA.GetAuraIds()`, `RWA.IsAuraActive(name)`, `RWA.GetAuraValue(name, field)`. Cherry's KittyCombo uses it for its weakaura condition.
 
 **Still being tested in game:** chat links to share an aura (`[RWA: name]`, experimental: `/rwa linktest`), the Kitty tracker's 2nd and 3rd icons (a best guess), and how Past second counts misses. The Threat meter is confirmed working in game.
@@ -236,11 +244,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
+## Updated in 0.10.7
+
+The default native click dispatch sends the complete original hyperlink, including its encoded item data and localized label. Previously learned signatures remain in use; the change still needs in-game testing.
+
 ## Features
 
 - **Copy chat**: hold the left mouse button and drag over lines (they turn blue; drag past the edge to scroll), then right-click and pick **Copy to clipboard**. Paste anywhere with Ctrl+V.
 - **Right-click menu** on a line: Copy line(s), Copy name, Whisper, Add friend, Ignore.
-- **Clicks work like the normal chat**: click a name to whisper, click an item link for its tooltip, Shift+click to put a name or item into the chat box.
+- **Chat links**: click a name to whisper, or Ctrl+click or Shift+click it to insert the name when chat is open, or request player information when it is closed. Click an item link for its tooltip, or Shift+click it to put it into the chat box.
 - **Emoji pictures**: 415 emoji drawn as small colour pictures in the chat, both real emoji and typed codes like `:skull` or `:cat:` (the closing colon is optional, except for one- or two-letter codes like `:x:`). Copying gives back what was typed. `/cchat emojis` lists them all.
 - **Emoji in the game's own chat** (where Cherry's Chat is off): they become hearts, stars, suns, notes and faces like (^_^) that the chat font can show, or `:shortcode:`. Optional: turn `:) <3` into emoji, and send `:heart:` as a real emoji.
 - **Encrypted chat**: pick a channel (guild, party, raid, whisper, say, yell, zone or a numbered channel) in the settings and type a key. What you send there goes out scrambled, and players with the same key read it as normal text, marked with a lock. An empty key means normal chat. This keeps casual readers out; it is not strong security (keys are stored as plain text).
@@ -248,7 +260,7 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 - **Select mode** (the C button) and a **copy window** with the last 200 lines, as a fallback.
 - **Safe**: if anything goes wrong it switches itself off and the game draws the chat again until the next Reload UI. Safe with Reload UI.
 
-**Still being tested in game:** encrypted chat, the exact place of emoji pictures in a line (they show, and their position is being fine-tuned), Shift+click into the chat box, Add friend / Ignore from the menu, and copying straight to the clipboard (there is a copy box fallback). If item link clicks do nothing, run `/cchat linktest` once.
+**Still being tested in game:** item-link dispatch, encrypted chat, the exact place of emoji pictures in a line (they show, and their position is being fine-tuned), Shift+click into the chat box, Add friend / Ignore from the menu, and copying straight to the clipboard (there is a copy box fallback). If item link clicks do nothing, use `/cchat linktest` to learn the client callback, `/cchat linkprobe` to capture the received message and recognized targets, and `/cchat window` to compare native chat.
 
 ## Chat commands
 
@@ -260,6 +272,7 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 - `/cchat size 600 300`: chat window width and height
 - `/cchat resize`: drag corner on the chat window
 - `/cchat linktest`: teach it how your client clicks item links
+- `/cchat linkprobe`: capture a report of recent original messages and recognized links
 - `/cchat emojis`: list every emoji picture and its code
 - `/cchat key guild <key>`: set the encryption key for a channel; `/cchat key guild` clears it
 - `/cchat symbols`: numbered test of the emoji symbols
@@ -344,6 +357,8 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zb probe`
 
 # Global Bank
 
+Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, adds coloured command help and fatal-error logs, and supports the extension popup helper status/start button and confirmed daily-collection/reset display.
+
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
@@ -379,7 +394,9 @@ The window shows each character it adds or updates and how many it tracks, and t
 
 It reads `Documents\Runes of Magic\<Name>\SaveVariables.lua` and writes the results to `Interface\GlobalBankHelper\`, which it creates next to `Interface\AddOns`. It never changes the game's files, needs no admin rights and doesn't use the internet. In game, `/gb` and the window tell you if the helper isn't running.
 
-For your own tools: `Interface\GlobalBankHelper\GlobalBank.json` holds every character's bags, bank and gold and is rewritten after every change.
+For your own tools: `Interface\GlobalBankHelper\GlobalBank.json` holds character data and confirmed daily reward records. The optional Chrome extension collects available daily rewards and can start the helper; see the installed Helper README for setup and the JSON format.
+
+The extension works only on the Gameforge Runes of Magic daily loyalty page. Its temporary status is kept in memory for the browser session; the helper saves confirmed reward data locally. The extension sends no data to Cherry or analytics services; the Collect action communicates with Gameforge.
 
 **Sharing:** the CherrysKit folder is safe to share; it never contains your characters. **Don't share `Interface\GlobalBankHelper`**: it shows what all your characters own.
 
@@ -561,14 +578,37 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns and stat ranges.**
 
-Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.1.2 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.2 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
 
 ## Features
 
-New in 6.1.2:
+New in 6.2.2:
+
+- Keep the clicked cached offer selected/highlighted through redraws, refiltering and scan completion so Target search remains usable.
+
+- Fix cached-row rendering when native level-colour metadata is absent; show the Browse panel before binding tab data.
+
+- **Search** and **Broad data** keep separate result lists. Search uses one native query with the original parameters and live bid/buyout controls. Broad data is a saved read-only quote browser with last-seen prices and minutes since observation.
+- **Target search for this item** restores the quote's keyword/category/level scope as a fresh normal search. Native IDs from broad snapshots are never used for purchases; cached tooltips use the captured item link.
+- Persistent Broad search requires the running **Global Bank helper 1.4.4**. If it is missing, stopped or outdated, the button is disabled and its hover explains where to start/update it. A fresh heartbeat may take up to 30 seconds to be confirmed.
+- Only a temporary **per-character** `AAH_BroadOutbox` is registered. The shared root UI SaveVariables file never receives broad data. When the game writes the character file, the helper merges the ASCII outbox into `Interface/GlobalBankHelper/AAHBroadCache.json` and a game-readable `.lua` mirror, then removes the acknowledged outbox assignment with guarded atomic cleanup and a recoverable backup. The addon clears its acknowledged memory outbox too. Busy, changed and read-only files wait for retry; unrelated UI bytes remain intact.
+- A helper clock expires quotes at two days. A completed repeat of the same scope removes unseen quotes from that scope; an unfiltered complete scan can remove all unseen quotes. Interrupted/capped scans preserve unseen entries. Helper-owned cleanup backups expire after two days. Identical item-link/seller/count/currency/price quotes share one fixture row; different prices remain separate.
+
+- Broad-search progress is displayed below the footer status text, outside the item list.
+
+- The separate Broad search button subdivides capped or stalled queries within your selected keyword/category scope. Normal Search leaves the parameters unchanged. Broad search fetches the initial result first (up to two 500-item batches), then accumulates unique auctions from the queued parts. Busy/delayed responses retry until completed or stopped. Stat, price and rarity filters can narrow the cache while it fills. Stop or closing the auction window cancels scanning.
+- Names view keeps two complete stat names per line, native stat colours and the original item-row height. Values view remains compact. No artificial name abbreviation.
+- A native auction-session close leaves the cached browser open instead of hiding it. If the server closes the connection, network scanning pauses and resumes after talking to the auctioneer again. Explicit X/Escape still closes the window.
+
+
+- All six added-stat slots remain visible without cutting colour codes; row text uses separate native lines.
+
+- Left-click the Stats header to switch between names and values; right-click it to sort. Hover for complete localized names and the native tooltip colours, with normalized values.
+
+Also in 6.1.2:
 
 - **Resizable window**: drag the corner grip; taller windows show more rows (Browse up to 16), wider ones give room to item names, stats and filters. The size is remembered.
-- **Stats column**: each item's *added* stats by slot (the named stats that come off when it is sharded, up to 6), short and readable, like `1:Dex472+Patt1178`. Hover for full names and totals, click the header to sort by added Str+Dex+Sta+Int+Wis. Values are shown without the +20% power modifier bonus of items over 101 durability, so items compare fairly.
+- **Stats column**: each item's *added* stats by slot (the named stats that come off when it is sharded, up to 6), short and readable, like `1:Dex472+Patt1178`. Hover for full names and totals, right-click the header to sort by added Str+Dex+Sta+Int+Wis. Values are shown without the +20% power modifier bonus of items over 101 durability, so items compare fairly.
 - **Dura column**: maximum durability, green over 101. Sortable.
 - **Six filters as dropdowns** (two columns): Keyword, 1-6 stats, green/yellow/orange stats, Tier/Plus/Durability at least, pet eggs, vendor profit, below average price, **Stat at least** and **Stat at most** for every stat (together they make a range). Each filter has a red X to clear it. Typed filters like `$str/30` or `$maxstr/425` still work.
 - **Rarity range**: two dropdowns, from Uncommon to Mythic and Item Shop (for example Epic to Legendary).
@@ -579,7 +619,7 @@ New in 6.1.2:
 
 From the original: browse with saved searches, bidding, selling with price suggestions, price history and more.
 
-**Note:** the server sends at most 1000 items per search; if you hit that, narrow it down (rarity range, level, category). `/aah probe` shows the server's count.
+**Server limits:** Broad search narrows capped queries and keeps their results together. A visible progress bar shows overall progress through the known queries, alongside current native pages and queued counts; the total can grow as more parts are discovered. An identical-item group can still be capped by the server; it remains marked unresolved and is polled again every minute after its previous pages finish. Busy errors and timeouts retry with pacing. Completion time depends on the server; closing the window stops scanning. `/aah probe` reports the current native query and combined scan separately.
 
 ## Chat commands
 
@@ -659,13 +699,13 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
 ## Features
 
-- **Daily reward button**: a small button on screen. Left click opens the item shop right on the daily loyalty reward page. Its picture shows whether this character already claimed today, or is below level 100 (the reward is for level 100 characters only). The day resets at midnight German time. Move it with right-drag or Shift+drag; show, hide and lock it in the ZShop window.
+- **Daily reward button**: a small button on screen. Left click opens the item shop right on the daily loyalty reward page. Its picture marks when this level 100 character opened the page today; opening it does not itself confirm a collection. Characters below level 100 get a separate icon. The day resets at midnight German time. Move it with right-drag or Shift+drag; show, hide and lock it in the ZShop window.
 - **Item shop in your web browser** or in the game's own shop window, your choice.
 - **Item depot** command to open your depot page.
 - ZShop window with its settings, and a row in Cherry's Kit. No other library needed (the original needed aaa_pylib).
 - ZShop never stores your shop login link, and never opens shop pages by itself. It cannot click Collect for you: you still press it on the page.
 
-**Still being tested in game:** which way of opening the shop works on every client, and the "claimed today" mark (it relies on the game's clock). Run `/zshop probe` and send the result.
+**Clock:** ZShop uses the client clock when available. Otherwise, start the Global Bank helper: ZShop watches its UTC heartbeat and may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
 
 ## Chat commands
 
@@ -789,6 +829,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/php probe
 ## Features
 
 - **One square per member**, coloured by class, filling bottom to top (or left to right): up to 36 raid members plus pets. Group by raid group, class, raid role or not at all, and grow from any corner.
+- **Default layout**: centred name, health percentage and missing health at the top, tracked buffs at the upper right, and debuffs along the lower edge. Edit the English tracked-buff names for other client languages.
 - **Indicators like Grid's**: coloured border, four corner squares, a centre icon, three text lines, bar colour, fading, and a flash on big hits and heals. Health percent shows by default.
 - **Every status can go to any indicator**, with a priority: health deficit, dead, offline, low health or mana, target, leader, raid role, raid icon, debuffs, heals over time, shields, salves, casting, and your own buff and debuff watches.
 - **Debuffs your way**: all, only listed, or all except listed (names or IDs), a hide list, an "important" list that also lights the border, a maximum time and a no-permanent switch, plus a small debuff row.

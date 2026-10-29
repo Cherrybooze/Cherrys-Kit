@@ -174,16 +174,41 @@
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
-						<FontString name="$parentText" inherits="GameFontHighlight" justifyH="LEFT">
+						<FontString name="$parentText1" inherits="GameFontHighlight" justifyH="LEFT">
 							<Size>
-								<AbsDimension x="1" y="38"/>
+								<AbsDimension x="1" y="12"/>
 							</Size>
 							<FontHeight>
 								<AbsValue val="11"/>
 							</FontHeight>
 							<Anchors>
-								<Anchor point="LEFT"/>
+								<Anchor point="TOPLEFT"/>
 							</Anchors>
+						</FontString>
+						<FontString name="$parentText2" inherits="GameFontHighlight" justifyH="LEFT">
+							<Size><AbsDimension x="1" y="12"/></Size>
+							<FontHeight><AbsValue val="11"/></FontHeight>
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="12"/></Offset></Anchor></Anchors>
+						</FontString>
+						<FontString name="$parentText3" inherits="GameFontHighlight" justifyH="LEFT">
+							<Size><AbsDimension x="1" y="12"/></Size>
+							<FontHeight><AbsValue val="11"/></FontHeight>
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="24"/></Offset></Anchor></Anchors>
+						</FontString>
+						<FontString name="$parentText4" inherits="GameFontHighlight" justifyH="LEFT">
+							<Size><AbsDimension x="1" y="12"/></Size>
+							<FontHeight><AbsValue val="11"/></FontHeight>
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="36"/></Offset></Anchor></Anchors>
+						</FontString>
+						<FontString name="$parentText5" inherits="GameFontHighlight" justifyH="LEFT">
+							<Size><AbsDimension x="1" y="12"/></Size>
+							<FontHeight><AbsValue val="11"/></FontHeight>
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="48"/></Offset></Anchor></Anchors>
+						</FontString>
+						<FontString name="$parentText6" inherits="GameFontHighlight" justifyH="LEFT">
+							<Size><AbsDimension x="1" y="12"/></Size>
+							<FontHeight><AbsValue val="11"/></FontHeight>
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="60"/></Offset></Anchor></Anchors>
 						</FontString>
 					</Layer>
 				</Layers>
@@ -209,16 +234,16 @@
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT")
-						GameTooltip:SetAuctionBrowseItem(this:GetParent().auctionid)
+						if AAH.BroadUI then AAH.BroadUI.ShowItemTooltip(this) else GameTooltip:SetAuctionBrowseItem(this:GetParent().auctionid) end
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide()
 					</OnLeave>
 					<OnMouseWheel>
-						GameTooltip:Hide()						
-						UIPanelScrollBar_OnMouseWheel(AAH_BrowseListScrollBar, delta)	
-						GameTooltip:SetAuctionBrowseItem(this:GetParent().auctionid)	
-					</OnMouseWheel>					
+						GameTooltip:Hide()
+						UIPanelScrollBar_OnMouseWheel(AAH_BrowseListScrollBar, delta)
+						if AAH.BroadUI then AAH.BroadUI.ShowItemTooltip(this) else GameTooltip:SetAuctionBrowseItem(this:GetParent().auctionid) end
+					</OnMouseWheel>
 				</Scripts>
 			</Button>
             <Button name="$parentSeller" enableMouse="true" text="test">
@@ -1823,6 +1848,7 @@
 							</Anchor>
 						</Anchors>
 						<Scripts>
+                            <OnLoad>this:RegisterForClicks("LeftButton", "RightButton")</OnLoad>
 							<OnEnter>AAH.Stats.ShowLegend(this)</OnEnter>
 							<OnLeave>GameTooltip:Hide()</OnLeave>
 						</Scripts>
@@ -2018,7 +2044,7 @@
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="24" y="45"/>
+							<AbsDimension x="24" y="36"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -2026,8 +2052,37 @@
 					<OnClick>
 						AAH.Browse.SearchButton_OnClick()
 					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+						GameTooltip:SetText("Search auction house", 1, 1, 1)
+						GameTooltip:AddLine("Search the specified parameters normally. Use Broad search to subdivide a search with over 1000 matching auctions.", 0, 0.75, 0.95)
+						GameTooltip:AddLine("While searching, this button becomes Stop. Stat, price and rarity filters work on the cached list.", 0, 0.75, 0.95)
+						GameTooltip:Show()
+					</OnEnter>
+					<OnLeave>GameTooltip:Hide()</OnLeave>
 				</Scripts>
 			</Button>
+			<Button name="AAH_BrowseBroadSearchButton" inherits="UIPanelButtonTemplate" text="Broad search">
+				<Size><AbsDimension x="80" y="22"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="16" y="64"/></Offset></Anchor></Anchors>
+				<NormalText inherits="GameFontNormal"><FontHeight><AbsValue val="11"/></FontHeight></NormalText>
+				<Scripts>
+					<OnClick>AAH.Browse.SearchButton_OnClick(true)</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_RIGHT")
+						GameTooltip:SetText("Broad search", 1, 1, 1)
+						GameTooltip:AddLine("Searches every item in the auction house categorically and displays them; this takes a long time.", 0, 0.75, 0.95)
+						GameTooltip:AddLine("Use this if there are over 1000 items in the category.", 1, 0.82, 0)
+						GameTooltip:AddLine("Keeps your keyword/category criteria and searches smaller parts within that scope. Results join one cached list.", 0, 0.75, 0.95)
+						GameTooltip:Show()
+					</OnEnter>
+					<OnLeave>GameTooltip:Hide()</OnLeave>
+				</Scripts>
+			</Button>
+            <Frame name="AAH_BroadHelperOverlay" enableMouse="true" hidden="true" frameLevel="10">
+                <Size><AbsDimension x="80" y="22"/></Size><Anchors><Anchor point="TOPLEFT" relativeTo="AAH_BrowseBroadSearchButton" relativePoint="TOPLEFT"/></Anchors>
+                <Scripts><OnEnter>GameTooltip:SetOwner(this,"ANCHOR_RIGHT");GameTooltip:SetText("Persistent Broad search",1,1,1);GameTooltip:AddLine(AAH.BroadUI.HelperMessage(),1,.75,.2);GameTooltip:Show();</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+            </Frame>
 			<Button name="AAH_BrowseResetButton" inherits="UIPanelButtonTemplate" text="Reset">
 				<Size>
 					<AbsDimension x="72" y="22"/>
@@ -2035,7 +2090,7 @@
 				<Anchors>
 					<Anchor point="TOPLEFT">
 						<Offset>
-							<AbsDimension x="24" y="75"/>
+							<AbsDimension x="24" y="92"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -2130,6 +2185,15 @@
 				</DisabledTexture>
 				<HighlightTexture file="Interface\Buttons\PanelLeftButton-Highlight" alphaMode="ADD"/>
 			</Button>
+			<Frame name="AAH_BrowseScanBar" hidden="true">
+                <Size><AbsDimension x="350" y="12"/></Size>
+                <Anchors><Anchor point="TOPLEFT" relativeTo="AAH_BrowseInfoLabel" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND"><Texture name="$parentBackground"><Anchors><Anchor point="TOPLEFT"/><Anchor point="BOTTOMRIGHT"/></Anchors></Texture></Layer>
+                    <Layer level="ARTWORK"><Texture name="$parentFill"><Size><AbsDimension x="1" y="12"/></Size><Anchors><Anchor point="TOPLEFT"/></Anchors></Texture></Layer>
+                    <Layer level="OVERLAY"><FontString name="$parentText" inherits="GameFontHighlight" justifyH="CENTER"><FontHeight><AbsValue val="10"/></FontHeight><Anchors><Anchor point="TOPLEFT"/><Anchor point="BOTTOMRIGHT"/></Anchors></FontString></Layer>
+                </Layers>
+            </Frame>
 			<Button name="AAH_BrowseInfoLabel" text="">
 				<Size>
 					<AbsDimension x="350" y="22"/>
@@ -2211,6 +2275,10 @@
 					</OnClick>
 				</Scripts>
 			</Button>
+            <Button name="AAH_BrowseTargetSearchButton" inherits="UIPanelButtonTemplate" text="Target search for this item" hidden="true">
+                <Size><AbsDimension x="180" y="24"/></Size><Anchors><Anchor point="RIGHT" relativeTo="AAH_BrowseBidButton" relativePoint="RIGHT"/></Anchors>
+                <Scripts><OnClick>AAH.BroadUI.TargetSearch(AAH.Browse.selected_auctionid);</OnClick><OnEnter>GameTooltip:SetOwner(this,"ANCHOR_TOP");GameTooltip:SetText("Refresh this item",1,1,1);GameTooltip:AddLine("Broad data are cached quotes. Open a fresh normal search and check seller, price and stats before bidding or buying.",0,.75,.95);GameTooltip:Show();</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+            </Button>
 			<Frame name="AAH_BrowseBidMoneyInput" inherits="AAH_MoneyTemplate">
 				<Anchors>
 					<Anchor point="RIGHT" relativeTo="AAH_BrowseBuyoutButton" relativePoint="LEFT">

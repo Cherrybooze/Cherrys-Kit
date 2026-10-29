@@ -21,7 +21,7 @@ F.TEXTURES = {
 
 local PARTS = { "Bg", "BarBg", "Bar", "Mana", "Skill", "Flash", "Hover", "BorderT", "BorderB", "BorderL", "BorderR",
   "CornerTL", "CornerTR", "CornerBL", "CornerBR", "Icon", "IconStack", "IconTime", "Text", "Text2", "Text3",
-  "Debuff1", "Debuff2", "Debuff3", "Debuff4", "Debuff1Time", "Debuff2Time", "Debuff3Time", "Debuff4Time",
+  "Buff1", "Buff2", "Buff3", "Debuff1", "Debuff2", "Debuff3", "Debuff4", "Debuff1Time", "Debuff2Time", "Debuff3Time", "Debuff4Time",
   "Spot1", "Spot2", "Spot3" }
 
 function F.Obj(slot)
@@ -193,6 +193,8 @@ function F.Style(slot, entry)
 
   local n = math.max(0, math.min(4, tonumber(P.debuffRow) or 0))
   local ds = math.max(4, math.floor((tonumber(P.debuffRowSize) or 11) * s + 0.5))
+  if P.separatedLayout then ds = math.min(ds, math.max(1, math.floor((iw - 2) / 4))) end
+  o.debuffSize = ds
   for i = 1, 4 do
     local d = o["Debuff" .. i]
     if i <= n then
@@ -203,6 +205,17 @@ function F.Style(slot, entry)
     else
       show(d, false)
       show(o["Debuff" .. i .. "Time"], false)
+    end
+  end
+
+  local buffs = math.max(0, math.min(3, tonumber(P.buffRow) or 0))
+  local bs = math.min(ds, math.max(1, math.floor((iw - 30 * s - buffs) / math.max(1, buffs))))
+  o.buffSize, o.buffCount = bs, buffs
+  for i = 1, 3 do
+    if i <= buffs then
+      place(o["Buff" .. i], name, ix + iw - i * bs - (i - 1), hy + 1, bs, bs)
+    else
+      show(o["Buff" .. i], false)
     end
   end
 
@@ -227,6 +240,16 @@ local function placeTexts(o, has2, has3)
   local hy, hh = o.health[2], o.health[4]
   local w = o.inner[3]
   local mid = math.floor(hy + hh / 2)
+  local P = G.P
+  if P.separatedLayout then
+    local leftWidth = math.min(w, math.floor(30 * (tonumber(P.scale) or 1) + 0.5))
+    local rightWidth = (o.buffCount or 0) * ((o.buffSize or 0) + 1)
+    local top = hy + math.floor(6 * (o.textScale or 1) + 0.5)
+    place(o.Spot1, name, o.inner[1], mid, w, 1)
+    place(o.Spot2, name, o.inner[1], top, leftWidth, 1)
+    place(o.Spot3, name, o.inner[1] + leftWidth, top, math.max(1, w - leftWidth - rightWidth), 1)
+    return
+  end
   local line = math.floor(10 * (o.textScale or 1) + 0.5)
   local y1, y2
   if has2 then
@@ -237,7 +260,6 @@ local function placeTexts(o, has2, has3)
   place(o.Spot1, name, o.inner[1], y1, w, 1)
   place(o.Spot2, name, o.inner[1], y2, w, 1)
   -- the third line shares the bottom edge with the debuff row: then it takes the right half
-  local P = G.P
   local row = (tonumber(P.debuffRow) or 0) > 0 and not P.debuffRowTop
   local x3, w3 = o.inner[1], w
   if row then
@@ -394,11 +416,18 @@ function F.Draw(slot)
   local n = math.max(0, math.min(4, tonumber(P.debuffRow) or 0))
   if n > 0 then
     local list = G.Auras.ShownDebuffs(unit)
-    local skip = (icon and icon.aura) and 1 or 0
+    local skip = (icon and icon.aura and icon.aura == list[1]) and 1 or 0
+    local count = math.min(n, math.max(0, #list - skip))
     for i = 1, n do
       local a = list[i + skip]
       local d, dt = o["Debuff" .. i], o["Debuff" .. i .. "Time"]
       if a and a.icon then
+        if P.separatedLayout then
+          local ds = o.debuffSize
+          local step = count > 1 and (hw - ds - 2) / (count - 1) or 0
+          local dy = P.debuffRowTop and (hy + 1) or (hy + hh - ds - 1)
+          place(d, o.name, hx + 1 + math.floor((i - 1) * step + 0.5), dy, ds, ds)
+        end
         G.Try(d, "SetTexture", a.icon)
         d:Show()
         local left = G.Auras.TimeLeft(a)
@@ -412,6 +441,20 @@ function F.Draw(slot)
         d:Hide()
         dt:Hide()
       end
+    end
+  end
+
+  -- Tracked buffs have their own upper-right row, separate from the centre icon.
+  local buffs = (o.buffCount or 0) > 0 and G.Auras.ShownBuffs(unit) or {}
+  for i = 1, 3 do
+    local obj, aura = o["Buff" .. i], buffs[i]
+    if obj and i <= (o.buffCount or 0) and aura and aura.icon then
+      G.Try(obj, "SetTexture", aura.icon)
+      G.Try(obj, "SetTexCoord", 0, 1, 0, 1)
+      G.Try(obj, "SetColor", 1, 1, 1)
+      obj:Show()
+    else
+      show(obj, false)
     end
   end
 

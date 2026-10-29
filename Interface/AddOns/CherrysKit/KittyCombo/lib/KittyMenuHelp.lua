@@ -78,8 +78,8 @@ Kitty.MenuHelp.boolean = {
 
 -- The two-way choice of canCast, canUse and the 1.6.0 conditions
 Kitty.MenuHelp.readyBoolean = {
-	["true"] = "Passes while it is ready to use (not on cooldown).",
-	["false"] = "Passes while it can NOT be used yet (on cooldown).",
+	["true"] = "Passes when available and cooldown remaining is at or below the threshold.",
+	["false"] = "Passes when the skill or slot exists and its cooldown exceeds the threshold.",
 };
 Kitty.MenuHelp.choiceHelp = {
 	castRecently = {["true"] = "Passes if it was cast within the seconds.", ["false"] = "Passes if it was NOT cast within the seconds."},

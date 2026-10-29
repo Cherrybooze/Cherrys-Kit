@@ -14,8 +14,9 @@ local K = zBagKit
 -- decisions here or the old layout would stick.
 K.onebag, K.unhooked, K.remembered, K.loadedMode, K.events = nil, nil, nil, nil, nil
 K.cherryOpen, K.resizing, K.dragging = nil, nil, nil
+K.storageInitialized, K.storageShared = nil, nil
 
-K.version = "5.07-ck10"
+K.version = "5.07-ck11"
 K.path = (CherrysKit_Paths and CherrysKit_Paths.zBag) or "Interface/AddOns/zBag/"
 K.BAG_SLOTS = 180
 K.BAG_PAGE = 30
@@ -26,10 +27,72 @@ function K.IsOn()
   return not (CherrysKit and CherrysKit.IsEnabled and not CherrysKit.IsEnabled("zBag"))
 end
 
+-- Different names prevent an old per-character zBag_VAR from overriding the shared copy.
+-- Both settings copies remain in the game's normal SavedVariables files.
+local function copySettings(value, seen)
+  if type(value) ~= "table" then return value end
+  seen = seen or {}
+  if seen[value] then return seen[value] end
+  local out = {}; seen[value] = out
+  for key, item in pairs(value) do out[key] = copySettings(item, seen) end
+  return out
+end
+
+function K.InitSettings()
+  if K.storageInitialized then return end
+  K.storageInitialized = true
+  if zBag_SHARE ~= 0 then zBag_SHARE = 1 end
+  if type(zBag_SHARED) ~= "table" then
+    -- On the first upgrade, retain the settings the game loaded for this character.
+    zBag_SHARED = copySettings(type(zBag_VAR) == "table" and zBag_VAR or {})
+  end
+  if type(zBag_LOCAL) ~= "table" then
+    zBag_LOCAL = copySettings(type(zBag_VAR) == "table" and zBag_VAR or zBag_SHARED)
+  end
+  K.storageShared = zBag_SHARE == 1
+  zBag_VAR = K.storageShared and zBag_SHARED or zBag_LOCAL
+  K.SaveSettings()
+end
+
+function K.SaveSettings()
+  SaveVariables("zBag_SHARE")
+  SaveVariables("zBag_SHARED")
+  SaveVariablesPerCharacter("zBag_LOCAL")
+end
+
+function K.SetSharing(enabled)
+  zBag_SHARE = enabled and 1 or 0
+  K.storageShared = enabled and true or false
+  zBag_VAR = K.storageShared and zBag_SHARED or zBag_LOCAL
+  K.Freeze("settings")
+  ZBAG_SCALE = zBag_VAR["scale"] or 1
+  ZBAG_ROW_ITEMS = zBag_VAR["rowitems"] or 10
+  ZBAG_SHOWEQ = zBag_VAR["showeq"] or 1
+  -- Refresh the open settings controls before they can save stale checkbox values.
+  if zBagConfigFrame and zBagConfigFrame:IsVisible() and zBagConfig_Load and zBankConfig_Load then
+    local sliders = { zBagRowSlider, zBagScaleSlider, zBagBRowSlider, zBagBScaleSlider }
+    local previous = {}
+    for i, slider in ipairs(sliders) do previous[i] = slider.loading; slider.loading = 1 end
+    zBagConfig_Load()
+    zBankConfig_Load()
+    zBagBRowSlider:SetValue(zBag_VAR["bankrowitems"] or 10)
+    zBagBScaleSlider:SetValue(zBag_VAR["bankscale"] or 0.99)
+    for i, slider in ipairs(sliders) do slider.loading = previous[i] end
+  end
+  if zBag_SetItemShop then zBag_SetItemShop() end
+  K.ApplyBankLayout()
+  if K.ApplyMoney then K.ApplyMoney() end
+  if zBag_Resize and zBag then zBag_Resize(zBag) end
+  if zBagB_Resize and zBagB then zBagB_Resize(zBagB) end
+  if K.UpdateCherry then K.UpdateCherry() end
+  K.SaveSettings()
+end
+
 -- The layout is decided when saved settings load, and can also be switched any time from the
 -- settings (Cherry's Kit): the game writes saved settings only on logout, so a Reload UI alone would
 -- forget a change.
 function K.Freeze(event)
+  K.InitSettings()
   if type(zBag_VAR) ~= "table" then
     zBag_VAR = {}
   end
@@ -45,6 +108,9 @@ function K.Freeze(event)
   end
   if var["bankslotnumbers"] ~= 1 then
     var["bankslotnumbers"] = 0
+  end
+  if var["bankmode"] ~= "stock" and var["bankmode"] ~= "onebank" then
+    var["bankmode"] = var["bagmode"] == "onebag" and "onebank" or "stock"
   end
   local want = K.IsOn() and var["bagmode"] == "onebag"
   if K.onebag == nil then
@@ -114,7 +180,7 @@ function K.RestoreGameWindows()
   if BagItemFrame then
     BagItemFrame:Show()
   end
-  if BankFrame and offScreen(BankFrame) then
+  if BankFrame and not K.IsOneBank() and offScreen(BankFrame) then
     putBack(BankFrame, "bankpos", "LEFT", "LEFT", 120, 0)
   end
 end
@@ -123,9 +189,6 @@ end
 function K.SwitchToIndividual()
   if zBag and zBag:IsVisible() then
     zBag:Hide()
-  end
-  if zBagB and zBagB:IsVisible() then
-    zBagB:Hide()
   end
   if BagFrame then
     if K.unhooked then
@@ -141,7 +204,9 @@ function K.SwitchToIndividual()
       BagFrame:Hide() -- reopen the backpack to get the game's window
     end
   end
-  putBack(BankFrame, "bankpos", "LEFT", "LEFT", 120, 0)
+  if not K.IsOneBank() then
+    putBack(BankFrame, "bankpos", "LEFT", "LEFT", 120, 0)
+  end
   if K.OnSwitchedToIndividual then
     K.OnSwitchedToIndividual()
   end
@@ -191,6 +256,18 @@ function K.IsOneBag()
   return K.onebag == true
 end
 
+function K.IsOneBank()
+  return K.IsOn() and type(zBag_VAR) == "table" and zBag_VAR["bankmode"] == "onebank"
+end
+
+function K.ApplyBankLayout()
+  if not K.IsOneBank() then
+    if zBagB and zBagB:IsVisible() then zBagB:Hide() end
+    putBack(BankFrame, "bankpos", "LEFT", "LEFT", 120, 0)
+  end
+  if K.PlaceSearchBoxes then K.PlaceSearchBoxes() end
+end
+
 -- One bag (cherry): the game's bank and windows stay as in individual bags; the backpack is replaced
 -- by the cherry bags.
 function K.IsCherry()
@@ -230,6 +307,18 @@ function K.Label(owner, slot, size, showOwner)
   owner.kitSlot, owner.kitSize = slot, size
   local name = owner:GetName()
   local text, back = _G[name .. "KitSlot"], _G[name .. "KitSlotBack"]
+  if not owner.kitSlotPositioned then
+    if text then
+      text:ClearAllAnchors()
+      text:SetAnchor("TOPLEFT", "TOPLEFT", owner, 1, 1)
+    end
+    if back then
+      back:ClearAllAnchors()
+      back:SetAnchor("TOPLEFT", "TOPLEFT", owner, 0, 0)
+      back:SetSize(22, 12)
+    end
+    owner.kitSlotPositioned = true
+  end
   if slot then
     if text then
       text:SetText(tostring(slot))

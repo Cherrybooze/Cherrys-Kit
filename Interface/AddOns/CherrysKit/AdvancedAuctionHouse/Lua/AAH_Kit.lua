@@ -26,6 +26,7 @@ function Kit.Help()
 	say(AAH.Manifest.Name .. " " .. AAH.Manifest.Version .. " by " .. AAH.Manifest.Author)
 	say("Open the auction house at an auctioneer. Drag the bottom-right corner to resize the window.")
 	say("Stats column: hover its header for the abbreviations. Alt+click an item to search for all of them.")
+	say("Search uses your parameters normally. Broad search splits capped/stalled searches within that scope and keeps one cache. Stop or close the window to cancel.")
 	say("/aah = settings | /aah size reset | /aah size <width> <height> | /aah stats on|off | /aah pagedelay <seconds, 0 = auto> | /aah probe")
 	say("/aah clear <item> | clearall | usewhitevalue | pricehistory | numhistory <n> | turn on|off")
 end
@@ -99,6 +100,17 @@ function Kit.Probe()
 	say("last search, server says: " .. tostring(okI and items) .. " items in " .. tostring(okP and pages) ..
 		" pages (" .. tostring(AAH.Browse.MaxPageItems) .. " per page; 1000 items = 20 pages is the server's usual cap)")
 	say("results " .. #list .. ", with stats " .. withStats)
+	local scan=AAH.Browse.Scan
+	if scan then
+		say(string.format("combined scan: %s, %d unique auctions, %d queries checked, %d queued, %d capped groups still unresolved%s",
+			scan.active and "running" or "stopped",#scan.items,scan.finished,#scan.queue,scan.capped,
+			scan.reason and (", "..scan.reason) or ""))
+		local q=scan.query or {}
+		say(string.format("scan mode %s, stage %s, native page %d/%d, category %s/%s/%s, level %s-%s, session %s",
+			scan.broad and "broad" or "normal",tostring(scan.stage),math.max(0,AAH.Browse.CurrentCachePage-1),AAH.Browse.MaxPages,
+			tostring(q.cat1),tostring(q.cat2),tostring(q.cat3),tostring(q.minlvl),tostring(q.maxlvl),
+			AAH.Main.sessionOpen==false and "closed (cached browser)" or "open"))
+	end
 	if example then
 		say("e.g. " .. tostring(example.name) .. ": " .. AAH.Stats.Text(example, 400))
 	end

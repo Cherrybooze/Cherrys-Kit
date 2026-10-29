@@ -10,7 +10,7 @@
 		</Scripts>
 	</Frame>
 	<Frame name="zBagKitConfig" parent="zBagConfigFrame">
-		<Size><AbsDimension x="470" y="200"/></Size>
+		<Size><AbsDimension x="470" y="248"/></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="zBagConfigFrameusebagsearch" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="8"/></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="OVERLAY">
@@ -18,7 +18,7 @@
 					<Anchors><Anchor point="TOPLEFT"/></Anchors>
 				</FontString>
 				<FontString name="$parentHint" inherits="GameFontHighlight" text="">
-					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="174"/></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="222"/></Offset></Anchor></Anchors>
 				</FontString>
 			</Layer>
 		</Layers>
@@ -69,7 +69,7 @@
 			</CheckButton>
 			<CheckButton name="$parentCherry">
 				<Size><AbsDimension x="24" y="24"/></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentIndividual" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentIndividual" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="24"/></Offset></Anchor></Anchors>
 				<HitRectInsets><AbsInset top="0" left="8" bottom="8" right="0"/></HitRectInsets>
 				<Layers>
 					<Layer level="OVERLAY">
@@ -198,6 +198,24 @@
 					<OnEnter>zBagKit.ShowTooltip(this, "money");</OnEnter>
 					<OnLeave>GameTooltip:Hide();</OnLeave>
 				</Scripts>
+			</CheckButton>
+			<CheckButton name="$parentShare">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentMoney" relativePoint="BOTTOMLEFT"/></Anchors>
+				<HitRectInsets><AbsInset top="0" left="8" bottom="8" right="0"/></HitRectInsets>
+				<Layers><Layer level="OVERLAY"><FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Share bag settings across characters"><Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="6"/></Offset></Anchor></Anchors></FontString></Layer></Layers>
+				<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/><PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+				<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+				<Scripts><OnClick>zBagKit.OnConfigClick("share");</OnClick><OnEnter>zBagKit.ShowTooltip(this, "share");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+			</CheckButton>
+			<CheckButton name="$parentOneBank">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentOneBag" relativePoint="BOTTOMLEFT"/></Anchors>
+				<HitRectInsets><AbsInset top="0" left="8" bottom="8" right="0"/></HitRectInsets>
+				<Layers><Layer level="OVERLAY"><FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Use one bank (classic zBag)"><Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="6"/></Offset></Anchor></Anchors></FontString></Layer></Layers>
+				<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/><PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+				<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+				<Scripts><OnClick>zBagKit.OnConfigClick("onebank");</OnClick><OnEnter>zBagKit.ShowTooltip(this, "onebank");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
 			</CheckButton>
 			<Button name="$parentReset" inherits="UIPanelButtonTemplate" text="Reset bag positions">
 				<Size><AbsDimension x="140" y="22"/></Size>

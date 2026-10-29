@@ -6,13 +6,13 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
 ## Features
 
-- **Daily reward button**: a small button on screen. Left click opens the item shop right on the daily loyalty reward page. Its picture shows whether this character already claimed today, or is below level 100 (the reward is for level 100 characters only). The day resets at midnight German time. Move it with right-drag or Shift+drag; show, hide and lock it in the ZShop window.
+- **Daily reward button**: a small button on screen. Left click opens the item shop right on the daily loyalty reward page. Its picture marks when this level 100 character opened the page today; opening it does not itself confirm a collection. Characters below level 100 get a separate icon. The day resets at midnight German time. Move it with right-drag or Shift+drag; show, hide and lock it in the ZShop window.
 - **Item shop in your web browser** or in the game's own shop window, your choice.
 - **Item depot** command to open your depot page.
 - ZShop window with its settings, and a row in Cherry's Kit. No other library needed (the original needed aaa_pylib).
 - ZShop never stores your shop login link, and never opens shop pages by itself. It cannot click Collect for you: you still press it on the page.
 
-**Still being tested in game:** which way of opening the shop works on every client, and the "claimed today" mark (it relies on the game's clock). Run `/zshop probe` and send the result.
+**Clock:** ZShop uses the client clock when available. Otherwise, start the Global Bank helper: ZShop watches its UTC heartbeat and may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
 
 ## Chat commands
 

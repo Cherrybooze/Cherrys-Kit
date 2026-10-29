@@ -86,6 +86,19 @@ def write_zip(path: Path, files: dict[str, bytes]) -> dict:
     return result
 
 
+PRIVATE_DATA_NAMES = frozenset(name.casefold() for name in (
+    "SaveVariables.lua", "GlobalBankDatabase.lua", "GlobalBank.json", "ExcludedCharacters.json",
+    "DailyRewards.json", "CharacterLinks.json", "GlobalBankHelperBeat.lua",
+    "GlobalBankHelper.log", "GlobalBankHelper-errors.log", "AAHBroadCache.json", "AAHBroadCache.lua",
+))
+
+
+def is_private_release_path(path: Path) -> bool:
+    name = path.name.casefold()
+    return (any(part.casefold() == "globalbankhelper" for part in path.parts)
+            or any(name == private or name.startswith(private + ".") for private in PRIVATE_DATA_NAMES))
+
+
 def build(output: Path) -> None:
     require(not output.is_relative_to(KIT), "Build output must be outside the installed addon tree.")
     metadata = json.loads((ROOT / "release-packages.json").read_text(encoding="utf-8"))
@@ -100,6 +113,7 @@ def build(output: Path) -> None:
     for path in sorted(KIT.rglob("*")):
         require(not path.is_symlink(), f"Symlinks are not release inputs: {path}")
         if path.is_file():
+            require(not is_private_release_path(path.relative_to(KIT)), f"Private game data must not be packaged: {path}")
             sources[path.relative_to(KIT).as_posix()] = path.read_bytes()
     require(sources, "No addon files found.")
     require(

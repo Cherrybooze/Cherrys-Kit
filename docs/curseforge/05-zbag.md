@@ -7,12 +7,14 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 ## Features
 
 - **Three layouts, switch any time** (applies straight away):
-  - *Individual bags (stock+search)*: the game's own bag and bank windows, one page per bag, with search added.
-  - *One bag (classic zBag)*: all bags in one frame, and one frame for the bank.
+  - *Individual bags (stock+search)*: the game's own bag window, one page per bag, with search added.
+  - *One bag (classic zBag)*: all bags in one frame.
   - *One bag (Cherry's)*: each bag opens as its own plain box. Drag a bag anywhere and drag its corner to reshape it (narrower = more rows). Bag I has the search box under it, and B opens and closes them all. *Lock resize* keeps the shapes.
+- **Choose the bank separately**: tick **Use one bank (classic zBag)** for zBag's bank, or leave it unticked for the game's bank. It works with any bag layout.
+- **Share bag settings across characters** is on by default. Turn it off for separate settings per character. Existing shared and separate settings are kept when you switch. On the first upgrade, the settings loaded on that character become the initial shared setup. The quick-sell item filter remains separate for each character.
 - **Auto bag and bank pages** (optional): rented pages show while their rent is running and hide once it runs out.
 - **Item search** in every layout (BagSearch).
-- **Slot numbers**: an optional see-through number (1 to 180) on every bag slot, and on every bank slot.
+- **Slot numbers**: an optional see-through number (1 to 180) in the upper-left corner of every bag slot and bank slot.
 - **All bags window**: all six bags in one window that you can drag anywhere. "Reset bag positions" puts it, the Cherry's bags and the money box back.
 - **Hide default backpack** (optional, individual bags): B opens All bags instead.
 - **Money box** (optional): gold, diamonds and rubies in a small box of its own that stays on screen and can be dragged anywhere.

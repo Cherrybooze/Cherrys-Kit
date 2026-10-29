@@ -406,7 +406,7 @@ Kitty.SkillManager.updateLazy = function(self)
 end;
 
 -- Get cooldown
-Kitty.SkillManager.canCast = function(self, skillName, threshold)
+Kitty.SkillManager.canCast = function(self, skillName, threshold, observeOnly)
 	if(threshold == nil) then
 		threshold = 0.6;
 	end
@@ -457,7 +457,7 @@ Kitty.SkillManager.canCast = function(self, skillName, threshold)
 		if(skillType == "TrialSkill") then
 			-- Special skills
 			-- Check both CooldownManager and SkillManager cooldowns
-			local ret1, remain1 = self.cooldownManager:canCast(skillName, threshold);
+			local ret1, remain1 = self.cooldownManager:canCast(skillName, threshold, observeOnly);
 			if(not ret1) then
 				result = ret1;
 				remaining = remain1;
@@ -474,7 +474,7 @@ Kitty.SkillManager.canCast = function(self, skillName, threshold)
 		else
 			-- SuitSkill, CastingSpell
 			-- Check the CooldownManager cooldown
-			result, remaining = self.cooldownManager:canCast(skillName, threshold);
+			result, remaining = self.cooldownManager:canCast(skillName, threshold, observeOnly);
 		end
 	else
 		-- Normal skills
@@ -537,6 +537,15 @@ Kitty.SkillManager.cast = function(self, skillName)
 		end
 	end
 	Kitty.debugPrint(string.format("%.2f[Sec] %s", Kitty.getTime(), "SkillName:[" .. tostring(skillName) .. "]"));
+end;
+-- Check a known skill's cooldown without treating resource failures as cooldowns.
+Kitty.SkillManager.isOnCooldown = function(self, skillName, threshold)
+    local detail = self.skillTable[skillName];
+    if(detail == nil) then return false; end
+    threshold = math.abs(tonumber(threshold) or 0.6);
+    local tracked = self.cooldownManager and self.cooldownManager.skillTable[skillName];
+    if(tracked and tracked.timestamp + tracked.cooldown - Kitty.getTime() > threshold) then return true; end
+    return (tonumber(detail.remaining) or 0) > threshold;
 end;
 -- Can a normal skill be cast?
 Kitty.SkillManager.canCastNormalSkill = function(self, skillName, threshold)
@@ -950,7 +959,7 @@ Kitty.CooldownManager.onCast = function(self, skillName, cooldown)
 	end
 end;
 -- Can the skill be used?
-Kitty.CooldownManager.canCast = function(self, skillName, threshold)
+Kitty.CooldownManager.canCast = function(self, skillName, threshold, observeOnly)
 	if(threshold == nil) then
 		threshold = 0.3;
 	end
@@ -964,8 +973,8 @@ Kitty.CooldownManager.canCast = function(self, skillName, threshold)
 			result = false;
 			remaining = remain;
 		else
-			-- Clear cast history
-			self.skillTable[skillName] = nil;
+			-- A lookahead can accept an unexpired cooldown; only clear after expiry.
+            if(remain <= 0 and not observeOnly) then self.skillTable[skillName] = nil; end
 			result = true;
 			remaining = remain;
 		end

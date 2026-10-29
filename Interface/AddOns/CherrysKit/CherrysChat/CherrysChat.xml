@@ -155,6 +155,11 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="332" /></Offset></Anchor></Anchors>
 				<Scripts><OnClick>CherrysChat.Settings("window");</OnClick></Scripts>
 			</Button>
+			<Button name="CherrysChat_ClassColorsButton" inherits="UIPanelButtonTemplate" text="Class-coloured names">
+				<Size><AbsDimension x="205" y="24" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="236" y="332" /></Offset></Anchor></Anchors>
+				<Scripts><OnClick>CherrysChat.Settings("classcolors");</OnClick></Scripts>
+			</Button>
 			<Frame name="CherrysChat_KeyDropDown" inherits="UIDropDownMenuTemplate">
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="220" y="364" /></Offset></Anchor></Anchors>
 			</Frame>

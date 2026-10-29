@@ -210,7 +210,7 @@
 					<OnLeave>GameTooltip:Hide()</OnLeave>
 				</Scripts>
 			</Frame>
-			<Button name="AAH_AuctionFrameTab1" inherits="AAH_TemplateAuctionFrameTab" id="1" text="BROWSE">
+			<Button name="AAH_AuctionFrameTab1" inherits="AAH_TemplateAuctionFrameTab" id="1" text="Search">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT">
 						<Offset>
@@ -219,9 +219,12 @@
 					</Anchor>
 				</Anchors>
 			</Button>
+            <Button name="AAH_AuctionFrameTab5" inherits="AAH_TemplateAuctionFrameTab" id="5" text="Broad data">
+                <Anchors><Anchor point="LEFT" relativeTo="AAH_AuctionFrameTab1" relativePoint="RIGHT"><Offset><AbsDimension x="2" y="0"/></Offset></Anchor></Anchors>
+            </Button>
 			<Button name="AAH_AuctionFrameTab2" inherits="AAH_TemplateAuctionFrameTab" id="2" text="BIDS">
 				<Anchors>
-					<Anchor point="LEFT" relativeTo="AAH_AuctionFrameTab1" relativePoint="RIGHT">
+					<Anchor point="LEFT" relativeTo="AAH_AuctionFrameTab5" relativePoint="RIGHT">
 						<Offset>
 							<AbsDimension x="2" y="0"/>
 						</Offset>

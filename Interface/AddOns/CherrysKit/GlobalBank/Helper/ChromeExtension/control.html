@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Global Bank local tools</title>
+  <link rel="stylesheet" href="control.css">
+  <script defer src="control.js"></script>
+</head>
+<body>
+  <main>
+    <h1>Global Bank local tools</h1>
+    <p>Read your character data and auction cache on this computer. These tools do not buy items.</p>
+    <section aria-labelledby="helper-title">
+      <h2 id="helper-title">Global Bank helper</h2>
+      <p id="helper-status" role="status">Checking the local helper…</p>
+      <button id="check-helper" type="button">Check helper</button>
+      <button id="start-helper" type="button" disabled>Start helper</button>
+      <p class="hint">The helper collects your saved character data. Keep its window open while you play.</p>
+    </section>
+    <section aria-labelledby="bank-title">
+      <h2 id="bank-title">Characters, bags and bank</h2>
+      <p>Type a command, then press Enter. Try <code>list</code>, <code>list gold</code>, <code>search mana</code>, <code>show Name</code>, or <code>help</code>.</p>
+      <form id="bank-form">
+        <label for="bank-command">Bank command</label>
+        <div class="command"><span aria-hidden="true">&gt;</span><input id="bank-command" name="command" maxlength="256" autocomplete="off" value="list"><button type="submit">Run</button></div>
+      </form>
+      <pre id="bank-output" aria-live="polite">No bank command has been run yet.</pre>
+    </section>
+    <section aria-labelledby="auction-title">
+      <h2 id="auction-title">Auction cache search</h2>
+      <p>Search the last auction data collected by the helper. Results are saved observations and may no longer be available or have the same price.</p>
+      <form id="auction-form">
+        <label for="auction-search">Item name or ID</label>
+        <input id="auction-search" name="search" maxlength="128" autocomplete="off" placeholder="For example: mana stone" required>
+        <label for="auction-realm">Realm <span class="hint">(optional; blank searches all realms)</span></label>
+        <input id="auction-realm" name="realm" maxlength="120" autocomplete="off" placeholder="For example: Gaia">
+        <button type="submit">Search cache</button>
+      </form>
+      <pre id="auction-output" aria-live="polite">No auction search has been run yet.</pre>
+    </section>
+    <p class="hint">This page reads local helper files only when you ask it to. It never asks for your password.</p>
+  </main>
+</body>
+</html>

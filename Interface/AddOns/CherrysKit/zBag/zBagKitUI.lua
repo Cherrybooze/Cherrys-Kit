@@ -11,8 +11,7 @@ local function var()
 end
 
 local function save()
-  SaveVariablesPerCharacter("zBag_VAR")
-  SaveVariables("zBag_VAR")
+  K.SaveSettings()
 end
 
 local function setShown(obj, on)
@@ -38,13 +37,20 @@ function K.PlaceSearchBoxes()
   setShown(zBagKitBagSettings, K.IsOn())
   setShown(zBagKitBankSettings, K.IsOn())
   setShown(zBagKitBagAll, K.IsOn())
-  if show and BagSearchEditBox and BagFrame then
-    BagSearchEditBox:ClearAllAnchors()
-    BagSearchEditBox:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", BagFrame, -5, -4)
+  if show and BagSearchEditBox then
+    local parent = K.IsOneBag() and zBagBackground or BagFrame
+    if parent then
+      BagSearchEditBox:ClearAllAnchors()
+      BagSearchEditBox:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", parent, -5, K.IsOneBag() and -5 or -4)
+    end
   end
-  if show and BankSearchEditBox and BankFrame then
-    BankSearchEditBox:ClearAllAnchors()
-    BankSearchEditBox:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", BankFrame, -5, -32)
+  if show and BankSearchEditBox then
+    local parent = K.IsOneBank() and zBagBBackground or BankFrame
+    if parent then
+      BankSearchEditBox:ClearAllAnchors()
+      if K.IsOneBank() then BankSearchEditBox:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", parent, -5, -5)
+      else BankSearchEditBox:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", parent, -5, -32) end
+    end
   end
 end
 
@@ -73,17 +79,15 @@ function K.OnUpdate(elapsed)
     return
   end
   wait = 0.2
-  if K.onebag ~= false then
-    return -- not loaded yet, or the one bag draws its own numbers
-  end
-  K.WatchAll()
+  if K.onebag == nil then return end
+  if K.onebag == false then K.WatchAll() end
   local on = K.IsOn()
-  local bag = on and var()["slotnumbers"] == 1 and BagFrame ~= nil and BagFrame:IsVisible()
+  local bag = on and K.onebag == false and var()["slotnumbers"] == 1 and BagFrame ~= nil and BagFrame:IsVisible()
   if bag or K.bagNumbers then
     K.bagNumbers = bag
     updateOverlays("zBagKitBag", "BagItemButton", K.BAG_SLOTS, bag, K.GameBagSlot)
   end
-  local bank = on and var()["bankslotnumbers"] == 1 and BankFrame ~= nil and BankFrame:IsVisible()
+  local bank = on and not K.IsOneBank() and var()["bankslotnumbers"] == 1 and BankFrame ~= nil and BankFrame:IsVisible()
   if bank or K.bankNumbers then
     K.bankNumbers = bank
     updateOverlays("zBagKitBank", "BankItemButton", K.BANK_PAGE, bank, K.GameBankSlot)
@@ -95,9 +99,7 @@ function K.OnEvent(event)
     K.events = (K.events and (K.events .. ",") or "") .. event
     K.Freeze(event)
     K.ApplyMoney()
-    if not K.IsOneBag() then
-      K.PlaceSearchBoxes()
-    end
+    K.PlaceSearchBoxes()
   elseif event == "PLAYER_BAG_CHANGED" or event == "BAG_ITEM_UPDATE" or event == "BAG_UPDATE_COOLDOWN" then
     K.UpdateCherry()
   end
@@ -116,8 +118,8 @@ function K.OnSwitchedToOneBag()
   K.bagNumbers, K.bankNumbers = false, false
   setShown(zBagKitAll, false)
   setShown(zBagKitBagSettings, false)
-  setShown(zBagKitBankSettings, false)
   setShown(zBagKitBagAll, false)
+  K.PlaceSearchBoxes()
   if BagFrame and BagFrame:IsVisible() then
     BagFrame:Hide() -- reopen the backpack to get the one bag
   end
@@ -584,6 +586,8 @@ function K.LoadConfig()
   zBagKitConfigBankSlots:SetChecked(v["bankslotnumbers"] == 1)
   zBagKitConfigHideBackpack:SetChecked(v["hidebackpack"] == 1)
   zBagKitConfigMoney:SetChecked(v["showmoney"] == 1)
+  zBagKitConfigShare:SetChecked(zBag_SHARE ~= 0)
+  zBagKitConfigOneBank:SetChecked(v["bankmode"] == "onebank")
   local hint
   if not K.IsOn() then
     hint = "|cffff6060zBag is turned off in the Cherry's Kit window.|r"
@@ -599,6 +603,7 @@ function K.LoadConfig()
   zBagKitConfigHint:SetText(hint)
   zBagKitConfigTitle:SetText("Bag layout (" .. K.PURPLE .. "Cherry's Kit|r)")
   zBagKitConfigOneBagTxt1:SetText("One bag (" .. K.TEAL .. "classic zBag|r)")
+  zBagKitConfigOneBankTxt1:SetText("Use one bank (" .. K.TEAL .. "classic zBag|r)")
   if zBagKitConfigCherryTxt1 then
     zBagKitConfigCherryTxt1:SetText("One bag (" .. K.PURPLE .. "Cherry's|r): movable, resizable bags")
   end
@@ -606,7 +611,12 @@ end
 
 function K.OnConfigClick(what)
   local v = var()
-  if what == "individual" then
+  if what == "share" then
+    K.SetSharing(zBagKitConfigShare:IsChecked())
+  elseif what == "onebank" then
+    v["bankmode"] = zBagKitConfigOneBank:IsChecked() and "onebank" or "stock"
+    K.ApplyBankLayout()
+  elseif what == "individual" then
     v["bagmode"] = "individual"
     save()
     K.Freeze("settings") -- individual bags apply straight away
@@ -665,12 +675,14 @@ function K.OnConfigClick(what)
 end
 
 K.TOOLTIPS = {
-  individual = { "Individual bags (stock+search)", "Use the game's own bag and bank windows, one page per bag, with a search box and slot numbers added. Applies straight away." },
-  cherry = { "One bag (Cherry's)", "Each bag opens as its own plain box. Drag a bag to move it; drag its bottom-right corner to change its shape (narrower = more rows). Bag I has the search box under it. B opens and closes them; the game's bank stays as it is. Bags you untick under show backpack tab stay closed." },
+  share = { "Share bag settings across characters", "Use the same bag and bank settings for your characters. Turn this off to keep separate settings for each character. Existing shared and separate settings are kept when you switch." },
+  onebank = { "Use one bank (classic zBag)", "Show all bank pages in zBag's combined bank window. Turn this off for the game's normal bank. This choice is independent of your bag layout." },
+  individual = { "Individual bags (stock+search)", "Use the game's own bag window, one page at a time, with a search box and slot numbers added. Choose the bank separately." },
+  cherry = { "One bag (Cherry's)", "Each bag opens as its own plain box. Drag a bag to move it; drag its bottom-right corner to change its shape (narrower = more rows). Bag I has the search box under it. B opens and closes them; choose the bank separately. Bags you untick under show backpack tab stay closed." },
   cherrylock = { "Lock resize", "Keep the Cherry's bags at their shapes: the resize corners are hidden. Bags still move." },
   bagauto = { "Auto", "Show each rented backpack page while its rent is running, and hide it once the rent runs out. Overrides the 3-6 ticks." },
   bankauto = { "Auto", "Show each rented bank page while its rent is running, and hide it once the rent runs out. Overrides the 2-5 ticks; 6 (item shop bank) keeps its own tick." },
-  onebag = { "One bag", "zBag's classic window: all bags in one frame, and one frame for the bank. Applies straight away." },
+  onebag = { "One bag", "zBag's classic window: all bags in one frame. Choose the bank separately. Applies straight away." },
   bagslots = { "Bag slot numbers", "Show the slot number (1-180) in a see-through mark on every bag slot." },
   allbags = { "All bags", "Open all six bags in one window; drag its title to move it. Click again to close it.\nMacro: /zb all" },
   hidebackpack = { "Hide default backpack", "With individual bags: the game's backpack stays hidden and B opens All bags instead. Macro: /zb all" },

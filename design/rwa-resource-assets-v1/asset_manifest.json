@@ -1,0 +1,66 @@
+{
+  "package": "RWA Resource Assets v1",
+  "runtime_installed": false,
+  "native_exports_included": false,
+  "approved_diamond_preserved_byte_for_byte": true,
+  "files": [
+    {
+      "path": "masters/soul-diamond.png",
+      "kind": "transparent_png_master",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 844344,
+      "sha256": "7d8a366463e85b4d5afc922fc8affc1b1c3df5ba5faff8adef3a6aefbda68fc2"
+    },
+    {
+      "path": "masters/max-label.png",
+      "kind": "transparent_png_master",
+      "width": 1774,
+      "height": 887,
+      "bytes": 897353,
+      "sha256": "5313380b616ad1efd03b8ea13d810112bc835acebf9d1a5c2e109395659c7837"
+    },
+    {
+      "path": "masters/bar-frame-metal.png",
+      "kind": "transparent_png_master",
+      "width": 2172,
+      "height": 724,
+      "bytes": 382585,
+      "sha256": "6b76205cd904f8d651d89a59768d292bbd1dc33c9d39c5ade36a33c86d43081c"
+    },
+    {
+      "path": "masters/bar-fill-glass.png",
+      "kind": "transparent_png_master",
+      "width": 2172,
+      "height": 724,
+      "bytes": 335747,
+      "sha256": "48697ea2e8cb49d22507d3580585af8bfcce196b9e8f69aa196bfa4c1fb0f8ea"
+    },
+    {
+      "path": "masters/bar-fill-bevel.png",
+      "kind": "transparent_png_master",
+      "width": 2172,
+      "height": 724,
+      "bytes": 238926,
+      "sha256": "34e25f1c3dea69cb6c26021d7fe51a3ce02eab7f89866493ce9a53218da8e1d6"
+    },
+    {
+      "path": "references/resource-defaults.png",
+      "kind": "reference_image",
+      "width": 1774,
+      "height": 887,
+      "bytes": 1945460,
+      "sha256": "5fd9e1f107efe64e17406b4d4a4d55106031036f475d8fbf6235a1634f55071c"
+    },
+    {
+      "path": "references/bar-styles-and-psi.png",
+      "kind": "reference_image",
+      "width": 1774,
+      "height": 887,
+      "bytes": 1697847,
+      "sha256": "1091e216ba5cc88dce0d8d752b916933c3884aa7de43b3b52ab9c704dea83189"
+    }
+  ],
+  "prompt": "Astra-GPT-6.0-Max-Prompt.txt",
+  "notes": "PNG masters and reference boards. Prompt includes native texture export and default aura implementation tasks. Minimal uses existing native fill and border."
+}

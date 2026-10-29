@@ -31,8 +31,7 @@ function zBagDeveloperConfig_Save()
 					zBag_VAR["displayDebugMessages"]=0; 
 					--yecho("zbV2dwbi" .. zBag_VAR["displayWackyBagIndex"]);
 				end				
-				SaveVariablesPerCharacter("zBag_VAR");
-				SaveVariables("zBag_VAR");
+				zBagKit.SaveSettings();
 				zBag_Update();
 			end
 end

@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.4.1** · Kit release **0.11.77** · [All addons / hub](../README.md)
+Version **1.4.5** · Kit release **0.11.79** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -32,14 +32,30 @@ The window shows each character it adds or updates and how many it tracks, and t
 - `get gold <name>`: one character's gold
 - `list gold` (also `list level`, `list items`, `list name`, `list note`): all characters, sorted
 - `search <text>`: which characters hold an item, and how many (bag and bank); notes too
-- `show <name>`: one character's note, bag and bank
+- `show <name>`: a character's saved classes, note, daily reward, bag and bank
+- `add note <name> <text>`: save a note, for example `add note Example bank alt`; `note <name>` clears it
+- `list note bank alt`: find characters whose notes contain `bank alt` (case insensitive)
+- `daily`: show reward status for characters with a saved level 100+ class
+- `search warrior > 60`: find characters with warrior at level 60 or higher
+- `erase <name>`: remove a character from the helper and stop tracking it
+- `ban list`: show excluded characters; `unban <name>` allows tracking again
 - `help`: all commands
+
+Class levels are saved on login, when your level or class changes, and on logout. Log in with the updated addon to record all available classes. The daily status uses the locally recorded confirmation and a 01:00 local-time reset; unknown means there is no unambiguous confirmation.
 
 It reads `Documents\Runes of Magic\<Name>\SaveVariables.lua` and writes the results to `Interface\GlobalBankHelper\`, which it creates next to `Interface\AddOns`. It never changes the game's files, needs no admin rights and doesn't use the internet. In game, `/gb` and the window tell you if the helper isn't running.
 
-For your own tools: `Interface\GlobalBankHelper\GlobalBank.json` holds every character's bags, bank and gold and is rewritten after every change.
+For your own tools: `Interface\GlobalBankHelper\GlobalBank.json` holds every character's bags, bank, gold, account association and last confirmed daily collection. See `Helper/README.txt` for the JSON formats and optional account links.
 
-**Sharing:** the CherrysKit folder is safe to share; it never contains your characters. **Don't share `Interface\GlobalBankHelper`**: it shows what all your characters own.
+## Chrome daily rewards (Windows)
+
+Run **Install Chrome extension.bat** from the installed `GlobalBank\Helper` folder. The setup window explains each step, copies the extension folder path, and opens Chrome. Enable Developer mode, choose **Load unpacked**, then in the folder picker press Alt+D, Ctrl+V, Enter and **Select Folder**. The list may look empty because Chrome asks for a folder. Keep the installed addon in place; rerun setup after moving it. Open the daily page through ZShop. The extension clicks an available chest and records it only after the page marks it redeemed. When the shop shows the current chest redeemed and a countdown for the next one, the popup shows that the reward was already collected and the time remaining; it does not invent a new collection timestamp. If the helper is closed, a page prompt and the extension popup offer to start its window.
+
+**Privacy:** The extension processes the Gameforge Runes of Magic daily loyalty page and does not read or change other websites. Its pending details and status stay in memory for the browser session. The Global Bank bridge saves confirmed reward details locally for your own use; the extension sends no data to Cherry or an analytics service. Collecting a reward still communicates with Gameforge through its page. After an update, old extension-local temporary data is cleared the next time the daily page opens.
+
+The recorded time is UTC, not a prediction of the game's reset time. A character must have one matching level 100+ snapshot in Global Bank. The snapshot has no server field, so matching by name cannot independently verify the server; ambiguous matches are left unlinked. Shop links contain login tokens and must not be saved in these data files.
+
+**Sharing:** the helper keeps character data and its exclusion list outside the CherrysKit folder. **Don't share `Interface\GlobalBankHelper`**: it shows what all your characters own.
 
 **Note:** whether the bank can be read while it is closed isn't confirmed yet, so open the bank once on each character to be sure it's saved. Notes and the resize corner are new; please report anything odd.
 
@@ -80,3 +96,23 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/gb probe`
 ## Support and contributions
 
 This is a personal hobby project. Support and PR reviews are best effort, with no promised response time or release schedule. Feel free to modify it for your own setup. If you fix something that was broken, a focused pull request is welcome; ideally DM **cherry** on the Runes of Magic Discord about it too. Include what changed and what you tested in game. See the [contribution guide](https://github.com/Cherrybooze/Cherrys-Kit/blob/main/CONTRIBUTING.md).
+
+
+## Search your data in Chrome
+
+Open the **Global Bank Daily Rewards** extension and choose **Open local bank and auction tools**. The page opens on your computer. It shows whether the helper is running and can start it for you.
+
+- Under **Characters, bags and bank**, try `list`, `list gold`, `search mana`, or `show Name`. Type `help` for more commands.
+- Under **Auction cache search**, enter an item name or ID. Add a realm to narrow the results.
+
+The results come from your own saved character snapshots and auction cache. An auction price is a past observation, so the item may have sold or the price may have changed. If the cache is empty, search in the in-game auction house, let the game save your character, and keep the helper running so it can collect the results. Old auction observations expire after two days. The page cannot buy items or change your character data.
+
+Your files are in `Interface/GlobalBankHelper/`. Keep that folder private: it contains your characters and their belongings. The local tools do not need Python or your game password.
+
+## Helper window
+
+Keep the helper window open while you play. Its commands let you search your characters and check its status. Type `help` for the full list. Use `heartbeat off` if you prefer a quieter window, or `heartbeat on` to turn the occasional status line back on. Auction data is collected in the background so you can still use the commands.
+
+The extension popup also shows helper status and, when known, your most recent confirmed daily collection. It displays the recorded time in your computer's local time and notes when the next 01:00 local-time boundary has passed; this is not a guarantee of the game's reset time. After updating the extension, reload it on Chrome's extensions page. Restart the helper after updating its files.
+
+If the helper reports an error, its local diagnostic log is at `Interface/GlobalBankHelper/GlobalBankHelper-errors.log`.

@@ -4,7 +4,8 @@
 # into Interface\GlobalBankHelper\GlobalBankDatabase.lua, which the Global Bank addon reads in game,
 # and GlobalBank.json next to it for tools outside the game.
 # That folder is outside CherrysKit, so the kit never contains anyone's characters and can be shared.
-# Reads the game's save files only; it never changes them. No admin rights, no internet.
+# Imports game saves; acknowledged AAH transport lines are backed up and removed safely.
+# No admin rights, no internet.
 # Copyright (C) Cherry. GPL v2 (see LICENSE.txt in Cherry's Kit).
 #
 #   -Watch            the helper window ("Start Global Bank helper.bat"): updates the database a few
@@ -14,10 +15,54 @@
 #                     addon can tell.
 #   -Command "<cmd>"  run one command and exit, e.g. -Command "get goldtotal" (for other tools)
 #   (no switch)       update the database once
-param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "")
+param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "", [ValidateSet(0, 1)][int]$Heartbeat = 1)
 
 $ErrorActionPreference = "Stop"
-. (Join-Path $PSScriptRoot "GlobalBank-Data.ps1")
+
+# Keep diagnostics available even when loading a dependency or starting the watcher fails.
+# Never include source text or expanded command arguments: those can contain private payloads.
+function Protect-HelperErrorText([string]$text, [int]$MaxLength = 240) {
+    $text = $text -replace '(?i)https?://[^\s"''<>]+', '[URL redacted]'
+    $text = $text -replace '(?i)(?:AAHB1:|bearer\s+)[A-Za-z0-9+/=_ .-]+', '[token redacted]'
+    $text = $text -replace '(?i)(token|password|authorization|cookie|secret)\s*[:=]\s*[^\s,;]+', '$1=[redacted]'
+    $text = $text -replace '[\{\[].*', '[payload redacted]'
+    $text = $text -replace '[A-Za-z0-9+/=_-]{64,}', '[long value redacted]'
+    $text = $text -replace '[\r\n]+', ' '
+    if ($text.Length -gt $MaxLength) { $text = $text.Substring(0, $MaxLength) + '...' }
+    return $text
+}
+
+function Write-HelperError($record, [string]$context, [switch]$Fatal) {
+    try {
+        $target = $errorLog
+        if (-not $target) {
+            $parent = Get-Item -LiteralPath $PSScriptRoot
+            while ($parent -and $parent.Name -ine 'AddOns') { $parent = $parent.Parent }
+            if (-not $parent) { return }
+            $folder = Join-Path $parent.Parent.FullName 'GlobalBankHelper'
+            [void][IO.Directory]::CreateDirectory($folder)
+            $target = Join-Path $folder 'GlobalBankHelper-errors.log'
+        }
+        $kind = if ($Fatal) { 'FATAL' } else { 'ERROR' }
+        $details = @((Get-Date).ToString('yyyy-MM-dd HH:mm:ss zzz') + "  $kind  $context")
+        $details += 'Exception: ' + $record.Exception.GetType().FullName + ' (HResult ' + $record.Exception.HResult + ')'
+        $details += 'Message: ' + (Protect-HelperErrorText $record.Exception.Message)
+        $details += 'ScriptStackTrace: ' + (Protect-HelperErrorText $record.ScriptStackTrace 8000)
+        $invocation = $record.InvocationInfo
+        if ($invocation) {
+            $details += 'InvocationInfo: ' + $invocation.ScriptName + ':' + $invocation.ScriptLineNumber + ':' + $invocation.OffsetInLine
+        }
+        [IO.File]::AppendAllText($target, ($details -join "`r`n") + "`r`n`r`n", (New-Object Text.UTF8Encoding($false)))
+    } catch { }
+}
+
+trap {
+    Write-HelperError $_ 'Unexpected helper exit' -Fatal
+    try { if ($script:AAHWorker) { Stop-Job $script:AAHWorker; Remove-Job $script:AAHWorker -Force } } catch { }
+    Write-Host 'Global Bank helper stopped after an unexpected error.' -ForegroundColor Red
+    Write-Host 'Details: Interface\GlobalBankHelper\GlobalBankHelper-errors.log. Correct the cause, then start the helper again.' -ForegroundColor Yellow
+    exit 1
+}
 
 if ($SaveFolder -eq "") {
     $SaveFolder = Join-Path ([Environment]::GetFolderPath("MyDocuments")) "Runes of Magic"
@@ -41,7 +86,14 @@ if (-not (Test-Path -LiteralPath $data)) {
 $out = Join-Path $data "GlobalBankDatabase.lua"
 $beat = Join-Path $data "GlobalBankHelperBeat.lua"
 $log = Join-Path $data "GlobalBankHelper.log"
+$errorLog = Join-Path $data "GlobalBankHelper-errors.log"
 $json = Join-Path $data "GlobalBank.json"
+$rewards = Join-Path $data "DailyRewards.json"
+$links = Join-Path $data "CharacterLinks.json"
+$excludedPath = Join-Path $data "ExcludedCharacters.json"
+if (-not (Test-Path -LiteralPath $links)) {
+    [System.IO.File]::WriteAllText($links, '{"schemaVersion":1,"accounts":[],"characters":[]}', (New-Object System.Text.UTF8Encoding($false)))
+}
 # Older versions could start a hidden copy with Windows through this shortcut.
 $oldShortcut = Join-Path ([Environment]::GetFolderPath("Startup")) "Global Bank helper.lnk"
 
@@ -49,12 +101,24 @@ $pattern = [regex]'(?m)^GlobalBank_Char = ("(?:[^"\\\r\n]|\\.)*")\s*$'
 $removedPattern = [regex]'(?m)^GlobalBank_Removed = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 $notesPattern = [regex]'(?m)^GlobalBank_Notes = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 
+$script:Excluded = @{}
 $script:Entries = @{}      # folder name -> @{ saved; s; line }, as in the database file
 $script:ByKey = @{}        # folder name -> character object
 $script:Notes = @{}        # name -> @{ v; t }: notes (and the window size, "*size") as in the database
 $script:Chars = @()        # character objects sorted by name
 $script:Buffer = ""        # what the player is typing
 $script:PromptShown = $false
+$script:ConsoleHeartbeat = ($Heartbeat -eq 1)
+$script:StartedAt = Get-Date
+$script:NextConsoleBeat = (Get-Date).AddSeconds(30)
+$script:AAHPendingPaths = @{}
+$script:AAHMaintenancePending = $false
+$script:AAHWorker = $null
+$script:AAHWorkerFailed = $false
+$script:AAHWorkerInbox = Join-Path $data ('.AAH-worker-' + $PID + '.json')
+
+. (Join-Path $PSScriptRoot "GlobalBank-Data.ps1")
+. (Join-Path $PSScriptRoot "AAH-Cache.ps1")
 
 ###########################################################################
 # Output
@@ -71,10 +135,161 @@ function Show-Prompt {
 }
 
 # Prints a line without mixing it into what the player is typing.
-function Say([string]$text) {
+function Say([string]$text, [ConsoleColor]$Color = [ConsoleColor]::Gray) {
     if ($script:PromptShown) { Clear-PromptLine }
-    Write-Host $text
-    if ($script:PromptShown) { Write-Host -NoNewline ("> " + $script:Buffer) }
+    Write-Host $text -ForegroundColor $Color
+    if ($script:PromptShown) { Show-Prompt }
+}
+
+# Disk liveness is independent of the optional console heartbeat. Cache work invokes this
+# callback during long operations; it must not touch the prompt or throw into that work.
+function Write-Beat {
+    $tmp = $beat + '.' + $PID + '.tmp'
+    try {
+        $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        $capability = if ($script:AAHCacheProtocol -eq 1) { "GlobalBank_AAHCacheProtocol = 1`r`n" } else { "" }
+        [IO.File]::WriteAllText($tmp, "GlobalBank_HelperBeat = $now`r`n$capability", (New-Object Text.UTF8Encoding($false)))
+        # Use the same replace-and-retry approach as the character database. A null
+        # File.Replace backup path fails in Windows PowerShell and leaves stale beats.
+        Move-Item -LiteralPath $tmp -Destination $beat -Force -ErrorAction Stop
+    } catch {
+        # A game reader may hold the file briefly. The next pulse retries without interrupting work.
+    } finally {
+        try { if ([IO.File]::Exists($tmp)) { [IO.File]::Delete($tmp) } } catch { }
+    }
+}
+if ($Watch) { $script:AAHProgressPulse = { param([string]$stage) Write-Beat } }
+
+function Show-Heartbeat {
+    if (-not $script:ConsoleHeartbeat -or (Get-Date) -lt $script:NextConsoleBeat) { return }
+    $script:NextConsoleBeat = (Get-Date).AddSeconds(30)
+    Say ("[{0}] alive | {1} characters | watching for saves" -f (Get-Date).ToString('HH:mm:ss'), $script:Chars.Count) DarkGray
+}
+
+function Show-Status {
+    $mode = if ($script:ConsoleHeartbeat) { 'on (1)' } else { 'off (0)' }
+    Say ("Status: {0} characters | running {1} min | console heartbeat {2}" -f $script:Chars.Count, [int]((Get-Date) - $script:StartedAt).TotalMinutes, $mode) Cyan
+    Say 'File liveness continues with either heartbeat setting. Type help for command groups.'
+}
+
+function Invoke-HelperMaintenance([scriptblock]$Report = { param($message) Write-Log $message }) {
+    # Each maintenance job gets its own catch so one failure cannot stop the watcher or its peers.
+    try { Invoke-AAHCleanupRetries }
+    catch { Write-HelperError $_ 'AAH cleanup retries'; & $Report 'AAH cleanup deferred; see GlobalBankHelper-errors.log.' }
+    try { Remove-AAHExpiredBackups $SaveFolder }
+    catch { Write-HelperError $_ 'AAH expired backups'; & $Report 'AAH backup maintenance deferred; see GlobalBankHelper-errors.log.' }
+    try { Import-AAHBroadOutbox -File '' -Text '' -DataFolder $data -SaveFolder $SaveFolder }
+    catch { Write-HelperError $_ 'AAH cache maintenance'; & $Report 'AAH cache maintenance deferred; see GlobalBankHelper-errors.log.' }
+}
+
+# Auction imports run in exactly one background process, passing paths rather than player
+# payloads through the job system. Commands, character saves and liveness remain on this thread.
+function Get-HelperCacheMutexName {
+    $hash = [Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [Text.Encoding]::UTF8.GetBytes([IO.Path]::GetFullPath($data).TrimEnd('\').ToLowerInvariant())
+        $suffix = [BitConverter]::ToString($hash.ComputeHash($bytes)).Replace('-', '').Substring(0, 24)
+        return 'Local\CherrysKitAAHCache-' + $suffix
+    } finally { $hash.Dispose() }
+}
+
+function Update-AAHWorker {
+    if ($script:AAHWorkerFailed) { return }
+    if ($script:AAHWorker) {
+        try {
+            foreach ($notice in @(Receive-Job $script:AAHWorker -ErrorAction Stop)) {
+                if ($notice.HelperWorkerNotice) { Write-Log $notice.HelperWorkerNotice }
+            }
+            if ($script:AAHWorker.State -notin @('Running', 'NotStarted', 'Blocked')) { throw 'Auction worker stopped unexpectedly.' }
+        } catch {
+            $script:AAHWorkerFailed = $true
+            Write-HelperError $_ 'Auction worker exit'
+            Write-Log 'Auction worker stopped; see GlobalBankHelper-errors.log. Restart the helper after correcting the cause.'
+            return
+        }
+    }
+    if (-not $script:AAHPendingPaths.Count -and -not $script:AAHMaintenancePending) { return }
+    if (-not $script:AAHWorker) {
+    $protectDefinition = 'function Protect-HelperErrorText { ' + ${function:Protect-HelperErrorText}.ToString() + ' }'
+    $errorDefinition = 'function Write-HelperError { ' + ${function:Write-HelperError}.ToString() + ' }'
+    $maintenanceDefinition = 'function Invoke-HelperMaintenance { ' + ${function:Invoke-HelperMaintenance}.ToString() + ' }'
+    $script:AAHWorker = Start-Job -ArgumentList (Join-Path $PSScriptRoot 'AAH-Cache.ps1'), $SaveFolder, $data, $errorLog, $script:AAHWorkerInbox, $protectDefinition, $errorDefinition, $maintenanceDefinition, (Get-HelperCacheMutexName) -ScriptBlock {
+        param($cacheScript, $saveRoot, $dataFolder, $errorLog, $inbox, $protectDefinition, $errorDefinition, $maintenanceDefinition, $lockName)
+        $ErrorActionPreference = 'Stop'
+        Invoke-Expression $protectDefinition
+        Invoke-Expression $errorDefinition
+        Invoke-Expression $maintenanceDefinition
+        $data = $dataFolder
+        $SaveFolder = $saveRoot
+        $cacheLock = New-Object Threading.Mutex($false, $lockName)
+        $locked = $false
+        try {
+            try { $locked = $cacheLock.WaitOne(30000) } catch [Threading.AbandonedMutexException] { $locked = $true }
+            if (-not $locked) { throw 'Auction cache is busy in another helper process.' }
+            . $cacheScript
+            # Keep cache cleanup retries alive between batches. This is the only cache consumer.
+            while ($true) {
+            if (-not [IO.File]::Exists($inbox)) { Start-Sleep -Milliseconds 100; continue }
+            $batch = [IO.File]::ReadAllText($inbox) | ConvertFrom-Json
+            [IO.File]::Delete($inbox)
+            foreach ($path in $batch.paths) {
+                try {
+                    $text = [IO.File]::ReadAllText($path, $script:AAHLatin1)
+                    Import-AAHBroadOutbox -File $path -Text $text -DataFolder $dataFolder -SaveFolder $saveRoot
+                } catch {
+                    Write-HelperError $_ 'Auction worker character import'
+                    [pscustomobject]@{ HelperWorkerNotice = 'Auction cache import deferred; see GlobalBankHelper-errors.log.' }
+                }
+            }
+            if ($batch.maintenance) {
+                Invoke-HelperMaintenance { param($message) [pscustomobject]@{ HelperWorkerNotice = $message } }
+            }
+            }
+        } catch {
+            Write-HelperError $_ 'Fatal auction worker failure' -Fatal
+            throw 'Auction worker failed. See GlobalBankHelper-errors.log.'
+        } finally {
+            if ($locked) { $cacheLock.ReleaseMutex() }
+            $cacheLock.Dispose()
+        }
+    }
+    }
+    # One published batch plus one coalesced pending set bounds the queue. An atomic rename
+    # gives the worker either the complete JSON of paths or no batch; no payload is serialized.
+    if ([IO.File]::Exists($script:AAHWorkerInbox)) { return }
+    $batch = @{ paths = @($script:AAHPendingPaths.Keys); maintenance = $script:AAHMaintenancePending } | ConvertTo-Json -Compress
+    $tmp = $script:AAHWorkerInbox + '.tmp'
+    try {
+        [IO.File]::WriteAllText($tmp, $batch, (New-Object Text.UTF8Encoding($false)))
+        [IO.File]::Move($tmp, $script:AAHWorkerInbox)
+        $script:AAHPendingPaths = @{}
+        $script:AAHMaintenancePending = $false
+    } catch { Write-HelperError $_ 'Queue auction worker batch' }
+}
+
+function Stop-AAHWorker {
+    if ($script:AAHWorker) {
+        Stop-Job $script:AAHWorker -ErrorAction SilentlyContinue
+        Remove-Job $script:AAHWorker -Force -ErrorAction SilentlyContinue
+        $script:AAHWorker = $null
+    }
+    foreach ($path in @($script:AAHWorkerInbox, ($script:AAHWorkerInbox + '.tmp'))) {
+        try { if ($path -and [IO.File]::Exists($path)) { [IO.File]::Delete($path) } } catch { }
+    }
+}
+
+function Import-CharacterAAH([string]$file, [string]$text) {
+    if ($Watch) { $script:AAHPendingPaths[$file] = $true; return }
+    $cacheLock = New-Object Threading.Mutex($false, (Get-HelperCacheMutexName))
+    $locked = $false
+    try {
+        try { $locked = $cacheLock.WaitOne(0) } catch [Threading.AbandonedMutexException] { $locked = $true }
+        if (-not $locked) { Write-Log 'Auction cache is busy; its running helper will handle pending imports.'; return }
+        Import-AAHBroadOutbox -File $file -Text $text -DataFolder $data -SaveFolder $SaveFolder
+    } finally {
+        if ($locked) { $cacheLock.ReleaseMutex() }
+        $cacheLock.Dispose()
+    }
 }
 
 function Write-Log([string]$text) {
@@ -93,6 +308,28 @@ function Write-Log([string]$text) {
 # One pass over every character folder. A file that can't be read right now (a game window is
 # writing it) keeps that character's entry from the previous database. Returns the new entries,
 # or $null when the database couldn't be written.
+# Exclusions live only in Interface\GlobalBankHelper, never in the addon package.
+function Read-Exclusions {
+    $result = @{}
+    if (-not (Test-Path -LiteralPath $excludedPath)) { return $result }
+    $doc = [IO.File]::ReadAllText($excludedPath, (New-Object System.Text.UTF8Encoding($false, $true))) | ConvertFrom-Json -ErrorAction Stop
+    if ($doc.schemaVersion -ne 1 -or $null -eq $doc.names -or $doc.names -isnot [array]) { throw 'Invalid ExcludedCharacters.json; tracking stopped to protect your exclusions.' }
+    foreach ($name in $doc.names) {
+        if ($name -isnot [string] -or -not $name.Trim() -or $name -match '[\x00-\x1f]' -or $name.Length -gt 100) { throw 'Invalid excluded character name; tracking stopped.' }
+        $result[$name] = $true
+    }
+    return $result
+}
+
+function Save-Exclusions($names) {
+    $doc = @{schemaVersion = 1; names = @($names.Keys | Sort-Object)}
+    $tmp = "$excludedPath.tmp"
+    [IO.File]::WriteAllText($tmp, (ConvertTo-Json -InputObject $doc -Depth 4), (New-Object System.Text.UTF8Encoding($false)))
+    Move-Item -LiteralPath $tmp -Destination $excludedPath -Force -ErrorAction Stop
+}
+
+function Is-Excluded([string]$name) { return $script:Excluded.ContainsKey($name) }
+
 function Update-Database {
     if (-not (Test-Path -LiteralPath $SaveFolder)) {
         Write-Log "Can't find the game's save folder: $SaveFolder (start the script with -SaveFolder ""<folder>"")"
@@ -108,11 +345,18 @@ function Update-Database {
     $removed = @{}   # name -> newest removed snapshot date, from every character's "Remove entry"
     $kept = 0
     foreach ($folder in Get-ChildItem -LiteralPath $SaveFolder -Directory | Sort-Object Name) {
+        if ($Watch) { Write-Beat }
+        if (Is-Excluded $folder.Name) { continue }
         $file = Join-Path $folder.FullName "SaveVariables.lua"
         if (-not (Test-Path -LiteralPath $file)) { continue }
         $entry = $null
         try {
             $text = [System.IO.File]::ReadAllText($file, $script:latin1)
+            # A one-shot character edit must not rebuild the unrelated auction cache.
+            if (-not ($Command -match '^\s*/?(?:erase|unban|note|add\s+note)\b')) {
+                try { Import-CharacterAAH $file $text }
+                catch { Write-HelperError $_ 'AAH character cache import'; Write-Log "AAH cache import deferred for $($folder.Name); see GlobalBankHelper-errors.log." }
+            }
             $m = $pattern.Match($text)
             if ($m.Success -and $m.Groups[1].Value.StartsWith('"GB1~')) {
                 $saved = (Get-Item -LiteralPath $file).LastWriteTime.ToString("yyyy-MM-dd HH:mm")
@@ -142,13 +386,16 @@ function Update-Database {
                     }
                 }
             }
-        } catch { }
+        } catch { Write-HelperError $_ 'Read character snapshot' }
         if (-not $entry -and $previous.ContainsKey($folder.Name)) {
             $old = $previous[$folder.Name]
             $entry = @{ name = $folder.Name; saved = $old.saved; s = $old.s; line = $old.line }
             $kept++
         }
-        if ($entry) { $found.Add($entry) }
+        if ($entry) {
+            $character = ConvertFrom-GBSnapshot $entry.s $entry.saved
+            if ($character -and -not (Is-Excluded $character.Name)) { $found.Add($entry) }
+        }
     }
     # Leave out snapshots someone removed in game, unless the character has saved a newer one since.
     $entries = New-Object 'System.Collections.Generic.List[object]'
@@ -156,6 +403,7 @@ function Update-Database {
         if ($removed.ContainsKey($e.name) -and [string]::CompareOrdinal($e.saved, $removed[$e.name]) -le 0) { continue }
         $entries.Add($e)
     }
+    foreach ($key in @($notes.Keys)) { if (Is-Excluded (ConvertTo-GBText $key)) { $notes.Remove($key) } }
     $made = (Get-Date).ToString("yyyy-MM-dd HH:mm")
     $lines = @(
         "-- Written by the Global Bank helper on $made. It replaces this file whenever a character logs out.",
@@ -183,12 +431,17 @@ function Write-Json {
     try {
         Export-GBJson $script:Chars $json (Get-Date).ToString("yyyy-MM-dd HH:mm")
     } catch {
-        Write-Log "Couldn't write $json ($($_.Exception.Message))"
+        Write-HelperError $_ 'Export character JSON'
+        Write-Log "Couldn't write $json; see GlobalBankHelper-errors.log."
     }
 }
 
 function Load-Model {
     $script:Entries = Read-GBDatabaseEntries $out
+    foreach ($key in @($script:Entries.Keys)) {
+        $parsed = ConvertFrom-GBSnapshot $script:Entries[$key].s $script:Entries[$key].saved
+        if ((Is-Excluded (ConvertTo-GBText $key)) -or ($parsed -and (Is-Excluded $parsed.Name))) { $script:Entries.Remove($key) }
+    }
     $script:ByKey = @{}
     foreach ($key in $script:Entries.Keys) {
         $c = ConvertFrom-GBSnapshot $script:Entries[$key].s $script:Entries[$key].saved
@@ -292,16 +545,29 @@ function Invoke-Update($loggedOut, [bool]$always) {
 # Commands (typed in the helper window, or passed with -Command)
 
 function Show-Help {
-    Say "Commands (the / and the word get are optional):"
+    Say "CHARACTERS & ITEMS  (the / and the word get are optional)" Cyan
     Say "  get goldtotal          gold of all characters together"
     Say "  get gold <name>        one character's gold"
     Say "  list [gold|level|items|name|note|saved] [text]"
-    Say "                         all characters, sorted, only names or notes containing text"
+    Say "                         sort characters; add text to filter names or notes"
+    Say "  list note bank alt     show characters with bank alt in their note"
     Say "  search <text>          which characters hold an item, and how many; notes too"
-    Say "  show <name>            one character's note, bag and bank"
+    Say "  search warrior > 60   characters with warrior level 60 or higher"
+    Say "  show <name>            one character's note, daily reward, bag and bank"
+    Say "  add note <name> <text> set a note; use note <name> to clear it"
+    Say "  note <name> <text>     shorter form of add note"
+    Say "  daily                  level 100+ daily reward status"
+    Say "  erase <name>           remove and stop tracking a character"
+    Say "  ban list               show excluded characters"
+    Say "  unban <name>           allow tracking a character again"
+    Say "HELPER CONTROLS" Cyan
     Say "  update                 read the save files again now"
     Say "  export                 rewrite GlobalBank.json (for tools outside the game)"
+    Say "  status                 character count, uptime and heartbeat setting"
+    Say "  heartbeat on|off        show or hide the 30-second text heartbeat (also: 1|0)"
+    Say "  help                   show these command groups"
     Say "  exit                   stop the helper (same as closing the window)"
+    Say "TRY: list gold | search mana stone | show <name> | heartbeat off" Yellow
 }
 
 function Get-OneCharacter([string]$name) {
@@ -321,7 +587,7 @@ function Show-List([string]$rest) {
         $words = @($words | Select-Object -Skip 1)
     }
     $filter = $words -join " "
-    $list = @($script:Chars | Where-Object { -not $filter -or $_.Name.IndexOf($filter, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 -or $_.Note.IndexOf($filter, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 })
+    $list = @($script:Chars | Where-Object { -not $filter -or $_.Note.IndexOf($filter, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 -or ($sort -ne "note" -and $_.Name.IndexOf($filter, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) })
     switch ($sort) {
         "gold"  { $list = @($list | Sort-Object @{ Expression = "Gold"; Descending = $true }, Name) }
         "level" { $list = @($list | Sort-Object @{ Expression = "Level"; Descending = $true }, Name) }
@@ -329,16 +595,46 @@ function Show-List([string]$rest) {
         "saved" { $list = @($list | Sort-Object @{ Expression = "Saved"; Descending = $true }, Name) }
         "note"  { $list = @($list | Sort-Object @{ Expression = { if ($_.Note) { 0 } else { 1 } } }, Note, Name) }
     }
-    if ($list.Count -eq 0) { Say "No characters$(if ($filter) { " with $filter in the name or note" })."; return }
-    Say ("{0,-22} {1,5} {2,-12} {3,15} {4,6}  {5,-16}  {6}" -f "Name", "Level", "Class", "Gold", "Items", "Saved", "Note")
+    if ($list.Count -eq 0) { Say "No characters$(if ($filter) { if ($sort -eq "note") { " with $filter in the note" } else { " with $filter in the name or note" } })."; return }
+    $classTexts = @{}
+    $classWidth = 12
     foreach ($c in $list) {
-        Say ("{0,-22} {1,5} {2,-12} {3,15} {4,6}  {5,-16}  {6}" -f $c.Name, $c.Level, $c.Class, (Format-GBGold $c.Gold), $c.Items, $c.Saved, $c.Note)
+        $text = if ($c.Classes.Count) { @($c.Classes | ForEach-Object { "$($_.Name)($($_.Level))" }) -join ', ' } else { "$($c.Class)($($c.Level))" }
+        $classTexts[$c.Name] = $text
+        $classWidth = [Math]::Max($classWidth, $text.Length)
+    }
+    $format = '{0,-22} {1,-' + $classWidth + '} {2,15} {3,6}  {4,-16}  {5}'
+    Say ($format -f 'Name', 'Classes', 'Gold', 'Items', 'Saved', 'Note')
+    foreach ($c in $list) {
+        Say ($format -f $c.Name, $classTexts[$c.Name], (Format-GBGold $c.Gold), $c.Items, $c.Saved, $c.Note)
     }
     Say "$($list.Count) characters, $(Format-GBGold (Get-GBGoldTotal $list)) gold."
 }
 
 function Show-Search([string]$text) {
-    if (-not $text) { Say "Search for what? For example: search mana stone"; return }
+    if (-not $text) { Say "Search for what? For example: search mana stone or search warrior > 60"; return }
+    if ($text -match '^(.+?)\s*(>=|>|<=|<|=)\s*(\d+)\s*$') {
+        $className = $Matches[1].Trim(); $operator = $Matches[2]; $level = [int64]$Matches[3]
+        $hits = @($script:Chars | Where-Object {
+            $c = $_
+            $classes = @($c.Classes)
+            if (-not $classes.Count -and $c.Class) { $classes = @([pscustomobject]@{Name=$c.Class;Level=$c.Level}) }
+            @($classes | Where-Object {
+                $classLevel = $_.Level
+                $_.Name -ieq $className -and $(switch ($operator) {
+                    '>' { $classLevel -ge $level }; '>=' { $classLevel -ge $level }
+                    '<' { $classLevel -lt $level }; '<=' { $classLevel -le $level }; '=' { $classLevel -eq $level }
+                })
+            }).Count -gt 0
+        })
+        if (-not $hits.Count) { Say "No matching saved classes. Log in to characters to update their class data."; return }
+        foreach ($c in $hits) {
+            $classes = if ($c.Classes.Count) { @($c.Classes | ForEach-Object { "$($_.Name)($($_.Level))" }) -join ', ' } else { "$($c.Class)($($c.Level))" }
+            Say "$($c.Name): $classes"
+        }
+        Say "$($hits.Count) character(s)."
+        return
+    }
     $noted = @($script:Chars | Where-Object { $_.Note -and $_.Note.IndexOf($text, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 })
     if ($noted.Count) {
         Say "Notes containing ""$text"":"
@@ -368,13 +664,77 @@ function Show-Character([string]$name) {
     $c = Get-OneCharacter $name
     if (-not $c) { return }
     Say "$(Describe-Character $c), saved $($c.Saved)"
+    if ($c.Classes.Count) { Say ("Classes: " + (@($c.Classes | ForEach-Object { "$($_.Name)($($_.Level))" }) -join ', ')) }
+    elseif ($c.Class) { Say "Classes: $($c.Class)($($c.Level)) (other classes not saved yet)" }
     if ($c.Note) { Say "Note: $($c.Note)" }
+    Show-DailyStatus $c
     $sections = @(@("Bag", $c.Bag, $c.BagSlots, $true), @("Bank", $c.Bank, $c.BankSlots, $c.BankSeen))
     foreach ($s in $sections) {
         if (-not $s[3]) { Say "$($s[0]): not seen yet (open the bank once on this character)."; continue }
         Say "$($s[0]) ($($s[1].Count) of $($s[2]) slots used):"
         foreach ($g in (Group-GBItems $s[1])) { Say ("  {0,8}  {1}" -f (Format-GBGold $g.Count), $g.Name) }
     }
+}
+
+function Show-DailyStatus($c) {
+    if ($c.Level -lt 100 -and @($c.Classes | Where-Object { $_.Level -ge 100 }).Count -eq 0) { return }
+    $rewardMatches = @()
+    try {
+        if (Test-Path -LiteralPath $rewards) {
+            $doc = [IO.File]::ReadAllText($rewards, (New-Object System.Text.UTF8Encoding($false, $true))) | ConvertFrom-Json -ErrorAction Stop
+            if ($doc.schemaVersion -ne 1 -or $null -eq $doc.records) { throw 'Invalid reward file' }
+            $rewardMatches = @($doc.records | Where-Object { $_.name -ieq $c.Name })
+        }
+        $sameName = @($script:Chars | Where-Object { $_.Name -ieq $c.Name })
+        $when = [DateTimeOffset]::MinValue
+        if ($rewardMatches.Count -ne 1 -or $sameName.Count -ne 1 -or [string]$rewardMatches[0].collectedAt -notmatch '(Z|[+-]\d\d:\d\d)$' -or -not [DateTimeOffset]::TryParse([string]$rewardMatches[0].collectedAt, [ref]$when)) {
+            Say "$($c.Name): daily login unknown (no unambiguous confirmation)" Yellow
+            return
+        }
+        $now = Get-Date
+        $reset = $now.Date.AddHours(1)
+        if ($reset -gt $now) { $reset = $reset.AddDays(-1) }
+        if ($when.LocalDateTime -ge $reset) { Say "$($c.Name): daily login collected ($($when.LocalDateTime.ToString('yyyy-MM-dd HH:mm')))" Green }
+        else { Say "$($c.Name): daily login not collected since reset" Red }
+    } catch { Say "$($c.Name): daily login unknown (couldn't read the local reward data)" Yellow }
+}
+
+function Set-HelperNote([string]$argsText) {
+    $parts = $argsText -split '\s+', 2
+    if (-not $parts[0]) { Say 'Use note <name> <text>; omit text to clear the note.'; return }
+    $c = Get-OneCharacter $parts[0]
+    if (-not $c) { return }
+    $text = if ($parts.Count -gt 1) { $parts[1].Trim() } else { '' }
+    if ($text -match '[\x00-\x1f"~`|\\]' -or [Text.Encoding]::UTF8.GetByteCount($text) -gt 80) { Say 'Notes must be at most 80 UTF-8 bytes and cannot contain quotes, backslashes, |, ~ or backticks.'; return }
+    if (-not (Test-Path -LiteralPath $out)) { Say 'Update the character database first.'; return }
+    $key = $script:latin1.GetString([Text.Encoding]::UTF8.GetBytes($c.Name))
+    $raw = $script:latin1.GetString([Text.Encoding]::UTF8.GetBytes($text))
+    $notes = Read-GBDatabaseNotes $out
+    $version = if ($notes.ContainsKey($key)) { [int64]$notes[$key].v + 1 } else { 1 }
+    $notes[$key] = @{v=$version; t=$raw}
+    $lines = @([IO.File]::ReadAllLines($out, $script:latin1) | Where-Object { -not $script:notesLinePattern.IsMatch($_) })
+    $line = '  notes = "' + (ConvertTo-GBNotesLine $notes) + '",'
+    $lines = @($lines[0..1]) + @($line) + @($lines[2..($lines.Count-1)])
+    $tmp = "$out.tmp"
+    [IO.File]::WriteAllText($tmp, ($lines -join "`r`n") + "`r`n", $script:latin1)
+    Move-Item -LiteralPath $tmp -Destination $out -Force -ErrorAction Stop
+    Invoke-Update $null $true
+    Say "Note updated for $($c.Name)."
+}
+
+function Set-CharacterExclusion([string]$name, [bool]$exclude) {
+    $name = $name.Trim()
+    if (-not $name -or $name.Length -gt 100 -or $name -match '[\x00-\x1f]') { Say 'Supply the exact character name.'; return }
+    $new = @{}
+    foreach ($key in $script:Excluded.Keys) { $new[$key] = $true }
+    if ($exclude) { $new[$name] = $true } else { $new.Remove($name) }
+    Save-Exclusions $new
+    $script:Excluded = $new
+    Invoke-Update $null $true
+    # The JSON must also be rewritten when Load-Model already filtered an excluded entry.
+    Write-Json
+    if ($exclude) { Say "$name is blocked from tracking. Its game save files were not changed." }
+    else { Say "$name can be tracked again when its saved data is available." }
 }
 
 # Returns "exit" when the player wants to stop; everything else is printed.
@@ -399,14 +759,32 @@ function Invoke-GBCommand([string]$line) {
     elseif (@("list", "chars", "characters") -contains $cmd) { Show-List $rest }
     elseif (@("search", "find", "item", "items") -contains $cmd) { Show-Search $rest }
     elseif (@("show", "char", "character", "view", "bank", "bag") -contains $cmd) { Show-Character $rest }
+    elseif ($cmd -eq "add" -and $rest -match '^note(?:\s+|$)(.*)$') { Set-HelperNote $Matches[1] }
+    elseif ($cmd -eq "note") { Set-HelperNote $rest }
+    elseif ($cmd -eq "daily") { foreach ($c in $script:Chars) { Show-DailyStatus $c } }
+    elseif ($cmd -eq "erase") { Set-CharacterExclusion $rest $true }
+    elseif ($cmd -eq "unban") { Set-CharacterExclusion $rest $false }
+    elseif ($cmd -eq "ban" -and $rest -ieq "list") {
+        if ($script:Excluded.Count) { Say 'Excluded characters:'; foreach ($name in @($script:Excluded.Keys | Sort-Object)) { Say "  $name" } }
+        else { Say 'No characters are excluded.' }
+    }
     elseif (@("update", "refresh") -contains $cmd) { Invoke-Update $null $true }
     elseif (@("export", "json") -contains $cmd) { Write-Json; Say "Wrote $json" }
+    elseif ($cmd -eq "status") { Show-Status }
+    elseif ($cmd -eq "heartbeat") {
+        if (@('on', '1') -contains $rest.ToLower()) { $script:ConsoleHeartbeat = $true; $script:NextConsoleBeat = (Get-Date).AddSeconds(30) }
+        elseif (@('off', '0') -contains $rest.ToLower()) { $script:ConsoleHeartbeat = $false }
+        elseif ($rest) { Say 'Use heartbeat on|off (or 1|0).'; return }
+        Show-Status
+    }
     elseif (@("exit", "quit", "stop") -contains $cmd) { return "exit" }
     else { Say "Unknown command: $cmd. Type help to see the commands." }
 }
 
 ###########################################################################
 # Start
+
+try { $script:Excluded = Read-Exclusions } catch { Write-Host "Cannot read the local exclusion list; helper stopped. $($_.Exception.Message)" -ForegroundColor Red; exit 1 }
 
 if ($Command) {
     Load-Model
@@ -446,25 +824,28 @@ if (-not $owned) {
     exit 2
 }
 
-function Write-Beat {
-    try {
-        $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-        [System.IO.File]::WriteAllText($beat, "GlobalBank_HelperBeat = $now`r`n")
-    } catch { }
-}
-
-Write-Host ""
-Write-Host "Global Bank helper is running. Keep this window open while you play; close it to stop."
-Write-Host "Your characters' bags, banks and gold are collected in:"
-Write-Host "    $data"
-Write-Host "Don't share that folder: it shows what all your characters own. CherrysKit itself is safe to share."
-Write-Host "Type help for commands, for example: get goldtotal, search mana, show <name>, list gold"
-Write-Host ""
+try {
+Write-Host ''
+Write-Host '  ==========================================================' -ForegroundColor DarkCyan
+Write-Host "       GLOBAL BANK  |  Cherry's Kit helper" -ForegroundColor Cyan
+Write-Host '       Bags, banks, gold and auction quotes in one place' -ForegroundColor Gray
+Write-Host '  ==========================================================' -ForegroundColor DarkCyan
+Write-Host '  Keep this window open while you play. Type exit to stop.' -ForegroundColor Green
+Write-Host "  Private character data: $data" -ForegroundColor DarkGray
+Write-Host "  Don't share that folder; CherrysKit itself is safe to share." -ForegroundColor DarkGray
+Write-Host ''
+Show-Help
+Show-Status
+Write-Host ''
 Write-Log "Watching $SaveFolder"
 Write-Beat
 $nextBeat = (Get-Date).AddSeconds(30)
 Load-Model
 Invoke-Update $null $true
+Write-Json
+$rewardStamp = if (Test-Path -LiteralPath $rewards) { (Get-Item -LiteralPath $rewards).LastWriteTimeUtc.Ticks } else { 0 }
+$linkStamp = (Get-Item -LiteralPath $links).LastWriteTimeUtc.Ticks
+$nextRewardCheck = (Get-Date).AddSeconds(1)
 
 $watcher = New-Object System.IO.FileSystemWatcher($SaveFolder, "SaveVariables.lua")
 $watcher.IncludeSubdirectories = $true
@@ -479,7 +860,8 @@ $due = $null
 $loggedOut = @{}
 
 $canType = $true
-try { [void][Console]::KeyAvailable } catch { $canType = $false }
+try { [void][Console]::KeyAvailable }
+catch { Write-HelperError $_ 'Console commands unavailable'; $canType = $false; Write-Log 'Console input is unavailable. Open Start Global Bank helper.bat in a normal terminal window to type commands.' }
 if ($canType) { Show-Prompt }
 
 while ($true) {
@@ -492,7 +874,9 @@ while ($true) {
                     $line = $script:Buffer
                     $script:Buffer = ""
                     $script:PromptShown = $false
-                    $result = Invoke-GBCommand $line
+                    $result = $null
+                    try { $result = Invoke-GBCommand $line }
+                    catch { Write-HelperError $_ 'Interactive command'; Say 'Command failed; see GlobalBankHelper-errors.log.' Red }
                     if ($result -eq "exit") { exit 0 }
                     Show-Prompt
                 } elseif ($key.Key -eq [ConsoleKey]::Backspace) {
@@ -503,14 +887,16 @@ while ($true) {
                 } elseif ($key.Key -eq [ConsoleKey]::Escape) {
                     $script:Buffer = ""
                     Clear-PromptLine
-                    Show-Prompt
+                    Write-Host -NoNewline ("> " + $script:Buffer)
                 } elseif ([int]$key.KeyChar -ne 0 -and -not [char]::IsControl($key.KeyChar)) {
                     $script:Buffer += $key.KeyChar
                     Write-Host -NoNewline $key.KeyChar
                 }
             }
         } catch {
+            Write-HelperError $_ 'Console input unavailable'
             $canType = $false
+            $script:PromptShown = $false
         }
     }
     foreach ($e in @(Get-Event -ErrorAction SilentlyContinue)) {
@@ -525,15 +911,36 @@ while ($true) {
             $due = (Get-Date).AddSeconds(3)
         }
     }
+    if ((Get-Date) -ge $nextRewardCheck) {
+        $nextRewardCheck = (Get-Date).AddSeconds(1)
+        try {
+        $stamp = if (Test-Path -LiteralPath $rewards) { (Get-Item -LiteralPath $rewards).LastWriteTimeUtc.Ticks } else { 0 }
+        $newLinkStamp = if (Test-Path -LiteralPath $links) { (Get-Item -LiteralPath $links).LastWriteTimeUtc.Ticks } else { 0 }
+        if ($stamp -ne $rewardStamp -or $newLinkStamp -ne $linkStamp) { Write-Json; $rewardStamp = $stamp; $linkStamp = $newLinkStamp }
+        } catch { Write-HelperError $_ 'Daily reward sidecar refresh'; Write-Log 'Daily reward refresh deferred; see GlobalBankHelper-errors.log.' }
+    }
     if ((Get-Date) -ge $nextBeat) {
         Write-Beat
+        $script:AAHMaintenancePending = $true
+        Show-Heartbeat
         $nextBeat = (Get-Date).AddSeconds(30)
     }
     if ($due -and (Get-Date) -ge $due) {
         $due = $null
         $names = $loggedOut
         $loggedOut = @{}
-        try { Invoke-Update $names $false } catch { Write-Log "Update failed: $($_.Exception.Message)" }
+        try { Invoke-Update $names $false }
+        catch { Write-HelperError $_ 'Character database update'; Write-Log 'Update failed; see GlobalBankHelper-errors.log. Watching continues.' }
     }
+    Update-AAHWorker
     Start-Sleep -Milliseconds 100
+}
+} finally {
+    Stop-AAHWorker
+    if ($watcher) { $watcher.Dispose() }
+    foreach ($kind in 'Changed', 'Created', 'Renamed') {
+        Unregister-Event -SourceIdentifier "GlobalBank$kind" -ErrorAction SilentlyContinue
+    }
+    if ($owned) { $mutex.ReleaseMutex() }
+    $mutex.Dispose()
 }

@@ -42,9 +42,25 @@ class ChatLinkTests(unittest.TestCase):
             CherrysChat.Win.TextWidth = function(text)
               local _, n = string.gsub(text, '[^\\128-\\191]', ''); return n;
             end;
-            nativeCalls, tooltipCalls, inserted = {}, {}, {};
-            ChatFrame_OnHyperlinkClick = function(frame, target, key)
-              table.insert(nativeCalls, {frame=frame, target=target, key=key});
+            nativeCalls, nativePreviews, tooltipCalls, inserted = {}, {}, {}, {};
+            -- Independent native-like parser: a bare target silently produces no action.
+            function ParseHyperlink(full)
+              if type(full) ~= "string" then return end
+              return string.match(full, "^|H([^:|]+):([^|]*)|h(.-)|h$")
+            end;
+            MakeFrame('GameTooltipHyperLink', false);
+            function GameTooltipHyperLink:SetHyperLink(full) table.insert(tooltipCalls, full) end;
+            ChatFrame_OnHyperlinkClick = function(...)
+              local frame, full, key = ...;
+              local kind, data, label = ParseHyperlink(full);
+              if not kind then return end;
+              table.insert(nativeCalls, {n=select('#', ...), frame=frame, full=full, key=key,
+                kind=kind, data=data, label=label, eventThis=this, event1=arg1, event2=arg2, event3=arg3});
+              if kind == 'item' then
+                if ctrlHeld then table.insert(nativePreviews, full)
+                else GameTooltipHyperLink:SetHyperLink(full); GameTooltipHyperLink:Show() end;
+              end;
+              -- Like a successful native handler, return nil after the action.
             end;
         """)
         for event in ("OnMouseDown", "OnMouseUp"):
@@ -86,6 +102,48 @@ class ChatLinkTests(unittest.TestCase):
                                  (TARGET, f"|cff80c0ff[{label}]|r", full))
                 self.assertEqual(self.c.Plain(full), f"[{label}]")
 
+    def test_native_fixture_silently_ignores_bare_targets_but_accepts_complete_markup(self):
+        handler = self.lua.globals().ChatFrame_OnHyperlinkClick
+        chat = self.lua.globals().ChatFrame1
+        self.assertIsNone(handler(chat, TARGET, "LBUTTON"))
+        self.assertEqual(len(self.lua.globals().nativeCalls), 0)
+        self.assertEqual(len(self.lua.globals().tooltipCalls), 0)
+        self.assertIsNone(handler(chat, item(), "LBUTTON"))
+        self.assertEqual(self.lua.globals().nativeCalls[1].full, item())
+        self.assertEqual(self.lua.globals().tooltipCalls[1], item())
+
+    def test_first_clicks_dispatch_full_localized_links_and_restore_event_globals(self):
+        cases = (
+            (POLISH, TARGET), (POLISH2, TARGET2),
+            ("Za\u017c\u00f3\u0142\u0107 g\u0119\u015bl\u0105 ja\u017a\u0144 \u0141\u015a\u0106\u0179\u0143", TARGET), ("Mana Stone Level 12", TARGET2),
+        )
+        for number, (label, target) in enumerate(cases, 1):
+            with self.subTest(label=label):
+                full = item(label, target)
+                self.assertIsNone(self.c.DB().linkSig)
+                g = self.lua.globals()
+                g.this, g.arg1, g.arg2, g.arg3 = "old this", "old 1", "old 2", "old 3"
+                self.assertTrue(self.win.ClickLink(1, self.span(full), "LBUTTON"))
+                self.assertEqual(len(g.nativeCalls), number)
+                call = g.nativeCalls[number]
+                self.assertTrue(self.lua.eval(f"nativeCalls[{number}].frame == ChatFrame1"))
+                self.assertTrue(self.lua.eval(f"nativeCalls[{number}].eventThis == ChatFrame1"))
+                self.assertEqual((call.n, call.full, call.key, call.kind, call.data, call.label),
+                                 (3, full, "LBUTTON", "item", target.split(":", 1)[1],
+                                  f"|cff80c0ff[{label}]|r"))
+                self.assertEqual((call.event1, call.event2, call.event3), (full, "LBUTTON", None))
+                self.assertEqual((g.this, g.arg1, g.arg2, g.arg3), ("old this", "old 1", "old 2", "old 3"))
+                self.assertEqual(len(g.tooltipCalls), number)
+                self.assertEqual(g.tooltipCalls[number], full)
+
+    def test_native_nil_return_after_ctrl_click_preview_does_not_show_fallback_tooltip(self):
+        self.lua.globals().ctrlHeld = True
+        full = item(POLISH2, TARGET2)
+        self.assertTrue(self.win.ClickLink(1, self.span(full), "LBUTTON"))
+        self.assertEqual(self.lua.globals().nativePreviews[1], full)
+        self.assertEqual(len(self.lua.globals().nativePreviews), 1)
+        self.assertEqual(len(self.lua.globals().tooltipCalls), 0)
+
     def test_mixed_colors_player_and_multiple_item_links_keep_full_payload(self):
         first, second = item(), item(POLISH2, TARGET2, "ffffd100")
         raw = "|cffcc88ff|Hchat:WORLD|h[World]|h |Hplayer:Zene*:1|h[Zene*]|h: WtT" + first + "WtT WtS" + second + "FoR DiaS|r"
@@ -110,17 +168,23 @@ class ChatLinkTests(unittest.TestCase):
         self.win.state[1].selA, self.win.state[1].selB = 1, len(rows)
         self.assertEqual(self.win.SelectedText(1), f"[{label}]")
 
-    def test_click_each_wrapped_link_fragment_uses_native_target_and_xml_mouse_handlers(self):
-        rows, _ = self.install_rows("WtT " + item() + " WtS " + item(POLISH2, TARGET2), 16)
+    def test_click_each_wrapped_link_fragment_dispatches_the_original_full_link(self):
+        first, second = item(), item(POLISH2, TARGET2)
+        rows, _ = self.install_rows("WtT " + first + " WtS " + second, 16)
         expected = []
         for index, row in rows.items():
             for span in row.spans.values():
+                self.assertIn(span.full, (first, second))
+                self.assertEqual(span.link, TARGET if span.full == first else TARGET2)
                 self.cursor(index, (span.x0 + span.x1) / 2)
                 self.assertEqual(self.win.LinkAtCursor(1).full, span.full)
                 self.client.event("CherrysChat_W1", "OnMouseDown")
                 self.client.event("CherrysChat_W1", "OnMouseUp")
-                expected.append(span.link)
-        self.assertEqual([call.target for call in self.lua.globals().nativeCalls.values()], expected)
+                expected.append(span.full)
+        self.assertGreater(expected.count(first), 1)
+        self.assertGreater(expected.count(second), 1)
+        self.assertEqual([call.full for call in self.lua.globals().nativeCalls.values()], expected)
+        self.assertEqual(list(self.lua.globals().tooltipCalls.values()), expected)
         self.assertFalse(self.win.broken)
 
     def test_repeated_identical_links_do_not_absorb_ordinary_bracketed_text(self):
@@ -178,7 +242,9 @@ class ChatLinkTests(unittest.TestCase):
     def test_native_event_global_signature_is_learned_replayed_and_restored(self):
         self.lua.execute("""
             ChatFrame_OnHyperlinkClick = function(...)
-              lastNative = {n=select('#',...), frame=this, full=arg1, key=arg2, extra=arg3};
+              if ParseHyperlink(arg1) then
+                lastNative = {n=select('#',...), frame=this, full=arg1, key=arg2, extra=arg3};
+              end;
             end;
         """)
         self.win.WatchLinkClicks()
@@ -187,12 +253,13 @@ class ChatLinkTests(unittest.TestCase):
         self.lua.globals().ChatFrame_OnHyperlinkClick()
         signature = self.c.DB().linkSig
         self.assertEqual((signature.n, signature.globals.arg1, signature.globals.arg2), (0, "full", "key"))
-        self.lua.globals().this, self.lua.globals().arg1 = "previous this", "previous arg1"
+        g = self.lua.globals()
+        g.this, g.arg1, g.arg2, g.arg3 = "previous this", "previous 1", "previous 2", "previous 3"
         self.assertTrue(self.win.ClickLink(1, self.span(item(POLISH2, TARGET2)), "RBUTTON"))
-        call = self.lua.globals().lastNative
-        self.assertEqual((call.n, call.full, call.key), (0, item(POLISH2, TARGET2), "RBUTTON"))
-        self.assertEqual(self.lua.globals().this, "previous this")
-        self.assertEqual(self.lua.globals().arg1, "previous arg1")
+        call = g.lastNative
+        self.assertEqual((call.n, call.full, call.key, call.extra), (0, item(POLISH2, TARGET2), "RBUTTON", None))
+        self.assertTrue(self.lua.eval("lastNative.frame == ChatFrame1"))
+        self.assertEqual((g.this, g.arg1, g.arg2, g.arg3), ("previous this", "previous 1", "previous 2", "previous 3"))
 
     def test_native_positional_signature_preserves_separate_localized_label(self):
         self.lua.execute("""
@@ -207,6 +274,27 @@ class ChatLinkTests(unittest.TestCase):
         call = self.lua.globals().lastNative
         self.assertEqual((call.target, call.full, call.label), (TARGET2, item(POLISH2, TARGET2), f"[{POLISH2}]"))
 
+    def test_genuinely_learned_bare_target_signature_remains_authoritative(self):
+        self.lua.execute("""
+            this, arg1, arg2, arg3 = nil, nil, nil, nil;
+            bareActions = {};
+            ChatFrame_OnHyperlinkClick = function(frame, target, key)
+              if type(target) == 'string' and string.match(target, '^item:') then
+                table.insert(bareActions, {frame=frame, target=target, key=key});
+              end;
+            end;
+        """)
+        self.win.WatchLinkClicks()
+        g = self.lua.globals()
+        g.ChatFrame_OnHyperlinkClick(g.ChatFrame1, TARGET, "LBUTTON")
+        signature = self.c.DB().linkSig
+        self.assertEqual((signature.n, signature[1], signature[2], signature[3]), (3, "frame", "link", "key"))
+        self.assertTrue(self.win.ClickLink(1, self.span(item(POLISH2, TARGET2)), "RBUTTON"))
+        self.assertEqual(len(g.bareActions), 2)
+        self.assertEqual((g.bareActions[2].target, g.bareActions[2].key), (TARGET2, "RBUTTON"))
+        self.assertTrue(self.lua.eval("bareActions[2].frame == ChatFrame1"))
+        self.assertEqual(len(g.tooltipCalls), 0)
+
     def test_native_userdata_chat_frame_is_retained_when_learning(self):
         self.lua.execute("""
             ChatFrame1 = newproxy(true);
@@ -219,19 +307,23 @@ class ChatLinkTests(unittest.TestCase):
         self.win.ClickLink(1, self.span(item()), "LBUTTON")
         self.assertTrue(self.lua.eval("lastFrame == ChatFrame1"))
 
-    def test_native_success_is_not_replaced_by_direct_tooltip_but_error_has_item_fallback(self):
-        self.lua.execute("""
-            MakeFrame('GameTooltipHyperLink', false);
-            function GameTooltipHyperLink:SetHyperLink(full) table.insert(tooltipCalls, full) end;
-        """)
+    def test_native_success_opens_once_and_error_or_false_use_fallback_and_restore_globals(self):
+        g = self.lua.globals()
+        g.this, g.arg1, g.arg2, g.arg3 = "old this", "old 1", "old 2", "old 3"
         self.assertTrue(self.win.ClickLink(1, self.span(item()), "LBUTTON"))
-        self.assertEqual(len(self.lua.globals().tooltipCalls), 0)
+        self.assertEqual(list(g.tooltipCalls.values()), [item()])
+        self.assertEqual((g.this, g.arg1, g.arg2, g.arg3), ("old this", "old 1", "old 2", "old 3"))
         self.lua.execute("ChatFrame_OnHyperlinkClick = function() error('native handler failed') end")
         self.assertTrue(self.win.ClickLink(1, self.span(item(POLISH2, TARGET2)), "LBUTTON"))
-        self.assertEqual(self.lua.globals().tooltipCalls[1], item(POLISH2, TARGET2))
-        self.assertTrue(self.lua.globals().GameTooltipHyperLink.visible)
+        self.assertEqual(list(g.tooltipCalls.values()), [item(), item(POLISH2, TARGET2)])
+        self.assertTrue(g.GameTooltipHyperLink.visible)
+        self.assertEqual((g.this, g.arg1, g.arg2, g.arg3), ("old this", "old 1", "old 2", "old 3"))
+        self.lua.execute("ChatFrame_OnHyperlinkClick = function() return false end")
+        self.assertTrue(self.win.ClickLink(1, self.span(item("Mana Stone", TARGET2)), "LBUTTON"))
+        self.assertEqual(list(g.tooltipCalls.values()), [item(), item(POLISH2, TARGET2), item("Mana Stone", TARGET2)])
+        self.assertEqual((g.this, g.arg1, g.arg2, g.arg3), ("old this", "old 1", "old 2", "old 3"))
         self.assertFalse(self.win.ClickLink(1, self.lua.table_from({"link": "[ordinary]", "full": "[ordinary]"}), "LBUTTON"))
-        self.assertEqual(len(self.lua.globals().tooltipCalls), 1)
+        self.assertEqual(len(g.tooltipCalls), 3)
 
     def test_shift_click_native_false_uses_insert_text_with_complete_original_payload(self):
         self.lua.execute("""
@@ -249,18 +341,35 @@ class ChatLinkTests(unittest.TestCase):
         self.win.LinkLeftClick(1, self.span(full), "LBUTTON")
         self.assertEqual(len(self.lua.globals().inserted), 1)
 
-    def test_localized_player_name_keeps_whisper_and_shift_name_behavior(self):
+    def test_localized_player_name_whispers_or_requests_info_on_modified_click(self):
         self.lua.execute("""
-            MakeFrame('ChatFrameEditBox', true);
+            MakeFrame('ChatFrameEditBox', false);
             function ChatFrameEditBox:InsertText(text) table.insert(inserted,text) end;
             function ChatFrame_SendTell(name) whispered=name end;
+            function AskPlayerInfo(name) requested=name end;
+            function IsCtrlKeyDown() return ctrlHeld end;
         """)
         player = self.span("|Hplayer:Śmiałek:1|h[Śmiałek]|h")
         self.win.LinkLeftClick(1, player, "LBUTTON")
         self.assertEqual(self.lua.globals().whispered, "Śmiałek")
         self.lua.globals().shiftHeld = True
         self.win.LinkLeftClick(1, player, "LBUTTON")
+        self.assertEqual(self.lua.globals().requested, "Śmiałek")
+        self.assertEqual(len(self.lua.globals().inserted), 0)
+        self.lua.globals().shiftHeld = False
+        self.lua.globals().ctrlHeld = True
+        self.lua.globals().requested = None
+        self.win.LinkLeftClick(1, player, "LBUTTON")
+        self.assertEqual(self.lua.globals().requested, "Śmiałek")
+        self.lua.globals().ChatFrameEditBox.Show(self.lua.globals().ChatFrameEditBox)
+        self.lua.globals().requested = None
+        self.win.LinkLeftClick(1, player, "LBUTTON")
         self.assertEqual(self.lua.globals().inserted[1], "Śmiałek")
+        self.assertIsNone(self.lua.globals().requested)
+        self.lua.globals().ctrlHeld = False
+        self.lua.globals().shiftHeld = True
+        self.win.LinkLeftClick(1, player, "LBUTTON")
+        self.assertEqual(self.lua.globals().inserted[2], "Śmiałek")
 
     def test_clicking_empty_slots_or_vertical_padding_does_not_clamp_to_a_link(self):
         rows, _ = self.install_rows(item("Visible"), visible=6)
@@ -271,6 +380,36 @@ class ChatLinkTests(unittest.TestCase):
         self.assertEqual(self.win.LinkAtCursor(1).link, TARGET)
         self.lua.globals().cursorY = 200 + 1
         self.assertIsNone(self.win.LinkAtCursor(1))
+
+    def test_wrapped_item_colours_and_click_payloads(self):
+        first = item("Pierścień niezwykle długiej mądrości", TARGET, "ffffc800")
+        second = f"|cff8040ff|H{TARGET2}|h[Zweiter Ring]|h|r"
+        rows, _ = self.win.WrapMessage("start " + first + " po " + second + " koniec", 14, None, "|cffaa44cc")
+        texts = [r.text for r in rows.values()]
+        self.assertTrue(sum("|cffffc800" in text for text in texts) >= 2)
+        self.assertTrue(any("|cff8040ff" in text for text in texts))
+        self.assertIn("|cffaa44cc", texts[-1])
+        spans = [span for row in rows.values() for span in row.spans.values()]
+        self.assertTrue(any(span.full == first for span in spans))
+        native_second = f"|H{TARGET2}|h[Zweiter Ring]|h"
+        self.assertTrue(any(span.full == native_second for span in spans))
+        self.assertTrue(self.win.ClickLink(1, next(span for span in spans if span.full == first), "LBUTTON"))
+        self.assertEqual(self.lua.globals().nativeCalls[1].full, first)
+
+    def test_uncoloured_known_format_uses_instance_quality_outside_draw(self):
+        self.lua.execute("""
+          calls = 0
+          function GetQualityByGUID(id) calls = calls + 1; return 2 end
+          function GetItemQualityColor(q) lastQuality = q; return 0.4, 0.2, 0.1 end
+        """)
+        target = "item:7a123 0 4000 0 0 0 0 0 0 0 64 abcdef"
+        full = f"|H{target}|h[Rzecz]|h"
+        rows, _ = self.win.WrapMessage(full + " after", 100, None, "|cffaa44cc")
+        self.assertIn("|cff66331a[Rzecz]", rows[1].text)
+        self.assertEqual(self.lua.globals().lastQuality, 4)
+        self.win.WrapMessage(full, 100, None, "|cffaa44cc")
+        self.assertEqual(self.lua.globals().calls, 1)
+        self.assertEqual(rows[1].spans[1].full, full)
 
     def test_probe_keeps_five_original_messages_and_native_parse_results_in_copy_box(self):
         self.lua.execute("function ParseHyperlink(link) return 'native-type', 'opaque-data', 'nazwa' end")
@@ -288,6 +427,7 @@ class ChatLinkTests(unittest.TestCase):
         self.assertEqual(probe.entries[1].colour[1], 0.8)
 
     def test_probe_distinguishes_plain_foreign_label_from_missing_link_metadata(self):
+        self.lua.globals().ParseHyperlink = None
         self.c.Log(1, "[World] WtT[Kamień Many Poziom 12]WtT")
         self.win.LinkProbe(1)
         entry = self.c.DB().linkProbe.entries[1]

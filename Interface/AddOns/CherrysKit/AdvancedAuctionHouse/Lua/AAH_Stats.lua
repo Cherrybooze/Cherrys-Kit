@@ -57,7 +57,19 @@ end
 -- from the left text (nil when it is not a stat AAH knows). A stat line with a name on its right
 -- starts a slot; stat lines without a right text that follow it belong to that slot; the first
 -- other line after the slots (for example "Rune (0/4)") ends them.
-function Stats.ReadSlotLine(listing, left, right, key, value)
+function Stats.NativeColor(ctrl, text)
+ local hex = text and string.match(text, "|c%x%x(%x%x%x%x%x%x)")
+ if hex then
+  return { tonumber(string.sub(hex, 1, 2), 16) / 255, tonumber(string.sub(hex, 3, 4), 16) / 255, tonumber(string.sub(hex, 5, 6), 16) / 255 }
+ end
+ if ctrl and ctrl.GetColor then
+  local ok, r, g, b = pcall(ctrl.GetColor, ctrl)
+  if ok and type(r) == "number" and type(g) == "number" and type(b) == "number" then return {r, g, b} end
+ end
+ return {1, 1, 1}
+end
+
+function Stats.ReadSlotLine(listing, left, right, key, value, leftColor, rightColor)
 	left, right = plain(left), plain(right)
 	-- "Power Modifier +20%": the bonus the slot values carry (see Stats.Normalize)
 	for _, text in ipairs({ left or "", right or "" }) do
@@ -81,7 +93,7 @@ function Stats.ReadSlotLine(listing, left, right, key, value)
 		if sign == "-" then
 			v = -math.abs(v)
 		end
-		stat = { key = Stats.BY_KEY[key or ""] and key or nil, value = v, label = rest }
+		stat = { key = Stats.BY_KEY[key or ""] and key or nil, value = v, label = rest, color = leftColor, percent = string.match(left, "^%s*[%+%-]%s*[%d%.]+%%") ~= nil }
 	end
 	local named = right and string.find(right, "%S") and not string.find(right, "%d")
 	if isStat and named then
@@ -89,7 +101,7 @@ function Stats.ReadSlotLine(listing, left, right, key, value)
 			listing.slotsDone = true
 			return
 		end
-		table.insert(slots, { name = right, stats = { stat } })
+		table.insert(slots, { name = right, color = rightColor, stats = { stat } })
 	elseif isStat and not right and #slots > 0 then
 		table.insert(slots[#slots].stats, stat)
 	elseif #slots > 0 and left and string.find(left, "%S") then
@@ -99,6 +111,17 @@ end
 
 Stats.CHAR_W = 5.6 -- rough width of one character of the cell font (height 11), in UI units
 Stats.LINES = 3   -- a 40-high row holds three lines of the small font
+Stats.NAME_LINES = 6
+function Stats.NameColor(slot)
+	local first=slot.stats and slot.stats[1]
+	local named=slot.color
+	if named and (named[1]<.99 or named[2]<.99 or named[3]<.99) then return named end
+	return first and first.color or slot.color or {1,1,1}
+end
+local function colorHex(rgb)
+	local function byte(v) return math.floor(math.max(0,math.min(1,v or 1))*255+.5) end
+	return string.format("%02x%02x%02x",byte(rgb[1]),byte(rgb[2]),byte(rgb[3]))
+end
 
 -- Totals of the added stats (the slots) into listing.raw, for sorting and the stat filters.
 -- Items with more than 101 maximum durability get +20% on their stats in the tooltip ("Power
@@ -179,7 +202,9 @@ end
 local function slotText(i, slot, short)
 	local plainParts, colorParts = {}, {}
 	for _, stat in ipairs(slot.stats) do
-		local tag, color = Stats.Tag(stat)
+		local tag = Stats.Tag(stat)
+        local rgb = stat.color or {1, 1, 1}
+        local color = colorHex(rgb)
 		local v = Stats.Fmt(stat.value, short)
 		table.insert(plainParts, tag .. v)
 		table.insert(colorParts, "|cff" .. color .. tag .. "|r" .. v)
@@ -207,12 +232,24 @@ Stats.GAP = "  " -- between slots on a line
 
 -- Cell text for a column `width` units wide: the slots, three a line if that fits in two lines,
 -- else two a line (three lines); values shortened to 1.2k when even that is too wide.
-function Stats.Text(listing, width)
+function Stats.Text(listing, width, mode)
 	local slots = listing and listing.slots or {}
 	if #slots == 0 then
 		return ""
 	end
 	local perLine = math.max(6, math.floor((width or 120) / Stats.CHAR_W))
+ if mode == "names" then
+  local lines = {}
+  for first=1,#slots,2 do
+   local pair={}
+   for i=first,math.min(first+1,#slots) do
+    local slot=slots[i]
+    pair[#pair+1]="|cff"..colorHex(Stats.NameColor(slot))..i..": "..(slot.name or "?").."|r"
+   end
+   lines[#lines+1]=table.concat(pair,Stats.GAP)
+  end
+  return table.concat(lines, "\n")
+ end
 	for _, short in ipairs({ false, true }) do
 		local texts = {}
 		for i, slot in ipairs(slots) do
@@ -253,6 +290,23 @@ function Stats.Text(listing, width)
 	return table.concat(lines, "\n")
 end
 
+-- RoM's native FontString can cut a long rich-text cell in the middle of a
+-- colour escape. Keep each already-formatted line in a separate control.
+function Stats.TextLines(listing, width, mode)
+	local lines = {}
+	for line in string.gmatch(Stats.Text(listing, width, mode), "[^\n]+") do
+		lines[#lines + 1] = line
+	end
+	return lines
+end
+
+function Stats.SetCell(name, listing, width, mode)
+	local lines = Stats.TextLines(listing, width, mode)
+	for line = 1, Stats.NAME_LINES do
+		_G[name.."Text"..line]:SetText(lines[line] or "")
+	end
+end
+
 -- Hover on a cell: each slot with its name and the full stat names, then the totals.
 function Stats.ShowTooltip(owner, listing)
 	GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
@@ -262,11 +316,13 @@ function Stats.ShowTooltip(owner, listing)
 		GameTooltip:AddLine("No added stats on this item.", 0.7, 0.7, 0.7)
 	end
 	for i, slot in ipairs(slots) do
-		GameTooltip:AddLine(i .. "  " .. slot.name, 1, 0.6, 0.2)
-		for _, stat in ipairs(slot.stats) do
-			local tag, color, name = Stats.Tag(stat)
-			GameTooltip:AddDoubleLine("   |cff" .. color .. tag .. "|r  " .. name, Stats.Fmt(stat.value), 1, 1, 1, 1, 1, 1)
-		end
+        local color = Stats.NameColor(slot)
+        GameTooltip:AddLine(i .. "  " .. slot.name, color[1], color[2], color[3])
+        for _, stat in ipairs(slot.stats) do
+            local effect = stat.color or {1, 1, 1}
+            local sign = stat.value < 0 and "-" or "+"
+            GameTooltip:AddLine("   " .. sign .. Stats.Fmt(math.abs(stat.value)) .. (stat.percent and "%" or "") .. " " .. (stat.label or "?"), effect[1], effect[2], effect[3])
+        end
 	end
 	if listing.slotsBonus then
 		GameTooltip:AddLine(string.format("Without the +%d%% power modifier (durability over 101)", math.floor((listing.slotsBonus - 1) * 100 + 0.5)), 0.6, 0.6, 0.6)
@@ -275,7 +331,7 @@ function Stats.ShowTooltip(owner, listing)
 	if #totals > 0 then
 		GameTooltip:AddLine("Added stats in total", 1, 0.82, 0)
 		for _, t in ipairs(totals) do
-			GameTooltip:AddDoubleLine("|cff" .. t[3] .. t[1] .. "|r  " .. t[4], Stats.Fmt(t[2]), 1, 1, 1, 0.8, 0.8, 0.8)
+			GameTooltip:AddDoubleLine(t[1] .. "  " .. t[4], Stats.Fmt(t[2]), 0.8, 0.8, 0.8, 0.8, 0.8, 0.8)
 		end
 	end
 	GameTooltip:Show()
@@ -285,7 +341,7 @@ end
 function Stats.ShowLegend(owner)
 	GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
 	GameTooltip:SetText("Stats", 1, 1, 1)
-	GameTooltip:AddLine("The item's added stats by slot (1-6), not its own stats. Click to sort by added Str+Dex+Sta+Int+Wis.", 0, 0.75, 0.95)
+	GameTooltip:AddLine("The item's added stats by slot (1-6), not its own stats. Left-click to toggle names and values; right-click to sort by added Str+Dex+Sta+Int+Wis.", 0, 0.75, 0.95)
 	for _, s in ipairs(Stats.ORDER) do
 		GameTooltip:AddDoubleLine("|cff" .. s[4] .. s[2] .. "|r", s[3], 1, 1, 1, 0.8, 0.8, 0.8)
 	end

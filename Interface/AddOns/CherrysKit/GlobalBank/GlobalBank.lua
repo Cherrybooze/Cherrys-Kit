@@ -21,7 +21,7 @@
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.4.1"
+GB.version = "1.4.5"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -92,6 +92,9 @@ function GB.Serialize(c)
       parts[#parts + 1] = table.concat({ tag, it.slot, it.count, it.id, clean(it.name), clean(it.icon) }, "~")
     end
   end
+  for _, class in ipairs(c.classes or {}) do
+    parts[#parts + 1] = table.concat({ "C", clean(class.name), tostring(class.level or 0) }, "~")
+  end
   add("B", c.bag)
   add("K", c.bank)
   return table.concat(parts, "`")
@@ -121,12 +124,15 @@ function GB.Parse(text)
     return nil
   end
   local c = { name = h[2], cls = h[3] or "", lvl = tonumber(h[4]) or 0, money = tonumber(h[5]) or 0,
-    bagMax = tonumber(h[6]) or 0, bankMax = tonumber(h[7]) or 0, when = h[9] or "", bag = {} }
+    bagMax = tonumber(h[6]) or 0, bankMax = tonumber(h[7]) or 0, when = h[9] or "", bag = {}, classes = {} }
   if h[8] == "1" then
     c.bank = {}
   end
   for i = 2, #records do
     local f = split(records[i], "~")
+    if f[1] == "C" and f[2] and f[2] ~= "" and tonumber(f[3]) then
+      c.classes[#c.classes + 1] = { name = f[2], level = tonumber(f[3]) }
+    end
     local list = (f[1] == "B" and c.bag) or (f[1] == "K" and c.bank) or nil
     if list and f[4] then
       list[#list + 1] = { slot = tonumber(f[2]) or 0, count = tonumber(f[3]) or 1, id = f[4], name = f[5] or "", icon = f[6] or "" }
@@ -220,6 +226,17 @@ function GB.Snapshot(withBank, authoritative)
   c.name, c.live = name, true
   c.cls = call(UnitClass, "player") or c.cls or ""
   c.lvl = call(UnitLevel, "player") or c.lvl or 0
+  local count = tonumber(call(GetPlayerNumClasses))
+  if count and count > 0 then
+    local classes = {}
+    for i = 1, count do
+      local class, _, level = call(GetPlayerClassInfo, i, true)
+      if type(class) == "string" and class ~= "" and tonumber(level) and tonumber(level) > 0 then
+        classes[#classes + 1] = { name = class, level = tonumber(level) }
+      end
+    end
+    if #classes == count then c.classes = classes end
+  end
   c.money = GB.ReadMoney()
   c.bag, c.bagMax = GB.ReadBag()
   if withBank then
@@ -564,7 +581,7 @@ end
 ---------------------------------------------------------------------------
 
 GB.EVENTS = { "VARIABLES_LOADED", "LOADING_END", "BAG_ITEM_UPDATE", "PLAYER_BAG_CHANGED", "PLAYER_MONEY",
-  "BANK_OPEN", "BANK_CLOSE", "BANK_UPDATE" }
+  "BANK_OPEN", "BANK_CLOSE", "BANK_UPDATE", "UNIT_LEVEL", "EXCHANGECLASS_SUCCESS" }
 
 function GB.OnLoad(frame)
   GB.registered = {}
@@ -622,6 +639,11 @@ function GB.OnEvent(event)
     return
   elseif event == "LOADING_END" then
     schedule(3, true, false)
+  elseif event == "UNIT_LEVEL" or event == "EXCHANGECLASS_SUCCESS" then
+    -- Ignore other units. Refresh only when the player levels or changes class.
+    if event ~= "UNIT_LEVEL" or arg1 == nil or arg1 == "player" then
+      schedule(1, GB.bankOpen, GB.bankOpen)
+    end
   elseif event == "BANK_OPEN" then
     GB.bankOpen = true
     schedule(1, true, true)
@@ -665,7 +687,7 @@ function GB.Flush()
     timer, timerBank, timerAuth = nil, false, false
     pcall(GB.Snapshot, withBank or GB.bankOpen, (auth or GB.bankOpen) and GB.bankOpen)
   else
-    pcall(GB.UpdateMoney)
+    pcall(GB.Snapshot, GB.bankOpen, GB.bankOpen)
   end
 end
 

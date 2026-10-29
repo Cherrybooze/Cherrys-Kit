@@ -29,27 +29,24 @@ function zBagHandler_OnUpdate(this)
 	if (ZBAG_SORTSTARTED==1) then
 		zBag_OrderItems();
 	end
-	-- Cherry's Kit: individual bags (or zBag off in the kit) leave the game's bag and bank alone
-	if (zBagKit.onebag == nil) then
-		return;
-	elseif (not zBagKit.IsOneBag()) then
+	-- The bag and bank layouts are independent.
+	if (zBagKit.onebag == nil) then return; end
+	if (not zBagKit.IsOneBag()) then
 		if (zBag:IsVisible()) then zBag:Hide(); end
-		if (zBagB:IsVisible()) then zBagB:Hide(); end
-		return;
-	end
+	else
 	if (zBag:IsVisible() and not BagFrame:IsVisible()) then
 		--yecho("here1");
 		if(zBag_VAR["alwaysshow"]==0) then 
 			HideUIPanel(zBag);
 		end
-		if (zBag_VAR["bankopenwithbag"]==1) then
+		if (zBagKit.IsOneBank() and zBag_VAR["bankopenwithbag"]==1) then
 	--		ZBAG_BANKINSPECT=1;
 			HideUIPanel(zBagB);
 		end
 	elseif (not zBag:IsVisible() and BagFrame:IsVisible()) then
 		--yecho("here2");
 		ShowUIPanel(zBag);
-		if (zBag_VAR["bankopenwithbag"]==1) then
+		if (zBagKit.IsOneBank() and zBag_VAR["bankopenwithbag"]==1) then
 	--		ZBAG_BANKINSPECT=1;
 			ShowUIPanel(zBagB);
 		end
@@ -60,6 +57,12 @@ function zBagHandler_OnUpdate(this)
 		BagItemFrame:Hide(); -- to not get update events on default bag when opened (a little fps boost)
 	end
 
+	end
+
+	if (not zBagKit.IsOneBank()) then
+		if (zBagB:IsVisible()) then zBagB:Hide(); end
+		return;
+	end
 	if (zBagB:IsVisible() and not BankFrame:IsVisible() and ZBAG_BANKINSPECT==0) then
 		--yecho("here3");
 		HideUIPanel(zBagB);

@@ -74,8 +74,51 @@ function B.BerlinOffset(utc)
   return 3600
 end
 
+-- Some clients do not expose os.time. The Global Bank helper writes UTC seconds
+-- every 30 seconds; trust it only after observing a new heartbeat in this session.
+local beatPath = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua"
+local lastBeat, anchorBeat, anchorTick, lastRead, lastTick
+local function helperNow()
+  if type(GetTime) ~= "function" or type(dofile) ~= "function" then
+    return nil
+  end
+  local ok, tick = pcall(GetTime)
+  tick = ok and tonumber(tick) or nil
+  if not tick then return nil end
+  if lastTick and tick < lastTick then
+    lastBeat, anchorBeat, anchorTick, lastRead = nil, nil, nil, nil
+  end
+  lastTick = tick
+  if not lastRead or tick - lastRead >= 5 then
+    lastRead = tick
+    GlobalBank_HelperBeat = nil
+    local readOK = pcall(dofile, beatPath)
+    local beat = readOK and tonumber(GlobalBank_HelperBeat) or nil
+    GlobalBank_HelperBeat = nil
+    if beat and beat >= 946684800 then
+      if lastBeat and beat ~= lastBeat then
+        anchorBeat, anchorTick = beat, tick
+      end
+      lastBeat = beat
+    end
+  end
+  if anchorTick and tick - anchorTick <= 75 then
+    return anchorBeat + math.max(0, tick - anchorTick)
+  end
+  return nil
+end
+
 function B.Now()
-  return os and os.time and os.time() or nil
+  if os and type(os.time) == "function" then
+    local ok, now = pcall(os.time)
+    if ok and type(now) == "number" then
+      B.clockSource = "client"
+      return now
+    end
+  end
+  local now = helperNow()
+  B.clockSource = now and "Global Bank helper" or "unavailable"
+  return now
 end
 
 -- Epoch seconds of the last and the next 00:00 in Germany
@@ -151,17 +194,92 @@ end
 -- The button (ZShopDailyButton in ZShop.xml)
 ---------------------------------------------------------------------------
 
+-- Coordinates saved by older versions were absolute UI offsets. New positions
+-- are fractions of the usable screen area, so they follow window/scale changes.
+local function finite(value)
+  value = tonumber(value)
+  if value and value == value and value > -math.huge and value < math.huge then return value end
+end
+
+local function uiScale()
+  local scale = type(GetUIScale) == "function" and finite(GetUIScale()) or nil
+  return scale and scale > 0 and scale or 1
+end
+
+local function screenSize()
+  local scale = uiScale()
+  local w = type(GetScreenWidth) == "function" and finite(GetScreenWidth()) or nil
+  local h = type(GetScreenHeight) == "function" and finite(GetScreenHeight()) or nil
+  if w and h and w > 0 and h > 0 then return w / scale, h / scale, scale end
+  local parent = _G["UIParent"]
+  if parent and parent.GetWidth and parent.GetHeight then
+    w, h = finite(parent:GetWidth()), finite(parent:GetHeight())
+    if w and h and w > 0 and h > 0 then return w, h, scale end
+  end
+  return nil, nil, scale
+end
+
+local function travel(button, w, h)
+  if not w or not h then return nil, nil end
+  local bw = button.GetWidth and finite(button:GetWidth()) or 36
+  local bh = button.GetHeight and finite(button:GetHeight()) or 36
+  return math.max(0, w - (bw or 36)), math.max(0, h - (bh or 36))
+end
+
+local function clamp(n, maxValue)
+  return math.max(0, math.min(n, maxValue))
+end
+
+local function positionSource()
+  local c, s = char(), shared()
+  if type(c.position) == "table" or (finite(c.x) and finite(c.y)) then return c end
+  return s
+end
+
+local function relativePosition(source)
+  local pos = source.position
+  if type(pos) ~= "table" then return nil end
+  local x, y = finite(pos.x), finite(pos.y)
+  if x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1 then return x, y end
+end
+
+-- Only migrate legacy positions that are visible: if the old resolution is
+-- unknown, clamping is safer than guessing the position at the old size.
+function B.InitializePosition()
+  local button = _G["ZShopDailyButton"]
+  if not button then return end
+  local source = positionSource()
+  if relativePosition(source) then return end
+  local x, y = finite(source.x), finite(source.y)
+  local w, h = screenSize()
+  local maxX, maxY = travel(button, w, h)
+  if x and y and maxX and maxY and maxX > 0 and maxY > 0 and
+      x >= 0 and x <= maxX and y >= 0 and y <= maxY then
+    source.position = { x = x / maxX, y = y / maxY }
+  end
+end
+
 function B.Place()
   local button = _G["ZShopDailyButton"]
-  if not button then
-    return
+  if not button then return end
+  local w, h, scale = screenSize()
+  B.positionWidth, B.positionHeight, B.positionScale = w, h, scale
+  local maxX, maxY = travel(button, w, h)
+  local source = positionSource()
+  local rx, ry = relativePosition(source)
+  local x, y = finite(source.x), finite(source.y)
+  if rx and maxX and maxY then
+    x, y = rx * maxX, ry * maxY
+  elseif x and y and maxX and maxY then
+    x, y = clamp(x, maxX), clamp(y, maxY)
   end
   button:ClearAllAnchors()
-  local x, y = tonumber(B.Get("x")), tonumber(B.Get("y"))
   if x and y then
     button:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", x, y)
   elseif _G["MinimapViewFrame"] then
-    button:SetAnchor("RIGHT", "LEFT", "MinimapViewFrame", -8, -4) -- just above KittyCombo's mode button spot
+    button:SetAnchor("RIGHT", "LEFT", "MinimapViewFrame", -8, -4)
+  elseif maxX and maxY then
+    button:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", clamp(w - 230 - (w - maxX), maxX), clamp(204, maxY))
   else
     button:SetAnchor("TOPRIGHT", "TOPRIGHT", "UIParent", -230, 204)
   end
@@ -169,9 +287,19 @@ end
 
 function B.SavePlace(button)
   local x, y = button:GetPos()
-  local scale = (type(GetUIScale) == "function" and GetUIScale()) or 1
-  B.Set("x", x / scale)
-  B.Set("y", y / scale)
+  local w, h, scale = screenSize()
+  x, y = finite(x), finite(y)
+  if not x or not y then return end
+  x, y = x / scale, y / scale
+  local maxX, maxY = travel(button, w, h)
+  B.Set("x", x)
+  B.Set("y", y)
+  if maxX and maxY and maxX > 0 and maxY > 0 then
+    B.Set("position", { x = clamp(x, maxX) / maxX, y = clamp(y, maxY) / maxY })
+  else
+    B.Set("position", nil)
+  end
+  B.Place()
 end
 
 function B.Refresh()
@@ -247,15 +375,15 @@ function B.StatusText()
     local _, level = me.CanDaily()
     text = "|cff9ea8baNeeds level " .. me.DAILY_LEVEL .. " (this character " .. tostring(level) .. ")|r"
   elseif state == "claimed" then
-    text = "|cff40ff40Claimed today on this character|r"
+    text = "|cff40ff40Daily page opened today on this character|r"
   else
-    text = "|cffffd100Not claimed today|r"
+    text = "|cffffd100Daily page not marked as opened today|r"
   end
   if now then
     local _, nextReset = B.ResetTimes(now)
     text = text .. "\n|cff9ea8baResets in " .. hm(nextReset - now) .. " (00:00 German time)|r"
   else
-    text = text .. "\n|cffff6060No clock in this client: the claimed mark can't be kept.|r"
+    text = text .. "\n|cffff6060No clock yet: start the Global Bank helper and wait up to a minute.|r"
   end
   return text
 end
@@ -295,6 +423,37 @@ end
 -- Every 30 seconds: the icon changes at the reset or when the character reaches level 100.
 B.tick = 0
 function B.OnUpdate(elapsed)
+  B.positionTick = (B.positionTick or 0) + (tonumber(elapsed) or 0)
+  if B.positionTick >= 1 then
+    B.positionTick = 0
+    local button = _G["ZShopDailyButton"]
+    local w, h, scale = screenSize()
+    if button and not button.zsMoving then
+      if w ~= B.positionWidth or h ~= B.positionHeight or scale ~= B.positionScale then
+        B.Place()
+      end
+      -- The minimap itself can be outside a newly resized window. Recover the
+      -- default minimap-anchored button after the client resolves its anchor.
+      local maxX, maxY = travel(button, w, h)
+      if maxX and maxY and button.GetPos then
+        local x, y = button:GetPos()
+        x, y = finite(x), finite(y)
+        if x and y then
+          x, y = x / scale, y / scale
+          if x < 0 or y < 0 or x > maxX or y > maxY then
+            button:ClearAllAnchors()
+            button:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", clamp(x, maxX), clamp(y, maxY))
+          end
+        end
+      end
+    end
+  end
+  -- Sample the helper clock even while the daily button is hidden or below level.
+  B.clockTick = (B.clockTick or 0) + (tonumber(elapsed) or 0)
+  if B.clockTick >= 5 then
+    B.clockTick = 0
+    B.Now()
+  end
   B.tick = B.tick + (tonumber(elapsed) or 0)
   if B.tick >= 30 then
     B.tick = 0

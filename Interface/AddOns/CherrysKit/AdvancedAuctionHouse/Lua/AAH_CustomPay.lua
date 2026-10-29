@@ -7,6 +7,29 @@ local Pay = {
 }
 AAH.Pay = Pay
 
+-- A broad quote's key and an old native generation are never auction IDs.
+-- Check again when a confirmation popup is accepted: another search may have
+-- replaced the native result table while the popup was open.
+local function canPayBrowse(item, auctionID)
+    local browse = AAH.Browse
+    if AAH.Main and AAH.Main.sessionOpen == false then return false end
+    if browse and browse.Scan and browse.Scan.broad then return false end
+    if item and (item.readonly or item.cacheEntry) then return false end
+    if browse and browse.NativeGeneration ~= nil then
+        local current = browse.Scan and browse.Scan.byId and browse.Scan.byId[auctionID or item and item.auctionid]
+        if not current or current.readonly or current.cacheEntry or
+            current._nativeGeneration ~= browse.NativeGeneration then return false end
+        if item and (item ~= current or item._nativeGeneration ~= browse.NativeGeneration) then return false end
+    end
+    return true
+end
+
+local function canPayBrowseID(auctionID)
+    local item = Pay.Current.Type == Pay.AuctionType.Browse and Pay.Current.Item
+    if item and item.auctionid ~= auctionID then item = nil end
+    return canPayBrowse(item, auctionID)
+end
+
 function Pay.InitPopups()
     StaticPopupDialogs["AAH_BID_NORMAL"] = {
         text = TEXT("BUYOUT_CONFIRMATION"),
@@ -75,6 +98,7 @@ end
 
 function Pay.PayAuction(item, moneyBid, moneyIsBuyout, typeAuction)
     if item == nil or moneyBid == nil or moneyIsBuyout == nil or typeAuction == nil then return end
+    if typeAuction == Pay.AuctionType.Browse and not canPayBrowse(item) then return end
 
     Pay.Current = {
         Item = item,
@@ -113,6 +137,7 @@ end
 
 function Pay.BidItem(typeAuction, auctionID, moneyBid, pass)
     if typeAuction == Pay.AuctionType.Browse then
+        if not canPayBrowseID(auctionID) then return end
         AuctionBrowseBuyItem(auctionID, moneyBid, pass)
     elseif typeAuction == Pay.AuctionType.Bid then
         AuctionBidBuyItem(auctionID, moneyBid, pass)
@@ -121,6 +146,7 @@ end
 
 function Pay.BuyItem(typeAuction, auctionID, pass)
     if typeAuction == Pay.AuctionType.Browse then
+        if not canPayBrowseID(auctionID) then return end
         AAH.Browse.BuyoutEvent = true
         AuctionBrowseBuyItem(auctionID, nil, pass)
     elseif typeAuction == Pay.AuctionType.Bid then

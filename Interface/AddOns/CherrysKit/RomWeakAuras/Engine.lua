@@ -1,12 +1,21 @@
 -- Engine.lua: loads auras, runs triggers, applies conditions and animations, shows and hides regions.
--- This is the RoM counterpart of the state machine in WeakAuras.lua, Conditions.lua and Animations.lua.
+-- Rules own their outputs; one shared loop updates observations and animations.
 
 local RWA = RWA
 local W = RWA.W
 local Regions = RWA.Regions
 local Triggers = RWA.Triggers
-local Conditions = RWA.Conditions
+local Rules = RWA.Rules
 
+local actionEdges = {} -- stable aura/rule/action identities, retained across reloads
+local compiledActions = {}
+function RWA.ResetRuleSoundHistory(id)
+  actionEdges[id], compiledActions[id] = nil, nil
+end
+function RWA.MoveRuleSoundHistory(oldId, newId)
+  actionEdges[newId], actionEdges[oldId] = actionEdges[oldId], nil
+  compiledActions[newId], compiledActions[oldId] = compiledActions[oldId], nil
+end
 local loaded = {} -- [id] = { data, region, env, states, active, anim, testUntil }
 RWA.loaded = loaded
 
@@ -14,6 +23,7 @@ local dirty = true
 local nextPoll = 0
 local unlocked = false -- /rwa unlock: every aura shown and draggable
 local editMode = false -- on while the /rwa window is open: also loads disabled auras and loops fake data
+local optionsPreview = false -- window placement visibility is independent of the drag lock
 local editStart = 0
 local LOOP = 10 -- seconds per fake cycle in edit and test mode
 
@@ -22,7 +32,7 @@ local function moving()
 end
 
 local function previewing(a, now)
-  return moving() or (a.testUntil and a.testUntil > now) or false
+  return optionsPreview or moving() or (a.testUntil and a.testUntil > now) or false
 end
 
 function RWA.MarkDirty()
@@ -46,29 +56,81 @@ local function resetConditionVisuals(region)
   end
 end
 
+local function clearRegionHandlers(region)
+  if W.activeTooltipOwner == region.frame then
+    W.activeTooltipOwner = nil
+    RWA.Try(GameTooltip, "Hide")
+  end
+  for _, event in ipairs({"OnEnter", "OnLeave", "OnMouseDown", "OnMouseUp"}) do
+    W.SetScript(region.frame, event, nil)
+  end
+  W.EnableMouse(region.frame, false)
+end
+
+local function attachRegionHover(a, region)
+  W.Tooltip(region.frame, function()
+    if loaded[a.data.id] ~= a then return end
+    local lines = Rules.TooltipLines(a.data, a.ruleResult, a.states)
+    return a.data.id, unpack(lines)
+  end)
+  W.EnableMouse(region.frame, true)
+end
+
 function RWA.UnloadAura(id)
   local a = loaded[id]
   if a then
-    W.EnableMouse(a.region.frame, false)
-    resetConditionVisuals(a.region)
-    a.region:Release()
+    for _, output in ipairs(a.outputs) do
+      clearRegionHandlers(output.region)
+      resetConditionVisuals(output.region)
+      output.region:Release()
+    end
     loaded[id] = nil
   end
 end
 
 function RWA.LoadAura(id)
   RWA.UnloadAura(id)
-  local data = (editMode and RWA.GetEditingAura and RWA.GetEditingAura(id)) or RWA.GetAura(id)
-  if not data or (not data.enabled and not editMode) then
+  local data = ((optionsPreview or editMode) and RWA.GetEditingAura and RWA.GetEditingAura(id)) or RWA.GetAura(id)
+  if not data or data.schemaVersion ~= 3 or (not data.enabled and not (optionsPreview or editMode)) then
+    if data and (data.schemaVersion == 2 or data.schemaVersion == 3) then RWA.ResetRuleSoundHistory(id) end
     return
   end
-  for i = 1, #data.triggers do
-    Triggers.Reset(data.triggers[i])
+  for _, source in ipairs(data.sources or {}) do
+    Triggers.Reset(source)
   end
   local a = { data = data, env = { id = id }, states = {}, active = false }
-  a.region = Regions.Acquire(data)
-  resetConditionVisuals(a.region)
+  local cache = compiledActions[id]
+  if cache then
+    local used = {}
+    for _, rule in ipairs(data.rules or {}) do
+      for _, action in ipairs(rule.actions or {}) do
+        if type(rule.id) == "string" and type(action.id) == "string" and action.type == "code" then
+          used[rule.id .. "\031" .. action.id] = true
+        end
+      end
+    end
+    for key in pairs(cache) do if not used[key] then cache[key] = nil end end
+  end
+  a.prepared, a.outputs, a.outputsById = Rules.PrepareActions(data), {}, {}
+  for _, outputId in ipairs(a.prepared.order) do
+    local item = a.prepared.outputs[outputId]
+    local definition = RWA.CopyTable(item.definition)
+    definition.id, definition.schemaVersion = data.id, 3
+    definition.point = data.point or "CENTER"
+    definition.x = (tonumber(data.x) or 0) + (tonumber(definition.offsetX) or 0)
+    definition.y = (tonumber(data.y) or 0) + (tonumber(definition.offsetY) or 0)
+    RWA.ApplyAuraDefaults(definition)
+    local output = { id = outputId, data = definition, sourceId = item.sourceId, active = false, placementCache = {} }
+    local parent = item.linkValid and definition.parentOutputId and a.outputsById[definition.parentOutputId]
+    output.parent = parent
+    output.region = parent and Regions.AcquireChild(parent.region, definition) or Regions.Acquire(definition)
+    resetConditionVisuals(output.region)
+    a.outputs[#a.outputs + 1] = output
+    a.outputsById[outputId] = output
+  end
+  a.region = a.outputs[1] and a.outputs[1].region
   loaded[id] = a
+  for _, output in ipairs(a.outputs) do attachRegionHover(a, output.region) end
   if moving() then
     RWA.MakeMovable(a)
   end
@@ -115,6 +177,7 @@ local function shouldLoad(load)
   end
   return true
 end
+RWA.PassesLoad = shouldLoad
 
 ---------------------------------------------------------------------------
 -- Reversible condition visuals. Visibility and sounds use real trigger states,
@@ -423,154 +486,120 @@ local function setActive(a, active, now)
   if active then
     a.region:Show()
     a.anim = { kind = (anim.start and anim.start ~= "none") and "start" or "main", t0 = now }
-    if not previewing(a, now) then
-      RWA.PlaySound(a.data.sound)
-    end
   else
     a.anim = { kind = "finish", t0 = now }
   end
 end
 
--- Fake data that loops every LOOP seconds: the timer runs down, stacks count 1 to 5 and
--- health-style values drain with it, so bars, text and conditions can be seen working.
-local function fakeState(a, now)
-  local t0 = (a.testUntil and a.testUntil > now) and (a.testUntil - LOOP) or editStart
-  local elapsed = math.max(0, now - t0)
-  local cycle = math.floor(elapsed / LOOP)
-  local remaining = LOOP - (elapsed - cycle * LOOP)
-  local pct = math.floor(remaining / LOOP * 100 + 0.5)
-  local icon = a.data.previewIcon
-  for _, state in ipairs(a.states) do
-    if state.icon then
-      icon = state.icon
-      break
+-- Preview uses the same animation presets and native parent relationship,
+-- but never enters the gameplay action/sound evaluation path.
+function RWA.AnimatePreviewOutput(output, visual, now, alpha)
+  if output.parent then
+    if output.parent.region.shown then
+      Regions.AnimateElement(output.region, now,
+        visual.localVisible and output.region.contentShown ~= false, alpha)
     end
+  else
+    setActive(output, visual.visible, now)
+    if (output.active or output.anim) and output.region.shown then animate(output, now, alpha) end
   end
-  return {
-    show = true,
-    name = a.data.id,
-    icon = icon,
-    stacks = cycle % 5 + 1,
-    progressType = "timed",
-    duration = LOOP,
-    expirationTime = now + remaining,
-    value = pct,
-    total = 100,
-    percent = pct,
-    cycle = cycle,
-    startTime = now - (elapsed - cycle * LOOP), -- %e counts up through each loop
-  }
 end
 
--- Triggers that feed only an extra display (element.from = i): they do not decide whether the
--- aura shows, and are not the main display's data.
-function RWA.OwnedTriggers(data)
-  local owned = {}
-  local auxiliary = type(data.triggers.auxiliary) == "table" and data.triggers.auxiliary or {}
-  for _, e in ipairs(data.elements or {}) do
-    local from = tonumber(e.from) or 0
-    if from > 0 and data.triggers[from] then
-      owned[from] = true
+local function evaluateActionEffects(a, effects, now)
+  local id = a.data.id
+  local old, nextEdges = actionEdges[id] or {}, {}
+  local cache = compiledActions[id] or {}
+  compiledActions[id] = cache
+  local muted = previewing(a, now)
+  for _, key in ipairs(effects.effectOrder or {}) do
+    local action = effects.effects[key]
+    local previous = old[key]
+    local state = previous or {}
+    nextEdges[key] = state
+    if action.type == "sound" then
+      local clip = action.clip
+      local interval = tonumber(action.interval)
+      local loop = action.mode == "loop" and interval and interval > 0
+      if (action.mode == "once" or loop) and type(clip) == "string" and clip ~= "" then
+        if not previous or (loop and now >= (state.nextAt or now)) then
+          if not muted then RWA.PlaySound(clip) end
+          if loop then state.nextAt = now + interval end
+        end
+      end
+    elseif action.type == "code" and not previous and not muted and type(action.code) == "string" and action.code ~= "" then
+      local compiled = cache[key]
+      if not compiled or compiled.source ~= action.code or compiled.env ~= a.env then
+        local fn, err = Triggers.CompileCustom(action.code, a.env)
+        compiled = { source = action.code, fn = fn, error = err, env = a.env }
+        cache[key] = compiled
+      end
+      if not muted then
+        if compiled.fn then
+          local ok, err = pcall(compiled.fn, a.env)
+          if not ok then RWA.Error(tostring(id) .. " action: " .. tostring(err)) end
+        else
+          RWA.Error(tostring(id) .. " action: " .. tostring(compiled.error))
+        end
+      end
     end
   end
-  -- A legacy element may refer to the only/main trigger. Share that state
-  -- rather than leaving the main display triggerless and fabricating a buff.
-  local hasMain, fallback = false, nil
-  for i = 1, #data.triggers do
-    if auxiliary[i] == true or auxiliary[tostring(i)] == true then
-      owned[i] = true -- still evaluated for conditions, but never part of the main gate
-    else
-      fallback = fallback or i
-      if not owned[i] then hasMain = true end
-    end
-  end
-  -- Share a real legacy source only when its role was not explicitly made auxiliary.
-  if not hasMain and fallback then owned[fallback] = nil end
-  return owned
+  actionEdges[id] = nextEdges
 end
 
 local function evaluate(a, now)
   local data = a.data
-  local triggers = data.triggers
-  local owned = RWA.OwnedTriggers(data)
-  local anyShown, allShown, counted = false, true, 0
-  local first
-  for i = 1, #triggers do
-    local ok, state = pcall(Conditions.EvaluateTrigger, triggers[i], i, data.conditions, now, a.env)
-    if not ok then
-      RWA.Error(data.id .. " trigger " .. i .. ": " .. tostring(state))
-      state = { show = false }
-    end
-    a.states[i] = state
+  local snapshot = Rules.Observe(data, now, a.env)
+  local effects = Rules.Evaluate(data, snapshot, shouldLoad(data.load), a.prepared)
+  local liveData = RWA.GetAura(data.id) or data
+  if liveData.schemaVersion ~= 3 then liveData = data end
+  local liveSnapshot = liveData == data and snapshot or Rules.Observe(liveData, now, a.env)
+  local livePrepared = liveData == data and a.prepared or a.livePrepared
+  if liveData ~= data and (not livePrepared or a.livePreparedData ~= liveData) then
+    livePrepared = Rules.PrepareActions(liveData)
+    a.livePrepared, a.livePreparedData = livePrepared, liveData
   end
-  local effects = Conditions.Effects(data, a.states, now)
-  a.conditionEffects = effects
-  for i = 1, #triggers do
-    local state = a.states[i]
-    if effects.showTriggers[i] then state.show = true end
-    if not owned[i] then
-      counted = counted + 1
-      if state.show then
-        anyShown = true
-        first = first or state
-      else
-        allShown = false
-      end
+  local liveEffects = liveData == data and effects or Rules.Evaluate(liveData, liveSnapshot, shouldLoad(liveData.load), livePrepared)
+  a.realData, a.realStates, a.realActive = liveData, liveSnapshot, liveEffects.visible
+  evaluateActionEffects(a, liveEffects, now)
+  if not optionsPreview and previewing(a, now) and shouldLoad(data.load) then
+    local phase = math.floor((now - editStart) % LOOP / (LOOP / 3))
+    local mode = phase == 0 and "missing" or phase == 1 and "long" or "expiring"
+    snapshot = Rules.Scenario(data, snapshot, mode, now)
+    effects = Rules.Evaluate(data, snapshot, true, a.prepared)
+    if moving() then
+      for _, output in pairs(effects.outputs) do output.visible = true; output.localVisible = true; effects.visible = true end
     end
   end
-  allShown = allShown and counted > 0
-  local active
-  if data.triggers.mode == "any" then
-    active = anyShown
-  else
-    active = allShown
-  end
-  local display = first or a.states[1] or {}
-  if active and not shouldLoad(data.load) then
-    active = false
-  end
-  if effects.hide then active = false end
-  active = active and data.enabled and true or false
-  a.realActive = active
-  if previewing(a, now) then
-    if not active or not data.enabled then
-      display = fakeState(a, now)
-      -- Replay the start animation each loop, as if the aura had just appeared.
-      if a.lastCycle and display.cycle ~= a.lastCycle and a.active then
-        local anim = data.animation or {}
-        if anim.start and anim.start ~= "none" then
-          a.anim = { kind = "start", t0 = now }
-        end
-      end
-      a.lastCycle = display.cycle
+  a.states, a.ruleResult = snapshot, effects
+  for _, output in ipairs(a.outputs) do
+    local visual = effects.outputs[output.id]
+    local observed=Rules.OutputState(a.prepared.outputs[output.id], snapshot, effects)
+    if optionsPreview then
+      -- Keep matching/effect diagnostics real. Only the detached rendering
+      -- state is filled with sample values and forced visible for positioning.
+      observed,visual=Rules.PlacementPreview(output.data,Rules.FindSource(data,output.sourceId),observed,visual,now,output.placementCache)
     end
-    active = true
-  else
-    a.lastCycle = nil
-  end
-  -- A hide rule wins over a show rule and over a forced editor/test preview.
-  if effects.hide then active = false end
-  local edges = a.conditionSoundMatches or {}
-  local nextEdges = {}
-  for _, cond in ipairs(data.conditions or {}) do
-    if type(cond) == "table" and type(cond.set) == "table" and type(cond.set.sound) == "string" then
-      local matches = effects.matches[cond] and a.realActive or false
-      nextEdges[cond] = matches
-      if matches and not edges[cond] and not previewing(a, now) then RWA.PlaySound(cond.set.sound) end
+    output.conditionEffects = visual
+    output.region:SetState(observed)
+    if optionsPreview then
+      output.active,output.anim,output.dy=true,nil,0
+      output.region.elementPhase=nil
+      if not output.placementPlaced then output.region:Place(0,0); output.placementPlaced=true end
+      output.region:Show()
+    elseif output.parent then
+      output.active = visual and visual.localVisible or false
+    else
+      setActive(output, visual and visual.visible or false, now)
     end
   end
-  a.conditionSoundMatches = nextEdges
-  a.region:SetState(display)
-  setActive(a, active, now)
-  if effects.hide then
-    a.anim = nil
-    a.region:Hide()
-  end
+  a.active = optionsPreview and #a.outputs>0 or effects.visible
 end
 
 local function frame(now)
   -- The window can close without our button (Escape, another addon), so edit mode follows it.
-  if editMode and RWA.IsOptionsOpen and not RWA.IsOptionsOpen() then
+  if optionsPreview and RWA.IsOptionsOpen and not RWA.IsOptionsOpen() then
+    RWA.SetOptionsPreview(false)
+  elseif editMode and RWA.IsOptionsOpen and not RWA.IsOptionsOpen() then
     RWA.SetEditMode(false)
   end
   local poll = now >= nextPoll
@@ -584,23 +613,39 @@ local function frame(now)
     if reevaluate then
       evaluate(a, now)
     end
-    local alpha = RWA.ApplyConditionVisuals(a.region, a.conditionEffects, now)
-    if not a.data.enabled then alpha = alpha * 0.4 end
-    if a.active or a.anim then
-      if a.region.shown then
-        a.region:Update(now)
-        a.region:UpdateElements(now, a.states)
-        animate(a, now, alpha)
+    for _, output in ipairs(a.outputs) do
+      local alpha = RWA.ApplyConditionVisuals(output.region, output.conditionEffects, now)
+      -- The native child frame inherits its parent's disabled fade as well.
+      if not a.data.enabled and not output.parent then alpha = alpha * 0.4 end
+      if optionsPreview then
+        -- Steady placement markers must remain visible between polls, including
+        -- while the real aura is disabled, unloaded, hidden or fading out.
+        output.region.elementPhase=nil
+        output.region:Show()
+        output.region:Update(now)
+        output.region:SetAlpha(math.max(a.data.enabled==false and 0.4 or 0.5,alpha))
+      elseif output.parent then
+        if output.parent.region.shown then
+          output.region:Update(now)
+          Regions.AnimateElement(output.region, now,
+            output.active and output.region.contentShown ~= false, alpha)
+        end
+      else
+        if (output.active or output.anim) and output.region.shown then
+          output.region:Update(now)
+          output.region:UpdateElements(now, a.states)
+          animate(output, now, alpha)
+        end
+        if not output.region.shown and alpha ~= output.region.alpha then
+          output.region:SetAlpha(alpha)
+        end
       end
-    end
-    if not a.region.shown and alpha ~= a.region.alpha then
-      a.region:SetAlpha(alpha)
     end
     if a.dragUpdate then
       a.dragUpdate()
     end
   end
-  if RWA.UpdatePreview then
+  if RWA.UpdatePreview and RWA.IsOptionsOpen and RWA.IsOptionsOpen() then
     RWA.UpdatePreview(now)
   end
 end
@@ -624,13 +669,18 @@ end
 
 function RWA.MakeMovable(a)
   local region = a.region
+  if not region then return end
   a.dragUpdate = W.MakeDraggable(region.frame, function()
-    return region.data.x or 0, region.data.y or 0
+    return a.data.x or 0, a.data.y or 0
   end, function(x, y)
     -- Stored offsets are screen style (+y down), the same as GetCursorPos.
-    region.data.x = math.floor(x + 0.5)
-    region.data.y = math.floor(y + 0.5)
-    region:Place(0, a.dy or 0)
+    x, y = math.floor(x + 0.5), math.floor(y + 0.5)
+    a.data.x, a.data.y = x, y
+    for _, output in ipairs(a.outputs) do
+      output.data.x = x + (tonumber(output.data.offsetX) or 0)
+      output.data.y = y + (tonumber(output.data.offsetY) or 0)
+      output.region:Place(0, output.parent and (output.region.elementDy or 0) or (output.dy or 0))
+    end
   end, function()
     if RWA.OnAuraMoved then
       RWA.OnAuraMoved(region.data.id)
@@ -646,7 +696,12 @@ local function applyMoving()
       end
     else
       a.dragUpdate = nil
-      W.EnableMouse(a.region.frame, false)
+      if a.region then
+        W.SetScript(a.region.frame, "OnMouseDown", nil)
+        W.SetScript(a.region.frame, "OnMouseUp", nil)
+        -- Locked frames retain hover but no drag handlers.
+        W.EnableMouse(a.region.frame, true)
+      end
     end
   end
   dirty = true
@@ -671,7 +726,7 @@ function RWA.SetEditMode(on)
   end
   editMode = on
   editStart = RWA.Now()
-  if RWA_DB then
+  if RWA_DB and not optionsPreview then
     RWA.ReloadAll()
   end
   applyMoving()
@@ -684,9 +739,33 @@ function RWA.IsEditMode()
   return editMode
 end
 
+-- Enter once per window opening. Locking positions changes editMode only;
+-- placement visibility and muting remain until the window actually closes.
+function RWA.SetOptionsPreview(on)
+  on=on and true or false
+  if on==optionsPreview and (on or not editMode) then return end
+  optionsPreview=on
+  editMode=on
+  editStart=RWA.Now()
+  if RWA_DB then RWA.ReloadAll() end
+  applyMoving()
+  if RWA.OnEditModeChanged then RWA.OnEditModeChanged(editMode) end
+end
+function RWA.IsOptionsPreview() return optionsPreview end
+
 -- Cherry's Kit (/ck) can switch the addon off; it then stays idle until turned on and reloaded.
 function RWA.IsOffInKit()
   return CherrysKit ~= nil and CherrysKit.IsEnabled ~= nil and not CherrysKit.IsEnabled("RomWeakAuras")
+end
+
+function RWA.NormalizeSavedAuras()
+  -- Provider examples are installed before this handler. Normalize once, before
+  -- loading any runtime state; retain an unconvertible definition unchanged.
+  for id, data in pairs(RWA_DB.auras) do
+    local converted, err = Rules.Normalize(data)
+    if converted then RWA_DB.auras[id] = RWA.ApplyAuraDefaults(converted)
+    else RWA.Error(id .. ": could not convert aura: " .. tostring(err or "unsupported definition")) end
+  end
 end
 
 RWA.On("RWA_READY", function()
@@ -701,6 +780,7 @@ RWA.On("RWA_READY", function()
     RWA.Print("turned off in Cherry's Kit. Type /ck to turn it on.")
     return
   end
+  RWA.NormalizeSavedAuras()
   RWA.ReloadAll()
   RWA.SetUpdater("engine", frame)
   RWA.Print("v" .. RWA.version .. " loaded,", #RWA_DB.order, "auras. Type /rwa to open.")
@@ -733,10 +813,15 @@ function RWA.GetAuraValue(id, var)
     return nil
   end
   local state
-  for i = 1, #a.data.triggers do
-    if a.states[i] and a.states[i].show then
-      state = a.states[i]
-      break
+  local data, states = a.realData or a.data, a.realStates or a.states
+  if data.schemaVersion == 2 or data.schemaVersion == 3 then
+    state = states[data.primarySourceId]
+  else
+    for i = 1, #(data.triggers or {}) do
+      if states[i] and states[i].show then
+        state = states[i]
+        break
+      end
     end
   end
   if not state then

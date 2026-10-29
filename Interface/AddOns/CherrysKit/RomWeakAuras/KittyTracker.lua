@@ -28,6 +28,174 @@ KT.Available = function()
   return predictor() ~= nil
 end
 
+-- Hotbar bindings are discovered on UI changes, not by scanning all slots on
+-- each rule poll. Macro text is parsed as literal data and is never executed.
+local hotbarBindings={}
+local function safeCall(fn,...)
+  if type(fn)~="function" then return nil end
+  local ok,a,b,c,d=pcall(fn,...)
+  if ok then return a,b,c,d end
+end
+function KT.ParseMacro(body)
+  if type(body)~="string" or #body>16384 then return nil,"unsupportedmacro" end
+  local found
+  for line in string.gmatch(body.."\n","([^\r\n]*)[\r\n]") do
+    local code=string.match(line,"^%s*/[Rr][Uu][Nn]%s+(.+)$") or string.match(line,"^%s*/[Ss][Cc][Rr][Ii][Pp][Tt]%s+(.+)$")
+    local first=code and string.match(code,"^%s*Kitty%.attack%s*%(()")
+    if first then
+      if found then return nil,"ambiguousmacro" end
+      local names,pos={},first
+      while true do
+        local _,space=string.find(code,"^%s*",pos);pos=(space or pos-1)+1
+        local ch=string.sub(code,pos,pos)
+        if ch==")" then
+          if not string.match(string.sub(code,pos+1),"^%s*;?%s*$") then return nil,"unsupportedmacro" end
+          found={names=names,automatic=#names==0};break
+        end
+        local value,last
+        if ch=="[" then
+          local equals=string.match(string.sub(code,pos),"^%[(=*)%[")
+          if equals then
+            local from=pos+#equals+2;local ending=string.find(code,"]"..equals.."]",from,true)
+            if ending then value=string.sub(code,from,ending-1);last=ending+#equals+1 end
+          end
+        elseif ch=="'" or ch=='"' then
+          last=string.find(code,ch,pos+1,true)
+          if last then value=string.sub(code,pos+1,last-1); if string.find(value,"\\",1,true) then value=nil end end
+        end
+        if value==nil or value=="" then return nil,"unsupportedmacro" end
+        names[#names+1]=value;pos=last+1
+        local _,space=string.find(code,"^%s*",pos);pos=(space or pos-1)+1
+        local separator=string.sub(code,pos,pos)
+        if separator=="," then
+          pos=pos+1
+          if string.match(string.sub(code,pos),"^%s*%)") then return nil,"unsupportedmacro" end
+        elseif separator~=")" then return nil,"unsupportedmacro" end
+      end
+    end
+  end
+  if found then return found end
+  return nil,"notkittymacro"
+end
+function KT.InvalidateHotbar(slot)
+  slot=tonumber(slot)
+  if slot and (slot<1 or slot>80 or slot~=math.floor(slot)) then slot=nil end
+  if slot then hotbarBindings[slot]=nil else for id in pairs(hotbarBindings) do hotbarBindings[id]=nil end end
+  local k=rawget(_G,"Kitty")
+  if k and k.Predict and k.Predict.cache then k.Predict.cache={} end
+  if RWA.MarkDirty then RWA.MarkDirty() end
+end
+function KT.InstallHotbarHook()
+  local k=rawget(_G,"Kitty")
+  if not k or type(k.onVariablesChanged)~="function" then return end
+  local previous=RWA.kittyHotbarHook
+  if previous and previous.owner==k and previous.wrapper==k.onVariablesChanged and previous.tracker==KT then return end
+  local original=previous and previous.owner==k and previous.wrapper==k.onVariablesChanged and previous.original or k.onVariablesChanged
+  local function pack(...) return {n=select("#",...),...} end
+  local wrapper=function(...)
+    local result=pack(original(...))
+    KT.InvalidateHotbar()
+    return unpack(result,1,result.n)
+  end
+  RWA.kittyHotbarHook={owner=k,tracker=KT,original=original,wrapper=wrapper}
+  k.onVariablesChanged=wrapper
+end
+local function macroAt(slot)
+  local texture,name=safeCall(GetActionInfo,slot)
+  if not texture or texture=="" then return nil,"emptyslot" end
+  if type(name)~="string" or name=="" then return nil,"nomacro" end
+  if type(GetMacroInfo)~="function" then return nil,"nomacroapi" end
+  local limit=tonumber(rawget(_G,"MAX_NUM_MACROS")) or 49
+  local candidate,body
+  for index=1,math.min(200,math.max(1,limit)) do
+    local _,macroName,text=safeCall(GetMacroInfo,index)
+    if macroName==name and type(text)=="string" then
+      if candidate and body~=text then return nil,"ambiguousmacro" end
+      candidate,body=index,text
+    end
+  end
+  if not candidate then return nil,"nomacro" end
+  local parsed,reason=KT.ParseMacro(body)
+  if not parsed then return nil,reason end
+  parsed.macroIndex,parsed.macroName,parsed.body=candidate,name,body
+  return parsed
+end
+local function classMatches(k,info)
+  if type(info)~="table" or info.class=="proc" then return false end
+  if info.class=="any" or info.class=="" then return true end
+  local build=k.BuildManager
+  if not build or type(build.getClass)~="function" or type(build.match)~="function" then return false end
+  local _,_,main,sub=safeCall(build.getClass,"player")
+  if type(main)~="string" or main=="" then return false end
+  return safeCall(build.match,main..(sub or ""),info.class)==true
+end
+function KT.ResolveHotbar(slot)
+  slot=tonumber(slot)
+  if not slot or slot<1 or slot>80 or slot~=math.floor(slot) then return nil,"invalidslot" end
+  local k=rawget(_G,"Kitty")
+  if not k or not predictor() then return nil,"nokittycombo" end
+  KT.InstallHotbarHook()
+  local lists=k.SettingManager and k.SettingManager.setting and k.SettingManager.setting.command
+  local listCount=type(lists)=="table" and #lists or 0
+  local old=hotbarBindings[slot]
+  local unchanged=old and old.lists==lists and old.listCount==listCount and old.macroManager==k.macroManager
+  if unchanged then
+    for _,watch in ipairs(old.watch or {}) do
+      local list=lists and lists[watch.index]
+      if list~=watch.list or list.info~=watch.info or list.info.name~=watch.name or list.info.class~=watch.class then unchanged=false; break end
+    end
+  end
+  if unchanged then return old.binding,old.reason end
+  local binding,reason=macroAt(slot)
+  local cache={lists=lists,listCount=listCount,watch={},macroManager=k.macroManager,binding=nil,reason=reason}
+  hotbarBindings[slot]=cache
+  if not binding then return nil,reason end
+  if binding.automatic then
+    binding.kittyName=""; binding.kitties={""}
+    cache.binding=binding
+    return binding
+  end
+  local seenName=false
+  binding.kitties={}
+  for _,name in ipairs(binding.names) do
+    local found,foundIndex,duplicates
+    for index,list in ipairs(type(lists)=="table" and lists or {}) do
+      if list.info and list.info.name==name then
+        if found then duplicates=true else found,foundIndex=list,index end
+      end
+    end
+    if found then
+      seenName=true
+      cache.watch[#cache.watch+1]={list=found,index=foundIndex,info=found.info,class=found.info.class,name=name}
+      if classMatches(k,found.info) then
+        if duplicates then cache.reason="ambiguouskitty";return nil,cache.reason end
+        binding.kitties[#binding.kitties+1]=name
+      end
+    end
+  end
+  if #binding.kitties>0 then
+    binding.kittyName=binding.kitties[1];cache.binding,cache.reason=binding,nil
+    return binding
+  end
+  cache.reason=seenName and "wrongclass" or "nokitty"
+  return nil,cache.reason
+end
+KT.REASONS={emptyslot="The hotbar slot is empty.",nomacro="There is no macro in this slot.",
+  notkittymacro="This macro does not call KittyCombo.",unsupportedmacro="Use a literal Kitty.attack(...) macro in this slot.",
+  ambiguousmacro="Several different macros have this name; give this macro a unique name.",
+  ambiguouskitty="Several Kitty lists have this name; give the tracked Kitty a unique name.",
+  wrongclass="This Kitty does not match your current class combination.",nokitty="No matching Kitty is configured.",
+  nokittycombo="KittyCombo is unavailable.",invalidslot="Choose a hotbar slot from 1 to 80.",
+  off="KittyCombo is turned off.",character="This aura is restricted to another character.",
+  nomacroapi="Macro information is unavailable."}
+for _,event in ipairs({"ACTIONBAR_SLOT_CHANGED","MACROFRAME_UPDATE","EXCHANGECLASS_SUCCESS","LOADING_END","RWA_READY","EXTRA_ACTIONBAR_SHOW"}) do
+  local eventName=event
+  RWA.On(eventName,function(_,slot)
+    KT.InvalidateHotbar(eventName=="ACTIONBAR_SLOT_CHANGED" and slot or nil)
+  end)
+end
+
+
 ---------------------------------------------------------------------------
 -- Trigger: { type = "kitty", kitty = "<kitty name>" ("" = by class, like /run Kitty.attack()),
 --            character = "<name>", anyCharacter = true|nil }
@@ -47,16 +215,38 @@ end
 
 Triggers.evaluators.kitty = function(trigger)
   local state = { show = false, progressType = "static", value = 1, total = 1, name = trigger.kitty or "" }
+  local kittyName=trigger.kitty or ""
+  local candidates
   if not KT.NameMatches(trigger) then
-    state.reason = "character"
+    state.reason,state.available = "character",false
     return state
   end
   local P = predictor()
   if not P then
-    state.reason = "nokittycombo"
+    state.reason,state.available = "nokittycombo",false
     return state
   end
-  local picks, reason = P.next(trigger.kitty or "", KT.PICKS)
+  local k=rawget(_G,"Kitty")
+  if k and (k.turnedOff or safeCall(k.isTurnedOff)==true) then state.reason,state.available="off",false;return state end
+  if trigger.hotbarSlot~=nil then
+    state.hotbarSlot=tonumber(trigger.hotbarSlot)
+    local binding,reason=KT.ResolveHotbar(trigger.hotbarSlot)
+    if not binding then state.reason,state.available=reason,false;return state end
+    kittyName=binding.kittyName
+    candidates=binding.kitties
+    state.macroName,state.kittyName,state.slotAvailable=binding.macroName,kittyName,true
+  end
+  local picks,reason
+  if candidates then
+    for _,name in ipairs(candidates) do
+      picks,reason=P.next(name,KT.PICKS)
+      kittyName=name
+      -- break/debug are real commands that stop macro fall-through.
+      if picks and #picks>0 or reason=="off" or reason and string.find(reason,"^error:") then break end
+    end
+    state.kittyName=kittyName
+    if reason=="nokitty" or reason=="off" or reason and string.find(reason,"^error:") then state.available=false end
+  else picks,reason=P.next(kittyName,KT.PICKS) end
   state.reason = reason
   local icons, names = {}, {}
   for i, pick in ipairs(picks or {}) do
@@ -286,7 +476,7 @@ end
 
 -- What the list's "Tracks" column says for a kitty trigger.
 function KT.Describe(t)
-  local text = "kitty " .. ((t.kitty and t.kitty ~= "") and t.kitty or "auto")
+  local text = t.hotbarSlot and ("KittyCombo macro in hotbar slot "..tostring(t.hotbarSlot)) or "kitty " .. ((t.kitty and t.kitty ~= "") and t.kitty or "auto")
   if not t.anyCharacter and t.character and t.character ~= "" then
     text = text .. " on " .. t.character
   end

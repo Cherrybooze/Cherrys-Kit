@@ -1,28 +1,35 @@
 # Cherry's Chat
 
-Version **0.10.6** · Kit release **0.11.78** · [All addons / hub](../README.md)
+Version **0.10.7** · Kit release **0.11.79** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
+## Updated in 0.10.7
+
+The default native click dispatch now sends the complete original hyperlink, including its encoded item data and localized label. Previously learned click signatures remain in use. This change has simulated-client coverage and still needs an in-game check.
+
 ## Updated in 0.10.6
 
 The long-text copy box keeps its payload when focus moves elsewhere and no longer disappears after twenty seconds. Click the text, hint or border to select the complete payload again, then press Ctrl+C. Escape or Enter still closes the box.
+
+Item links retain supplied native colours across wrapped lines; uncoloured links in the known native format use the client quality APIs.
 
 ## Features
 
 - **Copy chat**: hold the left mouse button and drag over lines (they turn blue; drag past the edge to scroll), then right-click and pick **Copy to clipboard**. Paste anywhere with Ctrl+V.
 - **Right-click menu** on a line: Copy line(s), Copy name, Whisper, Add friend, Ignore.
-- **Clicks work like the normal chat**: click a name to whisper, click an item link for its tooltip, Shift+click to put a name or item into the chat box.
+- **Chat links**: click a name to whisper, or Ctrl+click or Shift+click it to insert the name when chat is open, or request player information when it is closed. Click an item link for its tooltip, or Shift+click it to put it into the chat box.
 - **Emoji pictures**: 415 emoji drawn as small colour pictures in the chat, both real emoji and typed codes like `:skull` or `:cat:` (the closing colon is optional, except for one- or two-letter codes like `:x:`). Copying gives back what was typed. `/cchat emojis` lists them all.
 - **Emoji in the game's own chat** (where Cherry's Chat is off): they become hearts, stars, suns, notes and faces like (^_^) that the chat font can show, or `:shortcode:`. Optional: turn `:) <3` into emoji, and send `:heart:` as a real emoji.
 - **Encrypted chat**: pick a channel (guild, party, raid, whisper, say, yell, zone or a numbered channel) in the settings and type a key. What you send there goes out scrambled, and players with the same key read it as normal text, marked with a lock. An empty key means normal chat. This keeps casual readers out; it is not strong security (keys are stored as plain text).
+- **Class-coloured player names**, on by default, use the same RoM palette as Cherry's Grid. It uses the sender class supplied with chat messages, with your current units, guild roster, and pbInfo as fallbacks. Names whose class is unavailable keep their normal colour. Toggle it in `/cchat`.
 - **Font size and window size** per chat window, kept after login and Reload UI ("All windows" applies a change to every tab).
 - **Select mode** (the C button) and a **copy window** with the last 200 lines, as a fallback.
 - **Safe**: if anything goes wrong it switches itself off and the game draws the chat again until the next Reload UI. Safe with Reload UI.
 
-**Still being tested in game:** encrypted chat, the exact place of emoji pictures in a line (they show, and their position is being fine-tuned), Shift+click into the chat box, Add friend / Ignore from the menu, and copying straight to the clipboard (there is a copy box fallback). If item link clicks do nothing, run `/cchat linktest` once.
+**Still being tested in game:** item-link dispatch, encrypted chat, the exact place of emoji pictures in a line (they show, and their position is being fine-tuned), Shift+click into the chat box, Add friend / Ignore from the menu, and copying straight to the clipboard (there is a copy box fallback). If item link clicks do nothing, use `/cchat linktest` to learn the client callback, `/cchat linkprobe` to capture the original message and recognized targets, and `/cchat window` to compare with native chat. A label without an encoded target cannot be turned back into an item link.
 
 ## Chat commands
 

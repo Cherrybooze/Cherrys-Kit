@@ -118,6 +118,11 @@ function Browse.OnGameMessage(text)
 	local pace = Browse.Pace
 	pace.busy = pace.busy + 1
 	Browse.PaceBackOff()
+	local scan=Browse.Scan
+	if scan and scan.active and scan.stage=="header" then
+		scan.retryAt=pace.clock+Browse.PageDelay();scan.waitReason="Server busy; retrying"
+		Browse.InfoLabelUpdate()
+	end
 	if pace.lastBusyShown and pace.clock - pace.lastBusyShown < 5 then
 		return false -- swallow the repeat
 	end
@@ -138,6 +143,7 @@ local SORT_INTERVAL = 0.5
 local SortClock = 0
 
 local SearchRequested
+local SearchBroadRequested
 local FilterChanged
 local AwaitingData
 local CachingActive
@@ -145,6 +151,189 @@ local CachingActive
 local SearchDelay = ABORT_DELAY
 local FilterDelay = FILTER_DELAY
 local TimeRemaining = SEARCH_DELAY_START
+
+-- One serial scan, using the normal native search/paging API. A capped query
+-- is narrowed by native categories, then disjoint level ranges. No rarity,
+-- price or stat partitions: those predicates are not reliable server bounds.
+local SCAN_CAP = 1000
+local SCAN_TIMEOUT = 30
+local function copyQuery(query)
+	local copy={}; for k,v in pairs(query) do if k~="readyAt" then copy[k]=v end end; return copy
+end
+local function queryKey(q)
+	return table.concat({q.cat1 or 0,q.cat2 or 0,q.cat3 or 0,q.minlvl or 0,q.maxlvl or 0},":")
+end
+function Browse.SplitSearch(query)
+	local depth=query.cat3 and 3 or query.cat2 and 2 or query.cat1 and 1 or 0
+	if depth<3 and GetAuctionBrowseFilterList then
+		local names
+		if depth==0 then names={GetAuctionBrowseFilterList()}
+		elseif depth==1 then names={GetAuctionBrowseFilterList(query.cat1)}
+		else names={GetAuctionBrowseFilterList(query.cat1,query.cat2)} end
+		local children={}
+		for i,name in ipairs(names) do
+			if type(name)=="string" and name~="" then
+				local child=copyQuery(query); child["cat"..(depth+1)]=i
+				children[#children+1]=child
+			end
+		end
+		if #children>0 then return children end
+	end
+	local low=math.max(0,tonumber(query.minlvl) or 0)
+	local high=math.max(0,tonumber(query.maxlvl) or 0)
+	-- Zero means no bound in the native API. Keep the lower zero range intact
+	-- when it can no longer be split without turning 0..0 back into "all".
+	if high>0 and (high<=low or low==0 and high<=1) then return nil end
+	local middle=high>0 and math.floor((low+high)/2) or math.max(50,low+49)
+	local left,right=copyQuery(query),copyQuery(query)
+	left.minlvl,left.maxlvl=low,middle
+	right.minlvl,right.maxlvl=middle+1,high
+	return {left,right}
+end
+local function searchCaption(active)
+	AAH_BrowseSearchButton:SetText(active and "Stop" or TEXT("C_SEARCH"))
+	AAH_BrowseSearchButton:Enable()
+	if AAH_BrowseBroadSearchButton then
+		if active then AAH_BrowseBroadSearchButton:Disable() else AAH_BrowseBroadSearchButton:Enable() end
+	end
+end
+local function finishScan(reason)
+	local scan=Browse.Scan; if not scan then return end
+	scan.active,scan.stage,scan.reason=false,"done",reason
+	CachingActive,AwaitingData=nil,nil
+	if AAH.BroadUI and scan.broad then AAH.BroadUI.Finish(scan,not reason and scan.capped==0 and #scan.queue==0) end
+	searchCaption(false)
+	Browse.InfoLabelUpdate()
+end
+function Browse.CancelSearch(reason)
+	SearchRequested,FilterChanged=false,false
+	if Browse.Scan and Browse.Scan.active then
+		-- No native query token/cancel API exists. Drain a stopped in-flight
+		-- reply before a replacement search can claim its browse-update event.
+		if CachingActive and AwaitingData then Browse.SearchNotBefore=Browse.Pace.clock+ABORT_DELAY end
+		finishScan(reason or "Stopped; partial results")
+	end
+end
+function Browse.PauseSession()
+	local scan=Browse.Scan
+	if CachingActive and AwaitingData and (not AAH.Main or AAH.Main.sessionOpen~=false) then
+		Browse.SearchNotBefore=Browse.Pace.clock+ABORT_DELAY
+	end
+	if scan and scan.active and scan.stage~="paused" then
+		if scan.query and (scan.stage=="header" or scan.stage=="pages") then
+			table.insert(scan.queue,1,copyQuery(scan.query))
+		end
+		scan.stage="paused"
+	end
+	CachingActive,AwaitingData=nil,nil
+end
+function Browse.ResumeSession()
+	local scan=Browse.Scan
+	if scan and scan.active and scan.stage=="paused" then
+		scan.stage,scan.nextAt="wait",math.max(Browse.Pace.clock+Browse.PageDelay(),Browse.SearchNotBefore or 0)
+		searchCaption(true)
+	end
+	Browse.InfoLabelUpdate()
+end
+local function sendQuery(scan)
+	local q=scan.query
+	scan.sentAt,scan.retryAt=Browse.Pace.clock,nil
+	scan.attempts=scan.attempts+1
+	Browse.NativeGeneration=(Browse.NativeGeneration or 0)+1
+	if not scan.broad and scan.attempts>1 then
+		scan.items,scan.byId,scan.seen={},{},{};Browse.CurrentScanItem=1;Browse.List_Update()
+	end
+	local accepted=AuctionBrowseSearchItem(q.name,q.minlvl,q.maxlvl,q.rarity,1,q.rune,q.usable,q.cat1,q.cat2,q.cat3)
+	if accepted==false then Browse.PaceBackOff();scan.retryAt=Browse.Pace.clock+Browse.PageDelay() end
+end
+local function beginQuery(scan)
+	local q,soon
+	for i,candidate in ipairs(scan.queue) do
+		if not candidate.readyAt or candidate.readyAt<=Browse.Pace.clock then q=table.remove(scan.queue,i);break end
+		soon=math.min(soon or candidate.readyAt,candidate.readyAt)
+	end
+	if not q and soon then scan.nextAt=soon;return end
+	if not q then finishScan(); return end
+	scan.query,scan.children,scan.count,scan.waitPageAt=q,nil,nil,nil
+	scan.stage,scan.attempts="header",0
+	scan.queries=scan.queries+1
+	Browse.PrepareCachedSearch(); Browse.MaxPages,Browse.LastCached=0,0
+	CachingActive,AwaitingData=true,true
+	TimeRemaining=SEARCH_DELAY_START
+	sendQuery(scan)
+	Browse.InfoLabelUpdate()
+end
+local function queryDone()
+	local scan=Browse.Scan
+	if not scan or not scan.active or scan.stage=="wait" or scan.stage=="done" then return end
+	if queryKey(scan.query)==scan.initialKey then scan.initialComplete=true end
+	if scan.children then
+		scan.expanded=true
+		local key=queryKey(scan.query)
+		if scan.unresolved[key] then scan.unresolved[key]=nil;scan.capped=scan.capped-1 end
+		for _,q in ipairs(scan.children) do scan.queue[#scan.queue+1]=q end
+	elseif scan.broad and scan.count==SCAN_CAP then
+		local key=queryKey(scan.query)
+		if not scan.unresolved[key] then scan.unresolved[key]=true;scan.capped=scan.capped+1 end
+		-- Some identical-item groups have no further native partition. Poll
+		-- them again at a modest pace; never label that coverage complete.
+		scan.query.readyAt=Browse.Pace.clock+60
+		scan.queue[#scan.queue+1]=scan.query
+	else
+		local key=queryKey(scan.query)
+		if scan.unresolved[key] then scan.unresolved[key]=nil;scan.capped=scan.capped-1 end
+	end
+	scan.finished=scan.finished+1
+	CachingActive,AwaitingData=nil,nil
+	if #scan.queue==0 then finishScan(); return end
+	scan.stage,scan.nextAt="wait",Browse.Pace.clock+Browse.PageDelay()
+	scan.waitReason=nil
+	Browse.InfoLabelUpdate()
+end
+local function retryQuery(scan,reason)
+	Browse.PaceBackOff()
+	scan.waitReason=reason
+	scan.waitPageAt=nil
+	scan.retryAt=Browse.Pace.clock+Browse.PageDelay()
+	scan.stage="header"
+	CachingActive,AwaitingData=true,true
+	Browse.InfoLabelUpdate()
+end
+local function scanUpdate()
+	local scan=Browse.Scan; if not scan or not scan.active then return end
+	if scan.stage=="wait" and Browse.Pace.clock>=scan.nextAt and not Browse.HistoryRequestOut() then beginQuery(scan)
+	elseif scan.stage=="header" then
+		if scan.retryAt and Browse.Pace.clock>=scan.retryAt and not Browse.HistoryRequestOut() then
+			sendQuery(scan)
+		elseif not scan.retryAt and Browse.Pace.clock-scan.sentAt>=SCAN_TIMEOUT then
+			retryQuery(scan,"Server response delayed; retrying")
+		end
+	elseif scan.stage=="pages" and scan.waitPageAt and Browse.Pace.clock-scan.waitPageAt>=SCAN_TIMEOUT then
+		-- A server may report more pages than it actually supplies. Narrow a
+		-- stalled query too, rather than relying only on the reported cap.
+		local children=scan.broad and Browse.SplitSearch(scan.query)
+		if children then scan.children=children;queryDone()
+		else
+			retryQuery(scan,"Page response delayed; retrying")
+			Browse.PrepareCachedSearch();Browse.MaxPages=0
+		end
+	end
+end
+local function rememberListing(listing)
+	local scan=Browse.Scan
+	if not scan or not listing.auctionid then return listing end
+	listing._nativeGeneration=Browse.NativeGeneration
+	listing.searchQuery=scan.query
+	if listing.itemid==200000 or listing.itemid==200003 then
+		listing.count=tonumber(string.match(string.gsub(listing.name or "","%"..COMMA,""),"%d*") or "1") or 1
+	end
+	if scan.broad and AAH.BroadUI then return AAH.BroadUI.Remember(scan,listing) end
+	local id=listing.auctionid
+	if scan.seen[id] then return scan.byId[id] or {} end
+	scan.seen[id],scan.byId[id]=true,listing
+	scan.items[#scan.items+1]=listing
+	return listing
+end
 
 local HeaderList = {
     -- Menu text, colum header text, internal value, category
@@ -249,6 +438,8 @@ function Browse.Resize(num, value, extra)
 	num = math.floor(value / AAH.Layout.ROW)
 	Browse.Results.list = Browse.Results.list or {}
 	AAH_BrowseList:SetSize(666 + extra, 340 + value)
+	AAH_BrowseInfoLabel:SetWidth(350+extra)
+	if AAH_BrowseScanBar then AAH_BrowseScanBar:SetWidth(350+extra) end
 	AAH_BrowseCategory:SetSize(142, 340 + value)
 	for _, f in ipairs({ AAH_BrowseList, AAH_BrowseCategory }) do
 		f:ClearAllAnchors()
@@ -261,10 +452,11 @@ function Browse.Resize(num, value, extra)
 	Browse.SearchExtra = searchExtra
 	AAH.Layout.Try(AAH_BrowseSavedSearch, "SetHeight", 481 + value + hx)
 	Browse.DisplayedItems = math.max(1, math.min(7 + num, Browse.MAX_ROWS))
+	Browse.TreeItems=Browse.DisplayedItems
 	for i = Browse.DisplayedItems + 1, Browse.MAX_ROWS do
 		getglobal("AAH_BrowseListItem"..i):Hide()
 	end
-	for i = (Browse.DisplayedItems * 2) + 1, Browse.MAX_ROWS * 2 do
+	for i = (Browse.TreeItems * 2) + 1, Browse.MAX_ROWS * 2 do
 		getglobal("AAH_BrowseCategoryButton"..i):Hide()
 	end
 	for i = (Browse.DisplayedItems * 2) + 7, Browse.MAX_ROWS * 2 + 6 do
@@ -338,11 +530,15 @@ function Browse.LayoutColumns(extra)
 	for i = 1, Browse.MAX_ROWS do
 		local n = "AAH_BrowseListItem"..i
 		_G[n]:SetWidth(636 + extra)
+		_G[n]:SetHeight(40)
+		_G[n.."Stats"]:SetHeight(36)
 		_G[n.."Name"]:SetWidth(145 + nameExtra)
 		local before = n.."Dura"
 		if statsW > 0 then
 			_G[n.."Stats"]:SetWidth(statsW)
-			_G[n.."StatsText"]:SetWidth(statsW)
+			for line = 1, AAH.Stats.NAME_LINES do
+				_G[n.."StatsText"..line]:SetWidth(statsW)
+			end
 			_G[n.."Stats"]:ClearAllAnchors()
 			_G[n.."Stats"]:SetAnchor("LEFT", "RIGHT", n.."Dura", 6, 0)
 			_G[n.."Stats"]:Show()
@@ -388,7 +584,7 @@ end
 function Browse.Frame_OnLoad(this)
 	AAH_BrowseHeaderPPU:SetText(AAHLocale.Messages.GENERAL_PRICE_PER_UNIT_HEADER)
 	AAH_BrowseHeaderCustom2:SetText(AAHLocale.Messages.GENERAL_TIER_HEADER)
-	AAH_BrowseHeaderStats:SetText("Stats")
+	AAH_BrowseHeaderStats:SetText("Stats: " .. ((AAH_SavedSettings and AAH_SavedSettings.StatsDisplay == "names") and "Names" or "Values"))
 
 	for _, Header in pairs(HeaderFrames) do
 		_G[Header]:SetWidth(_G[Header]:GetTextWidth() + 12)
@@ -426,13 +622,29 @@ function Browse.Frame_OnUpdate(this, elapsedTime)
 		SearchDelay = SearchDelay - elapsedTime
         if SearchDelay <= 0 then
             SearchRequested = false
-            Browse.ExecuteSearch()
+            Browse.ExecuteSearch(SearchBroadRequested)
         end
 	end
 
 	Browse.Pace.clock = Browse.Pace.clock + (elapsedTime or 0)
+	if AAH.BroadUI and (not Browse.helperCheckAt or Browse.Pace.clock>=Browse.helperCheckAt) then
+		Browse.helperCheckAt=Browse.Pace.clock+1;AAH.BroadUI.UpdateHelperState()
+		local scan=Browse.Scan
+		if scan and scan.broad and scan.active and AAH.BroadCache then
+			if AAH.BroadCache.State()~="running" then
+				Browse.PauseSession();scan.pausedForHelper=true;scan.waitReason="Global Bank helper unavailable; broad scan paused."
+			elseif scan.pausedForHelper and (not AAH.Main or AAH.Main.sessionOpen~=false) then
+				scan.pausedForHelper,scan.waitReason=nil,nil;Browse.ResumeSession()
+			end
+		end
+		if AAH.BroadCache and (not Browse.cachePollAt or Browse.Pace.clock>=Browse.cachePollAt) then
+			Browse.cachePollAt=Browse.Pace.clock+30;AAH.BroadCache.ReadHelper();AAH.BroadUI.Refresh()
+		end
+	end
+	local connected=not AAH.Main or AAH.Main.sessionOpen~=false
+	if connected then scanUpdate() end
 	-- one request at a time: no price history while a page is on its way (Cherry's Kit)
-	if AAH.History.Processing and not (CachingActive and AwaitingData) then
+	if connected and AAH.History.Processing and not (CachingActive and AwaitingData) then
 		AAH.History.Queue_Process()
 	end
 
@@ -448,7 +660,7 @@ function Browse.Frame_OnUpdate(this, elapsedTime)
         end
 	end
 
-	if CachingActive then
+	if CachingActive and not (Browse.Scan and Browse.Scan.stage=="header") then
 		TimeRemaining = TimeRemaining - elapsedTime
 		Browse.Pace.time = Browse.Pace.time + (elapsedTime or 0)
 
@@ -464,31 +676,44 @@ function Browse.Frame_OnUpdate(this, elapsedTime)
                     Browse.CachePage(false)
                 else
                     paceRefused()
+                    if Browse.Scan then Browse.Scan.waitPageAt=Browse.Scan.waitPageAt or Browse.Pace.clock end
                     TimeRemaining = Browse.PageDelay()
                 end
             else
                 CachingActive = nil
+                queryDone()
             end
         end
 	end
 end
 
-function AAH.Events.AUCTION_BROWSE_UPDATE(this)
-	if Browse.BuyoutEvent == true then
-		Browse.BuyoutEvent = false
-        Browse.Event_OnBuyout()
-	end
-
+local function receiveSearchHeader()
 	if Browse.CurrentCachePage == 1 and Browse.Cache.PAGEREADY[1] == false and CachingActive then
+		if Browse.Scan and Browse.Scan.stage=="header" and Browse.Scan.retryAt then return true end
 		Browse.MaxPages = GetAuctionBrowseMaxPages()
 		Browse.EnsureCachePages(Browse.MaxPages)
+		local scan=Browse.Scan
+		if scan and scan.active and (scan.stage=="header" or scan.stage=="pages") then
+			scan.stage,scan.count,scan.retryAt,scan.waitReason="pages",GetAuctionBrowseMaxItems(),nil,nil
+			scan.children=scan.broad and scan.count==SCAN_CAP and Browse.SplitSearch(scan.query) or nil
+		end
 		if GetAuctionBrowseMaxItems() == 0 then
 			CachingActive = nil
 			AAH_BrowseProgressLabel:SetText(AAHLocale.Messages.BROWSE_NO_RESULTS)
+			queryDone()
 		else
 			TimeRemaining = 0
 		end
-	elseif CachingActive and AwaitingData then
+		return true
+	end
+end
+function AAH.Events.AUCTION_BROWSE_UPDATE(this)
+	if Browse.BuyoutEvent == true then
+		Browse.BuyoutEvent = false
+		Browse.Event_OnBuyout()
+	end
+	if receiveSearchHeader() then return end
+	if CachingActive and AwaitingData then
 		-- Cherry's Kit: the page we are waiting for has arrived; read it now, not on the next retry
 		TimeRemaining = 0
 	end
@@ -508,6 +733,7 @@ function Browse.Event_OnBuyout()
 end
 
 function AAH.Events.AUCTION_SEARCH_RESULT()
+	receiveSearchHeader()
 	TimeRemaining = 0
 	AAH_BrowseSearchButton:Enable()
 end
@@ -546,6 +772,13 @@ function Browse.DoFilteringStep(elapsedTime)
     AAH.Filters.Prepare() -- read the filter fields once per frame, not once per item
     local budget = AAH_SavedSettings.FilterSpeed
     while budget > 0 do
+        if Browse.Scan then
+            local listing=Browse.Scan.items[Browse.CurrentScanItem or 1]
+            if not listing then Browse.FilteringActive=false;Browse.ResultsDirty=true;break end
+            budget=budget-(listing.parsed and PARSED_COST or 1)
+            Browse.AddListingToList(listing)
+            Browse.CurrentScanItem=(Browse.CurrentScanItem or 1)+1
+        else
         while (not(Browse.Cache.PAGEREADY and Browse.Cache.PAGEREADY[Browse.CurrentFilterPage] == true and
 	        Browse.Cache.CACHEDDATA[Browse.CurrentFilterPage][Browse.CurrentFilterItem] and
 	        Browse.Cache.CACHEDDATA[Browse.CurrentFilterPage][Browse.CurrentFilterItem].auctionid
@@ -569,6 +802,7 @@ function Browse.DoFilteringStep(elapsedTime)
             budget = budget - (listing.parsed and PARSED_COST or 1)
             Browse.AddItemToList(Browse.CurrentFilterPage, Browse.CurrentFilterItem)
             nextFilterItem()
+        end
         end
     end
     AAH.Filters.Done()
@@ -611,6 +845,7 @@ function Browse.DoFilteringStep(elapsedTime)
 end
 
 function Browse.Frame_StopUpdates()
+    Browse.CancelSearch("Stopped; partial results")
     CachingActive = nil
 	FilterChanged = false
 	SearchRequested = false
@@ -621,6 +856,14 @@ end
 
 function Browse.Header_OnClick(this, key)
 	local id = this:GetID()
+ if id == 8 and key == "LBUTTON" then
+  AAH_SavedSettings.StatsDisplay = AAH_SavedSettings.StatsDisplay == "names" and "values" or "names"
+  this:SetText("Stats: " .. (AAH_SavedSettings.StatsDisplay == "names" and "Names" or "Values"))
+  if AAH.Layout then AAH.Layout.Apply(AAH.Layout.Size()) else Browse.List_UpdateItems() end
+  return
+ elseif id == 8 and key == "RBUTTON" then
+  key = "LBUTTON"
+ end
 	if key == "LBUTTON" then
 		Browse.ClearSortIcons()
 		if Browse.Results.sortIndex == id or Browse.Results.sortIndex == -id then
@@ -680,7 +923,10 @@ function Browse.List_Sort(index)
 		elseif i == 3 then
 			AAH.Tools.CurrentSortItem = Browse.CustomSortItem2
 		elseif i == 4 then
-			AAH.Tools.CurrentSortItem = "leftTime"
+			if Browse.Scan and Browse.Scan.broad and AAH.BroadCache then
+				for _,record in ipairs(Browse.Results.list) do record._seenAge=AAH.BroadCache.Age(record.cacheEntry) or math.huge end
+				AAH.Tools.CurrentSortItem = "_seenAge"
+			else AAH.Tools.CurrentSortItem = "leftTime" end
 		elseif i == 5 then
 			AAH.Tools.CurrentSortItem = "seller"
 		elseif i == 8 then
@@ -778,7 +1024,7 @@ function Browse.BuyoutButton_OnClick(this)
 end
 
 function Browse.CategoryScrollBar_Update()
-	local maxValue = GetAuctionBrowseFilterMaxItems(Browse.SelectedCategory[1], Browse.SelectedCategory[2]) - (Browse.DisplayedItems * 2)
+	local maxValue = GetAuctionBrowseFilterMaxItems(Browse.SelectedCategory[1], Browse.SelectedCategory[2]) - ((Browse.TreeItems or Browse.DisplayedItems) * 2)
 	if maxValue > 0 then
 		AAH_BrowseCategoryScrollBar:Show()
 		AAH_BrowseCategoryScrollBar:SetMinMaxValues(0, maxValue)
@@ -793,14 +1039,14 @@ function Browse.Category_UpdateList()
 	Browse.CategoryButtonNums = 0
 	Browse.CategoryScrollValue = AAH_BrowseCategoryScrollBar:GetValue()
 	Browse.Category_SetItemInfo(1, GetAuctionBrowseFilterList())
-	for i = Browse.CategoryButtonNums + 1, Browse.DisplayedItems * 2 do
+	for i = Browse.CategoryButtonNums + 1, (Browse.TreeItems or Browse.DisplayedItems) * 2 do
 		_G["AAH_BrowseCategoryButton"..i]:Hide()
 	end
 end
 
 function Browse.Category_SetItemInfo(layer, ...)
 	for i = 1, arg.n do
-		if Browse.CategoryButtonNums >= Browse.DisplayedItems * 2 then
+		if Browse.CategoryButtonNums >= (Browse.TreeItems or Browse.DisplayedItems) * 2 then
 			return
 		end
 		if Browse.CategoryScrollValue > 0 then
@@ -1043,24 +1289,27 @@ function Browse.ResetButton_OnClick()
 	AAH_BrowseFilterMaxPriceEditBox:SetText("")
 end
 
-function Browse.SearchButton_OnClick()
+function Browse.SearchButton_OnClick(broad)
+    if Browse.Scan and Browse.Scan.active then Browse.CancelSearch();return end
+	if AAH.Main and AAH.Main.sessionOpen==false then Browse.InfoLabelUpdate();return end
 
 	Browse.PrepareCachedSearch()
 	Browse.List_Update()
 
 	if not CachingActive then
-		Browse.ExecuteSearch()
+		Browse.ExecuteSearch(broad==true)
 	else
 		AAH_BrowseSearchButton:Disable()
 		CachingActive = nil
 		SearchRequested = true
+		SearchBroadRequested = broad==true
 		SearchDelay = ABORT_DELAY
 		AAH_BrowseProgressLabel:SetText(AAHLocale.Messages.BROWSE_CANCELLING)
 		AAH_BrowseInfoLabel:SetText("")
 	end
 end
 
-function Browse.ExecuteSearch()
+function Browse.ExecuteSearch(broad)
 	local name = AAH_BrowseNameEditBox:GetText()
 	local minlvl = AAH_BrowseMinLvlEditBox:GetNumber()
 	local maxlvl = AAH_BrowseMaxLvlEditBox:GetNumber()
@@ -1071,10 +1320,19 @@ function Browse.ExecuteSearch()
     local cat2=Browse.SelectedCategory[2]
     local cat3=Browse.SelectedCategory[3]
 
-	Browse.DoSearch(name, minlvl, maxlvl, rarity, rune, usable, cat1,cat2,cat3)
+	Browse.DoSearch(name, minlvl, maxlvl, rarity, rune, usable, cat1,cat2,cat3,broad)
 end
 
-function Browse.DoSearch(name, minlvl, maxlvl, rarity, rune, usable, cat1, cat2, cat3)
+function Browse.DoSearch(name, minlvl, maxlvl, rarity, rune, usable, cat1, cat2, cat3,broad)
+	if AAH.Main and AAH.Main.sessionOpen==false then Browse.InfoLabelUpdate();return end
+	if broad and AAH.BroadUI and not AAH.BroadUI.UpdateHelperState() then
+		AAH_BrowseProgressLabel:SetText(AAH.BroadUI.HelperMessage());AAH.BroadUI.UpdateHelperState();return
+	end
+	if AAH.BroadUI then
+		if AAH.Main and AAH.Main.ClickTab then AAH.Main.ClickTab(broad and 5 or 1,true)
+		else AAH.BroadUI.Switch(broad and "broad" or "normal",true) end
+	end
+	Browse.CancelSearch()
 
 	name = string.gsub(name, "'", "%%") -- see: http://forum.runesofmagic.com/showthread.php?t=490924&p=4405930#post4405930
 
@@ -1107,6 +1365,11 @@ function Browse.DoSearch(name, minlvl, maxlvl, rarity, rune, usable, cat1, cat2,
 		cat2 = cat2,
 		cat3 = cat3,
 	}
+	Browse.Scan={active=true,broad=broad==true,stage="wait",items={},byId={},seen={},queue={copyQuery(Browse.LastSearch)},
+		queries=0,finished=0,capped=0,unresolved={},initialKey=queryKey(Browse.LastSearch),
+		nextAt=math.max(Browse.Pace.clock,Browse.SearchNotBefore or 0)}
+	Browse.CurrentScanItem=1
+	if AAH.BroadUI then AAH.BroadUI.Attach(Browse.Scan,Browse.LastSearch) end
 
 	AAH_BrowseProgressLabel:SetText(AAHLocale.Messages.BROWSE_SEARCHING)
 	AAH_BrowseInfoLabel:SetText("")
@@ -1116,18 +1379,19 @@ function Browse.DoSearch(name, minlvl, maxlvl, rarity, rune, usable, cat1, cat2,
         AAH_BrowseHeaderPPU:SetText(AAHLocale.Messages.GENERAL_PRICE_PER_UNIT_HEADER)
     end
 
+	if Browse.HistoryRequestOut() then
+		Browse.Scan.nextAt=math.max(Browse.Scan.nextAt,AAH.History.RequestedAt+HISTORY_TIMEOUT)
+	end
 	AAH.History.ClearQueue()
 
 	Browse.Results.pageNum = 1
 	Browse.PrepareCachedSearch()
 	Browse.List_Update()
 
-    TimeRemaining = SEARCH_DELAY_START
 	Browse.Pace.pages, Browse.Pace.refusals, Browse.Pace.busy, Browse.Pace.time, Browse.Pace.sorts = 0, 0, 0, 0, 0
-	CachingActive = true
-	AuctionBrowseSearchItem(name, minlvl, maxlvl, rarity, 1, rune, usable, cat1,cat2,cat3)
-
-	AAH_BrowseSearchButton:Disable()
+	searchCaption(true)
+	CachingActive,AwaitingData=nil,nil
+	scanUpdate()
 end
 
 function Browse.PrepareCachedSearch()
@@ -1183,6 +1447,7 @@ function Browse.CachePage(firstPage)
 
 	local auctionid, name, count, rarity, texture, level, leftTime, seller, isBuyer, moneyMode, bidPrice, buyoutPrice = GetAuctionBrowseItemInfo(Browse.CurrentCachePage, j)
 	if not auctionid then -- not loaded
+		if Browse.Scan then Browse.Scan.waitPageAt=Browse.Scan.waitPageAt or Browse.Pace.clock end
 		if Browse.CurrentCachePage <= Browse.MaxPages then
 			TimeRemaining = SEARCH_DELAY_RETRY
 			AwaitingData = true
@@ -1194,6 +1459,7 @@ function Browse.CachePage(firstPage)
 	end
 
 	AwaitingData = nil
+	if Browse.Scan then Browse.Scan.waitPageAt=nil end
 	for i = 1, Browse.MaxPageItems do
 		auctionid, name, count, rarity, texture, level, leftTime, seller, isBuyer, moneyMode, bidPrice, buyoutPrice = GetAuctionBrowseItemInfo(Browse.CurrentCachePage, i)
 		if auctionid then
@@ -1201,7 +1467,7 @@ function Browse.CachePage(firstPage)
 			itemid, itemname = AAH.Tools.ParseLink(link)
 		end
 
-		Browse.Cache.CACHEDDATA[Browse.CurrentCachePage][i] = {
+		local listing = {
 			auctionid = auctionid,
 			itemid = itemid,
 			link = link,
@@ -1218,30 +1484,36 @@ function Browse.CachePage(firstPage)
 			bidPrice = bidPrice,
 			buyoutPrice = buyoutPrice,
 		}
-
-        AAH.History.Queue_Insertitem(auctionid, name, link, itemid)
+		Browse.Cache.CACHEDDATA[Browse.CurrentCachePage][i] = rememberListing(listing)
+        if auctionid and not (Browse.Scan and Browse.Scan.broad) then AAH.History.Queue_Insertitem(auctionid, name, link, itemid) end
 	end
 
 	Browse.Cache.PAGEREADY[Browse.CurrentCachePage] = true
 	Browse.LastCached = Browse.CurrentCachePage
 	Browse.InfoLabelUpdate()
 	Browse.CurrentCachePage = Browse.CurrentCachePage + 1
-	if firstPage then
+	if Browse.Scan then
+		Browse.FilteringActive=(Browse.CurrentScanItem or 1)<=#Browse.Scan.items
+	elseif firstPage then
 		Browse.List_Update()
 	else
 		Browse.List_Update_AddPage(Browse.LastCached)
 	end
 	pacePageDone()
 	TimeRemaining = Browse.PageDelay()
+	local scan=Browse.Scan
+	if scan and scan.active and (scan.children and scan.initialComplete or Browse.CurrentCachePage>Browse.MaxPages) then queryDone() end
 end
 
 function Browse.List_Update()
 	Browse.Results.nextPage = nil
-    Browse.Results.maxNums = GetAuctionBrowseMaxItems()
+    Browse.Results.maxNums = Browse.Scan and #Browse.Scan.items or GetAuctionBrowseMaxItems()
     Browse.Results.list = {}
+    Browse.FilteringActive = false
     Browse.ResultsDirty = nil
     SortClock = 0
     if Browse.Results.maxNums > 0 then
+        Browse.CurrentScanItem=1
         Browse.CurrentFilterPage = 1
         Browse.CurrentFilterItem = 1
         Browse.FilteringActive = true
@@ -1264,6 +1536,7 @@ function Browse.List_Update_AddPage(addPage)
 end
 
 function Browse.Cache_FindAuction(auctionid)
+    if Browse.Scan then return Browse.Scan.byId[auctionid] end
     for j = 1, Browse.MaxPages do
 		for i = 1, Browse.MaxPageItems do
 			local item = Browse.Cache.CACHEDDATA[j] and Browse.Cache.CACHEDDATA[j][i]
@@ -1275,6 +1548,11 @@ function Browse.Cache_FindAuction(auctionid)
 end
 
 function Browse.Cache_ClearAuction(auctionid)
+    if Browse.Scan then
+        local item=Browse.Scan.byId[auctionid]
+        if item then item.auctionid=nil;Browse.Scan.byId[auctionid]=nil;return true end
+        return false
+    end
     for j = 1, Browse.MaxPages do
         for i = 1, Browse.MaxPageItems do
 			local item = Browse.Cache.CACHEDDATA[j] and Browse.Cache.CACHEDDATA[j][i]
@@ -1380,18 +1658,20 @@ local function ParseToolTip(listing)
             break
         end
 
-        left = getglobal("AAH_TooltipTextLeft"..i):GetText()
+        local leftCtrl = getglobal("AAH_TooltipTextLeft"..i)
+        local rightCtrl = getglobal("AAH_TooltipTextRight"..i)
+        left = leftCtrl:GetText()
         local lkey, lvalue, lname
         if left and left ~= "" and leftVis then
 	        lkey, lvalue, lname = ParseLine(listing, left)
         end
-        right = getglobal("AAH_TooltipTextRight"..i):GetText()
+        right = rightCtrl:GetText()
         if right and right ~= "" and rightVis then
 	        ParseLine(listing, right)
         else
             right = nil
         end
-        AAH.Stats.ReadSlotLine(listing, (leftVis and left) or nil, right, lkey, lvalue)
+        AAH.Stats.ReadSlotLine(listing, (leftVis and left) or nil, right, lkey, lvalue, AAH.Stats.NativeColor(leftCtrl, left), AAH.Stats.NativeColor(rightCtrl, right))
     end
     AAH.Stats.Capture(listing) -- the item's own stats, before the derived values below
     if listing.mdam > 0 then
@@ -1404,7 +1684,10 @@ end
 
 function Browse.AddItemToList(pageNumber, itemIndex)
 	if Browse.Cache.PAGEREADY and Browse.Cache.PAGEREADY[pageNumber] == true then
-		local listing = Browse.Cache.CACHEDDATA[pageNumber][itemIndex]
+		Browse.AddListingToList(Browse.Cache.CACHEDDATA[pageNumber][itemIndex])
+	end
+end
+function Browse.AddListingToList(listing)
 		if not listing.auctionid then return end
 
         if listing.itemid == 200000 or listing.itemid == 200003 then -- Get Count from "itemname" for gold and diamonds
@@ -1441,10 +1724,56 @@ function Browse.AddItemToList(pageNumber, itemIndex)
         if AAH.Filters.CheckFilter(listing) then
             table.insert(Browse.Results.list, listing)
         end
-	end
 end
 
+local function scanBar(scan,percent,label)
+	local bar=AAH_BrowseScanBar; if not bar then return end
+	if not scan or not scan.broad or not scan.active and (scan.queries or 0)==0 then bar:Hide();return end
+	if not Browse.scanBarReady then
+		local path=AAH.Manifest.Root.."/Textures/scan_bar.tga"
+		AAH_BrowseScanBarBackground:SetTexture(path);AAH_BrowseScanBarBackground:SetColor(.035,.07,.09)
+		AAH_BrowseScanBarFill:SetTexture(path);AAH_BrowseScanBarFill:SetColor(.08,.55,.7)
+		Browse.scanBarReady=true
+	end
+	bar:Show()
+	scan.percent=percent
+	AAH_BrowseScanBarFill:SetWidth(math.max(1,bar:GetWidth()*percent/100))
+	AAH_BrowseScanBarText:SetText(percent.."% - "..label)
+end
 function Browse.InfoLabelUpdate()
+	if AAH.Main and AAH.Main.sessionOpen==false then
+		local message="Auction connection closed; cached results retained. Talk to the auctioneer to resume."
+		scanBar(Browse.Scan,Browse.Scan and Browse.Scan.percent or 0,message)
+		AAH_BrowseProgressLabel:SetText(#(Browse.Results.list or {})==0 and message or "")
+		AAH_BrowseInfoLabel:SetText(string.format("%d cached auctions | %d shown",
+			Browse.Scan and #Browse.Scan.items or 0,#(Browse.Results.list or {})))
+		return
+	end
+	local scan=Browse.Scan
+	if scan then
+		local progress=scan.waitReason or scan.capped>0 and (scan.capped.." capped group(s) still being checked; server has not exposed the full list")
+			or scan.expanded and "Scanning smaller categories and level ranges..." or "Searching..."
+		local current=scan.active and (scan.stage=="header" or scan.stage=="pages") and 1 or 0
+		local known=scan.finished+#scan.queue+current+(current==1 and scan.children and #scan.children or 0)
+		local part=scan.stage=="pages" and Browse.MaxPages>0 and math.min(1,Browse.LastCached/Browse.MaxPages) or 0
+		local percent=known>0 and math.floor(100*(scan.finished+part)/known) or 0
+		if scan.active then percent=math.min(99,percent) end
+		if scan.broad and scan.active and not scan.initialComplete and scan.count then
+			local fetched=math.min(scan.count,Browse.LastCached*Browse.MaxPageItems)
+			progress=string.format("Initial batch %d/2: %d / %d auctions (%d%%)",fetched>=500 and 2 or 1,
+				fetched,math.min(1000,scan.count),math.floor(100*fetched/math.max(1,scan.count)))
+		elseif scan.active and scan.stage=="pages" then
+			progress=progress..string.format(" Page %d/%d",Browse.LastCached,Browse.MaxPages)
+		end
+		local message=scan.active and progress or scan.reason or "Search finished"
+		scanBar(scan,percent,message)
+		AAH_BrowseProgressLabel:SetText(#(Browse.Results.list or {})==0 and message or "")
+		AAH_BrowseInfoLabel:SetText(string.format("%d "..(scan.broad and "cached offers" or "unique auctions").." | %d shown | %d%% of known searches checked (%d/%d)%s",
+			#scan.items,#(Browse.Results.list or {}),percent,scan.finished,known,
+			scan.active and (" | "..#scan.queue.." queued | Stop to cancel") or ""))
+		return
+	end
+	scanBar(nil,0,"")
 
     local pages = Browse.MaxPages
     if not pages or pages==0 then
@@ -1470,6 +1799,11 @@ function Browse.InfoLabelUpdate()
 end
 
 function Browse.List_UpdateItems()
+    local snapshot=Browse.DataView=="broad" or Browse.Scan and Browse.Scan.broad
+    AAH_BrowseHeaderLeftTime:SetText(snapshot and "Last seen" or TEXT("AUCTION_BALANCE_TIME"))
+    AAH_BrowseHeaderPrice:SetText(snapshot and "Last price" or TEXT("AUCTION_PRICE"))
+    AAH_BrowseHeaderStats:SetText("Stats: " .. ((AAH_SavedSettings and AAH_SavedSettings.StatsDisplay == "names") and "Names" or "Values"))
+    AAH_BrowseHeaderStats:SetWidth(AAH_BrowseHeaderStats:GetTextWidth() + 12)
 	local first_index = AAH_BrowseListScrollBar:GetValue()
 
 	for i = 1, Browse.DisplayedItems do
@@ -1494,19 +1828,19 @@ function Browse.List_UpdateItems()
 
 			SetItemButtonTexture(getglobal(buttonName.."Icon"), info.texture)
 			if Browse.StatsWidth > 0 then
-				getglobal(buttonName.."StatsText"):SetText(AAH.Stats.Text(info, Browse.StatsWidth))
+				AAH.Stats.SetCell(buttonName.."Stats", info, Browse.StatsWidth, AAH_SavedSettings.StatsDisplay)
 				getglobal(buttonName.."Dura"):SetText(Browse.DuraText(info))
 			end
 			for k = 1, 2 do
 				if not info[Browse["CustomSortItem"..k]] or info[Browse["CustomSortItem"..k]] == 0 or info[Browse["CustomSortItem"..k]] == "" then
 					getglobal(buttonName.."Custom"..k):SetText("")
 				elseif Browse["CustomSortItem"..k] == "level" then
-					getglobal(buttonName.."Custom"..k):SetText(info.levelcolor..info.level.."|r")
+					getglobal(buttonName.."Custom"..k):SetText((info.levelcolor or NORMAL_FONT_COLOR_CODE or "|cffffffff")..info.level.."|r")
 				else
 					getglobal(buttonName.."Custom"..k):SetText(tonumber(string.format("%.2f", info[Browse["CustomSortItem"..k]])))
 				end
 			end
-			getglobal(buttonName.."LeftTime"):SetText(AAH.Tools.LocalTimeString(info.leftTime))
+			getglobal(buttonName.."LeftTime"):SetText(AAH.BroadUI and info.cacheEntry and AAH.BroadUI.AgeText(info) or AAH.Tools.LocalTimeString(info.leftTime))
 			getglobal(buttonName.."Seller"):SetText(info.seller)
 
 			getglobal(buttonName.."PPUBid"):SetText("")
@@ -1558,6 +1892,7 @@ function Browse.ListItem_OnClick(row, key)
 end
 
 function Browse.SearchSame(auctionid)
+	if AAH.BroadUI then return AAH.BroadUI.TargetSearch(auctionid) end
 	local _, info = Browse.List_FindAuctionIndex(auctionid)
 	if not info or not info.name then
 		return
@@ -1571,7 +1906,8 @@ function Browse.SearchSame(auctionid)
 end
 
 function Browse.List_ItemIcon_OnClick(this,key)
-	local itemLink = GetAuctionBrowseItemLink(this:GetParent().auctionid)
+	local _,cached=Browse.List_FindAuctionIndex(this:GetParent().auctionid)
+	local itemLink = cached and cached.link or GetAuctionBrowseItemLink(this:GetParent().auctionid)
     if IsAltKeyDown and IsAltKeyDown() and key == "LBUTTON" then
         Browse.SearchSame(this:GetParent().auctionid)
     elseif IsShiftKeyDown() and key == "LBUTTON" then
@@ -1607,13 +1943,21 @@ function Browse.List_SetSelected(auctionid)
     Browse.selected_auctionid = auctionid
     local index = Browse.List_FindAuctionIndex(auctionid)
     if not index then
-        Browse.selected_auctionid = nil
+        -- A refilter builds the result array incrementally. Keep the stable
+        -- selection while that array is temporarily empty, then clear it only
+        -- if the finished result really no longer contains the item.
+        if not Browse.FilteringActive then Browse.selected_auctionid = nil end
+        if AAH.BroadUI then AAH.BroadUI.UpdateSelection(Browse.selected_auctionid) end
         return
     end
 
     local first_index = AAH_BrowseListScrollBar:GetValue()
     local but_idx = index-first_index
     local button = _G["AAH_BrowseListItem"..but_idx]
+    if button and but_idx>=1 and but_idx<=Browse.DisplayedItems then button:LockHighlight() end
+	-- Read-only quote actions must not bypass the selected-row highlight.
+	if AAH.BroadUI and AAH.BroadUI.UpdateSelection(auctionid) then return end
+	if AAH.Main and AAH.Main.sessionOpen==false then return end
     if not button or but_idx>Browse.DisplayedItems then return end
 
     local _,info = Browse.List_GetSelected()
@@ -1626,7 +1970,6 @@ function Browse.List_SetSelected(auctionid)
         AAH_BrowseBuyoutButton:Enable()
     end
     AAH_BrowseHistoryButton:Enable()
-    button:LockHighlight()
 end
 
 
