@@ -1,10 +1,14 @@
 # Cherry's KittyCombo
 
-Version **1.7.13** · Kit release **0.11.83** · [All addons / hub](../README.md)
+Version **1.7.14** · Kit release **0.11.84** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
+
+## Updated in 1.7.14
+
+The mode button's default position is **32 UI units lower** to clear the game's housing/furniture controls. Its default readout moves by the same amount to preserve the gap. Manually saved button/readout positions take precedence and are retained. Check the default placement inside a house with the native controls visible.
 
 ## Updated in 1.7.13
 

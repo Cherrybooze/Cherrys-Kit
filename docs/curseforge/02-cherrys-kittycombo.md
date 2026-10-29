@@ -4,6 +4,10 @@
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
+## Updated in 1.7.14
+
+The default mode button and its readout sit 32 UI units lower to clear housing/furniture controls. Manually saved positions are preserved; verify the default position with native housing controls visible.
+
 ## Updated in 1.7.13
 
 Closed or natively hidden mode pickers reject delayed clicks, so cancelling an editor pick cannot change the live HUD mode.

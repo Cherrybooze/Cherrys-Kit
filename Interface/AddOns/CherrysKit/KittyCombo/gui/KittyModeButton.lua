@@ -327,8 +327,10 @@ end
 
 -- Saved places: x/y for the mode button, tx/ty for the current mode readout
 local PLACES = {
-	KittyModeButton = {"x", "y", -8, 40, -230, 160},
-	KittyModeText = {"tx", "ty", -8, 84, -230, 204},	-- under the mode button
+	-- Leave the default housing/furniture controls clear. Explicit saved
+	-- positions still take precedence; the readout keeps its existing gap.
+	KittyModeButton = {"x", "y", -8, 72, -230, 192},
+	KittyModeText = {"tx", "ty", -8, 116, -230, 236},	-- under the mode button
 };
 M.place = function()
 	local mode = M.setting();

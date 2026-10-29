@@ -1,13 +1,13 @@
 {
-  "kit_version": "0.11.83",
-  "hub_version": "0.4.18",
-  "release_summary": "UMM adds Windows-style drag-box selection across all six bags and a right-side Recently sent pane using the shared 20-recipient history. Ctrl/Shift-drag adds, Escape/right-click cancels, existing click/group toggles remain, and unfinished selections stop on bag changes, navigation or close. The mass-send window expands and fits the viewport; recipient selection preserves committed marks. C.O.D./sending blocks recipient changes, and active queue sending locks all four tabs. Kitty's mode picker rejects delayed clicks after closing/native hiding. The 0.11.82 development features carry forward: RWA clickthrough, scale/screen transforms, grips/reset and HP/percentage; UMM shared last-recipient/gold shortcuts and History tab; Kitty mode pickers/changemode actions. Earlier fixes and 0.2-second dispatch/1.1-second prediction carry forward. Overhead emoji pictures remain unimplemented because the inspected client lacks the required hook.",
+  "kit_version": "0.11.84",
+  "hub_version": "0.4.19",
+  "release_summary": "Kitty's default mode button/readout moves 32 UI units down to clear housing/furniture controls while retaining manually saved positions. The complete PR work is included: RWA clickthrough, manual/viewport scaling, grips/reset, HP/percentage and native transport/non-spell casts; Kitty's shared paged mode picker, changemode action/guards and private prediction; UMM shared last recipient, configurable gold presets, 20-name history, mass-send recipient pane and Windows-style drag-box selection. zBag preserves stack-split dialogs through unrelated updates and adds smaller configurable slot labels. AAH isolates item parsing from the game's TP-upgrade tooltip. The reported TP black flash still needs in-game confirmation. Earlier cross-kit fixes, 0.2-second dispatch and 1.1-second prediction carry forward. Overhead emoji pictures remain unimplemented because the inspected client lacks the required hook.",
   "runtime_validation": "Lua 5.1 simulated-client suite: 617 tests, 591 passed and 26 pre-existing skips. Coverage includes UMM drag-box/sidebar/queue handling, closed Kitty pickers, zBag split persistence/source validation/font controls, private AAH tooltip isolation and RWA native transport/non-spell casts. Native drawing, mouse capture/focus, sidebar layout, live mail timing and cross-character behavior still need in-game validation. The reported brief black flash during native TP upgrades has not been reproduced here; a confirmed shared-dialog cancellation and game-owned skill-tooltip collision were corrected, with in-game verification documented. Earlier native-client limits and the unimplemented overhead emoji limitation remain documented.",
   "addons": [
     {
       "folder": "KittyCombo",
       "title": "Cherry's KittyCombo",
-      "version": "1.7.13",
+      "version": "1.7.14",
       "command": "/kc",
       "description_file": "02-cherrys-kittycombo.md",
       "summary": "One-key priority combos, safer prediction and shared rotation codes."

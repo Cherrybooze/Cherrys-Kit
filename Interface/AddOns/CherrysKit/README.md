@@ -1,12 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.18** · Kit release **0.11.83** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.19** · Kit release **0.11.84** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
 
-## Kit 0.11.83 playtest
+## Kit 0.11.84 playtest
+
+Kitty's default mode button/readout sit 32 UI units lower to clear housing/furniture controls; manually saved positions remain authoritative. This build includes the complete 0.11.83 PR work described below.
 
 UMM adds blue drag-box item selection and a right-side Recently sent pane sharing the 20-name history. Ctrl/Shift-drag adds, Escape/right-click cancels, and clicking a recent recipient keeps committed selections. The mass-send window expands/fits the viewport; C.O.D./sending blocks recipient changes. These native controls and their layout need an in-game playtest.
 
@@ -14,7 +16,7 @@ The same pass fixes zBag's refresh-time split-dialog dismissal and adds smaller/
 
 This playtest adds default-on aura clickthrough, whole-aura Scale controls and Expand/Collapse section headers to rom weakauras. Kitty's screen-aware paged mode-icon picker is shared by its HUD widgets and the new changemode action, with an editable automatic Mode is off guard and read-only mode-transition prediction. Closed/hidden pickers reject delayed selections. The earlier PR #4 fixes carry forward. Native click pass-through, scale anchoring and popup placement still need an in-game playtest. Emoji pictures above players' heads need a client-side bubble hook absent from the inspected client; overhead rendering is not implemented here.
 
-RWA also adds opt-in screen-responsive placement/sizing (off by default), preview move/Shift-scale grips, per-aura Reset position and readable target HP/percentage. Factory positions follow the approved layout; existing saved placements are preserved. UMM adds shared Use last/gold shortcuts and a third History tab for up to 20 distinct successful recipients. UMM 7.0.1-ck7 requires hub **0.4.17 or later** to load its history files; this build includes **0.4.18**. These additions still need native-client playtesting.
+RWA also adds opt-in screen-responsive placement/sizing (off by default), preview move/Shift-scale grips, per-aura Reset position and readable target HP/percentage. Factory positions follow the approved layout; existing saved placements are preserved. UMM adds shared Use last/gold shortcuts and a third History tab for up to 20 distinct successful recipients. UMM 7.0.1-ck7 requires hub **0.4.17 or later** to load its history files; this build includes **0.4.19**. These additions still need native-client playtesting.
 
 ## Features
 

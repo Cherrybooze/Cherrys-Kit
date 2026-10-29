@@ -60,7 +60,7 @@
 		<Size><AbsDimension x="36" y="36" /></Size>
 		<Anchors>
 			<Anchor point="TOPRIGHT" relativeTo="UIParent" relativePoint="TOPRIGHT">
-				<Offset><AbsDimension x="-230" y="160" /></Offset>
+				<Offset><AbsDimension x="-230" y="192" /></Offset>
 			</Anchor>
 		</Anchors>
 		<Layers>
@@ -173,7 +173,7 @@
 		<Size><AbsDimension x="140" y="24" /></Size>
 		<Anchors>
 			<Anchor point="TOPRIGHT" relativeTo="UIParent" relativePoint="TOPRIGHT">
-				<Offset><AbsDimension x="-230" y="204" /></Offset>
+				<Offset><AbsDimension x="-230" y="236" /></Offset>
 			</Anchor>
 		</Anchors>
 		<Layers>

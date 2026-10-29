@@ -1,8 +1,12 @@
-# In-game checks for kit 0.11.83
+# In-game checks for kit 0.11.84
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.26 requires hub 0.4.14 or later; UMM 7.0.1-ck7 requires **0.4.17** for its History files. The Full ZIP includes hub **0.4.18**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.26 requires hub 0.4.14 or later; UMM 7.0.1-ck7 requires **0.4.17** for its History files. The Full ZIP includes hub **0.4.19**.
+
+## 0.11.84 default mode-button placement
+
+With no manually saved mode-widget positions, enter a house and check the furniture control: the Kitty mode button and its default readout now sit **32 UI units lower**. Check minimap-relative placement and the no-minimap fallback, then restore custom x/y and tx/ty values and confirm they remain authoritative. Existing position-restoration, edge-picker and mode-action regressions remain applicable; native furniture overlap still needs visual confirmation.
 
 ## 0.11.83 mass-send selection and recent recipients
 

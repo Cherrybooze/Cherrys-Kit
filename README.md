@@ -1,10 +1,10 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.83/CherrysKit-Full-0.11.83.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.84/CherrysKit-Full-0.11.84.zip)
 
 # Cherry's Kit
 
-> Playtest build: kit **0.11.83**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
+> Playtest build: kit **0.11.84**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.83/CherrysKit-Full-0.11.83.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.84/CherrysKit-Full-0.11.84.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -12,11 +12,16 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest build: **0.11.83** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.83)
+Current playtest build: **0.11.84** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.84)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
-## What’s new in 0.11.83
+## What’s new in 0.11.84
+
+- Kitty's default mode button/readout move 32 UI units down to clear the default housing/furniture controls. Manually saved positions are preserved.
+- The complete 0.11.83 PR work below is included.
+
+## Included 0.11.83 changes
 
 - UMM adds **drag-box selection** across all six bags. Ctrl/Shift-drag adds, Escape/right-click cancels, and the original click/group controls remain available. Bound items keep their red marks and are excluded from sending.
 - A right-side **Recently sent** pane fills the mass-send recipient without clearing committed selections. It shares the same 20-name history across characters. The wider mail window fits the viewport; sending/C.O.D. locks recipient changes and queue sending locks all four tabs.
@@ -46,7 +51,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.83/CherrysKit-Full-0.11.83.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.84/CherrysKit-Full-0.11.84.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -76,8 +81,8 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.18 |
-| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.13 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.19 |
+| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.14 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.26 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.9 |
 | [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck14 |
@@ -96,7 +101,7 @@ Some integrations need both addons: for example, running a kitty from Grid needs
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome 1.0.8](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.83/CherrysKit-GlobalBankDailyRewards-1.0.8.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
+[Download Global Bank Daily Rewards for Chrome 1.0.8](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.84/CherrysKit-GlobalBankDailyRewards-1.0.8.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
 
 Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step. Automatic page processing is limited to the Gameforge daily shop page; the extension does not send your local data to the developer.
 

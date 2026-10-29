@@ -166,9 +166,9 @@ class KittyStartupTests(unittest.TestCase):
         self.widgets(lua, ready=True)
         lua.execute('Kitty.onEvent({}, "VARIABLES_LOADED");')
         self.assertEqual(list(lua.globals().anchorCalls.KittyModeButton.values()),
-                         ["RIGHT", "LEFT", "MinimapViewFrame", -8, 40])
+                         ["RIGHT", "LEFT", "MinimapViewFrame", -8, 72])
         self.assertEqual(list(lua.globals().anchorCalls.KittyModeText.values()),
-                         ["RIGHT", "LEFT", "MinimapViewFrame", -8, 84])
+                         ["RIGHT", "LEFT", "MinimapViewFrame", -8, 116])
         lua.execute('Kitty.ModeUI.set("burst", true);')
         self.load(lua, "dofile.lua")
         self.run_onload(lua, "KittyModeButton")
