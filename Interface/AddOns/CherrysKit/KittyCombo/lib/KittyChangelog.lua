@@ -30,7 +30,7 @@ Kitty.Changelog.getPages = function()
 				"  request: your rows were changed for you. Shift no longer flips",
 				"  it; the new condition \"Shift is held\" checks the key instead.",
 				"- /kc mode aoe, /kc mode none, /kc mode list (macros work too).",
-				"- Show current mode (Kitty options): click it for a menu of modes.",
+				"- Show current mode (Kitty options): click it for the mode pictures.",
 				"  rom weakauras has a \"KittyCombo mode\" aura too (off at first).",
 			}, "\n"),
 		},

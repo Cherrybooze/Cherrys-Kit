@@ -607,6 +607,7 @@ Kitty.helpHelp = function()
 	Kitty.sendMessage(Kitty.T("message", "Help07") .. " " .. Kitty.color("/kcg [Message]", 255, 255, 255), messageType);
 	Kitty.sendMessage(Kitty.T("message", "Help08") .. " " .. Kitty.color("/kc history", 255, 255, 255), messageType);
 	Kitty.sendMessage(Kitty.L("HelpProbe", "Check this version against your game client:") .. " " .. Kitty.color("/kc probe", 255, 255, 255), messageType);
+	Kitty.sendMessage(Kitty.L("HelpReadyWindow", "How early a key press may fire a skill (seconds):") .. " " .. Kitty.color("/kc window 0.2", 255, 255, 255), messageType);
 	Kitty.sendMessage(Kitty.T("message", "Help09"), messageType, 1, 1, 1);
 	Kitty.sendMessage(str, messageType, 1, 1, 1);
 end;
@@ -858,6 +859,9 @@ end;
 			elseif(string.find(string.lower(message), "^mode$") or string.find(string.lower(message), "^mode%s")) then
 				-- Pick one mode (the others turn off): /kc mode aoe, /kc mode none
 				Kitty.ModeUI.command(string.match(message, "^%S+%s*(.*)$"));
+			elseif(string.find(string.lower(message), "^window")) then
+				-- How early a key press may fire a skill: /kc window 0.6, /kc window default
+				Kitty.SkillManager.readyWindowCommand(string.match(message, "^%S+%s*(.*)$"));
 			elseif(string.find(string.lower(message), "^toggle")) then
 				-- Mode switches for the "Mode is on" condition: /kc toggle aoe
 				Kitty.toggleMode(string.match(message, "^%S+%s+(%S+)"));

@@ -95,24 +95,51 @@ local function placeholder(token, state, now)
   end
 end
 
+-- Visible texts are formatted on every frame, so each template is split once
+-- into literal text and %tokens; formatting then needs no gsub or closure.
+local compiledTemplates, compiledCount, formatParts = {}, 0, {}
+local function compileTemplate(template)
+  local parts, pos = {}, 1
+  while true do
+    local first, last, word = string.find(template, "%%(%a+)", pos)
+    if not first then break end
+    if first > pos then parts[#parts + 1] = string.sub(template, pos, first - 1) end
+    -- "%ps" is "%p" followed by the letter s.
+    parts[#parts + 1] = { word, string.sub(word, 1, 1), string.sub(word, 2) }
+    pos = last + 1
+  end
+  if pos <= string.len(template) then parts[#parts + 1] = string.sub(template, pos) end
+  return parts
+end
+
 function Regions.FormatText(template, state, now)
   if template=="%v / %t" and state.healthText then return state.healthText end
   if not template or template == "" then
     return ""
   end
-  return (string.gsub(template, "%%(%a+)", function(word)
-    local value = placeholder(word, state, now)
-    if value then
-      return value
+  if type(template) ~= "string" then template = tostring(template) end
+  local parts = compiledTemplates[template]
+  if not parts then
+    if compiledCount >= 200 then compiledTemplates, compiledCount = {}, 0 end
+    parts = compileTemplate(template)
+    compiledTemplates[template], compiledCount = parts, compiledCount + 1
+  end
+  local count = #parts
+  if count == 1 and type(parts[1]) == "string" then return parts[1] end
+  for i = 1, count do
+    local part = parts[i]
+    if type(part) == "string" then
+      formatParts[i] = part
+    else
+      local value = placeholder(part[1], state, now)
+      if not value then
+        value = placeholder(part[2], state, now)
+        value = value and (value .. part[3]) or ("%" .. part[1])
+      end
+      formatParts[i] = value
     end
-    -- "%ps" is "%p" followed by the letter s.
-    local first = string.sub(word, 1, 1)
-    value = placeholder(first, state, now)
-    if value then
-      return value .. string.sub(word, 2)
-    end
-    return "%" .. word
-  end))
+  end
+  return table.concat(formatParts, "", 1, count)
 end
 
 function Regions.Progress(state, now)

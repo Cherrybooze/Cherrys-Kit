@@ -1,10 +1,17 @@
 # Cherry's KittyCombo
 
-Version **1.7.14** · Kit release **0.11.84** · [All addons / hub](../README.md)
+Version **1.7.15** · Kit release **0.11.85** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
+
+## Updated in 1.7.15
+
+- The mode pictures now open from the "Mode:" readout and from the kitty editor even while the mode button is hidden, which is the default. `/kc probe` checks this in your client.
+- **Change kitty mode** rows can no longer flip the mode back and forth on every key press. After a kitty switches the mode, its other mode rows wait 1 second, and a row never spends a key press on the mode that is already on. Saving a kitty warns you when two mode rows have no other condition. The Kitty tracker in rom weakauras predicts the same way.
+- In the kitty editor, the mode pictures say "Click to use this mode for the action", and they close when you scroll the list.
+- New `/kc window 0.6` brings back the older, wider ready window so you can compare; `/kc window default` goes back to 0.2 seconds. Your choice is saved.
 
 ## Updated in 1.7.14
 
@@ -51,7 +58,7 @@ The mode widgets wait for saved settings before restoring their positions. Start
   - Both move with right-drag (or Shift+drag) and can be locked. Also `/kc mode <name>` in chat or macros.
   - Request mode is now a mode called request; the new condition "Shift is held" checks the Shift key.
 - **canCast / canUse** can also check that something is *on cooldown*.
-- **Change kitty mode action**: select a mode icon in a rotation row; its editable default guard prevents reselecting the same mode every press.
+- **Change kitty mode action**: select a mode icon in a rotation row; its editable default guard prevents reselecting the same mode every press, and other mode rows wait 1 second after a switch.
 - **weakaura condition**: a command can check any aura you made in rom weakauras (showing or not, time left, stacks, percent, value). Needs the rom weakauras package; without it those commands are skipped with one warning.
 - **Short share codes** (CKC3): Export and Import boxes in the kitty editor. Codes are compressed against a word list both players have, so a built-in kitty is 7 to 40 characters and your own kitties are 2 to 6 times shorter than before. Get code copies straight to the clipboard; Import also finds a code inside pasted text (a Discord .txt or Pastebin). Codes are checksummed, so a cut-off code is refused instead of half-imported, and importing never runs Lua code. Older CKC2 and CKC1 codes still import.
 - **Import button** in the kitty list (replaces the old "Initialization" button, which swapped all your kitties for the defaults without asking).
@@ -74,6 +81,7 @@ The mode widgets wait for saved settings before restoring their positions. Start
 - `/kc interrupt last`: add the spell your target is casting (or just cast) to your interrupt list
 - `/kc interrupt add <name>`, `/kc interrupt remove <name>`: add or remove a spell by name
 - `/kc interrupt list`: how many spells are built in, and the ones you added or removed
+- `/kc window 0.6`, `/kc window default`: how many seconds before a skill is ready a key press may fire it (default 0.2; saved)
 - `/kc probe`: checks the parts that can only be tested in game and prints OK / FAIL / LOOK per item
 - Macro: `/run Kitty.attack([[kitty name]])` (or use the Create macro button)
 

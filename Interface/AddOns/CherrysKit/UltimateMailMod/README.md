@@ -1,10 +1,16 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck7** · Kit release **0.11.83** · [All addons / hub](../README.md)
+Version **7.0.1-ck8** · Kit release **0.11.85** · [All addons / hub](../README.md)
 
 **A better mail window with mass send that no longer gets stuck after about 60 mails.**
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
+
+## Updated in 7.0.1-ck8
+
+- Clicking an item in **Mass Send Items** no longer takes the cursor out of the **To** field. Only a box you really drag takes the keyboard, so Escape can cancel it.
+- Item tooltips show the drag-a-box help only until you have dragged your first box; hovering the bag background still shows it.
+- While the mail window is open, it checks for screen size or UI scale changes twice a second instead of on every frame.
 
 ## Drag selection and mass-send recipients
 
@@ -70,7 +76,7 @@ New in the Cherry's Kit version:
 
 ## Install
 
-Requires [Cherry's Kit hub **0.4.17 or later**](../README.md) to load the History files. Kit **0.11.83** includes hub **0.4.18**. Download ZIPs from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/releases).
+Requires [Cherry's Kit hub **0.4.17 or later**](../README.md) to load the History files. Kit **0.11.85** includes hub **0.4.20**. Download ZIPs from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/releases).
 
 1. Install the full kit, or install the hub ZIP and this addon's ZIP.
 2. Extract into your game's `Interface/AddOns/` folder, merging the `CherrysKit` folders. This addon must end up at `Interface/AddOns/CherrysKit/UltimateMailMod/`.

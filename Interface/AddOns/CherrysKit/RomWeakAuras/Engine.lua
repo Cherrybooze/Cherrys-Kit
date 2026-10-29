@@ -630,7 +630,8 @@ local function applyAuraTransform(a,width,height)
 end
 
 local function placementUIScale()
-  local ok,value=pcall(function() return GetUIScale and GetUIScale() end)
+  -- pcall(nil) fails cleanly when the client lacks GetUIScale; no closure per frame.
+  local ok,value=pcall(GetUIScale)
   return ok and type(value)=="number" and value>0 and value<math.huge and value or 1
 end
 
@@ -655,7 +656,8 @@ local function frame(now)
     gripScale=placementUIScale()
   end
   for _, a in pairs(loaded) do
-    if a.data.autoScaleScreen==true then
+    -- The screen size rarely changes: check it on poll ticks, not every frame.
+    if a.data.autoScaleScreen==true and (poll or viewportRead) then
       if not viewportRead then viewportWidth,viewportHeight=RWA.ViewportSize();viewportRead=true end
       if viewportWidth~=a.viewportWidth or viewportHeight~=a.viewportHeight then applyAuraTransform(a,viewportWidth,viewportHeight) end
     end

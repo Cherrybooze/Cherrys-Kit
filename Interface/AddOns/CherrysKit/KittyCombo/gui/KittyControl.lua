@@ -449,6 +449,8 @@ Kitty.onEvent = function(this, event, arg1, arg2, arg3, arg4)
 	if(event == "VARIABLES_LOADED") then
 		-- Settings file loaded
 		Kitty.SettingManager.onVariablesLoaded(Kitty.VERSION);
+		-- A saved /kc window value
+		Kitty.SkillManager.applyReadyWindow();
 		-- Modes: old request mode conditions, the mode picked last time, the mode button
 		if(Kitty.ModeUI and Kitty.ModeUI.afterLoad) then
 			Kitty.ModeUI.afterLoad();

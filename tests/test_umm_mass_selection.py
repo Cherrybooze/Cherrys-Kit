@@ -297,6 +297,47 @@ class MassSelectionTests(MassSendFixture, unittest.TestCase):
         self.assertEqual(self.g.bagReads, reads)
         self.assertEqual(len(list(self.g.ummWidgets.keys())), count)
 
+    def test_item_click_keeps_typing_focus_and_only_a_real_box_takes_it(self):
+        self.lua.execute('''
+          keyFocus=0
+          local keys=UMMFrameTab3BagsSelectionKeys
+          local focus=keys.SetFocus
+          keys.SetFocus=function(self) keyFocus=keyFocus+1; return focus(self) end
+        ''')
+        recipient = self.g.UMMFrameTab3RecipientRecipient
+        recipient.SetFocus(recipient)
+        self.begin(5)
+        self.move(5, x=.55, y=.55)
+        self.end(click_before=True)
+        self.assertEqual(self.marked(), {5})
+        self.assertEqual(self.g.keyFocus, 0, "a plain item click took focus from the To field")
+        self.assertFalse(self.g.UMMFrameTab3BagsSelectionKeys.focus)
+        self.begin(1, x=.1, y=.1)
+        self.assertEqual(self.g.keyFocus, 0)
+        self.move(8, x=.9, y=.9)
+        self.assertEqual(self.g.keyFocus, 1)
+        self.assertTrue(self.g.UMMFrameTab3BagsSelectionKeys.focus)
+        self.move(9, x=.9, y=.9)
+        self.assertEqual(self.g.keyFocus, 1)
+        self.end()
+        self.assertFalse(self.g.UMMFrameTab3BagsSelectionKeys.focus)
+
+    def test_item_tooltips_show_the_box_help_only_until_the_first_box(self):
+        def hover(index):
+            self.g.this = self.slot(index)
+            self.g.UMMMassSendItemsSlotTemplate_OnEnter(self.slot(index))
+            return list(self.g.GameTooltip.lines.values())
+        self.assertIn(self.g.UMM_MSI_SELECT_HELP, hover(3))
+        self.begin(3)
+        self.end(click_before=True)
+        self.assertIn(self.g.UMM_MSI_SELECT_HELP, hover(3), "a click is not a box drag")
+        self.begin(1, x=.1, y=.1)
+        self.move(8, x=.9, y=.9)
+        self.end()
+        self.assertNotIn(self.g.UMM_MSI_SELECT_HELP, hover(3))
+        self.g.UMMMassSelectionTip(self.grid)
+        self.assertIn(self.g.UMM_MSI_SELECT_HELP, list(self.g.GameTooltip.lines.values()))
+
     def test_overlay_has_fixed_noninteractive_textures_and_a_verified_neutral_sample(self):
         self.assertFalse(self.g.UMMFrameTab3BagsSelection.mouse)
         self.assertFalse(self.g.UMMFrameTab3BagsSelectionKeys.mouse)
@@ -323,6 +364,28 @@ class MassSelectionTests(MassSendFixture, unittest.TestCase):
         pixel = pixels[y * width + x]
         self.assertGreaterEqual(min(pixel[:3]), 248)
         self.assertEqual(pixel[3], 255)
+
+
+class MassLayoutTests(MassSendFixture, unittest.TestCase):
+    def test_open_window_checks_the_screen_twice_a_second_and_tabs_lay_out_at_once(self):
+        self.g.UMMMasterFrame_OnEvent("VARIABLES_LOADED")
+        self.lua.execute('''
+          screenReads,scaleCalls=0,0
+          GetScreenWidth=function() screenReads=screenReads+1; return ummScreenWidth end
+          local setScale=UMMFrame.SetScale
+          UMMFrame.SetScale=function(self,...) scaleCalls=scaleCalls+1; return setScale(self,...) end
+          MailFrame:Show(); UMMFrame:Show()
+          function frames(count) for i=1,count do UMMMasterFrame_OnUpdate(UMMFrame,1/60) end end
+          frames(59)
+        ''')
+        self.assertEqual(self.g.screenReads, 2, "the layout check should run about twice a second")
+        self.assertEqual(self.g.scaleCalls, 0, "an unchanged screen must not lay the window out again")
+        self.lua.execute("ummScreenWidth=900; frames(31)")
+        self.assertEqual(self.g.scaleCalls, 1, "a smaller screen is picked up within half a second")
+        reads = self.g.screenReads
+        self.g.UMMMenuSelectTab(2)
+        self.assertEqual(self.g.screenReads, reads + 1)
+        self.assertEqual(self.g.UMMFrame.width, 805)
 
 
 class MassRecentTests(MassSendFixture, unittest.TestCase):

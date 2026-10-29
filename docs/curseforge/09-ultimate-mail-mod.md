@@ -4,6 +4,12 @@
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
 
+## Updated in 7.0.1-ck8
+
+- Clicking an item in **Mass Send Items** no longer takes the cursor out of the **To** field. Only a box you really drag takes the keyboard, so Escape can cancel it.
+- Item tooltips show the drag-a-box help only until you have dragged your first box; hovering the bag background still shows it.
+- While the mail window is open, it checks for screen size or UI scale changes twice a second instead of on every frame.
+
 ## Updated in 7.0.1-ck7
 
 **Drag-box selection** works across all six bag grids. Drag from a slot/background to replace the selection; **Ctrl/Shift-drag** adds. Escape/right-click cancels and restores the starting selection. Normal clicks and Ctrl-click group toggles remain; empty background clears marks. Bound items remain red and are excluded from sending. Bag changes, focus loss, navigation and closing cancel unfinished gestures.

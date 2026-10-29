@@ -1,8 +1,27 @@
-# In-game checks for kit 0.11.84
+# In-game checks for kit 0.11.85
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.26 requires hub 0.4.14 or later; UMM 7.0.1-ck7 requires **0.4.17** for its History files. The Full ZIP includes hub **0.4.19**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.27 requires hub 0.4.14 or later; UMM 7.0.1-ck8 requires **0.4.17** for its History files. The Full ZIP includes hub **0.4.20**.
+
+## 0.11.85 review fixes
+
+These follow up the 0.11.84 review. The simulated client cannot show whether a frame is really visible, where keyboard focus goes, or how much work the real client does per frame, so check these in game.
+
+| ID | Steps | Expected result |
+| --- | --- | --- |
+| K8 | In Kitty options turn **Show the mode button** off and **Show current mode** on. Click the "Mode:" readout. Then open a kitty, add a **Change kitty mode** row and click **Choose mode...**. Run `/kc probe`. | The mode pictures open both times, and the probe line **mode icons** says OK. |
+| K9 | In a copied kitty, put two Change kitty mode rows (aoe, then single) with no other conditions above a normal skill. Save, then press the kitty key about twice a second for ten seconds. | Saving prints one warning naming aoe and single. The mode switches about once a second at most and the skill fires on the presses in between. The rom weakauras Kitty tracker shows the same order. |
+| K10 | From **Choose mode...**, hover the pictures, then scroll the command list while they are open. | The tooltips say "Click to use this mode for the action". Scrolling closes the pictures and changes nothing. |
+| K11 | Type `/kc window`, `/kc window 0.6`, Reload UI, `/kc window`, `/kc window 5`, then `/kc window default`. | It reports 0.2, then 0.6, still 0.6 after the reload, refuses 5, then 0.2 again. |
+| W11 | Show several bars and texts, including a timer. Open /wa and drag an aura with its grip. Turn on screen scaling for one aura and change the UI scale. | Texts and timers update as before. The scaled aura follows the new UI scale within a moment. No errors. |
+| W12 | Target a player, a pet, an NPC, then another NPC with the same name; switch quickly with Tab and by clicking. | The target health text always matches the current target (HP for players and pets, `?` or `~` for NPCs) and never shows the previous target's numbers. |
+| W13 | Hover an aura in normal play. Untick **Make clickthrough** on it, save, and hover again. | No tooltip while clickthrough is on; the tooltip comes back after unticking. |
+| M10 | In Mass Send Items type half a name in **To**, click an item, then keep typing. Then drag a box and press Escape. | The click marks the item and your typing continues in To. While you drag a box Escape cancels it. |
+| M11 | Hover items before and after dragging your first box. | The drag help line shows on item tooltips only until the first box; the bag background tooltip still shows it. |
+| M12 | Keep the mail window open and change the UI scale or the game window size. | The mail window refits within half a second. |
+| B3 | Open the real bank at a banker and close it. Away from the banker, open the bank preview from the bag window, then visit the banker again. (Still open from the 0.11.81 review.) | The real bank shows Sort and no PREVIEW label; the preview shows PREVIEW and hides Sort. Size and rented pages are right each time. |
+| G1 | In a party with a mob targeted, click a party member in Cherry's Grid to run a kitty. (Still open from the 0.11.81 review.) | The action goes to the member, then your mob target comes back. |
 
 ## 0.11.84 default mode-button placement
 
@@ -123,7 +142,7 @@ The richer editor has a higher fixed cost: the fixture retained approximately 0.
 - In game, compare item-link colours in native chat and Cherry's Chat (including the reported Mythic earring), test wrapped links and Shift-click. In AAH, toggle the Stats header, reload, and compare full localized stat colours and normalized values with the native tooltip.
 
 - KittyCombo: compare predicted and selected skills during a cast; import a supported rotation, exercise class/build menus, cancel and save a new mode, and test duplicate action slots and Create/Pick up macro.
-- KittyCombo timing (1.7.13): compare successful casts with the default 0.2-second window and `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6`; restore with `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.2`. Confirm action rows with empty/unequipped stacks, missing slots or unusable actions fall through, while valid actions and "Item is ready" conditions retain their meaning. Import a missing-name range condition: it must fail quietly. Check missing mana versus a real zero, user thresholds, anti-repeat behavior and the 1.1-second prediction lookahead.
+- KittyCombo timing (1.7.13): compare successful casts with the default 0.2-second window and `/kc window 0.6` (1.7.15; saved); restore with `/kc window default`. Confirm action rows with empty/unequipped stacks, missing slots or unusable actions fall through, while valid actions and "Item is ready" conditions retain their meaning. Import a missing-name range condition: it must fail quietly. Check missing mana versus a real zero, user thresholds, anti-repeat behavior and the 1.1-second prediction lookahead.
 - Advanced AuctionHouse (6.2.3): scroll the bid and sell lists, click a row, then bid or cancel — the selected auction must be the row you clicked. Filter by a stat colour on an ordinary item and check no error appears.
 - rom weakauras (0.9.25): load an existing aura restricted to `class="scout"` and test canonical, mixed-case and localized names on both classes. Duplicate a behavior with an attached child display; remove/rebind a rule or action and check shared sources and converted source-choice bindings still work. Check an orphaned custom/primary source stops polling, with the compatibility primary still available through `GetAuraValue`. Exercise buff metadata relearning after cache eviction, class-change cooldowns and the hotbar picker.
 - CherrysChat (0.10.9): drag on one chat window and release the left button over another, then select again. The original selection must remain and neither overlay should keep painting. A right-button release during the left drag must not end it. Check same-window item/name clicks and Shift-click, plus disabling/re-enabling the overlays.

@@ -200,6 +200,57 @@ M.validModeName = function(name)
 	return type(name) == "string" and M.clean(name) ~= "" and M.clean(name) ~= M.clean(M.ADD_NEW);
 end
 
+-- After a kitty switches the mode, its other "Change kitty mode" rows wait this
+-- long, so two rows that undo each other cannot flip the mode on every press.
+-- Prediction marks its own simulated switch on its private manager (modeHeld).
+M.SWITCH_HOLD = 1;
+M.switchHeld = function(manager)
+	if(type(manager) == "table" and rawget(manager, "modeHeld")) then return true; end
+	local at = M.switchedAt;
+	if(at == nil or not Kitty.getTime) then return false; end
+	local now = Kitty.getTime();
+	return now >= at and now - at < M.SWITCH_HOLD;
+end
+-- False when the mode is already the only one on: that switch would only use up a press.
+-- Prediction passes its manager, whose modeState replaces the live modes.
+M.wouldChange = function(name, manager)
+	local modes = (type(manager) == "table" and rawget(manager, "modeState")) or Kitty.Modes;
+	name = M.clean(name);
+	for mode, state in pairs(modes) do
+		if(state and mode ~= name) then return true; end
+	end
+	return modes[name] ~= true;
+end
+-- A switch fired by a kitty row (the mode button and /kc mode use M.set)
+M.kittySwitch = function(name)
+	if(not M.validModeName(name)) then return false; end
+	M.set(name, true);
+	M.switchedAt = Kitty.getTime and Kitty.getTime() or nil;
+	return true;
+end
+-- Enabled "Change kitty mode" rows with no condition except their own "Mode is off"
+local function guardOnly(command)
+	for _, condition in ipairs(command) do
+		if(type(condition) ~= "table" or condition.conditionType ~= "modeOn") then return false; end
+		for _, entry in ipairs(condition) do
+			if(type(entry) ~= "table" or entry.modeActionGuard ~= true) then return false; end
+		end
+	end
+	return true;
+end
+-- Mode names of those rows when two or more different modes would take turns
+M.loopingModes = function(list)
+	local names, seen = {}, {};
+	for _, command in ipairs(type(list) == "table" and list or {}) do
+		if(type(command) == "table" and command.enable ~= false and command.commandType == "changemode"
+			and M.validModeName(command.commandName) and guardOnly(command)) then
+			local name = M.clean(command.commandName);
+			if(not seen[name]) then seen[name] = true; table.insert(names, name); end
+		end
+	end
+	return #names > 1 and names or nil;
+end
+
 -- The marker lives on the ordinary modeOn entry, so split/merge and share
 -- formats retain it. Boolean edits remain meaningful when the action is retargeted.
 M.configureCommand = function(command, name)
@@ -562,7 +613,6 @@ M.openPicker = function(anchor, onPick, current, includeNone)
 		for _, name in ipairs(M.names()) do table.insert(M.pickerChoices, name); end
 		if(#M.pickerChoices == 0) then M.closeFlyout(); return false; end
 	end
-	try(flyout, "SetParent", "UIParent");
 	M.fillFlyout(); flyout:Show(); return true;
 end
 M.toggleFlyout = function(anchor)
@@ -603,9 +653,12 @@ M.onChoiceEnter = function(choice)
 	local current = M.pickHandler and M.pickerCurrent or M.current() or "";
 	local title = (name == "") and Kitty.L("ModeNoneButton", "No mode (all off)") or name;
 	if(name == current) then
-		title = title .. (M.pickHandler and "  |cff40ff40(selected)|r" or Kitty.L("ModeCurrent", "  |cff40ff40(now)|r"));
+		title = title .. (M.pickHandler and Kitty.L("ModeSelected", "  |cff40ff40(selected)|r") or Kitty.L("ModeCurrent", "  |cff40ff40(now)|r"));
 	end
-	Kitty.showGameTooltip(choice, {title, Kitty.L("ModeChoiceClick", "|cff9ea8baClick to switch to this mode|r")});
+	-- In the kitty editor a click only picks the action's mode
+	local hint = M.pickHandler and Kitty.L("ModeChoicePick", "|cff9ea8baClick to use this mode for the action|r")
+		or Kitty.L("ModeChoiceClick", "|cff9ea8baClick to switch to this mode|r");
+	Kitty.showGameTooltip(choice, {title, hint});
 end
 
 --------------------------------------------------------------------------------

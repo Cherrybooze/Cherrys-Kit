@@ -53,8 +53,12 @@ Kitty.ComboManager.check = function(self, targetList, path)
 					Kitty.print("canDispatch Result:[" .. tostring(result) .. "], Command:[" .. tostring(command.commandName) .. "]");
 				end
 			elseif(command.commandType == "changemode") then
-				result = Kitty.ModeUI and type(Kitty.ModeUI.set) == "function"
-					and Kitty.ModeUI.validModeName(command.commandName);
+				-- Ready unless the mode is already on by itself, or a kitty switched
+				-- modes less than ModeUI.SWITCH_HOLD seconds ago
+				local modeUI = Kitty.ModeUI;
+				result = modeUI and type(modeUI.set) == "function"
+					and modeUI.validModeName(command.commandName)
+					and not modeUI.switchHeld(self) and modeUI.wouldChange(command.commandName, self);
 			elseif(command.commandType == "extra") then
 				-- Can the extra action be used?
 				local extraActionIndex = tonumber(command.commandName);
@@ -183,8 +187,8 @@ Kitty.ComboManager.cast = function(self, commandType, command)
 		-- Use an action slot
 		self.slotManager:use(command);
 	elseif(commandType == "changemode") then
-		if(Kitty.ModeUI and Kitty.ModeUI.validModeName(command)) then
-			Kitty.ModeUI.set(command, true);
+		if(Kitty.ModeUI) then
+			Kitty.ModeUI.kittySwitch(command);
 		end
 	elseif(commandType == "extra") then
 		-- Can the extra action be used?

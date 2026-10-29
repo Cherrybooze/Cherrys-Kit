@@ -93,7 +93,9 @@
 							local index = KittyCommandConfigFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
 							local command = Kitty.CommandConfigFrame.targetCommandList[index];
 							if(command.commandType == "changemode") then
-								Kitty.showGameTooltip(this,{"Change kitty mode",tostring(command.commandName or "Choose mode..."),"Click to pick the mode icon."});
+								Kitty.showGameTooltip(this,{Kitty.L("ModeActionTitle", "Change kitty mode"),
+									Kitty.ModeUI.validModeName(command.commandName) and command.commandName or Kitty.L("ModeActionChoose", "Choose mode..."),
+									Kitty.L("ModeActionIconClick", "Click to pick the mode icon.")});
 								return;
 							end
 							if(command.commandName ~= nil and command.commandName ~= "") then
@@ -224,7 +226,7 @@
 				<Size><AbsDimension x="150" y="22" /></Size>
 				<Anchors><Anchor point="LEFT" relativeTo="$parentDropDownMenu" relativePoint="RIGHT"><Offset><AbsDimension x="5" y="0" /></Offset></Anchor></Anchors>
 				<Scripts><OnClick>Kitty.protectFunction(function() Kitty.CommandConfigFrame.openModePicker(this:GetParent()); end)();</OnClick>
-				<OnEnter>Kitty.showGameTooltip(this,{"Change kitty mode","Pick a mode icon. Its default condition is Mode is off; the condition remains editable."});</OnEnter>
+				<OnEnter>Kitty.showGameTooltip(this,{Kitty.L("ModeActionTitle", "Change kitty mode"),Kitty.L("ModeActionButtonHelp", "Pick the mode this action turns on. It only fires while that mode is off; you can edit that condition.")});</OnEnter>
 				<OnLeave>Kitty.hideGameTooltip(this);</OnLeave>
 				<OnMouseWheel>Kitty.scrollList(KittyCommandConfigFrame_ScrollBar,delta);</OnMouseWheel></Scripts>
 			</Button>

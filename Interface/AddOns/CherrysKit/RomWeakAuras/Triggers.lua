@@ -450,15 +450,35 @@ end
 -- UnitChangeHealth is a DELTA, not max HP. Like pbInfo, only full-health
 -- positive observations can seed an estimate; smaller heals must not shrink it.
 local targetHealthKey,targetHealthName,targetHealthLevel,targetHealthClass,targetHealthMax
+-- What the target is (player, pet, level, class) only changes with the target,
+-- so it is read once per target instead of on every poll. UnitGUID plus the name
+-- identify the target; a target change or one second clears the facts, so a
+-- reused identity cannot keep stale ones. Without a GUID they are read each time.
+local targetFacts={}
 local function resetTargetHealth()
   targetHealthKey,targetHealthName,targetHealthLevel,targetHealthClass,targetHealthMax=nil,nil,nil,nil,nil
 end
-local function targetHealthText(state)
-  if state.value==nil then resetTargetHealth();return end
+RWA.On("PLAYER_TARGET_CHANGED",function() targetFacts.at=nil end)
+local function readTargetFacts(name,now)
+  local guid=call(rawget(_G,"UnitGUID"),"target")
+  if type(guid)~="string" and type(guid)~="number" or guid==""
+    or type(guid)=="number" and (not resourceNumber(guid) or guid==0) then guid=nil end
+  local f=targetFacts
+  now=tonumber(now) or RWA.Now()
+  if guid and f.at and f.guid==guid and f.name==name and now>=f.at and now-f.at<1 then return f end
+  f.guid,f.name,f.at=guid,name,guid and now or nil
+  f.isPlayer=call(rawget(_G,"UnitIsPlayer"),"target")
+  f.master=call(rawget(_G,"UnitMaster"),"target")
+  f.level=call(rawget(_G,"UnitLevel"),"target")
+  f.class=call(rawget(_G,"UnitClass"),"target")
+  return f
+end
+local function targetHealthText(state,now)
+  if state.value==nil then resetTargetHealth();targetFacts.at=nil;return end
   local percent=state.valueKnown and state.totalKnown and tostring(math.floor(state.percent+.5)) or "?"
   local suffix=" ("..percent.."%)"
-  local isPlayer=call(rawget(_G,"UnitIsPlayer"),"target")
-  local master=call(rawget(_G,"UnitMaster"),"target")
+  local facts=readTargetFacts(state.name,now)
+  local isPlayer,master=facts.isPlayer,facts.master
   local absolute=isPlayer==true or (type(isPlayer)=="number" and isPlayer~=0)
     or type(master)=="string" and master~="" or state.totalKnown and state.total~=100
   if absolute then
@@ -471,10 +491,7 @@ local function targetHealthText(state)
   if not state.valueKnown or not state.totalKnown or state.total~=100 or state.value>100 then resetTargetHealth();return end
   -- Unknown unit classification must not turn an ambiguous 100 into HP.
   if isPlayer~=false and isPlayer~=0 then resetTargetHealth();return end
-  local guid=call(rawget(_G,"UnitGUID"),"target")
-  if type(guid)~="string" and type(guid)~="number" or guid==""
-    or type(guid)=="number" and (not resourceNumber(guid) or guid==0) then guid=nil end
-  local name,level,class=state.name,call(rawget(_G,"UnitLevel"),"target"),call(rawget(_G,"UnitClass"),"target")
+  local guid,name,level,class=facts.guid,state.name,facts.level,facts.class
   if not guid or guid~=targetHealthKey or name~=targetHealthName or level~=targetHealthLevel or class~=targetHealthClass then
     targetHealthMax=nil
   end
@@ -525,9 +542,9 @@ status.durability = function(trigger,now)
   return {show=true,available=true,unit="player",progressType="static",name=lowest.name,
     value=lowest.value,total=lowest.total,percent=lowest.value/lowest.total*100,slot=lowest.slot}
 end
-status.health = function(trigger)
+status.health = function(trigger, now)
   local state=resource(trigger, UnitHealth, UnitMaxHealth)
-  if state.unit=="target" then targetHealthText(state) end
+  if state.unit=="target" then targetHealthText(state, now) end
   return state
 end
 status.mana = function(trigger)

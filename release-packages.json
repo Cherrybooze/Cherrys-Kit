@@ -1,13 +1,13 @@
 {
-  "kit_version": "0.11.84",
-  "hub_version": "0.4.19",
-  "release_summary": "Kitty's default mode button/readout moves 32 UI units down to clear housing/furniture controls while retaining manually saved positions. The complete PR work is included: RWA clickthrough, manual/viewport scaling, grips/reset, HP/percentage and native transport/non-spell casts; Kitty's shared paged mode picker, changemode action/guards and private prediction; UMM shared last recipient, configurable gold presets, 20-name history, mass-send recipient pane and Windows-style drag-box selection. zBag preserves stack-split dialogs through unrelated updates and adds smaller configurable slot labels. AAH isolates item parsing from the game's TP-upgrade tooltip. The reported TP black flash still needs in-game confirmation. Earlier cross-kit fixes, 0.2-second dispatch and 1.1-second prediction carry forward. Overhead emoji pictures remain unimplemented because the inspected client lacks the required hook.",
-  "runtime_validation": "Lua 5.1 simulated-client suite: 617 tests, 591 passed and 26 pre-existing skips. Coverage includes UMM drag-box/sidebar/queue handling, closed Kitty pickers, zBag split persistence/source validation/font controls, private AAH tooltip isolation and RWA native transport/non-spell casts. Native drawing, mouse capture/focus, sidebar layout, live mail timing and cross-character behavior still need in-game validation. The reported brief black flash during native TP upgrades has not been reproduced here; a confirmed shared-dialog cancellation and game-owned skill-tooltip collision were corrected, with in-game verification documented. Earlier native-client limits and the unimplemented overhead emoji limitation remain documented.",
+  "kit_version": "0.11.85",
+  "hub_version": "0.4.20",
+  "release_summary": "A playtest with fixes from the 0.11.84 review. KittyCombo 1.7.15: the mode pictures open while the mode button is hidden (its default), two Change kitty mode rows can no longer flip the mode on every key press, saving warns about mode rows that would take turns, and /kc window tries the older ready window. rom weakauras 0.9.27 does less work on every frame (text formatting, screen-size checks and target health); clickthrough, on by default since 0.9.25, hides aura tooltips until it is unticked. Ultimate Mail Mod 7.0.1-ck8 keeps the To field focused when you click an item in Mass Send, shows the drag help only until your first box, and checks its layout twice a second instead of every frame. Everything from the 0.11.84 playtest is included: Kitty's picture mode picker and Change kitty mode action, RWA clickthrough, scaling, grips, target HP and native transport casts, UMM drag-box selection, shared recipients, gold buttons and History, zBag's split fix and smaller slot numbers, and AAH's private item tooltip. Overhead emoji pictures remain unimplemented because the client has no hook for them.",
+  "runtime_validation": "Lua 5.1 simulated-client suite: 631 tests; 586 passed, 26 retired-editor tests skipped and 19 PowerShell-only tests skipped because the build host had no PowerShell (CI runs them). 14 new regressions cover the top-level mode picker, the mode-switch hold in play and in prediction, the save warning for mode rows that take turns, the editor picker closing on scroll, /kc window, identical display text with near-zero garbage, target facts read once per target, Mass Send focus and help text, and the twice-a-second mail layout check. Whether the mode picker really shows with the button hidden, where keyboard focus goes, and the real client's per-frame cost still need the in-game checks in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
   "addons": [
     {
       "folder": "KittyCombo",
       "title": "Cherry's KittyCombo",
-      "version": "1.7.14",
+      "version": "1.7.15",
       "command": "/kc",
       "description_file": "02-cherrys-kittycombo.md",
       "summary": "One-key priority combos, safer prediction and shared rotation codes."
@@ -15,7 +15,7 @@
     {
       "folder": "RomWeakAuras",
       "title": "rom weakauras",
-      "version": "0.9.26",
+      "version": "0.9.27",
       "command": "/wa",
       "description_file": "03-rom-weakauras.md",
       "summary": "Custom buff, debuff, cooldown, cast and status displays.",
@@ -64,7 +64,7 @@
     {
       "folder": "UltimateMailMod",
       "title": "Ultimate Mail Mod",
-      "version": "7.0.1-ck7",
+      "version": "7.0.1-ck8",
       "command": "/umm",
       "description_file": "09-ultimate-mail-mod.md",
       "summary": "Mail management, drag-box selection, shared recipients, gold presets and mass sending.",

@@ -459,13 +459,24 @@ end
 local function sameItem(entry, saved)
   return entry == saved.item and entry.Index == saved.index and entry.Link == saved.link;
 end
-local function clearSelectionUI(grid)
+-- Only a box that is really being dragged takes keyboard focus (for Esc), so a
+-- plain item click leaves the cursor in the To field.
+local function clearSelectionUI(grid, focused)
   getglobal(grid:GetName().."Selection"):Hide();
   local input = getglobal(grid:GetName().."SelectionKeys");
-  input:ClearFocus();
+  if (focused) then input:ClearFocus(); end
   input:SetKeyboardEnable(false);
   input:SetText("");
 end
+local function focusSelectionKeys(grid, drag)
+  if (drag.focused) then return; end
+  drag.focused = true;
+  local input = getglobal(grid:GetName().."SelectionKeys");
+  input:SetKeyboardEnable(true);
+  input:SetFocus(); -- EditBox focus is exposed by RoM; Frame:SetFocus is not.
+end
+-- Item tooltips repeat the box-drag help only until the first box this session.
+local boxHelpLearned = false;
 
 function Selection.CancelBoxSelection(self)
   local drag = self.priv_BoxDrag;
@@ -482,7 +493,7 @@ function Selection.CancelBoxSelection(self)
       end
     end
   end
-  clearSelectionUI(self);
+  clearSelectionUI(self, drag.focused);
   selectionStatus(self);
 end
 
@@ -523,9 +534,6 @@ function Selection.BeginBoxSelection(self, source, key, bagIndex, slotIndex)
   end
   self.priv_BoxDrag = drag;
   GameTooltip:Hide();
-  local input = getglobal(self:GetName().."SelectionKeys");
-  input:SetKeyboardEnable(true);
-  input:SetFocus(); -- EditBox focus is exposed by RoM; Frame:SetFocus is not.
   selectionStatus(self);
 end
 
@@ -541,7 +549,10 @@ function Selection.UpdateBoxSelection(self)
   end
   local dx, dy = (cx - drag.cx) / drag.sx, (cy - drag.cy) / drag.sy;
   if (not drag.active and dx * dx + dy * dy < 16) then return; end
-  drag.active = true;
+  if (not drag.active) then
+    drag.active, boxHelpLearned = true, true;
+    focusSelectionKeys(self, drag);
+  end
   cx, cy = clamp(cx, drag.left, drag.right), clamp(cy, drag.top, drag.bottom);
   local l, t, r, b = math.min(drag.ax, cx), math.min(drag.ay, cy), math.max(drag.ax, cx), math.max(drag.ay, cy);
   local box = getglobal(self:GetName().."Selection");
@@ -583,7 +594,7 @@ function Selection.EndBoxSelection(self, key)
   if (not drag) then return; end
   self.priv_BoxDrag = nil;
   self.priv_BoxClickBlock = not drag.nativeClick and drag.source or nil;
-  clearSelectionUI(self);
+  clearSelectionUI(self, drag.focused);
   local cx, cy = cursor();
   local x, y, w, h = physicalRect(drag.source);
   local clicked = drag.nativeClick or x and cx and cx >= x and cy >= y and cx <= x + w and cy <= y + h;
@@ -810,7 +821,7 @@ function UMMMassSendItemsSlotTemplate_OnEnter(this)
     GameTooltip:ClearAllAnchors();
     GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT", 0, 0);
     GameTooltip:SetHyperLink(itemLink);
-    GameTooltip:AddLine(UMM_MSI_SELECT_HELP, .7, .8, 1);
+    if (not boxHelpLearned) then GameTooltip:AddLine(UMM_MSI_SELECT_HELP, .7, .8, 1); end
     GameTooltip:Show();
   end
 end

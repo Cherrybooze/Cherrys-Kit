@@ -31,12 +31,13 @@ class TargetHealthTests(unittest.TestCase):
         return self.lua.globals().readHealth()
 
     def test_raw_player_pet_and_absolute_npc_hp_include_percentage(self):
+        # Each line is a different target, so each has its own GUID.
         for script, expected in (
-            ("player=true;hp=3000;total=4000", "3000 / 4000 (75%)"),
-            ('player=false;master="Owner";hp=75;total=100', "75 / 100 (75%)"),
-            ("master=nil;hp=3000;total=4000", "3000 / 4000 (75%)"),
-            ("player=1;hp=0;total=4000", "0 / 4000 (0%)"),
-            ("player=true;hp=1;total=8", "1 / 8 (13%)"),
+            ('guid="p-1";player=true;hp=3000;total=4000', "3000 / 4000 (75%)"),
+            ('guid="pet-1";player=false;master="Owner";hp=75;total=100', "75 / 100 (75%)"),
+            ('guid="npc-1";master=nil;hp=3000;total=4000', "3000 / 4000 (75%)"),
+            ('guid="p-2";player=1;hp=0;total=4000', "0 / 4000 (0%)"),
+            ('guid="p-3";player=true;hp=1;total=8', "1 / 8 (13%)"),
         ):
             with self.subTest(expected=expected):
                 self.lua.execute(script)
@@ -46,7 +47,7 @@ class TargetHealthTests(unittest.TestCase):
         state = self.state()
         self.assertEqual((state.value, state.total, state.percent), (75, 100, 75))
         self.assertEqual(state.healthText, "? / ? (75%)")
-        self.lua.execute("UnitIsPlayer=nil")
+        self.lua.execute('UnitIsPlayer=nil;guid="mob-2"')
         self.assertEqual(self.state().healthText, "? / ? (75%)")
 
     def test_pbinfo_cache_is_read_without_reentering_or_writing_other_addon(self):
@@ -58,9 +59,9 @@ class TargetHealthTests(unittest.TestCase):
         state = self.state()
         self.assertEqual(state.healthText, "~3000 / 4000 (75%)")
         self.assertEqual((state.value, state.total, state.percent), (75, 100, 75))
-        self.lua.execute('class="Mage"')
+        self.lua.execute('class="Mage";guid="mob-2"')
         self.assertEqual(self.state().healthText, "~6000 / 8000 (75%)")
-        self.lua.execute('class="Warrior";level=101')
+        self.lua.execute('class="Warrior";level=101;guid="mob-3"')
         self.assertEqual(self.state().healthText, "~9000 / 12000 (75%)")
         self.assertEqual(self.lua.globals().pbUpdates, 0)
 
@@ -95,12 +96,41 @@ class TargetHealthTests(unittest.TestCase):
             with self.subTest(value=bad):
                 self.lua.execute('pbInfo={MobDB={Mobs={Mob={[100]={Warrior={healthpoints=' + bad + '}}}}}}')
                 self.assertEqual(self.state().healthText, "? / ? (75%)")
-        self.lua.execute("player=true;hp=nil;total=nil")
+        self.lua.execute('player=true;hp=nil;total=nil;guid="player-1"')
         state = self.state()
         self.assertEqual(state.healthText, "? / ? (?%)")
         self.assertEqual((state.value, state.total), (0, 0))
         self.lua.execute("hp=3000;total=nil")
         self.assertEqual(self.state().healthText, "3000 / ? (?%)")
+
+    def test_target_facts_are_read_once_per_target_until_it_changes(self):
+        self.lua.execute('''
+          reads=0
+          local isPlayer=UnitIsPlayer
+          UnitIsPlayer=function(...) reads=reads+1; return isPlayer(...) end
+        ''')
+        g = self.lua.globals()
+        for _ in range(5):
+            self.assertEqual(self.state().healthText, "? / ? (75%)")
+        self.assertEqual(g.reads, 1)
+        for script in ('RWA.Fire("PLAYER_TARGET_CHANGED")', 'guid="mob-9"', "fixtureNow=fixtureNow+1.1"):
+            with self.subTest(script=script):
+                before = g.reads
+                self.lua.execute(script)
+                self.state()
+                self.state()
+                self.assertEqual(g.reads, before + 1)
+        self.lua.execute("fixtureUnits.target=false")
+        self.state()
+        self.lua.execute("fixtureUnits.target=true")
+        before = g.reads
+        self.state()
+        self.assertEqual(g.reads, before + 1, "a lost target kept its facts")
+        self.lua.execute("guid=nil")
+        before = g.reads
+        self.state()
+        self.state()
+        self.assertEqual(g.reads, before + 2, "facts without a GUID must be read every time")
 
     def test_stock_bar_has_full_width_hp_line_and_custom_text_keeps_its_layout(self):
         self.lua.execute('''

@@ -42,7 +42,7 @@ UMM_VERSION = {
   Minor     = 0,
   Revision  = 2,
   Build     = 20211118,	-- 2787
-  ummRev    = '023-ck7';	-- Cherry's Kit 2026-10-29
+  ummRev    = '023-ck8';	-- Cherry's Kit 2026-10-29
 }
 
 -- ##### Local Variables #####
@@ -244,13 +244,23 @@ end
 local TimeSinceLastUpdate = 0;
 UMMBagChangedTime = 0;
 local BAG_SETTLE_TIME = 0.15;  -- redraw the bag view this long after the last bag change
+-- Opening the window and changing tabs lay it out at once; while it stays open,
+-- screen size and UI scale changes are picked up within this many seconds.
+local LAYOUT_CHECK_TIME = 0.5;
+local layoutCheckWait = 0;
 
 function UMMMasterFrame_OnUpdate(this, elapsedTime)
   if (ModEnabled ~= true) then
     return;
   end
   UMMClock = UMMClock + elapsedTime;
-  if (UMMFrame:IsVisible()) then UMMMenuLayout(); end
+  if (UMMFrame:IsVisible()) then
+    layoutCheckWait = layoutCheckWait - elapsedTime;
+    if (layoutCheckWait <= 0) then
+      layoutCheckWait = LAYOUT_CHECK_TIME;
+      UMMMenuLayout();
+    end
+  end
   if (UMMFrame:IsVisible() and not MailFrame:IsVisible()) then
     HideUIPanel(UMMFrame);
     UMMComposeConfirm:Clear();
