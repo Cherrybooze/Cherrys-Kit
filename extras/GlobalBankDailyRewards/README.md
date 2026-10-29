@@ -7,7 +7,7 @@ This optional Windows extension collects an available Daily Loyalty Bonus when y
 **You need:** Google Chrome and Cherry's Kit with Global Bank installed. You do **not** need Python for the addons, the Global Bank helper, or this extension.
 
 1. Install the [full Cherry's Kit](../../README.md#download-and-install) into your game's `Interface/AddOns/` folder. Check that `Interface/AddOns/CherrysKit/CherrysKit.toc` exists.
-2. Download the [separate Global Bank Daily Rewards installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/globalbank-daily-rewards-v1.0.2/CherrysKit-GlobalBankDailyRewards-1.0.2.zip). Extract it into the **same** `Interface/AddOns/` folder and merge `CherrysKit/`. GitHub's automatic source ZIP is a repository snapshot, not this installer.
+2. Download the [separate Global Bank Daily Rewards installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-GlobalBankDailyRewards-1.0.7.zip). Extract it into the **same** `Interface/AddOns/` folder and merge `CherrysKit/`. GitHub's automatic source ZIP is a repository snapshot, not this installer.
 3. Open `Interface/AddOns/CherrysKit/GlobalBank/Helper/` in File Explorer and double-click **Install Chrome extension.bat**. Keep its window open: it registers the local bridge, prints the exact extension folder, attempts to copy that path, and opens Chrome's extensions page.
 4. In Chrome, turn on **Developer mode** at the top right, then click **Load unpacked** at the top left.
 5. In the folder picker, press **Alt+D** to focus its address bar, **Ctrl+V** to paste the path, then **Enter**. If the installer says copying failed, type the extension folder path it printed instead. Click **Select Folder**. The picker selects folders, so an empty-looking file list is normal; do not search for the extension in that list.
@@ -21,7 +21,7 @@ The extension is not on the Chrome Web Store. The installer registers a native m
 
 ## Search your characters and auction cache
 
-The local bank and auction tools are included in version **1.0.3 and later**. The published 1.0.2 download above does not include them yet.
+The local bank and auction tools are included in version **1.0.3 and later**. The current download includes the searchable auction cache and its sorting controls.
 
 1. Click the **Global Bank Daily Rewards** extension icon in Chrome, then **Open local bank and auction tools**.
 2. Check whether the helper is running. If needed, click **Start helper** and leave its window open.

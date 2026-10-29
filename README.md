@@ -1,10 +1,8 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.78/CherrysKit-Full-0.11.78.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-Full-0.11.79.zip)
 
 # Cherry's Kit
 
-> Development snapshot: kit 0.11.79 is not published yet. Visit Releases for the current public build.
-
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.78/CherrysKit-Full-0.11.78.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-Full-0.11.79.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -22,7 +20,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.78/CherrysKit-Full-0.11.78.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-Full-0.11.79.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -72,7 +70,7 @@ Some integrations need both addons: for example, running a kitty from Grid needs
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/globalbank-daily-rewards-v1.0.2/CherrysKit-GlobalBankDailyRewards-1.0.2.zip) — a separate Windows package that collects available daily rewards and records confirmed collections locally. See the [extension guide](extras/GlobalBankDailyRewards/README.md) for setup and privacy details.
+[Download Global Bank Daily Rewards for Chrome](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-GlobalBankDailyRewards-1.0.7.zip) — a separate Windows package that collects available daily rewards and records confirmed collections locally. See the [extension guide](extras/GlobalBankDailyRewards/README.md) for setup and privacy details.
 
 ## Support and pull requests
 
