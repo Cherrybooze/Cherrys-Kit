@@ -202,11 +202,17 @@ function ConvertTo-GBJsonString([string]$text) {
 # Everything as JSON (UTF-8), for tools outside the game:
 # { "made": "...", "characters": [ { "name", "class", "level", "gold", "bagSlots", "bankSlots",
 #   "bankSeen", "saved", "note", "bag": [ { "slot", "count", "id", "name", "icon" } ], "bank": [ ... ] } ] }
+# Preserve ISO timestamps across PowerShell versions, including 7.5+.
+function ConvertFrom-GBJson([string]$text) {
+    if ((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')) { return $text | ConvertFrom-Json -DateKind String -ErrorAction Stop }
+    return $text | ConvertFrom-Json -ErrorAction Stop
+}
+
 function Export-GBJson($chars, [string]$path, [string]$made) {
     $rewardsPath = Join-Path (Split-Path -Parent $path) 'DailyRewards.json'
     $rewards = @()
     if (Test-Path -LiteralPath $rewardsPath) {
-        $rewardData = [System.IO.File]::ReadAllText($rewardsPath, (New-Object System.Text.UTF8Encoding($false, $true))) | ConvertFrom-Json
+        $rewardData = ConvertFrom-GBJson ([System.IO.File]::ReadAllText($rewardsPath, (New-Object System.Text.UTF8Encoding($false, $true))))
         if ($rewardData.schemaVersion -ne 1 -or $null -eq $rewardData.records) { throw 'Unsupported DailyRewards.json format' }
         $rewards = @($rewardData.records)
     }

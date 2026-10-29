@@ -10,7 +10,7 @@ function Read-ControlJson([string]$dataDirectory, [string]$name) {
     }
     $info = Get-Item -LiteralPath $path
     if ($info.Length -gt 67108864) { throw 'This local data file is too large to open here (limit 64 MiB).' }
-    return [System.IO.File]::ReadAllText($path, $script:ControlEncoding) | ConvertFrom-Json
+    return ConvertFrom-GBJson ([System.IO.File]::ReadAllText($path, $script:ControlEncoding))
 }
 function ConvertTo-ControlCharacters($database) {
     if ($null -eq $database.characters) { throw 'The character data file has an unsupported format.' }

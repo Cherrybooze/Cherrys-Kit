@@ -682,7 +682,7 @@ function Show-DailyStatus($c) {
     $rewardMatches = @()
     try {
         if (Test-Path -LiteralPath $rewards) {
-            $doc = [IO.File]::ReadAllText($rewards, (New-Object System.Text.UTF8Encoding($false, $true))) | ConvertFrom-Json -ErrorAction Stop
+            $doc = ConvertFrom-GBJson ([IO.File]::ReadAllText($rewards, (New-Object System.Text.UTF8Encoding($false, $true))))
             if ($doc.schemaVersion -ne 1 -or $null -eq $doc.records) { throw 'Invalid reward file' }
             $rewardMatches = @($doc.records | Where-Object { $_.name -ieq $c.Name })
         }

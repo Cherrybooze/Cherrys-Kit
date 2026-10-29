@@ -45,7 +45,7 @@ function Get-LastCollected {
             -not [DateTimeOffset]::TryParse($stamp, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$parsed)) { continue }
         if ($parsed -gt $latestTime) {
             $latestTime = $parsed
-            $latest = @{name=[string]$record.name;server=[string]$record.server;collectedAt=$parsed.UtcDateTime.ToString('yyyy-MM-ddTHH:mm:ssZ')}
+            $latest = @{name=[string]$record.name;server=[string]$record.server;collectedAt=$parsed.UtcDateTime.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)}
         }
     }
     return $latest
@@ -116,7 +116,7 @@ try {
             if ($prior.schemaVersion -ne 1 -or $null -eq $prior.records) { throw 'Unsupported reward data format' }
             $records = @($prior.records | Where-Object { -not ($_.name -ieq $name -and $_.server -ieq $server) })
         }
-        $records += [pscustomobject]@{name=$matches[0].name;server=$server;day=$day;collectedAt=[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')}
+        $records += [pscustomobject]@{name=$matches[0].name;server=$server;day=$day;collectedAt=[DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)}
         $document = [ordered]@{schemaVersion=1;records=@($records)}
         $tmp = "$path.$PID.tmp"
         [System.IO.File]::WriteAllText($tmp, (ConvertTo-Json -InputObject $document -Depth 8), $utf8)
