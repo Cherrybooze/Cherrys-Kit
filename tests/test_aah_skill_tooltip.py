@@ -34,7 +34,7 @@ class SkillTooltipIsolationTests(unittest.TestCase):
         ''')
 
     def test_private_tooltip_is_declared_in_the_already_loaded_xml(self):
-        root = ET.parse(SOURCE / "XML/AAH_Templates.xml").getroot()
+        root = ET.parse(SOURCE / "Xml/AAH_Templates.xml").getroot()
         namespace = {"ui": "http://www.runewaker.com/"}
         tooltip = root.find("ui:GameTooltip[@name='AAH_ItemLinkTooltip']", namespace)
         self.assertIsNotNone(tooltip)
