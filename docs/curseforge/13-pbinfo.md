@@ -4,9 +4,9 @@
 
 pbInfo v0.60 by p.b. a.k.a. novayuna (later odie2), updated for Cherry's Kit. Parts that other kit addons already do are left out: the threat meter is now rom weakauras' Threat meter aura, and target health numbers are PortraitHP.
 
-## Updated in 0.60-ck3
+## Updated in 0.60-ck4
 
-Blood bar updates skip missing frames instead of erroring, the tooltip reads the mouseover unit once per update, chat history trims correctly, and the quest tracker sort handles non-table entries.
+The tooltip reuses repeated mouseover facts within an update and shares them with its MobDB call. The next update reads fresh facts; other MobDB callers retain their one-argument API, and NPC maxima are still learned only at full health. This reduces repeated native reads, not all tooltip work. Earlier blood-bar guards, chat-history trimming and quest-sort checks remain; native tooltip appearance still needs an in-game check.
 
 ## Features
 

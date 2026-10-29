@@ -1,14 +1,20 @@
 # rom weakauras
 
-Version **0.9.23** · Kit release **0.11.80** · [All addons / hub](../README.md)
+Version **0.9.24** · Kit release **0.11.81** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
-## Updated in 0.9.23
+## Updated in 0.9.24
 
-Duplicating a behavior keeps attached child displays pointing at the copy, removed rules and actions leave no orphaned triggers behind, class restrictions match localized and legacy class names, the skill lookup refreshes after a class change, the hotbar picker repaints only when something actually changed, and the remembered-buff cache stays bounded.
+Load restrictions normalize display names case-insensitively, including saved `class="scout"`, while accepting canonical tokens, localized names and the old Runedancer/Warden alias. Saved restriction text is preserved.
+
+Only referenced sources are observed during normal polling, including converted source-choice bindings and implicit display sources. An orphaned compatibility primary remains saved but is read only when the public `GetAuraValue` API requests it. Removing rules/actions prunes safe unshared sources; recovery metadata and referenced sources are retained.
+
+The saved `buffInfo` cache is capped at **4,000 ID entries**, and session `knownAuras` at **8,000 name/ID index entries**. Counts are maintained between inserts, with inexpensive batch eviction and an initial trim for oversized saves. Evicted buff metadata is learned again when observed; this is not a permanent buff catalogue.
+
+The previous child-display duplication, class-change skill invalidation and change-only hotbar repaint fixes remain.
 
 ## Editing and positioning
 

@@ -1,14 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.15** Â· Kit release **0.11.80** Â· [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.16** · Kit release **0.11.81** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
 
-## Preparing kit 0.11.80
+## Preparing kit 0.11.81
 
-This development snapshot fixes reported issues across the kit: KittyCombo fires skills closer to ready and skips unusable action rows; auction list clicks select the right row; rom weakauras keeps copies, class checks and caches in order; chat painting recovers from cross-window releases; bank refreshes and sorting are lighter; tooltip, macro-icon, daily reward and load-time probe edges are fixed. Prepared for a manual playtest before release.
+This development snapshot completes the PR #4 follow-up: case-insensitive RWA class gates and reference-aware polling, verified Grid target preservation, daily-page marks after a valid shop-link handoff, cross-window chat drag cleanup, elapsed-time bank refreshes and safe missing Kitty range probes. pbInfo reuses mouseover facts within each update. The 0.2-second Kitty dispatch window and earlier auction, tooltip, helper and loader fixes carry forward. Native input and successful-cast timing still need a manual playtest; no combat throughput gain is claimed.
 
 ## Features
 

@@ -4,9 +4,9 @@
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
-## Updated in 0.9.23
+## Updated in 0.9.24
 
-Duplicate behaviors keep their attached child displays, removed rules leave no orphaned triggers, class restrictions match localized class names, the skill lookup refreshes after a class change, and the hotbar picker only repaints on real changes.
+Class restrictions normalize display names case-insensitively while preserving saved text, canonical tokens, localized names and legacy aliases. Polling observes referenced sources, including implicit bindings and converted source choices; unused compatibility primaries stay saved and are read on demand by GetAuraValue. Safe unshared sources are pruned after rule/action removal. Saved buff metadata is capped at 4,000 IDs and session metadata at 8,000 name/ID entries, with batch eviction and relearning. Earlier child-display copies, class-change skill invalidation and change-only hotbar repaints remain.
 
 ## Updated in 0.9.22
 

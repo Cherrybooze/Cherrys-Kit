@@ -1,5 +1,5 @@
 ## Title: Cherry's Kit
-## Version: 0.11.80
+## Version: 0.11.81
 ## Description: Hub for Cherry's addons. Type /rwa or /ck to open each addon's settings, turn addons on or off, and reload the UI.
 ## Author: Cherry
 ## SavedVariables: RWA_DB, ZShop_Settings, CherrysGrid_DB

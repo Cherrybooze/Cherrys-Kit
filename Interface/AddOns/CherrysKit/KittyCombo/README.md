@@ -1,14 +1,18 @@
 # Cherry's KittyCombo
 
-Version **1.7.10** · Kit release **0.11.80** · [All addons / hub](../README.md)
+Version **1.7.11** · Kit release **0.11.81** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
-## Updated in 1.7.10
+## Updated in 1.7.11
 
-Key presses now fire a skill only when it is nearly ready (0.2 s instead of 0.6 s), so fewer presses are refused by the client's short repeat-cast guard. Action rows also skip a press when their slot is gone or unusable, or when an item stack is empty. Prediction, condition thresholds, cooldown tracking and saved rotations are unchanged.
+An imported or incomplete **inRange** condition with no probe name now fails cleanly without querying the bar or indexing a nil warning key. Named probes still read the slot once and warn at most once per skill per ten seconds when absent.
+
+The 1.7.10 dispatch changes remain: skills are attempted inside a **0.2-second** readiness window; action rows check the live slot, usability and item count. Missing mana fails a mana condition while a real zero remains valid. User condition thresholds, anti-repeat behavior, saved rotations and prediction's **1.1-second** lookahead retain their meaning. `castRecently` records a send attempt, not a confirmed cast.
+
+For an in-session A/B, run `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6`; use `0.2` to restore the new default. Compare successful casts over equal combat intervals and record the rotation, latency and press rate. Fewer eligible early attempts alone does not establish higher cast throughput; successful-cast measurements are still pending.
 
 ## Updated in 1.7.9
 
@@ -35,7 +39,7 @@ The mode widgets wait for saved settings before restoring their positions. Start
 - **Create macro**: one click makes a `/run Kitty.attack(...)` macro with a random icon and puts it on your cursor, and shows whether one already exists.
 - **Class icons** next to each kitty's class in the list and in the class menus.
 - **New look**: dark blue windows with gold borders (shared with rom weakauras). Every window can be resized by dragging the gold corner (60% to 160%) and remembers its size and position.
-- **Faster key presses**: only the skills a command checks are read (about 3 reads per press instead of about 57), with the same picks as the original 0.973. Skills and items that work mid-cast can fire while you cast.
+- **Lazy skill reads**: only the skills requested by the priority walk are read. Skills and items that work mid-cast can still be attempted while you cast; client/server acceptance is checked in game.
 - **Kitty tracker**: rom weakauras can show the next skill a kitty would fire, and its "KittyCombo mode" aura shows the mode that is on.
 - **Raid frame clicks**: Cherry's Grid can run a kitty on the party or raid member you click, and your target comes back afterwards.
 - **Changelog** button in the settings window, and **/kc probe** to check your client.

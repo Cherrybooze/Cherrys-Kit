@@ -1202,6 +1202,11 @@ end;
 -- quiet for ten seconds so evaluations and predictions do not repeat it.
 Kitty.ComboManager.inRangeWarnAt = {};
 Kitty.ComboManager.inRange = function(self, skill)
+	-- Imported/incomplete conditions may have no selected probe. Do not index
+	-- the warning cache or ask the action bar until a skill name is configured.
+	if(type(skill) ~= "string" or not string.find(skill, "%S")) then
+		return false;
+	end
 	local result = self.slotManager:inRange(skill);
 	if(result ~= nil) then
 		return result;

@@ -4,9 +4,9 @@
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
-## Updated in 1.2.0-ck3
+## Updated in 1.2.0-ck4
 
-The daily reward button is marked as opened when the shop link actually arrives, not before, so a blocked open no longer shows the day as spent.
+The daily-page reminder is marked after a valid daily link reaches a successful browser API handoff, or its linked native window is shown. Missing/failing openers, invalid links and timeouts leave it unmarked. Copy, Home and Depot do not mark Daily. The saved field remains named claimed for compatibility, but records only a page-open handoff, never a confirmed reward collection or browser page load. The manual shop-button fallback lasts sixty seconds; native handoff still needs an in-game check.
 
 ## Features
 
@@ -24,7 +24,7 @@ The daily reward button is marked as opened when the shop link actually arrives,
 - `/zshop daily`: open the daily loyalty reward page
 - `/zshop depot`: open your item depot
 - `/zshop button`: show or hide the daily reward button
-- `/zshop unmark`: clear today's claimed mark on this character
+- `/zshop unmark`: clear today's daily-page opened mark on this character
 - `/zshop browser`: switch between your web browser and the game window
 - `/zshop config`: reload config.lua
 - `/zshop probe`: what this client offers (send it with bug reports)

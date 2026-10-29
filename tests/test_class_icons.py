@@ -65,6 +65,22 @@ class ClassIconTests(unittest.TestCase):
         self.assertEqual(lua.globals().RWA.ClassIcon("Ritter", "Priester"),
                          BASE + "gfx/class/K_P.tga")
 
+    def test_class_tokens_normalize_display_names_and_legacy_aliases_without_kitty(self):
+        lua = self.runtime(with_kitty=False)
+        lua.execute('''
+            GetSystemString = function(key)
+                return ({SYS_CLASSNAME_RANGER="Kundschafter", SYS_CLASSNAME_AUGUR="Priester"})[key] or key
+            end
+        ''')
+        token = lua.globals().RWA.ClassToken
+        for name, expected in (("scout", "RANGER"), ("ScOuT", "RANGER"),
+                               ("RANGER", "RANGER"), ("rogue", "THIEF"),
+                               ("priest", "AUGUR"), ("warlock", "HARPSYN"),
+                               ("champion", "PSYRON"), ("runedancer", "WARDEN"),
+                               ("kundschafter", "RANGER"), ("PRIESTER", "AUGUR")):
+            with self.subTest(name=name):
+                self.assertEqual(token(name), expected)
+
     def test_text_localization_and_old_warden_token_are_supported(self):
         lua = self.runtime()
         lua.execute("""

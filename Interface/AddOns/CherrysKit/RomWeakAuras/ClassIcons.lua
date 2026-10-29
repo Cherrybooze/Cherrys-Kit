@@ -11,7 +11,10 @@ local tokens = { RUNEDANCER = "WARDEN" } -- old client name for Warden
 for _, token in ipairs(CLASS_IDS) do
   tokens[token] = token
 end
+local names = {WARRIOR="Warrior",RANGER="Scout",THIEF="Rogue",MAGE="Mage",AUGUR="Priest",KNIGHT="Knight",
+  WARDEN="Warden",DRUID="Druid",HARPSYN="Warlock",PSYRON="Champion",any="Any"}
 local localized = {}
+for token, name in pairs(names) do localized[string.lower(name)] = token end
 
 local function classToken(value)
   if type(value) == "number" then
@@ -24,7 +27,8 @@ local function classToken(value)
   if id and CLASS_IDS[id] then
     return CLASS_IDS[id]
   end
-  local token = tokens[string.upper(value)] or localized[value]
+  local key = string.lower(value)
+  local token = tokens[string.upper(value)] or localized[key]
   if token then
     return token
   end
@@ -40,15 +44,14 @@ local function classToken(value)
       ok, text = pcall(TEXT, key)
     end
     if ok and type(text) == "string" and text ~= "" and text ~= key then
-      localized[text] = canonical
+      localized[string.lower(text)] = canonical
     end
   end
-  return localized[value] or value
+  return localized[key] or value
 end
 
 RWA.ClassToken=classToken
-RWA.ClassNames={WARRIOR="Warrior",RANGER="Scout",THIEF="Rogue",MAGE="Mage",AUGUR="Priest",KNIGHT="Knight",
-  WARDEN="Warden",DRUID="Druid",HARPSYN="Warlock",PSYRON="Champion",any="Any"}
+RWA.ClassNames=names
 RWA.ClassChoices={{label="Any",value="any"}}
 for _,token in ipairs(CLASS_IDS) do RWA.ClassChoices[#RWA.ClassChoices+1]={label=RWA.ClassNames[token],value=token} end
 

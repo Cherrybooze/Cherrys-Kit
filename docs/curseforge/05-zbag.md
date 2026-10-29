@@ -4,9 +4,9 @@
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
-## Updated in 5.07-ck12
+## Updated in 5.07-ck13
 
-The bank window refreshes a few times a second instead of every frame, and sorting rebuilds its lookup tables once per pass and stops as soon as nothing is left to move.
+The bank XML passes real elapsed time to its 0.2-second timer, targeting about five refreshes per second independently of FPS, without a catch-up burst after a stall. Sorting retains its pass-level rebuild reduction, necessary post-swap rebuilds and no-progress exit; attribute lists are sorted once at build time. Live bank sorting still needs an in-game check.
 
 ## Features
 

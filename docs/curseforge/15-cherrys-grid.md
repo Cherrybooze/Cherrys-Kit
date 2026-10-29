@@ -2,9 +2,9 @@
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
 
-## Updated in 1.1.2
+## Updated in 1.1.3
 
-Clicking a member on a client without the focus-stash API no longer destroys your previous target, and the roster is scanned once per refresh.
+Spells and ordinary macro lines preserve the old target through a verified stable unit ID or a verified empty focus stash. Occupied focus slots are preserved. If no safe path exists, the action is skipped before changing the old target; switch/restoration failures are reported. No undocumented last-target API is assumed. Startup, roster polling and explicit layout refreshes each reuse one roster scan. Native targeting still needs an in-game check; delayed macro/Lua target changes after the synchronous click are outside this restoration scope. Kitty actions retain KittyCombo's existing attackOn path.
 
 ## Features
 

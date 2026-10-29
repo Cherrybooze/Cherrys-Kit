@@ -130,6 +130,7 @@ function Rules.ChangeActionType(data, action, kind)
   if kind == "show" then
     action.output = { id = nextId(data, actionItems(data, true), "o", "nextOutputId") }
   end
+  Rules.PruneSources(data)
   return true
 end
 
@@ -141,9 +142,8 @@ function Rules.RemoveAction(data, rule, actionId)
       local outputNumber = type(outputId) == "string" and tonumber(string.match(outputId, "^o(%d+)$"))
       if actionNumber then data.nextActionId = math.max(tonumber(data.nextActionId) or 1, actionNumber + 1) end
       if outputNumber then data.nextOutputId = math.max(tonumber(data.nextOutputId) or 1, outputNumber + 1) end
-      local sourceId = action.sourceId
       table.remove(rule.actions, index)
-      Rules.PruneSource(data, sourceId)
+      Rules.PruneSources(data)
       return true
     end
   end
@@ -187,11 +187,9 @@ function Rules.Remove(data, ruleId)
       local number = type(rule.id) == "string" and tonumber(string.match(rule.id, "^r(%d+)$"))
       if number then data.nextRuleId = math.max(tonumber(data.nextRuleId) or 1, number + 1) end
       -- Keep identities retired even for imported definitions without counters.
-      local sourceIds = {}
       for _, check in ipairs(rule.when and rule.when.checks or {}) do
         local n = type(check.id) == "string" and tonumber(string.match(check.id, "^c(%d+)$"))
         if n then data.nextCheckId = math.max(tonumber(data.nextCheckId) or 1, n + 1) end
-        if check.sourceId then sourceIds[#sourceIds + 1] = check.sourceId end
       end
       for _, action in ipairs(rule.actions or {}) do
         local n = type(action.id) == "string" and tonumber(string.match(action.id, "^a(%d+)$"))
@@ -199,12 +197,9 @@ function Rules.Remove(data, ruleId)
         local outputId = type(action.output) == "table" and action.output.id
         n = type(outputId) == "string" and tonumber(string.match(outputId, "^o(%d+)$"))
         if n then data.nextOutputId = math.max(tonumber(data.nextOutputId) or 1, n + 1) end
-        if action.sourceId then sourceIds[#sourceIds + 1] = action.sourceId end
       end
       table.remove(data.rules, i)
-      for _, id in ipairs(sourceIds) do
-        Rules.PruneSource(data, id)
-      end
+      Rules.PruneSources(data)
       return true
     end
   end
@@ -237,27 +232,61 @@ function Rules.Duplicate(data, ruleId)
   return copy, reason
 end
 
-local function sourceUsed(data, id)
-  if data.primarySourceId == id then return true end
-  for _, element in ipairs(data.elements or {}) do
-    if element.sourceId == id then return true end
-  end
-  for _, rule in ipairs(data.rules or {}) do
-    for _, check in ipairs(type(rule.when) == "table" and rule.when.checks or {}) do
-      if check.sourceId == id then return true end
-    end
-    for _, action in ipairs(rule.actions or {}) do
-      if action.sourceId == id then return true end
+local function actionSourceId(data, rule, action)
+  local id = action.sourceId
+  if id == nil then
+    for _, check in ipairs(rule.when and rule.when.checks or {}) do
+      if check.sourceId then id = check.sourceId; break end
     end
   end
-  return false
+  return id ~= false and (id or data.primarySourceId) or nil
 end
 
-function Rules.PruneSource(data, id)
-  if not id or sourceUsed(data, id) then return end
-  for i, source in ipairs(data.sources or {}) do
-    if source.id == id then table.remove(data.sources, i); return end
+-- Collect references once per load/edit, including converted sourceChoices and
+-- nested display metadata. The recovery archive is data only. A compatibility
+-- primary is not itself a reason to poll an otherwise unused source.
+function Rules.UsedSources(data)
+  local used, seen = {}, {}
+  local function references(value)
+    if type(value) ~= "table" or seen[value] then return end
+    seen[value] = true
+    for key, child in pairs(value) do
+      if key == "sourceId" and type(child) == "string" then used[child] = true
+      elseif key ~= "previousDefinition" then references(child) end
+    end
   end
+  for key, value in pairs(data) do
+    if key ~= "previousDefinition" then references(value) end
+  end
+  if data.schemaVersion ~= 3 and data.primarySourceId then used[data.primarySourceId] = true end
+  for _, rule in ipairs(data.rules or {}) do
+    for _, action in ipairs(rule.actions or {}) do
+      if action.type == "show" then
+        local id = actionSourceId(data, rule, action)
+        if id then used[id] = true end
+      end
+    end
+  end
+  return used
+end
+
+function Rules.PruneSource(data, id, used)
+  -- Keep the primary definition/ID for GetAuraValue and legacy editors, even
+  -- when normal polling no longer needs it. Observation is demand-driven.
+  if not id or data.primarySourceId == id or (used or Rules.UsedSources(data))[id] then return end
+  for i, source in ipairs(data.sources or {}) do
+    if source.id == id then
+      local number = type(id) == "string" and tonumber(string.match(id, "^s(%d+)$"))
+      if number then data.nextSourceId = math.max(tonumber(data.nextSourceId) or 1, number + 1) end
+      table.remove(data.sources, i)
+      return
+    end
+  end
+end
+
+function Rules.PruneSources(data)
+  local used = Rules.UsedSources(data)
+  for i = #(data.sources or {}), 1, -1 do Rules.PruneSource(data, data.sources[i].id, used) end
 end
 
 -- Always make a new source when an editor changes a check's source. Other
@@ -452,10 +481,11 @@ local function complete(source,data)
 end
 
 -- Each source is read once per evaluation, at the same supplied time.
-function Rules.Observe(data, now, env)
+function Rules.Observe(data, now, env, used)
   local snapshot = {}
+  used = used or Rules.UsedSources(data)
   for _, source in ipairs(data.sources or {}) do
-    if type(source.id) == "string" and complete(source,data) then
+    if type(source.id) == "string" and used[source.id] and complete(source,data) then
       local ok, state = pcall(RWA.Triggers.Observe, source, now, env)
       if ok and type(state) == "table" then snapshot[source.id] = state end
     end
@@ -1095,22 +1125,16 @@ end
 -- Build the action-owned output index once when a definition is loaded or
 -- edited. A show action owns its definition; modifiers refer to its stable ID.
 function Rules.PrepareActions(data)
-  local prepared = { outputs = {}, order = {} }
+  local prepared = { outputs = {}, order = {}, usedSources = Rules.UsedSources(data) }
   for _, rule in ipairs(data.rules or {}) do
     for _, action in ipairs(rule.actions or {}) do
       local output = type(action) == "table" and action.type == "show" and action.output
       if type(output) == "table" and type(output.id) == "string" and type(output.regionType) == "string"
         and (not RWA.Regions or RWA.Regions.types[output.regionType]) and not prepared.outputs[output.id] then
-        local sourceId = action.sourceId
-        if sourceId == nil then
-          for _, check in ipairs(rule.when and rule.when.checks or {}) do
-            if check.sourceId then sourceId = check.sourceId; break end
-          end
-        end
-        local binding=sourceId ~= false and (sourceId or data.primarySourceId) or nil
+        local binding=actionSourceId(data, rule, action)
         local boundSource=binding and Rules.FindSource(data,binding)
         local item = { definition = output, sourceId = binding, sourceChoices = action.sourceChoices,
-          sourceValid = sourceId ~= false and (binding == nil or boundSource ~= nil),
+          sourceValid = action.sourceId ~= false and (binding == nil or boundSource ~= nil),
           resource=output.resource or output.regionType=="soulpoints" and "psi" or boundSource and boundSource.type=="resource" and boundSource.resource }
         prepared.outputs[output.id] = item
         prepared.order[#prepared.order + 1] = output.id
@@ -1939,4 +1963,3 @@ function Rules.PlacementPreview(definition,source,observed,visual,now,cache)
   shown.blink=false
   return state,shown
 end
-

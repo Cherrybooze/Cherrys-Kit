@@ -210,6 +210,38 @@ class KittyDispatchTests(unittest.TestCase):
           assert(Kitty.ComboManager.castWithin('Demo', 5) == false);
         ''')
 
+    def test_imported_range_condition_without_a_name_fails_without_error_or_probe(self):
+        self.lua.execute('''
+          local reads, warnings, errors = 0, 0, 0
+          SendWarningMsg = function() warnings = warnings + 1 end
+          Kitty.sendMessage = function() errors = errors + 1 end
+          local manager = setmetatable({slotManager={inRange=function()
+            reads = reads + 1
+          end}}, {__index=Kitty.ComboManager})
+          for _=1,30 do
+            assert(manager:inRange(nil) == false)
+            assert(manager:inRange("") == false)
+            assert(manager:inRange("  ") == false)
+            assert(manager:inRange(false) == false)
+            assert(manager:checkCondition({{conditionType="inRange"}}) == false)
+          end
+          assert(reads == 0 and warnings == 0 and errors == 0)
+        ''')
+
+    def test_execution_window_can_still_be_toggled_for_an_ab_comparison(self):
+        self.lua.execute('''
+          Kitty.SkillManager.fetchSkill = function()
+            return {isAvailable=true,isSuitSkill=false,remaining=0.5,texture="icon"}
+          end
+          local manager = Kitty.ComboManager({}, Kitty.CooldownManager(), {})
+          local commands = {{commandType="skill",commandName="Compare"}}
+          assert(manager:check(commands) == nil)
+          Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6
+          assert(manager:check(commands) == "skill")
+          Kitty.SkillManager.EXECUTION_TOLERANCE = 0.2
+          assert(manager:check(commands) == nil)
+        ''')
+
 
 if __name__ == "__main__":
     unittest.main()

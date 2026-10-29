@@ -167,10 +167,15 @@ local function shouldLoad(load)
   end
   if load.class and load.class ~= "" and UnitClass then
     local main, sub = UnitClass("player")
-    local normalize = RWA.ClassToken or function(value) return value end
+    local function normalize(value)
+      local token = RWA.ClassToken and RWA.ClassToken(value) or value
+      return type(token) == "string" and string.lower(token) or token
+    end
     local want = normalize(load.class)
     if normalize(main or "") ~= want and normalize(sub or "") ~= want then
-      return false
+      if type(UnitClassToken) ~= "function" then return false end
+      main, sub = UnitClassToken("player")
+      if normalize(main or "") ~= want and normalize(sub or "") ~= want then return false end
     end
   end
   if load.level and UnitLevel and (UnitLevel("player") or 0) < load.level then
@@ -549,16 +554,16 @@ end
 
 local function evaluate(a, now)
   local data = a.data
-  local snapshot = Rules.Observe(data, now, a.env)
+  local snapshot = Rules.Observe(data, now, a.env, a.prepared.usedSources)
   local effects = Rules.Evaluate(data, snapshot, shouldLoad(data.load), a.prepared)
   local liveData = RWA.GetAura(data.id) or data
   if liveData.schemaVersion ~= 3 then liveData = data end
-  local liveSnapshot = liveData == data and snapshot or Rules.Observe(liveData, now, a.env)
   local livePrepared = liveData == data and a.prepared or a.livePrepared
   if liveData ~= data and (not livePrepared or a.livePreparedData ~= liveData) then
     livePrepared = Rules.PrepareActions(liveData)
     a.livePrepared, a.livePreparedData = livePrepared, liveData
   end
+  local liveSnapshot = liveData == data and snapshot or Rules.Observe(liveData, now, a.env, livePrepared.usedSources)
   local liveEffects = liveData == data and effects or Rules.Evaluate(liveData, liveSnapshot, shouldLoad(liveData.load), livePrepared)
   a.realData, a.realStates, a.realActive = liveData, liveSnapshot, liveEffects.visible
   evaluateActionEffects(a, liveEffects, now)
@@ -817,6 +822,13 @@ function RWA.GetAuraValue(id, var)
   local data, states = a.realData or a.data, a.realStates or a.states
   if data.schemaVersion == 2 or data.schemaVersion == 3 then
     state = states[data.primarySourceId]
+    if not state and type(data.primarySourceId) == "string" then
+      -- Legacy callers explicitly requesting the primary still get its value;
+      -- unreferenced compatibility sources need no background observation.
+      local observed = Rules.Observe(data, RWA.Now(), a.env, { [data.primarySourceId] = true })
+      state = observed[data.primarySourceId]
+      states[data.primarySourceId] = state
+    end
   else
     for i = 1, #(data.triggers or {}) do
       if states[i] and states[i].show then

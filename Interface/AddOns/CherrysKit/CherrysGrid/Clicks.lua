@@ -47,7 +47,7 @@ C.DEFAULTS = {
   RBUTTON = { type = "menu" },
 }
 
-C.FOCUS_SLOT = 12 -- where the old target waits during a kitty click (fallback only)
+C.FOCUS_SLOT = 12 -- prefer an empty high focus slot for temporary target storage
 
 local function chat(text)
   G.Print(text)
@@ -275,32 +275,96 @@ end
 -- Running on a member
 ---------------------------------------------------------------------------
 
+local function guid(unit)
+  if type(UnitGUID) == "function" then
+    local ok, value = pcall(UnitGUID, unit)
+    if ok and value and value ~= 0 and value ~= "" then return value end
+  end
+end
+
+local function sameUnit(a, b)
+  local ga, gb = guid(a), guid(b)
+  if ga and gb then return ga == gb end
+  if type(UnitIsUnit) == "function" then
+    local ok, value = pcall(UnitIsUnit, a, b)
+    return ok and value ~= nil and value ~= false and value ~= 0
+  end
+  return false -- names alone cannot distinguish two NPCs with the same name
+end
+
+local function clientCall(fn, ...)
+  if type(fn) ~= "function" then return false end
+  local ok, value = pcall(fn, ...)
+  return ok and value ~= false and value ~= 0 -- the documented calls return nil on success
+end
+
+-- TargetUnit accepts unit IDs, not names/GUIDs or an assumed last-target token.
+-- Reuse a stable ID first, then verify a new stash before changing the target.
+local function saveTarget()
+  for _, unit in ipairs({ "player", "pet" }) do
+    if sameUnit("target", unit) then return unit end
+  end
+  for _, group in ipairs({ { "party", 5 }, { "raid", 36 }, { "focus", 12 } }) do
+    for i = 1, group[2] do
+      local unit = group[1] .. i
+      if sameUnit("target", unit) then return unit end
+      if group[1] ~= "focus" and sameUnit("target", unit .. "pet") then return unit .. "pet" end
+    end
+  end
+  if type(FocusUnit) == "function" then
+    for slot = C.FOCUS_SLOT, 1, -1 do
+      local unit = "focus" .. slot
+      if not G.U.Exists(unit) then
+        if clientCall(FocusUnit, slot, "target") and sameUnit("target", unit) then return unit, slot end
+        pcall(FocusUnit, slot, "") -- this slot was empty before our attempt
+        return nil
+      end
+    end
+  end
+end
+
 -- Runs fn with the member targeted, then gives the old target back (unless keep).
 function C.OnMember(unit, keep, fn)
   local hadTarget = G.U.Exists("target")
-  local already = hadTarget and G.U.IsUnit("target", unit)
-  if hadTarget and not already and not keep and FocusUnit then
-    pcall(FocusUnit, C.FOCUS_SLOT, "target")
-  end
-  if not already then
-    TargetUnit(unit)
-  end
-  local ok, err = pcall(fn)
-  if SpellIsTargeting and SpellIsTargeting() then
-    SpellTargetUnit(unit) -- a skill that asks for a target takes the member
-  end
-  if not already and not keep then
-    if hadTarget and FocusUnit then
-      TargetUnit("focus" .. C.FOCUS_SLOT)
-      pcall(FocusUnit, C.FOCUS_SLOT, "")
-    else
-      TargetUnit("")
+  local already = hadTarget and sameUnit("target", unit)
+  local oldGuid, restore, slot = guid("target")
+  if hadTarget and not already and not keep then
+    restore, slot = saveTarget()
+    if not restore then
+      chat("click action skipped: this client could not preserve your current target.")
+      return false
     end
   end
+  local ok, err = pcall(function()
+    if not already and (not clientCall(TargetUnit, unit) or not sameUnit("target", unit)) then
+      error("could not target the clicked member", 0)
+    end
+    fn()
+    if SpellIsTargeting and SpellIsTargeting() then
+      if not clientCall(SpellTargetUnit, unit) then error("could not give the spell its target", 0) end
+    end
+  end)
+  local restored = true
+  if not already and not keep then
+    if hadTarget then
+      -- A vanished/reassigned unit ID must not be sent to TargetUnit: that can
+      -- clear the current target. Check both availability and the result.
+      restored = G.U.Exists(restore) and (not oldGuid or guid(restore) == oldGuid)
+        and clientCall(TargetUnit, restore) and sameUnit("target", restore)
+        and (not oldGuid or guid("target") == oldGuid)
+    else
+      restored = clientCall(TargetUnit, "") and not G.U.Exists("target")
+    end
+  end
+  if slot then
+    local cleared = clientCall(FocusUnit, slot, "") and not G.U.Exists("focus" .. slot)
+    if not cleared then chat("could not clear the temporary focus slot " .. slot .. ".") end
+  end
+  if not restored then chat("could not restore your previous target after the click action.") end
   if not ok then
     chat("error: " .. tostring(err))
   end
-  return ok
+  return ok and restored and true or false
 end
 
 -- Runs a kitty with the member as its target, then gives the old target back.

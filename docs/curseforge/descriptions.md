@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Fifteen package descriptions for Cherry's Kit 0.11.80, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Fifteen package descriptions for Cherry's Kit 0.11.81, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -103,7 +103,7 @@ Some kit addons contain parts under Creative Commons **NonCommercial** licences 
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
-Version 1.7.10 fires skills closer to ready (0.2 s window) and skips action rows that are gone, unusable or out of stock. 1.7.9 fixed prediction, import restrictions, editor drafts, proc cycles, cooldown conditions, named priorities and action-slot handling.
+Version 1.7.11 makes imported range conditions with no probe name fail cleanly. It retains the 0.2-second dispatch window, live action eligibility, missing-versus-zero mana handling, condition thresholds, anti-repeat behavior and 1.1-second prediction lookahead. `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6` selects the old A/B window; use `0.2` to restore the default. Successful-cast throughput gains have not been measured. 1.7.9's prediction, import, editor, proc, cooldown and action-slot fixes carry forward.
 
 ## Features
 
@@ -122,7 +122,7 @@ Version 1.7.10 fires skills closer to ready (0.2 s window) and skips action rows
 - **Create macro**: one click makes a `/run Kitty.attack(...)` macro with a random icon and puts it on your cursor, and shows whether one already exists.
 - **Class icons** next to each kitty's class in the list and in the class menus.
 - **New look**: dark blue windows with gold borders (shared with rom weakauras). Every window can be resized by dragging the gold corner (60% to 160%) and remembers its size and position.
-- **Faster key presses**: only the skills a command checks are read (about 3 reads per press instead of about 57), with the same picks as the original 0.973. Skills and items that work mid-cast can fire while you cast.
+- **Lazy skill reads**: only the skills requested by the priority walk are read. Skills and items that work mid-cast can still be attempted while you cast; client/server acceptance is checked in game.
 - **Kitty tracker**: rom weakauras can show the next skill a kitty would fire, and its "KittyCombo mode" aura shows the mode that is on.
 - **Raid frame clicks**: Cherry's Grid can run a kitty on the party or raid member you click, and your target comes back afterwards.
 - **Changelog** button in the settings window, and **/kc probe** to check your client.
@@ -169,9 +169,9 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
-## Updated in 0.9.23
+## Updated in 0.9.24
 
-Duplicate behaviors keep their attached child displays, removed rules leave no orphaned triggers, class restrictions match localized class names, the skill lookup refreshes after a class change, and the hotbar picker only repaints on real changes.
+Class restrictions normalize display names case-insensitively while preserving saved text, canonical tokens, localized names and legacy aliases. Polling observes referenced sources, including implicit bindings and converted source choices; unused compatibility primaries stay saved and are read on demand by GetAuraValue. Safe unshared sources are pruned after rule/action removal. Saved buff metadata is capped at 4,000 IDs and session metadata at 8,000 name/ID entries, with batch eviction and relearning. Earlier child-display copies, class-change skill invalidation and change-only hotbar repaints remain.
 
 ## Updated in 0.9.22
 
@@ -248,9 +248,9 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
-## Updated in 0.10.8
+## Updated in 0.10.9
 
-Painting a selection and releasing the mouse over another chat window no longer leaves the overlay broken until a Reload UI.
+Releasing the pressed button over another chat overlay clears the originating drag state and keeps its selection. Unrelated button releases do not end it, and hyperlinks activate only for a plain click released in its original window. Normal selection and native/modified link clicks retain regression coverage; cross-window input still needs an in-game check.
 
 ## Updated in 0.10.7
 
@@ -314,9 +314,9 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat pro
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
-## Updated in 5.07-ck12
+## Updated in 5.07-ck13
 
-The bank window refreshes a few times a second instead of every frame, and sorting rebuilds its lookup tables once per pass and stops as soon as nothing is left to move.
+The bank XML passes real elapsed time to its 0.2-second timer, targeting about five refreshes per second independently of FPS, without a catch-up burst after a stall. Sorting retains its pass-level rebuild reduction, necessary post-swap rebuilds and no-progress exit; attribute lists are sorted once at build time. Live bank sorting still needs an in-game check.
 
 ## Features
 
@@ -729,9 +729,9 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/ckload pr
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
-## Updated in 1.2.0-ck3
+## Updated in 1.2.0-ck4
 
-The daily reward button is marked as opened when the shop link actually arrives, not before, so a blocked open no longer shows the day as spent.
+The daily-page reminder is marked after a valid daily link reaches a successful browser API handoff, or its linked native window is shown. Missing/failing openers, invalid links and timeouts leave it unmarked. Copy, Home and Depot do not mark Daily. The saved field remains named claimed for compatibility, but records only a page-open handoff, never a confirmed reward collection or browser page load. The manual shop-button fallback lasts sixty seconds; native handoff still needs an in-game check.
 
 ## Features
 
@@ -749,7 +749,7 @@ The daily reward button is marked as opened when the shop link actually arrives,
 - `/zshop daily`: open the daily loyalty reward page
 - `/zshop depot`: open your item depot
 - `/zshop button`: show or hide the daily reward button
-- `/zshop unmark`: clear today's claimed mark on this character
+- `/zshop unmark`: clear today's daily-page opened mark on this character
 - `/zshop browser`: switch between your web browser and the game window
 - `/zshop config`: reload config.lua
 - `/zshop probe`: what this client offers (send it with bug reports)
@@ -781,9 +781,9 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zshop pro
 
 pbInfo v0.60 by p.b. a.k.a. novayuna (later odie2), updated for Cherry's Kit. Parts that other kit addons already do are left out: the threat meter is now rom weakauras' Threat meter aura, and target health numbers are PortraitHP.
 
-## Updated in 0.60-ck3
+## Updated in 0.60-ck4
 
-Blood bar updates skip missing frames instead of erroring, the tooltip reads the mouseover unit once per update, chat history trims correctly, and the quest tracker sort handles non-table entries.
+The tooltip reuses repeated mouseover facts within an update and shares them with its MobDB call. The next update reads fresh facts; other MobDB callers retain their one-argument API, and NPC maxima are still learned only at full health. This reduces repeated native reads, not all tooltip work. Earlier blood-bar guards, chat-history trimming and quest-sort checks remain; native tooltip appearance still needs an in-game check.
 
 ## Features
 
@@ -866,9 +866,9 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/php probe
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
 
-## Updated in 1.1.2
+## Updated in 1.1.3
 
-Clicking a member on a client without the focus-stash API no longer destroys your previous target, and the roster is scanned once per refresh.
+Spells and ordinary macro lines preserve the old target through a verified stable unit ID or a verified empty focus stash. Occupied focus slots are preserved. If no safe path exists, the action is skipped before changing the old target; switch/restoration failures are reported. No undocumented last-target API is assumed. Startup, roster polling and explicit layout refreshes each reuse one roster scan. Native targeting still needs an in-game check; delayed macro/Lua target changes after the synchronous click are outside this restoration scope. Kitty actions retain KittyCombo's existing attackOn path.
 
 ## Features
 

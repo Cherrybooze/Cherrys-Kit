@@ -44,32 +44,50 @@ local cache = {} -- ["unit|filter"] = list, cleared every poll and on UNIT_BUFF_
 local durations = {} -- ["unitKey|filter|id|name"] = { duration, expires, seen }
 local scanSerial = 0
 local knownAuras = {}
+local knownCount = 0
+local savedStore, savedCount
+
+-- Count a loaded saved table only once, then account for inserts and remove a
+-- batch at the cap. No full-cache recount or sorted eviction on each new buff.
+local function trimInfo(store, count, keep)
+  for key in pairs(store) do
+    if count <= keep then break end
+    store[key], count = nil, count - 1
+  end
+  return count
+end
+
+local function buffStore()
+  if type(RWA_DB) ~= "table" then return nil end
+  if type(RWA_DB.buffInfo) ~= "table" then RWA_DB.buffInfo = {} end
+  local store = RWA_DB.buffInfo
+  if store ~= savedStore then
+    savedStore, savedCount = store, 0
+    for _ in pairs(store) do savedCount = savedCount + 1 end
+    if savedCount > 4000 then savedCount = trimInfo(store, savedCount, 3000) end
+  end
+  return store
+end
 
 local function rememberAura(aura)
   if not aura.icon then
     return
   end
   local info = { name = aura.name, icon = aura.icon, id = aura.id }
-  knownAuras["name:" .. string.lower(aura.name)] = info
+  -- Leave room for both the name and ID indices of the latest observation.
+  if knownCount > 7998 then knownCount = trimInfo(knownAuras, knownCount, 6000) end
+  local nameKey = "name:" .. string.lower(aura.name)
+  if knownAuras[nameKey] == nil then knownCount = knownCount + 1 end
+  knownAuras[nameKey] = info
   if aura.id then
     local key = tostring(aura.id)
+    if knownAuras[key] == nil then knownCount = knownCount + 1 end
     knownAuras[key] = info
-    if type(RWA_DB) == "table" then
-      RWA_DB.buffInfo = RWA_DB.buffInfo or {}
-      local store = RWA_DB.buffInfo
+    local store = buffStore()
+    if store then
       if store[key] == nil then
-        -- Keep the remembered-buff cache bounded. Cleared entries are rebuilt
-        -- the next time the buff is seen.
-        local count = 0
-        for _ in pairs(store) do count = count + 1 end
-        if count >= 4000 then
-          local drop = {}
-          for name in pairs(store) do
-            drop[#drop + 1] = name
-            if #drop >= 1000 then break end
-          end
-          for _, name in ipairs(drop) do store[name] = nil end
-        end
+        if savedCount >= 4000 then savedCount = trimInfo(store, savedCount, 3000) end
+        savedCount = savedCount + 1
       end
       store[key] = info
     end
@@ -213,7 +231,8 @@ end
 function T.AuraInfo(trigger)
   local id = trigger.ids and trigger.ids[1]
   local key = id and tostring(id)
-  local info = key and (knownAuras[key] or (RWA_DB and RWA_DB.buffInfo and RWA_DB.buffInfo[key]))
+  local store = buffStore()
+  local info = key and (knownAuras[key] or (store and store[key]))
   if info then
     return info
   end
@@ -702,6 +721,7 @@ end
 
 function T.Tick(now)
   T.InvalidateAuras()
+  buffStore() -- also bound an oversized pre-existing save with no new sightings
   pruneDurations(now)
 end
 

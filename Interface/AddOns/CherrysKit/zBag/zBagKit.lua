@@ -16,7 +16,7 @@ K.onebag, K.unhooked, K.remembered, K.loadedMode, K.events = nil, nil, nil, nil,
 K.cherryOpen, K.resizing, K.dragging = nil, nil, nil
 K.storageInitialized, K.storageShared = nil, nil
 
-K.version = "5.07-ck12"
+K.version = "5.07-ck13"
 K.path = (CherrysKit_Paths and CherrysKit_Paths.zBag) or "Interface/AddOns/zBag/"
 K.BAG_SLOTS = 180
 K.BAG_PAGE = 30

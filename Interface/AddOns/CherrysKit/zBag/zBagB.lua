@@ -472,13 +472,15 @@ zBagBRent5:Hide();
 		ShowUIPanel(zBagB);
 end
 
-local zBagB_UpdateWait = 0;
+local zBagB_UpdateWait = 0.2;
 function zBagB_OnUpdate(this, elapsed)
-zBagB_UpdateWait = zBagB_UpdateWait - (elapsed or 0.03);
-if (zBagB_UpdateWait > 0) then
+zBagB_UpdateWait = zBagB_UpdateWait - (tonumber(elapsed) or 0);
+if (zBagB_UpdateWait > 0.000001) then
 	return;
 end
-zBagB_UpdateWait = 0.2;
+-- Retain frame overshoot, but never catch up with a burst after a stall.
+zBagB_UpdateWait = zBagB_UpdateWait + 0.2;
+if (zBagB_UpdateWait <= 0) then zBagB_UpdateWait = 0.2; end
 zBagB_Update();
 end
 

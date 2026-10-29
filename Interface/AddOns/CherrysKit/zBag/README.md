@@ -1,14 +1,16 @@
 # zBag
 
-Version **5.07-ck12** · Kit release **0.11.80** · [All addons / hub](../README.md)
+Version **5.07-ck13** · Kit release **0.11.81** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
-## Updated in 5.07-ck12
+## Updated in 5.07-ck13
 
-The bank window refreshes a few times a second instead of every frame, sorting rebuilds its lookup tables once per pass and stops as soon as a pass finds nothing left to move, and attribute sorting no longer re-sorts the same list for every comparison.
+The bank XML now passes actual elapsed time to its **0.2-second** refresh timer, targeting about **five refreshes per second** independently of FPS. Frame overshoot is retained; a stall causes one refresh rather than a catch-up burst. Showing the bank still refreshes immediately.
+
+Sorting retains the earlier pass-level rebuild reduction, the necessary rebuilds after swaps, and the exit when a pass makes no changes. Attribute lists are sorted once at build time. The lookup tables are not assumed valid after a swap; live bank sorting still needs an in-game check.
 
 ## Features
 

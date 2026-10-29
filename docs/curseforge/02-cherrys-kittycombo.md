@@ -4,7 +4,7 @@
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
-Version 1.7.10 fires skills closer to ready (0.2 s window) and skips action rows that are gone, unusable or out of stock. 1.7.9 fixed prediction, import restrictions, editor drafts, proc cycles, cooldown conditions, named priorities and action-slot handling.
+Version 1.7.11 makes imported range conditions with no probe name fail cleanly. It retains the 0.2-second dispatch window, live action eligibility, missing-versus-zero mana handling, condition thresholds, anti-repeat behavior and 1.1-second prediction lookahead. `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6` selects the old A/B window; use `0.2` to restore the default. Successful-cast throughput gains have not been measured. 1.7.9's prediction, import, editor, proc, cooldown and action-slot fixes carry forward.
 
 ## Features
 
@@ -23,7 +23,7 @@ Version 1.7.10 fires skills closer to ready (0.2 s window) and skips action rows
 - **Create macro**: one click makes a `/run Kitty.attack(...)` macro with a random icon and puts it on your cursor, and shows whether one already exists.
 - **Class icons** next to each kitty's class in the list and in the class menus.
 - **New look**: dark blue windows with gold borders (shared with rom weakauras). Every window can be resized by dragging the gold corner (60% to 160%) and remembers its size and position.
-- **Faster key presses**: only the skills a command checks are read (about 3 reads per press instead of about 57), with the same picks as the original 0.973. Skills and items that work mid-cast can fire while you cast.
+- **Lazy skill reads**: only the skills requested by the priority walk are read. Skills and items that work mid-cast can still be attempted while you cast; client/server acceptance is checked in game.
 - **Kitty tracker**: rom weakauras can show the next skill a kitty would fire, and its "KittyCombo mode" aura shows the mode that is on.
 - **Raid frame clicks**: Cherry's Grid can run a kitty on the party or raid member you click, and your target comes back afterwards.
 - **Changelog** button in the settings window, and **/kc probe** to check your client.

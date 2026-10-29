@@ -12,7 +12,7 @@
 ZShop = ZShop or {}
 local me = ZShop
 
-me.version = "1.2.0-ck3"
+me.version = "1.2.0-ck4"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.ZShop) or "Interface/AddOns/ZShop/"
 me.DAILY_LEVEL = 100
 
@@ -34,7 +34,8 @@ if SaveVariablesPerCharacter then
 end
 
 me.events = me.events or {}   -- event -> times seen (probe)
-me.pending = nil               -- { page = "daily", until = seconds } for the next shop link
+me.pending = nil               -- { page = "daily", left = seconds } for the next shop link
+me.dailyOnShow = nil           -- seconds left to show a linked daily page in the native window
 me.bagTimer = nil              -- seconds left of SetOnTimeWebBagRequest(1)
 me.waitTimer = nil             -- seconds until "click the shop button" hint
 me.lastLink = nil              -- shape of the last link (host/path and parameter names, no values)
@@ -85,12 +86,24 @@ end
 
 local useBrowser = false
 
+local function succeeded(fn, ...)
+  if type(fn) ~= "function" then return false end
+  local ok, value = pcall(fn, ...)
+  return ok and value ~= false and value ~= 0
+end
+
+local function markDaily()
+  if me.Button and me.Button.MarkClaimed then me.Button.MarkClaimed() end
+end
+
 function me.OnShopLink(link)
-  if type(link) ~= "string" then
-    return
+  if type(link) ~= "string" or not string.match(link, "^https?://[^/%s%?#]+[^%s]*$")
+    or string.find(link, "%c") then
+    return false
   end
   me.lastLink = shape(link)
   me.waitTimer = nil
+  me.dailyOnShow = nil
   local conf = me.config
   local page = conf.link
   if me.pending then
@@ -98,6 +111,9 @@ function me.OnShopLink(link)
     me.pending = nil
   end
   link = me.Rewrite(link, page)
+  local path, query = string.match(link, "^https?://[^/]+([^?]*)%?(.+)$")
+  local daily = page == "daily" and path == me.PAGES.daily and query ~= nil
+  if page == "daily" and not daily then return false end
 
   useBrowser = false
   if conf.browser == true then
@@ -105,27 +121,41 @@ function me.OnShopLink(link)
   elseif conf.browser == "shift" then
     useBrowser = IsShiftKeyDown and IsShiftKeyDown() and true or false
   elseif conf.browser == "copy" then
-    if Chat_CopyToClipboard then
-      Chat_CopyToClipboard(link)
-    end
-    chat("shop link copied. Paste it in your web browser (it holds your shop login, don't share it).")
     useBrowser = true
-    return
+    if succeeded(Chat_CopyToClipboard, link) then
+      chat("shop link copied. Paste it in your web browser (it holds your shop login, don't share it).")
+      return true -- copying a link is not opening the daily page
+    end
+    chat("could not copy the shop link.")
+    return false
   end
   if useBrowser then
-    if SetOnTimeWebBagRequest then
-      SetOnTimeWebBagRequest(1)
+    if not succeeded(GC_OpenWebRadio, link) then
+      chat("could not open the shop in your web browser.")
+      return false
+    end
+    if succeeded(SetOnTimeWebBagRequest, 1) then
       me.bagTimer = tonumber(conf.open) or 300
     end
-    GC_OpenWebRadio(link)
+    if daily then markDaily() end
   elseif MallWeb then
-    MallWeb.link = link
+    local ok = pcall(function() MallWeb.link = link end)
+    if not ok then return false end
+    me.dailyOnShow = daily and 60 or nil
+  else
+    chat("the game's shop window is unavailable.")
+    return false
   end
+  return true
 end
 
 function me.OnShopShow()
-  if not useBrowser and MoneyWebFrame then
-    MoneyWebFrame:Show()
+  if not useBrowser then
+    local daily = me.dailyOnShow
+    me.dailyOnShow = nil
+    if MoneyWebFrame and succeeded(MoneyWebFrame.Show, MoneyWebFrame) then
+      if daily then markDaily() end
+    end
   end
 end
 
@@ -145,9 +175,9 @@ local function pressShopButton()
       end
       local saved = this
       this = button
-      local ok = pcall(fn, button)
+      local ok, result = pcall(fn, button)
       this = saved
-      if ok then
+      if ok and result ~= false and result ~= 0 then
         return opener[1]
       end
     end
@@ -169,9 +199,7 @@ function me.Open(page)
     end
   end
   me.pending = { page = page, left = 60 }
-  if page == "daily" and me.Button and me.Button.MarkClaimed then
-    me.Button.MarkClaimed()
-  end
+  me.dailyOnShow = nil
   me.waitTimer = 3
   me.opener = pressShopButton()
 end
@@ -238,6 +266,10 @@ function me.OnUpdate(elapsed)
     if me.pending.left <= 0 then
       me.pending = nil
     end
+  end
+  if me.dailyOnShow then
+    me.dailyOnShow = me.dailyOnShow - elapsed
+    if me.dailyOnShow <= 0 then me.dailyOnShow = nil end
   end
   if me.waitTimer then
     me.waitTimer = me.waitTimer - elapsed
@@ -385,7 +417,7 @@ function me.Help()
   chat(" /zshop  opens the ZShop window")
   chat(" /zshop daily  opens the daily loyalty reward page (level " .. me.DAILY_LEVEL .. ")")
   chat(" /zshop depot  opens your item depot")
-  chat(" /zshop unmark  clears today's claimed mark on this character")
+  chat(" /zshop unmark  clears today's daily-page opened mark on this character")
   chat(" /zshop button  shows or hides the daily reward button")
   chat(" /zshop browser  web browser or game window")
   chat(" /zshop config  reloads config.lua")
