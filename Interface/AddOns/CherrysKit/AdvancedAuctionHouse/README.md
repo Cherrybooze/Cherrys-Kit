@@ -1,10 +1,14 @@
 # Advanced AuctionHouse
 
-Version **6.2.3** · Kit release **0.11.80** · [All addons / hub](../README.md)
+Version **6.2.4** · Kit release **0.11.83** · [All addons / hub](../README.md)
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns and stat ranges.**
 
-Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.3 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.4 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+
+## Updated in 6.2.4
+
+Item-link parsing uses its own hidden, transparent `AAH_ItemLinkTooltip`. It no longer overwrites or hides `GameTooltip_SkillLevelUp`, which belongs to the game's TP-upgrade preview. The parser-isolation regression passes; the reported brief black flash when raising a skill from 0 to max has not been reproduced in this simulated environment and still needs an in-game retest.
 
 ## Updated in 6.2.3
 

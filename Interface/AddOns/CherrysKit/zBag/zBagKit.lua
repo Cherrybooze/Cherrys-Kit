@@ -16,7 +16,8 @@ K.onebag, K.unhooked, K.remembered, K.loadedMode, K.events = nil, nil, nil, nil,
 K.cherryOpen, K.resizing, K.dragging = nil, nil, nil
 K.storageInitialized, K.storageShared = nil, nil
 
-K.version = "5.07-ck13"
+K.version = "5.07-ck14"
+K.DEFAULT_SLOT_FONT_SIZE, K.MIN_SLOT_FONT_SIZE, K.MAX_SLOT_FONT_SIZE = 8, 6, 20
 K.path = (CherrysKit_Paths and CherrysKit_Paths.zBag) or "Interface/AddOns/zBag/"
 K.BAG_SLOTS = 180
 K.BAG_PAGE = 30
@@ -297,10 +298,19 @@ end
 -- Shows a slot number on owner (a zBag item or one of the overlays in zBagKit.xml), which has the
 -- children <name>KitSlot (number) and <name>KitSlotBack (see-through mark). slot nil hides it.
 -- Only touches the frame when something changed, because zBag's bank updates every frame.
+function K.SlotNumberFontSize()
+  local size = tonumber(zBag_VAR and zBag_VAR["slotfontsize"])
+  if not size or size ~= size or size < K.MIN_SLOT_FONT_SIZE or size > K.MAX_SLOT_FONT_SIZE then
+    return K.DEFAULT_SLOT_FONT_SIZE
+  end
+  return math.floor(size)
+end
+
 function K.Label(owner, slot, size, showOwner)
   if not owner then
     return
   end
+  size = size or K.SlotNumberFontSize()
   if owner.kitSlot == slot and owner.kitSize == size then
     return
   end
@@ -315,10 +325,10 @@ function K.Label(owner, slot, size, showOwner)
     if back then
       back:ClearAllAnchors()
       back:SetAnchor("TOPLEFT", "TOPLEFT", owner, 0, 0)
-      back:SetSize(22, 12)
     end
     owner.kitSlotPositioned = true
   end
+  if back then back:SetSize(math.max(12, math.ceil(size * 2)), math.max(9, math.ceil(size + 2))) end
   if slot then
     if text then
       text:SetText(tostring(slot))

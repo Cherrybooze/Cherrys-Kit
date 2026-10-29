@@ -177,6 +177,10 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
+## Updated in 0.9.26
+
+The player cast bar follows native CASTING_* events for transport and other non-spell progress actions absent from UnitCastingTime. Polled spells take precedence; completion/cancel/failure, timeout, death and loading clear the fallback. Target casts remain unit-scoped. Existing My cast auras benefit without editing their saved sources. Native transport and cancellation still need in-game checking.
+
 ## Updated in 0.9.25
 
 Every aura now defaults to **Make clickthrough**, a tickable editor field that passes gameplay clicks through and suppresses aura hover tooltips. Editing and placement remain interactive; opting out restores hover. **Position** has whole-aura Scale (10–400%, default 100%), a numeric field and five-percentage-point −/+ buttons. Scaling preserves the chosen anchor, scales relative offsets and is inherited once by linked children. Section headers use **Expand / Collapse** instead of maximizers. The new fields support draft Save/Revert and sharing; native click pass-through and geometry still need in-game checks.
@@ -329,6 +333,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat pro
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
+
+## Updated in 5.07-ck14
+
+Unrelated bag/bank updates no longer close the stack-split number dialog. Confirmations validate the original source and amount; Shift-drag follows the normal pickup path. Slot numbers default to 8 points (about 40% smaller), with **Font size −/+** controls in /zb for 6–20. This applies to all bag/bank layouts and follows shared/per-character settings; stack counts keep their normal size. Native split behavior and readability need in-game checking.
 
 ## Updated in 5.07-ck13
 
@@ -634,7 +642,11 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns and stat ranges.**
 
-Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.3 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.4 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+
+## Updated in 6.2.4
+
+Auction item parsing uses a private hidden/transparent tooltip rather than the game's skill-upgrade tooltip. The confirmed widget collision is corrected; the reported brief black flash during native 0-to-max TP upgrades has not been reproduced or proven fixed offline and needs an in-game retest.
 
 ## Updated in 6.2.3
 

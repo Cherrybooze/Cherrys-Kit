@@ -45,11 +45,55 @@ function CB.SkillIcon(name)
   return icon
 end
 
+-- The native cast bar also covers transport, gathering and other progress
+-- actions absent from UnitCastingTime. CASTING_* is a player-only lifecycle:
+-- CastingBarFrame.cpp supplies the display name and duration in seconds.
+local function finite(value)
+  return type(value) == "number" and value == value and math.abs(value) < math.huge
+end
+local function changed()
+  if RWA.MarkDirty then RWA.MarkDirty() end
+end
+local function clearPlayerCast()
+  CB.playerCast = nil
+  changed()
+end
+RWA.On("CASTING_START", function(_, name, duration)
+  CB.playerCast = nil
+  duration = tonumber(duration)
+  if type(name) == "string" and name ~= "" and finite(duration) and duration > 0 then
+    CB.playerCast = {name = name, start = RWA.Now(), duration = duration, expirationTime = RWA.Now() + duration}
+  end
+  changed()
+end)
+RWA.On("CASTING_DELAYED", function(_, delay)
+  delay = tonumber(delay)
+  local cast = CB.playerCast
+  if cast and finite(delay) and delay >= 0 then
+    cast.duration, cast.expirationTime = cast.duration + delay, cast.expirationTime + delay
+    changed()
+  end
+end)
+for _, event in ipairs({"CASTING_STOP", "CASTING_FAILED", "LOADING_END", "PLAYER_DEAD"}) do
+  RWA.On(event, clearPlayerCast)
+end
+
+function CB.PlayerState(now)
+  local cast = CB.playerCast
+  if not cast then return end
+  if now >= cast.expirationTime then CB.playerCast = nil;return end
+  return {unit = "player", show = true, casting = 1, name = cast.name, progressType = "timed",
+    duration = cast.duration, expirationTime = cast.expirationTime}
+end
+
 -- The status evaluator is built by Triggers.lua; add the icon and fill-up flag to cast states.
 -- Wrapped once per load (Reload UI builds a new Triggers table, so this wraps the new one).
 local baseStatus = Triggers.evaluators.status
 Triggers.evaluators.status = function(trigger, now, ...)
   local state = baseStatus(trigger, now, ...)
+  if trigger.check == "cast" and (trigger.unit or "player") == "player" and not (state and state.show) then
+    state = CB.PlayerState(now) or state
+  end
   if trigger.check == "cast" and state and state.show then
     local unit = trigger.unit or "player"
     state.icon = (unit == "player" and CB.SkillIcon(state.name)) or RWA.W.TexturePath(CB.OTHER_ICON)

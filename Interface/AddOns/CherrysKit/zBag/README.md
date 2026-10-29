@@ -1,10 +1,16 @@
 # zBag
 
-Version **5.07-ck13** · Kit release **0.11.81** · [All addons / hub](../README.md)
+Version **5.07-ck14** · Kit release **0.11.83** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
+
+## Updated in 5.07-ck14
+
+Unrelated backpack/bank refreshes no longer dismiss the shared stack-split number dialog. Hiding zBank does not cancel a split in the still-open backpack. Confirmation validates the original slot/index/link, lock state and current amount, so a replaced/remapped stack is not split accidentally. Shift-drag/receive-drag follows the existing pickup path rather than reopening a split prompt.
+
+Slot numbers default to **8 points**, about **40% smaller** than the old 13-point labels. The **Font size −/+** controls beside the slot-number options in **/zb** choose **6–20** for bag and bank labels; classic item scaling also applies. Stock, classic, Cherry's and All-bags labels share this setting, which follows the existing shared/per-character profile. Stack counts retain their normal size. Native split interaction and label readability still need an in-game check.
 
 ## Updated in 5.07-ck13
 

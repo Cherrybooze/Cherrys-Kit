@@ -2,11 +2,18 @@
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.25 requires hub 0.4.14 or later; UMM 7.0.1-ck7 requires **0.4.17** for its History files. The Full ZIP includes hub **0.4.18**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.26 requires hub 0.4.14 or later; UMM 7.0.1-ck7 requires **0.4.17** for its History files. The Full ZIP includes hub **0.4.18**.
 
 ## 0.11.83 mass-send selection and recent recipients
 
-Offline: **596 Lua 5.1 tests; 570 passed, 26 pre-existing skips**. The **34 focused UMM tests pass**, including 23 new cases for box selection and the recipient pane. Tests run production bag/action/status methods and native XML handlers. They cover click-before-mouseup ordering, reversed/cross-bag rectangles, additive modifiers, click jitter, background clicks, release between frames, bound exclusions, cancelled/stale gestures, changed items, UI scales, queue startup/stop, shared 20-name lists and bounded widget reuse. A reproduced Kitty 1.7.13 regression also verifies that closing/natively hiding HUD and editor pickers rejects delayed clicks without changing the live mode.
+Offline: **617 Lua 5.1 tests; 591 passed, 26 pre-existing skips**. The 21 latest regressions cover stack-split persistence/source validation, slot fonts, private skill-tooltip isolation and native non-spell casts. The **34 focused UMM tests pass**, including 23 new cases for box selection and the recipient pane. Tests run production bag/action/status methods and native XML handlers. A reproduced Kitty 1.7.13 regression verifies that closing/natively hiding HUD and editor pickers rejects delayed clicks without changing the live mode.
+
+### Latest bag/TP/cast checks
+
+- **B1 — splitting:** with classic OneBag and OneBank open, Shift-click a stack and edit the amount while unrelated inventory updates arrive. The dialog/value must remain. Hide zBank while leaving the backpack open; the split must survive. Close the backpack to cancel. Replace/lock/remap the source before confirmation: no different stack may be split. Shift-drag/receive-drag must pick up/place rather than reopen the number prompt.
+- **B2 — label size:** enable bag/bank slot numbers in stock, classic, Cherry's and All-bags layouts. Default is 8 points (about 40% below 13); **Font size −/+** changes 6–20 and follows shared/per-character settings. Check immediate refresh, classic icon scaling, label backgrounds and unchanged stack counts.
+- **T1 — native TP upgrade:** use the built-in skill window, click Upgrade, type until the requested level clamps at 100, then confirm. Retest after auction item-link parsing. AAH must leave the game's skill-upgrade tooltip untouched, and unrelated bag updates must not dismiss the shared number dialog. **The brief black flash itself has not been reproduced or proven fixed offline**; record whether it remains with the kit enabled/disabled in the installed client. No kit wrapper of SetSpellPoint/GetSkillTotalPointToLV or graphics reset was found; Kitty's skill-change handler only invalidates its lazy index.
+- **W10 — native actions:** transport, open/record a transport-book portal, gather/craft, use a cast-time item and summon a pet. My cast must show the localized action name and native duration even when UnitCastingTime returns no spell. Test stop, failure, delay, timeout, death and zone completion. Target's cast must still follow the target's own spell API. Source-inspected `CastingBarFrame.cpp` supplies player CASTING_* events, used by `TransportBook/TeleportBook.cpp` and the gathering/crafting/item/quest/pet callers.
 
 | ID | Steps | Expected result |
 | --- | --- | --- |

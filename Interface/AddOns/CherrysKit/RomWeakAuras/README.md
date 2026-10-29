@@ -1,10 +1,14 @@
 # rom weakauras
 
-Version **0.9.25** · Kit release **0.11.82** · [All addons / hub](../README.md)
+Version **0.9.26** · Kit release **0.11.83** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Updated in 0.9.26
+
+The player cast bar follows native **CASTING_START / STOP / FAILED / DELAYED** events when `UnitCastingTime` has no spell. This covers transport-book casts and other native item/gathering/crafting/quest/pet progress actions. The event supplies the localized name and duration; stop/failure, timeout, death and loading clear it. Ordinary polled spell timing takes precedence, and player events never fabricate target casts. Existing My cast auras benefit without changing their saved sources; native transport/cancel behavior still needs an in-game check.
 
 ## Updated in 0.9.25
 

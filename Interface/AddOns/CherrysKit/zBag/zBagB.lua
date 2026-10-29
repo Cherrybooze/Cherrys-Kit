@@ -340,7 +340,7 @@ function zBagB_Update()
 				  --yecho("zbanki "..i.." count");
 				end
 				if (zBag_VAR["bankslotnumbers"] == 1) then
-					zBagKit.Label(item, i, 13*(zBag_VAR["bankscale"] or 1));
+					zBagKit.Label(item, i, zBagKit.SlotNumberFontSize()*(zBag_VAR["bankscale"] or 1));
 				else
 					zBagKit.Label(item, nil);
 				end

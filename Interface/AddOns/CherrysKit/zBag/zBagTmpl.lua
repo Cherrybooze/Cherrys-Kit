@@ -66,7 +66,7 @@ function zBagItem_OnClick(this, button, ignoreShift)
 	
 	if (button=="LBUTTON") then
   --yecho("lbutton");
-		if(IsShiftKeyDown()) then
+		if(IsShiftKeyDown() and not ignoreShift) then
   --yecho("isshift");
 			local itemLink=GetBagItemLink(this.index);
 			if(ChatEdit_AddItemLink(itemLink))then
@@ -79,8 +79,19 @@ function zBagItem_OnClick(this, button, ignoreShift)
 				return;
 			end
   --yecho("after locked");
+			local slot, sourceIndex, sourceLink = this:GetID(), index, GetBagItemLink(index);
+			if (not sourceLink) then return; end
 			this.AskNumberFrameCallBack = function(button,Number)
-				SplitBagItem(this.index,Number);
+				local currentIndex, _, _, currentCount, currentLocked = GetBagItemInfo(slot);
+				Number = tonumber(Number);
+				-- Updates may change another stack without cancelling this dialog.
+				-- A remapped/replaced source must never split a different item.
+				if (not this:IsVisible() or this:GetID() ~= slot or this.index ~= sourceIndex
+					or currentIndex ~= sourceIndex or GetBagItemLink(sourceIndex) ~= sourceLink
+					or currentLocked or not Number or Number ~= Number or Number < 1
+					or Number == math.huge or Number ~= math.floor(Number)
+					or not currentCount or currentCount <= 1 or Number > currentCount) then return; end
+				SplitBagItem(sourceIndex,Number);
 			end
   --yecho("before open number frame "..this:GetName());
 			OpenAskNumberFrame(1,itemCount,this,"BOTTOMRIGHT","TOPRIGHT" );

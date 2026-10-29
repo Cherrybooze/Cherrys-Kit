@@ -584,6 +584,7 @@ function K.LoadConfig()
   end
   zBagKitConfigBagSlots:SetChecked(v["slotnumbers"] == 1)
   zBagKitConfigBankSlots:SetChecked(v["bankslotnumbers"] == 1)
+  if zBagKitConfigSlotFontValue then zBagKitConfigSlotFontValue:SetText(tostring(K.SlotNumberFontSize())) end
   zBagKitConfigHideBackpack:SetChecked(v["hidebackpack"] == 1)
   zBagKitConfigMoney:SetChecked(v["showmoney"] == 1)
   zBagKitConfigShare:SetChecked(zBag_SHARE ~= 0)
@@ -607,6 +608,17 @@ function K.LoadConfig()
   if zBagKitConfigCherryTxt1 then
     zBagKitConfigCherryTxt1:SetText("One bag (" .. K.PURPLE .. "Cherry's|r): movable, resizable bags")
   end
+end
+
+function K.StepSlotFontSize(delta)
+  var()["slotfontsize"] = math.max(K.MIN_SLOT_FONT_SIZE, math.min(K.MAX_SLOT_FONT_SIZE, K.SlotNumberFontSize() + delta))
+  save()
+  K.LoadConfig()
+  if zBag:IsVisible() then zBag_Update() end
+  if zBagB:IsVisible() then zBagB_Update() end
+  K.UpdateAll()
+  K.UpdateCherry()
+  wait = 0 -- stock bag/bank overlays pick up the new size on the next update
 end
 
 function K.OnConfigClick(what)
@@ -690,6 +702,7 @@ K.TOOLTIPS = {
   money = { "Gold, diamonds and rubies", "Show your money in a small box of its own that stays on screen. Drag it anywhere; the place is kept." },
   settings = { "zBag settings", "Bag layout (individual bags, one bag or Cherry's bags), slot numbers, search and more." },
   bankslots = { "Bank slot numbers", "Show the slot number in a see-through mark on every bank slot." },
+  slotfont = { "Slot number font size", "Size of bag and bank slot labels, from 6 to 20. Default 8 is about 40% smaller than the old 13-point labels. Classic bag/bank item scales also apply. Stack counts keep their normal size." },
 }
 
 function K.ShowTooltip(owner, what)

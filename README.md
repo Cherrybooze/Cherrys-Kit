@@ -21,6 +21,8 @@ Cherry's Kit combines original addons, rewrites and fixes to older favourites in
 - UMM adds **drag-box selection** across all six bags. Ctrl/Shift-drag adds, Escape/right-click cancels, and the original click/group controls remain available. Bound items keep their red marks and are excluded from sending.
 - A right-side **Recently sent** pane fills the mass-send recipient without clearing committed selections. It shares the same 20-name history across characters. The wider mail window fits the viewport; sending/C.O.D. locks recipient changes and queue sending locks all four tabs.
 - Kitty's mode picker rejects delayed clicks after closing or native hiding, preserving the live mode when an editor pick is cancelled.
+- zBag keeps stack-split dialogs open through unrelated updates and validates their original source at confirmation. Slot numbers default to 8 points (about 40% smaller), with a **Font size** control in /zb.
+- RWA tracks native transport and other non-spell player cast/progress events. AAH uses a private item-parser tooltip instead of the game's skill-upgrade tooltip. The reported TP-upgrade black flash still needs an in-game retest.
 
 ## Earlier 0.11.82 development features included
 
@@ -76,14 +78,14 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 | --- | --- | --- | --- |
 | [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.18 |
 | [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.13 |
-| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.25 |
+| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.26 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.9 |
-| [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck13 |
+| [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck14 |
 | [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold. | `/gb` | 1.4.6 |
 | [Extended Macro Icons](Interface/AddOns/CherrysKit/ExtendedMacroIcons/README.md) | A larger, categorised macro icon picker. | `/emi` | 3.0.4 |
 | [TooltipIds](Interface/AddOns/CherrysKit/TooltipIds/README.md) | ID numbers for items, buffs, skills and other game data. | `/ti` | 1.0b3-ck3 |
 | [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck7 |
-| [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Auction searching, stat filters, history and a resizable window. | `/aah` | 6.2.3 |
+| [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Auction searching, stat filters, history and a resizable window. | `/aah` | 6.2.4 |
 | [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Loading times and memory use for the kit and other addons. | `/ckload` | 1.2.1 |
 | [ZShop](Interface/AddOns/CherrysKit/ZShop/README.md) | Item-shop access and a daily loyalty reward shortcut. | `/zshop` | 1.2.0-ck4 |
 | [pbInfo](Interface/AddOns/CherrysKit/pbInfo/README.md) | Richer tooltips, quest tracking, chat filters and cast-bar options. | `/pbinfo` | 0.60-ck4 |

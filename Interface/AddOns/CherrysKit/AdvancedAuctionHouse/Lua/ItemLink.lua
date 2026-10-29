@@ -10,7 +10,8 @@ local ID_RECIPES_END   = 553000
 local ID_ITEMS_START = 200000 -- Equipment, Questitems, Resources
 local ID_ITEMS_END   = 250000
 
-local DummyToolTip = "GameTooltip_SkillLevelUp"
+-- Item parsing must not overwrite/hide the game's live TP-upgrade tooltip.
+local DummyToolTip = "AAH_ItemLinkTooltip"
 
 local lookup_items=nil
 local lookup_cards=nil
@@ -212,6 +213,7 @@ local function CompareTooltips(tooltip,item,id)
     end
 
     item.id = old_id
+    _G[DummyToolTip]:Hide()
     return match
 end
 
@@ -255,6 +257,7 @@ function ItemLink.GetItemDataFromTooltip(tooltip)
     local base_link = ItemLink.GenerateLink(base_item)
     _G[DummyToolTip]:SetHyperLink(base_link)
     base_item = ItemLink.ParseTooltip(_G[DummyToolTip],{item.id})
+    _G[DummyToolTip]:Hide()
     assert(base_item)
     item.tier = item.tier - base_item.tier
     -- TODO: recalculate DURA !
