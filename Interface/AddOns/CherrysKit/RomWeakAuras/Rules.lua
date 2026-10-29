@@ -141,7 +141,9 @@ function Rules.RemoveAction(data, rule, actionId)
       local outputNumber = type(outputId) == "string" and tonumber(string.match(outputId, "^o(%d+)$"))
       if actionNumber then data.nextActionId = math.max(tonumber(data.nextActionId) or 1, actionNumber + 1) end
       if outputNumber then data.nextOutputId = math.max(tonumber(data.nextOutputId) or 1, outputNumber + 1) end
+      local sourceId = action.sourceId
       table.remove(rule.actions, index)
+      Rules.PruneSource(data, sourceId)
       return true
     end
   end
@@ -185,9 +187,11 @@ function Rules.Remove(data, ruleId)
       local number = type(rule.id) == "string" and tonumber(string.match(rule.id, "^r(%d+)$"))
       if number then data.nextRuleId = math.max(tonumber(data.nextRuleId) or 1, number + 1) end
       -- Keep identities retired even for imported definitions without counters.
+      local sourceIds = {}
       for _, check in ipairs(rule.when and rule.when.checks or {}) do
         local n = type(check.id) == "string" and tonumber(string.match(check.id, "^c(%d+)$"))
         if n then data.nextCheckId = math.max(tonumber(data.nextCheckId) or 1, n + 1) end
+        if check.sourceId then sourceIds[#sourceIds + 1] = check.sourceId end
       end
       for _, action in ipairs(rule.actions or {}) do
         local n = type(action.id) == "string" and tonumber(string.match(action.id, "^a(%d+)$"))
@@ -195,8 +199,12 @@ function Rules.Remove(data, ruleId)
         local outputId = type(action.output) == "table" and action.output.id
         n = type(outputId) == "string" and tonumber(string.match(outputId, "^o(%d+)$"))
         if n then data.nextOutputId = math.max(tonumber(data.nextOutputId) or 1, n + 1) end
+        if action.sourceId then sourceIds[#sourceIds + 1] = action.sourceId end
       end
       table.remove(data.rules, i)
+      for _, id in ipairs(sourceIds) do
+        Rules.PruneSource(data, id)
+      end
       return true
     end
   end
@@ -220,6 +228,9 @@ function Rules.Duplicate(data, ruleId)
       end
       for _, action in ipairs(copy.actions) do
         if remap[action.targetId] then action.targetId = remap[action.targetId] end
+        if type(action.output) == "table" and remap[action.output.parentOutputId] then
+          action.output.parentOutputId = remap[action.output.parentOutputId]
+        end
       end
     end
   end

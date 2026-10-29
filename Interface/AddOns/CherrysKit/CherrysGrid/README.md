@@ -1,8 +1,12 @@
 # Cherry's Grid
 
-Version **1.1.1** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **1.1.2** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
+
+## Updated in 1.1.2
+
+Clicking a member on a client without the focus-stash API no longer destroys your previous target. The roster is scanned once per refresh instead of twice.
 
 ## Features
 

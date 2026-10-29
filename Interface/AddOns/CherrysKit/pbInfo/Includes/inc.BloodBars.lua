@@ -17,14 +17,14 @@ function pbInfo.BloodBars.Scripts.OnUpdate()
 			local frameID = 20 - i;
 			local frame 		= _G["OBloodBar" .. frameID];			
 
-			if (frame:IsVisible()) then
+			if (frame and frame:IsVisible()) then
 				local titleFrame 	= _G["OBloodBar" .. frameID .. "Title"];		-- GetText()		- text above bar (name)
 				local barFrame 		= _G["OBloodBar" .. frameID .. "Bar"];			-- GetValue() 	- bar filling (current hp ratio)
 				local valueFrame 	= _G["OBloodBar" .. frameID .. "BarValue"]; 	-- GetText() 	- text inside bar (current hp ratio)
 				local levelFrame 	= _G["OBloodBar" .. frameID .. "BarLevel"];
-				local name 			= titleFrame:GetText();
-				local healthRatio 	= barFrame:GetValue();
-				local mL 			= tonumber(levelFrame:GetText());
+				local name 			= titleFrame and titleFrame:GetText();
+				local healthRatio 	= barFrame and barFrame:GetValue() or 0;
+				local mL 			= levelFrame and tonumber(levelFrame:GetText());
 				--local unitGUID 			= frame:GetID() - (512 * 512);
 				if (pbInfoSettings["MODIFYBLOODBARS"]
 					and type(pbInfo.MobDB.Mobs[name]) == "table"
@@ -34,9 +34,9 @@ function pbInfo.BloodBars.Scripts.OnUpdate()
 				) then
 					local healthMax = pbInfo.MobDB.Mobs[name][mL]["healthpoints"];
 					local health = math.ceil(healthMax * healthRatio / 100);
-					valueFrame:SetText(health .. " / " .. healthMax);
+					if (valueFrame) then valueFrame:SetText(health .. " / " .. healthMax); end;
 				end;
-				if (pbInfoSettings["BLOODBARSCOLORFADE"]) then
+				if (pbInfoSettings["BLOODBARSCOLORFADE"] and barFrame) then
 					barFrame:SetBarColor(HSBtoRGB(math.ceil((healthRatio / 100) * 127.5), 100, 100));
 				end;
 			end;

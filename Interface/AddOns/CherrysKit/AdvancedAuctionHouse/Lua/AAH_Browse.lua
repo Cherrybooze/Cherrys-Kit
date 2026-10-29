@@ -721,7 +721,7 @@ end
 
 function Browse.Event_OnBuyout()
     local idx, info = Browse.List_GetSelected()
-    assert(idx)
+    if not idx then return end
     local auctionid = info.auctionid
     table.remove(Browse.Results.list, idx)
     Browse.Cache_ClearAuction(auctionid)

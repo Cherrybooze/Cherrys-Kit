@@ -249,7 +249,7 @@ function pbInfo.QuestTracker.InfoTooltip(frame)
 end;
 
 function pbInfo.QuestTracker.SortTracker(a, b)
-	if (not type(a) == "table" and not type(b) == "table") then 
+	if (type(a) ~= "table" or type(b) ~= "table") then 
 		return false;
 	end;
 	local sortby = {"level", "name"};

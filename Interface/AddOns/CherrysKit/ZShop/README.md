@@ -1,10 +1,14 @@
 # ZShop
 
-Version **1.2.0-ck2** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **1.2.0-ck3** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
+
+## Updated in 1.2.0-ck3
+
+The daily reward button is marked as opened when the shop link actually arrives, not before, so a cancelled or blocked open no longer shows the day as spent on the button.
 
 ## Features
 

@@ -10,7 +10,7 @@
 CherrysEMI = CherrysEMI or {}
 local EMI = CherrysEMI
 
-EMI.version = "3.0.3"
+EMI.version = "3.0.4"
 EMI.MAX_MACROS = 56
 EMI.MACRO_COLUMNS = 7
 EMI.ICON_COLUMNS = 9
@@ -150,14 +150,19 @@ function EMI.ExtendedTexture(icon)
 end
 
 -- Icon number of the macro called name, if it uses an extended icon.
+-- The name-to-icon map is rebuilt when the macro list changes, not on every lookup.
+local macroIconCache = nil
 function EMI.MacroIconByName(name)
-  for i = 1, EMI.MAX_MACROS do
-    local icon, macroName = GetMacroInfo(i)
-    if macroName == name and EMI.IsExtended(icon) then
-      return icon
+  if macroIconCache == nil then
+    macroIconCache = {}
+    for i = 1, EMI.MAX_MACROS do
+      local icon, macroName = GetMacroInfo(i)
+      if macroName and macroName ~= "" and EMI.IsExtended(icon) then
+        macroIconCache[macroName] = icon
+      end
     end
   end
-  return nil
+  return macroIconCache[name]
 end
 
 -- A macro with an extended icon comes back from the game with the default icon; swap in ours.
@@ -207,6 +212,23 @@ function EMI.HooksOn()
   return entry ~= nil and GetMacroIconInfo == entry.wrapper
 end
 
+-- Gives the game its own functions (and macro window) back. Used when the kit keeps this
+-- addon off: Reload UI re-runs this file in the same Lua state, so last session's wrappers
+-- would otherwise stay installed.
+function EMI.RestoreHooks()
+  for name, entry in pairs(CherrysEMI_Hooks) do
+    if entry.original and _G[name] == entry.wrapper then
+      _G[name] = entry.original
+    end
+  end
+  CherrysEMI_Hooks = {}
+  macroIconCache = nil
+  if MacroFrame == CEMI_MacroFrame and EMI.originalMacroFrame then
+    MacroFrame = EMI.originalMacroFrame
+    EMI.originalMacroFrame = nil
+  end
+end
+
 ---------------------------------------------------------------------------
 -- Macro window
 ---------------------------------------------------------------------------
@@ -238,6 +260,7 @@ function EMI.SelectedMacro()
 end
 
 function EMI.UpdateMacros()
+  macroIconCache = nil
   for i = 1, EMI.MAX_MACROS do
     local button = child("CEMI_MacroButton" .. i)
     local label = child("CEMI_MacroButton" .. i .. "Name")
@@ -484,6 +507,7 @@ function EMI.Start()
   end
   EMI.started = true
   if EMI.IsOffInKit() then
+    EMI.RestoreHooks()
     return
   end
   -- The old 2.15 folder still installed: it swaps the same functions and the macro window, so

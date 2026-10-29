@@ -1,10 +1,14 @@
 # zBag
 
-Version **5.07-ck11** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **5.07-ck12** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
+
+## Updated in 5.07-ck12
+
+The bank window refreshes a few times a second instead of every frame, sorting rebuilds its lookup tables once per pass and stops as soon as a pass finds nothing left to move, and attribute sorting no longer re-sorts the same list for every comparison.
 
 ## Features
 

@@ -190,7 +190,7 @@ function Filters.Color(param, listing, color)--Search for green, yellow, or oran
 				found = AAH.Tools.FindColorType(getglobal("AAH_TooltipTextLeft"..i):GetColor())
 				if found == color then
 					return true
-				elseif AAH.Tools.FindColorType(r, g, b) == "rune" then
+				elseif found == "rune" then
 					return false
 				end
 			end
@@ -362,7 +362,8 @@ function Filters.Bargain(param, listing)--Search for items that can be reauction
 
 	local percent = .7
 	if param[2] then
-		percent = 1 - (tonumber(string.match(param[2], "%d+")) / 100) or .7
+		local discount = tonumber(string.match(param[2], "%d+")) or 30
+		percent = 1 - discount / 100
 	end
 	local maxtime = 4320
 	if param[3] then

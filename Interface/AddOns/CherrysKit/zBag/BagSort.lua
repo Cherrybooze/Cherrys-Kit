@@ -608,6 +608,7 @@ function BagSort.ParseItemDataFromLines(lines)
             end
         end
     end
+    table.sort(data.attributes)
     return data
 end
 
@@ -621,9 +622,8 @@ function BagSort.CompareFn(a, b)
             -- Default's always last
             return a.currentLoc < b.currentLoc
         elseif sortType == "attributes" then
-            -- Attribs are a bit special because it's a table
-            table.sort(a.attributes)
-            table.sort(b.attributes)
+            -- Attribs are a bit special because it's a table.
+            -- The list is sorted once where the item data is built.
             for attrIndex = 1, #a.attributes do
                 if not b.attributes[attrIndex] then
                     return false
@@ -816,13 +816,16 @@ function BagSort.DoMove()
 	if zBgab_TestInnerSortLayer >=1 then
 		for i=1,zBgab_TestInnerSortloop do
 			local z=nil
+			RebuildTable()
 			for index, item in pairs(BagSort.SortedData) do
-				RebuildTable()
 				if  item.bagIndex ~= item.moveToIndex  then
-					z = CheckNextLayer(item,item,1)	--recursive
+					if CheckNextLayer(item,item,1) then	--recursive
+						z = 1
+						RebuildTable()
+					end
 				end
 			end
-			if not z then i=zBgab_TestInnerSortloop+1 end
+			if not z then break end
 		end
 	end
 	

@@ -66,10 +66,10 @@ function pbInfo.ChatLog.SaveMessage(target, writer, text)
 		}
 	);
 	table.sort(pbInfo.ChatLog.Data[target], function(a, b) return a["time"] > b["time"] end);
-	for k, _ in pairs(pbInfo.ChatLog.Data[target]) do
-		if (k > pbInfoSettings["ChatLogMaxLinesPerChat"] + 1) then
-			table.remove(pbInfo.ChatLog.Data[target], k);
-		end;
+	local maxLines = pbInfoSettings["ChatLogMaxLinesPerChat"] + 1;
+	local lines = pbInfo.ChatLog.Data[target];
+	for k = #lines, maxLines + 1, -1 do
+		table.remove(lines, k);
 	end;
 --	TableTools.saveTable(pbInfo.ChatLog.Data["Whispers"], pbInfo.ChatLog.File);
 end;

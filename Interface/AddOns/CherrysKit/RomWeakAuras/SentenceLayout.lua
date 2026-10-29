@@ -43,7 +43,6 @@ function S.UpdateText(F,api)
       if check then
         local source=Rules.FindSource(d,check.sourceId)
         text(row.second,source and source.type=="resource" and check.field=="active" and "available" or comparison(api,check))
-        local source=Rules.FindSource(d,check.sourceId)
         if source and (source.type or "aura")=="aura" then
           local _,width=RWA.Try(row.first,"GetWidth")
           text(row.first,clip(Rules.ReadableSource(source),math.max(8,math.floor(((tonumber(width) or 180)-32)/7))))

@@ -1875,7 +1875,9 @@ function F.PickHotbar(source,check)
     get=function() return source.hotbarSlot or 2 end,
     set=function(slot)
       if RWA.IsOptionsOpen and not RWA.IsOptionsOpen() then return end
-      if F.selection~=owner or not matches(owner) or Rules.FindSource(data(),source.id)~=source then return end
+      local d=data()
+      if not d then return end
+      if F.selection~=owner or not matches(owner) or Rules.FindSource(d,source.id)~=source then return end
       local _,_,selectedCheck,selectedAction=findOwner(owner)
       if not ((selectedCheck and selectedCheck.sourceId==source.id) or (selectedAction and selectedAction.sourceId==source.id)) then return end
       F.SetHotbarSlot(source,slot)
@@ -1888,9 +1890,11 @@ function F.PickHotbar(source,check)
   })
 end
 function F.SetHotbarSlot(source,slot)
+  local d=data()
+  if not d then return end
   local old=tonumber(source.hotbarSlot) or 2
   source.hotbarSlot=slot
-  for _,rule in ipairs(data().rules or {}) do
+  for _,rule in ipairs(d.rules or {}) do
     for _,check in ipairs(rule.when and rule.when.checks or {}) do
       if check.sourceId==source.id then
         if check.field=="hotbarSlot" and (check.op=="==" or check.op=="=") and tonumber(check.value)==old then check.value=slot end

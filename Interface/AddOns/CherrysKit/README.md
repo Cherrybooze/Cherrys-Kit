@@ -1,14 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.14** Â· Kit release **0.11.79** Â· [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.15** Â· Kit release **0.11.80** Â· [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
 
-## Preparing kit 0.11.79
+## Preparing kit 0.11.80
 
-This development snapshot updates Cherry's Chat, rom weakauras and the hub. Cherry's Chat forwards complete item hyperlinks to the native click handler by default. RomWeakAuras adds a unified rules workspace and searchable list. The combined update is prepared for a manual playtest before release.
+This development snapshot fixes reported issues across the kit: KittyCombo fires skills closer to ready and skips unusable action rows; auction list clicks select the right row; rom weakauras keeps copies, class checks and caches in order; chat painting recovers from cross-window releases; bank refreshes and sorting are lighter; tooltip, macro-icon, daily reward and load-time probe edges are fixed. Prepared for a manual playtest before release.
 
 ## Features
 

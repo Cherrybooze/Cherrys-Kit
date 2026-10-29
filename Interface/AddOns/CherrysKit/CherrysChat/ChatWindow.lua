@@ -952,6 +952,10 @@ end
 function Wn.PaintUpdate(elapsed)
   local i = Wn.painting
   local p = Wn.press
+  if not i or not p then
+    Wn.painting = false
+    return
+  end
   local s = st(i)
   if not p.moved then
     local cx, cy = GetCursorPos()
@@ -987,10 +991,10 @@ end
 function Wn.MouseUp(i, key)
   guarded(function()
     local p = Wn.press
-    Wn.press = nil
     if Wn.painting ~= i or not p then
       return
     end
+    Wn.press = nil
     Wn.painting = false
     if p.moved then
       return -- painted lines stay blue until a click elsewhere; right-click them to copy

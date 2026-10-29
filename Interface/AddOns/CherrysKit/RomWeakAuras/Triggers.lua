@@ -56,7 +56,22 @@ local function rememberAura(aura)
     knownAuras[key] = info
     if type(RWA_DB) == "table" then
       RWA_DB.buffInfo = RWA_DB.buffInfo or {}
-      RWA_DB.buffInfo[key] = info
+      local store = RWA_DB.buffInfo
+      if store[key] == nil then
+        -- Keep the remembered-buff cache bounded. Cleared entries are rebuilt
+        -- the next time the buff is seen.
+        local count = 0
+        for _ in pairs(store) do count = count + 1 end
+        if count >= 4000 then
+          local drop = {}
+          for name in pairs(store) do
+            drop[#drop + 1] = name
+            if #drop >= 1000 then break end
+          end
+          for _, name in ipairs(drop) do store[name] = nil end
+        end
+      end
+      store[key] = info
     end
   end
 end
@@ -695,5 +710,13 @@ RWA.On("UNIT_BUFF_CHANGED", function()
   RWA.MarkDirty()
 end)
 RWA.On("LEARN_NEW_SKILL", function()
+  skillCache = {}
+end)
+RWA.On("UNIT_CLASS_CHANGED", function(_, unit)
+  if unit == nil or unit == "player" then
+    skillCache = {}
+  end
+end)
+RWA.On("EXCHANGECLASS_SUCCESS", function()
   skillCache = {}
 end)

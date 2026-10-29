@@ -1,10 +1,14 @@
 # pbInfo
 
-Version **0.60-ck2** · Kit release **0.11.77** · [All addons / hub](../README.md)
+Version **0.60-ck3** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **More information everywhere: richer mob and player tooltips, a quest tracker, chat filters and timestamps, chat history, cast bar options and auto repair.**
 
 pbInfo v0.60 by p.b. a.k.a. novayuna (later odie2), updated for Cherry's Kit. Parts that other kit addons already do are left out: the threat meter is now rom weakauras' Threat meter aura, and target health numbers are PortraitHP.
+
+## Updated in 0.60-ck3
+
+Blood bar updates skip missing frames instead of erroring every tick, the tooltip reads the mouseover unit once per update, chat history trims to the line limit correctly, and the quest tracker sort handles non-table entries.
 
 ## Features
 

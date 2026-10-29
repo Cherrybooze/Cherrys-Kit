@@ -169,6 +169,10 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
+## Updated in 0.9.23
+
+Duplicate behaviors keep their attached child displays, removed rules leave no orphaned triggers, class restrictions match localized class names, the skill lookup refreshes after a class change, and the hotbar picker only repaints on real changes.
+
 ## Updated in 0.9.22
 
 Faster Back navigation, step-by-step removal, two automatic resource bars, a PSI diamond pyramid, and updated starter aura positions.
@@ -244,6 +248,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
+## Updated in 0.10.8
+
+Painting a selection and releasing the mouse over another chat window no longer leaves the overlay broken until a Reload UI.
+
 ## Updated in 0.10.7
 
 The default native click dispatch sends the complete original hyperlink, including its encoded item data and localized label. Previously learned signatures remain in use; the change still needs in-game testing.
@@ -306,6 +314,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat pro
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
+## Updated in 5.07-ck12
+
+The bank window refreshes a few times a second instead of every frame, and sorting rebuilds its lookup tables once per pass and stops as soon as nothing is left to move.
+
 ## Features
 
 - **Three layouts, switch any time** (applies straight away):
@@ -362,6 +374,10 @@ Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, add
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.6
+
+Characters the helper no longer exports disappear from the window right away, and the Chrome helper stops retrying a failed reward confirmation forever.
 
 ## Features
 
@@ -436,6 +452,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/gb probe`
 
 Based on ExtendedMacroIcons 2.15 by Amurilon, cleaned up for Cherry's Kit.
 
+## Updated in 3.0.4
+
+Macro icon lookups are cached between macro changes, and turning the addon off in the kit removes its hooks from the last session.
+
 ## Features
 
 - **About 10,500 extra icons**: class skills, equipment, weapons, items, festival, furniture and more, in 58 categories.
@@ -479,10 +499,14 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/emi probe
 
 TooltipIds 1.0b3 by Rock5, updated for Cherry's Kit. Handy for rom weakauras (track a buff by its ID) and for macros.
 
+## Updated in 1.0b3-ck3
+
+Hovering a buff or debuff no longer prints an ID line to chat, and turning the addon off in the kit removes its hooks from the last session.
+
 ## Features
 
 - Adds an **"ID: 12345" line** to tooltips. Choose which kinds to show: Unit (NPCs and players), Item, Skill, Buff, Title, Item Shop, Store, Guild and Quest.
-- **Buff and debuff IDs print to chat** when you hover them (as in Rock5's original).
+- **Buff and debuff tooltips**: hovering them no longer prints ID lines to chat (the original did, once per hover).
 - Pick the colour of the ID text.
 - Can be turned off in Cherry's Kit; while off it leaves tooltips alone. Safe with Reload UI.
 
@@ -578,7 +602,11 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns and stat ranges.**
 
-Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.2 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.3 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+
+## Updated in 6.2.3
+
+Bid and sell list clicks select the row you actually clicked after scrolling, the stat colour filters no longer error on ordinary items, and a stale buyout message no longer throws.
 
 ## Features
 
@@ -657,6 +685,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/aah probe
 
 A small report of how long each addon took while the loading screen was up, and how much memory it added.
 
+## Updated in 1.2.1
+
+Both probe frames stop after the loading screen is gone, so a tiny hidden frame no longer keeps processing every frame.
+
 ## Features
 
 - **Per-addon times for Cherry's Kit addons**: exact load time and memory for every kit addon you have installed.
@@ -696,6 +728,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/ckload pr
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
+
+## Updated in 1.2.0-ck3
+
+The daily reward button is marked as opened when the shop link actually arrives, not before, so a blocked open no longer shows the day as spent.
 
 ## Features
 
@@ -744,6 +780,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zshop pro
 **More information everywhere: richer mob and player tooltips, a quest tracker, chat filters and timestamps, chat history, cast bar options and auto repair.**
 
 pbInfo v0.60 by p.b. a.k.a. novayuna (later odie2), updated for Cherry's Kit. Parts that other kit addons already do are left out: the threat meter is now rom weakauras' Threat meter aura, and target health numbers are PortraitHP.
+
+## Updated in 0.60-ck3
+
+Blood bar updates skip missing frames instead of erroring, the tooltip reads the mouseover unit once per update, chat history trims correctly, and the quest tracker sort handles non-table entries.
 
 ## Features
 
@@ -825,6 +865,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/php probe
 # Cherry's Grid
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
+
+## Updated in 1.1.2
+
+Clicking a member on a client without the focus-stash API no longer destroys your previous target, and the roster is scanned once per refresh.
 
 ## Features
 

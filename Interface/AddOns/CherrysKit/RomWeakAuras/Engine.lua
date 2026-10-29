@@ -167,8 +167,9 @@ local function shouldLoad(load)
   end
   if load.class and load.class ~= "" and UnitClass then
     local main, sub = UnitClass("player")
-    local want = string.lower(load.class)
-    if string.lower(main or "") ~= want and string.lower(sub or "") ~= want then
+    local normalize = RWA.ClassToken or function(value) return value end
+    local want = normalize(load.class)
+    if normalize(main or "") ~= want and normalize(sub or "") ~= want then
       return false
     end
   end

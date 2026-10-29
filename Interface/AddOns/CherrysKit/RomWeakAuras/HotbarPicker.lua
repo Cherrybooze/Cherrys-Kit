@@ -132,11 +132,27 @@ local function paintCell(cell,slot,width,height)
   W.SetColor(cell.icon,1,1,1,texture and .85 or .35)
   W.SetShown(cell.button,true)
 end
-function P.Refresh()
+function P.Refresh(force)
   if not P.open then return end
   local native=nativeButtons()
+  local mode=not P.forceGrid and #native>0 and "bars" or "grid"
+  local current=P.context and P.context.get and call(P.context.get)
+  -- Repaint only when the slots, their contents or the selection changed.
+  local signature=mode.."|"..tostring(current)
+  for _,entry in ipairs(native) do
+    local texture,name=slotInfo(entry.slot)
+    signature=signature.."|"..entry.slot..":"..tostring(entry.width).."x"..tostring(entry.height)..":"..tostring(texture)..":"..tostring(name)
+  end
+  if mode=="grid" then
+    for slot=1,80 do
+      local texture,name=slotInfo(slot)
+      signature=signature.."|"..slot..":"..tostring(texture)..":"..tostring(name)
+    end
+  end
+  if not force and signature==P.signature then return end
+  P.signature=signature
   P.nativeCount=#native
-  P.mode=not P.forceGrid and #native>0 and "bars" or "grid"
+  P.mode=mode
   W.SetShown(P.grid,P.mode=="grid")
   W.SetText(P.title,"Pick a hotbar slot")
   W.SetText(_G.RWA_HotbarPickerMode,P.mode=="bars" and "All slots" or "Use hotbars")
@@ -171,7 +187,7 @@ function P.Open(context)
   P.context,P.open,P.forceGrid,P.nextUpdate=context,true,false,nil
   adjustLayers()
   W.SetShown(P.frame,true);W.SetShown(P.panel,true);W.SetShown(P.focus,true)
-  P.Refresh()
+  P.Refresh(true)
   RWA.Try(P.focus,"SetFocus")
   RWA.SetUpdater("hotbar-picker",P.Update)
   return true
@@ -190,7 +206,7 @@ end
 function P.ToggleMode()
   if not P.open then return end
   P.forceGrid=P.mode=="bars"
-  P.Refresh();RWA.Try(P.focus,"SetFocus")
+  P.Refresh(true);RWA.Try(P.focus,"SetFocus")
 end
 function P.Update(now)
   if not P.open then return end
@@ -203,7 +219,7 @@ function P.Choose(index,key)
   local cell=P.cells[tonumber(index)]
   if not cell then return end
   local slot=cell.native and nativeSlot(cell.native) or P.mode=="grid" and validSlot(cell.slot)
-  if not slot then P.Refresh();return end
+  if not slot then P.Refresh(true);return end
   local context=P.context
   P.Close()
   if context and context.set then context.set(slot) end

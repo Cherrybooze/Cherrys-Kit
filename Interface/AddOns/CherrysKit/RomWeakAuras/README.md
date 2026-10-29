@@ -1,10 +1,14 @@
 # rom weakauras
 
-Version **0.9.22** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **0.9.23** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Updated in 0.9.23
+
+Duplicating a behavior keeps attached child displays pointing at the copy, removed rules and actions leave no orphaned triggers behind, class restrictions match localized and legacy class names, the skill lookup refreshes after a class change, the hotbar picker repaints only when something actually changed, and the remembered-buff cache stays bounded.
 
 ## Editing and positioning
 

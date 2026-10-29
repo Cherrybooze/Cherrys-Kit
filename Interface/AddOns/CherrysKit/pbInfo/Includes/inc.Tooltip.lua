@@ -7,11 +7,14 @@ pbInfo - Includes/inc.Mouseover.lua
 	contains changes by Fliewatuet: https://forum.runesofmagic.com/showthread.php?t=180013
 ]]
 function pbInfo.Tooltip.Scripts.OnUpdate() -- thx to dr00gz for the idea and some hints!
+	-- Read the mouseover unit once and reuse it below.
+	local isPlayer = UnitIsPlayer("mouseover");
+	local mC, sC = UnitClass("mouseover");
+	local mL, sL = UnitLevel("mouseover");
+	local mouseName = UnitName("mouseover");
 	-- update player information
-	if (UnitIsPlayer("mouseover") and pbInfoSettings["PLAYERINFO"]) then
-		local mC, sC = UnitClass("mouseover");
-		local mL, sL = UnitLevel("mouseover");
-		pbInfo.Tooltip.getPlayerInfo(UnitName("mouseover"), mC, mL, sC, sL)
+	if (isPlayer and pbInfoSettings["PLAYERINFO"]) then
+		pbInfo.Tooltip.getPlayerInfo(mouseName, mC, mL, sC, sL)
 	end;
 	-- real tooltip stuff
 	if (pbInfoSettings["STICKYTOOLTIP"] == true) then
@@ -40,17 +43,15 @@ function pbInfo.Tooltip.Scripts.OnUpdate() -- thx to dr00gz for the idea and som
         end;
     end;
     -------- </add>
-	if ((pbInfoSettings["MODIFYTOOLTIP"] or pbInfoSettings["SHOWMATERIALINFO"]) and UnitExists("mouseover") and UnitLevel("mouseover") > 0) then
-		local name = UnitName("mouseover");
-		if (pbInfoSettings["MODIFYTOOLTIP"] and (UnitIsPlayer("mouseover") or UnitCanAttack("player", "mouseover") or (pbInfoSettings["ALLNPC"] and type(pbInfo.MatDB[name]) ~= "table"))) then
+	if ((pbInfoSettings["MODIFYTOOLTIP"] or pbInfoSettings["SHOWMATERIALINFO"]) and UnitExists("mouseover") and (mL or 0) > 0) then
+		local name = mouseName;
+		if (pbInfoSettings["MODIFYTOOLTIP"] and (isPlayer or UnitCanAttack("player", "mouseover") or (pbInfoSettings["ALLNPC"] and type(pbInfo.MatDB[name]) ~= "table"))) then
 			-- show detailed information if target is a mob that can attack the player, or if it's a player
 			local nameText = name;
 			local masterName = UnitMaster("mouseover");
 			if (masterName) then
 				nameText = string.format(TEXT("TOOLTIP_PET_NAME"), masterName, nameText);
 			end;
-			local mC, sC = UnitClass("mouseover");
-			local mL, sL = UnitLevel("mouseover");
 			local sex = UnitSex("mouseover");
 			local race = UnitRace("mouseover");
 			local health, healthMax, healthRatio = 0, 0, 0;

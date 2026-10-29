@@ -442,7 +442,7 @@ end
 
 function zBagB_OnShow(this)
 	--yecho("zBagB_OnShow called");
-	if (this:IsVisible()) then
+	if (this and this:IsVisible()) then
 		if (BankFrame:IsVisible()) then 
 			ZBAG_BANKINSPECT=0;
 		else 
@@ -452,13 +452,6 @@ function zBagB_OnShow(this)
 		zBagB_Resize(this);
 		zBagB_Update();
 	end
-end
-
-function zBagB_OnUpdate(this)
-zBagB_Update();
-end
-
-function zBagB_OnShow()
 zBagBRent2:Hide();
 zBagBRent3:Hide();
 zBagBRent4:Hide();
@@ -477,6 +470,16 @@ zBagBRent5:Hide();
 		zBagBSort:Show();
 	end
 		ShowUIPanel(zBagB);
+end
+
+local zBagB_UpdateWait = 0;
+function zBagB_OnUpdate(this, elapsed)
+zBagB_UpdateWait = zBagB_UpdateWait - (elapsed or 0.03);
+if (zBagB_UpdateWait > 0) then
+	return;
+end
+zBagB_UpdateWait = 0.2;
+zBagB_Update();
 end
 
 

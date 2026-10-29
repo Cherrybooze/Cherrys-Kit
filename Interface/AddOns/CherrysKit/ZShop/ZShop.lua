@@ -12,7 +12,7 @@
 ZShop = ZShop or {}
 local me = ZShop
 
-me.version = "1.2.0-ck2"
+me.version = "1.2.0-ck3"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.ZShop) or "Interface/AddOns/ZShop/"
 me.DAILY_LEVEL = 100
 

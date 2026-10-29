@@ -59,3 +59,10 @@ The richer editor has a higher fixed cost: the fixture retained approximately 0.
 
 - KittyCombo: compare predicted and selected skills during a cast; import a supported rotation, exercise class/build menus, cancel and save a new mode, and test duplicate action slots and Create/Pick up macro.
 - KittyCombo timing (1.7.10): spam the rotation key and confirm skills fire as their cooldown ends instead of being refused early; run `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6` mid-session to compare the old window. Confirm an action row with an empty item stack or no bar slot is skipped, that a valid action still wins, and that "Item is ready" conditions keep their meaning.
+- Advanced AuctionHouse (6.2.3): scroll the bid and sell lists, click a row, then bid or cancel — the selected auction must be the row you clicked. Filter by a stat colour on an ordinary item and check no error appears.
+- rom weakauras (0.9.23): duplicate a behavior that has an attached child display and check the copy follows its own parent; remove a rule and confirm nothing keeps triggering; change class and check a cooldown aura; use the hotbar picker while dragging a button.
+- CherrysChat (0.10.8): press on one chat window, release the mouse over another window, then drag-select again — painting must still work without a Reload UI.
+- zBag (5.07-ck12): open the bank, sort several times, and sort by attributes; the window should stay responsive.
+- TooltipIds (1.0b3-ck3): hover buffs and debuffs — no chat lines; turn the addon off in the kit, reload, and check tooltips no longer add ID lines.
+- ZShop (1.2.0-ck3): with no shop opener available, click the daily reward; the button must not mark the day as opened.
+- GlobalBank (1.4.6): remove a character in the helper window and confirm it disappears in game after the next import. With the Chrome extension, let one confirmation fail and check the helper is not restarted repeatedly.

@@ -1,10 +1,14 @@
 # Cherry's Addon LoadTimes
 
-Version **1.2.0** · Kit release **0.11.77** · [All addons / hub](../README.md)
+Version **1.2.1** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **Find out which addons make your loading screen slow.**
 
 A small report of how long each addon took while the loading screen was up, and how much memory it added.
+
+## Updated in 1.2.1
+
+Both probe frames stop after the loading screen is gone, so a tiny hidden frame no longer keeps processing every frame for the rest of the session.
 
 ## Features
 

@@ -565,7 +565,7 @@ function Sell.List_IconClick(this,key)
         end
     end
 
-    Sell.List_SetSelected(this:GetParent():GetID())
+    Sell.List_SetSelected(this:GetParent().index)
 end
 
 

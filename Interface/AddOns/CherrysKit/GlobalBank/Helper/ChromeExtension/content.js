@@ -42,7 +42,14 @@
         if (chest && (chest.dataset.status === 'redeemed' || chest.classList.contains('redeemed'))) {
           const result = await chrome.runtime.sendMessage({type:'reward-confirmed',name:who.name,server:who.server,day:pending.day});
           if (!active()) { stop(); return; }
-          if (result?.ok) await chrome.storage.session.remove(pendingKey);
+          if (result?.ok) {
+            await chrome.storage.session.remove(pendingKey);
+          } else {
+            // Do not retry (and start a helper process) forever on a failing confirmation.
+            pending.attempts = (pending.attempts || 0) + 1;
+            if (pending.attempts >= 5) await chrome.storage.session.remove(pendingKey);
+            else await chrome.storage.session.set({[pendingKey]:pending});
+          }
           return;
         }
         if (Date.now() - pending.started < 30000) return;

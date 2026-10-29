@@ -4,6 +4,10 @@
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
+## Updated in 0.9.23
+
+Duplicate behaviors keep their attached child displays, removed rules leave no orphaned triggers, class restrictions match localized class names, the skill lookup refreshes after a class change, and the hotbar picker only repaints on real changes.
+
 ## Updated in 0.9.22
 
 Faster Back navigation, step-by-step removal, two automatic resource bars, a PSI diamond pyramid, and updated starter aura positions.

@@ -4,6 +4,10 @@
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
+## Updated in 1.2.0-ck3
+
+The daily reward button is marked as opened when the shop link actually arrives, not before, so a blocked open no longer shows the day as spent.
+
 ## Features
 
 - **Daily reward button**: a small button on screen. Left click opens the item shop right on the daily loyalty reward page. Its picture marks when this level 100 character opened the page today; opening it does not itself confirm a collection. Characters below level 100 get a separate icon. The day resets at midnight German time. Move it with right-drag or Shift+drag; show, hide and lock it in the ZShop window.

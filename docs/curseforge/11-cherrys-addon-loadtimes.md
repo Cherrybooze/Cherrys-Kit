@@ -4,6 +4,10 @@
 
 A small report of how long each addon took while the loading screen was up, and how much memory it added.
 
+## Updated in 1.2.1
+
+Both probe frames stop after the loading screen is gone, so a tiny hidden frame no longer keeps processing every frame.
+
 ## Features
 
 - **Per-addon times for Cherry's Kit addons**: exact load time and memory for every kit addon you have installed.

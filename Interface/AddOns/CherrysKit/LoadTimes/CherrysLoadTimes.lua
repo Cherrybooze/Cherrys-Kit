@@ -11,7 +11,7 @@
 -- RoM keeps Lua globals through Reload UI, so after a reload every addon's globals already exist:
 -- the watcher then sees only the few new ones.
 local reloaded = CherrysLoadTimes ~= nil
-CherrysLoadTimes = { version = "1.2.0", standalone = true, reloaded = reloaded }
+CherrysLoadTimes = { version = "1.2.1", standalone = true, reloaded = reloaded }
 CherrysKit_Load = CherrysLoadTimes
 local L = CherrysLoadTimes
 L.marks = {}     -- kit addons: { name, t, kb }, in load order
@@ -185,8 +185,12 @@ function L.Update(frame)
   local e = L.events.LOADING_END
   if e and e.first and not L.ready then
     L.ready = L.Now()
-    if frame and frame.Hide then
-      frame:Hide()
+    -- Both probe frames stop here; the one that did not run first would keep its OnUpdate.
+    for _, name in ipairs({ "CherrysLoadTimes_Frame", "CherrysKit_LoadLast" }) do
+      local probe = _G[name]
+      if probe and probe.Hide then
+        probe:Hide()
+      end
     end
   end
 end

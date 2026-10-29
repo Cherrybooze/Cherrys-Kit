@@ -2,7 +2,7 @@ local me = {   -- Create local namespace
 
 	Strings ={
 		AddonName = "TooltipIds",
-		Version = "1.0b3-ck2",
+		Version = "1.0b3-ck3",
 		Author = "Rock5",
 		IconPath = "Interface\ItemMall\IM_Help-Normal",
 	},
@@ -175,12 +175,23 @@ local function original(tbl, key, id)
 	if entry and entry.wrap ~= nil and tbl[key] == entry.wrap then
 		return entry.orig
 	end
-	TooltipIds_Hooks[id] = { orig = tbl[key] }
+	TooltipIds_Hooks[id] = { orig = tbl[key], tbl = tbl, key = key }
 	return tbl[key]
 end
 
 local function remember(tbl, key, id)
 	TooltipIds_Hooks[id].wrap = tbl[key]
+end
+
+-- Puts the originals back when the kit keeps this addon off: Reload UI re-runs this file in
+-- the same Lua state, so last session's wrappers would otherwise stay installed.
+local function restoreHooks()
+	for id, entry in pairs(TooltipIds_Hooks) do
+		if entry.tbl and entry.key and entry.orig ~= nil and entry.tbl[entry.key] == entry.wrap then
+			entry.tbl[entry.key] = entry.orig
+		end
+		entry.wrap = nil
+	end
 end
 
 -- Sets up the hooks
@@ -222,7 +233,6 @@ local function setHooks()
 		if settings.Options[4] then
 			local name, icon, count, ID = UnitBuff(unit , num )
 			addId(ID) -- Doesn't work
-			DEFAULT_CHAT_FRAME:AddMessage(tostring(name).." ID: ".. tostring(ID), settings.TextColor.r, settings.TextColor.g, settings.TextColor.b);
 		end
 	end
 
@@ -233,7 +243,6 @@ local function setHooks()
 		if settings.Options[4] then
 			local name, icon, count, ID = UnitDebuff(unit , num )
 			-- addId(ID) -- Doesn't work
-			DEFAULT_CHAT_FRAME:AddMessage(tostring(name).." ID: ".. tostring(ID), settings.TextColor.r, settings.TextColor.g, settings.TextColor.b);
 		end
 	end
 
@@ -446,6 +455,7 @@ function me:OnEvent(frame, event, arg1, arg2)
 
 		-- Turned off in Cherry's Kit: no hooks, no scanning.
 		if me.IsOffInKit() then
+			restoreHooks()
 			return
 		end
 		if not me.hooked then

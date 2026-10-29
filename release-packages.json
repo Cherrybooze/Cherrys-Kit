@@ -1,8 +1,8 @@
 {
   "kit_version": "0.11.80",
-  "hub_version": "0.4.14",
-  "release_summary": "KittyCombo gets tighter skill dispatch timing and action-row eligibility checks; the other addons carry over unchanged from 0.11.79.",
-  "runtime_validation": "The full Lua 5.1 regression suite passed (477 tests), including focused KittyCombo checks for the dispatch window, action-slot eligibility, missing/zero mana resources, the in-range probe and prediction parity. In-game rotation timing and the comparison with the old 0.6 s window still need player confirmation.",
+  "hub_version": "0.4.15",
+  "release_summary": "KittyCombo fires skills closer to ready and skips unusable action rows. Auction list clicks, display copies and class checks in rom weakauras, chat paint drags, bank sorting, macro icon lookups, tooltip IDs, the daily reward shortcut and other reported issues are fixed across the kit.",
+  "runtime_validation": "The full Lua 5.1 regression suite passed (477 tests), with focused KittyCombo checks for the dispatch window, action-slot eligibility, missing/zero mana resources, the in-range probe and prediction parity. In-game timing, auction clicking, chat painting, tooltips and the Chrome helper still need player confirmation.",
   "addons": [
     {
       "folder": "KittyCombo",
@@ -15,7 +15,7 @@
     {
       "folder": "RomWeakAuras",
       "title": "rom weakauras",
-      "version": "0.9.22",
+      "version": "0.9.23",
       "command": "/wa",
       "description_file": "03-rom-weakauras.md",
       "summary": "Custom buff, debuff, cooldown, cast and status displays.",
@@ -24,7 +24,7 @@
     {
       "folder": "CherrysChat",
       "title": "Cherry's Chat",
-      "version": "0.10.7",
+      "version": "0.10.8",
       "command": "/cchat",
       "description_file": "04-cherrys-chat.md",
       "summary": "Selectable chat, copying, emoji and chat display settings."
@@ -32,7 +32,7 @@
     {
       "folder": "zBag",
       "title": "zBag",
-      "version": "5.07-ck11",
+      "version": "5.07-ck12",
       "command": "/zb",
       "description_file": "05-zbag.md",
       "summary": "Bags, searching, sorting, quick sell and an All bags view."
@@ -40,7 +40,7 @@
     {
       "folder": "GlobalBank",
       "title": "Global Bank",
-      "version": "1.4.5",
+      "version": "1.4.6",
       "command": "/gb",
       "description_file": "06-global-bank.md",
       "summary": "A searchable view of your characters' bags, banks and gold."
@@ -48,7 +48,7 @@
     {
       "folder": "ExtendedMacroIcons",
       "title": "Extended Macro Icons",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "command": "/emi",
       "description_file": "07-extended-macro-icons.md",
       "summary": "A larger, categorised macro icon picker."
@@ -56,7 +56,7 @@
     {
       "folder": "TooltipIds",
       "title": "TooltipIds",
-      "version": "1.0b3-ck2",
+      "version": "1.0b3-ck3",
       "command": "/ti",
       "description_file": "08-tooltipids.md",
       "summary": "ID numbers for items, buffs, skills and other game data."
@@ -72,7 +72,7 @@
     {
       "folder": "AdvancedAuctionHouse",
       "title": "Advanced AuctionHouse",
-      "version": "6.2.2",
+      "version": "6.2.3",
       "command": "/aah",
       "description_file": "10-advanced-auctionhouse.md",
       "summary": "Auction searching, stat filters, history and a resizable window."
@@ -80,7 +80,7 @@
     {
       "folder": "LoadTimes",
       "title": "Cherry's Addon LoadTimes",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "command": "/ckload",
       "description_file": "11-cherrys-addon-loadtimes.md",
       "summary": "Loading times and memory use for the kit and other addons."
@@ -88,7 +88,7 @@
     {
       "folder": "ZShop",
       "title": "ZShop",
-      "version": "1.2.0-ck2",
+      "version": "1.2.0-ck3",
       "command": "/zshop",
       "description_file": "12-zshop.md",
       "summary": "Item-shop access and a daily loyalty reward shortcut."
@@ -96,7 +96,7 @@
     {
       "folder": "pbInfo",
       "title": "pbInfo",
-      "version": "0.60-ck2",
+      "version": "0.60-ck3",
       "command": "/pbinfo",
       "description_file": "13-pbinfo.md",
       "summary": "Richer tooltips, quest tracking, chat filters and cast-bar options."
@@ -112,7 +112,7 @@
     {
       "folder": "CherrysGrid",
       "title": "Cherry's Grid",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "command": "/grid",
       "description_file": "15-cherrys-grid.md",
       "summary": "Party and raid frames, with KittyCombo actions on click."

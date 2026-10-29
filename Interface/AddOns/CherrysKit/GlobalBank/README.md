@@ -1,10 +1,14 @@
 # Global Bank
 
-Version **1.4.5** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **1.4.6** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.6
+
+Characters the helper no longer exports disappear from the window right away instead of at the next Reload UI. The Chrome helper stops retrying a failed reward confirmation forever.
 
 ## Features
 

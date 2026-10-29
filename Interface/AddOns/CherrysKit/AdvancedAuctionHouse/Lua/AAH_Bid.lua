@@ -242,7 +242,7 @@ function Bid.List_IconClick(this,key)
         end
     end
 
-    Bid.Select(this:GetParent():GetID())
+    Bid.Select(this:GetParent().index)
 end
 
 function Bid.Select(auctionid)

@@ -2,6 +2,10 @@
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
 
+## Updated in 1.1.2
+
+Clicking a member on a client without the focus-stash API no longer destroys your previous target, and the roster is scanned once per refresh.
+
 ## Features
 
 - **One square per member**, coloured by class, filling bottom to top (or left to right): up to 36 raid members plus pets. Group by raid group, class, raid role or not at all, and grow from any corner.
