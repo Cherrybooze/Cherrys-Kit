@@ -95,7 +95,8 @@ if (-not (Test-Path -LiteralPath $links)) {
     [System.IO.File]::WriteAllText($links, '{"schemaVersion":1,"accounts":[],"characters":[]}', (New-Object System.Text.UTF8Encoding($false)))
 }
 # Older versions could start a hidden copy with Windows through this shortcut.
-$oldShortcut = Join-Path ([Environment]::GetFolderPath("Startup")) "Global Bank helper.lnk"
+$startupFolder = [Environment]::GetFolderPath("Startup")
+$oldShortcut = if ($startupFolder) { Join-Path $startupFolder "Global Bank helper.lnk" } else { $null }
 
 $pattern = [regex]'(?m)^GlobalBank_Char = ("(?:[^"\\\r\n]|\\.)*")\s*$'
 $removedPattern = [regex]'(?m)^GlobalBank_Removed = "((?:[^"\\\r\n]|\\.)*)"\s*$'
@@ -125,7 +126,7 @@ $script:AAHWorkerInbox = Join-Path $data ('.AAH-worker-' + $PID + '.json')
 
 function Clear-PromptLine {
     $width = 79
-    try { $width = [Console]::WindowWidth - 1 } catch { }
+    try { $width = [Math]::Max(1, [Console]::WindowWidth - 1) } catch { }
     Write-Host -NoNewline ("`r" + (" " * $width) + "`r")
 }
 
@@ -801,7 +802,7 @@ if (-not $Watch) {
 
 # Older versions could run a hidden copy that started with Windows. The helper now runs only while
 # its window is open, so that copy and its shortcut are removed.
-if (Test-Path -LiteralPath $oldShortcut) {
+if ($oldShortcut -and (Test-Path -LiteralPath $oldShortcut)) {
     Remove-Item -LiteralPath $oldShortcut -Force -ErrorAction SilentlyContinue
     Write-Host "Removed the old ""start with Windows"" shortcut: the helper now runs only while this window is open."
 }

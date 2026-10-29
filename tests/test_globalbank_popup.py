@@ -56,7 +56,7 @@ const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resol
   assert.equal(before.elements.start.textContent, 'Start Global Bank helper');
   assert.equal(before.elements.start.disabled, false);
   assert.equal(before.elements.reset.hidden, true); // 00:59 local, yesterday's collection is still current.
-  assert.match(before.elements.status.textContent, /Cherry \(Test\).*17[.:]00.*local time/);
+  assert.match(before.elements.status.textContent, /Cherry \(Test\).*(17[.:]00|5[.:]00\s*PM).*local time/);
   const after = fixture('2026-10-28T23:00:00Z', {ok:true,running:true,lastCollected:{name:'Cherry',collectedAt:'2026-10-28T15:00:00Z'}});
   await flush();
   assert.equal(after.elements.reset.hidden, false); // 01:00 local.

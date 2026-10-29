@@ -1719,7 +1719,7 @@ function Browse.AddListingToList(listing)
                 Browse.WarnedClass = true
                 DEFAULT_CHAT_FRAME:AddMessage("Advanced AuctionHouse: no stat conversion for class "..tostring(class).."; Str/Int etc. are not added to attack in the custom columns.")
             end
-            if AAH.BroadCache and listing.cacheEntry then AAH.BroadCache.RecordDetails(listing) end
+            if AAH.BroadCache and AAH.BroadCache.RecordDetails and listing.cacheEntry then AAH.BroadCache.RecordDetails(listing) end
         end
 
         if AAH.Filters.CheckFilter(listing) then

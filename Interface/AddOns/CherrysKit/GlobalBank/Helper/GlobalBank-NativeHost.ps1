@@ -30,7 +30,10 @@ function Get-HelperDataDirectory {
 function Get-LastCollected {
     $path = Join-Path (Get-HelperDataDirectory) 'DailyRewards.json'
     if (-not (Test-Path -LiteralPath $path)) { return $null }
-    $prior = [System.IO.File]::ReadAllText($path, $utf8) | ConvertFrom-Json
+    $jsonText = [System.IO.File]::ReadAllText($path, $utf8)
+    # PowerShell 7.5 can otherwise turn ISO strings into DateTime values.
+    if ((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')) { $prior = $jsonText | ConvertFrom-Json -DateKind String }
+    else { $prior = $jsonText | ConvertFrom-Json }
     if ($prior.schemaVersion -ne 1 -or $null -eq $prior.records) { throw 'Unsupported reward data format' }
     $latest = $null
     $latestTime = [DateTimeOffset]::MinValue
