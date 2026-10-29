@@ -10,7 +10,17 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
+Current kit release: **0.11.79** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.79)
+
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
+
+## What’s new in 0.11.79
+
+- Create and adjust displays in the updated rom weakauras editor.
+- Enjoy usability fixes for KittyCombo, Cherry's Chat, Cherry's Grid and zBag.
+- Use Global Bank's expanded character tracking and optional Chrome tools, and search auctions with Advanced AuctionHouse's broad search.
+
+Some features still need confirmation in the game client; see the release notes and individual addon guides for details.
 
 ## Why this project exists
 
@@ -70,7 +80,9 @@ Some integrations need both addons: for example, running a kitty from Grid needs
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-GlobalBankDailyRewards-1.0.7.zip) — a separate Windows package that collects available daily rewards and records confirmed collections locally. See the [extension guide](extras/GlobalBankDailyRewards/README.md) for setup and privacy details.
+[Download Global Bank Daily Rewards for Chrome 1.0.7](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.79/CherrysKit-GlobalBankDailyRewards-1.0.7.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
+
+Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step. Automatic page processing is limited to the Gameforge daily shop page; the extension does not send your local data to the developer.
 
 ## Support and pull requests
 
@@ -98,7 +110,7 @@ Python 3.10 or later is enough; there are no Python package dependencies:
 python tools/build_release.py
 ```
 
-This creates sixteen ZIPs in `dist/<kit version>/`, a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
+This creates seventeen ZIPs in `dist/<kit version>/` (the full kit, hub, fourteen addons and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
 
 The original 0.11.77 import preserved the supplied runtime code. Earlier READMEs referring to old tests or generators are kept as reference notes, but those development tools were not included in the handoff. Current tests simulate client APIs; native drawing, input, sound and event timing still need in-game checks.
 
