@@ -15,13 +15,14 @@ class TemplateAndConditionTests(unittest.TestCase):
 
     def test_gallery_has_all_factory_defaults_and_adjacent_pairs(self):
         catalog = list(self.rwa.Templates.Catalog().values())
-        self.assertEqual(len(catalog), 27)
+        self.assertEqual(len(catalog), 28)
         for i in range(0, 8, 2):
             left, right = catalog[i:i+2]
             self.assertEqual(left.definition.sources[1].unit, right.definition.sources[1].unit)
             self.assertEqual(left.definition.sources[1].filter, right.definition.sources[1].filter)
             self.assertEqual(left.definition.rules[1].when.checks[1].field, 'present')
             self.assertEqual(right.definition.rules[1].when.checks[1].field, 'missing')
+        self.assertIn('default:High durability repair', [e.id for e in catalog])
         self.assertIn('default:Threat meter', [e.id for e in catalog])
         self.assertIn('default:My cast', [e.id for e in catalog])
 

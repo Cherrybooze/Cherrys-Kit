@@ -30,10 +30,10 @@ class CompactGalleryTests(unittest.TestCase):
         card=next(c for c in self.visible_cards() if c.entry.id==entry_id)
         self.h.script(card.button.name,'OnClick',key='LBUTTON')
 
-    def test_all_defaults_fit_one_root_page_as_twenty_one_cards(self):
-        self.assertEqual(len(self.gallery.Catalog()),27)
+    def test_all_defaults_including_repair_fit_one_root_page(self):
+        self.assertEqual(len(self.gallery.Catalog()),28)
         cards=self.visible_cards()
-        self.assertEqual(len(cards),21)
+        self.assertEqual(len(cards),22)
         ids={c.entry.id for c in cards}
         self.assertIn('family:buff',ids)
         self.assertIn('family:debuff',ids)
@@ -42,6 +42,7 @@ class CompactGalleryTests(unittest.TestCase):
         self.assertIn('custom',ids)
         for resource in ('upper','lower','psi'):
             self.assertIn('resource:'+resource,ids)
+        self.assertIn('default:High durability repair',ids)
         self.assertIn('default:Threat meter',ids)
         self.assertIn('default:My cast',ids)
         self.assertNotIn('player:HELPFUL:false',ids)
@@ -71,7 +72,7 @@ class CompactGalleryTests(unittest.TestCase):
             self.assertEqual(cards[2].entry.unit,'target')
             self.h.script('RWA_TemplateBack','OnClick',key='LBUTTON')
             self.assertIsNone(self.gallery.family)
-            self.assertEqual(len(self.visible_cards()),21)
+            self.assertEqual(len(self.visible_cards()),22)
         self.assertEqual(len(list(self.lua.globals().RWA_DB.auras.keys())),0)
 
     def test_search_finds_specific_variant_in_any_word_order(self):
@@ -91,7 +92,7 @@ class CompactGalleryTests(unittest.TestCase):
             self.h.type_text(self.gallery.search,query)
             self.assertLessEqual(len(self.gallery.filtered),24)
             self.assertEqual(len(self.visible_cards()),len(self.gallery.filtered))
-        self.assertEqual(len(self.visible_cards()),21)
+        self.assertEqual(len(self.visible_cards()),22)
 
     def test_using_a_variant_creates_an_unsaved_independent_draft(self):
         self.click_card('family:buff')

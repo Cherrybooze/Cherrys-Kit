@@ -16,7 +16,11 @@ Click **Show bar/icon/text** to open its linked Appearance, Text, Offset and dis
 
 Existing behavior still uses one ordered rule model. A strict conditional branch requires its parent; a display-style branch is attached to the output it changes. All/Any choices identify when a group becomes independent. Names and short tooltips describe visible behavior instead of exposing conversion helper machinery. Equivalent converted checks may simplify in the draft; Save applies this and Revert restores the saved version. Edited helpers and custom Lua are preserved.
 
-**New** opens one compact gallery page: 21 root cards expose 27 presets. **Buff on…** and **Debuff on…** open paired Me/Target × Present/Missing subcards. Custom starts an unconfigured When/Then sentence. No new aura is saved until Save, and Cancel creates nothing.
+**Supporting checks** are condition groups used by other behaviors; they do not draw a display themselves. Some are created when an older aura is converted and can provide a reusable condition result or display source. Keep a group while another behavior depends on it. Equivalent generated checks may be simplified during editing; edited groups and custom Lua are retained.
+
+For an icon display, **Choose** beside **Icon / asset** opens the icon picker and writes the selected path into the editable field. Clear the field or choose **Automatic** to use the source icon. For a buff that is currently missing, the addon can use a previously observed buff icon or an icon from a learned skill with a matching localized name; an unknown buff or an unrecognized ID may not have an icon until the client provides one. The built-in buff example starts with an empty name/ID; saved player edits are retained.
+
+**New** opens a compact gallery of presets. **Buff on…** and **Debuff on…** open paired Me/Target × Present/Missing subcards. Custom starts an unconfigured When/Then sentence. No new aura is saved until Save, and Cancel creates nothing.
 
 ## Kitty Hook and hotbar selection
 

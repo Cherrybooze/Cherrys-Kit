@@ -188,6 +188,25 @@ def build(output: Path) -> None:
             result["minimum_hub_version"] = addon["minimum_hub_version"]
         packages.append(result)
     require(len(packages) == 16, "Expected a full kit, a hub, and fourteen addon ZIPs.")
+    # The optional browser extension is separate: including it in Global Bank
+    # would change the bytes of that unchanged addon's published archive.
+    extension_root = ROOT / "extras" / "GlobalBankDailyRewards"
+    extension_manifest = json.loads((extension_root / "GlobalBank/Helper/ChromeExtension/manifest.json").read_text(encoding="utf-8"))
+    extension_version = extension_manifest["version"]
+    require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", extension_version) is not None, "Unsafe extension version.")
+    extension_files = {}
+    for path in sorted((extension_root / "GlobalBank").rglob("*")):
+        require(not path.is_symlink(), f"Symlinks are not release inputs: {path}")
+        if path.is_file():
+            relative = path.relative_to(extension_root)
+            require(not is_private_release_path(relative), f"Private game data must not be packaged: {path}")
+            extension_files[relative.as_posix()] = path.read_bytes()
+    require(extension_files, "Missing Global Bank browser extension files.")
+    extension = write_zip(output / f"CherrysKit-GlobalBankDailyRewards-{extension_version}.zip", extension_files)
+    extension.update({"package": "GlobalBankDailyRewards", "title": "Global Bank Daily Rewards (Chrome)",
+                      "version": extension_version, "requires_hub": True,
+                      "requires_addon": "GlobalBank", "bundled_addons": []})
+    packages.append(extension)
     revision = git_output("rev-parse", "HEAD")
     status = git_output("status", "--porcelain")
     manifest = {
@@ -232,12 +251,13 @@ def build(output: Path) -> None:
         "**Source code (zip)** links download the repository with an extra wrapper folder.", "",
         metadata["release_summary"], "",
         "## Install", "",
-        f"Choose **Full** for everything, or **Hub** plus the addon ZIPs you want. "
+        f"Choose **Full** for the addons, or **Hub** plus the addon ZIPs you want. "
         f"Extract into {tick}Interface/AddOns/{tick}, merging the {tick}CherrysKit/{tick} folders. "
         f"Remove old separate copies, start the game or Reload UI, and type {tick}/ck{tick}.", "",
         "The hub includes Addon LoadTimes because the shared loader needs its hooks. "
         "The separate LoadTimes ZIP updates those same files. Other individual ZIPs require the hub.", "",
         hub_note, "",
+        "The optional Chrome extension is a separate ZIP; see its included installation instructions.", "",
         "## Downloads", "",
         "| Package | Version | ZIP |", "| --- | --- | --- |",
     ]

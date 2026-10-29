@@ -64,10 +64,15 @@ class UnifiedEditorTests(unittest.TestCase):
           t.rules[1].when.checks[1].field="always"
           RWA.Rules.AddAction(t,t.rules[1],{type="show",output={regionType="text",text="hello"}})
           RWA.AddAura(t)
+          local long=RWA.Rules.InitializeActions({id="Long text",enabled=true,regionType="icon"})
+          long.rules[1].when.checks[1].field="always"
+          RWA.Rules.AddAction(long,long.rules[1],{type="show",output={regionType="text",text="Long text sample"}})
+          RWA.AddAura(long)
         ''')
         self.h.load("Options.lua")
         self.lua.globals().RWA.ToggleOptions()
         self.assertIsNone(self.lua.globals().RWA.loaded['Sound only'].region)
+        self.assertTrue(self.h.widgets("FontString", text="hello"))
         self.assertTrue(self.h.widgets("FontString", text="Aa"))
 
     def test_saved_rate_and_casting_checks_are_evaluated(self):
@@ -93,7 +98,8 @@ class UnifiedEditorTests(unittest.TestCase):
           RWA.Fire("RWA_READY")
         ''')
         auras = self.lua.globals().RWA_DB.auras
-        self.assertEqual(len(list(auras.keys())), 16)
+        self.assertEqual(len(list(auras.keys())), 17)
+        self.assertIsNotNone(auras["High durability repair"])
         for name in ("Upper bar", "Lower bar", "PSI"):
             self.assertIsNotNone(auras["Resource: " + name])
         for name, aura in auras.items():
