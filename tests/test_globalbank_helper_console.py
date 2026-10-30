@@ -75,24 +75,12 @@ $SaveFolder=Join-Path $fixture 'Saves'
         self.assertNotIn('Level', listing.splitlines()[0])
         self.assertIn('Sampleone', command('search warrior > 60'))
         self.assertNotIn('Sampletwo:', command('search warrior > 60'))
-        control = subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-Command',
-            '. ' + quote(helper_dir / 'GlobalBank-Control.ps1') + '; Get-ControlBankQuery ' + quote(data) + ' ' + quote('search warrior > 60')],
-            capture_output=True, text=True, timeout=30)
-        self.assertEqual(control.returncode, 0, control.stderr)
-        self.assertIn('Sampleone: Warrior(60), Mage(100)', control.stdout)
-        self.assertNotIn('Sampletwo:', control.stdout)
         command('add note Sampleone Sampletwo bank alt')
         self.assertIn('Sampletwo bank alt', command('show Sampleone'))
         note_list = command('list note BANK ALT')
         self.assertIn('Sampleone', note_list)
         self.assertNotIn('Sampletwo  ', note_list)
         self.assertNotIn('Sampletwo  ', command('list note Sampletwo'))
-        control_notes = subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-Command',
-            '. ' + quote(helper_dir / 'GlobalBank-Control.ps1') + '; Get-ControlBankQuery ' + quote(data) + ' ' + quote('list note bank alt')],
-            capture_output=True, text=True, timeout=30)
-        self.assertEqual(control_notes.returncode, 0, control_notes.stderr)
-        self.assertIn('Sampleone |', control_notes.stdout)
-        self.assertNotIn('Sampletwo |', control_notes.stdout)
         self.assertIn('unknown', command('daily'))
         from datetime import datetime, timedelta, timezone
         rewards = data / 'DailyRewards.json'

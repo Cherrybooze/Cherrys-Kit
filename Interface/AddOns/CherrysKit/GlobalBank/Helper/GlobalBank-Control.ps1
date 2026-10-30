@@ -1,4 +1,4 @@
-# Read-only queries for the extension's local control page. Never evaluate command text.
+# For the extension's local page: auction searches, the character file, icons and the helper's commands. Never evaluate command text.
 . (Join-Path $PSScriptRoot 'GlobalBank-Data.ps1')
 $script:ControlEncoding = New-Object System.Text.UTF8Encoding($false, $true)
 
@@ -12,26 +12,6 @@ function Read-ControlJson([string]$dataDirectory, [string]$name) {
     if ($info.Length -gt 67108864) { throw 'This local data file is too large to open here (limit 64 MiB).' }
     return ConvertFrom-GBJson ([System.IO.File]::ReadAllText($path, $script:ControlEncoding))
 }
-function ConvertTo-ControlCharacters($database) {
-    if ($null -eq $database.characters) { throw 'The character data file has an unsupported format.' }
-    $characters = foreach ($c in @($database.characters)) {
-        if (-not $c) { continue }
-        $bags = @(foreach ($item in @($c.bag)) {
-            if ($item) { [pscustomobject]@{ Id=[string]$item.id; Name=[string]$item.name; Count=[int64]$item.count; Where='bag' } }
-        })
-        $bank = @(foreach ($item in @($c.bank)) {
-            if ($item) { [pscustomobject]@{ Id=[string]$item.id; Name=[string]$item.name; Count=[int64]$item.count; Where='bank' } }
-        })
-        $classes = @($c.classes | Where-Object { $_ -and $_.name } | ForEach-Object { [pscustomobject]@{Name=[string]$_.name;Level=[int]$_.level} })
-        if (-not $classes.Count -and $c.class) { $classes = @([pscustomobject]@{Name=[string]$c.class;Level=[int]$c.level}) }
-        [pscustomobject]@{ Name=[string]$c.name; Class=[string]$c.class; Classes=$classes; Level=[int]$c.level; Gold=[int64]$c.gold;
-            Note=[string]$c.note; Saved=[string]$c.saved; Bag=$bags; Bank=$bank; Items=($bags.Count + $bank.Count) }
-    }
-    return ,@($characters)
-}
-function Format-ControlClasses($c) {
-    return (@($c.Classes | ForEach-Object { "$($_.Name)($($_.Level))" }) -join ', ')
-}
 function Limit-ControlLines($lines) {
     $maxLines = 200
     $items = @($lines)
@@ -43,80 +23,6 @@ function Limit-ControlLines($lines) {
     }
     if ($items.Count -gt $maxLines) { $out.Add('More results were omitted. Narrow your search to see them.') }
     return ($out -join "`n")
-}
-function Get-ControlBankQuery([string]$dataDirectory, [string]$command) {
-    if (-not $command -or $command.Length -gt 256 -or $command -match '[\x00-\x1f]') { throw 'Enter a bank command of at most 256 characters.' }
-    $text = $command.Trim().TrimStart('/').Trim()
-    $parts = @($text -split '\s+')
-    $name = $parts[0].ToLowerInvariant()
-    $rest = (@($parts | Select-Object -Skip 1)) -join ' '
-    if ($name -eq 'get' -and $parts.Count -gt 1) {
-        $name = $parts[1].ToLowerInvariant()
-        $rest = (@($parts | Select-Object -Skip 2)) -join ' '
-    }
-    if (@('help','?','commands') -contains $name) {
-        return "Read-only bank commands:`n  list [gold|level|items|name|note|saved] [text]`n  list note bank alt (find text in notes)`n  search <item or note>`n  search warrior > 60 (level 60 or higher)`n  show <character>`n  gold [character]`n  goldtotal`n`nThe / and the word get are optional. To update data, use the Global Bank helper window."
-    }
-    $supported = @('list','chars','characters','search','find','item','items','show','char','character','view','bank','bag','gold','goldtotal','totalgold','total')
-    if ($supported -notcontains $name) { throw 'This page only accepts the read-only bank commands shown by help.' }
-    $chars = ConvertTo-ControlCharacters (Read-ControlJson $dataDirectory 'GlobalBank.json')
-    $lines = New-Object 'System.Collections.Generic.List[string]'
-    if (@('goldtotal','totalgold','total') -contains $name -or ($name -eq 'gold' -and (-not $rest -or $rest -ieq 'total'))) {
-        $lines.Add("$(Format-GBGold (Get-GBGoldTotal $chars)) gold on $($chars.Count) character(s).")
-    } elseif ($name -eq 'gold' -or @('show','char','character','view','bank','bag') -contains $name) {
-        if (-not $rest) { throw 'Enter a character name, for example: show Cherry' }
-        $matches = Find-GBCharacter $chars $rest
-        if ($matches.Count -ne 1) { throw 'No unique character matched. Use list to find the full name.' }
-        $c = $matches[0]
-        $lines.Add("$($c.Name) - $(Format-ControlClasses $c); $(Format-GBGold $c.Gold) gold; saved $($c.Saved)")
-        if ($name -ne 'gold') {
-            if ($c.Note) { $lines.Add("Note: $($c.Note)") }
-            foreach ($group in @(@{ label='Bag'; items=$c.Bag }, @{ label='Bank'; items=$c.Bank })) {
-                $lines.Add("$($group.label):")
-                $items = Group-GBItems $group.items
-                if (-not $items.Count) { $lines.Add('  No saved items.') }
-                foreach ($item in $items) { $lines.Add("  $($item.Name): $($item.Count)") }
-            }
-        }
-    } elseif (@('search','find','item','items') -contains $name) {
-        if (-not $rest) { throw 'Enter an item name or note, for example: search mana' }
-        if ($rest -match '^(.+?)\s*(>=|>|<=|<|=)\s*(\d+)\s*$') {
-            $className=$Matches[1].Trim(); $operator=$Matches[2]; $level=[int64]$Matches[3]
-            foreach ($c in $chars) {
-                $matching = @($c.Classes | Where-Object {
-                    $classLevel=$_.Level
-                    $_.Name -ieq $className -and $(switch ($operator) {
-                        '>' { $classLevel -ge $level }; '>=' { $classLevel -ge $level }
-                        '<' { $classLevel -lt $level }; '<=' { $classLevel -le $level }; '=' { $classLevel -eq $level }
-                    })
-                })
-                if ($matching.Count) { $lines.Add("$($c.Name): $(Format-ControlClasses $c)") }
-            }
-            if (-not $lines.Count) { $lines.Add('No matching saved classes. Log in with the updated addon to save class levels.') }
-            return Limit-ControlLines $lines
-        }
-        foreach ($c in $chars) { if ($c.Note -and $c.Note.IndexOf($rest, [StringComparison]::OrdinalIgnoreCase) -ge 0) { $lines.Add("Note - $($c.Name): $($c.Note)") } }
-        $items = Search-GBItems $chars $rest
-        foreach ($item in $items) {
-            $lines.Add("$($item.Name): $($item.Total) total")
-            foreach ($holder in $item.Holders) { $lines.Add("  $($holder.Name): bag $($holder.Bag), bank $($holder.Bank)") }
-        }
-        if (-not $lines.Count) { $lines.Add("No item names or notes contain: $rest") }
-    } else {
-        $words = @($rest -split '\s+' | Where-Object { $_ })
-        $sort = 'name'
-        if ($words.Count -and @('gold','level','items','name','note','saved') -contains $words[0].ToLowerInvariant()) {
-            $sort = $words[0].ToLowerInvariant(); $words = @($words | Select-Object -Skip 1)
-        }
-        $filter = $words -join ' '
-        $list = @($chars | Where-Object { -not $filter -or $_.Note.IndexOf($filter, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or ($sort -ne "note" -and $_.Name.IndexOf($filter, [StringComparison]::OrdinalIgnoreCase) -ge 0) })
-        if (@('gold','level','items','saved') -contains $sort) { $list = @($list | Sort-Object @{ Expression=$sort; Descending=$true }, Name) }
-        else { $list = @($list | Sort-Object $sort, Name) }
-        foreach ($c in $list) { $lines.Add("$($c.Name) | $(Format-ControlClasses $c) | $(Format-GBGold $c.Gold) gold | $($c.Items) item slots | $($c.Saved)$(if ($c.Note) { ' | ' + $c.Note })") }
-        if (-not $list.Count) { $lines.Add('No matching characters.') }
-        else { $lines.Add("$($list.Count) character(s), $(Format-GBGold (Get-GBGoldTotal $list)) gold.") }
-    }
-    return Limit-ControlLines $lines
 }
 function Get-ControlAuctionQuery([string]$dataDirectory, [string]$search, [string]$realmFilter) {
     if (-not $search -or $search.Length -gt 128 -or $search -match '[\x00-\x1f]') { throw 'Enter an item name or ID of at most 128 characters.' }
@@ -188,4 +94,94 @@ function Get-ControlAuctionPage([string]$dataDirectory, [string]$search, [string
     $sorted = @($found | Sort-Object @{Expression={ if ($null -eq $_.$sortKey -or $_.$sortKey -eq '') { 1 } else { 0 } }}, @{Expression={ $_.$sortKey }; Descending=($order -eq 'desc')}, name)
     $size=50; $page=@($sorted | Select-Object -Skip $offset -First $size)
     return @{ rows=$page; total=$sorted.Count; offset=$offset; pageSize=$size }
+}
+
+# The whole character file, for the Bank tab. Chrome takes at most 1 MB in a message.
+function Get-ControlBankFile([string]$dataDirectory) {
+    $path = Join-Path $dataDirectory 'GlobalBank.json'
+    if (-not (Test-Path -LiteralPath $path)) { return $null }
+    if ((Get-Item -LiteralPath $path).Length -gt 900000) { throw 'Your character file is too large for this page. Use the Terminal tab.' }
+    return [System.IO.File]::ReadAllText($path, [Text.Encoding]::UTF8)
+}
+
+# Item icons from the game's own interface.fdb, as base64. Only item icons can be asked for.
+# Its index has no names, so each entry's header is read until every asked-for icon has turned up.
+function Get-ControlIcons([string]$interfaceDirectory, $names) {
+    $path = Join-Path (Split-Path -Parent $interfaceDirectory) 'fdb\interface.fdb'
+    if (-not (Test-Path -LiteralPath $path)) { throw 'The game''s interface.fdb was not found.' }
+    $wanted = @{}
+    foreach ($name in $names) {
+        $key = ([string]$name).Replace('/', '\').TrimStart('\').ToLowerInvariant()
+        if ($key -match '^interface\\icons\\[a-z0-9_\-\\. ]+$' -and -not $key.Contains('..')) { $wanted["$key.dds"] = [string]$name }
+    }
+    $icons = @{}
+    $later = New-Object 'System.Collections.Generic.List[string]'
+    $total = 0
+    $stream = New-Object System.IO.FileStream($path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
+    try {
+        $reader = New-Object System.IO.BinaryReader($stream)
+        [void]$reader.ReadBytes(4)
+        $count = $reader.ReadUInt32()
+        $table = $reader.ReadBytes($count * 16)
+        $head = New-Object byte[] 32
+        for ($i = 0; $i -lt $count -and $wanted.Count; $i++) {
+            $stream.Position = [BitConverter]::ToUInt32($table, $i * 16 + 12)
+            if ($stream.Read($head, 0, 32) -lt 32) { continue }
+            $entry = [Text.Encoding]::ASCII.GetString($reader.ReadBytes([BitConverter]::ToInt32($head, 28))).TrimEnd([char]0).ToLowerInvariant()
+            if (-not $wanted.ContainsKey($entry)) { continue }
+            $original = $wanted[$entry]
+            $wanted.Remove($entry)
+            $packed = [BitConverter]::ToInt32($head, 16)
+            $method = [BitConverter]::ToInt32($head, 8)
+            # Format, width, height and mip count, then the mips. Other packing methods are left out: the page shows initials.
+            $picture = $reader.ReadBytes(16)
+            $format = [BitConverter]::ToInt32($picture, 0)
+            $width = [BitConverter]::ToInt32($picture, 4)
+            $height = [BitConverter]::ToInt32($picture, 8)
+            if (($method -ne 3 -and $method -ne 0) -or $packed -gt 2097152 -or $width -gt 1024 -or $height -gt 1024) { continue }
+            $blocksAcross = [Math]::Ceiling($width / 4)
+            $blocksDown = [Math]::Ceiling($height / 4)
+            $wantedBytes = switch ($format) { 4 { $width * $height * 4 } 6 { $blocksAcross * $blocksDown * 8 } 8 { $blocksAcross * $blocksDown * 16 } default { 0 } }
+            if (-not $wantedBytes) { continue }
+            $source = New-Object System.IO.MemoryStream(,$reader.ReadBytes($packed))
+            $plain = New-Object byte[] (16 + $wantedBytes)
+            [Array]::Copy($picture, $plain, 16)
+            $at = 16
+            if ($method -eq 3) {
+                # Past the two-byte zlib header
+                $source.Position = 2
+                $source = New-Object System.IO.Compression.DeflateStream($source, [IO.Compression.CompressionMode]::Decompress)
+            }
+            while ($at -lt $plain.Length) {
+                $read = $source.Read($plain, $at, $plain.Length - $at)
+                if ($read -le 0) { break }
+                $at += $read
+            }
+            $source.Dispose()
+            if ($at -lt $plain.Length) { continue }
+            $bytes = $plain
+            # Chrome takes at most 1 MB in a message; the page asks again for the rest.
+            $encoded = [Convert]::ToBase64String($bytes)
+            if ($total + $encoded.Length -gt 800000) { $later.Add($original); continue }
+            $total += $encoded.Length
+            $icons[$original] = $encoded
+        }
+    } finally { $stream.Dispose() }
+    return @{icons=$icons;later=$later}
+}
+
+# One of the helper's own commands, with no window. The text reaches it as a plain string, so nothing in it runs.
+function Invoke-ControlCommand([string]$command) {
+    if (-not $command.Trim() -or $command.Length -gt 256 -or $command -match '[\x00-\x1f]') { throw 'Enter a command of at most 256 characters.' }
+    $helper = Join-Path $PSScriptRoot 'GlobalBank-Update.ps1'
+    if (-not (Test-Path -LiteralPath $helper)) { throw 'Global Bank helper was not found' }
+    $env:GB_CONTROL_HELPER = $helper
+    $env:GB_CONTROL_COMMAND = $command
+    $launch = 'try { [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false) } catch { }; & $env:GB_CONTROL_HELPER -Command $env:GB_CONTROL_COMMAND -SkipAuctions'
+    $ErrorActionPreference = 'Continue'
+    try { [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false) } catch { }
+    $lines = & powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command $launch 2>&1
+    $text = (@($lines) | ForEach-Object { [string]$_ }) -join "`n"
+    if ($text.Length -gt 800000) { $text = $text.Substring(0, 800000) + "`n(cut short)" }
+    return $text
 }

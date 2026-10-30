@@ -490,6 +490,10 @@ Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, add
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
 
+## Updated in 1.4.8
+
+The extension's page is now a full view of your bank, with no terminal window. Its **Bank** tab shows every character's bag and bank laid out as in game, with the game's own icons, and **Update now** reads your save files. Its **Terminal** tab runs the helper's commands. You only need the helper window for collecting auction data and for automatic updates each time you log out.
+
 ## Updated in 1.4.7
 
 The daily reset now follows 00:00 in Germany in any time zone, instead of a fixed 01:00 local time. Setup takes one click plus Chrome's own two: it brings up the extensions page, which Chrome refuses to open from a command line, and fills in the folder window. The extension's local bridge also writes Windows' time for addons that have no clock.
