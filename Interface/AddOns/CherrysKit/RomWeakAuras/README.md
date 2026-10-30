@@ -1,10 +1,17 @@
 # rom weakauras
 
-Version **0.9.28** · Kit release **0.11.87** · [All addons / hub](../README.md)
+Version **0.9.29** · Kit release **0.11.88** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Updated in 0.9.29
+
+- **Much shorter share codes** (`RWA5!`), made the same way as KittyCombo's CKC3 codes: they are compressed against a codebook every player has (`data/ShareCodebook.lua`: every built-in template and English skill names). An aura made from a template is now about 20 to 45 characters instead of 450 to 1000, so most single auras fit in a chat line and in a **Chat link**. Your own changes and buff names add only what is new.
+- **Import finds the code in pasted text**: paste a whole Discord message or a .txt with words around the code, or a code broken over several lines.
+- Older `RWA1!` to `RWA4!` codes still import. If `lib/LibDeflate.lua` or the codebook is missing, Export falls back to `RWA4!` codes and `/rwa probe` says why.
+- The codebook is only read while you export or import and is let go 30 seconds later, so it costs no memory in play.
 
 ## Updated in 0.9.28
 
@@ -95,7 +102,7 @@ Existing definitions are converted to the action model at startup, with one loca
 - **Rules**: combine checks with All or Any and apply Show/Hide, sound, size, blink, colour, opacity or an icon overlay. Legacy remaining-time conditions retain their missing-or-time behaviour. **Load** only in or out of combat, or for one class.
 - **Sounds**: the 64 WeakAuras sounds, with an "All auras volume" setting that works even when your game sounds are turned down, and an Unmute button when interface sound is off.
 - **Editor and preview**: persistent silent placement, separate live explanations, labelled resource samples and lockable dragging.
-- **Export / Import**: compressed `RWA4!` codes (also imports `RWA1!`, `RWA2!` and `RWA3!`), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.
+- **Export / Import**: short `RWA5!` codes (also imports `RWA1!` to `RWA4!`), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.
 - **Ready-made examples**, including High durability repair, Player health with class icon, In combat timer, Class icon, **Hits per second**, **Threat meter** (top 5, in combat), **My cast** and **Target's cast** (cast bars with the spell's icon, name and time left, filling up as the cast runs), **Target's last cast** and **KittyCombo mode** (the mode Cherry's KittyCombo has on).
 - **Durability** checks the lowest current durability among equipped items that meet a configurable minimum maximum. The enabled High durability repair example warns below 101 for items with a maximum of at least 101 and shows the affected item.
 - **Gold and navy look** shared with Cherry's KittyCombo. Resize the window with the - and + buttons or by dragging its bottom right corner (60% to 160%). The aura list is searchable and scrolls.
@@ -147,6 +154,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 ## Credits and licence
 
 - A rewrite of **WeakAuras** by the WeakAuras team, under the **GNU GPL v2**, which rom weakauras uses too.
+- Share codes are compressed with **LibDeflate** (Copyright (C) 2018-2021 Haoqian He, zlib License; the licence is at the top of `lib/LibDeflate.lua`), the same copy KittyCombo uses.
 - Textures from WeakAuras and **Power Auras Classic**. Fonts **Fira Sans, Fira Mono, PT Sans Narrow** under the SIL Open Font License 1.1. Sounds under Creative Commons licences (CC BY 3.0, **CC BY-NC 3.0**, Sampling Plus 1.0, CC0), credited in the licence file.
 - The **Threat** trigger and Threat meter follow the idea and game calls of **pbInfo**'s threat meter (p.b. a.k.a. novayuna, odie2). They are a new implementation with none of its code.
 - The **Past second** trigger and Hits per second aura are based on the idea of **WhiteCount**, a small hits-per-second counter (no author named). It is a new implementation with none of its code.

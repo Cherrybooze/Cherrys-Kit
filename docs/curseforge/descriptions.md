@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Sixteen package descriptions for Cherry's Kit 0.11.86, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Sixteen package descriptions for Cherry's Kit 0.11.88, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -194,6 +194,13 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
+## Updated in 0.9.29
+
+- **Much shorter share codes** (`RWA5!`), made the same way as KittyCombo's CKC3 codes: they are compressed against a codebook every player has (every built-in template and English skill names). An aura made from a template is now about 20 to 45 characters instead of 450 to 1000, so most single auras fit in a chat line and in a **Chat link**. Your own changes and buff names add only what is new.
+- **Import finds the code in pasted text**: paste a whole Discord message or a .txt with words around the code, or a code broken over several lines.
+- Older `RWA1!` to `RWA4!` codes still import. If `lib/LibDeflate.lua` or the codebook is missing, Export falls back to `RWA4!` codes and `/rwa probe` says why.
+- The codebook is only read while you export or import and is let go 30 seconds later, so it costs no memory in play.
+
 ## Updated in 0.9.28
 
 - **The scale corner works.** In an unlocked placement view, drag the corner at an aura's bottom right to scale it: no key needed, and the percentage shows while you drag. The arrows at its top left move it. The **Position** section (X, Y and Scale) is now open when you edit an aura.
@@ -227,7 +234,7 @@ Class restrictions normalize display names case-insensitively while preserving s
 
 Faster Back navigation, step-by-step removal, two automatic resource bars, a PSI diamond pyramid, and updated starter aura positions.
 
-The searchable aura list opens a rule-flow editor with a shared contextual field panel, preview and position controls. Older definitions are converted to the action model; unsupported definitions remain available for recovery. RWA4 exports retain older RWA1/RWA2/RWA3 import support. The new editor still needs in-game playtesting.
+The searchable aura list opens a rule-flow editor with a shared contextual field panel, preview and position controls. Older definitions are converted to the action model; unsupported definitions remain available for recovery. RWA5 exports retain older RWA1 to RWA4 import support. The new editor still needs in-game playtesting.
 
 ## Features
 
@@ -238,7 +245,7 @@ The searchable aura list opens a rule-flow editor with a shared contextual field
 - **Rules**: combine source checks with All or Any and apply Show/Hide, sound, size, blink, colour, opacity or an icon overlay. Legacy remaining-time conditions retain their missing-or-time behaviour. **Load** only in or out of combat, or for one class.
 - **Sounds**: the 64 WeakAuras sounds, with an "All auras volume" setting that works even when your game sounds are turned down, and an Unmute button when interface sound is off.
 - **Editor and preview**: inspect live observations or labelled samples and use Move to position displays.
-- **Export / Import**: compressed `RWA4!` codes (also imports `RWA1!`, `RWA2!` and `RWA3!`), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.
+- **Export / Import**: short `RWA5!` codes (also imports `RWA1!` to `RWA4!`), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.
 - **Ready-made examples**, including Player health with class icon, In combat timer, Class icon, **Hits per second**, **Threat meter** (top 5, in combat), **My cast** and **Target's cast** (cast bars with the spell's icon, name and time left, filling up as the cast runs), **Target's last cast** and **KittyCombo mode** (the mode Cherry's KittyCombo has on).
 - **Gold and navy look** shared with Cherry's KittyCombo. Resize the window with the - and + buttons or by dragging its bottom right corner (60% to 160%). The aura list is searchable and scrolls.
 - **API for other addons**: `RWA.GetAuraIds()`, `RWA.IsAuraActive(name)`, `RWA.GetAuraValue(name, field)`. Cherry's KittyCombo uses it for its weakaura condition.
@@ -282,6 +289,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 ## Credits and licence
 
 - A rewrite of **WeakAuras** by the WeakAuras team, under the **GNU GPL v2**, which rom weakauras uses too.
+- Share codes are compressed with **LibDeflate** (Copyright (C) 2018-2021 Haoqian He, zlib License; the licence is at the top of its `lib/LibDeflate.lua`), the same copy KittyCombo uses.
 - Textures from WeakAuras and **Power Auras Classic**. Fonts **Fira Sans, Fira Mono, PT Sans Narrow** under the SIL Open Font License 1.1. Sounds under Creative Commons licences (CC BY 3.0, **CC BY-NC 3.0**, Sampling Plus 1.0, CC0), credited in the licence file.
 - The **Threat** trigger and Threat meter follow the idea and game calls of **pbInfo**'s threat meter (p.b. a.k.a. novayuna, odie2). They are a new implementation with none of its code.
 - The **Past second** trigger and Hits per second aura are based on the idea of **WhiteCount**, a small hits-per-second counter (no author named). It is a new implementation with none of its code.

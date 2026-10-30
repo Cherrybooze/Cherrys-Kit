@@ -1,8 +1,21 @@
-# In-game checks for kit 0.11.87
+# In-game checks for kit 0.11.88
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.28 requires hub 0.4.14 or later; UMM 7.0.1-ck9 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. The Full ZIP includes hub **0.4.22**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck9 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. The Full ZIP includes hub **0.4.22**.
+
+## 0.11.88 short rom weakauras share codes
+
+rom weakauras 0.9.29 writes `RWA5!` codes: LibDeflate with a codebook (`RomWeakAuras/data/ShareCodebook.lua`), both read with `dofile` only when a code is made or read. The simulated client proves the format; whether the real client loads those two files from the kit folder, and how long the first export takes, need these checks.
+
+| ID | Steps | Expected result |
+| --- | --- | --- |
+| S1 | Run `/rwa probe`. | A line **share codes RWA5**. If it names RWA4 and a missing file, report the line. |
+| S2 | Open /wa, click **New**, make **Buff on me - Present**, save, then press **Export** on its row. | The export box shows a code starting `RWA5!` of about 20 to 50 characters, the line under it says it fits in one chat line, and it is on the clipboard. The game does not freeze for more than a moment. |
+| S3 | Press **Chat link**, then Enter. Click the link in chat, then press **Import**. | The link shows `[RWA: Buff on me - Present]`. Clicking it puts the code in the Import box; Import adds **Buff on me - Present 2**, the same as the original. |
+| S4 | Paste the code into Discord or Notepad with words before and after it, copy the whole message, paste it into the Import box and press **Import**. | The aura is added; the extra words are ignored. |
+| S5 | Import a code made by 0.11.87 or older (`RWA4!`) and, if you have one, an older `RWA3!` code. | Both import as before. |
+| S6 | Press **Export all**, wait a minute in play, then export one aura again. | Both export; no errors. The second export after the wait may take a moment again (the codebook was released and is read again). |
 
 ## 0.11.87 fixes and speed-ups
 

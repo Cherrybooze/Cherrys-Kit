@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.22** · Kit release **0.11.87** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.22** · Kit release **0.11.88** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.88 playtest
+
+- **rom weakauras 0.9.29**: much shorter share codes (`RWA5!`) made with a codebook, like KittyCombo's CKC3 codes. Most single auras now fit in a chat line, and Import finds a code inside pasted text.
 
 ## Kit 0.11.87 playtest
 
