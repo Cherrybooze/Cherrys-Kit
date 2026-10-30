@@ -677,6 +677,13 @@ function Show-Character([string]$name) {
     }
 }
 
+# The daily reward resets at 00:00 in Germany, which is a different hour elsewhere.
+function Get-LastDailyReset {
+    $germany = [TimeZoneInfo]::FindSystemTimeZoneById('W. Europe Standard Time')
+    $today = [DateTime]::SpecifyKind([TimeZoneInfo]::ConvertTimeFromUtc([DateTime]::UtcNow, $germany).Date, 'Unspecified')
+    return New-Object DateTimeOffset($today, $germany.GetUtcOffset($today))
+}
+
 function Show-DailyStatus($c) {
     if ($c.Level -lt 100 -and @($c.Classes | Where-Object { $_.Level -ge 100 }).Count -eq 0) { return }
     $rewardMatches = @()
@@ -692,10 +699,7 @@ function Show-DailyStatus($c) {
             Say "$($c.Name): daily login unknown (no unambiguous confirmation)" Yellow
             return
         }
-        $now = Get-Date
-        $reset = $now.Date.AddHours(1)
-        if ($reset -gt $now) { $reset = $reset.AddDays(-1) }
-        if ($when.LocalDateTime -ge $reset) { Say "$($c.Name): daily login collected ($($when.LocalDateTime.ToString('yyyy-MM-dd HH:mm')))" Green }
+        if ($when -ge (Get-LastDailyReset)) { Say "$($c.Name): daily login collected ($($when.LocalDateTime.ToString('yyyy-MM-dd HH:mm')))" Green }
         else { Say "$($c.Name): daily login not collected since reset" Red }
     } catch { Say "$($c.Name): daily login unknown (couldn't read the local reward data)" Yellow }
 }

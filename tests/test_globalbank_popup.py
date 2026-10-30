@@ -1,10 +1,13 @@
 """Exercise real popup scripts in Node and native messaging using isolated player fixtures."""
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
+import time
 import unittest
 import uuid
 
@@ -17,8 +20,8 @@ SHELL = shutil.which('powershell') or shutil.which('pwsh')
 
 @unittest.skipUnless(NODE, 'Node required')
 class PopupTests(unittest.TestCase):
-    def run_js(self, source):
-        env = dict(os.environ, TZ='Europe/Helsinki')
+    def run_js(self, source, zone='Europe/Helsinki'):
+        env = dict(os.environ, TZ=zone)
         result = subprocess.run([NODE, '-e', source, str(EXTENSION)], capture_output=True,
                                 text=True, env=env, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -36,7 +39,7 @@ const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8');
 function fixture(now, responses) {
-  const elements = Object.fromEntries(['helper','start','status','reset','open-tools','reload-extension'].map(id => [id, {
+  const elements = Object.fromEntries(['helper','start','status','reset','reset-time','open-tools','reload-extension'].map(id => [id, {
     textContent:'', hidden:true, disabled:false, addEventListener(type, callback) { this.click = callback; }
   }]));
   const sent = [], timers = [];
@@ -97,6 +100,46 @@ const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resol
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
+    def popup_in_context(self, body, zone='Europe/Helsinki'):
+        self.run_js(r'''
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const elements = Object.fromEntries(['helper','start','status','reset','reset-time','open-tools','reload-extension'].map(id => [id, {
+  textContent:'', hidden:true, disabled:false, addEventListener() {}
+}]));
+class Clock extends Date { constructor(...args) { super(...(args.length ? args : ['2026-10-30T12:00:00Z'])); } }
+const context = vm.createContext({document:{getElementById:id => elements[id]}, Date:Clock, Intl,
+  chrome:{runtime:{sendMessage:async () => ({ok:true,running:true})}}, setTimeout:() => 0, clearTimeout:() => {}, console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8'), context);
+''' + body, zone)
+
+    def test_daily_reset_is_midnight_in_germany_from_any_time_zone(self):
+        # 23:00 UTC on 30 October 2026 is 00:00 on 31 October in Germany
+        for zone, hour in (('Europe/Helsinki', 1), ('Europe/Berlin', 0), ('Europe/London', 23),
+                           ('America/New_York', 19), ('Asia/Tokyo', 8)):
+            with self.subTest(zone=zone):
+                self.popup_in_context(r'''
+const next = vm.runInContext("germanMidnight(new Date('2026-10-30T12:00:00Z'), 1)", context);
+assert.equal(next.toISOString(), '2026-10-30T23:00:00.000Z');
+assert.equal(next.getHours(), HOUR);
+assert.equal(next.getMinutes(), 0);
+assert.match(elements['reset-time'].textContent, /^Daily reset: .+ your time \(00:00 in Germany\)\.$/);
+'''.replace('HOUR', str(hour)), zone)
+
+    def test_daily_reset_keeps_to_germany_across_its_clock_changes(self):
+        self.popup_in_context(r'''
+for (const [now, latest, next] of [
+  ['2026-03-28T12:00:00Z', '2026-03-27T23:00:00.000Z', '2026-03-28T23:00:00.000Z'],
+  ['2026-03-29T12:00:00Z', '2026-03-28T23:00:00.000Z', '2026-03-29T22:00:00.000Z'],
+  ['2026-10-24T12:00:00Z', '2026-10-23T22:00:00.000Z', '2026-10-24T22:00:00.000Z'],
+  ['2026-10-25T12:00:00Z', '2026-10-24T22:00:00.000Z', '2026-10-25T23:00:00.000Z'],
+  ['2026-10-30T22:59:59Z', '2026-10-29T23:00:00.000Z', '2026-10-30T23:00:00.000Z'],
+  ['2026-10-30T23:00:00Z', '2026-10-30T23:00:00.000Z', '2026-10-31T23:00:00.000Z'],
+]) {
+  assert.equal(vm.runInContext(`latestReset(new Date('${now}')).toISOString()`, context), latest);
+  assert.equal(vm.runInContext(`germanMidnight(new Date('${now}'), 1).toISOString()`, context), next);
+}
+''', 'America/New_York')
+
     def test_collected_countdown_and_invalidated_context_stop_quietly(self):
         self.run_js(r"""
 const assert=require('node:assert/strict'), fs=require('node:fs'), vm=require('node:vm'), path=require('node:path');
@@ -138,7 +181,7 @@ const flush=async()=>{for(let i=0;i<8;i++) await new Promise(r=>setImmediate(r))
     def test_reload_button_only_reloads_after_a_user_click(self):
         self.run_js(r"""
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const elements=Object.fromEntries(['helper','start','status','reset','open-tools','reload-extension'].map(id=>[id,{addEventListener(type,fn){this.click=fn}}]));
+const elements=Object.fromEntries(['helper','start','status','reset','reset-time','open-tools','reload-extension'].map(id=>[id,{addEventListener(type,fn){this.click=fn}}]));
 let reloads=0;
 const chrome={runtime:{sendMessage:async()=>({ok:true,running:true}),reload:()=>reloads++}};
 vm.runInNewContext(fs.readFileSync(path.join(process.argv[1],'popup.js'),'utf8'),{document:{getElementById:id=>elements[id]},chrome,Date,Intl,setTimeout:()=>0,clearTimeout:()=>{}});
@@ -151,7 +194,8 @@ elements['reload-extension'].click({isTrusted:true}); assert.equal(reloads,1);
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
 let listener; const sent = [];
 const runtime = {id:'test',getURL:file => 'chrome-extension://test/' + file,
-  onMessage:{addListener:fn => { listener = fn; }}, sendNativeMessage:(host,message,reply) => {
+  onMessage:{addListener:fn => { listener = fn; }}, onStartup:{addListener() {}}, onInstalled:{addListener() {}},
+  sendNativeMessage:(host,message,reply) => {
     sent.push({host,message}); reply({ok:true,running:false,lastCollected:null});
   }};
 vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime},URL});
@@ -174,6 +218,24 @@ delete runtime.lastError;
 runtime.sendNativeMessage = (host,message,reply) => reply({ok:false,error:'Missing helper'});
 listener({type:'helper-start'}, {id:'test',url:runtime.getURL('popup.html')}, value => result=value);
 assert.equal(result.errorKind, 'native-error');
+''')
+
+    def test_background_stamps_the_clock_when_chrome_starts_or_the_extension_loads(self):
+        self.run_js(r'''
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const listeners = {}, sent = [];
+const event = name => ({addListener:fn => { listeners[name] = fn; }});
+const runtime = {id:'test',getURL:file => 'chrome-extension://test/' + file,
+  onMessage:event('message'), onStartup:event('startup'), onInstalled:event('installed'),
+  sendNativeMessage:(host,message,reply) => { sent.push(host + ':' + message.type); reply({ok:true}); }};
+vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime},URL});
+assert.equal(sent.length, 0); // Waking the worker alone starts no process.
+listeners.startup();
+listeners.installed({reason:'install'});
+assert.deepEqual(sent, ['com.cherryskit.globalbank:clock', 'com.cherryskit.globalbank:clock']);
+// A missing host stays quiet.
+runtime.lastError = {message:'Native host not found'};
+listeners.startup();
 ''')
 
 
@@ -216,6 +278,25 @@ class NativeStatusTests(unittest.TestCase):
         self.assertNotIn('inventory', json.dumps(response))
         self.assertEqual(response, self.send({'type':'helper-status'}))
 
+    def clock_file(self):
+        return self.data / 'CherrysClockStamp.lua'
+
+    def test_clock_message_writes_only_the_time_for_addons(self):
+        self.assertEqual(self.send({'type':'clock'}), {'ok':True})
+        text = self.clock_file().read_text(encoding='ascii')
+        match = re.fullmatch(r'return \{utc = (\d+), tick = (-?\d+), offset = (-?\d+)\}\s*', text)
+        self.assertIsNotNone(match, text)
+        self.assertLess(abs(time.time() - int(match.group(1))), 60)
+        self.assertEqual([path.name for path in self.data.iterdir()], ['CherrysClockStamp.lua'])
+
+    def test_every_message_refreshes_the_clock(self):
+        self.send({'type':'helper-status'})
+        self.assertTrue(self.clock_file().is_file())
+
+    def test_failing_to_write_the_clock_does_not_stop_the_request(self):
+        self.clock_file().mkdir()
+        self.assertTrue(self.send({'type':'helper-status'})['ok'])
+
     def test_missing_or_untimed_collection_stays_unknown(self):
         self.assertIsNone(self.send({'type':'helper-status'})['lastCollected'])
         self.records([{'name':'Unknown','server':'Test','day':1},
@@ -228,6 +309,41 @@ class NativeStatusTests(unittest.TestCase):
         record = self.send({'type':'helper-status'})['lastCollected']
         self.assertEqual(record['name'], 'Fixture')
         self.assertRegex(record['collectedAt'], r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$')
+
+
+@unittest.skipUnless(SHELL, 'PowerShell required')
+class HelperAndSetupTests(unittest.TestCase):
+    def powershell(self, command):
+        result = subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-Command', command],
+                                capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        return result.stdout.strip()
+
+    @unittest.skipUnless(shutil.which('powershell'), 'Windows PowerShell required: the helper is only for Windows')
+    def test_helper_daily_reset_is_midnight_in_germany(self):
+        source = (NATIVE.parent / 'GlobalBank-Update.ps1').read_text(encoding='utf-8-sig')
+        function = re.search(r'function Get-LastDailyReset \{.*?\r?\n\}', source, re.S).group(0)
+        output = self.powershell(function + "; (Get-LastDailyReset).ToString('yyyy-MM-ddTHH:mm:sszzz')")
+        reset = datetime.fromisoformat(output)
+        self.assertEqual((reset.hour, reset.minute, reset.second), (0, 0, 0))
+        self.assertIn(reset.utcoffset(), (timedelta(hours=1), timedelta(hours=2)))
+        age = datetime.now(timezone.utc) - reset
+        self.assertGreaterEqual(age, timedelta(0))
+        self.assertLess(age, timedelta(hours=25))
+
+    def test_setup_scripts_parse(self):
+        for name in ('Install Chrome extension.ps1', 'Open Chrome extensions.ps1'):
+            path = str(NATIVE.parent / name).replace("'", "''")
+            errors = self.powershell("$e=$null;[void][System.Management.Automation.Language.Parser]::ParseFile("
+                                     f"'{path}',[ref]$null,[ref]$e);$e.Count")
+            self.assertEqual(errors, '0', name)
+
+    def test_separate_extension_package_matches_the_kit(self):
+        extra = ROOT / 'extras/GlobalBankDailyRewards/GlobalBank/Helper'
+        for path in extra.rglob('*'):
+            if path.is_file():
+                relative = path.relative_to(extra)
+                self.assertEqual(path.read_bytes(), (NATIVE.parent / relative).read_bytes(), str(relative))
 
 
 if __name__ == '__main__':

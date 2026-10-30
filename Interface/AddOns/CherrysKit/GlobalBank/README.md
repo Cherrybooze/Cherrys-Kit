@@ -1,10 +1,14 @@
 # Global Bank
 
-Version **1.4.6** · Kit release **0.11.80** · [All addons / hub](../README.md)
+Version **1.4.7** · Kit release **0.11.101** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.7
+
+The daily reset now follows 00:00 in Germany in any time zone, instead of a fixed 01:00 local time. Setup takes one click plus Chrome's own two: it brings up the extensions page, which Chrome refuses to open from a command line, and fills in the folder window. The extension's local bridge also writes Windows' time for addons that have no clock.
 
 ## Updated in 1.4.6
 
@@ -45,7 +49,7 @@ The window shows each character it adds or updates and how many it tracks, and t
 - `ban list`: show excluded characters; `unban <name>` allows tracking again
 - `help`: all commands
 
-Class levels are saved on login, when your level or class changes, and on logout. Log in with the updated addon to record all available classes. The daily status uses the locally recorded confirmation and a 01:00 local-time reset; unknown means there is no unambiguous confirmation.
+Class levels are saved on login, when your level or class changes, and on logout. Log in with the updated addon to record all available classes. The daily status uses the locally recorded confirmation and the reset at 00:00 in Germany, converted to your time zone; unknown means there is no unambiguous confirmation.
 
 It reads `Documents\Runes of Magic\<Name>\SaveVariables.lua` and writes the results to `Interface\GlobalBankHelper\`, which it creates next to `Interface\AddOns`. It never changes the game's files, needs no admin rights and doesn't use the internet. In game, `/gb` and the window tell you if the helper isn't running.
 
@@ -53,7 +57,9 @@ For your own tools: `Interface\GlobalBankHelper\GlobalBank.json` holds every cha
 
 ## Chrome daily rewards (Windows)
 
-Run **Install Chrome extension.bat** from the installed `GlobalBank\Helper` folder. The setup window explains each step, copies the extension folder path, and opens Chrome. Enable Developer mode, choose **Load unpacked**, then in the folder picker press Alt+D, Ctrl+V, Enter and **Select Folder**. The list may look empty because Chrome asks for a folder. Keep the installed addon in place; rerun setup after moving it. Open the daily page through ZShop. The extension clicks an available chest and records it only after the page marks it redeemed. When the shop shows the current chest redeemed and a countdown for the next one, the popup shows that the reward was already collected and the time remaining; it does not invent a new collection timestamp. If the helper is closed, a page prompt and the extension popup offer to start its window.
+Run **Install Chrome extension.bat** from the installed `GlobalBank\Helper` folder. It registers the local bridge and brings up Chrome's extensions page, with a small setup window on top. In Chrome, turn on **Developer mode** and click **Load unpacked**: the setup window fills in the folder and closes when the extension connects. Keep the installed addon in place; rerun setup after moving it. Open the daily page through ZShop. The extension clicks an available chest and records it only after the page marks it redeemed. When the shop shows the current chest redeemed and a countdown for the next one, the popup shows that the reward was already collected and the time remaining; it does not invent a new collection timestamp. If the helper is closed, a page prompt and the extension popup offer to start its window.
+
+**Real time:** when Chrome starts, or the extension contacts it, the bridge writes Windows' time to `Interface\GlobalBankHelper\CherrysClockStamp.lua`, so the kit's addons can show the real time. See the [hub's guide](../README.md#real-time-for-addons).
 
 **Privacy:** The extension processes the Gameforge Runes of Magic daily loyalty page and does not read or change other websites. Its pending details and status stay in memory for the browser session. The Global Bank bridge saves confirmed reward details locally for your own use; the extension sends no data to Cherry or an analytics service. Collecting a reward still communicates with Gameforge through its page. After an update, old extension-local temporary data is cleared the next time the daily page opens.
 
@@ -117,7 +123,7 @@ Your files are in `Interface/GlobalBankHelper/`. Keep that folder private: it co
 
 Keep the helper window open while you play. Its commands let you search your characters and check its status. Type `help` for the full list. Use `heartbeat off` if you prefer a quieter window, or `heartbeat on` to turn the occasional status line back on. Auction data is collected in the background so you can still use the commands.
 
-The extension popup also shows helper status and, when known, your most recent confirmed daily collection. It displays the recorded time in your computer's local time and notes when the next 01:00 local-time boundary has passed; this is not a guarantee of the game's reset time. After updating the extension, reload it on Chrome's extensions page. Restart the helper after updating its files.
+The extension popup also shows helper status and, when known, your most recent confirmed daily collection. It displays the recorded time in your computer's local time, shows when the next reset falls in your time zone (00:00 in Germany) and notes when it has passed; this is not a guarantee of the game's reset time. After updating the extension, reload it on Chrome's extensions page. Restart the helper after updating its files.
 
 If the helper reports an error, its local diagnostic log is at `Interface/GlobalBankHelper/GlobalBankHelper-errors.log`.
 

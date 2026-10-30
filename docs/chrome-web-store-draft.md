@@ -14,6 +14,8 @@ On the Daily Loyalty Bonus page, the extension reads the displayed character nam
 
 The extension’s session data is cleared when the browser closes or the extension is disabled, reloaded or updated; the separately installed local helper data can be removed from the game's Interface\GlobalBankHelper folder. That folder may also contain other Global Bank data, so users should preserve anything they wish to keep.
 
+The local bridge also writes Windows' time to `CherrysClockStamp.lua` in that same folder whenever Chrome starts or the extension contacts it, so the game's addons can show the real time. That file stays on the player's PC.
+
 ## Before submission
 
 - Register and configure the owner's Chrome Web Store developer account, including required verification.
