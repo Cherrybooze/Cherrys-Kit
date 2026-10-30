@@ -14,6 +14,7 @@ class PlacementTests(unittest.TestCase):
         self.h.load("Options.lua")
         self.lua.execute('''
           cursorX,cursorY,uiScale,shift=500,300,1,false
+          fixtureIgnoreTemplates=true
           GetCursorPos=function() return cursorX,cursorY end
           GetUIScale=function() return uiScale end
           IsShiftKeyDown=function() return shift end
@@ -217,20 +218,36 @@ class PlacementTests(unittest.TestCase):
         self.h.tick()
         self.assertEqual((corner.anchor[4], corner.anchor[5]), (944, 524))  # kept on the 960x540 screen
 
-    def test_grips_pooled_before_reload_gain_the_scale_corner_and_move_art(self):
-        self.open()
-        self.rwa.CloseOptions()
-        self.lua.execute('''
-          for _,grip in ipairs(RWA.placementGrips) do
-            grip.scaleFrame,grip.scaleArt,grip.scaleText=nil,nil,nil
-            grip.art:SetTexture("Interface/AddOns/CherrysKit/RomWeakAuras/Media/Textures/Grip_Highlight.tga")
-          end
-        ''')
+    def test_grips_are_xml_pool_frames_because_runtime_frames_get_no_scripts(self):
         aura = self.open()
-        self.assertTrue(aura.grip.scaleFrame.visible)
+        for frame in (aura.grip.frame, aura.grip.scaleFrame):
+            self.assertTrue(frame.name.startswith("RWA_PlaceGrip"))
+            self.assertIn("OnMouseDown", self.lua.globals().fixtureXmlScripts[frame.name])
         self.assertTrue(aura.grip.art.texture.endswith("Textures/UI/move.tga"))
         self.drag(aura, 10, 10, corner=True)
         self.assertAlmostEqual(aura.data.scale, 1.35)
+
+    def test_grips_from_before_reload_ui_are_retired_and_the_pool_starts_again(self):
+        old = self.open().grip
+        self.lua.execute('RWA.CancelAuraPlacement()')
+        self.h.load("Widgets.lua")
+        self.h.load("Engine.lua")
+        self.assertFalse(old.frame.visible)
+        self.assertFalse(old.scaleFrame.visible)
+        self.assertEqual(len(list(self.rwa.placementGrips.values())), 0)
+
+    def test_used_up_pool_leaves_shift_drag_on_the_aura_to_scale_it(self):
+        self.lua.execute('for i=1,96 do _G["RWA_PlaceGrip"..i]=nil end')
+        aura = self.open()
+        self.assertIsNone(aura.grip)
+        frame = aura.region.frame.name
+        self.lua.globals().shift = True
+        self.h.script(frame, "OnMouseDown", key="LBUTTON")
+        self.lua.globals().cursorX += 20
+        self.h.tick()
+        self.h.script(frame, "OnMouseUp", key="LBUTTON")
+        self.assertAlmostEqual(aura.data.scale, 1.35)
+        self.assertEqual((aura.data.x, aura.data.y), (25.5, -80.25))
 
     def test_interrupted_drags_cannot_mutate_old_draft_after_lock_reload_navigation_or_close(self):
         for route in ("lock", "reload", "switch", "hide", "revert", "delete"):

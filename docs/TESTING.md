@@ -1,10 +1,19 @@
-# In-game checks for kit 0.11.99
+# In-game checks for kit 0.11.100
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
 
-## 0.11.99 Cherry's Bar
+## 0.11.100 rom weakauras placement grips
+
+rom weakauras 0.9.30 takes the move arrows and the scale corner from 96 frames declared in `Frames.xml` (48 auras at once). Before, they were made after loading, and the game gives such frames no mouse scripts, so neither grip could be dragged. The simulated client now ignores templates on runtime frames the same way.
+
+| ID | Steps | Expected result |
+| --- | --- | --- |
+| W17 | Open /wa so the auras show with their arrows and corners. Hover the corner at an aura's bottom right, then drag it down or right, and back up or left. Drag the arrows at its top left. Reload UI with /wa open and try again. | The corner's tooltip says **scale** with a percentage. Dragging it makes the aura bigger, then smaller, with the percentage beside the corner while you drag. The arrows move the aura. Both still work after Reload UI. |
+| W18 | Hold Shift and drag the aura itself (not a grip). Edit that aura and look at Position. | Shift-drag scales it; a plain drag moves it. The editor's Scale shows the new value; Save aura keeps it. |
+
+## 0.11.100 Cherry's Bar
 
 Cherry's Bar is new, and none of it has run in the real client yet. Delete any old `Interface/AddOns/XBar` folder first.
 
