@@ -60,7 +60,7 @@
 		<Size><AbsDimension x="36" y="36" /></Size>
 		<Anchors>
 			<Anchor point="TOPRIGHT" relativeTo="UIParent" relativePoint="TOPRIGHT">
-				<Offset><AbsDimension x="-230" y="160" /></Offset>
+				<Offset><AbsDimension x="-230" y="192" /></Offset>
 			</Anchor>
 		</Anchors>
 		<Layers>
@@ -83,7 +83,7 @@
 		</Layers>
 		<HighlightTexture name="$parentHighlight" alphaMode="ADD" />
 		<Frames>
-			<Frame name="KittyModeFlyout" enableMouse="true" hidden="true">
+			<Frame name="KittyModeFlyout" parent="UIParent" enableMouse="true" hidden="true">
 				<Size><AbsDimension x="148" y="80" /></Size>
 				<Anchors>
 					<Anchor point="TOPRIGHT" relativeTo="KittyModeButton" relativePoint="BOTTOMRIGHT">
@@ -99,6 +99,9 @@
 							</Anchors>
 						</Texture>
 					</Layer>
+					<Layer level="OVERLAY"><FontString name="KittyModeFlyout_Page" inherits="GameFontNormal" justifyH="CENTER">
+						<Size><AbsDimension x="40" y="22" /></Size><FontHeight><AbsValue val="11" /></FontHeight>
+					</FontString></Layer>
 				</Layers>
 				<Frames>
 					<Button name="KittyModeFlyout_Button1" inherits="KittyModeFlyoutButtonTemplate" id="1" />
@@ -117,7 +120,14 @@
 					<Button name="KittyModeFlyout_Button14" inherits="KittyModeFlyoutButtonTemplate" id="14" />
 					<Button name="KittyModeFlyout_Button15" inherits="KittyModeFlyoutButtonTemplate" id="15" />
 					<Button name="KittyModeFlyout_Button16" inherits="KittyModeFlyoutButtonTemplate" id="16" />
+					<Button name="KittyModeFlyout_Prev" inherits="UIPanelButtonTemplate" text="&lt;">
+						<Size><AbsDimension x="30" y="22" /></Size><Scripts><OnClick>Kitty.ModeUI.changePage(-1);</OnClick></Scripts>
+					</Button>
+					<Button name="KittyModeFlyout_Next" inherits="UIPanelButtonTemplate" text="&gt;">
+						<Size><AbsDimension x="30" y="22" /></Size><Scripts><OnClick>Kitty.ModeUI.changePage(1);</OnClick></Scripts>
+					</Button>
 				</Frames>
+				<Scripts><OnMouseWheel>Kitty.ModeUI.changePage((delta or arg1 or 0)&gt;0 and -1 or 1);</OnMouseWheel></Scripts>
 			</Frame>
 		</Frames>
 		<Scripts>
@@ -163,7 +173,7 @@
 		<Size><AbsDimension x="140" y="24" /></Size>
 		<Anchors>
 			<Anchor point="TOPRIGHT" relativeTo="UIParent" relativePoint="TOPRIGHT">
-				<Offset><AbsDimension x="-230" y="204" /></Offset>
+				<Offset><AbsDimension x="-230" y="236" /></Offset>
 			</Anchor>
 		</Anchors>
 		<Layers>

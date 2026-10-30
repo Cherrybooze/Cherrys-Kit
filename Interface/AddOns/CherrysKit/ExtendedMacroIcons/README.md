@@ -1,10 +1,14 @@
 # Extended Macro Icons
 
-Version **3.0.3** · Kit release **0.11.77** · [All addons / hub](../README.md)
+Version **3.0.4** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **The game's macro window with about 10,500 more icons for your macros, in 58 categories.**
 
 Based on ExtendedMacroIcons 2.15 by Amurilon, cleaned up for Cherry's Kit.
+
+## Updated in 3.0.4
+
+Macro icon lookups are cached between macro changes instead of scanning every macro on each action lookup. Turning the addon off in the kit now also removes its hooks from the last session.
 
 ## Features
 

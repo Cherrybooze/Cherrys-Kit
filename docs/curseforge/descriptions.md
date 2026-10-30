@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Fifteen package descriptions for Cherry's Kit 0.11.79, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Fifteen package descriptions for Cherry's Kit 0.11.84, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -60,7 +60,7 @@ Each one is its own download and needs Cherry's Kit:
 - **Global Bank**: every character's bags, bank and gold in one window (`/gb`)
 - **Extended Macro Icons**: thousands more macro icons (`/emi`)
 - **TooltipIds**: ID numbers of buffs, items, skills and more (`/ti`)
-- **Ultimate Mail Mod**: mail window with reliable mass send (`/umm`)
+- **Ultimate Mail Mod**: mail window with shared recipient history, configurable gold shortcuts and reliable mass send (`/umm`)
 - **Advanced AuctionHouse**: resizable auction house with stat filters (`/aah`)
 - **ZShop**: item shop and daily loyalty reward in one click (`/zshop`)
 - **pbInfo**: richer tooltips, quest tracker, chat filters and cast bar options (`/pbinfo`)
@@ -103,7 +103,19 @@ Some kit addons contain parts under Creative Commons **NonCommercial** licences 
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
-Version 1.7.9 fixes prediction, import restrictions, editor drafts, proc cycles, cooldown conditions, named priorities and action-slot handling.
+## Updated in 1.7.14
+
+The default mode button and its readout sit 32 UI units lower to clear housing/furniture controls. Manually saved positions are preserved; verify the default position with native housing controls visible.
+
+## Updated in 1.7.13
+
+Closed or natively hidden mode pickers reject delayed clicks, so cancelling an editor pick cannot change the live HUD mode.
+
+## Updated in 1.7.12
+
+The mode button and readout share a screen-aware mode-icon picker, with a top-down left-edge layout when it fits, viewport/UI-scale handling and pages for extra modes. The main action menu adds **changemode**: select its mode icon and get an editable **Mode is off** condition automatically. Picking while editing changes only the draft. Execution switches on that press; the next press skips the default guarded switch. Prediction simulates following mode conditions on a private snapshot without changing live modes, settings or cooldowns. Shared mode actions require 1.7.12; existing CKC1/CKC2/CKC3 imports remain supported. Native popup/row interaction still needs in-game testing.
+
+Version 1.7.11's missing range-probe guard remains, alongside the 0.2-second dispatch window, live action eligibility, missing-versus-zero mana handling, condition thresholds, anti-repeat behavior and 1.1-second prediction lookahead. `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6` selects the old A/B window; use `0.2` to restore the default. Successful-cast throughput gains have not been measured. 1.7.9's prediction, import, editor, proc, cooldown and action-slot fixes carry forward.
 
 ## Features
 
@@ -112,7 +124,7 @@ Version 1.7.9 fixes prediction, import restrictions, editor drafts, proc cycles,
 - **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on (switch modes with `/kc toggle aoe`, also from macros).
 - **Modes**: switch your kitties between aoe, single, burst, dps, tank, heal, interrupt, pvp, farm, boss, request or your own modes, and let "Mode is on" rows decide what fires.
   - **Mode button** near the minimap (Kitty options > Show the mode button): shows the mode that is on as a picture. Click it to see every mode, click one to switch (the others turn off).
-  - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for a dropdown menu of every mode and "No mode".
+  - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for the same screen-aware mode-icon picker, including "No mode".
   - Both move with right-drag (or Shift+drag) and can be locked. Also `/kc mode <name>` in chat or macros.
   - Request mode is now a mode called request; the new condition "Shift is held" checks the Shift key.
 - **canCast / canUse** can also check that something is *on cooldown*.
@@ -122,7 +134,7 @@ Version 1.7.9 fixes prediction, import restrictions, editor drafts, proc cycles,
 - **Create macro**: one click makes a `/run Kitty.attack(...)` macro with a random icon and puts it on your cursor, and shows whether one already exists.
 - **Class icons** next to each kitty's class in the list and in the class menus.
 - **New look**: dark blue windows with gold borders (shared with rom weakauras). Every window can be resized by dragging the gold corner (60% to 160%) and remembers its size and position.
-- **Faster key presses**: only the skills a command checks are read (about 3 reads per press instead of about 57), with the same picks as the original 0.973. Skills and items that work mid-cast can fire while you cast.
+- **Lazy skill reads**: only the skills requested by the priority walk are read. Skills and items that work mid-cast can still be attempted while you cast; client/server acceptance is checked in game.
 - **Kitty tracker**: rom weakauras can show the next skill a kitty would fire, and its "KittyCombo mode" aura shows the mode that is on.
 - **Raid frame clicks**: Cherry's Grid can run a kitty on the party or raid member you click, and your target comes back afterwards.
 - **Changelog** button in the settings window, and **/kc probe** to check your client.
@@ -168,6 +180,22 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Updated in 0.9.26
+
+The player cast bar follows native CASTING_* events for transport and other non-spell progress actions absent from UnitCastingTime. Polled spells take precedence; completion/cancel/failure, timeout, death and loading clear the fallback. Target casts remain unit-scoped. Existing My cast auras benefit without editing their saved sources. Native transport and cancellation still need in-game checking.
+
+## Updated in 0.9.25
+
+Every aura now defaults to **Make clickthrough**, a tickable editor field that passes gameplay clicks through and suppresses aura hover tooltips. Editing and placement remain interactive; opting out restores hover. **Position** has whole-aura Scale (10–400%, default 100%), a numeric field and five-percentage-point −/+ buttons. Scaling preserves the chosen anchor, scales relative offsets and is inherited once by linked children. Section headers use **Expand / Collapse** instead of maximizers. The new fields support draft Save/Revert and sharing; native click pass-through and geometry still need in-game checks.
+
+**Auto scale position and size with screen size** is off by default. Enabling it captures the viewport; later resolution/UI-scale changes transform position and uniformly scale size without rewriting authored values. Unlocked placement previews have a top-left grip: drag to move, Shift-drag sideways to scale. **Reset position** restores recognized factory placements or centres custom auras while retaining size, screen reference and relative offsets. Factory placements use the approved layout; existing saved coordinates are preserved.
+
+**Target health** shows HP and percentage on a readable line below the bar. Directly exposed HP is used as provided; learned NPC maxima yield `~` estimates, and unavailable HP uses `?`. Original rule values and bar progress are retained. These controls, layout and real HP observations still need in-game playtesting.
+
+## Updated in 0.9.24
+
+Class restrictions normalize display names case-insensitively while preserving saved text, canonical tokens, localized names and legacy aliases. Polling observes referenced sources, including implicit bindings and converted source choices; unused compatibility primaries stay saved and are read on demand by GetAuraValue. Safe unshared sources are pruned after rule/action removal. Saved buff metadata is capped at 4,000 IDs and session metadata at 8,000 name/ID entries, with batch eviction and relearning. Earlier child-display copies, class-change skill invalidation and change-only hotbar repaints remain.
 
 ## Updated in 0.9.22
 
@@ -244,6 +272,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
+## Updated in 0.10.9
+
+Releasing the pressed button over another chat overlay clears the originating drag state and keeps its selection. Unrelated button releases do not end it, and hyperlinks activate only for a plain click released in its original window. Normal selection and native/modified link clicks retain regression coverage; cross-window input still needs an in-game check.
+
 ## Updated in 0.10.7
 
 The default native click dispatch sends the complete original hyperlink, including its encoded item data and localized label. Previously learned signatures remain in use; the change still needs in-game testing.
@@ -306,6 +338,14 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat pro
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
+## Updated in 5.07-ck14
+
+Unrelated bag/bank updates no longer close the stack-split number dialog. Confirmations validate the original source and amount; Shift-drag follows the normal pickup path. Slot numbers default to 8 points (about 40% smaller), with **Font size −/+** controls in /zb for 6–20. This applies to all bag/bank layouts and follows shared/per-character settings; stack counts keep their normal size. Native split behavior and readability need in-game checking.
+
+## Updated in 5.07-ck13
+
+The bank XML passes real elapsed time to its 0.2-second timer, targeting about five refreshes per second independently of FPS, without a catch-up burst after a stall. Sorting retains its pass-level rebuild reduction, necessary post-swap rebuilds and no-progress exit; attribute lists are sorted once at build time. Live bank sorting still needs an in-game check.
+
 ## Features
 
 - **Three layouts, switch any time** (applies straight away):
@@ -362,6 +402,10 @@ Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, add
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.6
+
+Characters the helper no longer exports disappear from the window right away, and the Chrome helper stops retrying a failed reward confirmation forever.
 
 ## Features
 
@@ -436,6 +480,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/gb probe`
 
 Based on ExtendedMacroIcons 2.15 by Amurilon, cleaned up for Cherry's Kit.
 
+## Updated in 3.0.4
+
+Macro icon lookups are cached between macro changes, and turning the addon off in the kit removes its hooks from the last session.
+
 ## Features
 
 - **About 10,500 extra icons**: class skills, equipment, weapons, items, festival, furniture and more, in 58 categories.
@@ -479,10 +527,14 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/emi probe
 
 TooltipIds 1.0b3 by Rock5, updated for Cherry's Kit. Handy for rom weakauras (track a buff by its ID) and for macros.
 
+## Updated in 1.0b3-ck3
+
+Hovering a buff or debuff no longer prints an ID line to chat, and turning the addon off in the kit removes its hooks from the last session.
+
 ## Features
 
 - Adds an **"ID: 12345" line** to tooltips. Choose which kinds to show: Unit (NPCs and players), Item, Skill, Buff, Title, Item Shop, Store, Guild and Quest.
-- **Buff and debuff IDs print to chat** when you hover them (as in Rock5's original).
+- **Buff and debuff tooltips**: hovering them no longer prints ID lines to chat (the original did, once per hover).
 - Pick the colour of the ID text.
 - Can be turned off in Cherry's Kit; while off it leaves tooltips alone. Safe with Reload UI.
 
@@ -518,6 +570,20 @@ Write to **cherry** on the Runes of Magic Discord.
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
 
+## Updated in 7.0.1-ck7
+
+**Drag-box selection** works across all six bag grids. Drag from a slot/background to replace the selection; **Ctrl/Shift-drag** adds. Escape/right-click cancels and restores the starting selection. Normal clicks and Ctrl-click group toggles remain; empty background clears marks. Bound items remain red and are excluded from sending. Bag changes, focus loss, navigation and closing cancel unfinished gestures.
+
+The right-side **Recently sent** pane shares the existing **20 distinct successful recipients**, newest first and available across characters. Click a name to fill mass-send To while retaining committed item selections. The mass-send window expands/fits the viewport. C.O.D./sending blocks recipient changes, and queue sending locks all four tabs. Native selection drawing, release/focus handling and layout still need in-game playtesting.
+
+## Updated in 7.0.1-ck6
+
+**Mail shortcuts** is on by default. **Use last** beside To fills the last successfully mailed recipient. Two buttons below Send Gold fill configurable amounts (defaults **100,000** and **1,000,000**); change both in `/umm` and click **Save presets**. Whole amounts from 1 to 999,999,999 are accepted. Gold shortcuts select Send Gold and clear C.O.D.; sending uses the existing Send/confirmation controls.
+
+**History**, the third main tab, lists up to **20 distinct successful recipients**, newest first. Repeated recipients move to the top without duplicates. Click a name to compose; Mass Send Items is the fourth tab. Failed/cancelled/timed-out sends do not replace the last recipient. Single and mass sends share this history.
+
+Shortcut settings, amounts and history live in **UMMConfig in the shared SaveVariables.lua**, available to every character. Turning shortcuts off hides the compose buttons; history remains available. The native layout, money confirmation and cross-character persistence still need in-game checks.
+
 ## Features
 
 From the original:
@@ -532,7 +598,7 @@ New in the Cherry's Kit version:
 - **Send fast or Send safely**: under 40 mails there is one Send button (fast). From 40 mails you choose: *Send fast* (quick pace, stops at the first failure) or *Send safely* (paced, with a short pause every 20 mails). C.O.D. mails always go the safe way. A **Stop** button stops after the current mail; unsent items stay marked.
 - **Bound items in red**, also when several are marked; they are skipped with "(N bound, not sent)".
 - **Ctrl+click** a marked item to unmark its whole group.
-- **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
+- **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, mail shortcuts and gold presets, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
 - Faster bag handling (the bag list is no longer rebuilt on every bag change) and a faster loading screen.
 
 **Please help test:** after a big mass send, `/umm trace` shows what happened. If sending waits forever, run `/umm x` with an item in the send slot and send the output; `/umm slotcheck off` is the workaround.
@@ -549,12 +615,14 @@ New in the Cherry's Kit version:
 - `/umm trace [on|off|clear|all]`: the last mail events, for finding problems
 - `/umm x`: check the send slot, cursor and send state
 - `/umm slotcheck on|off`: wait for the item to show in the send slot (default on)
+- `/umm shortcuts on|off`: Use last and gold buttons (default on)
+- `/umm gold <amount1> <amount2>`: save both shared gold presets
 - `/umm sound`: new-mail sound on or off
 - `/umm reset`: forget your saved characters
 
 ## Install
 
-- **Requires Cherry's Kit** (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
+- **Requires Cherry's Kit hub 0.4.17 or later** for the History manifest entries (installed automatically by CurseForge once configured as a Required dependency). This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
 - **Delete the old `Interface\AddOns\UltimateMailMod` folder.** While it is there, Cherry's Kit keeps this version turned off.
 - Turn it on or off in the Cherry's Kit window (`/ck`).
 
@@ -566,7 +634,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 - **Ultimate Mail Mod** originally by **Shardea of Siochain**, later maintained by **Maxeem of Muinin, mvoigt and Jagodragon**, with 2019-2021 changes by **Raihir** and a French translation by **Claralouise**. It has no licence statement, so its copyright stays with its authors and those parts are not covered by the GPL.
 - Bundles **LibStub** (public domain; Kaelten, Cladhaire, ckknight, Mikk, Ammo, Nevcairiel, joshborke) and **Sol by Alleris** (no licence statement).
-- Cherry's changes (send queue rewrite, bag handling, ctrl+click toggle, bound items in red, settings window, kit switch, /umm commands) are offered under the **GNU GPL v2**.
+- Cherry's changes (send queue rewrite, drag-box selection, bag handling, ctrl+click toggle, bound items in red, shared history/recipient panes/mail shortcuts, settings window, kit switch, /umm commands) are offered under the **GNU GPL v2**.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
 
@@ -578,7 +646,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns and stat ranges.**
 
-Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.2 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.4 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+
+## Updated in 6.2.4
+
+Auction item parsing uses a private hidden/transparent tooltip rather than the game's skill-upgrade tooltip. The confirmed widget collision is corrected; the reported brief black flash during native 0-to-max TP upgrades has not been reproduced or proven fixed offline and needs an in-game retest.
+
+## Updated in 6.2.3
+
+Bid and sell list clicks select the row you actually clicked after scrolling, the stat colour filters no longer error on ordinary items, and a stale buyout message no longer throws.
 
 ## Features
 
@@ -657,6 +733,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/aah probe
 
 A small report of how long each addon took while the loading screen was up, and how much memory it added.
 
+## Updated in 1.2.1
+
+Both probe frames stop after the loading screen is gone, so a tiny hidden frame no longer keeps processing every frame.
+
 ## Features
 
 - **Per-addon times for Cherry's Kit addons**: exact load time and memory for every kit addon you have installed.
@@ -697,6 +777,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/ckload pr
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
+## Updated in 1.2.0-ck4
+
+The daily-page reminder is marked after a valid daily link reaches a successful browser API handoff, or its linked native window is shown. Missing/failing openers, invalid links and timeouts leave it unmarked. Copy, Home and Depot do not mark Daily. The saved field remains named claimed for compatibility, but records only a page-open handoff, never a confirmed reward collection or browser page load. The manual shop-button fallback lasts sixty seconds; native handoff still needs an in-game check.
+
 ## Features
 
 - **Daily reward button**: a small button on screen. Left click opens the item shop right on the daily loyalty reward page. Its picture marks when this level 100 character opened the page today; opening it does not itself confirm a collection. Characters below level 100 get a separate icon. The day resets at midnight German time. Move it with right-drag or Shift+drag; show, hide and lock it in the ZShop window.
@@ -713,7 +797,7 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 - `/zshop daily`: open the daily loyalty reward page
 - `/zshop depot`: open your item depot
 - `/zshop button`: show or hide the daily reward button
-- `/zshop unmark`: clear today's claimed mark on this character
+- `/zshop unmark`: clear today's daily-page opened mark on this character
 - `/zshop browser`: switch between your web browser and the game window
 - `/zshop config`: reload config.lua
 - `/zshop probe`: what this client offers (send it with bug reports)
@@ -744,6 +828,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zshop pro
 **More information everywhere: richer mob and player tooltips, a quest tracker, chat filters and timestamps, chat history, cast bar options and auto repair.**
 
 pbInfo v0.60 by p.b. a.k.a. novayuna (later odie2), updated for Cherry's Kit. Parts that other kit addons already do are left out: the threat meter is now rom weakauras' Threat meter aura, and target health numbers are PortraitHP.
+
+## Updated in 0.60-ck4
+
+The tooltip reuses repeated mouseover facts within an update and shares them with its MobDB call. The next update reads fresh facts; other MobDB callers retain their one-argument API, and NPC maxima are still learned only at full health. This reduces repeated native reads, not all tooltip work. Earlier blood-bar guards, chat-history trimming and quest-sort checks remain; native tooltip appearance still needs an in-game check.
 
 ## Features
 
@@ -825,6 +913,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/php probe
 # Cherry's Grid
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
+
+## Updated in 1.1.3
+
+Spells and ordinary macro lines preserve the old target through a verified stable unit ID or a verified empty focus stash. Occupied focus slots are preserved. If no safe path exists, the action is skipped before changing the old target; switch/restoration failures are reported. No undocumented last-target API is assumed. Startup, roster polling and explicit layout refreshes each reuse one roster scan. Native targeting still needs an in-game check; delayed macro/Lua target changes after the synchronous click are outside this restoration scope. Kitty actions retain KittyCombo's existing attackOn path.
 
 ## Features
 

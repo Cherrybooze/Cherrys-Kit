@@ -999,16 +999,15 @@ end
 
 -- Clicking or dragging an aura on screen selects it: in the list it is marked, in the editor
 -- the editor switches to it.
-function RWA.OnAuraMoved(id)
+function RWA.OnAuraMoved(id,kind,modified)
   if not ui or not RWA.IsOptionsOpen() then
     return
   end
-  if RWA.UnifiedEditor then RWA.UnifiedEditor.dirty[id]=true end
+  if RWA.UnifiedEditor and modified~=false then RWA.UnifiedEditor.PlacementChanged(id,kind) end
   if ui.pageName == "edit" then
     if ui.selected ~= id then
       RWA.ShowEditor(id)
     else
-      RWA.UnifiedEditor.dirty[id]=true
       RWA.UnifiedEditor.previewDirty=true
       RWA.RefreshEditor()
     end

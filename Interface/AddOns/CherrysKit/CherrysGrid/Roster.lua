@@ -233,7 +233,6 @@ end
 function R.SetTest(on)
   R.test = on and true or false
   R.signature = ""
-  R.Update()
 end
 
 local function numRaid()
@@ -334,9 +333,9 @@ end
 local ROLE_TITLES = { tank = "Tanks", attacker = "Attackers" }
 
 -- Rebuilds R.groups. Returns true when who is shown (or where) changed.
-function R.Update()
+function R.Update(kind)
   local P = G.P
-  local kind = R.GroupType()
+  kind = kind or R.GroupType()
   R.units, R.groups, R.byUnit, R.byName = {}, {}, {}, {}
   local show = (kind == "solo" and P.showSolo) or (kind == "party" and P.showParty) or (kind == "raid" and P.showRaid)
   local list = show and members(P, kind) or {}

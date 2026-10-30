@@ -511,6 +511,10 @@ Kitty.CommandConditionFrame.updateData = function(this)
 	end
 
 	local index = KittyCommandConditionFrame_ScrollBar:GetValue() + this:GetID() - 1;
+	local previous = Kitty.CommandConditionFrame.targetConditionList[index];
+	if(previous and previous.modeActionGuard == true and condition.conditionType == "modeOn" and condition.name == previous.name) then
+		condition.modeActionGuard = true;
+	end
 	Kitty.CommandConditionFrame.targetConditionList[index] = condition;
 	local summaryLabel = Kitty.Skin.find(this:GetName() .. "Summary");
 	if(summaryLabel ~= nil) then

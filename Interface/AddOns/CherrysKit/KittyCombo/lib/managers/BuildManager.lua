@@ -270,25 +270,30 @@ Kitty.ClassManager.hasHealthByRate = function(target, min, max)
 	end
 end;
 -- Mana (knight, mage, priest, druid)
+-- Returns current, maximum and percent for the matching resource; the percent
+-- is nil when the maximum is unusable, and all three are nil when the target
+-- has no mana resource at all. A real zero with a valid maximum stays zero.
 Kitty.ClassManager.getMana = function(target)
 	if(UnitName(target) ~= nil) then
 		if(UnitManaType(target) == 1) then
 			-- Main class
-			if(UnitMaxMana(target) > 0) then
-				return UnitMana(target), UnitMaxMana(target), UnitMana(target) / UnitMaxMana(target) * 100;
-			else
-				return UnitMana(target), UnitMaxMana(target), 0;
+			local current = UnitMana(target);
+			local max = UnitMaxMana(target);
+			if(max ~= nil and max > 0) then
+				return current, max, current / max * 100;
 			end
+			return current, max, nil;
 		elseif(UnitSkillType(target) == 1) then
 			-- Sub class
-			if(UnitMaxSkill(target) > 0) then
-				return UnitSkill(target), UnitMaxSkill(target), UnitSkill(target) / UnitMaxSkill(target) * 100;
-			else
-				return UnitSkill(target), UnitMaxSkill(target), 0;
+			local current = UnitSkill(target);
+			local max = UnitMaxSkill(target);
+			if(max ~= nil and max > 0) then
+				return current, max, current / max * 100;
 			end
+			return current, max, nil;
 		end
 	end
-	return 0;
+	return nil;
 end;
 Kitty.ClassManager.hasMana = function(target, min, max)
 	if(min == nil) then
@@ -299,7 +304,7 @@ Kitty.ClassManager.hasMana = function(target, min, max)
 	end
 
 	local value = Kitty.ClassManager.getMana(target);
-	if(min <= value and value <= max) then
+	if(value ~= nil and min <= value and value <= max) then
 		return true, value;
 	else
 		return false, value;
@@ -314,7 +319,7 @@ Kitty.ClassManager.hasManaByRate = function(target, min, max)
 	end
 
 	local _, _, manaRate = Kitty.ClassManager.getMana(target);
-	if(min <= manaRate and manaRate <= max) then
+	if(manaRate ~= nil and min <= manaRate and manaRate <= max) then
 		return true, manaRate;
 	else
 		return false, manaRate;

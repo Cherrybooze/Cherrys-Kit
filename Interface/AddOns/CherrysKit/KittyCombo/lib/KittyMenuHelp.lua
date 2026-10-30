@@ -45,7 +45,7 @@ Kitty.MenuHelp.conditions = {
 	["isTargeted"] = "When an enemy targets [me]",
 	["canCast"] = "When [skill] is [ready] (or [on cooldown]): lets a command wait for another skill",
 	["canUse"] = "When action bar [slot] is [ready] (or [on cooldown])",
-	["castRecently"] = "When I cast [skill] in the last [seconds] (or didn't): no double debuffs",
+	["castRecently"] = "When Kitty tried [skill] in the last [seconds] (or didn't): no double debuffs",
 	["targetCasting"] = "When [my target] is casting [skill] (empty = built-in interrupt list; grow it with [/kc interrupt last])",
 	["targetDebuffStacks"] = "When [debuff] on [my target] has [number] stacks or more",
 	["modeOn"] = "When mode [aoe] is on (or off): switch with the [mode button] or [/kc mode aoe]",
@@ -82,7 +82,7 @@ Kitty.MenuHelp.readyBoolean = {
 	["false"] = "Passes when the skill or slot exists and its cooldown exceeds the threshold.",
 };
 Kitty.MenuHelp.choiceHelp = {
-	castRecently = {["true"] = "Passes if it was cast within the seconds.", ["false"] = "Passes if it was NOT cast within the seconds."},
+	castRecently = {["true"] = "Passes if the attempt was within the seconds.", ["false"] = "Passes if no attempt was made within the seconds."},
 	modeOn = {["true"] = "Passes while the mode is on.", ["false"] = "Passes while the mode is off."},
 	targetCasting = {["true"] = "Passes while the target casts it.", ["false"] = "Passes while the target does NOT cast it."},
 };
@@ -103,6 +103,7 @@ Kitty.MenuHelp.commandTypes = {
 	["macro"] = "Runs one of your macros (only macros that do not cast skills or use items).",
 	["emote"] = "Does an emote.",
 	["proc"] = "Runs another kitty here: its first ready command fires. Lets you reuse a rotation.",
+	["changemode"] = "Changes Kitty's active mode. Pick its mode icon; an editable Mode is off condition is added automatically. The switch uses this press; the next press continues under the new mode.",
 	["other"] = "break and debug.",
 	["break"] = "Stops here: nothing below this row fires while its conditions pass.",
 	["debug"] = "Prints a message instead of casting. For testing a kitty.",

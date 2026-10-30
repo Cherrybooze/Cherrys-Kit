@@ -11,7 +11,7 @@ Probe.FUNCTIONS = {
   "UnitBuffLeftTime", "UnitDebuffLeftTime", "UnitIsRaidLeader", "UnitIsRaidAssistant", "UnitIsMasterLooter",
   "UnitIsRaidMainTank", "UnitIsRaidMainAttacker", "GetRaidTargetIndex", "UnitDistance", "UnitCastingTime",
   "GetNumRaidMembers", "GetNumPartyMembers", "GetRaidMember", "GetPartyMember", "TargetUnit", "AssistUnit", "FollowUnit",
-  "FocusUnit", "SpellIsTargeting", "SpellTargetUnit", "GetPlayerCombatState", "GetUIScale",
+  "FocusUnit", "UnitGUID", "UnitIsUnit", "SpellIsTargeting", "SpellTargetUnit", "GetPlayerCombatState", "GetUIScale",
   "UIDropDownMenu_Initialize", "UIDropDownMenu_AddButton", "ToggleDropDownMenu", "CloseDropDownMenus",
 }
 

@@ -27,7 +27,7 @@ Each one is its own download and needs Cherry's Kit:
 - **Global Bank**: every character's bags, bank and gold in one window (`/gb`)
 - **Extended Macro Icons**: thousands more macro icons (`/emi`)
 - **TooltipIds**: ID numbers of buffs, items, skills and more (`/ti`)
-- **Ultimate Mail Mod**: mail window with reliable mass send (`/umm`)
+- **Ultimate Mail Mod**: mail window with shared recipient history, configurable gold shortcuts and reliable mass send (`/umm`)
 - **Advanced AuctionHouse**: resizable auction house with stat filters (`/aah`)
 - **ZShop**: item shop and daily loyalty reward in one click (`/zshop`)
 - **pbInfo**: richer tooltips, quest tracker, chat filters and cast bar options (`/pbinfo`)

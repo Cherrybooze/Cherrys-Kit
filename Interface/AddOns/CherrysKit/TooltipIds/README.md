@@ -1,15 +1,19 @@
 # TooltipIds
 
-Version **1.0b3-ck2** · Kit release **0.11.77** · [All addons / hub](../README.md)
+Version **1.0b3-ck3** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 **Shows the ID numbers of units, items, skills, buffs and more in their tooltips.**
 
 TooltipIds 1.0b3 by Rock5, updated for Cherry's Kit. Handy for rom weakauras (track a buff by its ID) and for macros.
 
+## Updated in 1.0b3-ck3
+
+Hovering a buff or debuff no longer prints an ID line to chat. Turning the addon off in the kit now also removes its hooks from the last session.
+
 ## Features
 
 - Adds an **"ID: 12345" line** to tooltips. Choose which kinds to show: Unit (NPCs and players), Item, Skill, Buff, Title, Item Shop, Store, Guild and Quest.
-- **Buff and debuff IDs print to chat** when you hover them (as in Rock5's original).
+- **Buff and debuff tooltips**: hovering them no longer prints ID lines to chat (the original did, once per hover).
 - Pick the colour of the ID text.
 - Can be turned off in Cherry's Kit; while off it leaves tooltips alone. Safe with Reload UI.
 

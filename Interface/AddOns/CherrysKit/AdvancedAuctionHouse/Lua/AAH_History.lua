@@ -109,15 +109,17 @@ function History.ClearQueue()
 	History.Processing = true
 	History.AutoPriceHistoryTrigger = false
     History.PriceHistoryQueue={}
+    History.QueueSeen={}
 end
 
 function History.Queue_Insertitem(auctionid,name,link,itemid)
     if auctionid and name then
-
-        for _, v in ipairs(History.PriceHistoryQueue) do
-            if v.itemid == itemid then
-                return
-            end
+        History.QueueSeen = History.QueueSeen or {}
+        if itemid ~= nil and History.QueueSeen[itemid] then
+            return
+        end
+        if itemid ~= nil then
+            History.QueueSeen[itemid] = true
         end
 
         local queueItem = {}

@@ -1,10 +1,16 @@
 # ZShop
 
-Version **1.2.0-ck2** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **1.2.0-ck4** · Kit release **0.11.81** · [All addons / hub](../README.md)
 
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
+
+## Updated in 1.2.0-ck4
+
+The reminder is marked only after a valid daily-page link is handed to the browser API successfully, or the native shop window is shown with that link. Missing/failing openers, invalid links and timeouts leave it unmarked. Copying a link and opening Home or Depot do not mark the daily page.
+
+The saved field is still named `claimed` for compatibility. It means **daily page opened**, not reward claimed: the addon cannot confirm that a browser loaded the page or that Collect succeeded. A successful client API handoff still needs an in-game/browser check. The pending manual shop-button fallback lasts sixty seconds.
 
 ## Features
 
@@ -14,7 +20,7 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 - ZShop window with its settings, and a row in Cherry's Kit. No other library needed (the original needed aaa_pylib).
 - ZShop never stores your shop login link, and never opens shop pages by itself. It cannot click Collect for you: you still press it on the page.
 
-**Clock:** ZShop uses the client clock when available. Otherwise, ZShop can use the UTC heartbeat from an updated Global Bank helper once that separate update is available; the existing released helper does not provide it. ZShop may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
+**Clock:** ZShop uses the client clock when available. Otherwise, run the bundled Global Bank helper: ZShop watches its UTC heartbeat and may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
 
 ## Chat commands
 
@@ -22,7 +28,7 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 - `/zshop daily`: open the daily loyalty reward page
 - `/zshop depot`: open your item depot
 - `/zshop button`: show or hide the daily reward button
-- `/zshop unmark`: clear today's claimed mark on this character
+- `/zshop unmark`: clear today's daily-page opened mark on this character
 - `/zshop browser`: switch between your web browser and the game window
 - `/zshop config`: reload config.lua
 - `/zshop probe`: what this client offers (send it with bug reports)

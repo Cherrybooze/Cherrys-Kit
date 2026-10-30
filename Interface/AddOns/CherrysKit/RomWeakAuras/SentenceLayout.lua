@@ -43,7 +43,6 @@ function S.UpdateText(F,api)
       if check then
         local source=Rules.FindSource(d,check.sourceId)
         text(row.second,source and source.type=="resource" and check.field=="active" and "available" or comparison(api,check))
-        local source=Rules.FindSource(d,check.sourceId)
         if source and (source.type or "aura")=="aura" then
           local _,width=RWA.Try(row.first,"GetWidth")
           text(row.first,clip(Rules.ReadableSource(source),math.max(8,math.floor(((tonumber(width) or 180)-32)/7))))
@@ -56,27 +55,39 @@ function S.VisibleRows(F)
   return math.max(1,math.min(#(F.ruleRows or {}),math.floor(((F.rulesArea and F.rulesArea.h or 400)-34)/32)))
 end
 local function group(F,name,on) for _,o in ipairs(F.groups[name] or {}) do show(o,on) end end
+local function positionTitle(F,d)
+  if F.sectionState.position then
+    local x,y=RWA.AuraTransform(d,F.viewportWidth,F.viewportHeight)
+    text(F.sections.position.title,string.format("Position: %g, %g",x,y))
+  else text(F.sections.position.title,"Position") end
+end
+function S.BindPosition(F,api)
+  local d=api.data(); if not d then return end
+  local x,y=RWA.AuraTransform(d,F.viewportWidth,F.viewportHeight)
+  F.x:bind("position:x",x,function(v) api.setPosition("x",v) end,api.validNumber)
+  F.y:bind("position:y",y,function(v) api.setPosition("y",v) end,api.validNumber)
+  F.scale:bind("position:scale",RWA.AuraScale(d)*100,function(v) d.scale=tonumber(v)/100 end,api.validScale)
+  RWA.Try(F.autoScaleScreen,"SetChecked",d.autoScaleScreen==true)
+  positionTitle(F,d)
+end
 local function layout(F,api)
-  local maximized=F.maxSection
   local generalHeight=F.sectionState.general and 26 or 82
   local rulesY=126+generalHeight+12
   local fieldY=fieldOpen(F) and 502 or 664
   F.rulesArea={x=14,y=rulesY,w=758,h=fieldY-rulesY-10}
-  if maximized=="rules" then F.rulesArea={x=14,y=76,w=1032,h=610} end
   local geometry={general={14,126,1032,generalHeight},rules={F.rulesArea.x,F.rulesArea.y,F.rulesArea.w,F.rulesArea.h},
     field={14,fieldY,758,fieldOpen(F) and 190 or 28},preview={784,rulesY,262,240},
-    position={784,rulesY+252,262,F.sectionState.position and 28 or 176}}
+    position={784,rulesY+252,262,F.sectionState.position and 28 or 234}}
   for name,sec in pairs(F.sections) do
     local g=geometry[name]; local x,y,w,h=g[1],g[2],g[3],g[4]
     sec.x,sec.y,sec.width=x,y,w
-    if maximized==name then x,y,w,h=14,76,1032,610 end
     if not sec.panel then sec.panel=W.Panel(F.root,x,y,w,h,name=="field" and "selected" or "quiet") end
-    place(F,sec.panel,x,y,w,h); show(sec.panel,not maximized or maximized==name)
-    place(F,sec.title,x+2,y+2,w-(name=="rules" and 238 or 122),23)
+    place(F,sec.panel,x,y,w,h); show(sec.panel,true)
+    place(F,sec.title,x+2,y+2,w-(name=="rules" and 244 or 140),23)
     W.Skin(sec.title,name=="field" and "selected" or "quiet")
     W.SetJustify(W.skins[sec.title].label,"LEFT"); W.SetFont(W.skins[sec.title].label,14)
-    place(F,sec.help,x+w-118,y+2); place(F,sec.collapse,x+w-90,y+2); place(F,sec.max,x+w-60,y+2); place(F,sec.close,x+w-30,y+2)
-    for _,o in ipairs({sec.title,sec.help,sec.collapse,sec.max,sec.close}) do show(o,not maximized or maximized==name) end
+    place(F,sec.help,x+w-134,y+2,24,23); place(F,sec.collapse,x+w-106,y+2,74,23); place(F,sec.close,x+w-30,y+2,26,23)
+    for _,o in ipairs({sec.title,sec.help,sec.collapse,sec.close}) do show(o,true) end
   end
   for name,objects in pairs(F.groups) do
     for _,o in ipairs(objects) do
@@ -87,17 +98,17 @@ local function layout(F,api)
         elseif name=="field" then x=20+(x-20)*1.58; y=y+137
         elseif name=="preview" then x=x+294; y=y-177+rulesY+34
         elseif name=="position" then x=794+(x-495)*.85; y=y-413+rulesY+292 end
-        if maximized==name then x=x-geometry[name][1]+14; y=y-geometry[name][2]+76 end
         place(F,o,x,y)
       end
     end
   end
   place(F,F.back,14,40); place(F,F.title,150,40,420,30); W.SetFont(F.title,22)
-  place(F,F.summary,18,78,1020,38); show(F.summary,not maximized)
+  place(F,F.summary,18,78,760,38); show(F.summary,true)
+  place(F,F.clickThroughLabel,800,80,190,24); place(F,F.clickThrough,1002,78,24,24)
   place(F,F.enabledLabel,580,44); place(F,F.enabled,646,40,90,28)
   place(F,F.load,796,154,224,24); place(F,F.loadClear,1020,154,24,24)
   show(F.enabled,true)
-  for _,o in ipairs({F.load,F.loadClear}) do show(o,not F.sectionState.general and (not maximized or maximized=="general")) end
+  for _,o in ipairs({F.load,F.loadClear}) do show(o,not F.sectionState.general) end
   show(F.enabledLabel,false)
   place(F,F.name.box,90,154,450,24); place(F,F.desc.box,116,182,920,24); show(F.idLabel,false)
   place(F,F.status,20,714); place(F,F.validation,20,690,750,20)
@@ -116,27 +127,29 @@ local function layout(F,api)
   end
   place(F,F.fontClear,F.positions[F.fontButton].x+190,F.positions[F.fontButton].y)
   local px,py=800,rulesY+292
-  if maximized=="position" then px,py=34,116 end
-  place(F,F.xLabel,px,py+3); place(F,F.yLabel,px,py+41)
-  for _,row in ipairs({{F.xMinus,F.x.box,F.xPlus,0},{F.yMinus,F.y.box,F.yPlus,38}}) do
-    place(F,row[1],px+24,py+row[4]); place(F,row[2],px+60,py+row[4],76,26); place(F,row[3],px+144,py+row[4])
+  place(F,F.xLabel,px,py+3); place(F,F.yLabel,px,py+35)
+  place(F,F.scaleLabel,px,py+67,50,22)
+  place(F,F.scaleUnit,px+204,py+67,20,22)
+  for _,row in ipairs({{F.xMinus,F.x.box,F.xPlus,0},{F.yMinus,F.y.box,F.yPlus,32},
+      {F.scaleMinus,F.scale.box,F.scalePlus,64}}) do
+    place(F,row[1],px+54,py+row[4]); place(F,row[2],px+90,py+row[4],76,26); place(F,row[3],px+170,py+row[4])
   end
-  place(F,F.move,px+4,py+90,220,28)
-  if F.sectionState.position then
-    local d=api.data()
-    text(F.sections.position.title,"Position: "..tostring(d.x or 0)..", "..tostring(d.y or 0))
-  else text(F.sections.position.title,"Position") end
+  place(F,F.autoScaleScreen,px,py+96,24,24)
+  place(F,F.autoScaleScreenLabel,px+30,py+94,206,36)
+  place(F,F.move,px,py+136,122,28)
+  place(F,F.resetPosition,px+126,py+136,116,28)
+  place(F,F.positionHint,px,py+168,242,22)
+  positionTitle(F,api.data())
   local a=F.rulesArea
-  place(F,F.addRule,a.x+a.w-228,a.y+2,96,23)
+  place(F,F.addRule,a.x+a.w-238,a.y+2,96,23)
   place(F,F.rulesPrev,a.x+a.w-17,a.y+32,12,22)
   place(F,F.rulesNext,a.x+a.w-17,a.y+a.h-24,12,22)
   place(F,F.rulesSurface,a.x,a.y+28,a.w,a.h-28)
   local range=math.max(1,#(F.lines or {})-S.VisibleRows(F))
   F.thumbTravel=math.max(1,a.h-120)
   place(F,F.thumb,a.x+a.w-16,a.y+58+(F.ruleTop or 0)/range*F.thumbTravel)
-  show(F.thumb,not F.sectionState.rules and (not maximized or maximized=="rules"))
+  show(F.thumb,not F.sectionState.rules)
   local vx,vy=794,rulesY
-  if maximized=="preview" then vx,vy=24,76 end
   place(F,F.previewMode,vx,vy+32,128,24)
   place(F,F.previewStatus,vx,vy+62,242,28); W.SetFont(F.previewStatus,15)
   place(F,F.previewMatch,vx,vy+158,242,70); W.SetFont(F.previewMatch,12)
@@ -358,16 +371,17 @@ function S.Refresh(F,api)
   if F.selection and not api.matches(F.selection) then F.selection=nil end
   layout(F,api)
   for name in pairs(F.groups) do
-    group(F,name,name=="common" or (not F.sectionState[name] and (name~="field" or fieldOpen(F)) and (not F.maxSection or F.maxSection==name)))
+    group(F,name,name=="common" or (not F.sectionState[name] and (name~="field" or fieldOpen(F))))
   end
   for name,sec in pairs(F.sections) do
-    text(sec.collapse,F.sectionState[name] and "v" or "^"); text(sec.max,F.maxSection==name and "R" or "[]")
+    text(sec.collapse,F.sectionState[name] and "Expand" or "Collapse")
   end
   text(F.sections.rules.title,"Aura flow")
   text(F.sections.general.title,F.sectionState.general and "General - name and notes" or "General")
   text(F.summary,Rules.AuraSummary(d)); text(F.title,F.context.getName() or F.id)
   text(F.back,RWA.Editor.new[F.id] and "< Cancel" or "< Auras")
   text(F.enabled,d.enabled==false and "Disabled" or "Enabled"); W.Skin(F.enabled,d.enabled==false and "quiet" or "selected")
+  RWA.Try(F.clickThrough,"SetChecked",d.clickThrough~=false)
   local combat=d.load and d.load.combat
   local load={}
   if combat~=nil then load[#load+1]=combat and "In combat" or "Out of combat" end
@@ -376,8 +390,7 @@ function S.Refresh(F,api)
   text(F.load,"Load: "..(#load>0 and table.concat(load,", ") or "Always"))
   F.name:bind("name",F.context.getName(),function(v) F.context.setName(v) end)
   F.desc:bind("description",d.desc,function(v) d.desc=v~="" and v or nil end)
-  F.x:bind("position:x",d.x,function(v) d.x=tonumber(v) end,api.validNumber)
-  F.y:bind("position:y",d.y,function(v) d.y=tonumber(v) end,api.validNumber)
+  S.BindPosition(F,api)
   F.lines=makeLines(F,api,d)
   F.ruleTop=math.max(0,math.min(F.ruleTop or 0,math.max(0,#F.lines-S.VisibleRows(F))))
   local sel=F.selection
@@ -391,10 +404,10 @@ function S.Refresh(F,api)
     end end
     F.lastSelection=selectedKey
   end
-  if not F.sectionState.rules and (not F.maxSection or F.maxSection=="rules") then
+  if not F.sectionState.rules then
     for i,row in ipairs(F.ruleRows) do renderRow(F,api,row,i<=S.VisibleRows(F) and F.lines[F.ruleTop+i] or nil,i) end
   end
-  if fieldOpen(F) and (not F.maxSection or F.maxSection=="field") then api.renderPanel()
+  if fieldOpen(F) then api.renderPanel()
   else text(F.fieldTitle,"Click a highlighted phrase to edit its settings") end
   layout(F,api)
   text(F.previewMode,({live="Live conditions",missing="Test: missing",long="Test: present",expiring="Test: expiring",secondary="Test: second",["resource-zero"]="Zero sample",["resource-partial"]="Partial sample",["resource-full"]="Full sample",["resource-unavailable"]="Unavailable",["resource-combat"]="Full / combat"})[F.scenario] or "Test")
@@ -403,4 +416,3 @@ function S.Refresh(F,api)
   local err=api.pendingError() or F.notice; text(F.validation,err and "|cffff6060"..err.."|r" or "")
   text(F.status,RWA.Editor.cleanup[F.id] and "Unsaved draft - duplicate converted checks simplified" or (F.dirty[F.id] or RWA.Editor.new[F.id]) and "Unsaved draft" or "Changes stay in this draft.")
 end
-

@@ -4,6 +4,10 @@
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
+## Updated in 0.10.9
+
+Releasing the pressed button over another chat overlay clears the originating drag state and keeps its selection. Unrelated button releases do not end it, and hyperlinks activate only for a plain click released in its original window. Normal selection and native/modified link clicks retain regression coverage; cross-window input still needs an in-game check.
+
 ## Updated in 0.10.7
 
 The default native click dispatch sends the complete original hyperlink, including its encoded item data and localized label. Previously learned signatures remain in use; the change still needs in-game testing.

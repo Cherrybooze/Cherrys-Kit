@@ -4,6 +4,22 @@
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
+## Updated in 0.9.26
+
+The player cast bar follows native CASTING_* events for transport and other non-spell progress actions absent from UnitCastingTime. Polled spells take precedence; completion/cancel/failure, timeout, death and loading clear the fallback. Target casts remain unit-scoped. Existing My cast auras benefit without editing their saved sources. Native transport and cancellation still need in-game checking.
+
+## Updated in 0.9.25
+
+Every aura now defaults to **Make clickthrough**, a tickable editor field that passes gameplay clicks through and suppresses aura hover tooltips. Editing and placement remain interactive; opting out restores hover. **Position** has whole-aura Scale (10–400%, default 100%), a numeric field and five-percentage-point −/+ buttons. Scaling preserves the chosen anchor, scales relative offsets and is inherited once by linked children. Section headers use **Expand / Collapse** instead of maximizers. The new fields support draft Save/Revert and sharing; native click pass-through and geometry still need in-game checks.
+
+**Auto scale position and size with screen size** is off by default. Enabling it captures the viewport; later resolution/UI-scale changes transform position and uniformly scale size without rewriting authored values. Unlocked placement previews have a top-left grip: drag to move, Shift-drag sideways to scale. **Reset position** restores recognized factory placements or centres custom auras while retaining size, screen reference and relative offsets. Factory placements use the approved layout; existing saved coordinates are preserved.
+
+**Target health** shows HP and percentage on a readable line below the bar. Directly exposed HP is used as provided; learned NPC maxima yield `~` estimates, and unavailable HP uses `?`. Original rule values and bar progress are retained. These controls, layout and real HP observations still need in-game playtesting.
+
+## Updated in 0.9.24
+
+Class restrictions normalize display names case-insensitively while preserving saved text, canonical tokens, localized names and legacy aliases. Polling observes referenced sources, including implicit bindings and converted source choices; unused compatibility primaries stay saved and are read on demand by GetAuraValue. Safe unshared sources are pruned after rule/action removal. Saved buff metadata is capped at 4,000 IDs and session metadata at 8,000 name/ID entries, with batch eviction and relearning. Earlier child-display copies, class-change skill invalidation and change-only hotbar repaints remain.
+
 ## Updated in 0.9.22
 
 Faster Back navigation, step-by-step removal, two automatic resource bars, a PSI diamond pyramid, and updated starter aura positions.

@@ -25,7 +25,12 @@ local CHECKS = {
   { "Mail events in chat",
     function() return UMMTrace.live == true end,
     function(on) UMMTrace.live = on and true or false end },
+  { UMM_SETTINGS_MAILSHORTCUTS,
+    function() return UMMSettings:ShortcutsEnabled() end,
+    function(on) UMMSettings:Set("MailShortcuts", on) end },
 };
+
+local goldDirty, refreshingGold = false, false;
 
 local BUTTONS = {
   Check = "Run check", Trace = "Show trace", Defaults = "Defaults", Reset = "Forget own chars",
@@ -50,9 +55,13 @@ function UMMSettingsUI_OnLoad(this)
   for name, text in pairs(BUTTONS) do
     getglobal(this:GetName()..name):SetText(text);
   end
+  for i = 1, 2 do
+    getglobal(this:GetName().."Preset"..i.."Label"):SetText(string.format(UMM_SETTINGS_GOLDPRESET, i));
+  end
+  getglobal(this:GetName().."SavePresets"):SetText(UMM_SETTINGS_SAVEPRESETS);
 end
 
-function UMMSettingsUI_Refresh()
+function UMMSettingsUI_Refresh(resetGold)
   if (not UMMConfig) then
     return;
   end
@@ -62,6 +71,40 @@ function UMMSettingsUI_Refresh()
   for i, check in ipairs(CHECKS) do
     getglobal("UMMSettingsFrameCheck"..i):SetChecked(check[2]() and 1 or nil);
   end
+  if (resetGold or not goldDirty) then
+    refreshingGold = true;
+    for i = 1, 2 do getglobal("UMMSettingsFramePreset"..i):SetText(string.format("%.0f", UMMSettings:GoldPreset(i))); end
+    refreshingGold, goldDirty = false, false;
+    getglobal("UMMSettingsFramePresetStatus"):SetText(UMM_SETTINGS_PRESETHELP);
+  end
+end
+
+function UMMSettingsUI_PresetEdited()
+  if (not refreshingGold) then
+    goldDirty = true;
+    local status = getglobal("UMMSettingsFramePresetStatus");
+    if (status) then status:SetText(UMM_SETTINGS_PRESETHELP); end
+  end
+end
+
+function UMMSettingsUI_SavePresets()
+  local first, second = getglobal("UMMSettingsFramePreset1"):GetText(), getglobal("UMMSettingsFramePreset2"):GetText();
+  if (not UMMSettings:SetGoldPresets(first, second)) then
+    getglobal("UMMSettingsFramePresetStatus"):SetText("|cffff6060"..UMM_SETTINGS_PRESETERROR.."|r");
+    return false;
+  end
+  UMMSettingsUI_Refresh(true);
+  getglobal("UMMSettingsFramePresetStatus"):SetText(UMM_SETTINGS_PRESETSAVED);
+  return true;
+end
+
+function UMMSettingsUI_ShortcutTip(this)
+  if (not GameTooltip) then return; end
+  GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT", 0, 0);
+  GameTooltip:SetText(UMM_SETTINGS_MAILSHORTCUTS);
+  GameTooltip:AddLine(UMM_SETTINGS_TIP_MAILSHORTCUTS, 1, 1, 1);
+  GameTooltip:AddLine(UMM_SETTINGS_PRESETHELP, 1, 1, 1);
+  GameTooltip:Show();
 end
 
 function UMMSettingsUI_Step(i, direction)
@@ -88,8 +131,10 @@ function UMMSettingsUI_Button(action)
       UMMSettings:Set(row[1], UMM_SEND_DEFAULTS[row[1]]);
     end
     UMMSettings:Set("NoSlotCheck", false);
+    UMMSettings:Set("MailShortcuts", true);
+    UMMSettings:SetGoldPresets(UMM_GOLD_PRESET_DEFAULTS[1], UMM_GOLD_PRESET_DEFAULTS[2]);
     UMMPrompt("send settings back to defaults");
-    UMMSettingsUI_Refresh();
+    UMMSettingsUI_Refresh(true);
   elseif (action == "resetchars") then
     SlashCmdList["UMM"](nil, "reset");
   end

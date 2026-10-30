@@ -48,7 +48,7 @@ function UMMPopUpDialogTemplate_OnLoad(this)
       result = result .. "000."; -- release 4.0.8.2506
     end
     if (kilo > 0) then
-      if (mega > 0) then
+      if (mega > 0 or giga > 0) then
         result = result .. Pad3Zero(kilo);
       else
         result = result .. kilo;
@@ -58,7 +58,7 @@ function UMMPopUpDialogTemplate_OnLoad(this)
       result = result .. "000."; -- release 4.0.8.2506
     end
     if (rest > 0) then
-      if (kilo > 0) then
+      if (kilo > 0 or mega > 0 or giga > 0) then
         result = result .. Pad3Zero(rest);
       else
         result = result .. rest;

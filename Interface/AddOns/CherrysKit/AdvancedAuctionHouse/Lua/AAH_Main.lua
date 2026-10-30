@@ -23,7 +23,7 @@ end
 LoadLocales()
 
 
-local VERSION = "v6.2.2"
+local VERSION = "v6.2.4"
 local DEFAULT_SETTINGS = { -- NB: all settings without default value will be deleted!
 	HistoryMaxSaved = 10,
 	PriceHistoryAutoshow = false,

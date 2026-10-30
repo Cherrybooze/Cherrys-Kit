@@ -21,7 +21,7 @@
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.4.5"
+GB.version = "1.4.6"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -423,15 +423,23 @@ function GB.LoadDatabase()
   if GB.db.loaded then
     GB.db.made = GlobalBank_Import.made
     GB.SetDatabaseNotes(GlobalBank_Import.notes)
+    local seen = {}
     for _, entry in ipairs(GlobalBank_Import) do
       local c = GB.Parse(type(entry) == "table" and entry.s or entry)
       if c then
         GB.db.count = GB.db.count + 1
         c.saved = type(entry) == "table" and entry.saved or nil
+        seen[c.name] = true
         local old = GB.chars[c.name]
         if c.name ~= me and not (old and old.live) and not GB.IsRemoved(c) then
           GB.chars[c.name] = c
         end
+      end
+    end
+    -- Characters the helper no longer exports disappear right away, not at the next Reload UI.
+    for name, old in pairs(GB.chars) do
+      if name ~= me and not (old and old.live) and not seen[name] then
+        GB.chars[name] = nil
       end
     end
   end

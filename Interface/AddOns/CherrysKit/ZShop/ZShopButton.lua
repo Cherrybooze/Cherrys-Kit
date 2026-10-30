@@ -2,9 +2,9 @@
 -- Left click opens the shop on the daily reward page. Right-drag (or Shift+left-drag) moves it
 -- unless locked. Options in the ZShop window (/zshop): show the button, lock it.
 --
--- "Claimed" is a shortcut: the game can't see the Collect click, so the reward counts as claimed
--- on a level 100 character once the button (or /zshop daily) opened the page since the last reset,
--- 00:00 German time (Europe/Berlin). /zshop unmark clears it for this character.
+-- The saved "claimed" field means only that a daily-page link was handed to the browser,
+-- or the native shop window was shown with that link, since 00:00 German time (Europe/Berlin).
+-- It does not confirm a Collect click or reward collection. /zshop unmark clears it.
 --
 -- Saved: ZShop_Char (this character) = { claimed = <os.time()>, x, y, show, lock };
 -- ZShop_Settings (shared file) holds x, y, show, lock too, as the default for new characters,

@@ -18,6 +18,7 @@ function RWA.MoveRuleSoundHistory(oldId, newId)
 end
 local loaded = {} -- [id] = { data, region, env, states, active, anim, testUntil }
 RWA.loaded = loaded
+local releasePlacement,updatePlacementGrip
 
 local dirty = true
 local nextPoll = 0
@@ -68,8 +69,13 @@ local function clearRegionHandlers(region)
 end
 
 local function attachRegionHover(a, region)
+  if not optionsPreview and not moving() and a.data.clickThrough ~= false then
+    clearRegionHandlers(region)
+    return
+  end
   W.Tooltip(region.frame, function()
     if loaded[a.data.id] ~= a then return end
+    if not optionsPreview and not moving() and a.data.clickThrough ~= false then return end
     local lines = Rules.TooltipLines(a.data, a.ruleResult, a.states)
     return a.data.id, unpack(lines)
   end)
@@ -79,6 +85,7 @@ end
 function RWA.UnloadAura(id)
   local a = loaded[id]
   if a then
+    releasePlacement(a)
     for _, output in ipairs(a.outputs) do
       clearRegionHandlers(output.region)
       resetConditionVisuals(output.region)
@@ -112,19 +119,28 @@ function RWA.LoadAura(id)
     for key in pairs(cache) do if not used[key] then cache[key] = nil end end
   end
   a.prepared, a.outputs, a.outputsById = Rules.PrepareActions(data), {}, {}
+  local viewportWidth,viewportHeight
+  if data.autoScaleScreen==true then viewportWidth,viewportHeight=RWA.ViewportSize() end
+  local positionX,positionY,auraScale=RWA.AuraTransform(data,viewportWidth,viewportHeight)
+  a.viewportWidth,a.viewportHeight=viewportWidth,viewportHeight
   for _, outputId in ipairs(a.prepared.order) do
     local item = a.prepared.outputs[outputId]
     local definition = RWA.CopyTable(item.definition)
     definition.id, definition.schemaVersion = data.id, 3
     definition.point = data.point or "CENTER"
-    definition.x = (tonumber(data.x) or 0) + (tonumber(definition.offsetX) or 0)
-    definition.y = (tonumber(data.y) or 0) + (tonumber(definition.offsetY) or 0)
+    definition.x = positionX + (tonumber(definition.offsetX) or 0) * auraScale
+    definition.y = positionY + (tonumber(definition.offsetY) or 0) * auraScale
     RWA.ApplyAuraDefaults(definition)
     local output = { id = outputId, data = definition, sourceId = item.sourceId, active = false, placementCache = {} }
     local parent = item.linkValid and definition.parentOutputId and a.outputsById[definition.parentOutputId]
     output.parent = parent
     output.region = parent and Regions.AcquireChild(parent.region, definition) or Regions.Acquire(definition)
     resetConditionVisuals(output.region)
+    -- Native children inherit their parent's scale. Independent outputs scale
+    -- about the shared aura position; condition Grow multiplies this base.
+    output.region.conditionBaseScale = parent and 1 or auraScale
+    RWA.Try(output.region.frame, "SetScale", output.region.conditionBaseScale)
+    output.region:Place()
     a.outputs[#a.outputs + 1] = output
     a.outputsById[outputId] = output
   end
@@ -167,9 +183,15 @@ local function shouldLoad(load)
   end
   if load.class and load.class ~= "" and UnitClass then
     local main, sub = UnitClass("player")
-    local want = string.lower(load.class)
-    if string.lower(main or "") ~= want and string.lower(sub or "") ~= want then
-      return false
+    local function normalize(value)
+      local token = RWA.ClassToken and RWA.ClassToken(value) or value
+      return type(token) == "string" and string.lower(token) or token
+    end
+    local want = normalize(load.class)
+    if normalize(main or "") ~= want and normalize(sub or "") ~= want then
+      if type(UnitClassToken) ~= "function" then return false end
+      main, sub = UnitClassToken("player")
+      if normalize(main or "") ~= want and normalize(sub or "") ~= want then return false end
     end
   end
   if load.level and UnitLevel and (UnitLevel("player") or 0) < load.level then
@@ -197,6 +219,7 @@ function RWA.ApplyConditionVisuals(region, effects, now)
   if scale ~= region.conditionScale then
     RWA.Try(region.frame, "SetScale", scale)
     region.conditionScale = scale
+    region:Place(region.placeDX or 0,region.placeDY or 0)
   end
   local overlay = effects.overlayIcon
   if overlay then
@@ -548,16 +571,16 @@ end
 
 local function evaluate(a, now)
   local data = a.data
-  local snapshot = Rules.Observe(data, now, a.env)
+  local snapshot = Rules.Observe(data, now, a.env, a.prepared.usedSources)
   local effects = Rules.Evaluate(data, snapshot, shouldLoad(data.load), a.prepared)
   local liveData = RWA.GetAura(data.id) or data
   if liveData.schemaVersion ~= 3 then liveData = data end
-  local liveSnapshot = liveData == data and snapshot or Rules.Observe(liveData, now, a.env)
   local livePrepared = liveData == data and a.prepared or a.livePrepared
   if liveData ~= data and (not livePrepared or a.livePreparedData ~= liveData) then
     livePrepared = Rules.PrepareActions(liveData)
     a.livePrepared, a.livePreparedData = livePrepared, liveData
   end
+  local liveSnapshot = liveData == data and snapshot or Rules.Observe(liveData, now, a.env, livePrepared.usedSources)
   local liveEffects = liveData == data and effects or Rules.Evaluate(liveData, liveSnapshot, shouldLoad(liveData.load), livePrepared)
   a.realData, a.realStates, a.realActive = liveData, liveSnapshot, liveEffects.visible
   evaluateActionEffects(a, liveEffects, now)
@@ -595,6 +618,22 @@ local function evaluate(a, now)
   a.active = optionsPreview and #a.outputs>0 or effects.visible
 end
 
+local function applyAuraTransform(a,width,height)
+  local x,y,scale=RWA.AuraTransform(a.data,width,height)
+  a.viewportWidth,a.viewportHeight=width,height
+  for _,output in ipairs(a.outputs) do
+    output.data.x=x+(tonumber(output.data.offsetX) or 0)*scale
+    output.data.y=y+(tonumber(output.data.offsetY) or 0)*scale
+    output.region.conditionBaseScale=output.parent and 1 or scale
+    output.region:Place(output.region.placeDX or 0,output.region.placeDY or 0)
+  end
+end
+
+local function placementUIScale()
+  local ok,value=pcall(function() return GetUIScale and GetUIScale() end)
+  return ok and type(value)=="number" and value>0 and value<math.huge and value or 1
+end
+
 local function frame(now)
   -- The window can close without our button (Escape, another addon), so edit mode follows it.
   if optionsPreview and RWA.IsOptionsOpen and not RWA.IsOptionsOpen() then
@@ -609,10 +648,21 @@ local function frame(now)
   end
   local reevaluate = poll or dirty
   dirty = false
+  local viewportRead,viewportWidth,viewportHeight=false
+  local gripScale
+  if moving() then
+    viewportWidth,viewportHeight=RWA.ViewportSize();viewportRead=true
+    gripScale=placementUIScale()
+  end
   for _, a in pairs(loaded) do
+    if a.data.autoScaleScreen==true then
+      if not viewportRead then viewportWidth,viewportHeight=RWA.ViewportSize();viewportRead=true end
+      if viewportWidth~=a.viewportWidth or viewportHeight~=a.viewportHeight then applyAuraTransform(a,viewportWidth,viewportHeight) end
+    end
     if reevaluate then
       evaluate(a, now)
     end
+    if a.dragUpdate then a.dragUpdate() end
     for _, output in ipairs(a.outputs) do
       local alpha = RWA.ApplyConditionVisuals(output.region, output.conditionEffects, now)
       -- The native child frame inherits its parent's disabled fade as well.
@@ -641,9 +691,7 @@ local function frame(now)
         end
       end
     end
-    if a.dragUpdate then
-      a.dragUpdate()
-    end
+    if a.grip then updatePlacementGrip(a,viewportWidth,viewportHeight,gripScale) end
   end
   if RWA.UpdatePreview and RWA.IsOptionsOpen and RWA.IsOptionsOpen() then
     RWA.UpdatePreview(now)
@@ -667,41 +715,163 @@ function RWA.TestAuras(id)
   RWA.Print("showing", count, "aura(s) for 10 seconds")
 end
 
-function RWA.MakeMovable(a)
-  local region = a.region
-  if not region then return end
-  a.dragUpdate = W.MakeDraggable(region.frame, function()
-    return a.data.x or 0, a.data.y or 0
-  end, function(x, y)
-    -- Stored offsets are screen style (+y down), the same as GetCursorPos.
-    x, y = math.floor(x + 0.5), math.floor(y + 0.5)
-    a.data.x, a.data.y = x, y
-    for _, output in ipairs(a.outputs) do
-      output.data.x = x + (tonumber(output.data.offsetX) or 0)
-      output.data.y = y + (tonumber(output.data.offsetY) or 0)
-      output.region:Place(0, output.parent and (output.region.elementDy or 0) or (output.dy or 0))
-    end
-  end, function()
-    if RWA.OnAuraMoved then
-      RWA.OnAuraMoved(region.data.id)
-    end
-  end)
+-- One fixed-size XML-scripted grip per concurrently movable aura. These native
+-- frames survive Reload UI, so retain/reuse the bounded pool and retire old owners.
+local placementGrips=RWA.placementGrips or {}
+RWA.placementGrips=placementGrips
+for _,grip in ipairs(placementGrips) do
+  if grip.owner and grip.owner.cancelDrag then grip.owner.cancelDrag() end
+  grip.owner,grip.shown=nil,nil
+  clearRegionHandlers(grip);RWA.Try(grip.frame,"Hide")
 end
 
+releasePlacement=function(a)
+  if a.cancelDrag then a.cancelDrag() end
+  a.dragUpdate,a.cancelDrag=nil,nil
+  local grip=a.grip
+  if not grip then return end
+  grip.owner,grip.shown,grip.x,grip.y,grip.relative=nil,nil,nil,nil,nil
+  clearRegionHandlers(grip);RWA.Try(grip.frame,"Hide")
+  a.grip=nil
+end
+
+local function acquirePlacementGrip(a)
+  local grip
+  for _,candidate in ipairs(placementGrips) do if not candidate.owner then grip=candidate;break end end
+  if not grip then
+    grip={frame=W.ChildRegionFrame("UIParent")}
+    W.SetSize(grip.frame,16,16)
+    RWA.Try(grip.frame,"SetFrameStrata","MEDIUM");RWA.Try(grip.frame,"SetFrameLevel",10)
+    grip.art=W.Texture(grip.frame,"OVERLAY","Grip_Highlight")
+    W.SetSize(grip.art,16,16);W.SetPoint(grip.art,"CENTER",grip.frame,"CENTER",0,0)
+    W.SetColor(grip.art,.3,1,1,1)
+    placementGrips[#placementGrips+1]=grip
+  end
+  grip.owner,a.grip=a,grip
+  W.EnableMouse(grip.frame,true)
+  W.Tooltip(grip.frame,function()
+    if loaded[a.data.id]~=a or not moving() then return end
+    return (RWA.Editor.names[a.data.id] or a.data.id).." - placement",
+      "Drag to move every output together.","Shift-drag right to enlarge; left to shrink (10-400%).",
+      optionsPreview and "Position and size stay in the draft until Save aura." or "Placement is saved for this aura; /rwa lock finishes."
+  end)
+  return grip
+end
+
+updatePlacementGrip=function(a,width,height,uiScale)
+  local grip=a.grip
+  if not grip or grip.owner~=a then return end
+  local left,top
+  for _,output in ipairs(a.outputs) do
+    local frame=output.region.frame
+    local ok,x,y
+    if type(frame.GetPos)=="function" then ok,x,y=pcall(frame.GetPos,frame) end
+    if ok and type(x)=="number" and type(y)=="number" and math.abs(x)<math.huge and math.abs(y)<math.huge then
+      left,top=math.min(left or x,x),math.min(top or y,y)
+    end
+  end
+  if left then
+    -- GetPos reports physical screen pixels; the grip itself stays 16 UI units
+    -- irrespective of aura size, Grow effects, native parent scale or UI scale.
+    local x,y=left/(uiScale or 1)-16,top/(uiScale or 1)-16
+    if width then x=math.max(0,math.min(math.max(0,width-16),x)) end
+    if height then y=math.max(0,math.min(math.max(0,height-16),y)) end
+    if x~=grip.x or y~=grip.y or grip.relative then
+      W.SetPoint(grip.frame,"TOPLEFT","UIParent","TOPLEFT",x,y)
+      grip.x,grip.y,grip.relative=x,y,nil
+    end
+  elseif grip.relative~=a.region.frame then
+    W.SetPoint(grip.frame,"BOTTOMRIGHT",a.region.frame,"TOPLEFT",0,0)
+    grip.relative=a.region.frame
+  end
+  if not grip.shown then RWA.Try(grip.frame,"Show");grip.shown=true end
+end
+
+function RWA.CancelAuraPlacement()
+  for _,a in pairs(loaded) do if a.cancelDrag then a.cancelDrag() end end
+end
+
+local function placementCursor()
+  if type(GetCursorPos)~="function" then return end
+  local ok,x,y=pcall(GetCursorPos)
+  if ok and type(x)=="number" and type(y)=="number" and math.abs(x)<math.huge and math.abs(y)<math.huge then return x,y end
+end
+local function leftButton(key) return key==nil or key=="LBUTTON" or key=="LeftButton" end
+
+function RWA.MakeMovable(a)
+  if not a.region then return end
+  local grip=a.grip or acquirePlacementGrip(a)
+  local function valid() return moving() and loaded[a.data.id]==a end
+  a.cancelDrag=function() a.placementDrag=nil end
+  a.dragUpdate=function()
+    local drag=a.placementDrag
+    if not drag then return end
+    local width,height
+    if a.data.autoScaleScreen==true then width,height=RWA.ViewportSize() end
+    if not valid() or placementUIScale()~=drag.uiScale or width~=drag.width or height~=drag.height then a.cancelDrag();return end
+    local cx,cy=placementCursor()
+    if not cx then a.cancelDrag();return end
+    local changed
+    if drag.kind=="scale" then
+      local scale=math.max(RWA.MIN_AURA_SCALE,math.min(RWA.MAX_AURA_SCALE,
+        drag.scale+math.floor((cx-drag.cx)/drag.uiScale/2+.5)/100))
+      changed=scale~=RWA.AuraScale(a.data)
+      a.data.scale=scale
+    else
+      local _,_,_,rx,ry=RWA.AuraTransform(a.data,width,height)
+      local x=(drag.x+math.floor((cx-drag.cx)/drag.uiScale+.5))/rx
+      local y=(drag.y+math.floor((cy-drag.cy)/drag.uiScale+.5))/ry
+      changed=x~=a.data.x or y~=a.data.y
+      a.data.x,a.data.y=x,y
+    end
+    if changed then
+      drag.changed=true
+      applyAuraTransform(a,width,height)
+      if optionsPreview and RWA.UnifiedEditor and RWA.UnifiedEditor.PlacementChanged then RWA.UnifiedEditor.PlacementChanged(a.data.id,drag.kind) end
+    end
+  end
+  local function begin(key,resize)
+    if not leftButton(key) or not valid() then return end
+    RWA.CancelAuraPlacement()
+    local cx,cy=placementCursor();if not cx then return end
+    local x,y=RWA.AuraTransform(a.data)
+    local width,height
+    if a.data.autoScaleScreen==true then width,height=RWA.ViewportSize() end
+    a.placementDrag={cx=cx,cy=cy,x=x,y=y,scale=RWA.AuraScale(a.data),uiScale=placementUIScale(),
+      kind=resize and "scale" or "position",width=width,height=height}
+  end
+  local function finish(_,key)
+    if not leftButton(key) then return end
+    local drag=a.placementDrag
+    if not drag then return end
+    a.dragUpdate();a.placementDrag=nil
+    if valid() and RWA.OnAuraMoved then RWA.OnAuraMoved(a.data.id,drag.kind,drag.changed==true) end
+  end
+  W.SetScript(a.region.frame,"OnMouseDown",function(_,key) begin(key,false) end)
+  W.SetScript(a.region.frame,"OnMouseUp",finish)
+  W.SetScript(grip.frame,"OnMouseDown",function(_,key)
+    begin(key,type(IsShiftKeyDown)=="function" and IsShiftKeyDown())
+  end)
+  W.SetScript(grip.frame,"OnMouseUp",finish)
+  local width,height=RWA.ViewportSize()
+  updatePlacementGrip(a,width,height,placementUIScale())
+end
 local function applyMoving()
   for _, a in pairs(loaded) do
+    if a.cancelDrag then a.cancelDrag() end
+    for _, output in ipairs(a.outputs) do
+      if not moving() then
+        W.SetScript(output.region.frame, "OnMouseDown", nil)
+        W.SetScript(output.region.frame, "OnMouseUp", nil)
+      end
+      attachRegionHover(a, output.region)
+    end
     if moving() then
       if not a.dragUpdate then
         RWA.MakeMovable(a)
       end
     else
-      a.dragUpdate = nil
-      if a.region then
-        W.SetScript(a.region.frame, "OnMouseDown", nil)
-        W.SetScript(a.region.frame, "OnMouseUp", nil)
-        -- Locked frames retain hover but no drag handlers.
-        W.EnableMouse(a.region.frame, true)
-      end
+      releasePlacement(a)
     end
   end
   dirty = true
@@ -816,6 +986,13 @@ function RWA.GetAuraValue(id, var)
   local data, states = a.realData or a.data, a.realStates or a.states
   if data.schemaVersion == 2 or data.schemaVersion == 3 then
     state = states[data.primarySourceId]
+    if not state and type(data.primarySourceId) == "string" then
+      -- Legacy callers explicitly requesting the primary still get its value;
+      -- unreferenced compatibility sources need no background observation.
+      local observed = Rules.Observe(data, RWA.Now(), a.env, { [data.primarySourceId] = true })
+      state = observed[data.primarySourceId]
+      states[data.primarySourceId] = state
+    end
   else
     for i = 1, #(data.triggers or {}) do
       if states[i] and states[i].show then

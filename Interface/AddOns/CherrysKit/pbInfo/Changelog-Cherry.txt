@@ -1,3 +1,9 @@
+pbInfo v0.60-ck4 for Cherry's Kit (2026-10-29)
+- Reuse mouseover unit facts within each tooltip update and share that snapshot with MobDB.
+  The next update reads fresh facts. Other MobDB callers keep their one-argument API;
+  learned NPC maxima still grow only at full health. Native appearance needs an in-game check.
+- Retain ck3's missing-frame blood-bar guard, bounded chat history and quest-sort type checks.
+
 pbInfo v0.60-ck2 for Cherry's Kit (2026-10-27)
 - New "Hide default castbar" tick in the CastingBar settings, on by default: the game's own cast bar
   stays hidden (rom weakauras' "My cast" and "Target's cast" auras replace it). Not hidden while

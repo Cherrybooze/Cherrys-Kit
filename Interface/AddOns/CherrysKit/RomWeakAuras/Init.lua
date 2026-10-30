@@ -6,7 +6,7 @@ local RWA = RWA
 
 RWA.name = "RomWeakAuras"
 RWA.title = "rom weakauras"
-RWA.version = "0.9.22"
+RWA.version = "0.9.26"
 -- Inside Cherry's Kit the addon lives in Interface/AddOns/CherrysKit/RomWeakAuras/ (set by the kit's KitPaths.lua).
 RWA.path = (CherrysKit_Paths and CherrysKit_Paths.RomWeakAuras) or "Interface/AddOns/RomWeakAuras/"
 RWA.media = RWA.path .. "Media/"

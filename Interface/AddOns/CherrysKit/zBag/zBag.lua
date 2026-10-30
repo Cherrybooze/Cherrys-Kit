@@ -439,7 +439,7 @@ function zBag_Update()
 			
 			SetItemButtonLuminance(item,locked);
 			if (zBag_VAR["slotnumbers"] == 1) then
-				zBagKit.Label(item, i, 13*ZBAG_SCALE);
+				zBagKit.Label(item, i, zBagKit.SlotNumberFontSize()*ZBAG_SCALE);
 			else
 				zBagKit.Label(item, nil);
 			end
@@ -454,7 +454,8 @@ function zBag_Update()
 		end
 	end
 	
-	AskNumberFrame:Hide();
+	-- Inventory events also arrive while a split amount is being entered.
+	-- Refresh the slots without dismissing the player's number dialog.
 
 for i = 1, ZBAG_MAXEQ do
 	item = getglobal("zEqItem"..i);
@@ -632,7 +633,8 @@ end
 
 --yecho("zBag_OnHide");
 function zBag_OnHide(this)
-	HideUIPanel(AskNumberFrame);
+	-- zBank shares this handler; hiding it must not cancel a backpack split.
+	if (this == zBag) then HideUIPanel(AskNumberFrame); end
 	if (zBagKit.IsOneBag() and BankFrame:IsVisible()) then
 		HideUIPanel(BankFrame);
 	end

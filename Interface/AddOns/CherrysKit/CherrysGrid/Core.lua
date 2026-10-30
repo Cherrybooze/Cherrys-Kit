@@ -10,7 +10,7 @@
 CherrysGrid = {}
 local G = CherrysGrid
 
-G.version = "1.1.1"
+G.version = "1.1.3"
 G.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.CherrysGrid) or "Interface/AddOns/CherrysGrid/"
 G.MEDIA = G.BASE_PATH .. "Media/"
 G.MAX_UNITS = 48 -- 36 members + 12 pets; the frames are declared in CherrysGrid.xml
@@ -432,9 +432,7 @@ function G.TryStart()
   end
   G.charName = name
   G.ready = true
-  G.Roster.Update()
   G.LoadProfile()
-  G.Layout.Apply()
   G.Refresh(true)
 end
 
@@ -467,8 +465,8 @@ function G.OnUpdate(elapsed)
   G.elapsed = 0
   if G.rosterElapsed > 1 then
     G.rosterElapsed = 0
-    if G.Roster.Update() then
-      G.Refresh(true)
+    if G.UpdateRoster() then
+      G.Refresh(true, true)
       return
     end
     G.Layout.KeepPartyHidden()
@@ -491,19 +489,24 @@ function G.OnUpdate(elapsed)
   end
 end
 
--- Redraws everything. layout=true also re-places the frames (size or roster changed).
-function G.Refresh(layout)
-  if not G.ready then
-    return
-  end
+-- Select the group profile before the one roster scan, so the scan uses its
+-- filters and ordering even when joining/leaving a raid.
+function G.UpdateRoster()
   local wanted = G.Roster.GroupType()
-  if wanted ~= G.groupType then
+  local profileChanged = wanted ~= G.groupType
+  if profileChanged then
     G.groupType = wanted
     G.LoadProfile()
-    layout = true
   end
+  return G.Roster.Update(wanted) or profileChanged
+end
+
+-- Redraws everything. rosterUpdated reuses the scan performed by OnUpdate.
+function G.Refresh(layout, rosterUpdated)
+  if not G.ready then return end
+  if not rosterUpdated then layout = G.UpdateRoster() or layout end
   if layout then
-    G.Layout.Apply()
+    G.Layout.Apply(true)
   end
   G.Frames.UpdateAll()
 end

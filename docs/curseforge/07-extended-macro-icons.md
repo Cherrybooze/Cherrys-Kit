@@ -4,6 +4,10 @@
 
 Based on ExtendedMacroIcons 2.15 by Amurilon, cleaned up for Cherry's Kit.
 
+## Updated in 3.0.4
+
+Macro icon lookups are cached between macro changes, and turning the addon off in the kit removes its hooks from the last session.
+
 ## Features
 
 - **About 10,500 extra icons**: class skills, equipment, weapons, items, festival, furniture and more, in 58 categories.

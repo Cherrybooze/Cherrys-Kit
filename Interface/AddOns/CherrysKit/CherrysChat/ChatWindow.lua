@@ -933,7 +933,12 @@ local function clearOthers(i)
   end
 end
 
+local function mouseButton(key)
+  return ({LeftButton="LBUTTON",RightButton="RBUTTON",MiddleButton="MBUTTON"})[key] or key or "LBUTTON"
+end
+
 local function mouseDown(i, key)
+  key = mouseButton(key)
   Wn.HideMenu()
   if key == "RBUTTON" then
     Wn.OpenMenu(i)
@@ -941,7 +946,7 @@ local function mouseDown(i, key)
   end
   local idx = Wn.RowAtCursor(i)
   local cx, cy = GetCursorPos()
-  Wn.press = { i = i, idx = idx, x = cx, y = cy, moved = false }
+  Wn.press = { i = i, key = key, idx = idx, x = cx, y = cy, moved = false }
   Wn.painting, Wn.edgeWait = i, 0
 end
 
@@ -952,6 +957,11 @@ end
 function Wn.PaintUpdate(elapsed)
   local i = Wn.painting
   local p = Wn.press
+  if not i or not p or p.i ~= i then
+    Wn.press = nil
+    Wn.painting = false
+    return
+  end
   local s = st(i)
   if not p.moved then
     local cx, cy = GetCursorPos()
@@ -987,12 +997,15 @@ end
 function Wn.MouseUp(i, key)
   guarded(function()
     local p = Wn.press
-    Wn.press = nil
-    if Wn.painting ~= i or not p then
+    if not p or mouseButton(key) ~= mouseButton(p.key) then
       return
     end
+    Wn.press = nil
     Wn.painting = false
-    if p.moved then
+    Wn.edgeWait = nil
+    -- Mouse-up belongs to the pressed button, even on another overlay. Only
+    -- a plain click released in its original window may activate a hyperlink.
+    if p.i ~= i or p.moved then
       return -- painted lines stay blue until a click elsewhere; right-click them to copy
     end
     -- A plain click: clear the paint and do what the game's chat does.
@@ -1331,6 +1344,7 @@ end
 ---------------------------------------------------------------------------
 
 function Wn.HideAll()
+  Wn.press, Wn.painting, Wn.edgeWait = nil, false, nil
   for i = 1, Wn.WINDOWS do
     local o = overlay(i)
     if o then
@@ -1356,6 +1370,7 @@ function Wn.Apply()
       end
     end
   end
+  Wn.press, Wn.painting, Wn.edgeWait = nil, false, nil
   Wn.state, Wn.rows = {}, {}
   if Wn.Owns(1) then
     Wn.flushed = nil -- lines the game drew while Cherry's chat was off go out of sight too

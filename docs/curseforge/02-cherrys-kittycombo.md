@@ -4,7 +4,19 @@
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
-Version 1.7.9 fixes prediction, import restrictions, editor drafts, proc cycles, cooldown conditions, named priorities and action-slot handling.
+## Updated in 1.7.14
+
+The default mode button and its readout sit 32 UI units lower to clear housing/furniture controls. Manually saved positions are preserved; verify the default position with native housing controls visible.
+
+## Updated in 1.7.13
+
+Closed or natively hidden mode pickers reject delayed clicks, so cancelling an editor pick cannot change the live HUD mode.
+
+## Updated in 1.7.12
+
+The mode button and readout share a screen-aware mode-icon picker, with a top-down left-edge layout when it fits, viewport/UI-scale handling and pages for extra modes. The main action menu adds **changemode**: select its mode icon and get an editable **Mode is off** condition automatically. Picking while editing changes only the draft. Execution switches on that press; the next press skips the default guarded switch. Prediction simulates following mode conditions on a private snapshot without changing live modes, settings or cooldowns. Shared mode actions require 1.7.12; existing CKC1/CKC2/CKC3 imports remain supported. Native popup/row interaction still needs in-game testing.
+
+Version 1.7.11's missing range-probe guard remains, alongside the 0.2-second dispatch window, live action eligibility, missing-versus-zero mana handling, condition thresholds, anti-repeat behavior and 1.1-second prediction lookahead. `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6` selects the old A/B window; use `0.2` to restore the default. Successful-cast throughput gains have not been measured. 1.7.9's prediction, import, editor, proc, cooldown and action-slot fixes carry forward.
 
 ## Features
 
@@ -13,7 +25,7 @@ Version 1.7.9 fixes prediction, import restrictions, editor drafts, proc cycles,
 - **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on (switch modes with `/kc toggle aoe`, also from macros).
 - **Modes**: switch your kitties between aoe, single, burst, dps, tank, heal, interrupt, pvp, farm, boss, request or your own modes, and let "Mode is on" rows decide what fires.
   - **Mode button** near the minimap (Kitty options > Show the mode button): shows the mode that is on as a picture. Click it to see every mode, click one to switch (the others turn off).
-  - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for a dropdown menu of every mode and "No mode".
+  - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for the same screen-aware mode-icon picker, including "No mode".
   - Both move with right-drag (or Shift+drag) and can be locked. Also `/kc mode <name>` in chat or macros.
   - Request mode is now a mode called request; the new condition "Shift is held" checks the Shift key.
 - **canCast / canUse** can also check that something is *on cooldown*.
@@ -23,7 +35,7 @@ Version 1.7.9 fixes prediction, import restrictions, editor drafts, proc cycles,
 - **Create macro**: one click makes a `/run Kitty.attack(...)` macro with a random icon and puts it on your cursor, and shows whether one already exists.
 - **Class icons** next to each kitty's class in the list and in the class menus.
 - **New look**: dark blue windows with gold borders (shared with rom weakauras). Every window can be resized by dragging the gold corner (60% to 160%) and remembers its size and position.
-- **Faster key presses**: only the skills a command checks are read (about 3 reads per press instead of about 57), with the same picks as the original 0.973. Skills and items that work mid-cast can fire while you cast.
+- **Lazy skill reads**: only the skills requested by the priority walk are read. Skills and items that work mid-cast can still be attempted while you cast; client/server acceptance is checked in game.
 - **Kitty tracker**: rom weakauras can show the next skill a kitty would fire, and its "KittyCombo mode" aura shows the mode that is on.
 - **Raid frame clicks**: Cherry's Grid can run a kitty on the party or raid member you click, and your target comes back afterwards.
 - **Changelog** button in the settings window, and **/kc probe** to check your client.

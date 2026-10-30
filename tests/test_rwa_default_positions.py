@@ -34,11 +34,11 @@ class DefaultPositionTests(unittest.TestCase):
     def test_factory_positions_target_health_and_missing_buff_are_clear_canonical_defaults(self):
         self.lua.execute('RWA_DB=nil;RWA.InitDB();RWA.NormalizeSavedAuras()')
         expected={
-            'Player health':(-390,90),'Target health':(-390,-215),"Target's cast":(-390,-245),
-            'My cast':(-20,260),'In combat':(80,-320),"Target's last cast":(215,-320),
-            'Hits per second':(260,-170),'Threat meter':(-510,-150),'KittyCombo mode':(-20,320),
-            'Example: debuff on target':(-150,-305),'Example: buff on me':(260,-70),
-            'Example: missing buff reminder':(70,10),
+            'Player health':(44,291),'Target health':(-390,-215),"Target's cast":(0,-250),
+            'My cast':(34,254),'In combat':(153,-363),"Target's last cast":(291,-363),
+            'Hits per second':(338,-201),'Threat meter':(-343,-202),'KittyCombo mode':(48,314),
+            'Example: debuff on target':(-106,-349),'Example: buff on me':(341,-91),
+            'Example: missing buff reminder':(-98,-208),
         }
         auras=self.lua.globals().RWA_DB.auras
         for name,position in expected.items():
@@ -47,6 +47,7 @@ class DefaultPositionTests(unittest.TestCase):
                 self.assertEqual(auras[name].point,'CENTER')
                 self.assertEqual(auras[name].schemaVersion,3)
         target=auras['Target health']
+        self.assertEqual((auras['Class icon'].point,auras['Class icon'].x,auras['Class icon'].y),('TOPRIGHT',-421,428))
         self.assertEqual(len(target.rules),1)
         self.assertEqual(len(target.rules[1].actions),1)
         self.assertEqual(target.sources[1].unit,'target')
@@ -92,14 +93,14 @@ class DefaultPositionTests(unittest.TestCase):
           local d=RWA_DB.auras["Target health"]
           local state=RWA.Rules.Observe(d,100,{})
           assert(state.s1.value==75 and state.s1.total==100)
-          assert(RWA.Regions.FormatText("%v / %t",state.s1,100)=="75%")
+          assert(RWA.Regions.FormatText("%v / %t",state.s1,100)=="? / ? (75%)")
           pbInfo={MobDB={Mobs={Mob={[100]={Warrior={healthpoints=4000}}}}}}
           state=RWA.Rules.Observe(d,101,{})
           assert(state.s1.value==75 and state.s1.total==100)
-          assert(RWA.Regions.FormatText("%v / %t",state.s1,101)=="~3000 / 4000")
+          assert(RWA.Regions.FormatText("%v / %t",state.s1,101)=="~3000 / 4000 (75%)")
           UnitIsPlayer=function() return true end;UnitHealth=function() return 3000 end;UnitMaxHealth=function() return 4000 end
           state=RWA.Rules.Observe(d,102,{})
-          assert(RWA.Regions.FormatText("%v / %t",state.s1,102)=="3000 / 4000")
+          assert(RWA.Regions.FormatText("%v / %t",state.s1,102)=="3000 / 4000 (75%)")
         ''')
 
     def test_saved_positions_edits_and_deleted_defaults_survive_reloads_and_reset_restores_factories(self):
@@ -121,7 +122,7 @@ class DefaultPositionTests(unittest.TestCase):
           assert(RWA_DB.settings.starterFlowDefaultsVersion==1)
           local hp,cast=RWA_DB.auras["Target health"],RWA_DB.auras["Target's cast"]
           assert(hp.x==-390 and hp.y==-215 and hp.rules[1].actions[1].output.width==240)
-          assert(cast.x==hp.x and cast.y==-245 and cast.schemaVersion==3)
+          assert(cast.x==0 and cast.y==-250 and cast.schemaVersion==3)
           assert(RWA_DB.auras["Example: buff on me"] and RWA_DB.auras["Hits per second"] and RWA_DB.auras["Threat meter"])
           for _,id in ipairs({"Player health","Target health","Target's cast","My cast","In combat","Target's last cast","Hits per second","Threat meter"}) do
             RWA_DB.auras[id].x,RWA_DB.auras[id].y=11,22

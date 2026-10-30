@@ -1,8 +1,16 @@
 # Cherry's Grid
 
-Version **1.1.1** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **1.1.3** · Kit release **0.11.81** · [All addons / hub](../README.md)
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
+
+## Updated in 1.1.3
+
+Direct spells and ordinary macro lines preserve the old target through a verified player/party/raid/pet/focus unit ID, or a verified temporary stash in an empty focus slot. Existing focus slots are preserved. If neither path is available, the action is skipped before changing your target and a message explains why. Failed target switches skip the action; failed restoration is reported explicitly. No undocumented last-target API or name/GUID targeting is assumed.
+
+The roster is scanned once for startup, a periodic roster refresh or an explicit layout refresh. Layout reuses that scan, and group-profile selection happens before it. Saved profiles and click bindings retain their format.
+
+Target preservation still depends on the client's native calls and the old unit remaining available. Arbitrary delayed Lua/macro target changes after the synchronous click finishes are outside this restoration scope. Kitty actions retain KittyCombo's existing `attackOn` path; native input and restoration need an in-game check.
 
 ## Features
 

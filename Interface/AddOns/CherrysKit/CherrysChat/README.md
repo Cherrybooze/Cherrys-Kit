@@ -1,10 +1,14 @@
 # Cherry's Chat
 
-Version **0.10.7** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **0.10.9** · Kit release **0.11.81** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
+
+## Updated in 0.10.9
+
+Releasing the pressed button over another chat overlay clears the originating press/painting state and keeps its painted selection. An unrelated button release does not end the drag. Only a plain click released in its original window activates a hyperlink. Normal selection and native/modified link clicks retain regression coverage; cross-window input still needs an in-game check.
 
 ## Updated in 0.10.7
 

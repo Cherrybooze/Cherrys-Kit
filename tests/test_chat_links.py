@@ -63,12 +63,13 @@ class ChatLinkTests(unittest.TestCase):
               -- Like a successful native handler, return nil after the action.
             end;
         """)
-        for event in ("OnMouseDown", "OnMouseUp"):
-            node = self.client.node("CherrysChat_W1")
-            script = node.find(f"ui:Scripts/ui:{event}", {"ui": "http://www.runewaker.com/"})
-            self.lua.globals().CherrysChat_W1.scripts[event] = self.lua.eval(
-                f"function(this, key) {script.text} end"
-            )
+        for window in ("CherrysChat_W1", "CherrysChat_W2"):
+            for event in ("OnMouseDown", "OnMouseUp"):
+                node = self.client.node(window)
+                script = node.find(f"ui:Scripts/ui:{event}", {"ui": "http://www.runewaker.com/"})
+                self.lua.globals()[window].scripts[event] = self.lua.eval(
+                    f"function(this, key) {script.text} end"
+                )
 
     def install_rows(self, text, width=200, visible=None):
         rows, links = self.win.WrapMessage(text, width)
@@ -135,6 +136,41 @@ class ChatLinkTests(unittest.TestCase):
                 self.assertEqual((g.this, g.arg1, g.arg2, g.arg3), ("old this", "old 1", "old 2", "old 3"))
                 self.assertEqual(len(g.tooltipCalls), number)
                 self.assertEqual(g.tooltipCalls[number], full)
+
+    def test_cross_window_release_finishes_the_originating_drag_and_keeps_selection(self):
+        # The copy fixture has no rendered line widgets; retain actual selection
+        # and XML mouse handlers while leaving only native drawing out of scope.
+        self.lua.execute("CherrysChat.Win.Draw=function() end")
+        self.install_rows(item() + " another line", 12)
+        self.cursor(1, 1)
+        self.client.event("CherrysChat_W1", "OnMouseDown")
+        self.lua.globals().cursorX += 10
+        self.win.PaintUpdate(0.1)
+        self.assertTrue(self.win.press.moved)
+        selected = self.win.SelectedText(1)
+        self.client.event("CherrysChat_W2", "OnMouseUp")
+        self.assertIsNone(self.win.press)
+        self.assertFalse(self.win.painting)
+        self.assertEqual(self.win.SelectedText(1), selected)
+        self.assertEqual(len(self.lua.globals().nativeCalls), 0)
+        self.win.PaintUpdate(0.2)
+        self.assertFalse(self.win.broken)
+        self.cursor(1, 1)
+        self.client.event("CherrysChat_W1", "OnMouseDown")
+        self.client.event("CherrysChat_W1", "OnMouseUp")
+        self.assertEqual(len(self.lua.globals().nativeCalls), 1)
+
+    def test_unrelated_button_release_keeps_the_left_drag_active(self):
+        self.install_rows(item())
+        self.cursor(1, 1)
+        self.client.event("CherrysChat_W1", "OnMouseDown")
+        self.client.event("CherrysChat_W2", "OnMouseUp", "RBUTTON")
+        self.assertIsNotNone(self.win.press)
+        self.assertEqual(self.win.painting, 1)
+        self.client.event("CherrysChat_W2", "OnMouseUp", "LBUTTON")
+        self.assertIsNone(self.win.press)
+        self.assertFalse(self.win.painting)
+        self.assertEqual(len(self.lua.globals().nativeCalls), 0)
 
     def test_native_nil_return_after_ctrl_click_preview_does_not_show_fallback_tooltip(self):
         self.lua.globals().ctrlHeld = True

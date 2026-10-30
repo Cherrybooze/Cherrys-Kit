@@ -1,10 +1,36 @@
 # Cherry's KittyCombo
 
-Version **1.7.9** · Kit release **0.11.79** · [All addons / hub](../README.md)
+Version **1.7.14** · Kit release **0.11.84** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
+
+## Updated in 1.7.14
+
+The mode button's default position is **32 UI units lower** to clear the game's housing/furniture controls. Its default readout moves by the same amount to preserve the gap. Manually saved button/readout positions take precedence and are retained. Check the default placement inside a house with the native controls visible.
+
+## Updated in 1.7.13
+
+Closing the mode picker clears its selectable choices, and hidden pickers reject delayed clicks. Cancelling an editor selection cannot fall through to a live HUD mode switch. This applies to explicit close and native hiding; dispatch and prediction behavior remain as described below.
+
+## Updated in 1.7.12
+
+- **Change kitty mode** is a main action-menu entry, stored as `changemode`. Pick a built-in or custom named mode from its icon picker; the row uses that mode's icon automatically.
+- Choosing the mode adds an ordinary **Mode is off** condition for it. The on/off choice is editable. Retargeting the action updates its generated guard while preserving manual conditions; switching the row to another command type removes its own generated guard.
+- The action switches the mode on that key press. With the default guard, the next press skips that switch and continues under the new mode. Picking icons while editing does not change the live mode; save the kitty and its parent list to apply the draft.
+- The HUD mode button and current-mode readout use the same icon picker. It opens top-down near the left edge when a column fits, chooses available space at other edges, and clamps to the viewport at the current UI scale. Extra modes are available through page arrows instead of being truncated. Saved HUD positions are preserved.
+- Prediction can show a mode-switch icon and simulate following mode conditions on a private snapshot. It never switches the live mode, writes settings or changes live cooldowns. New mode actions require KittyCombo 1.7.12 when sharing; existing CKC1/CKC2/CKC3 codes still import.
+
+Native popup placement and mode-row interaction still need an in-game check. The 0.2-second dispatch window, 0.6-second A/B toggle, 1.1-second lookahead and previous condition thresholds remain.
+
+## Updated in 1.7.11
+
+An imported or incomplete **inRange** condition with no probe name now fails cleanly without querying the bar or indexing a nil warning key. Named probes still read the slot once and warn at most once per skill per ten seconds when absent.
+
+The 1.7.10 dispatch changes remain: skills are attempted inside a **0.2-second** readiness window; action rows check the live slot, usability and item count. Missing mana fails a mana condition while a real zero remains valid. User condition thresholds, anti-repeat behavior, saved rotations and prediction's **1.1-second** lookahead retain their meaning. `castRecently` records a send attempt, not a confirmed cast.
+
+For an in-session A/B, run `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6`; use `0.2` to restore the new default. Compare successful casts over equal combat intervals and record the rotation, latency and press rate. Fewer eligible early attempts alone does not establish higher cast throughput; successful-cast measurements are still pending.
 
 ## Updated in 1.7.9
 
@@ -21,17 +47,18 @@ The mode widgets wait for saved settings before restoring their positions. Start
 - **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on (switch modes with `/kc toggle aoe`, also from macros).
 - **Modes**: switch your kitties between aoe, single, burst, dps, tank, heal, interrupt, pvp, farm, boss, request or your own modes, and let "Mode is on" rows decide what fires.
   - **Mode button** near the minimap (Kitty options > Show the mode button): shows the mode that is on as a picture. Click it to see every mode, click one to switch (the others turn off).
-  - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for a dropdown menu of every mode and "No mode".
+  - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for the same screen-aware mode-icon picker, including "No mode".
   - Both move with right-drag (or Shift+drag) and can be locked. Also `/kc mode <name>` in chat or macros.
   - Request mode is now a mode called request; the new condition "Shift is held" checks the Shift key.
 - **canCast / canUse** can also check that something is *on cooldown*.
+- **Change kitty mode action**: select a mode icon in a rotation row; its editable default guard prevents reselecting the same mode every press.
 - **weakaura condition**: a command can check any aura you made in rom weakauras (showing or not, time left, stacks, percent, value). Needs the rom weakauras package; without it those commands are skipped with one warning.
 - **Short share codes** (CKC3): Export and Import boxes in the kitty editor. Codes are compressed against a word list both players have, so a built-in kitty is 7 to 40 characters and your own kitties are 2 to 6 times shorter than before. Get code copies straight to the clipboard; Import also finds a code inside pasted text (a Discord .txt or Pastebin). Codes are checksummed, so a cut-off code is refused instead of half-imported, and importing never runs Lua code. Older CKC2 and CKC1 codes still import.
 - **Import button** in the kitty list (replaces the old "Initialization" button, which swapped all your kitties for the defaults without asking).
 - **Create macro**: one click makes a `/run Kitty.attack(...)` macro with a random icon and puts it on your cursor, and shows whether one already exists.
 - **Class icons** next to each kitty's class in the list and in the class menus.
 - **New look**: dark blue windows with gold borders (shared with rom weakauras). Every window can be resized by dragging the gold corner (60% to 160%) and remembers its size and position.
-- **Faster key presses**: only the skills a command checks are read (about 3 reads per press instead of about 57), with the same picks as the original 0.973. Skills and items that work mid-cast can fire while you cast.
+- **Lazy skill reads**: only the skills requested by the priority walk are read. Skills and items that work mid-cast can still be attempted while you cast; client/server acceptance is checked in game.
 - **Kitty tracker**: rom weakauras can show the next skill a kitty would fire, and its "KittyCombo mode" aura shows the mode that is on.
 - **Raid frame clicks**: Cherry's Grid can run a kitty on the party or raid member you click, and your target comes back afterwards.
 - **Changelog** button in the settings window, and **/kc probe** to check your client.

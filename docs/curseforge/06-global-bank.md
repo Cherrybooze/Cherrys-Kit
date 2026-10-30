@@ -6,6 +6,10 @@ Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, add
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
 
+## Updated in 1.4.6
+
+Characters the helper no longer exports disappear from the window right away, and the Chrome helper stops retrying a failed reward confirmation forever.
+
 ## Features
 
 - **One list of all your characters**: gold, level, filled slots and your own note. Sort by any of them; type in the search box to filter (notes are searched too).

@@ -1,6 +1,7 @@
 <Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/ ../../../worldxml/ui.xsd">
 	<!-- NB: AAH_Tooltip is used by 3rd-party addons to hook aah tooltip !-->
 	<GameTooltip name="AAH_Tooltip" frameStrata="TOOLTIP" hidden="true" inherits="GameTooltipTemplate" parent="UIParent"/>
+	<GameTooltip name="AAH_ItemLinkTooltip" hidden="true" alpha="0" enableMouse="false" inherits="GameTooltipTemplate" parent="UIParent"/>
 	<GameTooltip name="AAH_PriceHistoryTooltip" frameStrata="DIALOG" hidden="true" inherits="GameTooltipTemplate" parent="UIParent">
 		<Anchors>
 			<Anchor point="TOPLEFT" relativeTo="GameTooltip" relativePoint="BOTTOMLEFT"/>

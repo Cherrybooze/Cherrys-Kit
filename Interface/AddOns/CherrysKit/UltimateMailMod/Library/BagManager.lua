@@ -15,6 +15,7 @@ UMMBagManager = {
   ItemList = {};
   BySlot = {};
   priv_Dirty = true;
+  Revision = 0;
 
   Invalidate = function(self)
     self.priv_Dirty = true;
@@ -97,6 +98,7 @@ UMMBagManager = {
     self.ItemList = {};
     self.BySlot = {};
     self.priv_Dirty = true;
+    self.Revision = self.Revision + 1;
   end;
 
   Load = function(self)
@@ -136,6 +138,7 @@ UMMBagManager = {
     end
     self.BySlot = bySlot;
     self.priv_Dirty = false;
+    self.Revision = self.Revision + 1;
   end;
 
 };

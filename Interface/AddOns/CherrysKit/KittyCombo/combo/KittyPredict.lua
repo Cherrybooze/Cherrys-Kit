@@ -15,7 +15,7 @@ end
 --------------------------------------------------------------------------------
 Kitty.Predict = {};
 -- Seconds of cooldown still counted as ready, so the global cooldown after each press
--- does not blank the display (Kitty.attack itself uses 0.6).
+-- does not blank the display. Execution uses SkillManager.EXECUTION_TOLERANCE.
 Kitty.Predict.LOOKAHEAD = 1.1;
 -- Results are reused for this long; every check reads skill cooldowns from the client.
 Kitty.Predict.THROTTLE = 0.2;
@@ -95,6 +95,8 @@ local function iconFor(comboManager, commandType, commandName, icons)
 		if(ok and type(texture) == "string" and texture ~= "") then
 			return texture;
 		end
+	elseif(commandType == "changemode" and Kitty.ModeUI) then
+		return Kitty.ModeUI.iconPath(commandName);
 	end
 	return icons[maskKey(commandType, commandName)];
 end
@@ -102,6 +104,9 @@ end
 -- A ComboManager whose skill checks look LOOKAHEAD seconds ahead and whose procs see the masked lists.
 local function predictor(masked, icons)
 	local comboManager = Kitty.ComboManager(Kitty.slotManager, Kitty.cooldownManager, Kitty.macroManager);
+	local modeState = {};
+	for name, state in pairs(Kitty.Modes or {}) do modeState[name] = state; end
+	rawset(comboManager, "modeState", modeState);
     local liveCooldowns = comboManager.cooldownManager;
     rawset(comboManager, "cooldownManager", setmetatable({
         canCast = function(_, name, threshold)
@@ -160,6 +165,10 @@ Kitty.Predict.compute = function(kittyName, count)
 		-- A "break" row stops the kitty: nothing after it would fire either.
 		if(commandType == "break" or commandType == "debug") then
 			break;
+		end
+		if(commandType == "changemode") then
+			for name in pairs(comboManager.modeState) do comboManager.modeState[name] = false; end
+			comboManager.modeState[Kitty.ModeUI.clean(commandName)] = true;
 		end
 		masked[maskKey(commandType, commandName)] = true;
 	end

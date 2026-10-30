@@ -367,6 +367,8 @@ Kitty.ComboManager.formatCommandType = function(commandType)
 		return Kitty.colorGreen("M");
 	elseif(commandType == "proc") then
 		return Kitty.colorGreen("P");
+	elseif(commandType == "changemode") then
+		return Kitty.colorGreen("Mode");
 	elseif(commandType == "break") then
 		return Kitty.colorGreen("B");
 	elseif(commandType == "debug") then

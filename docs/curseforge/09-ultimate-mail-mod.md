@@ -4,6 +4,20 @@
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
 
+## Updated in 7.0.1-ck7
+
+**Drag-box selection** works across all six bag grids. Drag from a slot/background to replace the selection; **Ctrl/Shift-drag** adds. Escape/right-click cancels and restores the starting selection. Normal clicks and Ctrl-click group toggles remain; empty background clears marks. Bound items remain red and are excluded from sending. Bag changes, focus loss, navigation and closing cancel unfinished gestures.
+
+The right-side **Recently sent** pane shares the existing **20 distinct successful recipients**, newest first and available across characters. Click a name to fill mass-send To while retaining committed item selections. The mass-send window expands/fits the viewport. C.O.D./sending blocks recipient changes, and queue sending locks all four tabs. Native selection drawing, release/focus handling and layout still need in-game playtesting.
+
+## Updated in 7.0.1-ck6
+
+**Mail shortcuts** is on by default. **Use last** beside To fills the last successfully mailed recipient. Two buttons below Send Gold fill configurable amounts (defaults **100,000** and **1,000,000**); change both in `/umm` and click **Save presets**. Whole amounts from 1 to 999,999,999 are accepted. Gold shortcuts select Send Gold and clear C.O.D.; sending uses the existing Send/confirmation controls.
+
+**History**, the third main tab, lists up to **20 distinct successful recipients**, newest first. Repeated recipients move to the top without duplicates. Click a name to compose; Mass Send Items is the fourth tab. Failed/cancelled/timed-out sends do not replace the last recipient. Single and mass sends share this history.
+
+Shortcut settings, amounts and history live in **UMMConfig in the shared SaveVariables.lua**, available to every character. Turning shortcuts off hides the compose buttons; history remains available. The native layout, money confirmation and cross-character persistence still need in-game checks.
+
 ## Features
 
 From the original:
@@ -18,7 +32,7 @@ New in the Cherry's Kit version:
 - **Send fast or Send safely**: under 40 mails there is one Send button (fast). From 40 mails you choose: *Send fast* (quick pace, stops at the first failure) or *Send safely* (paced, with a short pause every 20 mails). C.O.D. mails always go the safe way. A **Stop** button stops after the current mail; unsent items stay marked.
 - **Bound items in red**, also when several are marked; they are skipped with "(N bound, not sent)".
 - **Ctrl+click** a marked item to unmark its whole group.
-- **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
+- **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, mail shortcuts and gold presets, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
 - Faster bag handling (the bag list is no longer rebuilt on every bag change) and a faster loading screen.
 
 **Please help test:** after a big mass send, `/umm trace` shows what happened. If sending waits forever, run `/umm x` with an item in the send slot and send the output; `/umm slotcheck off` is the workaround.
@@ -35,12 +49,14 @@ New in the Cherry's Kit version:
 - `/umm trace [on|off|clear|all]`: the last mail events, for finding problems
 - `/umm x`: check the send slot, cursor and send state
 - `/umm slotcheck on|off`: wait for the item to show in the send slot (default on)
+- `/umm shortcuts on|off`: Use last and gold buttons (default on)
+- `/umm gold <amount1> <amount2>`: save both shared gold presets
 - `/umm sound`: new-mail sound on or off
 - `/umm reset`: forget your saved characters
 
 ## Install
 
-- **Requires Cherry's Kit** (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
+- **Requires Cherry's Kit hub 0.4.17 or later** for the History manifest entries (installed automatically by CurseForge once configured as a Required dependency). This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
 - **Delete the old `Interface\AddOns\UltimateMailMod` folder.** While it is there, Cherry's Kit keeps this version turned off.
 - Turn it on or off in the Cherry's Kit window (`/ck`).
 
@@ -52,5 +68,5 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 - **Ultimate Mail Mod** originally by **Shardea of Siochain**, later maintained by **Maxeem of Muinin, mvoigt and Jagodragon**, with 2019-2021 changes by **Raihir** and a French translation by **Claralouise**. It has no licence statement, so its copyright stays with its authors and those parts are not covered by the GPL.
 - Bundles **LibStub** (public domain; Kaelten, Cladhaire, ckknight, Mikk, Ammo, Nevcairiel, joshborke) and **Sol by Alleris** (no licence statement).
-- Cherry's changes (send queue rewrite, bag handling, ctrl+click toggle, bound items in red, settings window, kit switch, /umm commands) are offered under the **GNU GPL v2**.
+- Cherry's changes (send queue rewrite, drag-box selection, bag handling, ctrl+click toggle, bound items in red, shared history/recipient panes/mail shortcuts, settings window, kit switch, /umm commands) are offered under the **GNU GPL v2**.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.

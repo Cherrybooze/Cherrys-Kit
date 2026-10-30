@@ -235,12 +235,14 @@ def build(output: Path) -> None:
 
     release_url = f"https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v{version}"
     tick = chr(96)
-    rwa = next((item for item in addons if item["folder"] == "RomWeakAuras"), {})
+    hub_requirements = [
+        f"{addon['title']} {addon['version']}: hub {addon['minimum_hub_version']} or later"
+        for addon in addons if addon.get("minimum_hub_version")
+    ]
     hub_note = (
-        f"**Updating RWA separately? Update the hub too.** RWA {rwa.get('version')} "
-        f"needs hub {rwa['minimum_hub_version']} or later to load its modules. "
-        "The Full ZIP already includes both."
-        if rwa.get("minimum_hub_version") else ""
+        "**Updating individual addons? Update the hub too.** Required loader versions: "
+        + "; ".join(hub_requirements) + ". The Full ZIP includes the current hub."
+        if hub_requirements else ""
     )
     notes = [
         f"# Cherry's Kit {version}", "",

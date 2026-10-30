@@ -4,6 +4,14 @@
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
+## Updated in 5.07-ck14
+
+Unrelated bag/bank updates no longer close the stack-split number dialog. Confirmations validate the original source and amount; Shift-drag follows the normal pickup path. Slot numbers default to 8 points (about 40% smaller), with **Font size −/+** controls in /zb for 6–20. This applies to all bag/bank layouts and follows shared/per-character settings; stack counts keep their normal size. Native split behavior and readability need in-game checking.
+
+## Updated in 5.07-ck13
+
+The bank XML passes real elapsed time to its 0.2-second timer, targeting about five refreshes per second independently of FPS, without a catch-up burst after a stall. Sorting retains its pass-level rebuild reduction, necessary post-swap rebuilds and no-progress exit; attribute lists are sorted once at build time. Live bank sorting still needs an in-game check.
+
 ## Features
 
 - **Three layouts, switch any time** (applies straight away):

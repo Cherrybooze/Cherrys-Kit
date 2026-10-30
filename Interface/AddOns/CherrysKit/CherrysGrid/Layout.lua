@@ -113,13 +113,13 @@ local function rgb(t, def)
 end
 
 -- Re-places everything: call after the roster or any size setting changed.
-function L.Apply()
+function L.Apply(rosterUpdated)
   local frame = CGrid_Layout
   if not frame or not G.ready then
     return
   end
   local P = G.P
-  G.Roster.Update()
+  if not rosterUpdated then G.UpdateRoster() end
   local spots, W, H = L.Compute()
   L.width, L.height = W, H
 

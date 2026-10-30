@@ -615,6 +615,17 @@ function Share.Import(code)
   -- cannot leave a partially imported set behind.
   for _, aura in ipairs(value.auras) do
     if type(aura) ~= "table" then return nil, "the code contains an invalid aura" end
+    if aura.clickThrough ~= nil and type(aura.clickThrough) ~= "boolean" then
+      return nil, "the code contains an invalid clickthrough choice"
+    end
+    if aura.scale ~= nil and not RWA.ValidAuraScale(aura.scale) then
+      return nil, "the code contains an invalid aura scale (10-400%)"
+    end
+    if aura.autoScaleScreen~=nil and type(aura.autoScaleScreen)~="boolean" then return nil,"the code contains an invalid screen scaling choice" end
+    if aura.autoScaleScreen==true and not RWA.ValidScreenReference(aura) then return nil,"the code contains an invalid screen size reference" end
+    for _,key in ipairs({"screenReferenceWidth","screenReferenceHeight"}) do
+      if aura[key]~=nil and not RWA.ValidScreenDimension(aura[key]) then return nil,"the code contains an invalid screen size reference" end
+    end
     if aura.schemaVersion ~= nil and aura.schemaVersion ~= 1 and aura.schemaVersion ~= 2 and aura.schemaVersion ~= 3 then
       return nil, "this aura requires a newer version of rom weakauras"
     end

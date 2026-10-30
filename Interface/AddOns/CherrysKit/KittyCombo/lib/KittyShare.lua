@@ -631,6 +631,9 @@ Kitty.Share.importCommandList = function(code)
 					newCommand[key] = value;
 				end
 			end
+			if(newCommand.commandType == "changemode" and Kitty.ModeUI and Kitty.ModeUI.validModeName(newCommand.commandName)) then
+				newCommand.icon = Kitty.ModeUI.iconPath(newCommand.commandName);
+			end
 			for _, condition in ipairs(command) do
 				local conditionType = (type(condition) == "table") and condition.conditionType or nil;
 				if(type(conditionType) == "string" and type(Kitty.ComboManager[conditionType .. "Type"]) == "function") then

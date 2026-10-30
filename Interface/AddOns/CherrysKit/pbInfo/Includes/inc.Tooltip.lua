@@ -7,16 +7,26 @@ pbInfo - Includes/inc.Mouseover.lua
 	contains changes by Fliewatuet: https://forum.runesofmagic.com/showthread.php?t=180013
 ]]
 function pbInfo.Tooltip.Scripts.OnUpdate() -- thx to dr00gz for the idea and some hints!
+	-- A fresh per-update snapshot; never retain facts across mouseover changes.
+	local mouseExists = UnitExists("mouseover");
+	local isPlayer = UnitIsPlayer("mouseover");
+	local mC, sC = UnitClass("mouseover");
+	local mL, sL = UnitLevel("mouseover");
+	local mouseName = UnitName("mouseover");
+	local isMine, canAttack, questMsg;
+	if (mouseExists and pbInfoSettings["MODIFYTOOLTIP"]) then
+		isMine = UnitIsMine("mouseover");
+		canAttack = UnitCanAttack("player", "mouseover");
+		questMsg = UnitQuestMsg("mouseover");
+	end;
 	-- update player information
-	if (UnitIsPlayer("mouseover") and pbInfoSettings["PLAYERINFO"]) then
-		local mC, sC = UnitClass("mouseover");
-		local mL, sL = UnitLevel("mouseover");
-		pbInfo.Tooltip.getPlayerInfo(UnitName("mouseover"), mC, mL, sC, sL)
+	if (isPlayer and pbInfoSettings["PLAYERINFO"]) then
+		pbInfo.Tooltip.getPlayerInfo(mouseName, mC, mL, sC, sL)
 	end;
 	-- real tooltip stuff
 	if (pbInfoSettings["STICKYTOOLTIP"] == true) then
-		if ((UnitExists("mouseover") and UnitLevel("mouseover") > 0) or pbInfoSettings["STICKYALLTOOLTIPS"]) then
-			if (UnitExists("mouseover")) then
+		if ((mouseExists and (mL or 0) > 0) or pbInfoSettings["STICKYALLTOOLTIPS"]) then
+			if (mouseExists) then
 				GameTooltip["cursor"] = false;
 			elseif (GameTooltip["cursor"] == false) then
 				GameTooltip:Hide();
@@ -29,36 +39,33 @@ function pbInfo.Tooltip.Scripts.OnUpdate() -- thx to dr00gz for the idea and som
 	end;
     -------- <add source="fliewatuet" date="25.10.2009">
     -- (re-)adding quest information to GameTooltip, if available
-    if (pbInfoSettings["MODIFYTOOLTIP"] and UnitExists("mouseover") and not UnitIsPlayer("mouseover") and not UnitIsMine("mouseover")) then
-        local name = UnitName("mouseover");
+    if (pbInfoSettings["MODIFYTOOLTIP"] and mouseExists and not isPlayer and not isMine) then
+        local name = mouseName;
         GameTooltip:ClearLines();
         GameTooltip:SetText(name, 1, 1, 0);
-        local QuestMsg = UnitQuestMsg("mouseover");    
+        local QuestMsg = questMsg;
         if (QuestMsg) then
 			local newQuestMsg = pbInfo.Tooltip.cleanUpQuestMsg(QuestMsg);
 			GameTooltip:AddLine(newQuestMsg, 1, 1, 1);    
         end;
     end;
     -------- </add>
-	if ((pbInfoSettings["MODIFYTOOLTIP"] or pbInfoSettings["SHOWMATERIALINFO"]) and UnitExists("mouseover") and UnitLevel("mouseover") > 0) then
-		local name = UnitName("mouseover");
-		if (pbInfoSettings["MODIFYTOOLTIP"] and (UnitIsPlayer("mouseover") or UnitCanAttack("player", "mouseover") or (pbInfoSettings["ALLNPC"] and type(pbInfo.MatDB[name]) ~= "table"))) then
+	if ((pbInfoSettings["MODIFYTOOLTIP"] or pbInfoSettings["SHOWMATERIALINFO"]) and mouseExists and (mL or 0) > 0) then
+		local name = mouseName;
+		if (pbInfoSettings["MODIFYTOOLTIP"] and (isPlayer or canAttack or (pbInfoSettings["ALLNPC"] and type(pbInfo.MatDB[name]) ~= "table"))) then
 			-- show detailed information if target is a mob that can attack the player, or if it's a player
 			local nameText = name;
 			local masterName = UnitMaster("mouseover");
 			if (masterName) then
 				nameText = string.format(TEXT("TOOLTIP_PET_NAME"), masterName, nameText);
 			end;
-			local mC, sC = UnitClass("mouseover");
-			local mL, sL = UnitLevel("mouseover");
 			local sex = UnitSex("mouseover");
 			local race = UnitRace("mouseover");
-			local health, healthMax, healthRatio = 0, 0, 0;
+			local health, healthMax, healthRatio = UnitHealth("mouseover"), 0, 0;
 			local mana, manaMax, manaType = UnitMana("mouseover"), UnitMaxMana("mouseover"), UnitManaType("mouseover");
 			local skill, skillMax, skillType = UnitSkill("mouseover"), UnitMaxSkill("mouseover"), UnitSkillType("mouseover");
 			local healthText, manaText, skillText, distColor, healthColor = "", "", "", "FFFFFF", "FFFFFF";
 			local mouseoverTarget = UnitName("mouseovertarget"); -- local distance = math.ceil(UnitDistance("mouseover")) - 1;
-			local questMsg = UnitQuestMsg("mouseover");
 			local difficulty, rgb = mL - UnitLevel("player"), {1.0, 1.0, 0.0};
 			-- clears GameTooltip, adds elite/boss info and colors name in difficulty colors
 			if (sex == 2) then
@@ -66,7 +73,7 @@ function pbInfo.Tooltip.Scripts.OnUpdate() -- thx to dr00gz for the idea and som
 			elseif (sex > 2) then
 				nameText = nameText .. "|cffFFFFFF - |cffFF0000Boss|r";
 			end;
-			if (UnitCanAttack("player", "mouseover")) then
+			if (canAttack) then
 				local i = 6;
 				if (difficulty >= 7) then
 					i = 1;
@@ -112,15 +119,15 @@ end; ]]
 				GameTooltip:AddLine(race, 1.0, 1.0, 1.0);
 			end
 			-- adding healthpoint information to GameTooltip
-			if (not UnitIsPlayer("mouseover")) then -- calculate or get the current healthpoints for mobs and NPCs
-				pbInfo.MobDB.Update("mouseover");
+			if (not isPlayer) then -- calculate or get the current healthpoints for mobs and NPCs
+				pbInfo.MobDB.Update("mouseover", {unit="mouseover",exists=mouseExists,isPlayer=isPlayer,
+					name=name,level=mL,class=mC,health=health});
 				healthMax = (type(pbInfo.MobDB.Mobs[name]) == "table" and type(pbInfo.MobDB.Mobs[name][mL]) == "table" and type(pbInfo.MobDB.Mobs[name][mL][mC]) == "table" and pbInfo.MobDB.Mobs[name][mL][mC]["healthpoints"]) or 0;
-				healthRatio = UnitHealth("mouseover");
+				healthRatio = health;
 				healthText = ((healthMax > 0) and pbAddThousandsSeparator(math.ceil(healthMax * healthRatio / 100)) .. " / " .. pbAddThousandsSeparator(healthMax) .. " (" .. healthRatio .. "%)") or healthRatio .. "%";
 				manaText = mana .. "%";
 				skillText = skill .. "%";
 			else -- players? That's easy .. .
-				health = UnitHealth("mouseover");
 				healthMax = UnitMaxHealth("mouseover");
 				healthRatio = math.ceil(100 * health / healthMax);
 				healthText = pbAddThousandsSeparator(health) .. " / " .. pbAddThousandsSeparator(healthMax) .. " (" .. healthRatio .. "%)";
@@ -197,7 +204,7 @@ end; ]]
 ]]
             -- crit chance
             local critChanceMsg = nil
-            if UnitCanAttack("player", "mouseover") then
+            if canAttack then
                 local class = UnitClass("player");
                 local abi = 'MELEE_CRITICAL'
                 if class == C_RANGER then
@@ -207,7 +214,6 @@ end; ]]
                 end
                 local k1,k2 = GetPlayerAbility(abi)
                 local k = k1+k2
-                local lvl = UnitLevel("player")
                 local c = 30*mL+300 -- calculated chance depend of level
                 local max = math.max(k,c)
                 local chance = ((k-c)/max + 1.0) / 2
@@ -220,7 +226,7 @@ end; ]]
 				GameTooltip:AddLine(pbInfo.Locale["Tooltip"]["TARGET"] .. ": " .. pbColor(mouseoverTarget, "FFFF00"), 1.0, 1.0, 1.0);
 			end;
 			-- ???
-			if (UnitIsMine("mouseover")) then
+			if (isMine) then
 				local MineMsg, iMineType, iSkillNow, iReqSkill = UnitMineMsg("mouseover");
 				if (iSkillNow == 0) then
 					GameTooltip:AddLine(MineMsg, 1, 0, 0);	

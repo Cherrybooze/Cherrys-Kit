@@ -397,7 +397,7 @@ class RuleFlowTests(unittest.TestCase):
 
     def test_linked_conversion_keeps_scale_and_independent_parent_child_animation(self):
         self.lua.execute('''
-          old={id="Layered",enabled=true,schemaVersion=2,regionType="icon",width=48,height=48,alpha=0.8,
+          old={id="Layered",enabled=true,clickThrough=false,schemaVersion=2,regionType="icon",width=48,height=48,alpha=0.8,
             animation={start="fade",main="pulse",finish="slide"},
             sources={{id="s1",type="status",check="combat"},{id="s2",type="status",check="combat"}},
             primarySourceId="s1",elements={{type="text",sourceId="s2",side="RIGHT",alpha=0.5,
@@ -776,7 +776,7 @@ class RuleFlowTests(unittest.TestCase):
         self.assertTrue(any("incomplete" in line for line in lines))
         self.assertEqual(self.lua.globals().plays,0)
 
-    def test_hover_uses_shared_summary_and_locked_frame_cannot_drag(self):
+    def test_opt_out_hover_uses_shared_summary_and_locked_frame_cannot_drag(self):
         self.lua.execute('''
           GameTooltip={lines={},shown=false}
           function GameTooltip:SetOwner(owner) self.owner=owner end
@@ -786,7 +786,7 @@ class RuleFlowTests(unittest.TestCase):
           function GameTooltip:AddLine(line) self.lines[#self.lines+1]=line end
           function GameTooltip:Show() self.shown=true end
           function GameTooltip:Hide() self.shown=false end
-          flow.schemaVersion=3
+          flow.schemaVersion=3; flow.clickThrough=false
           flow.rules[1].actions={{id="a1",type="show",output={id="o1",regionType="icon"}}}
           flow.rules[2].actions={{id="a2",type="color",targetId="o1",value={1,0,0,1}}}
           RWA.AddAura(flow)

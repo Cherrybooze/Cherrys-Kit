@@ -20,9 +20,26 @@
 				<FontString name="$parentHint" inherits="GameFontHighlight" text="">
 					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="222"/></Offset></Anchor></Anchors>
 				</FontString>
+				<FontString name="$parentSlotFontLabel" inherits="GameFontLabelYellow" text="Font size">
+					<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="300" y="6"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentSlotFontValue" inherits="GameFontHighlight" text="8" justifyH="CENTER">
+					<Size><AbsDimension x="24" y="22"/></Size>
+					<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="380" y="2"/></Offset></Anchor></Anchors>
+				</FontString>
 			</Layer>
 		</Layers>
 		<Frames>
+			<Button name="$parentSlotFontMinus" inherits="UIPanelButtonTemplate" text="-">
+				<Size><AbsDimension x="22" y="22"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="356" y="2"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>zBagKit.StepSlotFontSize(-1);</OnClick><OnEnter>zBagKit.ShowTooltip(this, "slotfont");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+			</Button>
+			<Button name="$parentSlotFontPlus" inherits="UIPanelButtonTemplate" text="+">
+				<Size><AbsDimension x="22" y="22"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="406" y="2"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>zBagKit.StepSlotFontSize(1);</OnClick><OnEnter>zBagKit.ShowTooltip(this, "slotfont");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+			</Button>
 			<CheckButton name="$parentIndividual">
 				<Size><AbsDimension x="24" y="24"/></Size>
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTitle" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="2"/></Offset></Anchor></Anchors>

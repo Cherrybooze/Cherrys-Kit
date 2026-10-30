@@ -405,6 +405,12 @@ Kitty.SkillManager.updateLazy = function(self)
 	end});
 end;
 
+-- Execution tolerance (seconds): a key press may dispatch a skill this far
+-- before the client shows its cooldown as finished. Dispatch used to inherit
+-- the canCast default (0.6) below; condition checks that pass their own
+-- threshold are unchanged. Set this field back to 0.6 at runtime to compare.
+Kitty.SkillManager.EXECUTION_TOLERANCE = 0.2;
+
 -- Get cooldown
 Kitty.SkillManager.canCast = function(self, skillName, threshold, observeOnly)
 	if(threshold == nil) then
@@ -415,9 +421,10 @@ Kitty.SkillManager.canCast = function(self, skillName, threshold, observeOnly)
 		return false, 0.0;
 	end
 
-	-- Mana check
+	-- Mana check (a target without a mana resource cannot pay mana costs)
 	if(Kitty.SkillManager.manaList[skillName] ~= nil) then
-		if(Kitty.ClassManager.getMana("player") < Kitty.SkillManager.manaList[skillName]) then
+		local mana = Kitty.ClassManager.getMana("player");
+		if(mana == nil or mana < Kitty.SkillManager.manaList[skillName]) then
 			return false, 0.0;
 		end
 	end
@@ -531,7 +538,7 @@ end
 Kitty.SkillManager.cast = function(self, skillName)
 	if(skillName ~= nil) then
 		CastSpellByName(skillName);
-		-- For the "Cast in last X sec" condition
+		-- For the "Cast in last X sec" condition (attempt time, not a confirmation)
 		if(Kitty.lastCast ~= nil) then
 			Kitty.lastCast[skillName] = GetTime();
 		end

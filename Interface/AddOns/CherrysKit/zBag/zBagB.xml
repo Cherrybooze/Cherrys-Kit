@@ -559,7 +559,7 @@
 			<OnShow>zBagB_OnShow(this);</OnShow>
 			<OnHide>zBag_OnHide(this);</OnHide> 
 			<OnEvent>zBagB_OnEvent(this,event,arg1,arg2);</OnEvent>
-			<OnUpdate>zBagB_OnUpdate();</OnUpdate>
+			<OnUpdate>zBagB_OnUpdate(this, elapsedTime);</OnUpdate>
 		</Scripts> 
 	</Frame>
 </Ui>

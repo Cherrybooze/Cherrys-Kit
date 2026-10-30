@@ -80,10 +80,10 @@ Kitty.Changelog.getPages = function()
 		{
 			title = "Under the hood",
 			text = table.concat({
-				"- Faster key presses: skills are read only when a command checks them",
-				"  (about 3 reads per press instead of about 57). Same picks as 0.973.",
-				"- While you cast, the kitty still runs, so skills and items that work",
-				"  mid-cast can fire (cooldowns decide). Only re-targeting waits.",
+				"- Lazy skill reads: only skills used by the priority walk are queried.",
+				"  Dispatch uses a 0.2 s window; successful-cast gains are unmeasured.",
+				"- While you cast, eligible skills and items can still be attempted.",
+				"  Conditions and the 1.1 s prediction lookahead retain their meaning.",
 				"- Skill book positions and buff lookups are remembered, and refreshed",
 				"  when you learn or change skills.",
 				"- The damage report skips other players' hits and only adds up damage",

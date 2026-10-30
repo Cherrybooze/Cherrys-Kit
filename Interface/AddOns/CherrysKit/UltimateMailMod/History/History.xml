@@ -1,0 +1,65 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+  <Button name="UMMHistoryEntryTemplate" inherits="UIPanelButtonTemplate" virtual="true" text="">
+    <Size><AbsDimension x="740" y="20"/></Size>
+    <Layers><Layer level="ARTWORK">
+      <FontString name="$parentName" inherits="GameFontHighlight" justifyH="LEFT" text="">
+        <Size><AbsDimension x="712" y="20"/></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="14" y="0"/></Offset></Anchor></Anchors>
+      </FontString>
+    </Layer></Layers>
+    <Scripts>
+      <OnClick>UMMHistory_Select(this:GetID());</OnClick>
+      <OnEnter>UMMHistory_Enter(this);</OnEnter>
+      <OnLeave>GameTooltip:Hide();</OnLeave>
+    </Scripts>
+  </Button>
+  <Frame name="UMMHistoryTemplate" virtual="true">
+    <Size><AbsDimension x="780" y="530"/></Size>
+    <Layers><Layer level="ARTWORK">
+      <FontString name="$parentTitle" inherits="GameTitleFont" justifyH="LEFT" text="">
+        <Size><AbsDimension x="740" y="26"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="10"/></Offset></Anchor></Anchors>
+      </FontString>
+      <FontString name="$parentHelp" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="740" y="38"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="40"/></Offset></Anchor></Anchors>
+      </FontString>
+      <FontString name="$parentEmpty" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="740" y="24"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="84"/></Offset></Anchor></Anchors>
+      </FontString>
+      <FontString name="$parentCount" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="740" y="18"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="510"/></Offset></Anchor></Anchors>
+      </FontString>
+    </Layer></Layers>
+    <Frames>
+      <Button name="$parentEntry1" inherits="UMMHistoryEntryTemplate" id="1">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="84"/></Offset></Anchor></Anchors>
+      </Button>
+      <Button name="$parentEntry2" inherits="UMMHistoryEntryTemplate" id="2"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry1" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry3" inherits="UMMHistoryEntryTemplate" id="3"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry2" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry4" inherits="UMMHistoryEntryTemplate" id="4"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry3" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry5" inherits="UMMHistoryEntryTemplate" id="5"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry4" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry6" inherits="UMMHistoryEntryTemplate" id="6"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry5" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry7" inherits="UMMHistoryEntryTemplate" id="7"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry6" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry8" inherits="UMMHistoryEntryTemplate" id="8"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry7" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry9" inherits="UMMHistoryEntryTemplate" id="9"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry8" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry10" inherits="UMMHistoryEntryTemplate" id="10"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry9" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry11" inherits="UMMHistoryEntryTemplate" id="11"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry10" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry12" inherits="UMMHistoryEntryTemplate" id="12"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry11" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry13" inherits="UMMHistoryEntryTemplate" id="13"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry12" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry14" inherits="UMMHistoryEntryTemplate" id="14"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry13" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry15" inherits="UMMHistoryEntryTemplate" id="15"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry14" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry16" inherits="UMMHistoryEntryTemplate" id="16"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry15" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry17" inherits="UMMHistoryEntryTemplate" id="17"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry16" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry18" inherits="UMMHistoryEntryTemplate" id="18"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry17" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry19" inherits="UMMHistoryEntryTemplate" id="19"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry18" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+      <Button name="$parentEntry20" inherits="UMMHistoryEntryTemplate" id="20"><Anchors><Anchor point="TOPLEFT" relativeTo="$parentEntry19" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="1"/></Offset></Anchor></Anchors></Button>
+    </Frames>
+    <Scripts>
+      <OnLoad>UMMHistory_OnLoad(this);</OnLoad>
+      <OnShow>UMMHistory_Refresh();</OnShow>
+    </Scripts>
+  </Frame>
+</Ui>
