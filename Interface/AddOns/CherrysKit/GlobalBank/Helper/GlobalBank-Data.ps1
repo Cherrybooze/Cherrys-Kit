@@ -39,12 +39,17 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
     if ($h.Count -lt 2 -or -not $h[1]) { return $null }
     $field = { param($i) if ($h.Count -gt $i) { $h[$i] } else { "" } }
     $classes = New-Object 'System.Collections.Generic.List[object]'
+    $currencies = New-Object 'System.Collections.Generic.List[object]'
     $bag = New-Object 'System.Collections.Generic.List[object]'
     $bank = New-Object 'System.Collections.Generic.List[object]'
     for ($i = 1; $i -lt $records.Count; $i++) {
         $f = $records[$i].Split([char]'~')
         if ($f.Count -ge 3 -and $f[0] -eq 'C' -and $f[1] -and (ConvertTo-GBNumber $f[2]) -gt 0) {
             $classes.Add([pscustomobject]@{ Name = ConvertTo-GBText $f[1]; Level = ConvertTo-GBNumber $f[2] })
+            continue
+        }
+        if ($f.Count -ge 3 -and $f[0] -eq 'M' -and $f[1] -and (ConvertTo-GBNumber $f[2]) -gt 0) {
+            $currencies.Add([pscustomobject]@{ Key = $f[1]; Amount = ConvertTo-GBNumber $f[2]; Name = $(if ($f.Count -gt 3) { ConvertTo-GBText $f[3] } else { "" }) })
             continue
         }
         if ($f.Count -lt 4) { continue }
@@ -59,6 +64,7 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
             Name  = if ($f.Count -gt 4) { ConvertTo-GBText $f[4] } else { "" }
             Icon  = if ($f.Count -gt 5) { $f[5] } else { "" }
             Where = $where
+            Bound = ($f.Count -gt 6 -and $f[6] -eq "1")
         }
         if ($where -eq "bag") { $bag.Add($item) } else { $bank.Add($item) }
     }
@@ -66,6 +72,7 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
         Name      = ConvertTo-GBText (& $field 1)
         Class     = ConvertTo-GBText (& $field 2)
         Classes   = @($classes.ToArray())
+        Currencies = @($currencies.ToArray())
         Level     = ConvertTo-GBNumber (& $field 3)
         Gold      = ConvertTo-GBNumber (& $field 4)
         BagSlots  = ConvertTo-GBNumber (& $field 5)
@@ -241,6 +248,12 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
             if (-not $firstClass) { [void]$sb.Append(',') }; $firstClass = $false
             [void]$sb.Append('{"name":').Append((ConvertTo-GBJsonString $class.Name)).Append(',"level":').Append($class.Level).Append('}')
         }
+        [void]$sb.Append('],"currencies":[')
+        $firstMoney = $true
+        foreach ($money in $c.Currencies) {
+            if (-not $firstMoney) { [void]$sb.Append(',') }; $firstMoney = $false
+            [void]$sb.Append('{"key":').Append((ConvertTo-GBJsonString $money.Key)).Append(',"amount":').Append($money.Amount).Append(',"name":').Append((ConvertTo-GBJsonString $money.Name)).Append('}')
+        }
         [void]$sb.Append('],"gold":').Append($c.Gold)
         [void]$sb.Append(',"bagSlots":').Append($c.BagSlots).Append(',"bankSlots":').Append($c.BankSlots)
         [void]$sb.Append(',"bankSeen":').Append($(if ($c.BankSeen) { 'true' } else { 'false' }))
@@ -269,7 +282,9 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
                 [void]$sb.Append('{"slot":').Append($it.Slot).Append(',"count":').Append($it.Count)
                 [void]$sb.Append(',"id":').Append((ConvertTo-GBJsonString $it.Id))
                 [void]$sb.Append(',"name":').Append((ConvertTo-GBJsonString $it.Name))
-                [void]$sb.Append(',"icon":').Append((ConvertTo-GBJsonString $it.Icon)).Append('}')
+                [void]$sb.Append(',"icon":').Append((ConvertTo-GBJsonString $it.Icon))
+                if ($it.Bound) { [void]$sb.Append(',"bound":true') }
+                [void]$sb.Append('}')
             }
             [void]$sb.Append(']')
         }

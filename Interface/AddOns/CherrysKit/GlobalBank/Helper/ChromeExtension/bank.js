@@ -5,6 +5,12 @@ const GBBank = (() => {
   const PER_PAGE = {bag: 30, bank: 40};
   const PLACE = {bag: 'Bag', bank: 'Bank'};
   const MAX_TOOLTIP_ROWS = 12;
+  const EQUIPPABLE = new Set(['Weapons', 'Armour', 'Jewellery']);
+  // Bought with real money and shared by an account, so adding them up across characters would count them twice.
+  const SHOP_NAMES = {account: 'Diamonds', bonus: 'Bonus', billdin: 'Billdin'};
+  const FIXED_NAMES = {transmutor: 'Arcane Transmutor Charges'};
+  // The order of the game's own currency window
+  const CURRENCY_ORDER = ['transmutor', '11', '12', '10', '17', '21', '9', '13', '15', '16', '4', '8', '14', '18', '19', '22', '23', 'account', 'bonus', 'billdin'];
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString('en-US');
@@ -49,7 +55,7 @@ const GBBank = (() => {
       for (const place of ['bag', 'bank']) {
         for (const item of character[place] || []) {
           list.push({id: item.id, name: String(item.name || 'Unknown item'), icon: item.icon, count: Number(item.count) || 1,
-            type: typeOf(item.id, item.icon), character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
+            type: typeOf(item.id, item.icon), bound: !!item.bound, character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
         }
       }
     }
@@ -63,6 +69,122 @@ const GBBank = (() => {
       && (!filters.hidden || !filters.hidden.has(entry.character))
       && (!filters.minLevel || entry.level >= filters.minLevel)
       && (!filters.maxLevel || entry.level <= filters.maxLevel));
+  }
+  // An item's own choice comes first: always keep, then excluded, then the rule for bound items.
+  function itemKey(entry) {
+    return String(entry.id || entry.name);
+  }
+  function isHidden(entry, settings) {
+    const key = itemKey(entry);
+    if (settings.whitelist.has(key)) return false;
+    if (settings.excluded.has(key)) return true;
+    return !!settings.excludeBound && entry.bound && !EQUIPPABLE.has(entry.type);
+  }
+  // The right-click on an item: a shown one becomes excluded, and an excluded one comes back.
+  function toggleHidden(entry, settings) {
+    const key = itemKey(entry);
+    if (isHidden(entry, settings)) {
+      settings.excluded.delete(key);
+      if (isHidden(entry, settings)) settings.whitelist.add(key);
+    } else {
+      settings.whitelist.delete(key);
+      settings.excluded.add(key);
+    }
+  }
+  // The Currencies tab: a column for each currency anyone has, a total, and the characters in the order asked for.
+  function currencyTable(characters, sort, descending) {
+    const columns = new Map([['gold', {key: 'gold', name: 'Gold', total: 0, shop: false}]]);
+    const rows = characters.map(character => {
+      const amounts = {gold: Number(character.gold) || 0};
+      for (const money of character.currencies || []) {
+        amounts[money.key] = Number(money.amount) || 0;
+        const shop = money.key in SHOP_NAMES;
+        if (!columns.has(money.key)) columns.set(money.key, {key: money.key, name: SHOP_NAMES[money.key] || FIXED_NAMES[money.key] || money.name || `Currency ${money.key}`, total: 0, shop});
+      }
+      return {name: character.name, amounts};
+    });
+    for (const column of columns.values()) {
+      column.total = column.shop ? null : rows.reduce((sum, row) => sum + (row.amounts[column.key] || 0), 0);
+    }
+    const direction = descending ? -1 : 1;
+    rows.sort((a, b) => (sort === 'name' ? a.name.localeCompare(b.name) * direction
+      : ((a.amounts[sort] || 0) - (b.amounts[sort] || 0)) * direction || a.name.localeCompare(b.name)));
+    const list = [...columns.values()];
+    const place = key => { const at = CURRENCY_ORDER.indexOf(key); return at < 0 ? CURRENCY_ORDER.length : at; };
+    return {columns: [list[0], ...list.slice(1).sort((a, b) => place(a.key) - place(b.key) || a.name.localeCompare(b.name))], rows};
+  }
+  function tableCell(tag, text) {
+    const node = document.createElement(tag);
+    node.textContent = text;
+    return node;
+  }
+  // A heading row whose buttons sort the table; text columns start A to Z and number columns highest first.
+  function sortableHeadings(root, columns, redraw) {
+    const sorting = root.sorting;
+    const headers = document.createElement('tr');
+    for (const column of columns) {
+      const mark = sorting.key === column.key ? (sorting.descending ? ' ▼' : ' ▲') : '';
+      const header = document.createElement('th');
+      const button = tableCell('button', column.name + mark);
+      button.type = 'button';
+      button.addEventListener('click', () => {
+        sorting.descending = sorting.key === column.key ? !sorting.descending : !column.text;
+        sorting.key = column.key;
+        redraw();
+      });
+      header.append(button);
+      headers.append(header);
+    }
+    root.querySelector('thead').replaceChildren(headers);
+  }
+  function renderCurrencies(root, characters) {
+    root.sorting = root.sorting || {key: 'gold', descending: true};
+    const table = currencyTable(characters, root.sorting.key, root.sorting.descending);
+    sortableHeadings(root, [{key: 'name', name: 'Character', text: true}, ...table.columns], () => renderCurrencies(root, characters));
+    const total = document.createElement('tr');
+    total.className = 'currency-total';
+    total.append(tableCell('td', 'All characters'));
+    for (const column of table.columns) total.append(tableCell('td', column.total === null ? 'per account' : formatNumber(column.total)));
+    const rows = table.rows.map(row => {
+      const line = document.createElement('tr');
+      line.append(tableCell('td', row.name));
+      for (const column of table.columns) line.append(tableCell('td', formatNumber(row.amounts[column.key] || 0)));
+      return line;
+    });
+    root.querySelector('tbody').replaceChildren(total, ...rows);
+  }
+  // The Characters tab: one row for each, with the last daily reward taken.
+  const ROSTER_COLUMNS = [
+    {key: 'name', name: 'Character', text: true},
+    {key: 'class', name: 'Class', text: true},
+    {key: 'level', name: 'Level'},
+    {key: 'gold', name: 'Gold'},
+    {key: 'items', name: 'Items'},
+    {key: 'saved', name: 'Last saved', text: true},
+    {key: 'day', name: 'Reward day'},
+    {key: 'taken', name: 'Reward taken'},
+  ];
+  function rosterRows(characters, sort, descending) {
+    const rows = characters.map(character => {
+      const taken = Date.parse(character.dailyLogin?.collectedAt || '');
+      return {name: String(character.name || ''), class: String(character.class || ''), level: Number(character.level) || 0,
+        gold: Number(character.gold) || 0, items: (character.bag || []).length + (character.bank || []).length,
+        saved: String(character.saved || ''), day: Number(character.dailyLogin?.day) || 0, taken: Number.isFinite(taken) ? taken : 0};
+    });
+    const direction = descending ? -1 : 1;
+    const text = ROSTER_COLUMNS.find(column => column.key === sort)?.text;
+    return rows.sort((a, b) => (text ? a[sort].localeCompare(b[sort]) : a[sort] - b[sort]) * direction || a.name.localeCompare(b.name));
+  }
+  function renderRoster(root, characters) {
+    root.sorting = root.sorting || {key: 'taken', descending: true};
+    sortableHeadings(root, ROSTER_COLUMNS, () => renderRoster(root, characters));
+    const clock = new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'});
+    root.querySelector('tbody').replaceChildren(...rosterRows(characters, root.sorting.key, root.sorting.descending).map(row => {
+      const line = document.createElement('tr');
+      for (const text of [row.name, row.class, formatNumber(row.level), formatNumber(row.gold), formatNumber(row.items), row.saved || '—',
+        row.day || '—', row.taken ? clock.format(row.taken) : '—']) line.append(tableCell('td', text));
+      return line;
+    }));
   }
   // One cell for each item, or for each stack when stacking is off, and everywhere it is
   function cells(list, stack) {
@@ -84,6 +206,7 @@ const GBBank = (() => {
 
   function create(root, send, status, onData) {
     const state = {characters: [], hidden: new Set(), sort: 'name'};
+    const settings = {excluded: new Set(), whitelist: new Set(), excludeBound: false};
     const icons = new Map();
     const el = id => root.querySelector('#' + id);
     const tooltip = el('bank-tooltip');
@@ -108,6 +231,7 @@ const GBBank = (() => {
         tooltip.append(row);
       }
       if (rows.length > MAX_TOOLTIP_ROWS) tooltip.append(make('span', 'bank-tip-type', `and ${rows.length - MAX_TOOLTIP_ROWS} more`));
+      tooltip.append(make('span', 'bank-tip-type', isHidden(cell.places[0], settings) ? 'Right-click to bring it back' : 'Right-click to exclude it'));
       tooltip.hidden = false;
       moveTooltip(event);
     }
@@ -125,11 +249,17 @@ const GBBank = (() => {
       const grid = el('bank-grid');
       grid.replaceChildren();
       tooltip.hidden = true;
-      const list = applyFilters(entries(state.characters), filters());
+      const showHidden = el('bank-show-excluded').checked;
+      const list = applyFilters(entries(state.characters), filters()).filter(entry => showHidden || !isHidden(entry, settings));
       const shown = cells(list, el('bank-stack').checked).sort(SORTS[state.sort]);
       const needed = [];
       for (const cell of shown) {
-        const slot = make('div', 'bank-slot filled');
+        const slot = make('div', isHidden(cell.places[0], settings) ? 'bank-slot filled bank-excluded' : 'bank-slot filled');
+        slot.addEventListener('contextmenu', event => {
+          event.preventDefault();
+          toggleHidden(cell.places[0], settings);
+          settingsChanged();
+        });
         slot.append(make('span', 'bank-letters', cell.name.slice(0, 2)));
         const picture = make('img');
         picture.alt = '';
@@ -154,6 +284,51 @@ const GBBank = (() => {
           grid.querySelectorAll('img').forEach(picture => { if (picture.dataset.icon === name) picture.src = url; });
         }).catch(error => { status(`Icons couldn't be read: ${error.message || error}`); });
       }
+    }
+    // Kept in this browser only: it changes what this page shows, not what the game or the helper saves.
+    function settingsChanged() {
+      if (typeof chrome !== 'undefined' && chrome.storage) {
+        chrome.storage.local.set({bankExclusions: {excluded: [...settings.excluded], whitelist: [...settings.whitelist], excludeBound: settings.excludeBound}}).catch(() => {});
+      }
+      renderExclusions();
+      renderGrid();
+    }
+    function itemName(key) {
+      for (const entry of entries(state.characters)) if (itemKey(entry) === key) return entry.name;
+      return key.startsWith('n:') ? key.slice(2) : `Item ${key}`;
+    }
+    function renderExclusions() {
+      el('bank-exclusions-summary').textContent = `Excluded items (${settings.excluded.size} excluded, ${settings.whitelist.size} always kept)`;
+      el('bank-exclude-bound').checked = settings.excludeBound;
+      for (const [id, set] of [['bank-excluded-list', settings.excluded], ['bank-whitelist', settings.whitelist]]) {
+        const list = el(id);
+        list.replaceChildren();
+        for (const key of set) {
+          const row = make('li', '', itemName(key) + ' ');
+          const remove = make('button', '', 'Remove');
+          remove.type = 'button';
+          remove.addEventListener('click', () => { set.delete(key); settingsChanged(); });
+          row.append(remove);
+          list.append(row);
+        }
+      }
+    }
+    // An exact name or an ID, from what your characters hold; an ID also works for something nobody holds yet.
+    function keyForText(text) {
+      if (/^\d+$/.test(text)) return text;
+      const lower = text.toLowerCase();
+      const found = entries(state.characters).find(entry => entry.name.toLowerCase() === lower);
+      return found ? itemKey(found) : null;
+    }
+    function addFromBox(into, other) {
+      const box = el('bank-exclusion-item');
+      const key = keyForText(box.value.trim());
+      el('bank-exclusion-note').textContent = key ? '' : 'None of your characters has an item with exactly that name. Try its ID.';
+      if (!key) return;
+      other.delete(key);
+      into.add(key);
+      box.value = '';
+      settingsChanged();
     }
     function renderSummary() {
       const total = state.characters.length;
@@ -198,7 +373,8 @@ const GBBank = (() => {
       el('bank-made').textContent = data.made ? `Data from ${data.made}` : 'No saved data yet: press Update now after logging out of a character.';
       renderCharacters();
       renderGrid();
-      if (onData) onData(totals(state.characters), data.made);
+      renderExclusions();
+      if (onData) onData(totals(state.characters), data.made, state.characters);
     }
     async function update() {
       const button = el('bank-update');
@@ -221,7 +397,21 @@ const GBBank = (() => {
     el('bank-all').addEventListener('click', () => setAll(true));
     el('bank-none').addEventListener('click', () => setAll(false));
     el('bank-update').addEventListener('click', update);
+    el('bank-show-excluded').addEventListener('change', renderGrid);
+    el('bank-exclude-bound').addEventListener('change', event => { settings.excludeBound = event.target.checked; settingsChanged(); });
+    el('bank-exclusion-add').addEventListener('click', () => addFromBox(settings.excluded, settings.whitelist));
+    el('bank-whitelist-add').addEventListener('click', () => addFromBox(settings.whitelist, settings.excluded));
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.get('bankExclusions').then(({bankExclusions: saved}) => {
+        if (!saved) return;
+        settings.excluded = new Set(saved.excluded || []);
+        settings.whitelist = new Set(saved.whitelist || []);
+        settings.excludeBound = !!saved.excludeBound;
+        renderExclusions();
+        renderGrid();
+      }).catch(() => {});
+    }
     return {reload, update};
   }
-  return {create, typeOf, locationLabel, entries, applyFilters, cells, formatDuration, totals};
+  return {create, typeOf, locationLabel, entries, applyFilters, cells, formatDuration, totals, isHidden, toggleHidden, currencyTable, renderCurrencies, rosterRows, renderRoster};
 })();

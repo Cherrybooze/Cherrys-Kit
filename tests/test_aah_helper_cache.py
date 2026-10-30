@@ -159,6 +159,19 @@ try { if (Remove-AAHAcknowledgedOutbox $file $original $root @() 0) { throw 'Rea
 ''')
         self.assertIn(before.encode('latin1'), self.hero.read_bytes())
 
+    def test_helper_json_carries_currencies_and_bound_items(self):
+        data_script = HELPER.with_name('GlobalBank-Data.ps1')
+        out = self.data / 'GlobalBank.json'
+        self.run_ps(". '" + str(data_script).replace("'", "''") + "'\n" + '''
+$snapshot = 'GB1~A~Mage~1~5~0~0~0~t`M~12~345~Honor`M~gone~0~x`B~1~1~5~Name~icon~1`K~2~1~6~Other~icon'
+$c = ConvertFrom-GBSnapshot $snapshot 'when'
+Export-GBJson @($c) (Join-Path $data 'GlobalBank.json') 'now'
+''')
+        character = json.loads(out.read_text(encoding='utf-8'))['characters'][0]
+        self.assertEqual(character['currencies'], [dict(key='12', amount=345, name='Honor')])
+        self.assertIs(character['bag'][0]['bound'], True)
+        self.assertNotIn('bound', character['bank'][0])
+
     def test_the_bank_file_goes_to_the_page_in_parts(self):
         control = HELPER.with_name('GlobalBank-Control.ps1')
         (self.data / 'GlobalBank.json').write_text('é' * 700000, encoding='utf-8')
