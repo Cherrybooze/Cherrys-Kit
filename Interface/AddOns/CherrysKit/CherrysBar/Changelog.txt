@@ -1,0 +1,6 @@
+Cherry's Bar
+
+1.0.0
+  First version, forked from XBar III 1.72 for Cherry's Kit. Top bar, bottom bar or both, top only by
+  default. Fourteen displays set per bar and side, with right-click options. Six bar styles. Reads
+  only on events or slow timers, and redraws only when a text changes.

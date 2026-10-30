@@ -52,7 +52,7 @@ Each addon includes its own README, local reference notes and the original combi
 4. Commit and push to `main`. Let the packaging check pass.
 5. Tag that commit, for example `v0.11.77`, and push the tag.
 6. Build again from the clean tagged checkout so `release-manifest.json` records the right source commit.
-7. Create a GitHub release for the tag with the generated notes. Upload all eighteen ZIPs (seventeen addon ZIPs and the optional extension ZIP), `release-manifest.json` and `SHA256SUMS.txt`.
+7. Create a GitHub release for the tag with the generated notes. Upload all nineteen ZIPs (eighteen addon ZIPs and the optional extension ZIP), `release-manifest.json` and `SHA256SUMS.txt`.
 8. Compare uploaded asset sizes and SHA-256 digests with the local files before publishing.
 9. Update the direct full-kit ZIP links at the top of the project README and the repository's About website. Keep the full-kit asset labelled as the installer, and start the release notes with its direct download. Test a downloaded asset by extracting it directly into an empty `Interface/AddOns/` folder: `CherrysKit/CherrysKit.toc` must appear there, with no repository or version wrapper.
 

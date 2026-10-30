@@ -1,8 +1,30 @@
-# In-game checks for kit 0.11.90
+# In-game checks for kit 0.11.91
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. The Full ZIP includes hub **0.4.22**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.0.0 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+
+## 0.11.91 Cherry's Bar
+
+Cherry's Bar is new, and none of it has run in the real client yet. Delete any old `Interface/AddOns/XBar` folder first.
+
+| ID | Steps | Expected result |
+| --- | --- | --- |
+| B1 | Reload UI. Run `/cbar probe`. | Only the top bar shows, with Menu, XP, Bag and Gold on the left and Mail, FPS and the clock on the right. The probe lists missing functions (ideally none), says how many frames it moved and gives text widths above 0. |
+| B2 | Look at the top of the screen. | The player, target, buff and party frames and the minimap sit below the bar, not under it. |
+| B3 | Run `/cbar bottom`, then `/cbar both`, then `/cbar top`. | The bars switch at once. With a bottom bar the action bar and experience bar sit above it, and they go back afterwards. The top frames return to the edge when the top bar is off. |
+| B4 | Open `/cbar`. Send a hidden display to the Bottom bar with its first button, then click Top. Use Left/Right, `<` and `>`. | Displays join and leave each bar, flow without overlapping or big gaps, and swap places. |
+| B5 | Right-click a display. Tick icon, label and colours off and on, move it, then hide it. Move off the menu. | The menu shows that display's options and each change shows at once. The menu closes about half a second after the mouse leaves. |
+| B6 | Left-click Menu, Bag, Mail, Zone, Friends and Guild. Scroll a long list with the wheel. Right-click Bag and pick the bank. | Each opens the right window or list, and a click on a person whispers them while a right-click invites them. A window the client lacks gives a chat message, not an error box. |
+| B7 | Hover each display, in and out of combat. | The tooltip shows that display's details out of combat, and nothing in combat until Tooltips in combat is ticked. |
+| B8 | In `/cbar`, click Edit for Bags, type `[USED] of [TOTAL] ([LOAD]%)` and press Enter. Then click Default. | The text changes at once and comes back. The bar makes room for the wider text. |
+| B9 | Try each style and opacity on both bars, and Text size. | Every style draws edge to edge with no gaps, and the top and bottom art face the right way. Note any style whose art looks cut off. |
+| B10 | Tick Hide the game's menu bar, XP bar and damaged-gear figure, then untick them. Untick Move game frames clear. | They hide and come back, and the frames go back to the edge. |
+| B11 | Pick up loot, earn gold and XP, change zone, wait a minute. | Bag, Gold, XP, Zone and the clock update within a second or so. |
+| B12 | Reload UI, then log in on another character. | Settings are kept on both. Frames are not moved twice. |
+| B13 | In `/ck` turn Cherry's Bar off and Reload UI. | No bars, and no frames moved. |
+| B14 | Put XBar back in `Interface/AddOns/XBar` and Reload UI, then delete it again. | Cherry's Bar stays off and the hub says to delete `AddOns\XBar`. |
+| B15 | Run `/ckload` after playing for a while, in and out of combat. | Cherry's Bar's memory stays small and does not keep growing. |
 
 ## 0.11.90 names from chat into Ultimate Mail Mod
 

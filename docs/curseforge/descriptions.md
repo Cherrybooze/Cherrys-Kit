@@ -29,6 +29,7 @@ Sixteen package descriptions for Cherry's Kit 0.11.90, ready to paste into Curse
 - [PortraitHP](14-portraithp.md)
 - [Cherry's Grid](15-cherrys-grid.md)
 - [Cherry's Quests](16-cherrys-quests.md)
+- [Cherry's Bar](17-cherrys-bar.md)
 
 <!-- 01-cherrys-kit.md -->
 
@@ -68,6 +69,7 @@ Each one is its own download and needs Cherry's Kit:
 - **PortraitHP**: target health percent on its portrait (`/php`)
 - **Cherry's Grid**: party and raid frames that run kitties on click (`/grid`)
 - **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
+- **Cherry's Bar**: information bars at the top, bottom or both, with displays set per bar (`/cbar`)
 - **Cherry's Addon LoadTimes**: how long each addon takes to load, for troubleshooting; off until its `Switch.txt` turns it on (`/ckload`)
 
 ## Chat commands
@@ -1094,3 +1096,43 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cq probe`
 
 - Written by Cherry for Cherry's Kit, under the **GNU GPL v2**. It uses the same client calls as pbInfo's quest tracker (by p.b. a.k.a. novayuna and odie2) but contains none of its code.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
+
+<!-- 17-cherrys-bar.md -->
+
+# Cherry's Bar
+
+**Full-width information bars for Runes of Magic: at the top of the screen, the bottom, or both, with your choice of displays on each.**
+
+## Features
+
+- **Top bar, bottom bar or both.** Only the top bar shows at first. Each bar has its own style and opacity.
+- **Displays per bar**: Menu (the game's windows and settings), Experience, Bags, Money, Mail, Performance, Clock, Zone, Friends, Guild, Ammo, Class, Gathering, and Damage and durability. Put each on either bar, on the left or right, in the order you like.
+- **Right-click any display** for its options: icon, label, colours, bar, side and order. Left-click does its job, such as opening your bag or listing friends online.
+- **Your own text**: rewrite any display with tokens such as `[USED]/[TOTAL]`.
+- **Six styles**, and an option to move the game's frames clear of the bars.
+- **Light on the game**: displays read only on events or slow timers, and displays you hid do nothing.
+
+**Still being tested in game:** moving the game's frames, text widths and some of the game calls. `/cbar probe` shows what the client does.
+
+## Chat commands
+
+- `/cbar`: options window
+- `/cbar top`, `/cbar bottom`, `/cbar both`: which bars show
+- `/cbar reset`: every setting back to its default
+- `/cbar probe`: checks what this game client offers
+
+## Install
+
+- **Requires Cherry's Kit** 0.4.23 or later (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\CherrysBar\`.
+- Turn it on or off in the Cherry's Kit window (`/ck`).
+- Delete any old `Interface\AddOns\XBar` folder: Cherry's Bar stays off while XBar is installed, because they would draw over each other.
+
+## Bug reports
+
+Write to **cherry** on the Runes of Magic Discord. Add the output of `/cbar probe` if you can.
+
+## Credits and licence
+
+- Forked from **XBar III** by **matif** and **Bussdee**, based on **XBar** by **nigr(A)ngelus**, with thanks to aveng3r, Havorn, Slayblaze, ArcticXWolf, Caelin and Mavoc.
+- The bars and settings follow the ideas of **Titan Panel** for World of Warcraft by the **Titan Panel Development Team**. It contains none of Titan Panel's code or pictures, and Titan Panel has not endorsed it.
+- Offered under **CC BY-NC-SA 3.0**, like XBar: see `Interface\AddOns\CherrysKit\CherrysBar\LICENSE-CherrysBar.txt`. Free, never to be sold.

@@ -22,5 +22,6 @@ CherrysKit_Commands = {
   PortraitHP = "/php", -- PortraitHP on/off ("/php probe" still reaches it)
   CherrysGrid = "/grid", -- Cherry's Grid options ("/grid test", "/grid probe" still reach it)
   CherrysQuests = "/cq", -- Cherry's Quests options ("/cq npcs", "/cq probe" still reach it)
+  CherrysBar = "/cbar", -- Cherry's Bar options ("/cbar top", "/cbar bottom", "/cbar both", "/cbar probe" still reach it)
   ControlHub   = "/rwa /ck",    -- the Cherry's Kit window
 }

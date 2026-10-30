@@ -1,8 +1,8 @@
 {
-  "kit_version": "0.11.90",
-  "hub_version": "0.4.22",
-  "release_summary": "A playtest that puts names from chat into the mail window. With the mail window open, Ctrl+click or Shift+click a player's name in chat to put it in To: Ultimate Mail Mod 7.0.1-ck10 fills Compose's To, switching to Compose from the inbox or History, or the mass-send To field while Mass Send Items is open, with the marked items kept. Cherry's Chat 0.10.12 hands these clicks to the mail window before its own chat-box action. While a mail is still sending UMM says so; while the gold confirmation is open, a mass-send list waits for Send or the inbox is taking mail, the click does what it normally does and To stays as it is. Everything from the 0.11.89, 0.11.88 and 0.11.87 playtests is included (the chat menu beside the scroll bar, rom weakauras 0.9.29 share codes, Cherry's Quests 1.0.0, and the 0.11.87 fixes and speed-ups).",
-  "runtime_validation": "Lua 5.1 simulated-client suite: 701 tests; 656 passed, 26 retired-editor tests skipped and 19 PowerShell-only tests skipped because the build host had no PowerShell (CI runs them). 8 new tests cover Ctrl- and Shift-clicked names filling Compose's To from the inbox, History and Compose (passed as arguments or as the event's arg1 and arg2), the mass-send To field with marks kept, plain and right clicks, item links, leftover event arguments and a closed mail window reaching the game unchanged, To staying put while sending, during a gold confirmation, a planned mass send or locked tabs, one wrapper after Reload UI, no wrapper while UMM is off in the hub, and Cherry's Chat handing name clicks to the mail window before the chat box; the real client's name links and modifier keys still need checks C5, M16 and M17. In 0.11.89, 3 new tests place the chat menu right of the scroll bar and level with the window's middle wherever the mouse is, left of a window at the screen's right edge, and inside the screen for a low or screen-wide window; the real client's frame positions still need check C4. In 0.11.88, 9 new tests cover the frozen RWA5 codebook bytes, RWA5 round trips for template, edited and mixed auras, chat-line length, codes pasted with surrounding text or line breaks, damaged and future codes, the RWA4 fallback without a codebook, releasing the codebook after 30 seconds, and key-order-independent packing; loading LibDeflate and the codebook with dofile in the real client still needs checks S1 to S6. The 35 tests added in 0.11.87 cover the chat redraw rate during bursts and the new scroll bar, the rom weakauras scale corner and grip tooltips, target HP learned by name, level and class (including the game's empty answer for monsters), the percent-above layout and description update, Past second codes without garbage, pbInfo's tooltip, cast bar, cast time and player-search rates, the idle mail master frame, UMM's gold preset grouping and cap and the reset confirmation, KittyCombo's protected control frame, and the LoadTimes switch (off, on, broken and after Reload UI). In host-side Lua measurements, the memory rom weakauras makes per 10 simulated seconds fell from about 2.8 MB to 45 KB with one buff and from 4.6 MB to 90 KB with 15 buffs and 6 debuffs; these are not client frame rates. The real client's per-frame cost, the chat freeze, the scroll bar graphics, hiding the cast bar without a flash, tooltip refreshes and the target HP numbers still need the in-game checks in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
+  "kit_version": "0.11.91",
+  "hub_version": "0.4.23",
+  "release_summary": "A playtest that adds Cherry's Bar 1.0.0 (/cbar): full-width information bars at the top of the screen, the bottom, or both, with displays set per bar. It is a fork of XBar III, with bars and right-click settings in the spirit of Titan Panel, and shows only the top bar at first. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed. Everything from the 0.11.90 playtest is included unchanged.",
+  "runtime_validation": "Lua 5.1 simulated-client suite: 743 tests; 717 passed and 26 retired-editor tests skipped. Cherry's Bar adds 42 regressions covering the default top bar, top/bottom/both, displays set per bar and flowing without overlap, formats, one redraw per event burst, events following the tokens used, near-zero garbage on idle frames, rarer ticks in combat, moving game frames and restoring them through bar changes and Reload UI, right-click menus, options, the hub switch and the XBar old-copy check. Nothing has run in the real client yet: drawing, text widths, GetAnchor, frame moves and the game calls inherited from XBar III need the in-game checks in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
   "addons": [
     {
       "folder": "KittyCombo",
@@ -127,6 +127,15 @@
       "description_file": "16-cherrys-quests.md",
       "summary": "A prettier quest tracker; Ctrl+click a quest to track the NPCs it names.",
       "minimum_hub_version": "0.4.21"
+    },
+    {
+      "folder": "CherrysBar",
+      "title": "Cherry's Bar",
+      "version": "1.0.0",
+      "command": "/cbar",
+      "description_file": "17-cherrys-bar.md",
+      "summary": "Information bars at the top, bottom or both, with displays set per bar.",
+      "minimum_hub_version": "0.4.23"
     }
   ]
 }

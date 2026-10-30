@@ -1,0 +1,716 @@
+-- Cherry's Bar: the displays. Their readings and tokens come from XBar III's buttons (Mail's sold
+-- items by Mavoc), rewritten to read only on events or a slow timer. Each display is:
+--   key, label, title, icon, fmt: names, its picture and its default text
+--   bar, side, order, showLabel: where it starts
+--   events: { "EVENT", "TOKEN", ... }: see Displays.lua
+--   every, tick: seconds between tick(def) calls; tick returns true when there is something new
+--   read(v, def, cfg): writes the tokens into v; called only when redrawing
+--   tip(v, def), click(def, frame), hint, tokens (for the options window), extra (right-click rows)
+
+local G = CherrysBar
+local D = G.Displays
+
+local GOLD_TEXT, RESET = "|cffffe855", "|r"
+
+local function comma(value)
+  if value == nil then
+    return ""
+  end
+  local text, k = tostring(value), 1
+  while k > 0 do
+    text, k = string.gsub(text, "^(-?%d+)(%d%d%d)", "%1,%2")
+  end
+  return text
+end
+G.Comma = comma
+
+local function tipPair(left, right)
+  GameTooltip:AddDoubleLine(GOLD_TEXT .. tostring(left) .. RESET, tostring(right))
+end
+
+local function loadColor(percent)
+  if percent > 89 then
+    return "|cffff0000"
+  elseif percent > 69 then
+    return "|cffffaa00"
+  end
+  return "|cffffffff"
+end
+
+local function toggle(frameName)
+  local frame = _G[frameName]
+  if frame and ToggleUIFrame then
+    ToggleUIFrame(frame)
+  end
+end
+
+local function gameText(name, fallback)
+  local value = _G[name]
+  return type(value) == "string" and value or fallback
+end
+
+local CLASS_COLORS = {
+  SYS_CLASSNAME_WARRIOR = "ff0033", SYS_CLASSNAME_RANGER = "a5d603", SYS_CLASSNAME_THIEF = "00d6c5",
+  SYS_CLASSNAME_MAGE = "ff9100", SYS_CLASSNAME_AUGUR = "288cec", SYS_CLASSNAME_KNIGHT = "ffff70",
+  SYS_CLASSNAME_WARDEN = "8b35ff", SYS_CLASSNAME_DRUID = "0cf360", SYS_CLASSNAME_HARPSYN = "bf30e7",
+  SYS_CLASSNAME_PSYRON = "5677dd",
+}
+
+local function classColor(class)
+  if TEXT then
+    for token, color in pairs(CLASS_COLORS) do
+      if class == TEXT(token) then
+        return "|cff" .. color
+      end
+    end
+  end
+  return "|cffffffff"
+end
+
+---------------------------------------------------------------------------
+-- Menu: the game's windows (XBar III's lists)
+---------------------------------------------------------------------------
+
+local MAIN_ICON = "Interface/MainMenuFrame/MainPopupButton-Icon-"
+local SYSTEM_ICON = MAIN_ICON .. "System"
+
+local function windowRow(icon, textName, fallback, frameName)
+  return { icon = icon, text = gameText(textName, fallback), click = function() toggle(frameName) end }
+end
+
+local function gameMenu()
+  return {
+    { icon = MAIN_ICON .. "Character", text = gameText("SYSTEM_CHARACTER", "Character"),
+      click = function() ToggleCharacter("EquipmentFrame") end },
+    windowRow(MAIN_ICON .. "Skill", "SYSTEM_SKILL", "Skills", "UI_SkillBook"),
+    windowRow("Interface/MainMenuFrame/Mainpopupbutton-Icon-Title", "SYSTEM_TITLE", "Titles", "AchievementTitleFrame"),
+    windowRow(MAIN_ICON .. "Quest", "SYSTEM_QUEST", "Quests", "UI_QuestBook"),
+    windowRow(MAIN_ICON .. "Quild", "SYSTEM_GUILD", "Guild", "GuildFrame"),
+    { icon = MAIN_ICON .. "Contacts", text = gameText("SYSTEM_SOCIAL", "Friends"),
+      click = function() ToggleSocialFrame("Friend") end },
+    windowRow(MAIN_ICON .. "Card", "SYSTEM_CARDBOOK", "Cards", "CardBookFrame"),
+    windowRow(MAIN_ICON .. "Beauty", "SYSTEM_BEAUTY", "Beauty Studio", "BeautyStudioFrame"),
+    windowRow(MAIN_ICON .. "Merchant", "SYSTEM_MERCHANT", "Item Shop", "ItemMallFrame"),
+    windowRow(MAIN_ICON .. "InstanceRecord", "SYSTEM_INSTANCE_RECORD", "Instance Records", "InstanceRecordFrame"),
+    windowRow(MAIN_ICON .. "SortBoard", "SORT_SCOREBOARD_TITLE", "Leaderboards", "SortScoreBoard"),
+    windowRow(MAIN_ICON .. "SuitSkill", "SUITSKILL_FRAME", "Set Skills", "SkillSuitFrame"),
+    windowRow("Interface/DrawruneFrame/DrawRuneFrame-Icon", "BINDING_NAME_TOGGLEDRAWOUTRUNE", "Runes", "DrawRuneFrame"),
+    windowRow(MAIN_ICON .. "Clock", "TIMEFLAG_TITLE", "Timed Items", "TimeFlagFrame"),
+    windowRow(SYSTEM_ICON, "ACCOUNTBAG", "Account Bag", "AccountBagFrame"),
+    windowRow(SYSTEM_ICON, "ACCOUNTBOOK_TITLE", "Account Book", "AccountBookFrame"),
+    { icon = SYSTEM_ICON, text = "|cffe66868" .. gameText("SYSTEM_OPTION", "Game Menu"),
+      click = function() ToggleGameMenu() end },
+  }
+end
+
+local function systemMenu()
+  return {
+    windowRow("Interface/PetFrame/PetFrameShow_Normal", "PET_FRAME_BUTTON", "Pets", "PetFrame"),
+    windowRow("Interface/PartyBoardFrame/OpenBoardButton_Normal", "PARTY_BOARD_TITLE1", "Party Board", "PartyBoardFrame"),
+    windowRow("Interface/Minimap/MinimapButton_NpcTrack_Normal", "UI_NPCTRACK_TITLE", "NPC Tracking", "NpcTrackFrame"),
+    { icon = "Interface/Minimap/MinimapButton_RestoreUI_Normal", text = gameText("GCF_TEXT_RESTORE", "Restore UI positions"),
+      click = function() UIPanelAnchorFrame_ResetAnchorAll() end },
+    windowRow(SYSTEM_ICON, "RAIDFRAME_OPTION_TITLE", "Raid Options", "RaidOptionFrame"),
+    { icon = SYSTEM_ICON, text = gameText("GAME_MENU_DISPLAYOPTION", "Display"),
+      click = function() GameMenuFrame.SSFTab = 1; toggle("SYS_Settings_Frame") end },
+    { icon = SYSTEM_ICON, text = gameText("GAME_MENU_MUSICOPTION", "Sound"),
+      click = function() GameMenuFrame.SSFTab = 2; toggle("SYS_Settings_Frame") end },
+    windowRow(SYSTEM_ICON, "GAME_MENU_UIOPTION", "Interface", "GameConfigFrame"),
+    windowRow(SYSTEM_ICON, "GAME_MENU_KEYBINDING", "Key Bindings", "KeyDefineFrame"),
+    windowRow(SYSTEM_ICON, "GAME_MENU_MACRO", "Macros", "MacroFrame"),
+    { icon = SYSTEM_ICON, text = "Reload UI", click = function() ReloadUI() end },
+    { icon = SYSTEM_ICON, text = "Log out", click = function() Logout() end },
+    { icon = MAIN_ICON .. "Close", text = "|cffe66868" .. gameText("GAME_MENU_QUIT", "Quit"),
+      click = function() StaticPopup_Show("QUIT") end },
+  }
+end
+
+D.Add({
+  key = "Menu", label = "Menu", title = "Game menu", showLabel = true, bar = "top", side = "left", order = 10,
+  icon = G.MEDIA .. "Icons/SysBtn_Normal", fmt = "",
+  click = function(def, frame) G.Menu.Open(gameMenu(), frame, def) end,
+  hint = "Click: the game's windows",
+  extra = function(def, frame)
+    return { { text = "Game settings...", click = function() G.Menu.Open(systemMenu(), frame, def) end } }
+  end,
+})
+
+---------------------------------------------------------------------------
+-- Experience
+---------------------------------------------------------------------------
+
+local xpSession = { tp = nil, xp = nil, xpGain = 0, tpGain = 0 }
+
+D.Add({
+  key = "Exp", label = "XP", title = "Experience", showLabel = true, bar = "top", side = "left", order = 20,
+  icon = "Interface/Icons/Im_Ball08", fmt = "[PER]%",
+  events = { { "PLAYER_EXP_CHANGED" }, { "TP_EXP_UPDATE" } },
+  tokens = "[XP] [XPN] to level [XPM] max [PER] percent [PERN] percent to go [TP] [TPA] total [XPS] [TPS] this session [XPD] [TPD] debt",
+  read = function(v)
+    local xp, max, tp = GetPlayerExp("player"), GetPlayerMaxExp("player"), GetTpExp("Tp")
+    if not max or max <= 0 then
+      max = 1
+    end
+    if xpSession.xp and xp > xpSession.xp then
+      xpSession.xpGain = xpSession.xpGain + (xp - xpSession.xp)
+    end
+    if xpSession.tp and tp > xpSession.tp then
+      xpSession.tpGain = xpSession.tpGain + (tp - xpSession.tp)
+    end
+    xpSession.xp, xpSession.tp = xp, tp
+    v.XP, v.XPM, v.XPN = comma(xp), comma(max), comma(max - xp)
+    v.PER = string.format("%.2f", xp / max * 100)
+    v.PERN = string.format("%.2f", (max - xp) / max * 100)
+    v.TP = comma(tp)
+    v.TPA = comma(GetTotalTpExp())
+    v.XPS, v.TPS = comma(xpSession.xpGain), comma(xpSession.tpGain)
+    local xpDebt, tpDebt = GetPlayerExpDebt()
+    v.XPD, v.TPD = comma(xpDebt), comma(tpDebt)
+  end,
+  tip = function(v)
+    tipPair("Experience", v.XP .. " / " .. v.XPM .. " (" .. v.PER .. "%)")
+    tipPair("To next level", v.XPN)
+    tipPair("TP", v.TP)
+    tipPair("This session", "XP " .. v.XPS .. ", TP " .. v.TPS)
+    tipPair("Debt", "XP " .. v.XPD .. ", TP " .. v.TPD)
+  end,
+})
+
+---------------------------------------------------------------------------
+-- Bags
+---------------------------------------------------------------------------
+
+local function countGoods(from, to)
+  local used = 0
+  for i = from, to do
+    local _, _, count = GetGoodsItemInfo(i)
+    if count and count > 0 then
+      used = used + 1
+    end
+  end
+  return used
+end
+
+D.Add({
+  key = "Bag", label = "Bag", title = "Bags", showLabel = true, bar = "top", side = "left", order = 30,
+  icon = "Interface/Icons/Story_06", fmt = "[USED]/[TOTAL]",
+  events = { { "PLAYER_BAG_CHANGED" } },
+  tokens = "[USED] [TOTAL] [LOAD] percent full [SUSED] item shop bag [AUSED] magic box",
+  setup = function(def, cfg)
+    local fmt = cfg.fmt
+    def.scan = string.find(fmt, "[SUSED]", 1, true) or string.find(fmt, "[AUSED]", 1, true) or false
+  end,
+  read = function(v, def)
+    local used, total = GetBagCount()
+    total = (total and total > 0) and total or 1
+    local load = math.ceil(used / total * 100)
+    local color = loadColor(load)
+    v.USED = color .. used .. RESET
+    v.TOTAL = total
+    v.LOAD = color .. load .. RESET
+    if def.scan or def.hovering then
+      v.SUSED = countGoods(1, 50) .. "/50"
+      v.AUSED = countGoods(51, 60) .. "/5"
+    end
+  end,
+  tip = function(v)
+    tipPair(gameText("BACKPACK", "Backpack"), v.USED .. "/" .. v.TOTAL)
+    tipPair(gameText("GOODSPACK", "Item shop bag"), v.SUSED)
+    tipPair(gameText("MAGICBOX_TITLE", "Magic box"), v.AUSED)
+  end,
+  click = function()
+    toggle("BagFrame")
+    G.Try(MainMenuBagHasNewItem, "Hide")
+  end,
+  hint = "Click: your bag",
+  extra = function()
+    return { { text = gameText("TIMEFLAG_HANDY_BANK", "Open bank"), click = function()
+      if TimeLet_GetLetTime("BankLet") >= 0 then
+        OpenBank()
+      else
+        toggle("BankFrame")
+      end
+    end } }
+  end,
+})
+
+---------------------------------------------------------------------------
+-- Money
+---------------------------------------------------------------------------
+
+local money = { last = nil, gained = 0, spent = 0 }
+
+D.Add({
+  key = "Money", label = "Gold", title = "Money", showLabel = true, bar = "top", side = "left", order = 40,
+  icon = "Interface/Icons/Coin_03", fmt = "[GOLD]",
+  events = { { "PLAYER_MONEY" } },
+  tokens = "[GOLD] [DIAS] diamonds [RUBY] rubies [COIN] phirius tokens [GAINED] [SPENT] this session",
+  read = function(v)
+    local gold = GetPlayerMoney("copper")
+    if money.last and gold > money.last then
+      money.gained = money.gained + (gold - money.last)
+    elseif money.last and gold < money.last then
+      money.spent = money.spent + (money.last - gold)
+    end
+    money.last = gold
+    v.GOLD = "|cffffee80" .. comma(gold) .. RESET
+    v.DIAS = "|cffc7c7ff" .. comma(GetPlayerMoney("account")) .. RESET
+    v.RUBY = "|cffffc7c7" .. comma(GetPlayerMoney("bonus")) .. RESET
+    v.COIN = "|cffc7c7c7" .. comma(GetPlayerMoney("billdin")) .. RESET
+    v.GAINED = "|cff8de668" .. comma(money.gained) .. RESET
+    v.SPENT = "|cffe66868" .. comma(money.spent) .. RESET
+  end,
+  tip = function(v)
+    tipPair("Gold", v.GOLD)
+    tipPair("Diamonds", v.DIAS)
+    tipPair("Rubies", v.RUBY)
+    tipPair("Phirius tokens", v.COIN)
+    tipPair("Earned this session", v.GAINED)
+    tipPair("Spent this session", v.SPENT)
+  end,
+  click = function() toggle("BagFrame") end,
+})
+
+---------------------------------------------------------------------------
+-- Mail. The count comes from system messages, as the client gives no unread-mail reading here.
+---------------------------------------------------------------------------
+
+local mail = { unread = 0, sold = {} }
+local mailMessages, soldPattern
+
+local function mailStrings()
+  if mailMessages or not TEXT then
+    return
+  end
+  mailMessages = {}
+  for _, token in ipairs({ "SYS_NEW_MAIL", "SYS_AC_BUYOUT_SUCCESS", "SYS_AC_CANCEL_SELL_ITEM", "SYS_AC_EXCEED", "SYS_GOT_GIFT" }) do
+    mailMessages[TEXT(token)] = true
+  end
+  soldPattern = string.gsub(TEXT("SYS_AC_SELL_SUCCESS"), "%%s", "(.+)")
+end
+
+D.Add({
+  key = "Mail", label = "Mail", showLabel = true, bar = "top", side = "right", order = 10,
+  icon = "Interface/Icons/Quest_Letter02", fmt = "[UNREAD]",
+  events = { { "MAIL_SHOW" }, { "CHAT_MSG_SYSTEM" } },
+  tokens = "[UNREAD] new mail since you last opened the mailbox",
+  onEvent = function(def, event, message)
+    if event == "MAIL_SHOW" then
+      mail.unread = 0
+      mail.sold = {}
+      return true
+    end
+    mailStrings()
+    if not mailMessages or type(message) ~= "string" then
+      return false
+    end
+    if mailMessages[message] then
+      mail.unread = mail.unread + 1
+      return true
+    end
+    local item = string.match(message, soldPattern)
+    if item and #mail.sold < 40 then
+      mail.sold[#mail.sold + 1] = item
+    end
+    return false
+  end,
+  read = function(v)
+    v.UNREAD = mail.unread > 0 and ("|cff8de668" .. mail.unread .. RESET) or "0"
+  end,
+  tip = function(v)
+    tipPair("New since last opened", v.UNREAD)
+    for i, item in ipairs(mail.sold) do
+      if i > 30 then
+        GameTooltip:AddLine("...")
+        break
+      end
+      GameTooltip:AddLine(item)
+    end
+  end,
+  click = function()
+    if TimeLet_GetLetTime("MailLet") < 0 then
+      StaticPopup_Show("TIMEFLAG_FAIL1")
+    else
+      OpenMail()
+    end
+  end,
+  hint = "Click: your mailbox (needs a mail letter item)",
+})
+
+---------------------------------------------------------------------------
+-- Performance: frame rate and latency, every 2 seconds, redrawn only when a whole number changes
+---------------------------------------------------------------------------
+
+D.Add({
+  key = "Perf", label = "FPS", title = "Performance", bar = "top", side = "right", order = 20,
+  icon = "Interface/Icons/Sys_Home04", fmt = "[FPS] fps [MS] ms", every = 2,
+  tokens = "[FPS] frames per second [MS] latency",
+  tick = function(def)
+    local fps, ping = math.floor(GetFramerate()), math.floor(GetPing())
+    if fps == def.fps and ping == def.ping then
+      return false
+    end
+    def.fps, def.ping = fps, ping
+    return true
+  end,
+  read = function(v, def)
+    local fps = def.fps or math.floor(GetFramerate())
+    local ping = def.ping or math.floor(GetPing())
+    v.FPS = (fps < 21 and "|cffff0000" or fps < 41 and "|cffffaa00" or "|cffffffff") .. fps .. RESET
+    v.MS = (ping > 150 and "|cffff0000" or ping > 100 and "|cffffaa00" or "|cffffffff") .. ping .. RESET
+  end,
+  tip = function(v)
+    tipPair("Frames per second", v.FPS)
+    tipPair("Latency", v.MS .. " ms")
+  end,
+})
+
+---------------------------------------------------------------------------
+-- Clock: looks at the time once a second and redraws once a minute
+---------------------------------------------------------------------------
+
+CherrysBar_SessionStart = CherrysBar_SessionStart or (GetTime and GetTime()) or 0
+
+local function hoursMinutes(minutes)
+  return string.format("%02d:%02d", math.floor(minutes / 60), minutes % 60)
+end
+
+D.Add({
+  key = "Clock", label = "Time", title = "Clock", bar = "top", side = "right", order = 30,
+  icon = "Interface/Icons/elf_skill/Skill_ward16-1", fmt = "[TIME24]", every = 1,
+  tokens = "[TIME24] [TIME12] [DATE] [ONLINE] this session [TOTAL] all characters",
+  tick = function(def)
+    local minute = math.floor(os.time() / 60)
+    if minute == def.minute then
+      return false
+    end
+    if def.minute then
+      local S = G.S()
+      S.playedMins = (tonumber(S.playedMins) or 0) + 1
+    end
+    def.minute = minute
+    return true
+  end,
+  read = function(v)
+    v.TIME24 = os.date("%H:%M")
+    v.TIME12 = os.date("%I:%M %p")
+    v.DATE = os.date("%a %d-%m-%Y")
+    v.ONLINE = hoursMinutes(math.floor(((GetTime and GetTime() or 0) - CherrysBar_SessionStart) / 60))
+    local total = tonumber(G.S().playedMins) or 0
+    v.TOTAL = string.format("%dd %s", math.floor(total / 1440), hoursMinutes(total % 1440))
+  end,
+  tip = function(v)
+    tipPair("Date", v.DATE)
+    tipPair("Time", v.TIME24)
+    tipPair("Online this session", v.ONLINE)
+    tipPair("Online in total", v.TOTAL)
+  end,
+})
+
+---------------------------------------------------------------------------
+-- Zone
+---------------------------------------------------------------------------
+
+D.Add({
+  key = "Zone", label = "Zone", icon = "Interface/Icons/Sys_Home03", fmt = "[ZONE]", every = 3,
+  tokens = "[ZONE] where you are",
+  tick = function(def)
+    local zone = GetZoneName()
+    if zone == def.zone then
+      return false
+    end
+    def.zone = zone
+    return true
+  end,
+  read = function(v, def)
+    v.ZONE = def.zone or GetZoneName() or ""
+  end,
+  click = function() toggle("WorldMapFrame") end,
+  hint = "Click: the world map",
+})
+
+---------------------------------------------------------------------------
+-- Friends and guild. Reading the lists is event-only; the pop-up is built when it is opened.
+---------------------------------------------------------------------------
+
+local function friendCounts()
+  local count = GetFriendCount("Friend") or 0
+  local online = 0
+  for i = 1, count do
+    local _, _, on = GetFriendInfo("Friend", i)
+    if on then
+      online = online + 1
+    end
+  end
+  return online, count
+end
+
+local function peopleRow(name, icon, text)
+  return {
+    icon = icon, text = text or name,
+    tip = "Click: whisper. Right-click: invite to party.",
+    click = function(key)
+      if key == "RBUTTON" then
+        InviteByName(name)
+      else
+        ChatFrame_SendTell(name)
+      end
+    end,
+  }
+end
+
+D.Add({
+  key = "Friends", label = "Friends", showLabel = true, icon = "Interface/Icons/Emo_Wave", fmt = "[ONLINE]/[COUNT]",
+  events = { { "RESET_FRIEND" } },
+  tokens = "[ONLINE] [COUNT]",
+  read = function(v)
+    v.ONLINE, v.COUNT = friendCounts()
+  end,
+  click = function(def, frame)
+    local rows = {}
+    for i = 1, GetFriendCount("Friend") or 0 do
+      local name, _, on = GetFriendInfo("Friend", i)
+      if on and name then
+        rows[#rows + 1] = peopleRow(name, "Interface/Icons/Emo_Wave")
+      end
+    end
+    if #rows == 0 then
+      rows[1] = { text = "Nobody online" }
+    end
+    G.Menu.Open(rows, frame, def)
+  end,
+  hint = "Click: friends online",
+})
+
+local function guildOnline()
+  local online = 0
+  for i = 1, GetNumGuildMembers() or 0 do
+    local _, _, _, _, _, _, _, _, _, _, on = GetGuildRosterInfo(i)
+    if on then
+      online = online + 1
+    end
+  end
+  return online
+end
+
+D.Add({
+  key = "Guild", label = "Guild", showLabel = true, icon = "Interface/Icons/Skill_Mag_New20-5", fmt = "[ONLINE]/[MEMBER]",
+  events = { { "UPDATE_GUILD_MEMBER" } },
+  tokens = "[GNAME] [ONLINE] [MEMBER]",
+  read = function(v)
+    v.GNAME = (GetGuildInfo and GetGuildInfo()) or ""
+    v.ONLINE, v.MEMBER = guildOnline(), GetNumGuildMembers() or 0
+  end,
+  click = function(def, frame)
+    local rows = {}
+    for i = 1, GetNumGuildMembers() or 0 do
+      local name, _, class, level, _, _, _, _, _, _, on = GetGuildRosterInfo(i)
+      if on and name then
+        rows[#rows + 1] = peopleRow(name, "Interface/Icons/Emo_Wave", classColor(class) .. name .. RESET .. " " .. tostring(level))
+      end
+    end
+    if #rows == 0 then
+      rows[1] = { text = "Nobody online" }
+    end
+    G.Menu.Open(rows, frame, def)
+  end,
+  hint = "Click: guild members online",
+})
+
+---------------------------------------------------------------------------
+-- Ammunition
+---------------------------------------------------------------------------
+
+D.Add({
+  key = "Ammo", label = "Ammo", showLabel = true, icon = "Interface/Icons/Ammo1", fmt = "[COUNT]",
+  events = { { "PLAYER_BAG_CHANGED", "COUNT", "BAG" }, { "PLAYER_INVENTORY_CHANGED" } },
+  tokens = "[COUNT] equipped and in bag [EQUIP] [BAG] [NAME]",
+  read = function(v)
+    local _, _, name = GetInventoryItemDurable("player", 9)
+    if not name then
+      v.NAME, v.EQUIP, v.BAG, v.COUNT = gameText("NONE", "None"), 0, 0, 0
+      return
+    end
+    local equipped, bag = GetInventoryItemCount("player", 9), GetCountInBagByName(name)
+    local count = equipped + bag
+    local color = count < 101 and "|cffff0000" or count < 501 and "|cffffaa00" or "|cffffffff"
+    v.NAME, v.EQUIP, v.BAG = name, equipped, bag
+    v.COUNT = color .. count .. RESET
+  end,
+  tip = function(v)
+    tipPair(v.NAME, v.COUNT)
+    tipPair("Equipped", v.EQUIP)
+    tipPair("In bag", v.BAG)
+  end,
+})
+
+---------------------------------------------------------------------------
+-- Classes, quests and dailies
+---------------------------------------------------------------------------
+
+D.Add({
+  key = "Class", label = "Class", icon = "Interface/Icons/Ft_Manikin01", fmt = "[MCLASS] [MLVL]/[SCLASS] [SLVL]", every = 30,
+  events = { { "UNIT_LEVEL", "MLVL", "SLVL" }, { "EXCHANGECLASS_SUCCESS" }, { "PLAYER_HONOR_CHANGED", "HONOR" } },
+  tokens = "[MCLASS] [MLVL] [SCLASS] [SLVL] [QUEST] done/in book [DAY] dailies [HONOR] [GOOD]",
+  onEvent = function(def, event, unit)
+    return event ~= "UNIT_LEVEL" or unit == "player"
+  end,
+  tick = function() return true end,
+  read = function(v)
+    local main, sub = UnitClass("player")
+    local mainLevel, subLevel = UnitLevel("player")
+    v.MCLASS = classColor(main) .. tostring(main or "") .. RESET
+    v.MLVL = mainLevel or 0
+    v.SCLASS = (sub and sub ~= "") and (classColor(sub) .. sub .. RESET) or gameText("NONE", "None")
+    v.SLVL = subLevel or 0
+    local done, perDay = Daily_count()
+    v.DAY = done .. "/" .. perDay
+    local total = GetNumQuestBookButton_QuestBook() or 0
+    local finished = 0
+    for i = 1, total do
+      local _, _, _, _, _, _, _, _, _, complete = GetQuestInfo(i)
+      if complete then
+        finished = finished + 1
+      end
+    end
+    v.QUEST = finished .. "/" .. total
+    v.HONOR = comma(math.floor(GetPlayerPointInfo(3, 1, " ") or 0))
+    v.GOOD = string.format("%.2f", GetPlayerGoodEvil() or 0)
+  end,
+  tip = function(v)
+    tipPair("Classes", v.MCLASS .. " " .. v.MLVL .. " / " .. v.SCLASS .. " " .. v.SLVL)
+    tipPair("Quests done / in book", v.QUEST)
+    tipPair("Daily quests", v.DAY)
+    tipPair("Honor", v.HONOR)
+    tipPair("Reputation", v.GOOD)
+  end,
+})
+
+---------------------------------------------------------------------------
+-- Gathering
+---------------------------------------------------------------------------
+
+local CRAFTS = { { "MINE", "MINING", "Mining" }, { "WOOD", "LUMBERING", "Lumbering" }, { "HERB", "HERBLISM", "Herbalism" } }
+
+D.Add({
+  key = "Craft", label = "Gather", title = "Gathering", icon = "Interface/Icons/item_tr_08",
+  fmt = "[MINELV] [WOODLV] [HERBLV]",
+  events = { { "PLAYER_LIFESKILL_CHANGED" } },
+  tokens = "[MINELV] [MINEXP] [WOODLV] [WOODXP] [HERBLV] [HERBXP] level and percent",
+  read = function(v)
+    for _, craft in ipairs(CRAFTS) do
+      local value = GetPlayerCurrentSkillValue(craft[2]) or 0
+      local level = math.floor(value)
+      v[craft[1] .. "LV"] = level
+      v[craft[1] .. "XP"] = string.format("%.2f", (value - level) * 100)
+    end
+  end,
+  tip = function(v)
+    for _, craft in ipairs(CRAFTS) do
+      tipPair(craft[3], v[craft[1] .. "LV"] .. " (" .. v[craft[1] .. "XP"] .. "%)")
+    end
+  end,
+})
+
+---------------------------------------------------------------------------
+-- Damage and durability. Combat events only add numbers; the display redraws at the next tick,
+-- and the running figures reset after 5 seconds without a hit.
+---------------------------------------------------------------------------
+
+local meter = {
+  damage = { total = 0, last = 0, start = nil, at = nil },
+  heal = { total = 0, last = 0, start = nil, at = nil },
+}
+
+local function addTo(m, amount, now)
+  if not m.start then
+    m.start, m.total = now - 1, 0
+  end
+  m.at, m.last = now, amount
+  m.total = m.total + amount
+end
+
+local function perSecond(m)
+  if not m.start or not m.at or m.at <= m.start then
+    return 0
+  end
+  return math.floor(m.total / (m.at - m.start))
+end
+
+local function durability(v)
+  local total, items, lowest = 0, 0, 100
+  v.DURAL = gameText("NONE", "None")
+  for i = 0, 21 do
+    local cur, max = GetInventoryItemDurable("player", i)
+    if max and max ~= 0 and i ~= 18 and i ~= 19 and i ~= 20 and i ~= 9 then
+      local percent = math.ceil(cur / max * 1000) / 10
+      items = items + 1
+      total = total + percent
+      if percent < lowest then
+        lowest = percent
+        v.DURAL = cur .. "/" .. max
+      end
+    end
+  end
+  local average = items > 0 and math.ceil(total / items * 10) / 10 or 100
+  v.DURA = (average < 41 and "|cffff0000" or average < 86 and "|cffffaa00" or "|cffffffff") .. average .. RESET
+end
+
+D.Add({
+  key = "Dps", label = "DPS", title = "Damage and durability", icon = "Interface/Icons/Im_Ball03",
+  fmt = "[DPS] dps [DURA]%", every = 1,
+  events = {
+    { "COMBATMETER_DAMAGE", "DPS", "DMG" }, { "COMBATMETER_HEAL", "HPS", "HEAL" },
+    { "PLAYER_INVENTORY_CHANGED", "DURA", "DURAL" }, { "UNIT_HEALTH", "KILLS" },
+  },
+  tokens = "[DPS] [DMG] last hit [HPS] [HEAL] last heal [DURA] average durability [DURAL] lowest [KILLS]",
+  onEvent = function(def, event, unit)
+    if event == "COMBATMETER_DAMAGE" or event == "COMBATMETER_HEAL" then
+      if _source ~= G.charName then
+        return false
+      end
+      local now = GetTime()
+      if event == "COMBATMETER_DAMAGE" then
+        addTo(meter.damage, tonumber(_damage) or 0, now)
+      else
+        addTo(meter.heal, tonumber(_heal) or 0, now)
+      end
+      return true
+    elseif event == "UNIT_HEALTH" then
+      if unit ~= "target" or UnitHealth("target") ~= 0 or not UnitExists("target") then
+        return false
+      end
+      local kills = G.S().kills
+      kills[G.charName] = (tonumber(kills[G.charName]) or 0) + 1
+      return true
+    end
+    return true
+  end,
+  tick = function(def)
+    local now, changed = GetTime(), false
+    for _, m in pairs(meter) do
+      if m.at and now - m.at > 5 then
+        m.start, m.at, m.total = nil, nil, 0
+        changed = true
+      end
+    end
+    return changed
+  end,
+  read = function(v)
+    v.DPS = comma(perSecond(meter.damage))
+    v.DMG = comma(meter.damage.last)
+    v.HPS = comma(perSecond(meter.heal))
+    v.HEAL = comma(meter.heal.last)
+    v.KILLS = comma(tonumber(G.S().kills[G.charName]) or 0)
+    durability(v)
+  end,
+  tip = function(v)
+    tipPair("Average durability", v.DURA .. "%")
+    tipPair("Lowest durability", v.DURAL)
+    tipPair("Damage per second", v.DPS)
+    tipPair("Healing per second", v.HPS)
+    tipPair("Kills", v.KILLS)
+  end,
+  click = function() ToggleCharacter("EquipmentFrame") end,
+  hint = "Click: your equipment",
+})

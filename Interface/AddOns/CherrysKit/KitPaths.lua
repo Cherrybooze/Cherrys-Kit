@@ -14,4 +14,5 @@ CherrysKit_Paths = {
   PortraitHP = "Interface/AddOns/CherrysKit/PortraitHP/",
   CherrysGrid = "Interface/AddOns/CherrysKit/CherrysGrid/",
   CherrysQuests = "Interface/AddOns/CherrysKit/CherrysQuests/",
+  CherrysBar = "Interface/AddOns/CherrysKit/CherrysBar/",
 }

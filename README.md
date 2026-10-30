@@ -1,10 +1,10 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.90/CherrysKit-Full-0.11.90.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.91/CherrysKit-Full-0.11.91.zip)
 
 # Cherry's Kit
 
-> Playtest build: kit **0.11.90**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
+> Playtest build: kit **0.11.91**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.90/CherrysKit-Full-0.11.90.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.91/CherrysKit-Full-0.11.91.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -12,11 +12,15 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest build: **0.11.90** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.90)
+Current playtest build: **0.11.91** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.91)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
-## What’s new in 0.11.90
+## What’s new in 0.11.91
+
+- **Cherry's Bar 1.0.0** (`/cbar`) is new: full-width information bars at the top of the screen, the bottom, or both, with displays set per bar. It is a fork of XBar III, with bars and right-click settings in the spirit of Titan Panel. It shows the top bar at first. Hub 0.4.23 lists it. None of it has run in the game client yet, and [the checks are here](docs/TESTING.md).
+
+## In 0.11.90
 
 - **Names from chat into the mail**: with the mail window open, Ctrl+click or Shift+click a player's name in chat to put it in To. **Ultimate Mail Mod 7.0.1-ck10** fills Compose's To (switching to Compose from the inbox or History) or the mass-send To field on Mass Send Items, and **Cherry's Chat 0.10.12** hands these clicks to the mail window first.
 
@@ -57,7 +61,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.90/CherrysKit-Full-0.11.90.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.91/CherrysKit-Full-0.11.91.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -87,7 +91,7 @@ Remove old separate copies of the same addons from `Interface/AddOns/` first; th
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.22 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.23 |
 | [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.16 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.29 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.12 |
@@ -103,6 +107,7 @@ Remove old separate copies of the same addons from `Interface/AddOns/` first; th
 | [PortraitHP](Interface/AddOns/CherrysKit/PortraitHP/README.md) | Your target's health percentage on its portrait. | `/php` | 2019.07.14-ck2 |
 | [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click. | `/grid` | 1.1.4 |
 | [Cherry's Quests](Interface/AddOns/CherrysKit/CherrysQuests/README.md) | A prettier quest tracker; Ctrl+click a quest to track the NPCs it names. | `/cq` | 1.0.0 |
+| [Cherry's Bar](Interface/AddOns/CherrysKit/CherrysBar/README.md) | Information bars at the top, bottom or both, with displays set per bar. | `/cbar` | 1.0.0 |
 
 Some integrations need both addons: for example, running a kitty from Grid needs KittyCombo. Each addon's README lists its requirements and current limits. Features still being tested are labelled there.
 
@@ -138,7 +143,7 @@ Python 3.10 or later is enough; there are no Python package dependencies:
 python tools/build_release.py
 ```
 
-This creates eighteen ZIPs in `dist/<kit version>/` (the full kit, hub, fifteen addons and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
+This creates nineteen ZIPs in `dist/<kit version>/` (the full kit, hub, sixteen addons and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
 
 The original 0.11.77 import preserved the supplied runtime code. Earlier READMEs referring to old tests or generators are kept as reference notes, but those development tools were not included in the handoff. Current tests simulate client APIs; native drawing, input, sound and event timing still need in-game checks.
 

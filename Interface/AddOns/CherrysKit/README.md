@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.22** · Kit release **0.11.90** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.23** · Kit release **0.11.91** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.91 playtest
+
+- **Cherry's Bar 1.0.0** (`/cbar`) is new: information bars at the top of the screen, the bottom, or both, with displays set per bar. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed.
 
 ## Kit 0.11.90 playtest
 
@@ -83,6 +87,7 @@ Each one is its own download and needs Cherry's Kit:
 - **PortraitHP**: target health percent on its portrait (`/php`)
 - **Cherry's Grid**: party and raid frames that run kitties on click (`/grid`)
 - **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
+- **Cherry's Bar**: information bars at the top, bottom or both, with displays set per bar (`/cbar`)
 - **Cherry's Addon LoadTimes**: how long each addon takes to load, for troubleshooting; off until its `Switch.txt` turns it on (`/ckload`)
 
 ## Chat commands

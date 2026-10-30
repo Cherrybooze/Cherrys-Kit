@@ -29,3 +29,4 @@ These descriptions started with the [Opus handoff](https://claude.ai/artifact/HX
 - [PortraitHP](14-portraithp.md)
 - [Cherry's Grid](15-cherrys-grid.md)
 - [Cherry's Quests](16-cherrys-quests.md)
+- [Cherry's Bar](17-cherrys-bar.md)
