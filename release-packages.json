@@ -1,8 +1,8 @@
 {
-  "kit_version": "0.11.97",
+  "kit_version": "0.11.98",
   "hub_version": "0.4.23",
-  "release_summary": "A playtest that adds Cherry's Bar 1.1.5 (/cbar): full-width information bars at the top of the screen, the bottom, or both, with nineteen displays set per bar and seven styles and icons from Cherry's Studio Panel art. Displays can be dragged on a map of the bars in /cbar or on the bars themselves, or moved with buttons and right-click menus. It is a fork of XBar III, with bars and settings in the spirit of Titan Panel, and shows only the top bar at first, drawn under the game's frames with its displays kept clear of them. A bottom bar lifts the whole interface and fits underneath. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed. KittyCombo 1.7.17 hands its \"Mode:\" plate to the bar's Kitty mode display while that is on a bar. Everything else from the 0.11.90 playtest is included unchanged.",
-  "runtime_validation": "Lua 5.1 simulated-client suite: 800 tests; 774 passed and 26 retired-editor tests skipped. Cherry's Bar has 98 regressions, now including a client with no os library, display timers that fail, the clock with and without CherrysClock, and the /cbar perf recorder. Frame strata, sizes and positions were read from the installed client's own layout files. The os error was found by reading the code and the client's recorded environment; whether it caused the reported frame drops has not been measured. Drawing order, lifting UIParent, text widths, dragging, the picker opening from the bar, the new coordinate and volume calls and the game calls inherited from XBar III need the in-game checks in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
+  "release_summary": "A playtest that adds Cherry's Bar 1.1.6 (/cbar): full-width information bars at the top of the screen, the bottom, or both, with nineteen displays set per bar and seven styles and icons from Cherry's Studio Panel art. Displays can be dragged on a map of the bars in /cbar or on the bars themselves, or moved with buttons and right-click menus. It is a fork of XBar III, with bars and settings in the spirit of Titan Panel, and shows only the top bar at first, drawn under the game's frames with its displays kept clear of them. A bottom bar lifts the whole interface and fits underneath. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed. KittyCombo 1.7.17 hands its \"Mode:\" plate to the bar's Kitty mode display while that is on a bar. Everything else from the 0.11.90 playtest is included unchanged.",
+  "runtime_validation": "Lua 5.1 simulated-client suite: 801 tests; 775 passed and 26 retired-editor tests skipped. Cherry's Bar has 99 regressions, now including a client with no os library, display timers that fail, the clock with and without CherrysClock, the 0 to 100 master volume, and the /cbar perf recorder. Frame strata, sizes and positions were read from the installed client's own layout files. The os error was found by reading the code and the client's recorded environment; whether it caused the reported frame drops has not been measured. Drawing order, lifting UIParent, text widths, dragging, the picker opening from the bar, the new coordinate and volume calls and the game calls inherited from XBar III need the in-game checks in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
   "addons": [
     {
       "folder": "KittyCombo",
@@ -131,7 +131,7 @@
     {
       "folder": "CherrysBar",
       "title": "Cherry's Bar",
-      "version": "1.1.5",
+      "version": "1.1.6",
       "command": "/cbar",
       "description_file": "17-cherrys-bar.md",
       "summary": "Information bars at the top, bottom or both, with displays set per bar.",

@@ -13,7 +13,7 @@ P.FUNCTIONS = {
   "GetPlayerCurrentSkillValue", "Daily_count", "GetNumQuestBookButton_QuestBook", "GetQuestInfo", "GetPlayerPointInfo",
   "GetPlayerGoodEvil", "TimeLet_GetLetTime", "OpenMail", "OpenBank", "ToggleUIFrame", "ToggleCharacter", "ToggleSocialFrame",
   "ToggleGameMenu", "InviteByName", "ChatFrame_SendTell", "StaticPopup_Show", "TEXT", "GetCursorPos", "GetUIScale",
-  "GetPlayerWorldMapPos", "GetBagItemCount", "GetCountInBankByName", "MasterVolumeSlider_GetValue", "SSF_AudioSettings_OnApply",
+  "GetPlayerWorldMapPos", "GetBagItemCount", "GetCountInBankByName", "MasterVolumeSlider_GetValue", "MasterVolumeSlider_SetValue",
 }
 
 P.FRAMES = {

@@ -1,5 +1,9 @@
 Cherry's Bar
 
+1.1.6
+  Fixes Volume: it treated the game's master volume as 0 to 1, but the client's runs 0 to 100 in whole
+  numbers, so a scroll step was rounded away and clicking restored almost nothing.
+
 1.1.5
   Fixes an error raised once a second from the update loop: the Clock asked for the os library, which
   this client does not have, and that also stopped the displays after it from updating on time. It now

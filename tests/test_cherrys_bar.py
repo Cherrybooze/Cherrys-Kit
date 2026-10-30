@@ -25,7 +25,7 @@ calls = { bag = 0, ping = 0, opened = {}, volume = {} }
 now, inCombat, zone = 100, false, "Varanas"
 uiScale = 1
 cursor = { 300, 12 }
-volume = 0.8
+volume = 80
 state = { used = 10, total = 60, gold = 1234567, fps = 60, ping = 40, xp = 500, xpMax = 1000 }
 os = nil  -- the game's Lua has no os library
 function GetTime() return now end
@@ -79,8 +79,9 @@ function InviteByName() end
 function ChatFrame_SendTell() end
 function StaticPopup_Show() end
 function MasterVolumeSlider_GetValue() return volume end
-SYS_AudioSettings_MasterVolumeSlider = { SetValue = function(_, v) volume = v end }
-function SSF_AudioSettings_OnApply() calls.volume[#calls.volume + 1] = volume end
+function MasterVolumeSlider_SetValue(v) volume = v end
+-- The client's slider runs 0 to 100 in whole numbers.
+SYS_AudioSettings_MasterVolumeSlider = { SetValue = function(self, v) self.value = math.floor(v + 0.5) end }
 
 local Widget = {}
 Widget.__index = Widget
@@ -1028,13 +1029,14 @@ class BarTest(unittest.TestCase):
         self.assertIn("VolumeMute", self.ev(icon))
         self.assertEqual(self.text_of("Volume"), "0%")
         self.run_lua(f"CherrysBar.Displays.MouseUp({slot}, 'LBUTTON')")
-        self.assertEqual(self.ev("volume"), 0.8)
+        self.assertEqual(self.ev("volume"), 80)
+        self.assertEqual(self.ev("SYS_AudioSettings_MasterVolumeSlider.value"), 80)
         self.run_lua(f"for i = 1, 4 do CherrysBar.Displays.Wheel({slot}, -1) end")
-        self.assertAlmostEqual(self.ev("volume"), 0.6)
+        self.assertEqual(self.ev("volume"), 60)
         self.assertIn("VolumeMedium", self.ev(icon))
         self.assertEqual(self.text_of("Volume"), "60%")
         self.run_lua(f"for i = 1, 20 do CherrysBar.Displays.Wheel({slot}, 1) end")
-        self.assertEqual(self.ev("volume"), 1)
+        self.assertEqual(self.ev("volume"), 100)
 
     def with_kitty(self):
         self.run_lua("""
@@ -1099,6 +1101,23 @@ class BarTest(unittest.TestCase):
         self.with_kitty()
         self.run_lua("CherrysBar.Bars.BarClick('top', 'RBUTTON')")
         self.assertIn("Kitty mode", self.menu_rows())
+
+    def test_volume_scrolls_up_from_muted(self):
+        self.run_lua("""
+            volume = 0
+            local D = CherrysBar.Displays
+            D.SetBar(D.byKey.Volume, 'top')
+            D.Wheel(D.byKey.Volume.slot, 1)
+        """)
+        self.assertEqual(self.ev("volume"), 5)
+        self.assertEqual(self.text_of("Volume"), "5%")
+        self.assertIn("VolumeLow", self.ev("_G['CBar_D' .. CherrysBar.Displays.byKey.Volume.slot .. 'Icon'].texture"))
+        self.run_lua("""
+            volume = 0
+            local D = CherrysBar.Displays
+            D.MouseUp(D.byKey.Volume.slot, 'LBUTTON')
+        """)
+        self.assertEqual(self.ev("volume"), 50)
 
     def test_every_display_reads_and_tips_without_error(self):
         self.with_kitty()
@@ -1185,7 +1204,7 @@ class BarTest(unittest.TestCase):
         text = " ".join(str(v) for v in self.ev("messages").values())
         self.assertIn("missing functions: none", text.replace("|cffff7fa8Cherry's Bar:|r ", ""))
         self.assertIn("displays shown", text)
-        self.assertIn("master volume reads 0.8", text)
+        self.assertIn("master volume reads 80", text)
 
 
 class PackageTest(unittest.TestCase):

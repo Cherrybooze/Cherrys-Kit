@@ -1,10 +1,10 @@
-# In-game checks for kit 0.11.97
+# In-game checks for kit 0.11.98
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.5 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.6 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
 
-## 0.11.97 Cherry's Bar
+## 0.11.98 Cherry's Bar
 
 Cherry's Bar is new, and none of it has run in the real client yet. Delete any old `Interface/AddOns/XBar` folder first.
 

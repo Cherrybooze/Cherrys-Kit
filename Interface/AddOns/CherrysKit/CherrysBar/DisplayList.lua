@@ -922,7 +922,8 @@ D.Add({
 })
 
 ---------------------------------------------------------------------------
--- Volume: the game's master volume, using the calls XBar's mute button used
+-- Volume: the game's master volume, 0 to 100 in the client's sys_settings.lua. Its slider takes
+-- whole numbers, so the value is set directly and the slider only follows it.
 ---------------------------------------------------------------------------
 
 local function volumeNow()
@@ -930,8 +931,8 @@ local function volumeNow()
 end
 
 local function volumeSet(value)
-  SYS_AudioSettings_MasterVolumeSlider:SetValue(value)
-  SSF_AudioSettings_OnApply()
+  MasterVolumeSlider_SetValue(value)
+  G.Try(SYS_AudioSettings_MasterVolumeSlider, "SetValue", value)
 end
 
 D.Add({
@@ -947,8 +948,8 @@ D.Add({
   end,
   read = function(v, def)
     local value = volumeNow()
-    v.VOL = math.floor(value * 100 + 0.5)
-    D.SetIcon(def, Icon(value <= 0 and "VolumeMute" or value < 0.33 and "VolumeLow" or value < 0.66 and "VolumeMedium" or "VolumeHigh"))
+    v.VOL = math.floor(value + 0.5)
+    D.SetIcon(def, Icon(value <= 0 and "VolumeMute" or value < 33 and "VolumeLow" or value < 66 and "VolumeMedium" or "VolumeHigh"))
   end,
   tip = function(v)
     tipPair("Master volume", v.VOL .. "%")
@@ -960,13 +961,13 @@ D.Add({
       S.volumeBefore = value
       volumeSet(0)
     else
-      volumeSet(tonumber(S.volumeBefore) or 0.5)
+      volumeSet(tonumber(S.volumeBefore) or 50)
     end
     def.level = nil
     D.Update(def)
   end,
   wheel = function(def, delta)
-    volumeSet(math.max(0, math.min(1, volumeNow() + (delta > 0 and 0.05 or -0.05))))
+    volumeSet(math.max(0, math.min(100, volumeNow() + (delta > 0 and 5 or -5))))
     def.level = nil
   end,
   hint = "Click: mute. Mouse wheel: louder or quieter.",
