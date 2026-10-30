@@ -1,17 +1,17 @@
-# In-game checks for kit 0.11.92
+# In-game checks for kit 0.11.93
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.0 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.1 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
 
-## 0.11.92 Cherry's Bar
+## 0.11.93 Cherry's Bar
 
 Cherry's Bar is new, and none of it has run in the real client yet. Delete any old `Interface/AddOns/XBar` folder first.
 
 | ID | Steps | Expected result |
 | --- | --- | --- |
-| B1 | Reload UI. Run `/cbar probe`. | Only the top bar shows, in the Stone style, with Menu, XP, Bag and Gold on the left and Mail, FPS and the clock on the right. The probe lists missing functions (ideally none), says how many frames it moved and gives text widths above 0. |
-| B2 | Look along the whole bar, on your full screen width. | The art runs edge to edge with no visible seams between tiles, the gold trim faces the middle of the screen, and a soft shadow falls below it. Icons are clean, with no box or halo around them. |
+| B1 | Reload UI. Run `/cbar probe`. | Only the top bar shows, in the Ironstone style, with Menu, XP, Bag and Gold on the left and Mail, FPS and the clock on the right. The probe lists missing functions (ideally none), says how many frames it moved and gives text widths above 0. |
+| B2 | Look along the whole bar, on your full screen width. | The art runs edge to edge with no visible seams between tiles, and the gold rail faces the middle of the screen. Text and icons sit in the dark part, clear of the rail, and are easy to read. Icons are clean, with no box or halo around them. |
 | B3 | Look at the top of the screen. | The player, target, buff and party frames and the minimap sit below the bar, not under it. |
 | B4 | Run `/cbar bottom`, then `/cbar both`, then `/cbar top`. | The bars switch at once. With a bottom bar the action bar and experience bar sit above it, and they go back afterwards. The top frames return to the edge when the top bar is off. |
 | B5 | Open `/cbar`. In the map, drag a display from Not shown onto Top, then to another place, then to Bottom, then back to Not shown. | Each drop lands where you let go and the real bars change at once. Note whether dragging works inside the window at all. |

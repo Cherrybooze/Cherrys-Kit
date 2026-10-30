@@ -1,8 +1,14 @@
 Cherry's Bar
 
+1.1.1
+  Art now comes straight from Cherry's finished Studio Panel Assets pack: Ironstone, Blacksteel,
+  Froststeel, Darkwood, Verdant and Arcane, with its icons, controls and 2:1 volume speakers. Saved
+  style names carry over. Bars default to 24 high, with text and icons centred clear of the rail.
+  The options window's - and + are the pack's pictures.
+
 1.1.0
-  All of XBar's pictures are gone: six bar styles and a full icon set made by Cherry, drawn as seamless
-  tiles, plus plain Slate. Moving displays is now clear: a map of both bars in /cbar where displays
+  All of XBar's pictures are gone: six bar styles and a full icon set from Cherry's sheets, drawn as
+  seamless tiles, plus plain Slate. Moving displays is now clear: a map of both bars in /cbar where displays
   can be dragged or moved with buttons, dragging on the bars themselves while unlocked, and a tick
   list on right-clicking a bar. New displays: Currencies, Durability, Daily quests and Volume, split
   out of Money, Damage and Class or following Titan Panel's ideas. New figures: gold and XP per hour,

@@ -74,7 +74,7 @@ end
 
 local function resetSessionRow()
   return {
-    text = "Reset session figures", icon = Icon("broom"),
+    text = "Reset session figures", icon = Icon("Broom"),
     click = function()
       session.start = now()
       session.money.gained, session.money.spent = 0, 0
@@ -153,7 +153,7 @@ local function systemMenu()
     windowRow(SYSTEM_ICON, "GAME_MENU_UIOPTION", "Interface", "GameConfigFrame"),
     windowRow(SYSTEM_ICON, "GAME_MENU_KEYBINDING", "Key Bindings", "KeyDefineFrame"),
     windowRow(SYSTEM_ICON, "GAME_MENU_MACRO", "Macros", "MacroFrame"),
-    { icon = SYSTEM_ICON, text = "Reload UI", click = function() ReloadUI() end },
+    { icon = Icon("Reload"), text = "Reload UI", click = function() ReloadUI() end },
     { icon = SYSTEM_ICON, text = "Log out", click = function() Logout() end },
     { icon = MAIN_ICON .. "Close", text = "|cffe66868" .. gameText("GAME_MENU_QUIT", "Quit"),
       click = function() StaticPopup_Show("QUIT") end },
@@ -162,7 +162,7 @@ end
 
 D.Add({
   key = "Menu", label = "Menu", title = "Game menu", showLabel = true, bar = "top", side = "left", order = 10,
-  icon = Icon("play"), fmt = "",
+  icon = Icon("Run"), fmt = "",
   click = function(def, frame) G.Menu.Open(gameMenu(), frame, def) end,
   hint = "Click: the game's windows",
   extra = function(def, frame)
@@ -178,7 +178,7 @@ local xpSession = session.xp
 
 D.Add({
   key = "Exp", label = "XP", title = "Experience", bar = "top", side = "left", order = 20,
-  icon = Icon("star"), fmt = "[PER]%",
+  icon = Icon("Experience"), fmt = "[PER]%",
   events = { { "PLAYER_EXP_CHANGED" }, { "TP_EXP_UPDATE" } },
   tokens = "[XP] [XPM] max [XPN] to level [PER] percent [TP] [TPA] total [XPS] [TPS] this session [XPH] per hour [TTL] time to level [XPD] [TPD] debt",
   extra = function() return { resetSessionRow() } end,
@@ -234,7 +234,7 @@ end
 
 D.Add({
   key = "Bag", label = "Bag", title = "Bags", bar = "top", side = "left", order = 30,
-  icon = Icon("bag"), fmt = "[USED]/[TOTAL]",
+  icon = Icon("Bag"), fmt = "[USED]/[TOTAL]",
   events = { { "PLAYER_BAG_CHANGED" } },
   tokens = "[USED] [FREE] [TOTAL] [LOAD] percent full [SUSED] item shop bag [AUSED] magic box",
   setup = function(def, cfg)
@@ -284,7 +284,7 @@ local money = session.money
 
 D.Add({
   key = "Money", label = "Gold", title = "Gold", bar = "top", side = "left", order = 40,
-  icon = Icon("coins"), fmt = "[GOLD]",
+  icon = Icon("Gold"), fmt = "[GOLD]",
   events = { { "PLAYER_MONEY" } },
   tokens = "[GOLD] [GAINED] [SPENT] [NET] this session [GPH] earned per hour",
   extra = function() return { resetSessionRow() } end,
@@ -330,7 +330,7 @@ local function itemCurrency(entry)
 end
 
 D.Add({
-  key = "Wallet", label = "Wallet", title = "Currencies", icon = Icon("chest"), fmt = "[DIAS] [RUBY] [COIN]",
+  key = "Wallet", label = "Wallet", title = "Currencies", icon = Icon("Storage"), fmt = "[DIAS] [RUBY] [COIN]",
   events = { { "PLAYER_MONEY" }, { "PLAYER_BAG_CHANGED", "AM", "PS", "EJ", "PM", "DS", "BT" } },
   tokens = "[DIAS] diamonds [RUBY] rubies [COIN] tokens [AM] [PS] [EJ] [PM] [DS] [BT] the currencies the tooltip lists",
   setup = function(def, cfg)
@@ -381,7 +381,7 @@ end
 
 D.Add({
   key = "Mail", label = "Mail", bar = "top", side = "right", order = 10,
-  icon = Icon("letter"), fmt = "[UNREAD]",
+  icon = Icon("Mail"), fmt = "[UNREAD]",
   events = { { "MAIL_SHOW" }, { "CHAT_MSG_SYSTEM" } },
   tokens = "[UNREAD] new mail since you last opened the mailbox",
   onEvent = function(def, event, message)
@@ -433,7 +433,7 @@ D.Add({
 
 D.Add({
   key = "Perf", label = "FPS", short = "Perf", title = "Performance", bar = "top", side = "right", order = 20,
-  icon = Icon("gauge"), fmt = "[FPS] fps [MS] ms", every = 2,
+  icon = Icon("Performance"), fmt = "[FPS] fps [MS] ms", every = 2,
   tokens = "[FPS] frames per second [MS] latency [MEM] addon memory in MB",
   tick = function(def)
     local fps, ping = math.floor(GetFramerate()), math.floor(GetPing())
@@ -463,7 +463,7 @@ D.Add({
 
 D.Add({
   key = "Clock", label = "Time", title = "Clock", bar = "top", side = "right", order = 30,
-  icon = Icon("clock"), fmt = "[TIME24]", every = 1,
+  icon = Icon("Clock"), fmt = "[TIME24]", every = 1,
   tokens = "[TIME24] [TIME12] [DATE] [ONLINE] this session [TOTAL] all characters",
   tick = function(def)
     local minute = math.floor(os.time() / 60)
@@ -509,7 +509,7 @@ local function coords()
 end
 
 D.Add({
-  key = "Zone", label = "Zone", title = "Location", icon = Icon("map"), fmt = "[ZONE]", every = 3,
+  key = "Zone", label = "Zone", title = "Location", icon = Icon("Location"), fmt = "[ZONE]", every = 3,
   tokens = "[ZONE] where you are [X] [Y] map position",
   setup = function(def, cfg)
     def.wantCoords = string.find(cfg.fmt, "[X]", 1, true) or string.find(cfg.fmt, "[Y]", 1, true) or false
@@ -567,7 +567,7 @@ local function peopleRow(name, icon, text)
 end
 
 D.Add({
-  key = "Friends", label = "Friends", icon = Icon("heart"), fmt = "[ONLINE]/[COUNT]",
+  key = "Friends", label = "Friends", icon = Icon("Regeneration"), fmt = "[ONLINE]/[COUNT]",
   events = { { "RESET_FRIEND" } },
   tokens = "[ONLINE] [COUNT]",
   read = function(v)
@@ -578,7 +578,7 @@ D.Add({
     for i = 1, GetFriendCount("Friend") or 0 do
       local name, _, on = GetFriendInfo("Friend", i)
       if on and name then
-        rows[#rows + 1] = peopleRow(name, Icon("heart"))
+        rows[#rows + 1] = peopleRow(name, Icon("Regeneration"))
       end
     end
     if #rows == 0 then
@@ -601,7 +601,7 @@ local function guildOnline()
 end
 
 D.Add({
-  key = "Guild", label = "Guild", icon = Icon("banner"), fmt = "[ONLINE]/[MEMBER]",
+  key = "Guild", label = "Guild", icon = Icon("Guild"), fmt = "[ONLINE]/[MEMBER]",
   events = { { "UPDATE_GUILD_MEMBER" } },
   tokens = "[GNAME] [ONLINE] [MEMBER]",
   read = function(v)
@@ -613,7 +613,7 @@ D.Add({
     for i = 1, GetNumGuildMembers() or 0 do
       local name, _, class, level, _, _, _, _, _, _, on = GetGuildRosterInfo(i)
       if on and name then
-        rows[#rows + 1] = peopleRow(name, Icon("banner"), classColor(class) .. name .. RESET .. " " .. tostring(level))
+        rows[#rows + 1] = peopleRow(name, Icon("Guild"), classColor(class) .. name .. RESET .. " " .. tostring(level))
       end
     end
     if #rows == 0 then
@@ -629,7 +629,7 @@ D.Add({
 ---------------------------------------------------------------------------
 
 D.Add({
-  key = "Ammo", label = "Ammo", icon = Icon("quiver"), fmt = "[COUNT]",
+  key = "Ammo", label = "Ammo", icon = Icon("Ammo"), fmt = "[COUNT]",
   events = { { "PLAYER_BAG_CHANGED", "COUNT", "BAG" }, { "PLAYER_INVENTORY_CHANGED" } },
   tokens = "[COUNT] equipped and in bag [EQUIP] [BAG] [NAME]",
   read = function(v)
@@ -656,7 +656,7 @@ D.Add({
 ---------------------------------------------------------------------------
 
 D.Add({
-  key = "Repair", label = "Gear", title = "Durability", icon = Icon("anvil"), fmt = "[DURA]%", every = 30,
+  key = "Repair", label = "Gear", title = "Durability", icon = Icon("Repair"), fmt = "[DURA]%", every = 30,
   events = { { "PLAYER_INVENTORY_CHANGED" } },
   tokens = "[DURA] average percent [DURAL] the lowest item",
   read = function(v)
@@ -711,7 +711,7 @@ local function perSecond(m)
 end
 
 D.Add({
-  key = "Dps", label = "DPS", title = "Damage", icon = Icon("dice"), fmt = "[DPS]", every = 1,
+  key = "Dps", label = "DPS", title = "Damage", icon = Icon("Loot"), fmt = "[DPS]", every = 1,
   events = {
     { "COMBATMETER_DAMAGE", "DPS", "DMG" }, { "COMBATMETER_HEAL", "HPS", "HEAL" }, { "UNIT_HEALTH", "KILLS" },
   },
@@ -780,7 +780,7 @@ local function questCounts()
 end
 
 D.Add({
-  key = "Daily", label = "Daily", title = "Daily quests", icon = Icon("flag"), fmt = "[DAY]", every = 30,
+  key = "Daily", label = "Daily", title = "Daily quests", icon = Icon("Map"), fmt = "[DAY]", every = 30,
   tokens = "[DAY] dailies done today [QUEST] quests ready / in your book",
   tick = function() return true end,
   read = function(v)
@@ -802,7 +802,7 @@ D.Add({
 ---------------------------------------------------------------------------
 
 D.Add({
-  key = "Class", label = "Class", icon = Icon("helmet"), fmt = "[MCLASS] [MLVL]/[SCLASS] [SLVL]",
+  key = "Class", label = "Class", icon = Icon("Characters"), fmt = "[MCLASS] [MLVL]/[SCLASS] [SLVL]",
   events = { { "UNIT_LEVEL" }, { "EXCHANGECLASS_SUCCESS" }, { "PLAYER_HONOR_CHANGED" } },
   tokens = "[MCLASS] [MLVL] [SCLASS] [SLVL] [HONOR] [GOOD] reputation",
   onEvent = function(def, event, unit)
@@ -834,7 +834,7 @@ D.Add({
 local CRAFTS = { { "MINE", "MINING", "Mining" }, { "WOOD", "LUMBERING", "Lumbering" }, { "HERB", "HERBLISM", "Herbalism" } }
 
 D.Add({
-  key = "Craft", label = "Gather", title = "Gathering", icon = Icon("potion"),
+  key = "Craft", label = "Gather", title = "Gathering", icon = Icon("Potion"),
   fmt = "[MINELV] [WOODLV] [HERBLV]",
   events = { { "PLAYER_LIFESKILL_CHANGED" } },
   tokens = "[MINELV] [MINEXP] [WOODLV] [WOODXP] [HERBLV] [HERBXP] level and percent",
@@ -867,7 +867,7 @@ local function volumeSet(value)
 end
 
 D.Add({
-  key = "Volume", label = "Vol", short = "Sound", title = "Volume", icon = Icon("vol_high"), fmt = "[VOL]%", every = 2,
+  key = "Volume", label = "Vol", short = "Vol", title = "Volume", icon = Icon("VolumeHigh"), iconWide = true, fmt = "[VOL]%", every = 2,
   tokens = "[VOL] master volume in percent",
   tick = function(def)
     local value = volumeNow()
@@ -880,7 +880,7 @@ D.Add({
   read = function(v, def)
     local value = volumeNow()
     v.VOL = math.floor(value * 100 + 0.5)
-    D.SetIcon(def, Icon(value <= 0 and "vol_mute" or value < 0.34 and "vol_low" or value < 0.67 and "vol_mid" or "vol_high"))
+    D.SetIcon(def, Icon(value <= 0 and "VolumeMute" or value < 0.33 and "VolumeLow" or value < 0.66 and "VolumeMedium" or "VolumeHigh"))
   end,
   tip = function(v)
     tipPair("Master volume", v.VOL .. "%")

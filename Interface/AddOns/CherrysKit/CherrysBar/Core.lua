@@ -10,11 +10,14 @@
 CherrysBar = {}
 local G = CherrysBar
 
-G.version = "1.1.0"
+G.version = "1.1.1"
 G.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.CherrysBar) or "Interface/AddOns/CherrysBar/"
 G.MEDIA = G.BASE_PATH .. "Media/"
 G.BAR_NAMES = { "top", "bottom" }
 G.SETTINGS_VERSION = 2 -- version 1 was the first build's skins and displays, which are gone
+G.SKIN_RENAMES = { -- the first cut of the art, before the finished pack
+  Stone = "Ironstone", Steel = "Blacksteel", Frost = "Froststeel", Walnut = "Darkwood", Moss = "Verdant", Amethyst = "Arcane",
+}
 
 if SaveVariables then
   SaveVariables("CherrysBar_DB")
@@ -104,10 +107,10 @@ end
 
 G.DEFAULTS = {
   bars = {
-    top = { show = true, skin = "Stone", alpha = 1, autoHide = false },
-    bottom = { show = false, skin = "Stone", alpha = 1, autoHide = false },
+    top = { show = true, skin = "Ironstone", alpha = 1, autoHide = false },
+    bottom = { show = false, skin = "Ironstone", alpha = 1, autoHide = false },
   },
-  barHeight = 26,
+  barHeight = 24,
   textSize = 12,
   locked = true,        -- unlocked, displays can be dragged along the bars
   makeRoom = true,      -- move the game's frames out from under the bars
@@ -133,6 +136,9 @@ function G.ApplyDefaults()
     CherrysBar_DB = { settingsVersion = G.SETTINGS_VERSION, playedMins = S.playedMins, kills = S.kills }
   end
   merge(G.S(), G.DEFAULTS)
+  for _, cfg in pairs(G.S().bars) do
+    cfg.skin = G.SKIN_RENAMES[cfg.skin] or cfg.skin
+  end
 end
 
 function G.ResetAll()

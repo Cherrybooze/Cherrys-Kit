@@ -1,0 +1,9 @@
+{
+  "unique_assets": 52,
+  "image_exports": 380,
+  "skin_exports_with_exact_horizontal_seam": 36,
+  "icon_exports_with_alpha_and_unclipped_bounds": 344,
+  "TGA_exports_matching_PNG_pixels": 164,
+  "errors": [],
+  "in_game_tested": false
+}

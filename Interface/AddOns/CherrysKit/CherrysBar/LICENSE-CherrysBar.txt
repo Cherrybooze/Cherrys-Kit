@@ -23,9 +23,10 @@ What Cherry's Bar uses from XBar III
     meter, minimap, raid save, web links, casting bar, item preview, low-detail switch).
 
 Pictures
-  The bar styles (except Slate) and every icon in Media were made by Cherry for this addon, from the
-  sheets in the repository's design/cherrys-bar folder. Slate is a gradient drawn by
-  tools/gen_cherrysbar_art.py. They are offered under the licence above.
+  The bar styles (except Slate) and every icon in Media are Cherry's Studio Panel Assets v1, generated
+  for this addon. Its notes, kept in the repository's design/cherrys-bar folder, record that Titan
+  Panel's pictures were a style and function reference only and that none of them are included. Slate
+  is a gradient drawn by tools/gen_cherrysbar_art.py. They are offered under the licence above.
 
 Changes made by Cherry (2026): two bars instead of one; displays flow along each bar and are set per
 bar; a map of the bars, dragging and right-click settings; auto-hide; new displays and figures; a new

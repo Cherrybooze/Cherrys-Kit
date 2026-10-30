@@ -78,8 +78,14 @@ local function placeChip(def, x, y, width)
   chip:ClearAllAnchors()
   chip:SetAnchor("TOPLEFT", "TOPLEFT", "CBar_Options", x, y)
   G.Try(chip, "SetWidth", width)
-  G.Try(_G[n .. "Icon"], "SetTexture", def.iconNow or def.icon)
+  local icon = _G[n .. "Icon"]
+  local iconW = def.iconWide and 32 or 18
+  G.Try(icon, "SetTexture", def.iconNow or def.icon)
+  G.Try(icon, "SetWidth", iconW)
+  G.Try(icon, "SetHeight", def.iconWide and 16 or 18)
   local text = _G[n .. "Text"]
+  text:ClearAllAnchors()
+  text:SetAnchor("LEFT", "LEFT", n, iconW + 5, 0)
   if width >= O.CHIP_MIN_TEXT then
     text:SetText(def.short or def.label or def.key)
     text:Show()

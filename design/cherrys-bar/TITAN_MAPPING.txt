@@ -1,0 +1,186 @@
+TITAN PANEL 9.3.5 ARTWORK MAPPING
+
+All source paths below are relative to the uploaded addon's archive root.
+All destination paths are relative to this artwork pack's root. These are
+suggested counterparts, not files automatically patched or installed.
+
+Use the TGA files for the proposed game integration. PNG copies with the same
+names are provided in PNG/ for preview and reuse. A path in your addon code
+must point to the actual installed location, not to the ZIP or this document.
+
+1. PANEL SKINS
+
+For each source skin, Titan constructs these extensionless names:
+
+  <skin path>/TitanPanelBackgroundTop0
+  <skin path>/TitanPanelBackgroundBottom0
+
+The new pack supplies six separate custom-skin folders:
+
+  Titan/Artwork/Custom/StudioIronstone/
+  Titan/Artwork/Custom/StudioBlacksteel/
+  Titan/Artwork/Custom/StudioFroststeel/
+  Titan/Artwork/Custom/StudioDarkwood/
+  Titan/Artwork/Custom/StudioVerdant/
+  Titan/Artwork/Custom/StudioArcane/
+
+Each contains TitanPanelBackgroundTop0.tga and
+TitanPanelBackgroundBottom0.tga, both 256 x 32 RGBA. Register a folder through
+"Skins - Custom" as described in README.txt. These are additional themes;
+there is no automatic one-to-one replacement of the 21 supplied skin sets.
+
+The runtime selects Top for top-positioned bars and Bottom for bottom bars.
+It does not automatically flip one file to create the other. Set_Skin in
+Titan/Titan.lua requests horizontal and vertical repetition and applies the
+configured alpha. Nominal bar height is 24 px in Titan/TitanGlobal.lua.
+
+2. STATUS ICONS
+
+Most original plugins display these at 16 x 16, regardless of their source
+texture dimensions. These mappings select the pack's 16 px export; a larger
+export can be chosen deliberately for a different UI scale.
+
+  TitanBag/Artwork/TitanBag.tga
+    -> TGA/Icons/16/Bag.tga
+
+  TitanGold/Artwork/TitanGold.blp
+    -> TGA/Icons/16/Gold.tga
+
+  TitanLocation/TitanLocation.tga
+    -> TGA/Icons/16/Location.tga
+
+  TitanPerformance/TitanPerformance.tga
+    -> TGA/Icons/16/Performance.tga
+
+  TitanRepair/TitanRepair.blp
+    -> TGA/Icons/16/Repair.tga
+
+  TitanRegen/TitanRegen.blp
+    -> TGA/Icons/16/Regeneration.tga
+
+  TitanPost/artwork/Mail.blp
+    -> TGA/Icons/16/Mail.tga
+
+  TitanAlts/Artwork/Alts.blp
+    -> TGA/Icons/16/Characters.tga
+
+  TitanLootType/TitanLootType.tga
+    -> TGA/Icons/16/Loot.tga
+
+  TitanAmmo/TitanClassicThrown.tga
+    -> TGA/Icons/16/Ammo.tga
+
+Additional general-purpose status icons:
+
+  TGA/Icons/16/Clock.tga
+  TGA/Icons/16/Experience.tga
+  TGA/Icons/16/Storage.tga
+  TGA/Icons/16/Potion.tga
+  TGA/Icons/16/Map.tga
+  TGA/Icons/16/Guild.tga
+
+These additional icons have no direct bundled-file counterpart in the
+uploaded archive. TitanClock does not require a bundled icon; TitanXP selects
+game-provided faction textures. There are no equivalent replacements here
+for Titan/Artwork/Titan.blp or the Alliance/Horde/Neutral insignia.
+
+3. VOLUME STATES
+
+Use the 32 x 16 exports to retain the original plugin's canvas and display
+ratio. All four files share the same framing.
+
+  TitanVolume/Artwork/TitanVolumeMute.tga
+    -> TGA/Volume/32x16/VolumeMute.tga
+
+  TitanVolume/Artwork/TitanVolumeLow.tga
+    -> TGA/Volume/32x16/VolumeLow.tga
+
+  TitanVolume/Artwork/TitanVolumeMedium.tga
+    -> TGA/Volume/32x16/VolumeMedium.tga
+
+  TitanVolume/Artwork/TitanVolumeHigh.tga
+    -> TGA/Volume/32x16/VolumeHigh.tga
+
+In the supplied code, muted or zero volume selects Mute; a nonzero volume
+below 0.33 selects Low; below 0.66 selects Medium; otherwise High is used.
+The files supply artwork only; the consuming plugin selects the state.
+
+4. PINS AND SMALL CONTROLS
+
+  Titan/Artwork/TitanPanelPushpinIn.tga
+  TitanAlts/Artwork/TitanPanelPushpinIn.tga
+    -> TGA/Controls/16/PinIn.tga
+
+  Titan/Artwork/TitanPanelPushpinOut.tga
+  TitanAlts/Artwork/TitanPanelPushpinOut.tga
+    -> TGA/Controls/16/PinOut.tga
+
+  TitanLootType/Artwork/resize.tga
+    -> TGA/Controls/16/Resize.tga
+
+PinIn corresponds to a pinned bar; PinOut corresponds to auto-hide enabled.
+Alts also uses the pin images for its tooltip locking state.
+
+5. TITAN UI UTILITIES
+
+The mappings below use 24 px exports to match the common source canvas.
+Reload and Broom are also supplied at 24 px for a consistent control row;
+choose another supplied size when your consuming frame requires it. The
+original Reload source is 64 x 64 and Broom is 128 x 128.
+
+  TitanUI/Artwork/save_disk.tga
+    -> TGA/Controls/24/Save.tga
+
+  TitanUI/Artwork/save_disk_disabled.tga
+  TitanUI/Artwork/save_black.tga
+    -> TGA/Controls/24/SaveDisabled.tga
+
+  TitanUI/Artwork/TitanReload.blp
+    -> TGA/Controls/24/Reload.tga
+
+  TitanUI/Artwork/clear_broom.tga
+    -> TGA/Controls/24/Broom.tga
+
+  TitanUI/Artwork/plus_green.tga
+    -> TGA/Controls/24/Plus.tga
+
+  TitanUI/Artwork/delete_x.tga
+    -> TGA/Controls/24/Close.tga
+
+  TitanUI/Artwork/delete_recycle.tga
+    -> TGA/Controls/24/Trash.tga
+
+  TitanUI/Artwork/run_blue.tga
+    -> TGA/Controls/24/Run.tga
+
+  TitanUI/Artwork/tag_green.tga
+    -> TGA/Controls/24/TagGreen.tga
+
+  TitanUI/Artwork/tag_red.tga
+    -> TGA/Controls/24/TagRed.tga
+
+  TitanUI/Artwork/tag_yellow.tga
+    -> TGA/Controls/24/TagGold.tga
+
+  TitanUI/Artwork/tag_black.tga
+    -> TGA/Controls/24/TagDark.tga
+
+TitanUI/Slash.lua explicitly uses save_black when there are no pending edits
+and disables that button; save_disk indicates pending changes. This explains
+the shared SaveDisabled mapping.
+
+Lock, Unlock, Minus, CheckboxOn and CheckboxOff are additional reusable
+controls. No direct bundled artwork replacement is assigned to them here.
+
+6. PATH AND FORMAT NOTES
+
+The supplied Lua frequently omits filename extensions in texture references.
+Map references to the newly installed TGA paths deliberately; leaving old
+BLP and new TGA files under an identical basename is not part of this pack's
+installation instructions. Renaming or changing a path is an integration
+choice for the consuming addon, not a behavior performed by these assets.
+
+The skin names and directory structure follow the uploaded version's code.
+The status/control mappings describe functional counterparts and do not
+claim pixel-identical geometry, matching faction marks, automatic plugin
+support, or successful testing in a running game client.

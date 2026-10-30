@@ -1,6 +1,6 @@
 # Cherry's Bar
 
-Version **1.1.0** · Kit release **0.11.92** · [All addons / hub](../README.md)
+Version **1.1.1** · Kit release **0.11.93** · [All addons / hub](../README.md)
 
 **Full-width information bars at the top of the screen, the bottom, or both. A fork of XBar III, with bars and settings in the spirit of Titan Panel.**
 
@@ -9,7 +9,7 @@ Version **1.1.0** · Kit release **0.11.92** · [All addons / hub](../README.md)
 - **Top bar, bottom bar or both.** Only the top bar shows at first. Each bar has its own style, opacity and auto-hide. `/cbar top`, `/cbar bottom` and `/cbar both` switch quickly.
 - **Eighteen displays**, each on the top bar, the bottom bar or hidden, and on the left or right: Menu (the game's windows and settings), Experience, Bags, Gold, Currencies, Mail, Performance, Clock, Location, Friends, Guild, Ammo, Durability, Damage, Daily quests, Class, Gathering and Volume. Seven show at first; the rest are one click away.
 - **Your own text.** Every display's text can be rewritten with tokens, such as `[FREE]` for free bag slots, `[GPH]` for gold per hour or `[TTL]` for time to level. `/cbar` lists the tokens of the display you pick.
-- **Seven styles:** Stone, Steel, Frost, Walnut, Moss, Amethyst and plain Slate, with a set of icons drawn for this addon.
+- **Seven styles:** Ironstone, Blacksteel, Froststeel, Darkwood, Verdant, Arcane and plain Slate, with a matching set of icons.
 - **Auto-hide** per bar: it tucks away and comes back when the mouse reaches the screen's edge.
 - **Moves the game's frames clear** of the bars, as an option you can turn off. It can also hide the game's menu bar, XP bar and damaged-gear figure.
 - **Light:** displays read the game only on its events or slow timers, and only when something they show can have changed. Bursts of events become one redraw, ticks are four times rarer in combat, and displays you hid do nothing at all.
@@ -46,5 +46,5 @@ If you still have XBar installed, Cherry's Bar stays off until you delete `Inter
 
 - Forked from **XBar III** by **matif** and **Bussdee**, based on **XBar** by **nigr(A)ngelus**, with thanks to aveng3r, Havorn, Slayblaze, ArcticXWolf, Caelin and Mavoc.
 - The bars and settings follow the ideas of **Titan Panel** for World of Warcraft by the **Titan Panel Development Team**. Its licence does not allow modified copies, so Cherry's Bar contains none of its code or pictures, and Titan Panel has not endorsed it.
-- Bar styles and icons were made by Cherry for this addon.
+- Bar styles and icons are Cherry's **Studio Panel Assets**, made for this addon with Titan Panel's art as a style reference only.
 - Offered under **CC BY-NC-SA 3.0**, like XBar, not the GPL. See [LICENSE-CherrysBar.txt](LICENSE-CherrysBar.txt). The kit's combined notices are in [LICENSE.txt](LICENSE.txt). Free, never to be sold.

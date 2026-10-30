@@ -4,10 +4,9 @@ local G = CherrysBar
 local B = {}
 G.Bars = B
 
--- Cherry's art (design/cherrys-bar), cut by tools/gen_cherrysbar_art.py; Slate is a plain gradient.
-B.SKINS = { "Stone", "Steel", "Frost", "Walnut", "Moss", "Amethyst", "Slate" }
+-- Cherry's Studio Panel Assets (design/cherrys-bar); Slate is a plain gradient.
+B.SKINS = { "Ironstone", "Blacksteel", "Froststeel", "Darkwood", "Verdant", "Arcane", "Slate" }
 B.TILES = 16        -- tile textures per bar, declared in CherrysBar.xml
-B.ART_RATIO = 32 / 28 -- a tile's picture is 32 rows, of which 28 are the bar and 4 its shadow
 B.HIDE_DELAY = 1    -- seconds an auto-hide bar stays after the mouse leaves
 
 local revealed = {} -- auto-hide bars on screen just now
@@ -32,7 +31,14 @@ function B.IsVisible(name)
 end
 
 function B.Height()
-  return tonumber(G.S().barHeight) or 26
+  return tonumber(G.S().barHeight) or 24
+end
+
+-- The art's rail runs near the edge facing the screen's middle, so what sits on the bar is centred on
+-- the part beyond it: a little up on the top bar, a little down on the bottom one.
+function B.Nudge(name)
+  local nudge = math.floor(B.Height() / 12 + 0.5)
+  return name == "bottom" and nudge or -nudge
 end
 
 function B.SkinFile(name)
@@ -70,13 +76,12 @@ function B.Apply(name)
   placeAlongEdge(frame, name, height)
   G.Try(frame, "SetAlpha", tonumber(cfg.alpha) or 1)
   local file = B.SkinFile(name)
-  local art = math.floor(height * B.ART_RATIO + 0.5)
   local frameName = partName("Bar", name)
   for i = 1, B.TILES do
     local tile = _G[frameName .. "T" .. i]
     if tile then
       G.Try(tile, "SetTexture", file)
-      G.Try(tile, "SetHeight", art)
+      G.Try(tile, "SetHeight", height)
     end
   end
   if edge then
@@ -120,10 +125,10 @@ function B.ApplyHandles()
     if lock and pin then
       if on then
         lock:ClearAllAnchors()
-        lock:SetAnchor("RIGHT", "RIGHT", bar, -4, 0)
+        lock:SetAnchor("RIGHT", "RIGHT", bar, -4, B.Nudge(name))
         pin:ClearAllAnchors()
-        pin:SetAnchor("RIGHT", "RIGHT", bar, -24, 0)
-        G.Try(_G[partName("Pin", name) .. "Icon"], "SetTexture", G.Icon(S.bars[name].autoHide and "pin_out" or "pin"))
+        pin:SetAnchor("RIGHT", "RIGHT", bar, -24, B.Nudge(name))
+        G.Try(_G[partName("Pin", name) .. "Icon"], "SetTexture", G.Icon(S.bars[name].autoHide and "PinOut" or "PinIn"))
         pin:Show()
         lock:Show()
       else
@@ -264,7 +269,7 @@ function B.MenuRows(name)
     B.SetLocked(not S.locked)
     G.Menu.Replace(B.MenuRows(name))
   end }
-  rows[#rows + 1] = { text = "All options (/cbar)", icon = G.Icon("refresh"), click = function() G.Options.Toggle() end }
+  rows[#rows + 1] = { text = "All options (/cbar)", click = function() G.Options.Toggle() end }
   return rows
 end
 

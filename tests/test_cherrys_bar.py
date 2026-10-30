@@ -1,5 +1,7 @@
 """Cherry's Bar: bars, displays, position controls, settings, throttling and hub links in a fake client."""
 
+import hashlib
+import json
 from pathlib import Path
 import re
 import struct
@@ -14,7 +16,7 @@ KIT = ROOT / "Interface/AddOns/CherrysKit"
 SOURCE = KIT / "CherrysBar"
 FILES = ("Core.lua", "Bars.lua", "Displays.lua", "DisplayList.lua", "Menu.lua", "Options.lua", "Probe.lua")
 NS = "{http://www.runewaker.com/}"
-SKINS = ("Stone", "Steel", "Frost", "Walnut", "Moss", "Amethyst", "Slate")
+SKINS = ("Ironstone", "Blacksteel", "Froststeel", "Darkwood", "Verdant", "Arcane", "Slate")
 
 CLIENT = r'''
 messages = {}
@@ -201,10 +203,16 @@ class BarTest(unittest.TestCase):
         self.assertEqual(self.ev("CBar_BarTop.anchors[1][1]"), "TOPLEFT")
         self.assertEqual(self.ev("CBar_BarBottom.anchors[1][1]"), "BOTTOMLEFT")
         for i in range(1, 17):
-            self.assertIn("Skins/Stone/top", self.ev(f"CBar_BarTopT{i}.texture"))
-            self.assertIn("Skins/Stone/bottom", self.ev(f"CBar_BarBottomT{i}.texture"))
-        self.assertEqual(self.ev("CBar_BarTop.h"), 26)
-        self.assertEqual(self.ev("CBar_BarTopT1.h"), 30)  # with its shadow
+            self.assertIn("Skins/Ironstone/top", self.ev(f"CBar_BarTopT{i}.texture"))
+            self.assertIn("Skins/Ironstone/bottom", self.ev(f"CBar_BarBottomT{i}.texture"))
+        self.assertEqual(self.ev("CBar_BarTop.h"), 24)
+        self.assertEqual(self.ev("CBar_BarTopT1.h"), 24)
+        self.assertEqual(self.ev("CBar_D1Icon.w"), 16)
+
+    def test_what_sits_on_a_bar_clears_the_rail(self):
+        self.run_lua("CherrysBar.Command('both'); local D = CherrysBar.Displays; D.SetBar(D.byKey.Zone, 'bottom')")
+        self.assertEqual(self.ev("frameOf('Bag').anchors[1][5]"), -2)
+        self.assertEqual(self.ev("frameOf('Zone').anchors[1][5]"), 2)
 
     def test_bar_height_moves_everything_with_it(self):
         self.run_lua("CherrysBar.S().barHeight = 34; CherrysBar.Refresh()")
@@ -415,9 +423,9 @@ class BarTest(unittest.TestCase):
         self.run_lua("CherrysBar.Options.Toggle(); CherrysBar.Options.BarClick('bottom', 'show')")
         self.assertTrue(self.ev("CBar_BarBottom.shown"))
         self.run_lua("CherrysBar.Options.BarClick('top', 'skin')")
-        self.assertEqual(self.ev("CherrysBar.S().bars.top.skin"), "Steel")
-        self.assertEqual(self.ev("CBar_OptBarTopSkin.text"), "Steel")
-        self.assertIn("Steel/top", self.ev("CBar_LayoutTop.texture"))
+        self.assertEqual(self.ev("CherrysBar.S().bars.top.skin"), "Blacksteel")
+        self.assertEqual(self.ev("CBar_OptBarTopSkin.text"), "Blacksteel")
+        self.assertIn("Blacksteel/top", self.ev("CBar_LayoutTop.texture"))
         self.run_lua("CherrysBar.Options.BarClick('top', 'minus')")
         self.assertAlmostEqual(self.ev("CBar_BarTop.alpha"), 0.9)
         self.assertEqual(self.ev("CBar_OptBarTopValue.text"), "90%")
@@ -456,10 +464,10 @@ class BarTest(unittest.TestCase):
         self.run_lua("local D = CherrysBar.Displays; D.MouseUp(D.byKey.Bag.slot, 'RBUTTON')")
         self.assertTrue(self.ev("CBar_Menu.shown"))
         rows = self.menu_rows()
-        self.assertIn("check_on", self.ev(f"CBar_MenuRow{rows['Show icon']}Icon.texture"))
+        self.assertIn("CheckboxOn", self.ev(f"CBar_MenuRow{rows['Show icon']}Icon.texture"))
         self.run_lua(f"CherrysBar.Menu.RowClick({rows['Show icon']}, 'LBUTTON')")
         self.assertFalse(self.ev("cfg('Bag').icon"))
-        self.assertIn("check_off", self.ev(f"CBar_MenuRow{rows['Show icon']}Icon.texture"))
+        self.assertIn("CheckboxOff", self.ev(f"CBar_MenuRow{rows['Show icon']}Icon.texture"))
         self.assertTrue(self.ev("CBar_Menu.shown"))
         self.run_lua(f"CherrysBar.Menu.RowClick({rows['Move left']}, 'LBUTTON')")
         self.assertEqual(self.ev("row('top', 'left')"), "Menu,Bag,Exp,Money")
@@ -474,12 +482,12 @@ class BarTest(unittest.TestCase):
         self.assertEqual(self.ev("CBar_Menu.anchors[1][4]"), 300)
         rows = self.menu_rows()
         self.assertIn("Location", rows)
-        self.assertIn("check_off", self.ev(f"CBar_MenuRow{rows['Location']}Icon.texture"))
-        self.assertIn("check_on", self.ev(f"CBar_MenuRow{rows['Bags']}Icon.texture"))
+        self.assertIn("CheckboxOff", self.ev(f"CBar_MenuRow{rows['Location']}Icon.texture"))
+        self.assertIn("CheckboxOn", self.ev(f"CBar_MenuRow{rows['Bags']}Icon.texture"))
         self.run_lua(f"CherrysBar.Menu.RowClick({rows['Location']}, 'LBUTTON')")
         self.assertEqual(self.ev("cfg('Zone').bar"), "top")
         self.assertTrue(self.ev("frameOf('Zone').shown"))
-        self.assertIn("check_on", self.ev(f"CBar_MenuRow{rows['Location']}Icon.texture"))
+        self.assertIn("CheckboxOn", self.ev(f"CBar_MenuRow{rows['Location']}Icon.texture"))
         self.run_lua(f"CherrysBar.Menu.RowClick({rows['Location']}, 'LBUTTON')")
         self.assertEqual(self.ev("cfg('Zone').bar"), "off")
 
@@ -541,10 +549,10 @@ class BarTest(unittest.TestCase):
 
     def test_pin_handle_toggles_auto_hide_and_its_picture(self):
         self.run_lua("CherrysBar.Command('unlock')")
-        self.assertIn("Icons/pin", self.ev("CBar_PinTopIcon.texture"))
+        self.assertIn("Icons/PinIn", self.ev("CBar_PinTopIcon.texture"))
         self.run_lua("CherrysBar.Bars.PinClick('top')")
         self.assertTrue(self.ev("CherrysBar.S().bars.top.autoHide"))
-        self.assertIn("pin_out", self.ev("CBar_PinTopIcon.texture"))
+        self.assertIn("PinOut", self.ev("CBar_PinTopIcon.texture"))
         self.run_lua("CherrysBar.Bars.PinClick('top')")
         self.assertFalse(self.ev("CBar_EdgeTop.shown"))
         self.assertTrue(self.ev("CBar_BarTop.shown"))
@@ -684,26 +692,26 @@ class BarTest(unittest.TestCase):
     # Game frames
 
     def test_make_room_moves_top_frames_and_restores_them(self):
-        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
-        self.assertEqual(self.anchor_y("TargetFrame"), 28)
-        self.assertEqual(self.anchor_y("MinimapFrame"), 58)
-        self.assertEqual(self.anchor_y("MinimapFrameBorder"), 25)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
+        self.assertEqual(self.anchor_y("TargetFrame"), 26)
+        self.assertEqual(self.anchor_y("MinimapFrame"), 56)
+        self.assertEqual(self.anchor_y("MinimapFrameBorder"), 23)
         self.assertEqual(self.anchor_y("MainMenuFrame"), 0)
         self.run_lua("CherrysBar.Command('bottom')")
         self.assertEqual(self.anchor_y("PlayerFrame"), 0)
         self.assertEqual(self.anchor_y("MinimapFrame"), 32)
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -26)
-        self.assertEqual(self.anchor_y("ExperienceFrame"), -26)
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
+        self.assertEqual(self.anchor_y("ExperienceFrame"), -24)
         self.run_lua("CherrysBar.Command('top')")
         self.assertEqual(self.anchor_y("MainMenuFrame"), 0)
-        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
 
     def test_make_room_is_not_applied_twice(self):
         self.run_lua("CherrysBar.Bars.MakeRoom(); CherrysBar.Bars.MakeRoom()")
-        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
         self.run_lua("CherrysBar.OnEvent('LOADING_END')")
         self.tick(4)
-        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
 
     def test_make_room_leaves_a_frame_the_player_dragged_away(self):
         self.run_lua("""
@@ -729,12 +737,12 @@ class BarTest(unittest.TestCase):
     def test_reload_does_not_move_frames_twice(self):
         # Frames that kept their place through Reload UI...
         self.load_addon()
-        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
-        self.assertEqual(self.anchor_y("MinimapFrame"), 58)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
+        self.assertEqual(self.anchor_y("MinimapFrame"), 56)
         self.run_lua("CherrysBar.Command('bottom')")
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -26)
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
         self.load_addon()
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -26)
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
         # ...and frames the reload rebuilt at the game's own positions.
         self.run_lua("""
             MainMenuFrame:ClearAllAnchors()
@@ -744,8 +752,8 @@ class BarTest(unittest.TestCase):
             PlayerFrame:SetAnchor('TOPLEFT', 'TOPLEFT', 'UIParent', 0, 0)
         """)
         self.load_addon()
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -26)
-        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
 
     # Displays
 
@@ -817,18 +825,21 @@ class BarTest(unittest.TestCase):
     def test_volume_mutes_restores_scrolls_and_changes_its_speaker(self):
         self.run_lua("local D = CherrysBar.Displays; D.SetBar(D.byKey.Volume, 'top')")
         self.assertEqual(self.text_of("Volume"), "80%")
+        volume_icon = "_G['CBar_D' .. CherrysBar.Displays.byKey.Volume.slot .. 'Icon']"
+        self.assertEqual(self.ev(volume_icon + ".w"), 32)  # the pack's speakers are 2:1
+        self.assertEqual(self.ev(volume_icon + ".h"), 16)
         icon = "_G['CBar_D' .. CherrysBar.Displays.byKey.Volume.slot .. 'Icon'].texture"
-        self.assertIn("vol_high", self.ev(icon))
+        self.assertIn("VolumeHigh", self.ev(icon))
         slot = self.ev("CherrysBar.Displays.byKey.Volume.slot")
         self.run_lua(f"CherrysBar.Displays.MouseUp({slot}, 'LBUTTON')")
         self.assertEqual(self.ev("volume"), 0)
-        self.assertIn("vol_mute", self.ev(icon))
+        self.assertIn("VolumeMute", self.ev(icon))
         self.assertEqual(self.text_of("Volume"), "0%")
         self.run_lua(f"CherrysBar.Displays.MouseUp({slot}, 'LBUTTON')")
         self.assertEqual(self.ev("volume"), 0.8)
         self.run_lua(f"for i = 1, 4 do CherrysBar.Displays.Wheel({slot}, -1) end")
         self.assertAlmostEqual(self.ev("volume"), 0.6)
-        self.assertIn("vol_mid", self.ev(icon))
+        self.assertIn("VolumeMedium", self.ev(icon))
         self.assertEqual(self.text_of("Volume"), "60%")
         self.run_lua(f"for i = 1, 20 do CherrysBar.Displays.Wheel({slot}, 1) end")
         self.assertEqual(self.ev("volume"), 1)
@@ -870,10 +881,23 @@ class BarTest(unittest.TestCase):
                               displays = { Dps = { fmt = '[DURA]', bar = 'top' } }, playedMins = 77, kills = { Cherry = 3 } }
         """)
         self.load_addon()
-        self.assertEqual(self.ev("CherrysBar.S().bars.top.skin"), "Stone")
+        self.assertEqual(self.ev("CherrysBar.S().bars.top.skin"), "Ironstone")
         self.assertEqual(self.ev("cfg('Dps').bar"), "off")
         self.assertEqual(self.ev("CherrysBar.S().playedMins"), 77)
         self.assertEqual(self.ev("CherrysBar.S().kills.Cherry"), 3)
+
+    def test_skin_names_of_the_first_art_carry_over_and_the_layout_stays(self):
+        self.run_lua("""
+            CherrysBar.S().bars.top.skin = 'Walnut'
+            CherrysBar.S().bars.bottom.skin = 'Moss'
+            local D = CherrysBar.Displays
+            D.SetBar(D.byKey.Zone, 'top')
+        """)
+        self.load_addon()
+        self.assertEqual(self.ev("CherrysBar.S().bars.top.skin"), "Darkwood")
+        self.assertEqual(self.ev("CherrysBar.S().bars.bottom.skin"), "Verdant")
+        self.assertEqual(self.ev("cfg('Zone').bar"), "top")
+        self.assertIn("Skins/Darkwood/top", self.ev("CBar_BarTopT1.texture"))
 
     def test_reset_everything(self):
         self.run_lua("""
@@ -897,7 +921,7 @@ class BarTest(unittest.TestCase):
         self.assertFalse(self.ev("CherrysBar.ready"))
         self.assertTrue(self.ev("CherrysBar.off"))
         self.assertFalse(self.ev("CBar_BarTop.shown"))
-        self.assertEqual(self.ev("PlayerFrame.anchors[1][5]"), 26)  # from the first load, not moved again
+        self.assertEqual(self.ev("PlayerFrame.anchors[1][5]"), 24)  # from the first load, not moved again
 
     def test_slash_command_and_probe(self):
         self.run_lua("SlashCmdList['CHERRYSBAR'](nil, 'probe')")
@@ -957,7 +981,7 @@ class PackageTest(unittest.TestCase):
     def tga_size(self, path):
         data = path.read_bytes()
         width, height, depth = struct.unpack("<HHB", data[12:17])
-        self.assertEqual(len(data), 18 + width * height * 4, path)
+        self.assertIn(len(data) - (18 + width * height * 4), (0, 26), path)  # 26: the optional TGA footer
         self.assertEqual(depth, 32, path)
         return width, height
 
@@ -973,13 +997,21 @@ class PackageTest(unittest.TestCase):
     def test_every_icon_named_in_the_code_exists_and_none_is_spare(self):
         used = set()
         for name in FILES:
-            used |= set(re.findall(r'Icon\("([a-z_]+)"\)', (SOURCE / name).read_text(encoding="utf-8")))
-        used |= set(re.findall(r'Icons\\([a-z_]+)"', (SOURCE / "CherrysBar.xml").read_text(encoding="utf-8")))
-        dynamic = {"vol_low", "vol_mid", "vol_high", "vol_mute", "check_on", "check_off", "pin", "pin_out", "unlock", "lock"}
+            used |= set(re.findall(r'Icon\("([A-Za-z]+)"\)', (SOURCE / name).read_text(encoding="utf-8")))
+        used |= set(re.findall(r'Icons\\([A-Za-z]+)"', (SOURCE / "CherrysBar.xml").read_text(encoding="utf-8")))
+        dynamic = {"VolumeMute", "VolumeLow", "VolumeMedium", "VolumeHigh", "CheckboxOn", "CheckboxOff",
+                   "PinIn", "PinOut", "Unlock", "Lock"}
         files = {p.stem for p in (SOURCE / "Media/Icons").glob("*.tga")}
         self.assertEqual(used | dynamic, files)
         for path in (SOURCE / "Media/Icons").glob("*.tga"):
-            self.assertEqual(self.tga_size(path), (32, 32))
+            self.assertEqual(self.tga_size(path), (64, 32) if path.stem.startswith("Volume") else (32, 32))
+
+    def test_art_is_the_pack_unchanged(self):
+        manifest = json.loads((ROOT / "design/cherrys-bar/asset-manifest.json").read_text(encoding="utf-8"))
+        hashes = {f["sha256"] for asset in manifest["assets"] for f in asset["files"]}
+        for path in (SOURCE / "Media").rglob("*.tga"):
+            if path.parent.name != "Slate":
+                self.assertIn(hashlib.sha256(path.read_bytes()).hexdigest(), hashes, path)
 
     def test_credits_and_licence_stay_with_the_addon(self):
         notice = (SOURCE / "LICENSE-CherrysBar.txt").read_text(encoding="utf-8")
@@ -1000,7 +1032,7 @@ class PackageTest(unittest.TestCase):
     def test_no_xbar_art_is_left(self):
         for path in SOURCE.rglob("*"):
             self.assertNotIn(path.name.lower(), ("bar_bgndm.tga", "baru_bgndm.tga", "sysbtn_normal.tga", "logo.tga"), path)
-        for skin in ("Black", "Gloss", "Blockz", "AdPanel", "Tribal"):
+        for skin in ("Black", "Gloss", "Blockz", "AdPanel", "Tribal", "Stone", "Steel", "Frost", "Walnut", "Moss", "Amethyst"):
             self.assertFalse((SOURCE / "Media/Skins" / skin).exists(), skin)
 
     def test_hub_knows_the_addon(self):

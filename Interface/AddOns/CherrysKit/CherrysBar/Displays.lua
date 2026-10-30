@@ -63,7 +63,12 @@ local function unlocked()
 end
 
 local function iconSize()
-  return math.min(G.Bars.Height() - 6, 22)
+  return math.min(G.Bars.Height() - 8, 22)
+end
+
+-- Volume's speakers are drawn on a 2:1 canvas, and every other icon is square.
+local function iconWidth(def)
+  return def.iconWide and iconSize() * 2 or iconSize()
 end
 
 -- A display reads only what its format asks for: { "EVENT", "TOKEN", ... } registers EVENT only
@@ -234,7 +239,7 @@ end
 
 local function displayWidth(def, cfg)
   local grip = unlocked() and D.GRIP or 0
-  local iconPart = (cfg.icon and def.icon) and (iconSize() + D.TEXT_GAP) or 0
+  local iconPart = (cfg.icon and def.icon) and (iconWidth(def) + D.TEXT_GAP) or 0
   return grip + iconPart + (def.textWidth or 0) + 8
 end
 
@@ -264,10 +269,11 @@ local function place(def, cfg, barName, side, offset)
   local width = displayWidth(def, cfg)
   frame:ClearAllAnchors()
   local relName = barName == "bottom" and "CBar_BarBottom" or "CBar_BarTop"
+  local nudge = G.Bars.Nudge(barName)
   if side == "right" then
-    frame:SetAnchor("RIGHT", "RIGHT", relName, -offset, 0)
+    frame:SetAnchor("RIGHT", "RIGHT", relName, -offset, nudge)
   else
-    frame:SetAnchor("LEFT", "LEFT", relName, offset, 0)
+    frame:SetAnchor("LEFT", "LEFT", relName, offset, nudge)
   end
   G.Try(frame, "SetWidth", width)
   G.Try(frame, "SetHeight", G.Bars.Height())
@@ -310,12 +316,12 @@ local function styleSlot(def, cfg)
   if icon then
     if cfg.icon and def.icon then
       G.Try(icon, "SetTexture", def.iconNow or def.icon)
-      G.Try(icon, "SetWidth", size)
+      G.Try(icon, "SetWidth", iconWidth(def))
       G.Try(icon, "SetHeight", size)
       icon:ClearAllAnchors()
       icon:SetAnchor("LEFT", "LEFT", widget(def, ""), left, 0)
       icon:Show()
-      left = left + size + D.TEXT_GAP
+      left = left + iconWidth(def) + D.TEXT_GAP
     else
       icon:Hide()
     end

@@ -1,0 +1,3452 @@
+{
+  "name": "Studio Panel Assets",
+  "version": "1.0",
+  "created": "2026-10-30",
+  "reference_archive": "TitanPanel-9.3.5.zip",
+  "unique_assets": 52,
+  "image_export_count": 380,
+  "artwork_method": "Built-in image generation; mechanical slicing, scaling, periodic mirroring and format export.",
+  "runtime_tested": false,
+  "assets": [
+    {
+      "id": "skin.Ironstone.Top",
+      "category": "skin",
+      "name": "Ironstone Top",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        0,
+        768,
+        118
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Ironstone/256x32/Top.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "2cab92aed847fb5b885ef0a92671def7cbbebc287519d9809e551d6512399110"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioIronstone/TitanPanelBackgroundTop0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "4f1257edb2a4679931a9fde1340bb366f9fea1376be406b79b194dc97a072a11"
+        },
+        {
+          "path": "PNG/Skins/Ironstone/512x64/Top.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "9db7fd80288e23aa64b239af3490b71746ee1060920264e98e3c637005b1674d"
+        }
+      ]
+    },
+    {
+      "id": "skin.Ironstone.Bottom",
+      "category": "skin",
+      "name": "Ironstone Bottom",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        119,
+        768,
+        237
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Ironstone/256x32/Bottom.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "978bc23ca7a687426e607fd2ec63986f8976a2ad3ee7a6f791c63a6b00290cf7"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioIronstone/TitanPanelBackgroundBottom0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "9d053f33be855b070348bbae8eae3d7119569a5ed7c2a1adac8f78be9f61ffb9"
+        },
+        {
+          "path": "PNG/Skins/Ironstone/512x64/Bottom.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "bbf89c45a9513c201bed7da4d0044f932e247b74b8e28dff83c3e742d71490e6"
+        }
+      ]
+    },
+    {
+      "id": "skin.Blacksteel.Top",
+      "category": "skin",
+      "name": "Blacksteel Top",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        239,
+        768,
+        358
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Blacksteel/256x32/Top.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "89858b0c3c7b17d5f21078ed341099d42840c6e9dd4cdc270febaa1804c7ed61"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioBlacksteel/TitanPanelBackgroundTop0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "be35168426a9bb935ca05ec555f12b9e0c0991ed792e3ea7648c2b55371104d1"
+        },
+        {
+          "path": "PNG/Skins/Blacksteel/512x64/Top.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "bce6dcb0cf63644531944a035e5faf6b79b192cd1c6bf615c65f2c1e9221efd7"
+        }
+      ]
+    },
+    {
+      "id": "skin.Blacksteel.Bottom",
+      "category": "skin",
+      "name": "Blacksteel Bottom",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        359,
+        768,
+        475
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Blacksteel/256x32/Bottom.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "6de908c8de7b26fac80ff5feb61050679e77dde09ed7e6644a01e0015a4a802e"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioBlacksteel/TitanPanelBackgroundBottom0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "c1d518945141c44e19df1fd84f1f26c084ee1ce2b093e37cd2f0bc9d964fc358"
+        },
+        {
+          "path": "PNG/Skins/Blacksteel/512x64/Bottom.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "14d115599736666fc7574ea5c19f4b4af41e4df1bc3e5a215c680a5ece8e2db5"
+        }
+      ]
+    },
+    {
+      "id": "skin.Froststeel.Top",
+      "category": "skin",
+      "name": "Froststeel Top",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        477,
+        768,
+        596
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Froststeel/256x32/Top.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "bca39efb4dd5706e611410b1f5e0e7fe12d62fe31c85cfc3dbf83ba0e3441013"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioFroststeel/TitanPanelBackgroundTop0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "bc08c7290b8d30b03e7259c2a716f9c68506da52a321dd0c30d06b4843da2440"
+        },
+        {
+          "path": "PNG/Skins/Froststeel/512x64/Top.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "57e85ed44bb2ed81c6f35ed9a340c82e03f6f545c5490fbd9e59f0e8fc05e8ad"
+        }
+      ]
+    },
+    {
+      "id": "skin.Froststeel.Bottom",
+      "category": "skin",
+      "name": "Froststeel Bottom",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        598,
+        768,
+        716
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Froststeel/256x32/Bottom.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "f3039c2731b29c46de1d180fc6c0d329e97bf8a43ba30636dea29d1bdf61fa02"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioFroststeel/TitanPanelBackgroundBottom0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "52f8ff07b70d748e464cf43c0003e5d8bc052e9f74dcfc6bba8a2c54ef87a66a"
+        },
+        {
+          "path": "PNG/Skins/Froststeel/512x64/Bottom.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "4bec2c6eab6ad4c70a3c90122b5e0751b5919775fb4fbd1255aba287e5b81394"
+        }
+      ]
+    },
+    {
+      "id": "skin.Darkwood.Top",
+      "category": "skin",
+      "name": "Darkwood Top",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        718,
+        768,
+        836
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Darkwood/256x32/Top.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "e9062790ca61894893caa3989f14048bd38e80f761c1073113aed20f6041477a"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioDarkwood/TitanPanelBackgroundTop0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "6dd63cbb5fc418c45a7b7d486ee38d62f235af4a4843465e42dc6967e8e2ae92"
+        },
+        {
+          "path": "PNG/Skins/Darkwood/512x64/Top.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "02c31053fecc7b0e1efa1ae06e0011aec0c89ebefaa1139145317c08346ce527"
+        }
+      ]
+    },
+    {
+      "id": "skin.Darkwood.Bottom",
+      "category": "skin",
+      "name": "Darkwood Bottom",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        838,
+        768,
+        954
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Darkwood/256x32/Bottom.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "c6c1296925c9a96406991fe8a7d7dbd41e4a642236ccc4142e0eb840b3b50770"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioDarkwood/TitanPanelBackgroundBottom0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "ad4294624ff28249122b076a93d8714c1e5f9f493452ef359850c0cdf8f0c675"
+        },
+        {
+          "path": "PNG/Skins/Darkwood/512x64/Bottom.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "e3ea007c7fe513d1f9d84e14f31dfa7fa2f4729880a5c2fdbb79006276c6693f"
+        }
+      ]
+    },
+    {
+      "id": "skin.Verdant.Top",
+      "category": "skin",
+      "name": "Verdant Top",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        956,
+        768,
+        1076
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Verdant/256x32/Top.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "be223c83303d04947e66cc947f8790980af5a501703b826b4f021d14b5f8855e"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioVerdant/TitanPanelBackgroundTop0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "a42e16d5e4ca073b8804a85a34e9c40eb0b399045e0e6b2ed90625e4d06c7cad"
+        },
+        {
+          "path": "PNG/Skins/Verdant/512x64/Top.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "f8041473e34ed865060558f4aed2becf5b72aa632156f045002eaa1530934c21"
+        }
+      ]
+    },
+    {
+      "id": "skin.Verdant.Bottom",
+      "category": "skin",
+      "name": "Verdant Bottom",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        1078,
+        768,
+        1196
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Verdant/256x32/Bottom.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "d4efee567140534851e75db2ea2407e0719189089ce1e1c291ccb1f05e2a30bb"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioVerdant/TitanPanelBackgroundBottom0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "044c6a6d54da07f92c23dd1ea808ebd91b39738101cbb4e3bebefa194a998395"
+        },
+        {
+          "path": "PNG/Skins/Verdant/512x64/Bottom.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "1655ec7cd8760852656c952644b9603c58be4e338e25741e638ca2c2ac8a7810"
+        }
+      ]
+    },
+    {
+      "id": "skin.Arcane.Top",
+      "category": "skin",
+      "name": "Arcane Top",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        1198,
+        768,
+        1325
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Arcane/256x32/Top.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "286b3513016f7df585c1000bbbcdac7cfd99103b1305a570cd615d349a14c450"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioArcane/TitanPanelBackgroundTop0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "6b4a89b49c32a5d7b69a88fd158e49e726a9c866e8ddd60eed1ea08f4804cbcd"
+        },
+        {
+          "path": "PNG/Skins/Arcane/512x64/Top.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "0c47ff7b03d5be4b3d3994b0661938e1bb127f4302d3955bca87adabafe76dd8"
+        }
+      ]
+    },
+    {
+      "id": "skin.Arcane.Bottom",
+      "category": "skin",
+      "name": "Arcane Bottom",
+      "source": "Source-Art/bars-atlas.png",
+      "source_box": [
+        256,
+        1327,
+        768,
+        1455
+      ],
+      "export_method": "Resample half-tile; append its horizontal mirror for periodic edge pixels.",
+      "files": [
+        {
+          "path": "PNG/Skins/Arcane/256x32/Bottom.png",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "a44cca403da305db546b22d06b0535d2c29db90212db964586009cc9ee108041"
+        },
+        {
+          "path": "Titan/Artwork/Custom/StudioArcane/TitanPanelBackgroundBottom0.tga",
+          "width": 256,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "6c7301e8c89b9c7c9aa56836308d25e8344819d64693179f0ee0b7f94cd8b2f8"
+        },
+        {
+          "path": "PNG/Skins/Arcane/512x64/Bottom.png",
+          "width": 512,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "8d6be7bbd0244a361c615ec6a9e389310844af3f53fc31157c5c19abde8ff765"
+        }
+      ]
+    },
+    {
+      "id": "icons.Bag",
+      "category": "icons",
+      "name": "Bag",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        47,
+        70,
+        307,
+        307
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Bag.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "eb85b08ebf5b2799d2d3b5e59ccd9611f3376345433dcc11fae6786b10626dff"
+        },
+        {
+          "path": "TGA/Icons/16/Bag.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "3fed98407bd2d326dafcb3c091e0153683eeddb85436a4bf13f9067b2b6f3df1"
+        },
+        {
+          "path": "PNG/Icons/24/Bag.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "c4cfacdc8460a6378911078db1fb25cc138c25a2ad8ba2fcd3d0bea60469e8d6"
+        },
+        {
+          "path": "TGA/Icons/24/Bag.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "464e4f81633671b167c093c8deecfd3feed04d74d0164cbc55e6018ff5099612"
+        },
+        {
+          "path": "PNG/Icons/32/Bag.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "d883d6158bddfc4c9bd57c1c0817bfe63281df02648fb68c035e991bb92a3a2d"
+        },
+        {
+          "path": "TGA/Icons/32/Bag.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "f061f4ad4add41f3ea9d1353f9cfe1150b9d295e65a4b220e84489ae2f7a7f48"
+        },
+        {
+          "path": "PNG/Icons/64/Bag.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "8174695cddcdda9639ccedc8a624406e72accc9c4db572cb7aae25bc1822609a"
+        },
+        {
+          "path": "TGA/Icons/64/Bag.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "bf16efa840eeda1a070046cf7a6a7fff93bdaca3159c63d150a111ded0ac80cc"
+        },
+        {
+          "path": "PNG/Icons/128/Bag.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "60fc6997719bed0246cd1114f6c737920b081bd6a08cb40d0e729a726124afbc"
+        }
+      ]
+    },
+    {
+      "id": "icons.Gold",
+      "category": "icons",
+      "name": "Gold",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        355,
+        85,
+        611,
+        314
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Gold.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "aa71d61511597cb35506e1cbaadc0c6810df0939ddce6cc65f1b4f217fc7e641"
+        },
+        {
+          "path": "TGA/Icons/16/Gold.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "9cabb8078caaa6407929e09e0a033ef0edd9dc3be87ad41ed54addb10e56d5c3"
+        },
+        {
+          "path": "PNG/Icons/24/Gold.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "5acdfa40cfeaf3eb9035027abf6cafd271e5a3ecee593149dc4bf83c0a23d203"
+        },
+        {
+          "path": "TGA/Icons/24/Gold.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "fa1912f87d293ecbaceff02437530ab9e07a4dcd74091fb800e5e944bb98bcc5"
+        },
+        {
+          "path": "PNG/Icons/32/Gold.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "db7f255b5ab2e3c2b183abb36b4bdc0eede6a7dc16345afdcbb89949c0b93d32"
+        },
+        {
+          "path": "TGA/Icons/32/Gold.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "589fb7cf7d73f3e030a30a3acee6d8ecf95499ff622ae938ffaea9867fa9645b"
+        },
+        {
+          "path": "PNG/Icons/64/Gold.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "fd9095480fbb0715335a30a23ade77ebda198702907aef9fe854f963c09960a0"
+        },
+        {
+          "path": "TGA/Icons/64/Gold.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "37638bee452af6af83c8d2d0f4b9d79c03eb7ef9dc6df7d431d6269d0f942a13"
+        },
+        {
+          "path": "PNG/Icons/128/Gold.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "1ee44e925de650f8055a227218aa8cc922da40881228b22a2b6c56dddf65766f"
+        }
+      ]
+    },
+    {
+      "id": "icons.Clock",
+      "category": "icons",
+      "name": "Clock",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        665,
+        51,
+        901,
+        316
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Clock.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "570fc8e619e91eedfa2233e6768a114adf6a69046e1f18e2b9d133f3fdb23315"
+        },
+        {
+          "path": "TGA/Icons/16/Clock.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "4f0b08cd05c3b9448300050274519910b8779896ffe9d8f5dd6a5fa79f5c0e8c"
+        },
+        {
+          "path": "PNG/Icons/24/Clock.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "2c7cc22681efb59f968525f1ed6a06c39320584abaa21a2d7161206f06e302ee"
+        },
+        {
+          "path": "TGA/Icons/24/Clock.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "b36aab6bd3a5a00259f897c958c0f37d577363d0719bbbc6334c823644b84c49"
+        },
+        {
+          "path": "PNG/Icons/32/Clock.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "bf064d964cdd7834e5f71ad6613b16091462a33ff616c01a2867b0f19912e0b5"
+        },
+        {
+          "path": "TGA/Icons/32/Clock.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "7c0498eb99148fbbc064067a71ba88116f3b6a91ccf66bba767a3d369b6984e4"
+        },
+        {
+          "path": "PNG/Icons/64/Clock.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "7fd604e903da11b42e9d7b6344e56ba53ff2415dcbb51cecf392e409948916d1"
+        },
+        {
+          "path": "TGA/Icons/64/Clock.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "4b7e14368368c1b6342febcdea71d4551f2079b0cd6d85a2ff5dc194c137fd81"
+        },
+        {
+          "path": "PNG/Icons/128/Clock.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "e3d0ed2f638536cc2abec7bd83df60dd868f67f74a32233ddba790121d186ca8"
+        }
+      ]
+    },
+    {
+      "id": "icons.Location",
+      "category": "icons",
+      "name": "Location",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        979,
+        50,
+        1234,
+        311
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Location.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "298f27bc1f882b906276ae0b1cbb1ec0559277d33a49c434c957bfa6802b0b47"
+        },
+        {
+          "path": "TGA/Icons/16/Location.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "19a70e05d7a7ee7c4c425d7f4e2765ecae740506528b15bd962dd5c0f0cbff41"
+        },
+        {
+          "path": "PNG/Icons/24/Location.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "cf5042d7e96c7adda3e051933d3cfbe23c7811c091f82429885dffe174a67ea6"
+        },
+        {
+          "path": "TGA/Icons/24/Location.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "5da4971d31852d003a1d2b6a6158954788122835764e2e9008bd2d7cfb6a8376"
+        },
+        {
+          "path": "PNG/Icons/32/Location.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "6a8a3e00a8723f8f091657c75beb5dd0a6edbabcbf60037fef75311712bb232a"
+        },
+        {
+          "path": "TGA/Icons/32/Location.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "c49ce6e22f8391aa81281b642fe760802d11b4fc4c3bc54589297e86142f1f43"
+        },
+        {
+          "path": "PNG/Icons/64/Location.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "4a74317c45ececc052a6e2c1900260f4515e42f86dd739f28debd4204c0a6dee"
+        },
+        {
+          "path": "TGA/Icons/64/Location.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "5b6bcb13c0ac7a53b76ccda02c4ef06eeaa9fdafe6c7347fac8194a658002568"
+        },
+        {
+          "path": "PNG/Icons/128/Location.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "2464d476113d093f2d486616bbd2ded543ab31bb117a772666887123bbf2c3de"
+        }
+      ]
+    },
+    {
+      "id": "icons.Performance",
+      "category": "icons",
+      "name": "Performance",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        47,
+        349,
+        303,
+        601
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Performance.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "09823a763c9b240a1ec212ca2f0e04008dd671c01201bea8a00691af435375cd"
+        },
+        {
+          "path": "TGA/Icons/16/Performance.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "380ad98d23710ca16c47664c9863f65cebe69c6171cc72d2907dfafaa2dd89d5"
+        },
+        {
+          "path": "PNG/Icons/24/Performance.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "d8683c9abc382a35057c1e72163c593a13885d01504ae022605bf2694c6c2432"
+        },
+        {
+          "path": "TGA/Icons/24/Performance.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "d9ecf832f7707118cfa38e912f9db60d66043459485b205d5cc704e5f86ffc07"
+        },
+        {
+          "path": "PNG/Icons/32/Performance.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "57beaf5ec0faa77ccda61a82ff32e85bad55bcef75fb9f0f87b3ae5755f20f3f"
+        },
+        {
+          "path": "TGA/Icons/32/Performance.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "fa0cdaed7fe773bd2279bef234fe3b67c4f9a7d1edaccfc6be0c5c1df0fbc0b4"
+        },
+        {
+          "path": "PNG/Icons/64/Performance.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "1e9254ad318d2371b4102e680b83bf2ec4268ccc5c01469153db98c9cbaedb6b"
+        },
+        {
+          "path": "TGA/Icons/64/Performance.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "6ad98ec2b0778e18a1f70fc5bde0fcb5061659ca7bc41fa545307530c70da0d6"
+        },
+        {
+          "path": "PNG/Icons/128/Performance.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "f949574429ddf22541b365d8df6376d7cec8b4c0e283a2c4aefcb1db5613f8e3"
+        }
+      ]
+    },
+    {
+      "id": "icons.Repair",
+      "category": "icons",
+      "name": "Repair",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        344,
+        365,
+        618,
+        594
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Repair.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "e194fd5abc63a51a7cbb9684cdaba1a7e37496df272cbdb81933f69b06642081"
+        },
+        {
+          "path": "TGA/Icons/16/Repair.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "14a9a5b903148e52719298e125d40112d9dda8df1b94fa86b3ca2538612541ac"
+        },
+        {
+          "path": "PNG/Icons/24/Repair.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "3beb47489fd13837606df862ba5bb5619178f0fd4704b8ad711691893615ba92"
+        },
+        {
+          "path": "TGA/Icons/24/Repair.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "c63d931df3dc6c4cc29290f596a31d6941c60796cb75245249b0de0a79628994"
+        },
+        {
+          "path": "PNG/Icons/32/Repair.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "88d7727c681666abc0280211ae6c615d0d4c5c3fc1267f355e355ecd6a13c84b"
+        },
+        {
+          "path": "TGA/Icons/32/Repair.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "8d2f8edf314d9de25cef7e0d705be01d215296c7af5238230e6b9158a9e50676"
+        },
+        {
+          "path": "PNG/Icons/64/Repair.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "6b53c2cf9160bf10437c89fdcd6912abc84575379809883e9c740dcbe8fcf707"
+        },
+        {
+          "path": "TGA/Icons/64/Repair.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "5331f7fa65fd058f11b2d5957a16bb7143287727b6b8479c6c9d0ff3ebd0a741"
+        },
+        {
+          "path": "PNG/Icons/128/Repair.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "e3e501a615fcc4a49cd37c1b64e602aba9cc9057bd393a59b36d085962669f8f"
+        }
+      ]
+    },
+    {
+      "id": "icons.Regeneration",
+      "category": "icons",
+      "name": "Regeneration",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        656,
+        361,
+        908,
+        585
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Regeneration.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "0ebed707d241aa420da39349c328971190a0e1fc3b89d06ad9f10e1459254f44"
+        },
+        {
+          "path": "TGA/Icons/16/Regeneration.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "a1502fbf6de9ada777fc45f697bbac36f8950be3a3d150dfb9e4a19f5390ee8f"
+        },
+        {
+          "path": "PNG/Icons/24/Regeneration.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "a3cdcff6219c18d8449e3d4b78b4f556975c77c6e0b22cbe056fdb76eada6a1b"
+        },
+        {
+          "path": "TGA/Icons/24/Regeneration.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "e707e50e87c8b64468a2f65f7df618508ca402bf1ead8a217d0f665336846ade"
+        },
+        {
+          "path": "PNG/Icons/32/Regeneration.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "288e9bafeba6ec03ba907dcab4c3702bfbc246cf0052f43776a1439069df0802"
+        },
+        {
+          "path": "TGA/Icons/32/Regeneration.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "5b068555f1806297d401de9d26a4d0c020ed305e34cb43ba21e5fe87fccefa56"
+        },
+        {
+          "path": "PNG/Icons/64/Regeneration.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "61579bd48b92a7e11599a4fb57e03c1a4f07e0acd6cfff2ac5ca07fb5ae2b0bd"
+        },
+        {
+          "path": "TGA/Icons/64/Regeneration.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "567a8f83de56251a14afcb7d55ed43cc9086db0e52604a1bd9f9fc9b6d76f393"
+        },
+        {
+          "path": "PNG/Icons/128/Regeneration.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "e71653b54a358aae86d5c280585c311b8386c2054c6872d2b6d41231c3a2c5c9"
+        }
+      ]
+    },
+    {
+      "id": "icons.Mail",
+      "category": "icons",
+      "name": "Mail",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        958,
+        362,
+        1230,
+        591
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Mail.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "5886c6ebce1e205580cdcaa4a807b2c68f226ab66c3bc8262f82cf47753f7e70"
+        },
+        {
+          "path": "TGA/Icons/16/Mail.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "0f330fd1ef920d80964c1010f1aabb08e002a6782b1c4b9db3f78d6dc4579ce9"
+        },
+        {
+          "path": "PNG/Icons/24/Mail.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "a9e177514286d0136dcac5003d6429f3a0e8d7e63a279a5251de20f3573b2ad8"
+        },
+        {
+          "path": "TGA/Icons/24/Mail.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "634d5dd2aceb719d69ab9cb5154e8768a28b136413dfabf8c565bf229eccf343"
+        },
+        {
+          "path": "PNG/Icons/32/Mail.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "d9946ffd702b44b4d0afe6a1da3fdf03a341ab10e762b3c1866900fec96ec9af"
+        },
+        {
+          "path": "TGA/Icons/32/Mail.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "f7c52836ae15743e8e4a551c6eaad6f82b46707a77ed33b4a04bdde0773045ff"
+        },
+        {
+          "path": "PNG/Icons/64/Mail.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "8b6778925d3b07a98139f089fb19e0b28c8a651e9dbc033ca7a04ff1ac0c4dd1"
+        },
+        {
+          "path": "TGA/Icons/64/Mail.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "2b82ace69f3194cfb8b92bb66f3e7c8e0a2345f3a041c2082cb690f76daea1d8"
+        },
+        {
+          "path": "PNG/Icons/128/Mail.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "f6b94691c2eaacad604ed66b9cc732aa0266253f3ec12f65a43dc25354464ea8"
+        }
+      ]
+    },
+    {
+      "id": "icons.Characters",
+      "category": "icons",
+      "name": "Characters",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        38,
+        629,
+        317,
+        919
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Characters.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "fdeea7f016a0a6490d3bc02dd692c1d1d93717af2ccce94b62f20a915192aac1"
+        },
+        {
+          "path": "TGA/Icons/16/Characters.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "7ac846a8945b15d2381f4bd4a754fa531ba8c9e2e8b7b922fd7b878287488063"
+        },
+        {
+          "path": "PNG/Icons/24/Characters.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "2ad8c831139757fa8a4d939b0643373d5b936da9a812d8b01376f072b8749ae9"
+        },
+        {
+          "path": "TGA/Icons/24/Characters.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "a4dfa19b2a85d7a57d4aa8c097a03870b34b86ac6a441e2f8c5395a10f163729"
+        },
+        {
+          "path": "PNG/Icons/32/Characters.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "a54e63201b4490ede0142e7b29ffa055c0f382e40d48716fa950827186c3350e"
+        },
+        {
+          "path": "TGA/Icons/32/Characters.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "7791a55a0cd62158e98490f7f79c049ae50767679196a8d2d0501ad53dff3be7"
+        },
+        {
+          "path": "PNG/Icons/64/Characters.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "5707462b398317c87784924c68dea211b8926b5a867cf69d16e35bc836b6ecb2"
+        },
+        {
+          "path": "TGA/Icons/64/Characters.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "ca7c6e523e08f729db3c187c2285ef2f340ed8b3d0a4a9f4880dd57a94dc312e"
+        },
+        {
+          "path": "PNG/Icons/128/Characters.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "2a87166aacb8e119cac2924b0b94dde3b3fbe936860668f439cb78d6722bcede"
+        }
+      ]
+    },
+    {
+      "id": "icons.Loot",
+      "category": "icons",
+      "name": "Loot",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        380,
+        678,
+        591,
+        892
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Loot.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "953d44a8e8402ffb9aaf1e960cc766b0744f8c51fd5325649508f635dc74d5ff"
+        },
+        {
+          "path": "TGA/Icons/16/Loot.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "521d4ea470759e0adf79eb3309b0a0bb1ee1ebfa82eba9dfb0b8791577143d21"
+        },
+        {
+          "path": "PNG/Icons/24/Loot.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "9fe1d7c2bba4d5972f64959a42edf3e234d454063c31559c5a838060ecd32b28"
+        },
+        {
+          "path": "TGA/Icons/24/Loot.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "807f12a2aaab6fa9e807cefd711f42aea5967bc30b2111fefa467b7bb81114ca"
+        },
+        {
+          "path": "PNG/Icons/32/Loot.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "0b7664819dab5eab8e4d78c0c63f4f516577f35c679acc8bff6da3e879bc4878"
+        },
+        {
+          "path": "TGA/Icons/32/Loot.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "3ce5becacb57b2cc679af01c8e99e6712a813d43ed4012e4472429fd1e7f56d7"
+        },
+        {
+          "path": "PNG/Icons/64/Loot.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "a760ba40109dc905855ced1a3362798d25beea2be44410394d4e44a49aa253e3"
+        },
+        {
+          "path": "TGA/Icons/64/Loot.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "8e47fea273d93cd79f02f46b362f184596dcac96cb3cfb16fe5c815b62293ce0"
+        },
+        {
+          "path": "PNG/Icons/128/Loot.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "4996c30a301c7b54f2c6785da6ba280ea7d441625291ab6d0cabcbd554fb3f25"
+        }
+      ]
+    },
+    {
+      "id": "icons.Ammo",
+      "category": "icons",
+      "name": "Ammo",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        661,
+        626,
+        925,
+        918
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Ammo.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "9770f1c31982338c0e963a424d1497e7277465c3fbdeaaa78b1d49b1035fac22"
+        },
+        {
+          "path": "TGA/Icons/16/Ammo.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "274e6b85fa874f260675405fdc6c3ba9e6ba713031e3b81b0a990349116d44da"
+        },
+        {
+          "path": "PNG/Icons/24/Ammo.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "7dcde29ac2359e00a07cf0dadf1c91d153f9124469a72d75101c097d69fba35b"
+        },
+        {
+          "path": "TGA/Icons/24/Ammo.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "9513e7f1b6835b9797fd1815643c0ff68ff6e5cb75d6abfee0862a73d6b4a425"
+        },
+        {
+          "path": "PNG/Icons/32/Ammo.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "da74e4129f7bee146b52421ee4f432072588b74dffe35a1f13e4866eebb690e2"
+        },
+        {
+          "path": "TGA/Icons/32/Ammo.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "cdac57f3d8dc86ad66d019362672f89fed556ee0c15f8daccd73ba6c8cee2334"
+        },
+        {
+          "path": "PNG/Icons/64/Ammo.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "6b76671544345b2ce13bf47e8a653c2b03e46cb5cec6dce905d5f2e97d8eaa40"
+        },
+        {
+          "path": "TGA/Icons/64/Ammo.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "83e946ebf418bd253804e658a43b650d8834ee372d4ee577d80b92259cc3a5fd"
+        },
+        {
+          "path": "PNG/Icons/128/Ammo.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "31f9802efc475e979da526d120e26dba844c1c76e44772f4061f87ca7ff06964"
+        }
+      ]
+    },
+    {
+      "id": "icons.Experience",
+      "category": "icons",
+      "name": "Experience",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        964,
+        641,
+        1220,
+        902
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Experience.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "d1fbddc2209daa0ec0f50fcabbc7420ae80720f412e45a86eeb8f9154fadc26a"
+        },
+        {
+          "path": "TGA/Icons/16/Experience.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "af29ccd0e6affc106a7227c6abb6a5aa8abdaec82c4ae20983116ca5b6252d00"
+        },
+        {
+          "path": "PNG/Icons/24/Experience.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "2e581d2950ab19df141ca7d381d6972196ff2e72eee236948c948c4aebdba3b0"
+        },
+        {
+          "path": "TGA/Icons/24/Experience.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "7fe83deb39b387bd55deca87f39a71b3c4d323d1a7019bed71241c85620f174d"
+        },
+        {
+          "path": "PNG/Icons/32/Experience.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "9d280364c62745f45ac775d270b7625c7a9f0246a9ebb0f1d9aa8b9d089abcd7"
+        },
+        {
+          "path": "TGA/Icons/32/Experience.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "7bd18f8ceb77e3612e8696e757a1a849b02d6fea345b5bef81be9a0491a3a5c4"
+        },
+        {
+          "path": "PNG/Icons/64/Experience.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "671ede1f04d8fd0c78ca43169ba931345ec8946a593181ad2eaaddf3db82ec7d"
+        },
+        {
+          "path": "TGA/Icons/64/Experience.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "76c2638279d4c191c813115a6dba108a1d3ae70628dfc0dc474fd9164ef97d51"
+        },
+        {
+          "path": "PNG/Icons/128/Experience.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "2ad094f857cd365ee06bf0e0a124d916965b2957b6bf892df8f4d291d6ad32a8"
+        }
+      ]
+    },
+    {
+      "id": "icons.Storage",
+      "category": "icons",
+      "name": "Storage",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        43,
+        949,
+        322,
+        1201
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Storage.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "acc49e930e2ff9b8079955f80a3b418734006724974ac5f888b3fc489ab878d4"
+        },
+        {
+          "path": "TGA/Icons/16/Storage.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "077de39948f0ca6db7f4a1f8f0f9cdb021cc8adb89b70f7f9b299e07c7d5c743"
+        },
+        {
+          "path": "PNG/Icons/24/Storage.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "8e1a1d1d0e0ec7eb0c186ff85ff6df4a8b337fb13a1ea3db1983b1acd2377dbc"
+        },
+        {
+          "path": "TGA/Icons/24/Storage.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "a83523536b9f86b699c4a131a969846be4273a7cda480c1a8a8f34cf42a087d9"
+        },
+        {
+          "path": "PNG/Icons/32/Storage.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "78de18093c3618afc5b48d086bd26207c6b2dd2d6777e09307be315b1b0bf991"
+        },
+        {
+          "path": "TGA/Icons/32/Storage.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "15a56acd13e94c615255f903bbb3626462ad71443442784d02caaa2eca6299da"
+        },
+        {
+          "path": "PNG/Icons/64/Storage.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "efd6fa5db35cb40f6bd9d33528406e89c8a04b49ab98aeab1f28166856cbcce0"
+        },
+        {
+          "path": "TGA/Icons/64/Storage.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "52c91b666ccb06c3fe91aa78edfa77e91b28c5b97da4b92ffa4c41bbcff47187"
+        },
+        {
+          "path": "PNG/Icons/128/Storage.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "e629eb03a68dd554e759b26d51a84becfe173507f3beb009c24c633e58f55ac3"
+        }
+      ]
+    },
+    {
+      "id": "icons.Potion",
+      "category": "icons",
+      "name": "Potion",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        382,
+        939,
+        581,
+        1198
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Potion.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "c31444df473c3c98b1f903af2b88e30c5ce3934d4047f782993287562d678808"
+        },
+        {
+          "path": "TGA/Icons/16/Potion.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "9403338d4f106caf7aa3b11bbbfb9c93877acfe44d72e4bad9d00490375f317d"
+        },
+        {
+          "path": "PNG/Icons/24/Potion.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "05018e8321819505c2b38d07f9345034bf64dbc0aec4960b380960199826500a"
+        },
+        {
+          "path": "TGA/Icons/24/Potion.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "b590eae22400bef0f31f81253c7f4b860b8344fd216e96bdd0ad18ef219c6781"
+        },
+        {
+          "path": "PNG/Icons/32/Potion.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "ed371961e6560dcfb8030f31944121c93dbdc269d447e70b3a5ed4952fec99de"
+        },
+        {
+          "path": "TGA/Icons/32/Potion.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "b656094d56a834803f6f6425dba991c7d32305947ca296d84e2077d3fb1bc86b"
+        },
+        {
+          "path": "PNG/Icons/64/Potion.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "6a16cd6a5f79df9017220d02bf956c628c3128f0f56f8f25daf07807b95fbde3"
+        },
+        {
+          "path": "TGA/Icons/64/Potion.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "aff44648680771b23150be1e2ce48ebae39236a8954a1912bbe51235d324f53f"
+        },
+        {
+          "path": "PNG/Icons/128/Potion.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "4e337b2a3f9d749aff4d2edd025e0bab6703cff1778feda9e66424b82a144b44"
+        }
+      ]
+    },
+    {
+      "id": "icons.Map",
+      "category": "icons",
+      "name": "Map",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        646,
+        948,
+        940,
+        1196
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Map.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "b525d385f89861539f0634b204f024ab2435bad331f41e569d2e9f7b81757146"
+        },
+        {
+          "path": "TGA/Icons/16/Map.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "0ab8c063e6a26ecac3ea6051bfb1b27e3ffa2e72f17ee7f9954870d11c973560"
+        },
+        {
+          "path": "PNG/Icons/24/Map.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "500289757e893bafc0ecb1c6406f1a6b871bc088efc791c97e27c04e587fbab7"
+        },
+        {
+          "path": "TGA/Icons/24/Map.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "580db52163343cf1c1cd8a3cba6f7038239006dc8a4a3b2b5797bb6732792557"
+        },
+        {
+          "path": "PNG/Icons/32/Map.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "f6c50bde5a6591425e47ad158fb673f4eef999b9987f3a03d752b9c7a7039dc3"
+        },
+        {
+          "path": "TGA/Icons/32/Map.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "ef8e50f61d4a327a714ac9f44c25ce5ec2f4bd11f2422f5646eaf5e0f3102147"
+        },
+        {
+          "path": "PNG/Icons/64/Map.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "a68428547344faaa243f6fc004d98f2eb4dcdfbf60c89b4b9cb614e530181fc9"
+        },
+        {
+          "path": "TGA/Icons/64/Map.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "b241f4e28387ad21443e5dc571b1b11310e10790c3a62599c63b053203f06896"
+        },
+        {
+          "path": "PNG/Icons/128/Map.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "dc04944ddecca8a79f6545a436887f8847231082e8d18f0db47a1b7760b68243"
+        }
+      ]
+    },
+    {
+      "id": "icons.Guild",
+      "category": "icons",
+      "name": "Guild",
+      "source": "Source-Art/icons-atlas.png",
+      "source_box": [
+        962,
+        925,
+        1223,
+        1201
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Icons/16/Guild.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "8b28f7de80be2d5556ede23a28109a6b6e973ff929b419557b100b96c4ee6163"
+        },
+        {
+          "path": "TGA/Icons/16/Guild.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "fd371a29efe4e6d6ffd000182fccab024acf099fecf5ef7616da1e94ed806dd9"
+        },
+        {
+          "path": "PNG/Icons/24/Guild.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "a0b0e0ef247a56a0c30084bf165b7af02ba896b3b33c7b5f81a6b23a2b97838e"
+        },
+        {
+          "path": "TGA/Icons/24/Guild.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "6542da11692651af7d6018ba0548cce2f44aa13318106d945cc6a2ce29fe03ef"
+        },
+        {
+          "path": "PNG/Icons/32/Guild.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "cf4b313dfc5915df002044989fcde421ac8685560dd07fb033e298ee1d5ccdf2"
+        },
+        {
+          "path": "TGA/Icons/32/Guild.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "55e9d690e633adf1b8d32798e17c837709531a3a4ac7fc123337800ac3fe6295"
+        },
+        {
+          "path": "PNG/Icons/64/Guild.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "73326b9ce3f17d3b626ab4e6da5edaa825966caf7e90068309e956395ea56266"
+        },
+        {
+          "path": "TGA/Icons/64/Guild.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "abbb41f91229994e2da262780754769a403b8c3cf8eab71ccbf2bb5c5612d77b"
+        },
+        {
+          "path": "PNG/Icons/128/Guild.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "247656dcbeb0e5a38449faea75c33ad741d3b845ed961386b9a69961349d1a41"
+        }
+      ]
+    },
+    {
+      "id": "controls.PinIn",
+      "category": "controls",
+      "name": "PinIn",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        69,
+        79,
+        193,
+        270
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/PinIn.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "ae6d1d19eeac25a529c18ada9b9fa394b2331de406e81de41c4a038d22702dd8"
+        },
+        {
+          "path": "TGA/Controls/16/PinIn.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "0dcd826e192f39ae27004f1de3c1ffd5cd8937bf671ad80d84079363c5c29821"
+        },
+        {
+          "path": "PNG/Controls/24/PinIn.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "2d121ca2ca68753c6844a59771838007f8de0b09d79a59311084677697591822"
+        },
+        {
+          "path": "TGA/Controls/24/PinIn.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "4069bd9a709a10e045babf294d7bcecab56e2b67fd5025860767c74ab5c16497"
+        },
+        {
+          "path": "PNG/Controls/32/PinIn.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "283d16eb02571fc8e7dae2c47ef0201359c441239328ce14150c2651f9e11e7e"
+        },
+        {
+          "path": "TGA/Controls/32/PinIn.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "aca6536ffb8d17f06e0e50f423b0c45dba581e02e40a62a6e91145d6f3163842"
+        },
+        {
+          "path": "PNG/Controls/64/PinIn.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "cec8ac04364be88982f34db1049b2a3f52262a307b36c376cb145bec89a2656f"
+        },
+        {
+          "path": "TGA/Controls/64/PinIn.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "cad0c2741d453dbaa36457673bc70970509725b83aed1c40d5ded3c36aac8590"
+        },
+        {
+          "path": "PNG/Controls/128/PinIn.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "006469b14dd64a4653b014de6ca07219dbe16cbf8766a8f5c790aa3bd4ee96ec"
+        }
+      ]
+    },
+    {
+      "id": "controls.PinOut",
+      "category": "controls",
+      "name": "PinOut",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        320,
+        79,
+        469,
+        265
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/PinOut.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "0b2447ac2bfcf5f34d4610f36846f13124c145d5cfdc109e90c4019715f147f9"
+        },
+        {
+          "path": "TGA/Controls/16/PinOut.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "b963ee2d5c589d90e03938b70bf263cad97a13f0604b97f7e13682f31c8f5d99"
+        },
+        {
+          "path": "PNG/Controls/24/PinOut.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "364204e1193955c81d9dd997d7d61ef227e722a2fc7e70b88ab910ce648b891b"
+        },
+        {
+          "path": "TGA/Controls/24/PinOut.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "760aa7b6f19c7b004d19d4a40e7505162b206ec0d839afc3fc6495b3fc5806b6"
+        },
+        {
+          "path": "PNG/Controls/32/PinOut.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "88cc2fc3bc2520e122d36e8183277b3e4027dab529d03b5baffad1823b1897e4"
+        },
+        {
+          "path": "TGA/Controls/32/PinOut.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "b034224fa00e08a845461cd2f77b71ffbb76d9fe10bd1cb1d42a437d7ef054d6"
+        },
+        {
+          "path": "PNG/Controls/64/PinOut.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "009d1bdaca28b6cf0504ef7622ae2b540ae577c5158cd86d4f163992d1bbb35e"
+        },
+        {
+          "path": "TGA/Controls/64/PinOut.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "4ed649623de8b68dd9c4ce875054c1d084f53fe70d19c1dda9e6f7b7f72d5519"
+        },
+        {
+          "path": "PNG/Controls/128/PinOut.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "64bc649a34eff33c667a5bf4898683223f0140249b43144634692423558cfdf0"
+        }
+      ]
+    },
+    {
+      "id": "controls.Lock",
+      "category": "controls",
+      "name": "Lock",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        560,
+        64,
+        722,
+        272
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Lock.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "57cfcd7f0e0e0168609121d6f074e6c665ca00ad9a48f2089858bc81b5e8ccb3"
+        },
+        {
+          "path": "TGA/Controls/16/Lock.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "4aa14df194a95da909039bca392fca4faa82adb2d3186dd73f1a33691a8d4e8b"
+        },
+        {
+          "path": "PNG/Controls/24/Lock.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "76f3b337cba92d7c42b9d5011ae14111ddb37aa669313f7b50cefa2b9b5a5771"
+        },
+        {
+          "path": "TGA/Controls/24/Lock.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "bb189766358315747be49d9574d568f90c90ae0f0d130bed5c13fb375dd7b7a1"
+        },
+        {
+          "path": "PNG/Controls/32/Lock.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "336b6388e3055c6256f15692cc021b85aadfa7ec8c9e7898e6ad8af8c6ad9b41"
+        },
+        {
+          "path": "TGA/Controls/32/Lock.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "3ee991450225903bfbf98243e02e2da123c8bdbd23ca168200703ee0358f68d5"
+        },
+        {
+          "path": "PNG/Controls/64/Lock.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "376345fe04b5cffca10c65efc869bff240bd177e5d2f0e10f04dacb4de437328"
+        },
+        {
+          "path": "TGA/Controls/64/Lock.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "42ce6dc3c54a3d7bd0c0ed6e156832acc962f03473d71d4b67309a9ffc5dbcaf"
+        },
+        {
+          "path": "PNG/Controls/128/Lock.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "6ef82a362951748fc78b40e7824535ffdd461c2b7bb0696a982cb929ca9c06c4"
+        }
+      ]
+    },
+    {
+      "id": "controls.Unlock",
+      "category": "controls",
+      "name": "Unlock",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        808,
+        56,
+        992,
+        272
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Unlock.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "37605a48ceaa36293d7acfec49c67853f85b3d4b49d1ff6da7df1d9b7739960c"
+        },
+        {
+          "path": "TGA/Controls/16/Unlock.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "da0a9f902e8d1732aaf502b767779169461f3249920f13b980bd9afcc0cbc781"
+        },
+        {
+          "path": "PNG/Controls/24/Unlock.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "ffa400d7eab7420500aa6e4b94d9056393a27d34073b00e143a8ee59d07f78bf"
+        },
+        {
+          "path": "TGA/Controls/24/Unlock.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "23f1e4c6824f84a930ccba249981d13507ec3aae723f040cc775192c42fa5db6"
+        },
+        {
+          "path": "PNG/Controls/32/Unlock.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "e931050cf13768814b31b5bfd71f5e982a0975e729e5c8fe31fff07d423877ec"
+        },
+        {
+          "path": "TGA/Controls/32/Unlock.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "1cc99cc0ba0aa05cd65e1720f3019a061f5b83c6d1936a1caf5d916c783ebce2"
+        },
+        {
+          "path": "PNG/Controls/64/Unlock.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "69f95b85dfcb22212676328976007780216e9736c8bc8ebbc3c6bb120b8654dc"
+        },
+        {
+          "path": "TGA/Controls/64/Unlock.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "8857c18ce78b6f0172ec274d34018956ed76ca38c18b8d97bf3795bac2abb202"
+        },
+        {
+          "path": "PNG/Controls/128/Unlock.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "f88bd8995a5507a41340f07be1e78a1bc1ca35f1f225ee412b587661f056d399"
+        }
+      ]
+    },
+    {
+      "id": "controls.Save",
+      "category": "controls",
+      "name": "Save",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        45,
+        336,
+        219,
+        514
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Save.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "1194f9951d6981a338ef414e6c4640209fe6dc4b73a93db3cbad9ee932050774"
+        },
+        {
+          "path": "TGA/Controls/16/Save.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "441d02eeac5247de73c503a64f7dc9b38f394d9d6d1d95dd468de036131c9a4e"
+        },
+        {
+          "path": "PNG/Controls/24/Save.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "ad22d87cf49989e36f4f5d088c95371d2c1c8965a25715516abcbac1f6ea64e1"
+        },
+        {
+          "path": "TGA/Controls/24/Save.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "ac8c644aec9dcc18088ae45e66058ed5c023c90f204f6babbb498d449901c7f2"
+        },
+        {
+          "path": "PNG/Controls/32/Save.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "85a3189f933aba31854321fecda13563c0fd7c308da0bf6b541717ed89a3b0fd"
+        },
+        {
+          "path": "TGA/Controls/32/Save.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "e2412dcc194e4c7971f2cae18584bfc9cf4525610ce2680356fa5a1e4d514655"
+        },
+        {
+          "path": "PNG/Controls/64/Save.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "d2bdee035b23a2396d69157b32e67466e3fe2d17fd2fb5bc68477501cd2494fc"
+        },
+        {
+          "path": "TGA/Controls/64/Save.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "d6d2e3d3691e67d30fc412fee06ab1cf6cf989832a39f6a0452822c3fe612c20"
+        },
+        {
+          "path": "PNG/Controls/128/Save.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "66faf84013b7f764d66953288453ddb1d0366bbe5e74b0d383f00f50d7ad0a85"
+        }
+      ]
+    },
+    {
+      "id": "controls.SaveDisabled",
+      "category": "controls",
+      "name": "SaveDisabled",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        300,
+        336,
+        473,
+        513
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/SaveDisabled.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "8db593c30d5aa9405d1e7a666a06ef62b0cd41ec341a50a6cd94489d7162873a"
+        },
+        {
+          "path": "TGA/Controls/16/SaveDisabled.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "754d3b7c993de208a5fa40da360401c9491476410c698bb105e8e5b86e6c3031"
+        },
+        {
+          "path": "PNG/Controls/24/SaveDisabled.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "b6cc2705259cfdee5d36e30ee22f01c330605d50550b552dae62f5eec0b5a514"
+        },
+        {
+          "path": "TGA/Controls/24/SaveDisabled.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "e05305c24f391dbf7cb5bfd54392ee1b88ec78b94869fca84b741ae2ff05f158"
+        },
+        {
+          "path": "PNG/Controls/32/SaveDisabled.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "380c08575df8f7c94d0e5cde04a1456905ffc130a42554fb54eea4a25bf1f977"
+        },
+        {
+          "path": "TGA/Controls/32/SaveDisabled.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "1fdd88a03934a9e8394cf7776eedb978639eee6ecded15c514861d6e03d5c4b2"
+        },
+        {
+          "path": "PNG/Controls/64/SaveDisabled.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "40fbf2785c3e5e0f4e3f1968a612008989e9282d0ca249b16467542fbb57f2f8"
+        },
+        {
+          "path": "TGA/Controls/64/SaveDisabled.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "8310b5e398f55f816e47c9de55a315ecdd611a16605285422064a7426a703e07"
+        },
+        {
+          "path": "PNG/Controls/128/SaveDisabled.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "86ee2dde0f21c9e077c2b8b2474d2625b796b8bf4f4c60bda9462de6f8ee29ad"
+        }
+      ]
+    },
+    {
+      "id": "controls.Reload",
+      "category": "controls",
+      "name": "Reload",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        550,
+        334,
+        734,
+        527
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Reload.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "84b650840b554490290c29b8de21ede416bda73332cb2e6e75e7e870a38ab9b3"
+        },
+        {
+          "path": "TGA/Controls/16/Reload.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "bb4328b15ada50aa7831c59d8460730e26e9f40fd4a156872e8f52f14081dbf7"
+        },
+        {
+          "path": "PNG/Controls/24/Reload.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "84cd0f70a91d46b06e973e6a7ff5771fdf947974049e7859979fb0615ae3b19c"
+        },
+        {
+          "path": "TGA/Controls/24/Reload.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "bc43b46a9117a5ec4ede6a353ccccd75f5e6700b77374b6e04f13a7da07066d2"
+        },
+        {
+          "path": "PNG/Controls/32/Reload.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "e6112646ed65d45b5895891318de1f55709731a7dacae03a0ecf53a8754465c9"
+        },
+        {
+          "path": "TGA/Controls/32/Reload.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "c2de888a943b4f11fb928bd6eedece828ad9886a06a6572d7923b9b465f57e0b"
+        },
+        {
+          "path": "PNG/Controls/64/Reload.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "0b629b7092b941b3ec0e5cf335b1814702ebf08e743a60f48b48e5d3d7ee4093"
+        },
+        {
+          "path": "TGA/Controls/64/Reload.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "7e2e3f23730410d69130cc4dad8efff9ca68e3bcc60ae88d6bf3db1320a56492"
+        },
+        {
+          "path": "PNG/Controls/128/Reload.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "95d55d776fc275fe93b604887e555eb3a3cd0d2ce389074c4f7ad5e4bb517708"
+        }
+      ]
+    },
+    {
+      "id": "controls.Broom",
+      "category": "controls",
+      "name": "Broom",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        796,
+        321,
+        978,
+        531
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Broom.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "9cec3f90eb78b2b9003f282c70f2b162a2227396cda8f15dc438b87913c3cbe7"
+        },
+        {
+          "path": "TGA/Controls/16/Broom.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "c10fd1c4f962faef23a473d9afec4e557bf16e64119fedd6e51a751cdac4501c"
+        },
+        {
+          "path": "PNG/Controls/24/Broom.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "3b3dc26ecad8be28a112789e51877fbddcd93b571e87ce441838af780994cb08"
+        },
+        {
+          "path": "TGA/Controls/24/Broom.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "be6357683066b4292c2f714fc628bcfabe06d6a33279dfdc4e974754b5fc9e78"
+        },
+        {
+          "path": "PNG/Controls/32/Broom.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "518d19ac18e0146722e6cc809f3b1edc87a61945333f36e4af10ab56640db0b7"
+        },
+        {
+          "path": "TGA/Controls/32/Broom.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "dae633246babb7d1f4f021fc17fc8d82566caa24b20a95c5f41ea981fabcb6b4"
+        },
+        {
+          "path": "PNG/Controls/64/Broom.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "5071aa204c978d6921f709d4f56b85a502dfa824a5a27d31245719737034b4c7"
+        },
+        {
+          "path": "TGA/Controls/64/Broom.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "d8ee9ef538a1cf6c30ebc7f27aaa557ee9c0ff30eb3f9bd08c493087dec0b308"
+        },
+        {
+          "path": "PNG/Controls/128/Broom.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "20454ba627d69eb3ebdf2a11fb1cc55cd1d59a189b05ee5dc67b149e13453ef8"
+        }
+      ]
+    },
+    {
+      "id": "controls.Plus",
+      "category": "controls",
+      "name": "Plus",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        45,
+        593,
+        219,
+        768
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Plus.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "fbac02351e59dd1e35e5a364193ac3708724caadcc17915c58ce48a0d8647b85"
+        },
+        {
+          "path": "TGA/Controls/16/Plus.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "27449a6cbeda3182c3871ad7e1e8eca960f02b7010399cf1bd27663fd66966d7"
+        },
+        {
+          "path": "PNG/Controls/24/Plus.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "6ae8cba432039e4f1d70d9dd8817fbf2c4e2459d88bb7dbe4d1efa2424172c61"
+        },
+        {
+          "path": "TGA/Controls/24/Plus.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "6378e487feab7079932a7f853b5f0208786134447db5aef1f49ccdc5d66c54f5"
+        },
+        {
+          "path": "PNG/Controls/32/Plus.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "d6d2f3c524411f8b8f6206929201512dce3197edf135a4710063bd6bdfbb69e7"
+        },
+        {
+          "path": "TGA/Controls/32/Plus.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "fe95f61a858777ed8b353dc0ec1e3d1eb342895b6fbe7483856ec73af69a7ed1"
+        },
+        {
+          "path": "PNG/Controls/64/Plus.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "2f642b0173dc624fa412264c1df843e1f99d872895e8a0246e6994eaccf41832"
+        },
+        {
+          "path": "TGA/Controls/64/Plus.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "226aae06467ee668fc2a03a6df4dc6cbb47ca6f68d4e6c4ef590b1a14e59c40f"
+        },
+        {
+          "path": "PNG/Controls/128/Plus.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "3061c249b9ddfdf74b536f14bb66d69279af1e90e6897395d5a306368f94b1b6"
+        }
+      ]
+    },
+    {
+      "id": "controls.Minus",
+      "category": "controls",
+      "name": "Minus",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        295,
+        640,
+        479,
+        718
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Minus.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "091651ae9a02e4159f3a0c80bd4b861061ee266cbdba0b0a3ea730b42c06f6da"
+        },
+        {
+          "path": "TGA/Controls/16/Minus.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "42d2811ee64b4e720a05a091f16e1e6fda015796b54aca6f0c33408df54deb3a"
+        },
+        {
+          "path": "PNG/Controls/24/Minus.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "ae0bc6026bdf155bee3a5d2c0ec74cf61499c7922fd0a33bfd0e6aec68f6ab71"
+        },
+        {
+          "path": "TGA/Controls/24/Minus.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "f212d4249e309206d9ac52d97b19ad1e2db0b9ba3625c1bcb4582029d0955f35"
+        },
+        {
+          "path": "PNG/Controls/32/Minus.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "457eb355e97149d536df85f22f0172dfbd892d63fd843e9ccdeaaf928df98245"
+        },
+        {
+          "path": "TGA/Controls/32/Minus.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "1f4e8aff2d07101d7d1d4aeb961a842e4171d544b9be31b18bb3fc890c07ccc4"
+        },
+        {
+          "path": "PNG/Controls/64/Minus.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "d1f03fdaaab86b22fc454cb6616ef782e541921eec7223bd1a0ecff25349a403"
+        },
+        {
+          "path": "TGA/Controls/64/Minus.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "38439c74ff13508ed2b49197b687486e5154881ebe452514f34c85bb51757ce1"
+        },
+        {
+          "path": "PNG/Controls/128/Minus.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "406bdc374820021988b781f93e975edbc7d70b9a0cbcc43d9d5ec4d0b9cfce18"
+        }
+      ]
+    },
+    {
+      "id": "controls.Close",
+      "category": "controls",
+      "name": "Close",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        555,
+        597,
+        725,
+        767
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Close.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "98caeab94544683653f2cf8c59d99854a3cf015e0752621b35acbae2ac5da806"
+        },
+        {
+          "path": "TGA/Controls/16/Close.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "700a5da9cc3983784fc91e73deace4f53784b6718e354cc5e421ff7888192809"
+        },
+        {
+          "path": "PNG/Controls/24/Close.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "488c82fdbf0240787bf80b5ddfa6eb2120df05916b7917bc944fd2821d96956d"
+        },
+        {
+          "path": "TGA/Controls/24/Close.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "4a571a5ab21b426644ec61a822df39ee6d19a896790fdfcf00108fcb81519242"
+        },
+        {
+          "path": "PNG/Controls/32/Close.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "0deb8c06d66179daff2cbd892b842a06f218fa78d45d3c3d7ae85da8bc26f039"
+        },
+        {
+          "path": "TGA/Controls/32/Close.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "e5add3db5f71b6b689aa3eb20ba0751f026981aededbd49c610c30b159275c47"
+        },
+        {
+          "path": "PNG/Controls/64/Close.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "aca9b68f9b6bc4337d32740d3e175d0934fe00adf629e7a08505fc8827407b62"
+        },
+        {
+          "path": "TGA/Controls/64/Close.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "02705c0ffcb36d8983f64f9d7ab32061ac969f6120179c5c0fc1dd37ec1078c2"
+        },
+        {
+          "path": "PNG/Controls/128/Close.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "450ec311a2946b4f0791c07a63b86b50028f90de827dfd4be645453c1a92f6fb"
+        }
+      ]
+    },
+    {
+      "id": "controls.Trash",
+      "category": "controls",
+      "name": "Trash",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        820,
+        584,
+        973,
+        777
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Trash.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "6e45219c639a4af6638543ca19376d85ae9c78d8ada9b98c76d214fe78666196"
+        },
+        {
+          "path": "TGA/Controls/16/Trash.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "62844772bee3c64bd821de77320f1a1bd2c1cde3d155018a2e72bb81c34076de"
+        },
+        {
+          "path": "PNG/Controls/24/Trash.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "639b4694310de74446ccc85baa4b334c4b7df678cba859cab1c66195291fe24c"
+        },
+        {
+          "path": "TGA/Controls/24/Trash.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "497001a6579d1ad2e8dc37101597da42b3067449f948e701c1957546e20302b8"
+        },
+        {
+          "path": "PNG/Controls/32/Trash.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "196bc312a210d31af85f55638d1aac452d8261112491146d2ae17f6e64681e95"
+        },
+        {
+          "path": "TGA/Controls/32/Trash.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "e7545dba17563e4dc12b8096079bae9543acf5d8a7e5342b637ab7297f180979"
+        },
+        {
+          "path": "PNG/Controls/64/Trash.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "e2102c0597053641756c62dcd087b12d77e904e53828379de6d2c7e8f157192f"
+        },
+        {
+          "path": "TGA/Controls/64/Trash.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "c1e442786dd6b1d666ffb163f4216cefc1d1d9261c7caa039ba774fa8333df95"
+        },
+        {
+          "path": "PNG/Controls/128/Trash.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "f74ee47f13aee8394ab29a62b027a8bdc549c69dd15c8fb9a00eb2c31aeb3c26"
+        }
+      ]
+    },
+    {
+      "id": "controls.Run",
+      "category": "controls",
+      "name": "Run",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        76,
+        845,
+        207,
+        1012
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Run.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "0dd1bab8caac336bac4b6b6bc9ef16d5a138f83cc65c4cda15ff11cfe856195e"
+        },
+        {
+          "path": "TGA/Controls/16/Run.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "32ee589ae611438a51ee2e576afaf620146d261d40a31251e67b2b883168ff9e"
+        },
+        {
+          "path": "PNG/Controls/24/Run.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "85267fcdf2ee3113489573aa4e9f57e1b0c5918508bbb8e28a714606eb0f49c3"
+        },
+        {
+          "path": "TGA/Controls/24/Run.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "b1c9fd4325c5cf43bcff8a1ff1a6ebf33f8a91402789fee779b2e956733c1f57"
+        },
+        {
+          "path": "PNG/Controls/32/Run.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "291210b06191b0e21489adc6c3599fea19771ec2e01c5e7caee79de6c2c63ea1"
+        },
+        {
+          "path": "TGA/Controls/32/Run.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "55f3b21f8bc5b6f401935c585b4dffe843703f9cb2c778ce10ce3bb0c5df3dcc"
+        },
+        {
+          "path": "PNG/Controls/64/Run.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "26f0b773e538305c2539969ffabfcbfa04f23dbaf224d75970cf38488568802f"
+        },
+        {
+          "path": "TGA/Controls/64/Run.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "8bfdabc42a09638ee87c8daa27deae48f9423cd705acf3ac1ab2b6d4b573ba1c"
+        },
+        {
+          "path": "PNG/Controls/128/Run.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "d0a289ef07e5ea7580b7dbd68e612a3b1df96787e6c4a37e3cbf2a478f5aa6d9"
+        }
+      ]
+    },
+    {
+      "id": "controls.Resize",
+      "category": "controls",
+      "name": "Resize",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        304,
+        848,
+        475,
+        1011
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/Resize.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "cb9c63b3f411375ba57f5cec717e41e996118b3dfc28081884eb7aff578958cd"
+        },
+        {
+          "path": "TGA/Controls/16/Resize.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "106b11e291b9c250a2ed824891583cac418404de9ef1b4d9559e3e5a69d38e15"
+        },
+        {
+          "path": "PNG/Controls/24/Resize.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "7befb144fc0785850d46b823c45813e86a8e54bb5ce4895ac112a2d69ff8a7a2"
+        },
+        {
+          "path": "TGA/Controls/24/Resize.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "b291ec9858703d579f0f2edc4bb5b175706de55656b760ce21c809543ebe1c21"
+        },
+        {
+          "path": "PNG/Controls/32/Resize.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "0ad48a56d5ba5db8daff7b9ff9cb22caa4ca6ec1507cf2ac284b0a900dfa5549"
+        },
+        {
+          "path": "TGA/Controls/32/Resize.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "0462c4d7e065786fb1144c44a9fce67f5b830ae5d05111be2c84f7f11a99ec40"
+        },
+        {
+          "path": "PNG/Controls/64/Resize.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "78687a3fa3ec32a96d05dbf2cac3fec3bf1d4533ae7d87f0e236f1c00f247188"
+        },
+        {
+          "path": "TGA/Controls/64/Resize.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "ef24d0a38633920e82808ef2f3f2bcd621199511f141f9cc2081898a66d8098c"
+        },
+        {
+          "path": "PNG/Controls/128/Resize.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "a0d9e1cafed38be05696e07502b07e8064bc942be6c10cd4413a4d4c85722092"
+        }
+      ]
+    },
+    {
+      "id": "controls.TagGreen",
+      "category": "controls",
+      "name": "TagGreen",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        549,
+        841,
+        720,
+        1014
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/TagGreen.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "5f8c7d7f636cd8354c52e7f588850aab76bbd322910e25dea17d805d912daa90"
+        },
+        {
+          "path": "TGA/Controls/16/TagGreen.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "1c487fc511c3da19385b42a75836f986a5a5e12f57acbf0280cb7c63c61ad32f"
+        },
+        {
+          "path": "PNG/Controls/24/TagGreen.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "e2ed6ec9911ab0655940ff0b2b1fd7cd0f6f5f4c5bf4407de1f276b24531bd8f"
+        },
+        {
+          "path": "TGA/Controls/24/TagGreen.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "241d6d4372b49626639e554b250dc2ae4978eecdb3d22092a897593d72f0539d"
+        },
+        {
+          "path": "PNG/Controls/32/TagGreen.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "e9ad70a91c73efb94bd120d04122b09ec54baca7d182bfb9934c4951f08afa1e"
+        },
+        {
+          "path": "TGA/Controls/32/TagGreen.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "6b4c2bf6f769238e6f8641f28c95c6b741073c88556706b324c3f3bb96e018b7"
+        },
+        {
+          "path": "PNG/Controls/64/TagGreen.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "ed204cf12ca3e2231544eda0fe15e89f17f5c82b9d88e411e131626532cc8eae"
+        },
+        {
+          "path": "TGA/Controls/64/TagGreen.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "4cd53061d6f296b17cd0c1edb44521abbaeeb83eaae60f3634c9e2a794989870"
+        },
+        {
+          "path": "PNG/Controls/128/TagGreen.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "a3f2f276ae956f4d6a4a7dac633e909985f30fa788e1c22d28f30df8d31aaf59"
+        }
+      ]
+    },
+    {
+      "id": "controls.TagRed",
+      "category": "controls",
+      "name": "TagRed",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        809,
+        841,
+        979,
+        1013
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/TagRed.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "2ab0888b9fddbe172fde9c6705ac63d39baa52b584765140de873b11566015a6"
+        },
+        {
+          "path": "TGA/Controls/16/TagRed.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "e6d542fc70726db1ddc001e5741694b231c65d32b85039386311cdb8ac7b93f5"
+        },
+        {
+          "path": "PNG/Controls/24/TagRed.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "507638a6e09b67ed49c503c92a5e68a60dc50ca833266484968db28dd81d0818"
+        },
+        {
+          "path": "TGA/Controls/24/TagRed.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "3c5c1305e54d44e7a7fbed3a045bd0b2b3233d8751dbe2073bebfd9c89dfda68"
+        },
+        {
+          "path": "PNG/Controls/32/TagRed.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "3f2869bb0493b5bff5370568649e5d5f03b6c0e4387c4a14f7e91062184d3017"
+        },
+        {
+          "path": "TGA/Controls/32/TagRed.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "6b3396de7f355773c81a19f48f5b20d3a703428992c61cc0a5c9bf7db19dc9ea"
+        },
+        {
+          "path": "PNG/Controls/64/TagRed.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "b8c1b8490980c6bc2324c586e9a75ad5fdc680fe8b1ba6a5a6aeb52864efcaf0"
+        },
+        {
+          "path": "TGA/Controls/64/TagRed.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "4c35a6250d6c2bcf539732051c9c39ba2f8cdd81ef7e23c3d970830baeb65269"
+        },
+        {
+          "path": "PNG/Controls/128/TagRed.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "94f023460ac93c5c266a3d77c497848c336c0e481bf095d4fae4dc62c6213611"
+        }
+      ]
+    },
+    {
+      "id": "controls.TagGold",
+      "category": "controls",
+      "name": "TagGold",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        39,
+        1091,
+        210,
+        1265
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/TagGold.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "362896c5cc9ede111ae1856be58abde40dcfa27af6024d5ef15d454e3d951c2c"
+        },
+        {
+          "path": "TGA/Controls/16/TagGold.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "17c5bb72b197348f449aabb89ee293795a1271f1b2ad9df5d47fe852694664b0"
+        },
+        {
+          "path": "PNG/Controls/24/TagGold.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "edb7acef15f3250c52f85247e81fe01622767dc2b5093a34b42c653c24732531"
+        },
+        {
+          "path": "TGA/Controls/24/TagGold.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "ae70ee333e466ec7282fe2985874f0a1c4d30860fe52106e8588d748f78b8521"
+        },
+        {
+          "path": "PNG/Controls/32/TagGold.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "a7f837d922cf49b42db47f939ab193f9e1e65d16e9efa2f5b538546b3d06cc8c"
+        },
+        {
+          "path": "TGA/Controls/32/TagGold.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "e278f12a6e9343af71c736daf9ce73c2b47194d131bf2ee93c688a92e5a0c669"
+        },
+        {
+          "path": "PNG/Controls/64/TagGold.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "14de6c2c399b783183ae1b1d676a7a53ac7e15ba4dc0ad6fdcf2d6aafa0159cc"
+        },
+        {
+          "path": "TGA/Controls/64/TagGold.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "0064c936ab48c80cac734118769232e0f754b9324b688978c3c9fb58178d3d48"
+        },
+        {
+          "path": "PNG/Controls/128/TagGold.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "554d43965a70665f6a53c67e4f5f8d1c5a32a50f1fc9a5ed2bbd33e1009d9cad"
+        }
+      ]
+    },
+    {
+      "id": "controls.TagDark",
+      "category": "controls",
+      "name": "TagDark",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        295,
+        1094,
+        464,
+        1265
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/TagDark.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "55390226e7a8257c055371deee48df8e390ef1090eb71a3c6af5ba1108e773ab"
+        },
+        {
+          "path": "TGA/Controls/16/TagDark.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "b7a1efabded11581170933a3dc2b7b96f28a1912e47323687a6d44b64fc0de95"
+        },
+        {
+          "path": "PNG/Controls/24/TagDark.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "6a40e9b21dfaeaa5e722cdf1e2ee4fa817322254593b92a946e3ea227f23cc42"
+        },
+        {
+          "path": "TGA/Controls/24/TagDark.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "a719e1369da36fd228a49a49a1fba1d2b163301f4b506fecdc5f080e825ab6b3"
+        },
+        {
+          "path": "PNG/Controls/32/TagDark.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "42a4fc1b4d97aec5c754137495b714c68e65be64e5123671ccd4ef81f4d6566d"
+        },
+        {
+          "path": "TGA/Controls/32/TagDark.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "4fa328f0aa262e9e018b617e09ea742b2ff089f0d4565f42479c1fe46ee0c930"
+        },
+        {
+          "path": "PNG/Controls/64/TagDark.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "3bdb1ee7310536a96b97671bbed05c1e8876200f206ab51897a879f1e0d1f4b6"
+        },
+        {
+          "path": "TGA/Controls/64/TagDark.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "d024698292bd81f085aa22f821267f1709011c5cb75f51d34caa992b27c37441"
+        },
+        {
+          "path": "PNG/Controls/128/TagDark.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "36da6e7cb529efad212dd249cc9e66971ff9af8b23fc04c4b53438cea77cb77b"
+        }
+      ]
+    },
+    {
+      "id": "controls.CheckboxOn",
+      "category": "controls",
+      "name": "CheckboxOn",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        550,
+        1089,
+        734,
+        1265
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/CheckboxOn.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "78af5ee832ee7836dd805e5b812eb46256eef1f11584fed304673473aeae0dc6"
+        },
+        {
+          "path": "TGA/Controls/16/CheckboxOn.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "88dc924429af47104cbcdc347ca3c63c38379e523438a8c8e2dea911aadea2d0"
+        },
+        {
+          "path": "PNG/Controls/24/CheckboxOn.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "ef4bd8d66f9f514ee240ee3e583d32834d949b39b9e70aec1c25902e421615a5"
+        },
+        {
+          "path": "TGA/Controls/24/CheckboxOn.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "89e22c8a397d6292844ab7e44e90c529855aa627411ad7f47d6d9bfbf66d3fdd"
+        },
+        {
+          "path": "PNG/Controls/32/CheckboxOn.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "b70c13817be330f1ee430af94776a8c8bcfc10ea8cb862ea5e2603dabb557fbb"
+        },
+        {
+          "path": "TGA/Controls/32/CheckboxOn.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "29d838074cd247bded059301c174374d97e25c0c60240e9aec8142e5c5029978"
+        },
+        {
+          "path": "PNG/Controls/64/CheckboxOn.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "7b59a86d6947053776f1a37c02cb2271d2fa7713ac8dd5463d0abc1040de8f84"
+        },
+        {
+          "path": "TGA/Controls/64/CheckboxOn.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "bd35dd9dfc1d614727a1c448d68620579dedcc278dc8cc1a831b4c9edfce062d"
+        },
+        {
+          "path": "PNG/Controls/128/CheckboxOn.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "cfacb9cbd0d990b853f0549dc7dca3c8ca569377b31841ae560c174e991bda0e"
+        }
+      ]
+    },
+    {
+      "id": "controls.CheckboxOff",
+      "category": "controls",
+      "name": "CheckboxOff",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        807,
+        1089,
+        987,
+        1263
+      ],
+      "export_method": "Crop alpha bounds with 2px source padding; fit in 87.5% of square, preserving aspect and alpha.",
+      "files": [
+        {
+          "path": "PNG/Controls/16/CheckboxOff.png",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "1ff7fcc56049a98a3006d7496deb8752ec007d3e83bfde1943511dccb5d545b7"
+        },
+        {
+          "path": "TGA/Controls/16/CheckboxOff.tga",
+          "width": 16,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "b24c47d34807619684a59ec9538c9e9deef6ad8abb4423b8506fca006a6326bf"
+        },
+        {
+          "path": "PNG/Controls/24/CheckboxOff.png",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "61e352786204b148aae4bae834aee739d2e9384bb39768328c3d2a880d098d04"
+        },
+        {
+          "path": "TGA/Controls/24/CheckboxOff.tga",
+          "width": 24,
+          "height": 24,
+          "mode": "RGBA",
+          "sha256": "8457272ed782631b66d1404ebb05c8d0e8ad48519cdc9a672dd227b80a48587a"
+        },
+        {
+          "path": "PNG/Controls/32/CheckboxOff.png",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "216a91aefd7e979fb26ede0e754ff752dd9bab427ca1da1fb9be26959bb1b61e"
+        },
+        {
+          "path": "TGA/Controls/32/CheckboxOff.tga",
+          "width": 32,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "92cefe023f68b66f6244ee84096a5373fd0cafbd84289b6bc96c7c6e3afad9cf"
+        },
+        {
+          "path": "PNG/Controls/64/CheckboxOff.png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "8b63b1894876739bc341a921788b093004b60b48b2179b55f5f6f9f0b5d66f6b"
+        },
+        {
+          "path": "TGA/Controls/64/CheckboxOff.tga",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "99adf64a583f59c7263f0f63dc2f9435676827b050479b174e02ef4be092a9c1"
+        },
+        {
+          "path": "PNG/Controls/128/CheckboxOff.png",
+          "width": 128,
+          "height": 128,
+          "mode": "RGBA",
+          "sha256": "244bba3d650366c043ba202f22880eafd82aa0010636dce5f612eabbbd9223f0"
+        }
+      ]
+    },
+    {
+      "id": "volume.VolumeMute",
+      "category": "volume",
+      "name": "VolumeMute",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        45,
+        1336,
+        237,
+        1472
+      ],
+      "export_method": "Crop generated state; scale to shared speaker-body height and left anchor on a 2:1 canvas. Alpha preserved.",
+      "files": [
+        {
+          "path": "PNG/Volume/32x16/VolumeMute.png",
+          "width": 32,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "ce2dfbed91ca6fe5d4336011d0ace0b18647b7fb3ab51aa3c9f213df772fd602"
+        },
+        {
+          "path": "TGA/Volume/32x16/VolumeMute.tga",
+          "width": 32,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "ae6a0fc6f6239f6cc634bf8cb2746ecfe9926a24452b5d5053c3b74f41b1fa3f"
+        },
+        {
+          "path": "PNG/Volume/64x32/VolumeMute.png",
+          "width": 64,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "9dd95f5b561f8e1bd557551b3085154e0d65cd2f49f3dc9b501113189fcb67c9"
+        },
+        {
+          "path": "TGA/Volume/64x32/VolumeMute.tga",
+          "width": 64,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "5994ca568f3e46ae3ba6705f7baab747ffcab422329f5ae49954fd13f622820e"
+        },
+        {
+          "path": "PNG/Volume/128x64/VolumeMute.png",
+          "width": 128,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "8353a825a63053a6a0ac11b0488aeca510ce074825ecc369e65a08f0d5faea84"
+        }
+      ]
+    },
+    {
+      "id": "volume.VolumeLow",
+      "category": "volume",
+      "name": "VolumeLow",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        300,
+        1336,
+        449,
+        1472
+      ],
+      "export_method": "Crop generated state; scale to shared speaker-body height and left anchor on a 2:1 canvas. Alpha preserved.",
+      "files": [
+        {
+          "path": "PNG/Volume/32x16/VolumeLow.png",
+          "width": 32,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "57d9bc753c5f77f6139413d4d7c2cd4e84b83190ba5c7af77dc5556b993e3d25"
+        },
+        {
+          "path": "TGA/Volume/32x16/VolumeLow.tga",
+          "width": 32,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "3a057ca8958ad30823f81a2897535ef0cfde7551a6cc9aede243cd0f2f4f32d2"
+        },
+        {
+          "path": "PNG/Volume/64x32/VolumeLow.png",
+          "width": 64,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "264f80c6cbf39dc07c177415a3d89b06e1ad6348b4f71c02398958ccc35047a6"
+        },
+        {
+          "path": "TGA/Volume/64x32/VolumeLow.tga",
+          "width": 64,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "9f11cf147a4ab348481aba4654e4fd1bc10819f3733f7376001f74a18a032fa0"
+        },
+        {
+          "path": "PNG/Volume/128x64/VolumeLow.png",
+          "width": 128,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "bd1e21fe0faced0abbee8009eff43857f118aaa5dd2526eecfbe342eee6292e5"
+        }
+      ]
+    },
+    {
+      "id": "volume.VolumeMedium",
+      "category": "volume",
+      "name": "VolumeMedium",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        551,
+        1336,
+        725,
+        1472
+      ],
+      "export_method": "Crop generated state; scale to shared speaker-body height and left anchor on a 2:1 canvas. Alpha preserved.",
+      "files": [
+        {
+          "path": "PNG/Volume/32x16/VolumeMedium.png",
+          "width": 32,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "57146dddb5e4cc4fadd7e0cdef69a7bef4e103871b9326fca1045a867bdad1f2"
+        },
+        {
+          "path": "TGA/Volume/32x16/VolumeMedium.tga",
+          "width": 32,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "7ffc27bf73b8f2f02248cd084c4670fafb536265e15504339e248518942a3381"
+        },
+        {
+          "path": "PNG/Volume/64x32/VolumeMedium.png",
+          "width": 64,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "ed14840d33c69c58a5b8772416b644a1ca551a21853bd37cde5637e221d3dbf3"
+        },
+        {
+          "path": "TGA/Volume/64x32/VolumeMedium.tga",
+          "width": 64,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "ba0f5508652478033500ee54883196a487924352af3c1ba26a49e4d05586c0ad"
+        },
+        {
+          "path": "PNG/Volume/128x64/VolumeMedium.png",
+          "width": 128,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "866241e846cbe45c41efc4614dd410751e463a2d1594f047275f6ece8118a135"
+        }
+      ]
+    },
+    {
+      "id": "volume.VolumeHigh",
+      "category": "volume",
+      "name": "VolumeHigh",
+      "source": "Source-Art/controls-atlas.png",
+      "source_box": [
+        784,
+        1328,
+        985,
+        1479
+      ],
+      "export_method": "Crop generated state; scale to shared speaker-body height and left anchor on a 2:1 canvas. Alpha preserved.",
+      "files": [
+        {
+          "path": "PNG/Volume/32x16/VolumeHigh.png",
+          "width": 32,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "3c262524b885d9c275d8b66c1c93f10e1cb3eaa75cd40bfe96c310144d487601"
+        },
+        {
+          "path": "TGA/Volume/32x16/VolumeHigh.tga",
+          "width": 32,
+          "height": 16,
+          "mode": "RGBA",
+          "sha256": "c525a86dbac1b8af13b039f8c8b65236cd651d9a6fff0fc36b5a1d775c5c53fa"
+        },
+        {
+          "path": "PNG/Volume/64x32/VolumeHigh.png",
+          "width": 64,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "137741e0b47cd413281e6271c079920356257bce02c7b88382e1bc594c9f2487"
+        },
+        {
+          "path": "TGA/Volume/64x32/VolumeHigh.tga",
+          "width": 64,
+          "height": 32,
+          "mode": "RGBA",
+          "sha256": "00903fcecba1eb820851e86961296e45d570360365c04472c93db73363fbc72c"
+        },
+        {
+          "path": "PNG/Volume/128x64/VolumeHigh.png",
+          "width": 128,
+          "height": 64,
+          "mode": "RGBA",
+          "sha256": "7e177d373b44c934f1ae7d14e2f583f92ab37bc67eaa25723ee8694178543976"
+        }
+      ]
+    }
+  ]
+}

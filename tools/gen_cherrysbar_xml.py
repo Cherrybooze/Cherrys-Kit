@@ -57,12 +57,12 @@ def bar(name):
     lower = name.lower()
     point = "BOTTOMLEFT" if name == "Bottom" else "TOPLEFT"
     tiles = "\n".join(
-        f'				<Texture name="{frame}T{i}" file="{TEX}">{size(256, 30)}'
+        f'				<Texture name="{frame}T{i}" file="{TEX}">{size(256, 24)}'
         f'{anchor(point, x=(i - 1) * 256)}</Texture>'
         for i in range(1, TILES + 1))
     calls = "CherrysBar.Bars"
     return f"""	<Frame name="{frame}" parent="UIParent" frameStrata="BACKGROUND" enableMouse="true" hidden="true">
-		{size(32, 26)}
+		{size(32, 24)}
 		{anchor(rel="UIParent")}
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -87,7 +87,7 @@ def bar(name):
 		{anchor(rel="UIParent")}
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_Pin{name}Icon" file="{ICONS}\\pin"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
+				<Texture name="CBar_Pin{name}Icon" file="{ICONS}\\PinIn"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -101,7 +101,7 @@ def bar(name):
 		{anchor(rel="UIParent")}
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_Lock{name}Icon" file="{ICONS}\\unlock"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
+				<Texture name="CBar_Lock{name}Icon" file="{ICONS}\\Unlock"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -115,13 +115,13 @@ def bar(name):
 def display(i):
     n = f"CBar_D{i}"
     return f"""	<Frame name="{n}" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		{size(60, 26)}
+		{size(60, 24)}
 		{anchor(rel="UIParent")}
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="{n}Grip" file="{ICONS}\\grip" hidden="true">{size(14, 14)}{anchor("LEFT", "$parent", "LEFT", 0, 0)}</Texture>
-				<Texture name="{n}Icon" file="{TEX}">{size(18, 18)}{anchor("LEFT", "$parent", "LEFT", 4, 0)}</Texture>
-				<FontString name="{n}Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight>{anchor("LEFT", "$parent", "LEFT", 26, 0)}</FontString>
+				<Texture name="{n}Grip" file="{ICONS}\\Resize" hidden="true">{size(14, 14)}{anchor("LEFT", "$parent", "LEFT", 0, 0)}</Texture>
+				<Texture name="{n}Icon" file="{TEX}">{size(16, 16)}{anchor("LEFT", "$parent", "LEFT", 4, 0)}</Texture>
+				<FontString name="{n}Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight>{anchor("LEFT", "$parent", "LEFT", 24, 0)}</FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="{n}Hover" file="{TEX}" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -179,8 +179,8 @@ def bar_row(name, y):
 				<Frames>
 					{check(n + "Show", 2, 2, f"{c}(&quot;{lower}&quot;, &quot;show&quot;);")}
 					{button(n + "Skin", "", 130, 22, 120, 2, f"{c}(&quot;{lower}&quot;, &quot;skin&quot;);")}
-					{button(n + "Minus", "-", 26, 22, 312, 2, f"{c}(&quot;{lower}&quot;, &quot;minus&quot;);")}
-					{button(n + "Plus", "+", 26, 22, 382, 2, f"{c}(&quot;{lower}&quot;, &quot;plus&quot;);")}
+					{icon_button(n + "Minus", "Minus", 20, 316, 3, f"{c}(&quot;{lower}&quot;, &quot;minus&quot;);")}
+					{icon_button(n + "Plus", "Plus", 20, 384, 3, f"{c}(&quot;{lower}&quot;, &quot;plus&quot;);")}
 					{check(n + "Auto", 416, 2, f"{c}(&quot;{lower}&quot;, &quot;auto&quot;);")}
 				</Frames>
 			</Frame>"""
@@ -200,7 +200,7 @@ def chip(i):
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="{n}Icon" file="{TEX}">{size(18, 18)}{anchor("LEFT", "$parent", "LEFT", 3, 0)}</Texture>
-						{label(n + "Text", "", 11, 44, 18, 22, 3)}
+						<FontString name="{n}Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight>{anchor("LEFT", "$parent", "LEFT", 23, 0)}</FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -227,8 +227,8 @@ def general_row(i):
 				</Layers>
 				<Frames>
 					{check(n + "Check", 2, 2, f"CherrysBar.Options.RowClick({i}, &quot;check&quot;);")}
-					{button(n + "Minus", "-", 26, 22, 274, 2, f"CherrysBar.Options.RowClick({i}, &quot;minus&quot;);")}
-					{button(n + "Plus", "+", 26, 22, 350, 2, f"CherrysBar.Options.RowClick({i}, &quot;plus&quot;);")}
+					{icon_button(n + "Minus", "Minus", 20, 278, 3, f"CherrysBar.Options.RowClick({i}, &quot;minus&quot;);")}
+					{icon_button(n + "Plus", "Plus", 20, 352, 3, f"CherrysBar.Options.RowClick({i}, &quot;plus&quot;);")}
 				</Frames>
 				<Scripts>
 					<OnEnter>CherrysBar.Options.RowEnter({i}, this);</OnEnter>
@@ -313,7 +313,7 @@ def build():
 			</Layer>
 		</Layers>
 		<Frames>
-			{icon_button("CBar_OptionsClose", "close", 24, 846, 10, "CBar_Options:Hide();")}
+			{icon_button("CBar_OptionsClose", "Close", 24, 846, 10, "CBar_Options:Hide();")}
 			{bar_row("Top", 60)}
 			{bar_row("Bottom", 88)}
 			{button("CBar_OptionsLock", "", 240, 24, 626, 122, o + ".ToggleLock();")}

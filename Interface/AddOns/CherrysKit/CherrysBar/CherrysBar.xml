@@ -10,26 +10,26 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_BarTop" parent="UIParent" frameStrata="BACKGROUND" enableMouse="true" hidden="true">
-		<Size><AbsDimension x="32" y="26" /></Size>
+		<Size><AbsDimension x="32" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="CBar_BarTopT1" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT2" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="256" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT3" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="512" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT4" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="768" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT5" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="1024" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT6" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="1280" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT7" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="1536" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT8" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="1792" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT9" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2048" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT10" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2304" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT11" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2560" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT12" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2816" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT13" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="3072" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT14" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="3328" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT15" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="3584" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarTopT16" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="3840" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT1" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT2" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="256" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT3" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="512" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT4" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="768" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT5" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="1024" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT6" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="1280" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT7" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="1536" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT8" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="1792" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT9" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2048" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT10" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2304" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT11" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2560" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT12" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2816" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT13" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="3072" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT14" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="3328" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT15" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="3584" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarTopT16" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="3840" y="0" /></Offset></Anchor></Anchors></Texture>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -50,7 +50,7 @@
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_PinTopIcon" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\pin"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
+				<Texture name="CBar_PinTopIcon" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\PinIn"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -64,7 +64,7 @@
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_LockTopIcon" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\unlock"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
+				<Texture name="CBar_LockTopIcon" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Unlock"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -74,26 +74,26 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_BarBottom" parent="UIParent" frameStrata="BACKGROUND" enableMouse="true" hidden="true">
-		<Size><AbsDimension x="32" y="26" /></Size>
+		<Size><AbsDimension x="32" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="CBar_BarBottomT1" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT2" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="256" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT3" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="512" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT4" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="768" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT5" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="1024" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT6" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="1280" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT7" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="1536" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT8" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="1792" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT9" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="2048" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT10" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="2304" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT11" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="2560" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT12" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="2816" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT13" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="3072" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT14" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="3328" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT15" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="3584" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_BarBottomT16" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="30" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="3840" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT1" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT2" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="256" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT3" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="512" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT4" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="768" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT5" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="1024" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT6" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="1280" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT7" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="1536" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT8" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="1792" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT9" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="2048" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT10" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="2304" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT11" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="2560" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT12" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="2816" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT13" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="3072" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT14" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="3328" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT15" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="3584" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_BarBottomT16" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="256" y="24" /></Size><Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="3840" y="0" /></Offset></Anchor></Anchors></Texture>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -114,7 +114,7 @@
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_PinBottomIcon" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\pin"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
+				<Texture name="CBar_PinBottomIcon" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\PinIn"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -128,7 +128,7 @@
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_LockBottomIcon" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\unlock"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
+				<Texture name="CBar_LockBottomIcon" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Unlock"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors></Texture>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -138,13 +138,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D1" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D1Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D1Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D1Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D1Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D1Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D1Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D1Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -159,13 +159,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D2" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D2Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D2Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D2Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D2Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D2Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D2Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D2Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -180,13 +180,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D3" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D3Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D3Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D3Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D3Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D3Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D3Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D3Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -201,13 +201,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D4" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D4Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D4Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D4Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D4Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D4Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D4Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D4Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -222,13 +222,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D5" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D5Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D5Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D5Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D5Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D5Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D5Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D5Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -243,13 +243,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D6" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D6Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D6Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D6Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D6Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D6Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D6Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D6Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -264,13 +264,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D7" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D7Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D7Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D7Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D7Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D7Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D7Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D7Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -285,13 +285,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D8" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D8Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D8Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D8Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D8Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D8Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D8Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D8Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -306,13 +306,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D9" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D9Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D9Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D9Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D9Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D9Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D9Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D9Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -327,13 +327,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D10" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D10Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D10Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D10Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D10Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D10Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D10Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D10Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -348,13 +348,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D11" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D11Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D11Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D11Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D11Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D11Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D11Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D11Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -369,13 +369,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D12" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D12Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D12Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D12Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D12Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D12Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D12Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D12Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -390,13 +390,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D13" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D13Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D13Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D13Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D13Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D13Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D13Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D13Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -411,13 +411,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D14" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D14Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D14Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D14Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D14Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D14Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D14Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D14Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -432,13 +432,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D15" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D15Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D15Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D15Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D15Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D15Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D15Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D15Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -453,13 +453,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D16" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D16Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D16Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D16Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D16Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D16Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D16Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D16Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -474,13 +474,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D17" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D17Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D17Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D17Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D17Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D17Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D17Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D17Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -495,13 +495,13 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CBar_D18" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
-		<Size><AbsDimension x="60" y="26" /></Size>
+		<Size><AbsDimension x="60" y="24" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="CBar_D18Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\grip" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
-				<Texture name="CBar_D18Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
-				<FontString name="CBar_D18Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="26" y="0" /></Offset></Anchor></Anchors></FontString>
+				<Texture name="CBar_D18Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D18Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D18Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture name="CBar_D18Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
@@ -1018,7 +1018,7 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="CBar_OptionsClose"><Size><AbsDimension x="24" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="846" y="10" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptionsCloseTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\close" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\close" alphaMode="ADD" /><Scripts><OnClick>CBar_Options:Hide();</OnClick></Scripts></Button>
+			<Button name="CBar_OptionsClose"><Size><AbsDimension x="24" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="846" y="10" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptionsCloseTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Close" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Close" alphaMode="ADD" /><Scripts><OnClick>CBar_Options:Hide();</OnClick></Scripts></Button>
 						<Frame name="CBar_OptBarTop">
 				<Size><AbsDimension x="560" y="26" /></Size>
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="14" y="60" /></Offset></Anchor></Anchors>
@@ -1033,8 +1033,8 @@
 				<Frames>
 					<CheckButton name="CBar_OptBarTopShow" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;top&quot;, &quot;show&quot;);</OnClick></Scripts></CheckButton>
 					<Button name="CBar_OptBarTopSkin" inherits="UIPanelButtonTemplate" text=""><Size><AbsDimension x="130" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="120" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;top&quot;, &quot;skin&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptBarTopMinus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="312" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;top&quot;, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptBarTopPlus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="382" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;top&quot;, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptBarTopMinus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="316" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptBarTopMinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;top&quot;, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptBarTopPlus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="384" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptBarTopPlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;top&quot;, &quot;plus&quot;);</OnClick></Scripts></Button>
 					<CheckButton name="CBar_OptBarTopAuto" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="416" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;top&quot;, &quot;auto&quot;);</OnClick></Scripts></CheckButton>
 				</Frames>
 			</Frame>
@@ -1052,8 +1052,8 @@
 				<Frames>
 					<CheckButton name="CBar_OptBarBottomShow" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;bottom&quot;, &quot;show&quot;);</OnClick></Scripts></CheckButton>
 					<Button name="CBar_OptBarBottomSkin" inherits="UIPanelButtonTemplate" text=""><Size><AbsDimension x="130" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="120" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;bottom&quot;, &quot;skin&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptBarBottomMinus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="312" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;bottom&quot;, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptBarBottomPlus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="382" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;bottom&quot;, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptBarBottomMinus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="316" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptBarBottomMinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;bottom&quot;, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptBarBottomPlus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="384" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptBarBottomPlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;bottom&quot;, &quot;plus&quot;);</OnClick></Scripts></Button>
 					<CheckButton name="CBar_OptBarBottomAuto" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="416" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.BarClick(&quot;bottom&quot;, &quot;auto&quot;);</OnClick></Scripts></CheckButton>
 				</Frames>
 			</Frame>
@@ -1070,7 +1070,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip1Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip1Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip1Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1092,7 +1092,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip2Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip2Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip2Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1114,7 +1114,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip3Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip3Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip3Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1136,7 +1136,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip4Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip4Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip4Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1158,7 +1158,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip5Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip5Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip5Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1180,7 +1180,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip6Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip6Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip6Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1202,7 +1202,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip7Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip7Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip7Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1224,7 +1224,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip8Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip8Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip8Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1246,7 +1246,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip9Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip9Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip9Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1268,7 +1268,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip10Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip10Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip10Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1290,7 +1290,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip11Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip11Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip11Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1312,7 +1312,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip12Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip12Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip12Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1334,7 +1334,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip13Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip13Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip13Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1356,7 +1356,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip14Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip14Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip14Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1378,7 +1378,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip15Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip15Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip15Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1400,7 +1400,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip16Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip16Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip16Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1422,7 +1422,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip17Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip17Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip17Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1444,7 +1444,7 @@
 					</Layer>
 					<Layer level="ARTWORK">
 						<Texture name="CBar_Chip18Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
-						<FontString name="CBar_Chip18Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><Size><AbsDimension x="44" y="18" /></Size><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="3" /></Offset></Anchor></Anchors></FontString>
+						<FontString name="CBar_Chip18Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
 					</Layer>
 				</Layers>
 				<Scripts>
@@ -1492,8 +1492,8 @@
 				</Layers>
 				<Frames>
 					<CheckButton name="CBar_OptRow1Check" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(1, &quot;check&quot;);</OnClick></Scripts></CheckButton>
-					<Button name="CBar_OptRow1Minus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="274" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(1, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptRow1Plus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="350" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(1, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow1Minus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="278" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow1MinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(1, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow1Plus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow1PlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(1, &quot;plus&quot;);</OnClick></Scripts></Button>
 				</Frames>
 				<Scripts>
 					<OnEnter>CherrysBar.Options.RowEnter(1, this);</OnEnter>
@@ -1511,8 +1511,8 @@
 				</Layers>
 				<Frames>
 					<CheckButton name="CBar_OptRow2Check" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(2, &quot;check&quot;);</OnClick></Scripts></CheckButton>
-					<Button name="CBar_OptRow2Minus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="274" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(2, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptRow2Plus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="350" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(2, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow2Minus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="278" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow2MinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(2, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow2Plus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow2PlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(2, &quot;plus&quot;);</OnClick></Scripts></Button>
 				</Frames>
 				<Scripts>
 					<OnEnter>CherrysBar.Options.RowEnter(2, this);</OnEnter>
@@ -1530,8 +1530,8 @@
 				</Layers>
 				<Frames>
 					<CheckButton name="CBar_OptRow3Check" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(3, &quot;check&quot;);</OnClick></Scripts></CheckButton>
-					<Button name="CBar_OptRow3Minus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="274" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(3, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptRow3Plus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="350" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(3, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow3Minus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="278" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow3MinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(3, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow3Plus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow3PlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(3, &quot;plus&quot;);</OnClick></Scripts></Button>
 				</Frames>
 				<Scripts>
 					<OnEnter>CherrysBar.Options.RowEnter(3, this);</OnEnter>
@@ -1549,8 +1549,8 @@
 				</Layers>
 				<Frames>
 					<CheckButton name="CBar_OptRow4Check" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(4, &quot;check&quot;);</OnClick></Scripts></CheckButton>
-					<Button name="CBar_OptRow4Minus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="274" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(4, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptRow4Plus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="350" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(4, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow4Minus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="278" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow4MinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(4, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow4Plus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow4PlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(4, &quot;plus&quot;);</OnClick></Scripts></Button>
 				</Frames>
 				<Scripts>
 					<OnEnter>CherrysBar.Options.RowEnter(4, this);</OnEnter>
@@ -1568,8 +1568,8 @@
 				</Layers>
 				<Frames>
 					<CheckButton name="CBar_OptRow5Check" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(5, &quot;check&quot;);</OnClick></Scripts></CheckButton>
-					<Button name="CBar_OptRow5Minus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="274" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(5, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptRow5Plus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="350" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(5, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow5Minus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="278" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow5MinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(5, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow5Plus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow5PlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(5, &quot;plus&quot;);</OnClick></Scripts></Button>
 				</Frames>
 				<Scripts>
 					<OnEnter>CherrysBar.Options.RowEnter(5, this);</OnEnter>
@@ -1587,8 +1587,8 @@
 				</Layers>
 				<Frames>
 					<CheckButton name="CBar_OptRow6Check" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(6, &quot;check&quot;);</OnClick></Scripts></CheckButton>
-					<Button name="CBar_OptRow6Minus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="274" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(6, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptRow6Plus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="350" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(6, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow6Minus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="278" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow6MinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(6, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow6Plus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow6PlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(6, &quot;plus&quot;);</OnClick></Scripts></Button>
 				</Frames>
 				<Scripts>
 					<OnEnter>CherrysBar.Options.RowEnter(6, this);</OnEnter>
@@ -1606,8 +1606,8 @@
 				</Layers>
 				<Frames>
 					<CheckButton name="CBar_OptRow7Check" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(7, &quot;check&quot;);</OnClick></Scripts></CheckButton>
-					<Button name="CBar_OptRow7Minus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="274" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(7, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptRow7Plus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="350" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(7, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow7Minus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="278" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow7MinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(7, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow7Plus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow7PlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(7, &quot;plus&quot;);</OnClick></Scripts></Button>
 				</Frames>
 				<Scripts>
 					<OnEnter>CherrysBar.Options.RowEnter(7, this);</OnEnter>
@@ -1625,8 +1625,8 @@
 				</Layers>
 				<Frames>
 					<CheckButton name="CBar_OptRow8Check" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="22" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="2" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(8, &quot;check&quot;);</OnClick></Scripts></CheckButton>
-					<Button name="CBar_OptRow8Minus" inherits="UIPanelButtonTemplate" text="-"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="274" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(8, &quot;minus&quot;);</OnClick></Scripts></Button>
-					<Button name="CBar_OptRow8Plus" inherits="UIPanelButtonTemplate" text="+"><Size><AbsDimension x="26" y="22" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="350" y="2" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.RowClick(8, &quot;plus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow8Minus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="278" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow8MinusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Minus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(8, &quot;minus&quot;);</OnClick></Scripts></Button>
+					<Button name="CBar_OptRow8Plus"><Size><AbsDimension x="20" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="3" /></Offset></Anchor></Anchors><NormalTexture name="CBar_OptRow8PlusTex" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" /><HighlightTexture file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Plus" alphaMode="ADD" /><Scripts><OnClick>CherrysBar.Options.RowClick(8, &quot;plus&quot;);</OnClick></Scripts></Button>
 				</Frames>
 				<Scripts>
 					<OnEnter>CherrysBar.Options.RowEnter(8, this);</OnEnter>

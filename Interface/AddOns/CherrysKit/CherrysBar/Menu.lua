@@ -32,7 +32,7 @@ local function draw()
         local icon = row(i, "Icon")
         local file = item.icon
         if item.checked ~= nil then
-          file = G.Icon(item.checked and "check_on" or "check_off")
+          file = G.Icon(item.checked and "CheckboxOn" or "CheckboxOff")
         end
         if file then
           G.Try(icon, "SetTexture", file)
@@ -218,10 +218,10 @@ function M.DisplayRows(def, frame)
   else
     rows[#rows + 1] = { text = "Move to the top bar", click = moveTo("top"), keepOpen = true }
   end
-  rows[#rows + 1] = { text = "Hide this display", icon = G.Icon("close"), click = moveTo("off") }
+  rows[#rows + 1] = { text = "Hide this display", icon = G.Icon("Close"), click = moveTo("off") }
   rows[#rows + 1] = { text = G.S().locked and "Unlock to drag displays" or "Lock the displays",
-    icon = G.Icon(G.S().locked and "unlock" or "lock"), click = function() G.Bars.SetLocked(not G.S().locked) end }
-  rows[#rows + 1] = { text = "All options (/cbar)", icon = G.Icon("refresh"), click = function() G.Options.Toggle() end }
+    icon = G.Icon(G.S().locked and "Unlock" or "Lock"), click = function() G.Bars.SetLocked(not G.S().locked) end }
+  rows[#rows + 1] = { text = "All options (/cbar)", click = function() G.Options.Toggle() end }
   return rows
 end
 
