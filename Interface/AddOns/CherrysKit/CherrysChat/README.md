@@ -1,6 +1,6 @@
 # Cherry's Chat
 
-Version **0.11.0** · Kit release **0.11.108** · [All addons / hub](../README.md)
+Version **0.11.0** · Kit release **0.11.109** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 

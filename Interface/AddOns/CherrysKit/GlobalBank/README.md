@@ -1,10 +1,14 @@
 # Global Bank
 
-Version **1.4.11** · Kit release **0.11.107** · [All addons / hub](../README.md)
+Version **1.4.12** · Kit release **0.11.107** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.12
+
+Gear no longer stacks in the Bank tab. Each piece shows its durability, plus level, tier upgrades, runes and stats when you hover it, and the name search finds stats too. A character saves these the next time it logs in.
 
 ## Updated in 1.4.11
 

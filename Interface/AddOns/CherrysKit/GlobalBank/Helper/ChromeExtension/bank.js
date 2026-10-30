@@ -55,7 +55,7 @@ const GBBank = (() => {
       for (const place of ['bag', 'bank']) {
         for (const item of character[place] || []) {
           list.push({id: item.id, name: String(item.name || 'Unknown item'), icon: item.icon, count: Number(item.count) || 1,
-            type: typeOf(item.id, item.icon), bound: !!item.bound, character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
+            type: typeOf(item.id, item.icon), bound: !!item.bound, gear: item.gear || null, character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
         }
       }
     }
@@ -63,7 +63,8 @@ const GBBank = (() => {
   }
   function applyFilters(list, filters) {
     const text = (filters.text || '').toLowerCase();
-    return list.filter(entry => (!text || entry.name.toLowerCase().includes(text))
+    return list.filter(entry => (!text || entry.name.toLowerCase().includes(text)
+        || (entry.gear && entry.gear.stats.concat(entry.gear.runes).some(name => name.toLowerCase().includes(text))))
       && (!filters.type || entry.type === filters.type)
       && (!filters.place || entry.place === filters.place)
       && (!filters.hidden || !filters.hidden.has(entry.character))
@@ -186,12 +187,28 @@ const GBBank = (() => {
       return line;
     }));
   }
+  // Gear is one of a kind, with its own durability and stats. Older saves have no details, so its type decides.
+  function stackable(entry) {
+    return !entry.gear && !EQUIPPABLE.has(entry.type);
+  }
+  // A piece of gear's details, one line each, for the tooltip
+  function gearLines(gear) {
+    const lines = [`Durability ${formatNumber(gear.dura)} / ${formatNumber(gear.maxDura)}`];
+    const levels = [];
+    if (gear.plus > 0) levels.push(`+${gear.plus}`);
+    if (gear.tier > 0) levels.push(`Tier +${gear.tier}`);
+    if (levels.length) lines.push(levels.join(' · '));
+    if (gear.stats.length) lines.push(`Stats: ${gear.stats.join(', ')}`);
+    if (gear.runes.length) lines.push(`Runes: ${gear.runes.join(', ')}`);
+    if (gear.freeSlots > 0) lines.push(`Free rune slots: ${gear.freeSlots}`);
+    return lines;
+  }
   // One cell for each item, or for each stack when stacking is off, and everywhere it is
   function cells(list, stack) {
     const found = new Map();
     list.forEach((entry, index) => {
-      const key = stack ? String(entry.id || entry.name) : index;
-      if (!found.has(key)) found.set(key, {id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, total: 0, places: []});
+      const key = stack && stackable(entry) ? String(entry.id || entry.name) : index;
+      if (!found.has(key)) found.set(key, {id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, gear: entry.gear, total: 0, places: []});
       const cell = found.get(key);
       cell.total += entry.count;
       cell.places.push(entry);
@@ -222,7 +239,10 @@ const GBBank = (() => {
       tooltip.style.top = Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 8) + 'px';
     }
     function showTooltip(event, cell) {
-      tooltip.replaceChildren(make('strong', '', cell.name), make('span', 'bank-tip-type', `${cell.type} · ${formatNumber(cell.total)} in all`));
+      const title = make('strong', '', cell.name);
+      if (/^[0-9a-f]{6}$/i.test(cell.gear?.color || '')) title.style.color = `#${cell.gear.color}`;
+      tooltip.replaceChildren(title, make('span', 'bank-tip-type', `${cell.type} · ${formatNumber(cell.total)} in all`));
+      if (cell.gear) for (const line of gearLines(cell.gear)) tooltip.append(make('span', 'bank-tip-row', line));
       const rows = [...cell.places].sort((a, b) => a.character.localeCompare(b.character) || a.place.localeCompare(b.place) || a.slot - b.slot);
       for (const entry of rows.slice(0, MAX_TOOLTIP_ROWS)) {
         const row = make('span', 'bank-tip-row');
@@ -268,6 +288,7 @@ const GBBank = (() => {
         else if (cell.icon) needed.push(cell.icon);
         slot.append(picture);
         if (cell.total > 1) slot.append(make('span', 'bank-count', cell.total > 9999 ? `${Math.floor(cell.total / 1000)}k` : String(cell.total)));
+        else if (cell.gear?.plus > 0) slot.append(make('span', 'bank-count', `+${cell.gear.plus}`));
         slot.addEventListener('mouseenter', event => showTooltip(event, cell));
         slot.addEventListener('mousemove', moveTooltip);
         slot.addEventListener('mouseleave', () => { tooltip.hidden = true; });
@@ -413,5 +434,5 @@ const GBBank = (() => {
     }
     return {reload, update};
   }
-  return {create, typeOf, locationLabel, entries, applyFilters, cells, formatDuration, totals, isHidden, toggleHidden, currencyTable, renderCurrencies, rosterRows, renderRoster};
+  return {create, typeOf, locationLabel, entries, applyFilters, cells, formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, currencyTable, renderCurrencies, rosterRows, renderRoster};
 })();
