@@ -1,8 +1,22 @@
-# In-game checks for kit 0.11.101
+# In-game checks for kit 0.11.103
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+
+## 0.11.103 Global Bank without the terminal window
+
+This runs in Chrome, not the game. It has run on real Chrome 155 with a test profile and C's real saved data: icons, both tabs and Update now all worked.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| G1 | Reload the extension, then its icon, then **Open local bank and auction tools**. | The Bank tab shows one grid of everything, with real icons. About 2% of the game's icons use a packing the page can't read; those show the item's first two letters. |
+| G2 | Hover an item you have in several places. | The tooltip lists each character with its bag or bank slot and count, such as Bank 45 (page 2, slot 5). |
+| G3 | Try the name search, Type, Where, character level, the character list, Sort by, and Stack the same item. | The grid and the count follow each one, and it stays easy to scroll. Item types are a guess from IDs and icon names, so tell me where one is wrong. |
+| G7 | Turn on **Start the Global Bank helper automatically when Chrome is open**. | No window opens. Within a few seconds the top of the page says the helper is running, started automatically, and for how long. Log out of a character: the data updates by itself. |
+| G8 | Turn it off, then turn it on and close Chrome completely. | Off: the helper stops. Closing Chrome: it stops within a few seconds, and starts again the next time Chrome opens. A helper you opened in its own window isn't closed by the toggle. |
+| G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
+| G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 
 ## 0.11.101 real time, daily reset, extension setup and single-addon installs
 

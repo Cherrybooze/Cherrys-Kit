@@ -3,30 +3,69 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Global Bank local tools</title>
+  <title>Global Bank</title>
   <link rel="stylesheet" href="control.css">
+  <script defer src="icons.js"></script>
+  <script defer src="bank.js"></script>
   <script defer src="control.js"></script>
 </head>
 <body>
   <main>
-    <h1>Global Bank local tools</h1>
-    <p>Read your character data and auction cache on this computer. These tools do not buy items.</p>
-    <section aria-labelledby="helper-title">
-      <h2 id="helper-title">Global Bank helper</h2>
-      <p id="helper-status" role="status">Checking the local helper…</p>
-      <button id="check-helper" type="button">Check helper</button>
-      <button id="start-helper" type="button" disabled>Start helper</button>
-      <p class="hint">The helper collects your saved character data. Keep its window open while you play.</p>
+    <h1>Global Bank</h1>
+    <section class="status-bar" aria-label="Status">
+      <p id="status-helper" role="status">Checking the helper…</p>
+      <p id="status-data" class="hint"></p>
+      <label class="status-toggle"><input id="auto-helper" type="checkbox"> Start the Global Bank helper automatically when Chrome is open</label>
     </section>
-    <section aria-labelledby="bank-title">
-      <h2 id="bank-title">Characters, bags and bank</h2>
-      <p>Type a command, then press Enter. Try <code>list</code>, <code>list gold</code>, <code>search mana</code>, <code>show Name</code>, or <code>help</code>.</p>
-      <form id="bank-form">
-        <label for="bank-command">Bank command</label>
-        <div class="command"><span aria-hidden="true">&gt;</span><input id="bank-command" name="command" maxlength="256" autocomplete="off" value="list"><button type="submit">Run</button></div>
-      </form>
-      <pre id="bank-output" aria-live="polite">No bank command has been run yet.</pre>
-    </section>
+    <nav class="tabs" role="tablist" aria-label="Global Bank">
+      <button type="button" role="tab" data-tab="bank" aria-selected="true">Bank</button>
+      <button type="button" role="tab" data-tab="terminal" aria-selected="false">Terminal</button>
+      <button type="button" role="tab" data-tab="auctions" aria-selected="false">Auctions</button>
+    </nav>
+    <div id="tab-bank" class="tab-panel">
+      <section class="bank-filters" aria-label="Search and filters">
+        <div class="bank-filter-row">
+          <label class="bank-wide">Item name <input id="bank-search" maxlength="80" autocomplete="off" placeholder="For example: mana stone"></label>
+          <label>Type <select id="bank-type"><option value="">All types</option><option>Armour</option><option>Weapons</option><option>Jewellery</option><option>Runes</option><option>Potions</option><option>Materials</option><option>Recipes</option><option>Mounts and pets</option><option>Other</option></select></label>
+          <label>Where <select id="bank-place"><option value="">Bag and bank</option><option value="bag">Bag</option><option value="bank">Bank</option></select></label>
+          <label>Character level <span class="bank-levels"><input id="bank-min-level" type="number" min="0" placeholder="Min" aria-label="Lowest character level"><input id="bank-max-level" type="number" min="0" placeholder="Max" aria-label="Highest character level"></span></label>
+          <label>Sort by <select id="bank-sort"><option value="name">Name</option><option value="count">Count</option><option value="type">Type</option></select></label>
+          <button id="bank-update" type="button">Update now</button>
+        </div>
+        <div class="bank-filter-row">
+          <details class="bank-characters-menu">
+            <summary id="bank-character-summary">All characters</summary>
+            <div class="bank-menu-buttons"><button id="bank-all" type="button">All</button><button id="bank-none" type="button">None</button></div>
+            <div id="bank-character-list" class="bank-character-list"></div>
+          </details>
+          <label class="bank-check"><input id="bank-stack" type="checkbox" checked> Stack the same item</label>
+          <span id="bank-total" class="hint"></span>
+        </div>
+        <p id="bank-status" class="hint" role="status"></p>
+      </section>
+      <div id="bank-grid" class="bank-grid"></div>
+      <p id="bank-made" class="hint"></p>
+      <div id="bank-tooltip" class="bank-tooltip" hidden></div>
+    </div>
+    <div id="tab-terminal" class="tab-panel" hidden>
+      <section aria-labelledby="terminal-title">
+        <h2 id="terminal-title">Terminal</h2>
+        <p>The helper's commands, without its window. Try <code>list gold</code>, <code>search mana</code>, <code>show Name</code>, or <code>help</code>.</p>
+        <pre id="bank-output" class="terminal" aria-live="polite"></pre>
+        <form id="bank-form">
+          <label for="bank-command">Command</label>
+          <div class="command"><span aria-hidden="true">&gt;</span><input id="bank-command" name="command" maxlength="256" autocomplete="off"><button type="submit">Run</button></div>
+        </form>
+      </section>
+      <section aria-labelledby="helper-title">
+        <h2 id="helper-title">Helper window</h2>
+        <p id="helper-status" role="status">Checking the local helper…</p>
+        <button id="check-helper" type="button">Check helper</button>
+        <button id="start-helper" type="button" disabled>Start helper</button>
+        <p class="hint">You don't need this window if the automatic option at the top of the page is on.</p>
+      </section>
+    </div>
+    <div id="tab-auctions" class="tab-panel" hidden>
     <section aria-labelledby="auction-title">
       <h2 id="auction-title">Auction cache search</h2>
       <p>Search the last auction data collected by the helper. Results are saved observations and may no longer be available or have the same price.</p>
@@ -49,7 +88,8 @@
       <div class="auction-table-wrap"><table id="auction-table" hidden><thead><tr><th>Name</th><th>Realm</th><th>Level</th><th>Tier</th><th>Durability</th><th>Added stats</th><th>Estimated end</th><th>Seller</th><th>Buyout</th></tr></thead><tbody id="auction-rows"></tbody></table></div>
       <div class="auction-buttons"><button id="auction-prev" type="button" disabled>Previous</button><button id="auction-next" type="button" disabled>Next</button></div>
     </section>
-    <p class="hint">This page reads local helper files only when you ask it to. It never asks for your password.</p>
+    </div>
+    <p class="hint">Everything here stays on this PC. It never asks for your password.</p>
   </main>
 </body>
 </html>

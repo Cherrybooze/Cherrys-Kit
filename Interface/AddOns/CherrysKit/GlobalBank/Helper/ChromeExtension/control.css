@@ -24,3 +24,53 @@ td { overflow-wrap: anywhere; }
 pre { max-height: 360px; overflow: auto; padding: 12px; color: #e8ecf0; background: #0b121b; border: 1px solid #334657; white-space: pre-wrap; overflow-wrap: anywhere; }
 .hint { color: #bdc9d5; }
 code { color: #ffdc7c; }
+
+main { max-width: 1180px; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid #405468; }
+.tabs button { color: #dbe3ea; background: #192533; border-color: #405468; border-bottom: 0; border-radius: 6px 6px 0 0; }
+.tabs button[aria-selected="true"] { color: #101820; background: #f1c85e; border-color: #e7c061; }
+.terminal { min-height: 320px; max-height: 60vh; white-space: pre-wrap; }
+.bank-filters { position: sticky; top: 0; z-index: 5; margin: 12px 0; padding: 10px 14px; }
+.bank-filter-row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; margin-bottom: 8px; }
+.bank-filter-row label { margin: 0; font-size: .85rem; }
+.bank-filter-row label input:not([type="checkbox"]), .bank-filter-row label select { display: block; width: auto; margin-top: 3px; padding: 6px 8px; }
+.bank-wide { flex: 1 1 220px; }
+.bank-wide input { width: 100% !important; }
+.bank-levels { display: flex; gap: 4px; }
+.bank-levels input { width: 68px !important; }
+.bank-check { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+.bank-check input { width: auto; }
+.bank-filters p { margin: 0; }
+.bank-characters-menu { position: relative; }
+.bank-characters-menu summary { cursor: pointer; padding: 6px 10px; border: 1px solid #708698; border-radius: 4px; background: #0d1620; }
+.bank-character-list { display: flex; flex-direction: column; gap: 2px; max-height: 50vh; overflow-y: auto; }
+.bank-characters-menu[open] > div { background: #0d1620; }
+.bank-characters-menu[open] { z-index: 6; }
+.bank-menu-buttons { position: absolute; top: 100%; left: 0; width: 340px; padding: 8px 8px 0; border: 1px solid #708698; border-bottom: 0; box-sizing: border-box; }
+.bank-menu-buttons button { padding: 3px 12px; margin-right: 4px; }
+.bank-character-list { position: absolute; top: calc(100% + 44px); left: 0; width: 340px; padding: 4px 8px 8px; border: 1px solid #708698; border-top: 0; box-sizing: border-box; }
+.bank-character { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; margin: 0; padding: 4px; font-weight: 400; cursor: pointer; }
+.bank-character:hover { background: #243345; }
+.bank-character input { grid-row: span 2; width: auto; }
+.bank-name { font-weight: 600; color: #ffdc7c; }
+.bank-detail { font-size: .8rem; color: #bdc9d5; overflow-wrap: anywhere; }
+/* The game's item slots: dark, gold-lit, close together */
+.bank-grid { --slot: 44px; display: grid; grid-template-columns: repeat(auto-fill, var(--slot)); gap: 2px; padding: 10px; border: 2px solid #8a7240; border-radius: 6px; background: linear-gradient(#1d1a14, #12100c); box-shadow: inset 0 0 0 1px #000; }
+.bank-slot { position: relative; width: var(--slot); height: var(--slot); box-sizing: border-box; border: 1px solid #000; border-radius: 3px; background: radial-gradient(#2c2a26, #151310); box-shadow: inset 0 0 0 1px #4a4336; }
+.bank-slot img { position: absolute; inset: 1px; width: calc(100% - 2px); height: calc(100% - 2px); border-radius: 2px; }
+.bank-slot img:not([src]) { visibility: hidden; }
+.bank-slot.filled:hover { box-shadow: 0 0 0 1px #f1d98c; }
+.bank-count { position: absolute; right: 2px; bottom: 0; font-size: .78rem; font-weight: 600; color: #fff; text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000; }
+.bank-empty { grid-column: 1 / -1; color: #bdc9d5; }
+.bank-tooltip { position: fixed; z-index: 10; width: 320px; box-sizing: border-box; padding: 7px 10px; color: #e8ecf0; background: #0b0f16f5; border: 1px solid #8a7240; border-radius: 4px; pointer-events: none; }
+.bank-tooltip[hidden] { display: none; }
+.bank-tooltip strong, .bank-tooltip span { display: block; }
+.bank-tooltip strong { color: #ffdc7c; }
+.bank-tip-type { color: #bdc9d5; font-size: .85rem; }
+.bank-tip-row { font-size: .88rem; }
+.bank-tip-row b { color: #fff; }
+.bank-letters { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .78rem; color: #d9b65c; }
+.status-bar { margin: 0 0 12px; padding: 10px 14px; }
+.status-bar p { margin: 0 0 4px; }
+.status-toggle { display: flex; gap: 6px; align-items: center; margin: 6px 0 0; font-weight: 400; }
+.status-toggle input { width: auto; }

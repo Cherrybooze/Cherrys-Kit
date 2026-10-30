@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.24** · Kit release **0.11.101** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.24** · Kit release **0.11.103** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.103 playtest
+
+- **Global Bank 1.4.8:** the extension's page shows everything your characters hold in one grid with filters, and runs the helper's commands, with no terminal window.
 
 ## Kit 0.11.101 playtest
 

@@ -42,21 +42,92 @@
       start.disabled = running;
     }
   });
-  async function run(form, output, message) {
-    const button = form.querySelector('button[type="submit"]');
-    button.disabled = true;
-    output.textContent = 'Reading local data…';
-    try {
-      const response = await send(message);
-      output.textContent = typeof response.output === 'string' ? response.output : 'No results.';
-    } catch (error) {
-      output.textContent = 'Could not read local data: ' + String(error.message || error);
-    } finally { button.disabled = false; }
+  // Tabs
+  function showTab(name) {
+    document.querySelectorAll('[data-tab]').forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.tab === name)));
+    document.querySelectorAll('.tab-panel').forEach(panel => { panel.hidden = panel.id !== 'tab-' + name; });
   }
-  byId('bank-form').addEventListener('submit', event => {
+  document.querySelectorAll('[data-tab]').forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.tab)));
+
+  // The Bank tab
+  const bankStatus = text => { byId('bank-status').textContent = text; };
+  const bank = GBBank.create(byId('tab-bank'), send, bankStatus, (totals, made) => {
+    const number = value => value.toLocaleString('en-US');
+    byId('status-data').textContent = `${number(totals.characters)} characters · ${number(totals.items)} items in ${number(totals.stacks)} stacks`
+      + (made ? ` · data from ${made}` : ' · no data saved yet');
+  });
+  // The status line and the toggle
+  const statusHelper = byId('status-helper');
+  const autoHelper = byId('auto-helper');
+  async function refreshStatus() {
+    try {
+      const info = await send({type:'helper-info'});
+      if (!info.running) {
+        statusHelper.textContent = 'Helper: not running.';
+      } else {
+        const ran = info.since ? ` for ${GBBank.formatDuration((Date.now() - Date.parse(info.since)) / 1000)}` : '';
+        statusHelper.textContent = `Helper: running${ran}, ${info.auto ? 'started automatically' : 'in its own window'}.`;
+      }
+    } catch (error) {
+      statusHelper.textContent = 'Helper: cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder.';
+    }
+  }
+  chrome.storage.local.get('autoHelper').then(({autoHelper: on}) => { autoHelper.checked = !!on; });
+  autoHelper.addEventListener('change', async () => {
+    const on = autoHelper.checked;
+    autoHelper.disabled = true;
+    statusHelper.textContent = on ? 'Helper: starting…' : 'Helper: stopping…';
+    try {
+      await chrome.storage.local.set({autoHelper: on});
+      await send({type: on ? 'helper-auto-start' : 'helper-auto-stop'});
+      // A helper takes a moment to start
+      if (on) await new Promise(resolve => setTimeout(resolve, 3000));
+    } catch (error) {
+      bankStatus('The helper could not be changed: ' + String(error.message || error));
+    } finally {
+      autoHelper.disabled = false;
+      refreshStatus();
+    }
+  });
+  refreshStatus();
+  setInterval(refreshStatus, 30000);
+  bank.reload().catch(error => bankStatus('Cannot read your saved data. Run Install Chrome extension.bat in the installed GlobalBank Helper folder. ' + String(error.message || error)));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) bank.reload().catch(() => {}); });
+
+  // The Terminal tab: the helper's own commands, run one at a time without its window
+  const terminal = byId('bank-output');
+  const history = [];
+  let historyAt = 0;
+  function printLine(text) {
+    terminal.textContent += text + '\n';
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+  byId('bank-form').addEventListener('submit', async event => {
     event.preventDefault();
-    const command = byId('bank-command').value.trim();
-    if (command) run(event.currentTarget, byId('bank-output'), {type:'bank-query',command});
+    const box = byId('bank-command');
+    const command = box.value.trim();
+    if (!command) return;
+    box.value = '';
+    history.push(command);
+    historyAt = history.length;
+    printLine('> ' + command);
+    if (/^\/?(exit|quit|stop)$/i.test(command)) { printLine('Nothing to stop: each command here runs on its own.'); return; }
+    if (/^\/?heartbeat\b/i.test(command)) { printLine('The heartbeat only shows in the helper window.'); return; }
+    const button = event.currentTarget.querySelector('button[type="submit"]');
+    button.disabled = true;
+    try {
+      const response = await send({type:'bank-command',command});
+      printLine(String(response.output || '').trimEnd() || 'Done.');
+      bank.reload().catch(() => {});
+    } catch (error) {
+      printLine('Could not run that: ' + String(error.message || error));
+    } finally { button.disabled = false; box.focus(); }
+  });
+  byId('bank-command').addEventListener('keydown', event => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    historyAt = Math.max(0, Math.min(history.length, historyAt + (event.key === 'ArrowUp' ? -1 : 1)));
+    event.currentTarget.value = history[historyAt] || '';
   });
   const stats = {
     str:'Strength', dex:'Dexterity', sta:'Stamina', int:'Intelligence', wis:'Wisdom',

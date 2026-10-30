@@ -77,10 +77,13 @@ Chrome daily reward extension (Windows)
 
 Local bank and auction tools in Chrome
 1. Click the Global Bank Daily Rewards extension icon, then click "Open local bank and auction tools".
-2. Check the helper status. If it is stopped, click "Start helper" and leave its window open.
-3. Under Characters, bags and bank, try list, list gold, search mana or show followed by a
-   character name. Type help to see the other read-only commands.
-4. Under Auction cache search, enter an item name or ID. Add a realm name to narrow the results.
+2. Bank tab: everything your characters hold in one grid, with a search and filters. Hover an item to
+   see who has it and in which slot. Update now reads your save files.
+3. Terminal tab: the helper's commands, including note and erase, without its window.
+4. Auctions tab: search the auction cache. Prices are saved observations and may have changed.
+To collect auction data and update each time you log out, either keep the helper window open or turn
+on "Start the Global Bank helper automatically when Chrome is open" at the top of the page: it runs
+hidden, stops when Chrome closes, and turning it off closes it. Nothing on the page can buy items. Keep Interface\GlobalBankHelper private.
 
 The bank results come from your saved character snapshots. Auction results are the last prices
 seen by the helper, so an item may have sold or its price may have changed. Search in the game's

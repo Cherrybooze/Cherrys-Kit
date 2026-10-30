@@ -7,7 +7,7 @@ This optional Windows extension collects an available Daily Loyalty Bonus when y
 **You need:** Google Chrome and Cherry's Kit with Global Bank installed. You do **not** need Python for the addons, the Global Bank helper, or this extension.
 
 1. Install the [full Cherry's Kit](../../README.md#download-and-install) into your game's `Interface/AddOns/` folder. Check that `Interface/AddOns/CherrysKit/CherrysKit.toc` exists.
-2. Download the [separate Global Bank Daily Rewards installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.101/CherrysKit-GlobalBankDailyRewards-1.0.9.zip). Extract it into the **same** `Interface/AddOns/` folder and merge `CherrysKit/`. GitHub's automatic source ZIP is a repository snapshot, not this installer.
+2. Download the [separate Global Bank Daily Rewards installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.103/CherrysKit-GlobalBankDailyRewards-1.0.10.zip). Extract it into the **same** `Interface/AddOns/` folder and merge `CherrysKit/`. GitHub's automatic source ZIP is a repository snapshot, not this installer.
 3. Open `Interface/AddOns/CherrysKit/GlobalBank/Helper/` in File Explorer and double-click **Install Chrome extension.bat**. It registers the local bridge and brings up Chrome's extensions page, with a small setup window on top.
 4. In Chrome, turn on **Developer mode** at the top right, then click **Load unpacked** at the top left. Those two clicks are all Chrome needs: the setup window fills in the folder and closes when the extension connects.
 5. If the folder window does not fill itself in, the setup window copies the path for you: press **Ctrl+V** in the folder window, then **Enter**. If the extensions page did not open, type `chrome://extensions/` into Chrome's address bar.
@@ -28,7 +28,7 @@ The local bank and auction tools are included in version **1.0.3 and later**. Th
 3. Under **Characters, bags and bank**, try `list`, `list gold`, `search mana`, or `show Name`. Type `help` for more commands.
 4. Under **Auction cache search**, enter an item name or ID and optionally a realm. The results show saved observations, which may be out of date. If the cache is empty, search in the game and let the helper collect the data.
 
-This page reads local data when you ask it to. It cannot buy items or change character data. It does not need Python or your game password.
+The **Bank** tab shows everything every character holds in one grid, with the game's own icons, a search and filters; hover an item to see who has it and in which slot. **Update now** reads your save files. The **Terminal** tab runs the helper's commands, including ones that change local data, such as `note` and `erase`. Nothing on this page can buy items. It does not need Python, your game password or the helper window. To collect auction data and update automatically each time you log out, turn on **Start the Global Bank helper automatically when Chrome is open** at the top of the page: it runs hidden, stops when Chrome closes, and turning it off closes it.
 
 ## Privacy and scope
 

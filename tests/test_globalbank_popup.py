@@ -1,6 +1,7 @@
 """Exercise real popup scripts in Node and native messaging using isolated player fixtures."""
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import base64
 import json
 import os
 import re
@@ -10,6 +11,7 @@ import subprocess
 import time
 import unittest
 import uuid
+import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTENSION = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension'
@@ -140,6 +142,80 @@ for (const [now, latest, next] of [
 }
 ''', 'America/New_York')
 
+    def test_icons_decode_the_games_picture_formats(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({DataView, Uint8ClampedArray, Uint8Array, console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'icons.js'), 'utf8') + ';this.GBIcons = GBIcons;', context);
+const picture = (format, width, height, body) => {
+  const bytes = new Uint8Array(16 + body.length);
+  new DataView(bytes.buffer).setUint32(0, format, true);
+  new DataView(bytes.buffer).setUint32(4, width, true);
+  new DataView(bytes.buffer).setUint32(8, height, true);
+  bytes.set(body, 16);
+  return bytes;
+};
+// BGRA: blue, green, red, alpha
+let out = context.GBIcons.decode(picture(4, 1, 1, [10, 20, 30, 40]));
+assert.deepEqual([...out.pixels], [30, 20, 10, 40]);
+// DXT1: both end colours pure red, every pixel index 0
+out = context.GBIcons.decode(picture(6, 4, 4, [0x00, 0xf8, 0x00, 0xf8, 0, 0, 0, 0]));
+assert.deepEqual([...out.pixels.slice(0, 4)], [255, 0, 0, 255]);
+assert.equal(out.pixels.length, 64);
+// DXT1: three-colour mode, index 3 is see-through
+out = context.GBIcons.decode(picture(6, 4, 4, [0x00, 0x00, 0x00, 0xf8, 0xff, 0xff, 0xff, 0xff]));
+assert.equal(out.pixels[3], 0);
+// DXT5: alpha 128 on every pixel, over pure green
+out = context.GBIcons.decode(picture(8, 4, 4, [128, 128, 0, 0, 0, 0, 0, 0, 0xe0, 0x07, 0xe0, 0x07, 0, 0, 0, 0]));
+assert.deepEqual([...out.pixels.slice(0, 4)], [0, 255, 0, 128]);
+// Unknown, too short, or absurd
+assert.equal(context.GBIcons.decode(picture(9, 4, 4, [0])), null);
+assert.equal(context.GBIcons.decode(picture(4, 4, 4, [0])), null);
+assert.equal(context.GBIcons.decode(picture(4, 5000, 4, [0])), null);
+assert.equal(context.GBIcons.decode(new Uint8Array(3)), null);
+""")
+
+    def test_bank_grid_filters_stacks_and_says_where_things_are(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+const bank = context.GBBank;
+const characters = [
+  {name:'Cherry', level:100, bag:[{slot:1,id:'202845',name:'Mana Stone',icon:'interface/Icons/mana stone06',count:3}], bank:[{slot:45,id:'214491',name:'Great Sword',icon:'weapon/wp_blade',count:1}]},
+  {name:'Alt', level:10, bag:[{slot:31,id:'202845',name:'Mana Stone',icon:'interface/Icons/mana stone06',count:2}], bank:[]},
+];
+assert.equal(bank.locationLabel('bag', 31), 'Bag 31 (page 2, slot 1)');
+assert.equal(bank.formatDuration(59), '0 min');
+assert.equal(bank.formatDuration(45 * 60), '45 min');
+assert.equal(bank.formatDuration(134 * 60), '2 h 14 min');
+assert.equal(bank.formatDuration(74 * 3600), '3 days 2 h');
+assert.deepEqual(JSON.parse(JSON.stringify(bank.totals(characters))), {characters:2, stacks:3, items:6});
+assert.equal(bank.locationLabel('bank', 45), 'Bank 45 (page 2, slot 5)');
+assert.equal(bank.locationLabel('bank', 40), 'Bank 40 (page 1, slot 40)');
+const all = bank.entries(characters);
+assert.equal(all.length, 3);
+const count = filters => bank.applyFilters(all, filters).length;
+assert.equal(count({}), 3);
+assert.equal(count({text:'mana'}), 2);
+assert.equal(count({type:'Weapons'}), 1);
+assert.equal(count({place:'bank'}), 1);
+assert.equal(count({minLevel:50}), 2);
+assert.equal(count({maxLevel:50}), 1);
+assert.equal(count({hidden:new Set(['Cherry'])}), 1);
+const stacked = bank.cells(all, true);
+assert.equal(stacked.length, 2);
+const stone = stacked.find(cell => cell.name === 'Mana Stone');
+assert.equal(stone.total, 5);
+assert.deepEqual(stone.places.map(place => place.character).join(), 'Cherry,Alt');
+assert.equal(bank.cells(all, false).length, 3);
+for (const [id, icon, type] of [['214491','weapon/wp_blade','Weapons'], ['220560','EQ_torso-leather','Armour'], ['235800','jewelry/earring_03','Jewellery'],
+  ['520090','run_tel_010','Runes'], ['550535','reci_car_001','Recipes'], ['200663','item_potion_050','Potions'], ['209902','Phantom/Material_c_02','Materials'],
+  ['202095','charger_04','Mounts and pets'], ['203165','quest_dust_01','Other'], ['n:Odd',null,'Other']]) {
+  assert.equal(bank.typeOf(id, icon), type, id);
+}
+""")
+
     def test_collected_countdown_and_invalidated_context_stop_quietly(self):
         self.run_js(r"""
 const assert=require('node:assert/strict'), fs=require('node:fs'), vm=require('node:vm'), path=require('node:path');
@@ -220,22 +296,68 @@ listener({type:'helper-start'}, {id:'test',url:runtime.getURL('popup.html')}, va
 assert.equal(result.errorKind, 'native-error');
 ''')
 
+    def test_only_the_local_page_can_ask_for_bank_data_icons_and_commands(self):
+        self.run_js(r'''
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+let listener; const sent = [];
+const runtime = {id:'test',getURL:file => 'chrome-extension://test/' + file,
+  onMessage:{addListener:fn => { listener = fn; }}, onStartup:{addListener() {}}, onInstalled:{addListener() {}},
+  sendNativeMessage:(host,message,reply) => { sent.push(message.type); reply({ok:true}); }};
+vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime},URL});
+const page = {id:'test',url:runtime.getURL('control.html')};
+const ask = (message, sender = page) => listener(message, sender, () => {});
+assert.equal(ask({type:'bank-data'}), true);
+assert.equal(ask({type:'bank-icons',names:['interface/icons/x']}), true);
+assert.equal(ask({type:'bank-command',command:'list gold'}), true);
+assert.deepEqual(sent, ['bank-data', 'bank-icons', 'bank-command']);
+for (const type of ['helper-info', 'helper-auto-start', 'helper-auto-stop']) { assert.equal(ask({type}), true); assert.equal(sent.pop(), type); }
+const others = [{id:'test',url:runtime.getURL('popup.html')}, {id:'other',url:runtime.getURL('control.html')},
+  {id:'test',tab:{id:1},url:'https://eu-shop-runesofmagic.gameforge.com/dailies/display/5'}];
+for (const sender of others) {
+  ask({type:'bank-data'}, sender);
+  ask({type:'helper-auto-stop'}, sender);
+  ask({type:'helper-auto-start'}, sender);
+  ask({type:'bank-icons',names:['interface/icons/x']}, sender);
+  ask({type:'bank-command',command:'erase Cherry'}, sender);
+}
+ask({type:'bank-command',command:''});
+ask({type:'bank-command',command:'x'.repeat(257)});
+ask({type:'bank-command',command:5});
+ask({type:'bank-icons',names:[]});
+ask({type:'bank-icons',names:Array(26).fill('x')});
+ask({type:'bank-icons',names:[5]});
+assert.equal(sent.length, 3);
+''')
+
     def test_background_stamps_the_clock_when_chrome_starts_or_the_extension_loads(self):
         self.run_js(r'''
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+(async () => {
 const listeners = {}, sent = [];
 const event = name => ({addListener:fn => { listeners[name] = fn; }});
 const runtime = {id:'test',getURL:file => 'chrome-extension://test/' + file,
   onMessage:event('message'), onStartup:event('startup'), onInstalled:event('installed'),
   sendNativeMessage:(host,message,reply) => { sent.push(host + ':' + message.type); reply({ok:true}); }};
-vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime},URL});
+let autoHelper = false;
+const storage = {local:{get:async () => ({autoHelper})}};
+vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime,storage},URL});
+const flush = () => new Promise(resolve => setImmediate(resolve));
 assert.equal(sent.length, 0); // Waking the worker alone starts no process.
 listeners.startup();
 listeners.installed({reason:'install'});
+await flush();
 assert.deepEqual(sent, ['com.cherryskit.globalbank:clock', 'com.cherryskit.globalbank:clock']);
+// With the page's toggle on, a Chrome start also starts the helper.
+sent.length = 0;
+autoHelper = true;
+listeners.startup();
+await flush();
+assert.deepEqual(sent, ['com.cherryskit.globalbank:clock', 'com.cherryskit.globalbank:helper-auto-start']);
+sent.length = 0;
 // A missing host stays quiet.
 runtime.lastError = {message:'Native host not found'};
 listeners.startup();
+})().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
 
@@ -251,6 +373,8 @@ class NativeStatusTests(unittest.TestCase):
         # No real helper mutex or player folders can be touched by this fixture.
         self.host.write_text(NATIVE.read_text(encoding='utf-8').replace(
             'CherrysKitGlobalBankHelper', 'GBPopupTest' + uuid.uuid4().hex), encoding='utf-8-sig')
+        for name in ('GlobalBank-Control.ps1', 'GlobalBank-Data.ps1'):
+            shutil.copy2(NATIVE.parent / name, helper / name)
         self.data = self.root / 'Interface/GlobalBankHelper'
         self.data.mkdir()
 
@@ -277,6 +401,59 @@ class NativeStatusTests(unittest.TestCase):
         self.assertEqual(response['lastCollected'], {'name':'Latest','server':'B','collectedAt':'2026-10-28T23:05:00Z'})
         self.assertNotIn('inventory', json.dumps(response))
         self.assertEqual(response, self.send({'type':'helper-status'}))
+
+    def fdb(self, entries):
+        # interface.fdb: magic, count, a table of (type, time, offset), then records
+        records, table = b'', b''
+        start = 8 + 16 * len(entries)
+        for name, method, picture, packed in entries:
+            raw = name.encode() + b'\0'
+            head = struct.pack('<IIIIIQI', 32 + len(raw) + 16 + len(packed), 2, method, len(picture), len(packed), 0, len(raw))
+            table += struct.pack('<IQI', 2, 0, start + len(records))
+            records += head + raw + picture[:16] + packed
+        folder = self.root / 'fdb'
+        folder.mkdir()
+        (folder / 'interface.fdb').write_bytes(b'\x01BDF' + struct.pack('<I', len(entries)) + table + records)
+
+    def test_icons_come_from_the_games_file_and_only_icons(self):
+        head = struct.pack('<IIII', 4, 1, 1, 1)
+        plain = bytes([10, 20, 30, 40])
+        extra_mip = bytes(4)
+        self.fdb([('interface\\icons\\a.dds', 3, head, zlib.compress(plain + extra_mip)),
+                  ('interface\\icons\\raw.dds', 0, head, plain),
+                  ('interface\\icons\\packed.dds', 4, head, b'\x38\0\0\0HXDR'),
+                  ('interface\\worldxml\\secret.dds', 3, head, zlib.compress(plain))])
+        response = self.send({'type':'bank-icons','names':['/interface/Icons/A', 'interface/icons/raw', 'interface/icons/packed',
+                                                           'interface/worldxml/secret', 'interface/icons/../worldxml/secret', 'interface/icons/none']})
+        self.assertTrue(response['ok'], response)
+        self.assertEqual(set(response['icons']), {'/interface/Icons/A', 'interface/icons/raw'})
+        self.assertEqual(base64.b64decode(response['icons']['/interface/Icons/A']), head + plain)
+        self.assertEqual(base64.b64decode(response['icons']['interface/icons/raw']), head + plain)
+
+    def test_bank_data_returns_the_character_file(self):
+        self.assertIsNone(self.send({'type':'bank-data'})['json'])
+        (self.data / 'GlobalBank.json').write_text(json.dumps({'characters':[{'name':'Fixture'}]}))
+        self.assertEqual(json.loads(self.send({'type':'bank-data'})['json'])['characters'][0]['name'], 'Fixture')
+
+    @unittest.skipUnless(shutil.which('powershell'), 'Windows PowerShell required: the helper is only for Windows')
+    def test_commands_run_the_helper_as_plain_text(self):
+        for path in NATIVE.parent.iterdir():
+            if path.is_file() and path.name != NATIVE.name:
+                shutil.copy2(path, self.host.parent / path.name)
+        response = self.send({'type':'bank-command','command':'help'})
+        self.assertTrue(response['ok'], response)
+        self.assertIn('CHARACTERS & ITEMS', response['output'])
+        # Nothing in the text runs: it is only ever a command name to the helper
+        marker = self.root / 'ran.txt'
+        self.send({'type':'bank-command','command':f'help; New-Item "{marker}"'})
+        self.send({'type':'bank-command','command':f'$(New-Item {marker})'})
+        self.assertFalse(marker.exists())
+
+    def test_status_says_when_nothing_runs(self):
+        response = self.send({'type':'helper-info'})
+        self.assertTrue(response['ok'], response)
+        self.assertFalse(response['running'])
+        self.assertIsNone(response['since'])
 
     def clock_file(self):
         return self.data / 'CherrysClockStamp.lua'

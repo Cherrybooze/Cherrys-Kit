@@ -15,7 +15,7 @@
 #                     addon can tell.
 #   -Command "<cmd>"  run one command and exit, e.g. -Command "get goldtotal" (for other tools)
 #   (no switch)       update the database once
-param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "", [ValidateSet(0, 1)][int]$Heartbeat = 1)
+param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "", [ValidateSet(0, 1)][int]$Heartbeat = 1, [switch]$SkipAuctions, [switch]$Auto)
 
 $ErrorActionPreference = "Stop"
 
@@ -281,6 +281,8 @@ function Stop-AAHWorker {
 
 function Import-CharacterAAH([string]$file, [string]$text) {
     if ($Watch) { $script:AAHPendingPaths[$file] = $true; return }
+    # The extension's page: a backlog can take minutes, and it waits in the save file for the helper window.
+    if ($SkipAuctions) { return }
     $cacheLock = New-Object Threading.Mutex($false, (Get-HelperCacheMutexName))
     $locked = $false
     try {
@@ -851,6 +853,8 @@ Write-Json
 $rewardStamp = if (Test-Path -LiteralPath $rewards) { (Get-Item -LiteralPath $rewards).LastWriteTimeUtc.Ticks } else { 0 }
 $linkStamp = (Get-Item -LiteralPath $links).LastWriteTimeUtc.Ticks
 $nextRewardCheck = (Get-Date).AddSeconds(1)
+$nextAutoCheck = (Get-Date).AddSeconds(2)
+$autoStop = Join-Path $data 'GlobalBankHelperAuto.stop'
 
 $watcher = New-Object System.IO.FileSystemWatcher($SaveFolder, "SaveVariables.lua")
 $watcher.IncludeSubdirectories = $true
@@ -902,6 +906,14 @@ while ($true) {
             Write-HelperError $_ 'Console input unavailable'
             $canType = $false
             $script:PromptShown = $false
+        }
+    }
+    # Started by the extension's toggle: it ends when the toggle goes off or Chrome closes.
+    if ($Auto -and (Get-Date) -ge $nextAutoCheck) {
+        $nextAutoCheck = (Get-Date).AddSeconds(2)
+        if ((Test-Path -LiteralPath $autoStop) -or -not (Get-Process -Name chrome -ErrorAction SilentlyContinue)) {
+            Remove-Item -LiteralPath $autoStop -Force -ErrorAction SilentlyContinue
+            exit 0
         }
     }
     foreach ($e in @(Get-Event -ErrorAction SilentlyContinue)) {
