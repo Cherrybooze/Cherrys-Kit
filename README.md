@@ -18,7 +18,7 @@ Cherry's Kit combines original addons, rewrites and fixes to older favourites in
 
 ## What’s new in 0.11.102
 
-- **Emoji in Say bubbles**: **Cherry's Chat 0.11.0** sends emoji in Say as `:fire:` text, or as symbols the game font can draw, so the bubble over your head shows them instead of two empty boxes. The game draws bubbles itself, so no addon can put pictures in them; Cherry's Chat users still see the picture in chat. Pick the style with **Say bubbles** in `/cchat`.
+- **Emoji in Say bubbles**: **Cherry's Chat 0.11.0** sends emoji in Say as symbols the game font can draw (♥ ★ (^_^)), or as text like `:carrot:` when there is no symbol, so the bubble over your head shows them instead of two empty boxes. The game draws bubbles itself, so no addon can put pictures in them; Cherry's Chat users still see the picture in chat. Pick the style with **Say bubbles** in `/cchat`.
 
 ## In 0.11.101
 

@@ -52,7 +52,7 @@ C.DEFAULTS = {
   emojiSize = 0, -- 0 = same height as the text
   smileys = false, -- also turn :) :( <3 ... into pictures
   sendShortcodes = false, -- :heart: in a message you send becomes the emoji itself
-  sayEmoji = "code", -- emoji in Say (shown in the bubble over your head): code | symbols | emoji
+  sayEmoji = "symbols", -- emoji in Say (shown in the bubble over your head): symbols | code | emoji
   copyButton = true, -- the C button on the chat: select mode for copying
   classColors = true, -- colour player names when their primary class is known
   allWindows = true, -- font and size changes go to every chat window
@@ -1222,7 +1222,7 @@ end
 local EMOJI_MODES = { "symbols", "text", "off" }
 local EMOJI_LABELS = { symbols = "Symbols (^_^)", text = "Text (:smile:)", pictures = "Pictures", off = "Off" }
 
-local BUBBLE_MODES = { "code", "symbols", "emoji" }
+local BUBBLE_MODES = { "symbols", "code", "emoji" }
 local BUBBLE_LABELS = { code = "Text (:fire:)", symbols = "Symbols (^_^)", emoji = "Emoji (boxes)" }
 
 local function onOff(v)

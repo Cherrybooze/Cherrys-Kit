@@ -12,8 +12,8 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 
 **Emoji in Say bubbles.** The bubble over your head is drawn by the game itself, and no addon can put pictures in it or change its font, so an emoji in it showed as two empty boxes. Cherry's Chat now sends emoji in **Say** as text the bubble can show. Pick how with **Say bubbles** in the `/cchat` settings:
 
-- **Text (:fire:)**, the default: the bubble shows `:fire:`, and everyone with Cherry's Chat still sees the picture in chat.
-- **Symbols (^_^)**: hearts, stars, suns and faces like (^_^) that the game font can draw, and `:fire:` where there is none. Others see the symbol instead of the picture.
+- **Symbols (^_^)**, the default: hearts, stars, suns and faces like (^_^) that the game font can draw, and text such as `:carrot:` for every emoji with no symbol. Others see the symbol instead of the picture.
+- **Text (:fire:)**: every emoji goes out as text like `:fire:`, and everyone with Cherry's Chat still sees the picture in chat.
 - **Emoji (boxes)**: sends the emoji itself, as before.
 
 Other channels have no bubbles and stay as they were. Bubbles over other players show what they sent.
