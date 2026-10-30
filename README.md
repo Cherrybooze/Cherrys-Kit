@@ -1,10 +1,10 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.93/CherrysKit-Full-0.11.93.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.94/CherrysKit-Full-0.11.94.zip)
 
 # Cherry's Kit
 
-> Playtest build: kit **0.11.93**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
+> Playtest build: kit **0.11.94**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.93/CherrysKit-Full-0.11.93.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.94/CherrysKit-Full-0.11.94.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -12,13 +12,13 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest build: **0.11.93** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.93)
+Current playtest build: **0.11.94** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.94)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
-## What’s new in 0.11.93
+## What’s new in 0.11.94
 
-- **Cherry's Bar 1.1.1** (`/cbar`) is new: full-width information bars at the top of the screen, the bottom, or both, with eighteen displays set per bar. Drag displays on a map of the bars or on the bars themselves. Its bar styles and icons are Cherry's Studio Panel art. It is a fork of XBar III, with bars and right-click settings in the spirit of Titan Panel. It shows the top bar at first. Hub 0.4.23 lists it. None of it has run in the game client yet, and [the checks are here](docs/TESTING.md).
+- **Cherry's Bar 1.1.2** (`/cbar`) is new: full-width information bars at the top of the screen, the bottom, or both, with eighteen displays set per bar. Drag displays on a map of the bars or on the bars themselves. Its bar styles and icons are Cherry's Studio Panel art. It is a fork of XBar III, with bars and right-click settings in the spirit of Titan Panel. It shows the top bar at first, drawn under the game's portrait, housing controls and minimap. Hub 0.4.23 lists it. None of it has run in the game client yet, and [the checks are here](docs/TESTING.md).
 
 ## In 0.11.90
 
@@ -61,7 +61,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.93/CherrysKit-Full-0.11.93.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.94/CherrysKit-Full-0.11.94.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -107,7 +107,7 @@ Remove old separate copies of the same addons from `Interface/AddOns/` first; th
 | [PortraitHP](Interface/AddOns/CherrysKit/PortraitHP/README.md) | Your target's health percentage on its portrait. | `/php` | 2019.07.14-ck2 |
 | [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click. | `/grid` | 1.1.4 |
 | [Cherry's Quests](Interface/AddOns/CherrysKit/CherrysQuests/README.md) | A prettier quest tracker; Ctrl+click a quest to track the NPCs it names. | `/cq` | 1.0.0 |
-| [Cherry's Bar](Interface/AddOns/CherrysKit/CherrysBar/README.md) | Information bars at the top, bottom or both, with displays set per bar. | `/cbar` | 1.1.1 |
+| [Cherry's Bar](Interface/AddOns/CherrysKit/CherrysBar/README.md) | Information bars at the top, bottom or both, with displays set per bar. | `/cbar` | 1.1.2 |
 
 Some integrations need both addons: for example, running a kitty from Grid needs KittyCombo. Each addon's README lists its requirements and current limits. Features still being tested are labelled there.
 

@@ -6,12 +6,18 @@ local G = CherrysBar
 local O = {}
 G.Options = O
 
-O.GENERAL_ROWS = 8
+O.GENERAL_ROWS = 6
 -- The layout rows, as tools/gen_cherrysbar_xml.py places them.
 O.ROW_X, O.ROW_W, O.ROW_H = 90, 776, 30
 O.ROWS = { { key = "top", y = 148 }, { key = "bottom", y = 182 }, { key = "off", y = 216 } }
 O.CHIP_H, O.CHIP_MAX, O.CHIP_MIN_TEXT = 24, 66, 50
 O.DRAG_PIXELS = 4
+O.GAP_STEP, O.GAP_MAX = 20, 1200
+O.BAR_TIPS = {
+  room = "Moves the game's frames off this bar. Off, the bar is simply drawn under them.",
+  left = "Left-side displays start this far from the screen's edge. 400 clears the portrait and housing controls.",
+  right = "Right-side displays stop this far from the screen's edge. 490 clears the buffs and minimap.",
+}
 
 local function pct(v)
   return math.floor((tonumber(v) or 0) * 100 + 0.5) .. "%"
@@ -20,8 +26,6 @@ end
 O.LIST = {
   { key = "barHeight", kind = "num", label = "Bar height", min = 20, max = 36, step = 2 },
   { key = "textSize", kind = "num", label = "Text size", min = 9, max = 16, step = 1 },
-  { key = "makeRoom", kind = "check", label = "Move the game's frames clear of the bars",
-    tip = "Moves the player, target, party, buff and minimap frames down, and the action bar up, so the bars do not cover them. A frame you dragged far from the edge stays where it is." },
   { key = "tipsInCombat", kind = "check", label = "Tooltips in combat" },
   { key = "hideMenuBar", kind = "check", label = "Hide the game's menu bar",
     tip = "The Menu display on the bar opens the same windows." },
@@ -65,6 +69,9 @@ local function refreshBar(name)
   _G[n .. "Skin"]:SetText(cfg.skin)
   _G[n .. "Value"]:SetText(pct(cfg.alpha))
   _G[n .. "Auto"]:SetChecked(cfg.autoHide and 1 or nil)
+  _G[n .. "Room"]:SetChecked(cfg.makeRoom and 1 or nil)
+  _G[n .. "LeftValue"]:SetText(tostring(cfg.leftGap))
+  _G[n .. "RightValue"]:SetText(tostring(cfg.rightGap))
   local art = _G["CBar_Layout" .. (name == "bottom" and "Bottom" or "Top")]
   G.Try(art, "SetTexture", G.Bars.SkinFile(name))
 end
@@ -203,6 +210,12 @@ function O.BarClick(name, what)
   elseif what == "auto" then
     G.Bars.SetAutoHide(name, not cfg.autoHide)
     return
+  elseif what == "room" then
+    cfg.makeRoom = not cfg.makeRoom
+  elseif what == "leftMinus" or what == "leftPlus" or what == "rightMinus" or what == "rightPlus" then
+    local key = string.find(what, "left", 1, true) and "leftGap" or "rightGap"
+    local v = (tonumber(cfg[key]) or 0) + (string.find(what, "Plus", 1, true) and O.GAP_STEP or -O.GAP_STEP)
+    cfg[key] = math.max(0, math.min(O.GAP_MAX, v))
   elseif what == "skin" then
     local skins, at = G.Bars.SKINS, 0
     for i, key in ipairs(skins) do
@@ -217,6 +230,14 @@ function O.BarClick(name, what)
   end
   G.Refresh()
   O.Refresh()
+end
+
+function O.BarTip(what, frame)
+  if GameTooltip and O.BAR_TIPS[what] then
+    GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM", 0, 0)
+    GameTooltip:SetText(O.BAR_TIPS[what], 1, 1, 1)
+    G.Try(GameTooltip, "Show")
+  end
 end
 
 function O.ToggleLock()

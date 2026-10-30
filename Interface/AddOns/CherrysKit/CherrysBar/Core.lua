@@ -10,7 +10,7 @@
 CherrysBar = {}
 local G = CherrysBar
 
-G.version = "1.1.1"
+G.version = "1.1.2"
 G.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.CherrysBar) or "Interface/AddOns/CherrysBar/"
 G.MEDIA = G.BASE_PATH .. "Media/"
 G.BAR_NAMES = { "top", "bottom" }
@@ -107,13 +107,15 @@ end
 
 G.DEFAULTS = {
   bars = {
-    top = { show = true, skin = "Ironstone", alpha = 1, autoHide = false },
-    bottom = { show = false, skin = "Ironstone", alpha = 1, autoHide = false },
+    -- The game keeps its portrait and housing controls in the top left, out to 396 wide, and its buffs
+    -- and minimap in the top right, 488 from the edge. The bar is drawn under all of them, so nothing of
+    -- the game's has to move; the displays stay in the clear stretch between them.
+    top = { show = true, skin = "Ironstone", alpha = 1, autoHide = false, makeRoom = false, leftGap = 400, rightGap = 490 },
+    bottom = { show = false, skin = "Ironstone", alpha = 1, autoHide = false, makeRoom = true, leftGap = 0, rightGap = 0 },
   },
   barHeight = 24,
   textSize = 12,
   locked = true,        -- unlocked, displays can be dragged along the bars
-  makeRoom = true,      -- move the game's frames out from under the bars
   tipsInCombat = false, -- display tooltips while fighting
   hideMenuBar = false,  -- hide the game's own main menu buttons
   hideXpBar = false,    -- hide the game's experience bar
@@ -136,6 +138,7 @@ function G.ApplyDefaults()
     CherrysBar_DB = { settingsVersion = G.SETTINGS_VERSION, playedMins = S.playedMins, kills = S.kills }
   end
   merge(G.S(), G.DEFAULTS)
+  G.S().makeRoom = nil -- one setting for both bars until 1.1.1
   for _, cfg in pairs(G.S().bars) do
     cfg.skin = G.SKIN_RENAMES[cfg.skin] or cfg.skin
   end

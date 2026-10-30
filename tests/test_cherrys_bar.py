@@ -130,6 +130,9 @@ GameFrame("UnitFrame_party1", 2, 118)
 GameFrame("MinimapFrame", -12, 32, "TOPRIGHT")
 GameFrame("MinimapFrameBorder", 0, -1, "TOPRIGHT")
 GameFrame("MainMenuFrame", 0, 0, "BOTTOM")
+GameFrame("PlayerFramePartyBoardButton", 308, 30)
+GameFrame("PetBookFrameButton", 138, 98)
+GameFrame("HouseFrame", 0, 0)
 GameFrame("ExperienceFrame", 0, 0, "BOTTOMLEFT")
 MakeWidget("EquipDameFrame", true)
 MakeWidget("BagFrame", false)
@@ -215,7 +218,7 @@ class BarTest(unittest.TestCase):
         self.assertEqual(self.ev("frameOf('Zone').anchors[1][5]"), 2)
 
     def test_bar_height_moves_everything_with_it(self):
-        self.run_lua("CherrysBar.S().barHeight = 34; CherrysBar.Refresh()")
+        self.run_lua("CherrysBar.S().bars.top.makeRoom = true; CherrysBar.S().barHeight = 34; CherrysBar.Refresh()")
         self.assertEqual(self.ev("CBar_BarTop.h"), 34)
         self.assertEqual(self.ev("frameOf('Bag').h"), 34)
         self.assertEqual(self.anchor_y("PlayerFrame"), 34)
@@ -430,11 +433,10 @@ class BarTest(unittest.TestCase):
         self.assertAlmostEqual(self.ev("CBar_BarTop.alpha"), 0.9)
         self.assertEqual(self.ev("CBar_OptBarTopValue.text"), "90%")
         self.assertEqual(self.ev("CBar_OptRow1Label.text"), "Bar height")
-        for i in range(1, 8):
+        for i in range(1, 7):
             kind = self.ev(f"CherrysBar.Options.LIST[{i}].kind")
             for part in {"check": ["check", "check"], "num": ["plus", "minus"]}[kind]:
                 self.run_lua(f"CherrysBar.Options.RowClick({i}, '{part}')")
-        self.assertFalse(self.ev("CBar_OptRow8.shown"))
 
     def test_picked_display_settings_and_format(self):
         self.run_lua("""
@@ -692,6 +694,7 @@ class BarTest(unittest.TestCase):
     # Game frames
 
     def test_make_room_moves_top_frames_and_restores_them(self):
+        self.run_lua("CherrysBar.S().bars.top.makeRoom = true; CherrysBar.Refresh()")
         self.assertEqual(self.anchor_y("PlayerFrame"), 24)
         self.assertEqual(self.anchor_y("TargetFrame"), 26)
         self.assertEqual(self.anchor_y("MinimapFrame"), 56)
@@ -707,6 +710,7 @@ class BarTest(unittest.TestCase):
         self.assertEqual(self.anchor_y("PlayerFrame"), 24)
 
     def test_make_room_is_not_applied_twice(self):
+        self.run_lua("CherrysBar.S().bars.top.makeRoom = true; CherrysBar.Refresh()")
         self.run_lua("CherrysBar.Bars.MakeRoom(); CherrysBar.Bars.MakeRoom()")
         self.assertEqual(self.anchor_y("PlayerFrame"), 24)
         self.run_lua("CherrysBar.OnEvent('LOADING_END')")
@@ -715,16 +719,71 @@ class BarTest(unittest.TestCase):
 
     def test_make_room_leaves_a_frame_the_player_dragged_away(self):
         self.run_lua("""
+            CherrysBar.S().bars.top.makeRoom = true
             PlayerFrame:ClearAllAnchors()
             PlayerFrame:SetAnchor('TOPLEFT', 'TOPLEFT', 'UIParent', 300, 400)
             CherrysBar.Bars.MakeRoom()
         """)
         self.assertEqual(self.anchor_y("PlayerFrame"), 400)
 
-    def test_make_room_off_touches_nothing(self):
-        self.run_lua("CherrysBar.S().makeRoom = false; CherrysBar.Refresh()")
-        self.assertEqual(self.anchor_y("PlayerFrame"), 0)
+    def test_top_bar_leaves_the_game_frames_alone_by_default(self):
+        for frame in ("PlayerFrame", "MinimapFrame", "MinimapFrameBorder", "TargetFrame", "HouseFrame"):
+            start = {"PlayerFrame": 0, "MinimapFrame": 32, "MinimapFrameBorder": -1, "TargetFrame": 2, "HouseFrame": 0}[frame]
+            self.assertEqual(self.anchor_y(frame), start, frame)
         self.assertEqual(self.anchor_y("MainMenuFrame"), 0)
+
+    def test_bottom_bar_still_lifts_the_action_bar_by_default(self):
+        self.run_lua("CherrysBar.Command('both')")
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 0)
+
+    def test_make_room_is_a_choice_per_bar_and_takes_the_portrait_cluster_along(self):
+        self.run_lua("CherrysBar.Options.Toggle(); CherrysBar.Options.BarClick('top', 'room')")
+        for frame, y in (("PlayerFrame", 24), ("PlayerFramePartyBoardButton", 54), ("PetBookFrameButton", 122), ("HouseFrame", 24)):
+            self.assertEqual(self.anchor_y(frame), y, frame)
+        self.run_lua("CherrysBar.Options.BarClick('top', 'room')")
+        self.assertEqual(self.anchor_y("PlayerFrame"), 0)
+        self.assertEqual(self.anchor_y("HouseFrame"), 0)
+
+    def test_old_shared_setting_is_dropped(self):
+        self.run_lua("CherrysBar.S().makeRoom = true")
+        self.load_addon()
+        self.assertIsNone(self.ev("CherrysBar.S().makeRoom"))
+        self.assertEqual(self.anchor_y("PlayerFrame"), 0)
+
+    def test_left_displays_start_past_the_portrait_and_housing(self):
+        self.assertEqual(self.ev("frameOf('Menu').anchors[1][4]"), 410)
+        self.assertGreater(self.ev("frameOf('Exp').anchors[1][4]"), 410)
+
+    def test_right_displays_stop_short_of_the_buffs_and_minimap(self):
+        self.assertEqual(self.ev("frameOf('Clock').anchors[1][4]"), -500)
+        self.assertLess(self.ev("frameOf('Perf').anchors[1][4]"), -500)
+
+    def test_clear_gaps_are_set_per_bar(self):
+        self.run_lua("""
+            CherrysBar.Options.Toggle()
+            CherrysBar.Command('both')
+            local D = CherrysBar.Displays
+            D.SetBar(D.byKey.Zone, 'bottom')
+        """)
+        self.assertEqual(self.ev("frameOf('Zone').anchors[1][4]"), 10)
+        self.assertEqual(self.ev("CBar_OptBarTopLeftValue.text"), "400")
+        self.run_lua("CherrysBar.Options.BarClick('top', 'leftMinus')")
+        self.assertEqual(self.ev("frameOf('Menu').anchors[1][4]"), 390)
+        self.assertEqual(self.ev("CBar_OptBarTopLeftValue.text"), "380")
+        self.run_lua("CherrysBar.Options.BarClick('top', 'rightPlus')")
+        self.assertEqual(self.ev("frameOf('Clock').anchors[1][4]"), -520)
+        self.assertEqual(self.ev("CBar_OptBarTopRightValue.text"), "510")
+        self.run_lua("CherrysBar.Options.BarClick('bottom', 'leftPlus')")
+        self.assertEqual(self.ev("frameOf('Zone').anchors[1][4]"), 30)
+        self.run_lua("for i = 1, 40 do CherrysBar.Options.BarClick('bottom', 'leftMinus') end")
+        self.assertEqual(self.ev("CherrysBar.S().bars.bottom.leftGap"), 0)
+
+    def test_handles_sit_inside_the_clear_stretch(self):
+        self.run_lua("CherrysBar.Command('unlock')")
+        self.assertEqual(self.ev("CBar_LockTop.anchors[1][4]"), -494)
+        self.assertEqual(self.ev("CBar_PinTop.anchors[1][4]"), -514)
+        self.assertEqual(self.ev("frameOf('Clock').anchors[1][4]"), -544)
 
     def test_hiding_game_frames_only_shows_what_it_hid(self):
         self.run_lua("MainMenuFrame:Hide(); CherrysBar.Refresh()")
@@ -736,6 +795,7 @@ class BarTest(unittest.TestCase):
 
     def test_reload_does_not_move_frames_twice(self):
         # Frames that kept their place through Reload UI...
+        self.run_lua("CherrysBar.S().bars.top.makeRoom = true; CherrysBar.Refresh()")
         self.load_addon()
         self.assertEqual(self.anchor_y("PlayerFrame"), 24)
         self.assertEqual(self.anchor_y("MinimapFrame"), 56)
@@ -921,7 +981,7 @@ class BarTest(unittest.TestCase):
         self.assertFalse(self.ev("CherrysBar.ready"))
         self.assertTrue(self.ev("CherrysBar.off"))
         self.assertFalse(self.ev("CBar_BarTop.shown"))
-        self.assertEqual(self.ev("PlayerFrame.anchors[1][5]"), 24)  # from the first load, not moved again
+        self.assertEqual(self.ev("PlayerFrame.anchors[1][5]"), 0)
 
     def test_slash_command_and_probe(self):
         self.run_lua("SlashCmdList['CHERRYSBAR'](nil, 'probe')")
@@ -969,6 +1029,16 @@ class PackageTest(unittest.TestCase):
             self.assertIn(f"y = {y} }}", options)
         self.assertIn("ROW_X, ROW_W, ROW_H = 90, 776, 30", gen)
         self.assertIn("O.ROW_X, O.ROW_W, O.ROW_H = 90, 776, 30", options)
+
+    def test_bars_are_drawn_under_the_game(self):
+        root = ET.parse(SOURCE / "CherrysBar.xml").getroot()
+        tops = {el.get("name"): el for el in root}
+        for name, el in tops.items():
+            if re.match(r"CBar_(Bar|Edge|Pin|Lock)(Top|Bottom)$|CBar_D\d+$", name):
+                self.assertEqual(el.get("frameStrata"), "BACKGROUND", name)
+        # The game's own top-of-screen frames are LOW, and its menus and windows higher still.
+        self.assertEqual(tops["CBar_Menu"].get("frameStrata"), "DIALOG")
+        self.assertEqual(tops["CBar_Options"].get("frameStrata"), "DIALOG")
 
     def test_toc_lists_lua_and_every_file_exists(self):
         toc = (KIT / "CherrysKit.toc").read_text(encoding="utf-8-sig")

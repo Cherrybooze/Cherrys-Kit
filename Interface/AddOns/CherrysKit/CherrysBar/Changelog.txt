@@ -1,5 +1,11 @@
 Cherry's Bar
 
+1.1.2
+  The top bar now leaves the game's frames alone: it is drawn under the portrait, housing controls,
+  target, buffs and minimap, and its displays stay in the clear stretch between them. Clear left and
+  Clear right are set per bar (400 and 490 on top). Move frames is now per bar, off for the top and on
+  for the bottom. When on, it takes the portrait's separate buttons and the housing frame along.
+
 1.1.1
   Art now comes straight from Cherry's finished Studio Panel Assets pack: Ironstone, Blacksteel,
   Froststeel, Darkwood, Verdant and Arcane, with its icons, controls and 2:1 volume speakers. Saved

@@ -1110,7 +1110,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cq probe`
 - **Easy to rearrange**: drag displays on a map of the bars in `/cbar`, or on the bars themselves, or use the Left, Right, top bar, bottom bar and Hide buttons. Right-click an empty part of a bar to tick displays on and off.
 - **Right-click any display** for its options: icon, label, colours and where it goes. Left-click does its job, such as opening your bag or listing friends online.
 - **Your own text**: rewrite any display with tokens such as `[FREE]`, `[GPH]` for gold per hour or `[TTL]` for time to level.
-- **Seven styles** (Ironstone, Blacksteel, Froststeel, Darkwood, Verdant, Arcane and plain Slate) with a matching set of icons, and an option to move the game's frames clear of the bars.
+- **Seven styles** (Ironstone, Blacksteel, Froststeel, Darkwood, Verdant, Arcane and plain Slate) with a matching set of icons, and a bar drawn under the game's portrait, housing controls and minimap, with displays kept clear of them.
 - **Light on the game**: displays read only on events or slow timers, and displays you hid do nothing.
 
 **Still being tested in game:** moving the game's frames, text widths and some of the game calls. `/cbar probe` shows what the client does.

@@ -1,8 +1,8 @@
 {
-  "kit_version": "0.11.93",
+  "kit_version": "0.11.94",
   "hub_version": "0.4.23",
-  "release_summary": "A playtest that adds Cherry's Bar 1.1.1 (/cbar): full-width information bars at the top of the screen, the bottom, or both, with eighteen displays set per bar and seven styles and icons from Cherry's Studio Panel art. Displays can be dragged on a map of the bars in /cbar or on the bars themselves, or moved with buttons and right-click menus. It is a fork of XBar III, with bars and settings in the spirit of Titan Panel, and shows only the top bar at first. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed. Everything from the 0.11.90 playtest is included unchanged.",
-  "runtime_validation": "Lua 5.1 simulated-client suite: 775 tests; 749 passed and 26 retired-editor tests skipped. Cherry's Bar adds 74 regressions covering the default top bar, top/bottom/both, tiled art on each edge, text and icons clear of the art's rail, stepping and dragging displays along and between bars, the map of the bars in the options window, right-click menus, auto-hide, formats, one redraw per event burst, events following the tokens used, near-zero garbage on idle frames, rarer ticks in combat, moving game frames and restoring them through bar changes and Reload UI, session figures, Volume, carried-over style names, the art matching the pack's manifest, the hub switch and the XBar old-copy check. Nothing has run in the real client yet: drawing, text widths, GetAnchor, frame moves, dragging, the new coordinate and volume calls and the game calls inherited from XBar III need the in-game checks in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
+  "release_summary": "A playtest that adds Cherry's Bar 1.1.2 (/cbar): full-width information bars at the top of the screen, the bottom, or both, with eighteen displays set per bar and seven styles and icons from Cherry's Studio Panel art. Displays can be dragged on a map of the bars in /cbar or on the bars themselves, or moved with buttons and right-click menus. It is a fork of XBar III, with bars and settings in the spirit of Titan Panel, and shows only the top bar at first, drawn under the game's frames with its displays kept clear of them. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed. Everything from the 0.11.90 playtest is included unchanged.",
+  "runtime_validation": "Lua 5.1 simulated-client suite: 783 tests; 757 passed and 26 retired-editor tests skipped. Cherry's Bar adds 82 regressions covering the default top bar left clear of the portrait and housing controls and right clear of the buffs and minimap, the game's frames left unmoved by default, bars in the lowest strata, top/bottom/both, tiled art on each edge, stepping and dragging displays along and between bars, the map of the bars in the options window, right-click menus, auto-hide, formats, one redraw per event burst, events following the tokens used, near-zero garbage on idle frames, rarer ticks in combat, optional frame moves through bar changes and Reload UI, session figures, Volume, carried-over style names, the art matching the pack's manifest, the hub switch and the XBar old-copy check. Frame strata, sizes and positions were read from the installed client's own layout files. Nothing has run in the real client yet: drawing order, text widths, dragging, the new coordinate and volume calls and the game calls inherited from XBar III need the in-game checks in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
   "addons": [
     {
       "folder": "KittyCombo",
@@ -131,7 +131,7 @@
     {
       "folder": "CherrysBar",
       "title": "Cherry's Bar",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "command": "/cbar",
       "description_file": "17-cherrys-bar.md",
       "summary": "Information bars at the top, bottom or both, with displays set per bar.",

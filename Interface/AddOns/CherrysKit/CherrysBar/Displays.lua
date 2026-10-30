@@ -283,11 +283,11 @@ end
 function D.Layout()
   for _, barName in ipairs(G.BAR_NAMES) do
     if G.Bars.IsShown(barName) then
-      local offset = D.PADDING
+      local offset = D.PADDING + G.Bars.Gap(barName, "left")
       for _, def in ipairs(D.Row(barName, "left")) do
         offset = offset + place(def, D.Config(def), barName, "left", offset) + D.PADDING
       end
-      local right = D.PADDING + (unlocked() and G.Bars.HANDLE_SPACE or 0)
+      local right = D.PADDING + G.Bars.Gap(barName, "right") + (unlocked() and G.Bars.HANDLE_SPACE or 0)
       local row = D.Row(barName, "right")
       for i = #row, 1, -1 do
         local def = row[i]

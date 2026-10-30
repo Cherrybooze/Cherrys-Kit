@@ -41,6 +41,12 @@ function B.Nudge(name)
   return name == "bottom" and nudge or -nudge
 end
 
+-- How far from the screen's edge a side's displays start.
+function B.Gap(name, side)
+  local cfg = G.S().bars[name]
+  return tonumber(side == "right" and cfg.rightGap or cfg.leftGap) or 0
+end
+
 function B.SkinFile(name)
   local skin = G.S().bars[name].skin
   return G.MEDIA .. "Skins/" .. skin .. (name == "bottom" and "/bottom" or "/top")
@@ -122,12 +128,13 @@ function B.ApplyHandles()
     local on = not S.locked and B.IsVisible(name)
     local pin, lock = _G[partName("Pin", name)], _G[partName("Lock", name)]
     local bar = partName("Bar", name)
+    local gap = B.Gap(name, "right")
     if lock and pin then
       if on then
         lock:ClearAllAnchors()
-        lock:SetAnchor("RIGHT", "RIGHT", bar, -4, B.Nudge(name))
+        lock:SetAnchor("RIGHT", "RIGHT", bar, -(4 + gap), B.Nudge(name))
         pin:ClearAllAnchors()
-        pin:SetAnchor("RIGHT", "RIGHT", bar, -24, B.Nudge(name))
+        pin:SetAnchor("RIGHT", "RIGHT", bar, -(24 + gap), B.Nudge(name))
         G.Try(_G[partName("Pin", name) .. "Icon"], "SetTexture", G.Icon(S.bars[name].autoHide and "PinOut" or "PinIn"))
         pin:Show()
         lock:Show()
@@ -283,9 +290,11 @@ function B.BarClick(name, key)
 end
 
 ---------------------------------------------------------------------------
--- Making room. Top frames near the edge move down by the bar's height, and back when the bar goes.
--- A frame moved by someone else since counts from its new place. Nothing is saved: Reload UI starts
--- again from the game's own positions. An auto-hide bar takes no room.
+-- Making room, a per-bar choice. The bars are drawn under the game's frames, so the top bar leaves them
+-- alone by default; the bottom bar lifts the action bar, which would otherwise cover its displays.
+-- Top frames near the edge move down by the bar's height, and back when the bar goes. A frame moved
+-- by someone else since counts from its new place. Nothing is saved: Reload UI starts again from
+-- the game's own positions. An auto-hide bar takes no room.
 ---------------------------------------------------------------------------
 
 -- Groups move together; the first frame of a group decides. Each stays where XBar III moved it.
@@ -295,6 +304,16 @@ B.TOP_GROUPS = {
   { "PlayerBuffButton1" },
   { "UnitFrame_party1" },
   { "MinimapFrameBorder", "MinimapFrame" },
+  -- Separate frames in the client, so the portrait would otherwise leave them behind.
+  { "PartyMicFrame" },
+  { "PlayerFramePartyBoardButton" },
+  { "PlayerFrameQuitInstanceButton" },
+  { "PlayerFrameWorldBattleGroundButton" },
+  { "PlayerFrameWeekInstancesButton" },
+  { "PetBookFrameButton" },
+  { "PlayerFramePetButton" },
+  { "PetHeadFrame" },
+  { "HouseFrame" },
 }
 B.MAX_TOP_OFFSET = 180 -- a frame further down than this is not in the bar's way
 
@@ -383,9 +402,8 @@ local function moveBottom(want)
 end
 
 local function roomFor(name)
-  local S = G.S()
-  local cfg = S.bars[name]
-  return (S.makeRoom and cfg.show and not cfg.autoHide) and B.Height() or 0
+  local cfg = G.S().bars[name]
+  return (cfg.makeRoom and cfg.show and not cfg.autoHide) and B.Height() or 0
 end
 
 function B.MakeRoom()

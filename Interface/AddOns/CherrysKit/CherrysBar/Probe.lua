@@ -18,7 +18,7 @@ P.FUNCTIONS = {
 
 P.FRAMES = {
   "PlayerFrame", "TargetFrame", "PlayerBuffButton1", "UnitFrame_party1", "MinimapFrame", "MinimapFrameBorder",
-  "MainMenuFrame", "ExperienceFrame", "EquipDameFrame", "BagFrame",
+  "MainMenuFrame", "ExperienceFrame", "EquipDameFrame", "BagFrame", "HouseFrame", "PlayerBuffFrame",
 }
 
 local function has(o, m)
@@ -52,6 +52,15 @@ function P.Run()
   if not G.ready then
     return
   end
+  local layers = {}
+  for _, name in ipairs({ "CBar_BarTop", "PlayerFrame", "HouseFrame", "TargetFrame", "PlayerBuffFrame", "MinimapFrameBorder" }) do
+    local frame = _G[name]
+    if has(frame, "GetFrameStrata") then
+      local ok, strata = pcall(frame.GetFrameStrata, frame)
+      layers[#layers + 1] = name .. "=" .. tostring(ok and strata)
+    end
+  end
+  G.Print("layers: " .. (#layers > 0 and table.concat(layers, ", ") or "the client does not report them"))
   G.Print("moving frames: " .. G.Bars.status)
   local x, y = G.FramePos(CBar_BarTop)
   G.Print("top bar at " .. tostring(x) .. ", " .. tostring(y) .. ", middle of the screen " .. tostring(G.MiddleX())
