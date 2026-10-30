@@ -69,4 +69,6 @@ main { max-width: 1180px; }
 .bank-tip-type { color: #bdc9d5; font-size: .85rem; }
 .bank-tip-row { font-size: .88rem; }
 .bank-tip-row b { color: #fff; }
+.bank-stale { color: #f0a35e; }
+.bank-character .bank-stale { grid-column: 2; }
 .bank-letters { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .78rem; color: #d9b65c; }
