@@ -10,7 +10,7 @@
 		</Scripts>
 	</Frame>
 	<Frame name="CherrysChat_Settings" parent="UIParent" frameStrata="DIALOG" enableMouse="true" hidden="true">
-		<Size><AbsDimension x="460" y="508" /></Size>
+		<Size><AbsDimension x="460" y="540" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Backdrop name="CherrysChat_Settings_Backdrop" bgFile="Interface/Tooltips/Tooltip-Background" edgeFile="Interface/Tooltips/Tooltip-border">
 			<EdgeSize><AbsValue val="16" /></EdgeSize>
@@ -46,17 +46,17 @@
 				</FontString>
 				<FontString name="CherrysChat_KeyTitle" inherits="GameFontNormal" justifyH="LEFT" text="Encrypted chat">
 					<Size><AbsDimension x="200" y="18" /></Size>
-					<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="372" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="404" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="14" /></FontHeight>
 				</FontString>
 				<FontString name="CherrysChat_KeyHint" inherits="GameFontNormal" justifyH="LEFT" text="">
 					<Size><AbsDimension x="430" y="18" /></Size>
-					<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="438" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="470" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 				<FontString name="CherrysChat_SettingsHint" inherits="GameFontNormal" justifyH="LEFT" text="Sizes are saved per window and come back after every login.">
 					<Size><AbsDimension x="430" y="18" /></Size>
-					<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="474" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="506" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -160,12 +160,17 @@
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="236" y="332" /></Offset></Anchor></Anchors>
 				<Scripts><OnClick>CherrysChat.Settings("classcolors");</OnClick></Scripts>
 			</Button>
+			<Button name="CherrysChat_BubbleButton" inherits="UIPanelButtonTemplate" text="Say bubbles">
+				<Size><AbsDimension x="205" y="24" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="364" /></Offset></Anchor></Anchors>
+				<Scripts><OnClick>CherrysChat.Settings("bubble");</OnClick></Scripts>
+			</Button>
 			<Frame name="CherrysChat_KeyDropDown" inherits="UIDropDownMenuTemplate">
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="220" y="364" /></Offset></Anchor></Anchors>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="220" y="396" /></Offset></Anchor></Anchors>
 			</Frame>
 			<EditBox name="CherrysChat_KeyBox" inherits="UIPanelEditBoxTemplate" letters="64" historyLines="0" autoFocus="false">
 				<Size><AbsDimension x="230" y="24" /></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="402" /></Offset></Anchor></Anchors>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="22" y="434" /></Offset></Anchor></Anchors>
 				<Scripts>
 					<OnEnterPressed>CherrysChat.Crypt.SaveKeyBox();</OnEnterPressed>
 					<OnEscapePressed>this:ClearFocus(); CherrysChat.Crypt.ShowKey();</OnEscapePressed>
@@ -173,12 +178,12 @@
 			</EditBox>
 			<Button name="CherrysChat_KeySave" inherits="UIPanelButtonTemplate" text="Save key">
 				<Size><AbsDimension x="86" y="24" /></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="262" y="402" /></Offset></Anchor></Anchors>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="262" y="434" /></Offset></Anchor></Anchors>
 				<Scripts><OnClick>CherrysChat.Crypt.SaveKeyBox();</OnClick></Scripts>
 			</Button>
 			<Button name="CherrysChat_KeyClear" inherits="UIPanelButtonTemplate" text="Clear">
 				<Size><AbsDimension x="76" y="24" /></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="402" /></Offset></Anchor></Anchors>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="352" y="434" /></Offset></Anchor></Anchors>
 				<Scripts><OnClick>CherrysChat.Crypt.ClearKey();</OnClick></Scripts>
 			</Button>
 		</Frames>

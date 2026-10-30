@@ -1,10 +1,30 @@
 # Global Bank
 
-Version **1.4.7** · Kit release **0.11.104** · [All addons / hub](../README.md)
+Version **1.4.12** · Kit release **0.11.110** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.12
+
+Gear no longer stacks in the Bank tab. Each piece shows its durability, plus level, tier upgrades, runes and stats when you hover it, and the name search finds stats too. A character saves these the next time it logs in.
+
+## Updated in 1.4.11
+
+The extension's page has a Currencies tab with every character's currencies, totals and a sort per currency. The Bank tab can exclude items, with an option to exclude bound items that can't be equipped, and an always-keep list. Characters save their currencies and which items are bound the next time they log in.
+
+## Updated in 1.4.10
+
+The auction cache now removes an item when its auction ends, not only after two days, and forgets old transfer records. The page also handles a character file of any size, for players with thousands of alts.
+
+## Updated in 1.4.9
+
+The Bank tab can now run without the local helper: choose your save folder, and your game folder for icons, and it reads them straight from there. The Terminal and Auctions tabs still need the helper.
+
+## Updated in 1.4.8
+
+The extension's page is now a full view of your bank, with no terminal window. Its **Bank** tab shows everything every character holds in one scrolling grid, with the game's own icons, a search and filters. Hover an item to see who has it and in which slot. **Update now** reads your save files. Its **Terminal** tab runs the helper's commands. To collect auction data and update automatically each time you log out, turn on **Start the Global Bank helper automatically when Chrome is open** at the top of the page. It runs hidden, stops when Chrome closes, and turning it off closes it. The top of the page shows whether the helper is running and for how long, and how many characters and items are saved.
 
 ## Updated in 1.4.7
 

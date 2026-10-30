@@ -50,6 +50,19 @@ function Request-AAHCleanup([string]$File, [string]$Text, [string]$SaveFolder, [
     else { $script:AAHPending[$File] = @{ text = $Text; root = $SaveFolder; assignments = $Assignments } }
 }
 
+# An entry stays until its auction ends or two days pass since anyone saw it. The game's remaining
+# time rounds up, so a live auction isn't removed early. Entries with no remaining time keep the two days.
+function Test-AAHEntryLive($entry, [double]$now) {
+    $seen = [double]$entry.lastSeenTrustedUTC
+    if ($seen -le ($now - 172800)) { return $false }
+    $left = $entry.data['leftTime']
+    return ($left -isnot [double] -and $left -isnot [int] -and $left -isnot [long] -and $left -isnot [decimal]) -or ($seen + [double]$left * 60) -gt $now
+}
+# Which transfers are done only matters while one could still be in a save file.
+function Remove-AAHOldTokens($map, [double]$now) {
+    foreach ($token in @($map.Keys)) { if ([double]$map[$token] -le ($now - 604800)) { $map.Remove($token) } }
+}
+
 function New-AAHMap { return ,([hashtable]::new([StringComparer]::Ordinal)) }
 function ConvertTo-AAHMap($value) {
     if ($null -eq $value) { return $null }
@@ -218,7 +231,7 @@ function Import-AAHBroadOutbox([string]$File, [string]$Text, [string]$DataFolder
         $token = $character + "`n" + $transfer
         $byKey = New-AAHMap
         foreach ($entry in $realm.entries) {
-            if ($entry.lastSeenTrustedUTC -gt ($now - 172800)) { $byKey[$entry.key] = $entry }
+            if (Test-AAHEntryLive $entry $now) { $byKey[$entry.key] = $entry }
         }
         if (-not $realm.processedTransfers.Contains($token)) {
             foreach ($entry in $wire.entries) {
@@ -238,7 +251,7 @@ function Import-AAHBroadOutbox([string]$File, [string]$Text, [string]$DataFolder
                     $seen = Get-AAHNumber $entry.lastSeenTrustedUTC
                     if ($seen -le 0 -or $seen -gt ($now + 300)) { throw 'Invalid trusted auction timestamp.' }
                 }
-                if ($seen -le ($now - 172800)) { continue }
+                if (-not (Test-AAHEntryLive @{ lastSeenTrustedUTC = $seen; data = $core } $now)) { continue }
                 $memberships = New-AAHMap
                 if ($byKey.Contains($key)) { foreach ($m in $byKey[$key].memberships.Keys) { $memberships[$m] = $true } }
                 foreach ($m in $entry.memberships.Keys) { if ($entry.memberships[$m] -is [bool] -and $entry.memberships[$m]) { $memberships[(Get-AAHString $m)] = $true } }
@@ -281,8 +294,10 @@ function Import-AAHBroadOutbox([string]$File, [string]$Text, [string]$DataFolder
     foreach ($server in @($state.realms.Keys)) {
         $realm = $state.realms[$server]
         $before = $realm.entries.Count
-        $realm.entries = @($realm.entries | Where-Object { $_.lastSeenTrustedUTC -gt ($now - 172800) })
+        $realm.entries = @($realm.entries | Where-Object { Test-AAHEntryLive $_ $now })
         if ($realm.entries.Count -ne $before) { $expired = $true }
+        if ($realm.processedTransfers) { Remove-AAHOldTokens $realm.processedTransfers $now }
+        if ($realm.processedRuns) { Remove-AAHOldTokens $realm.processedRuns $now }
         $public.realms[$server] = @{ entries = $realm.entries; acknowledgements = $realm.acknowledgements }
     }
     if (-not $outboxMatches.Count -and -not $expired -and [IO.File]::Exists($mirror)) { return }

@@ -39,12 +39,17 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
     if ($h.Count -lt 2 -or -not $h[1]) { return $null }
     $field = { param($i) if ($h.Count -gt $i) { $h[$i] } else { "" } }
     $classes = New-Object 'System.Collections.Generic.List[object]'
+    $currencies = New-Object 'System.Collections.Generic.List[object]'
     $bag = New-Object 'System.Collections.Generic.List[object]'
     $bank = New-Object 'System.Collections.Generic.List[object]'
     for ($i = 1; $i -lt $records.Count; $i++) {
         $f = $records[$i].Split([char]'~')
         if ($f.Count -ge 3 -and $f[0] -eq 'C' -and $f[1] -and (ConvertTo-GBNumber $f[2]) -gt 0) {
             $classes.Add([pscustomobject]@{ Name = ConvertTo-GBText $f[1]; Level = ConvertTo-GBNumber $f[2] })
+            continue
+        }
+        if ($f.Count -ge 3 -and $f[0] -eq 'M' -and $f[1] -and (ConvertTo-GBNumber $f[2]) -gt 0) {
+            $currencies.Add([pscustomobject]@{ Key = $f[1]; Amount = ConvertTo-GBNumber $f[2]; Name = $(if ($f.Count -gt 3) { ConvertTo-GBText $f[3] } else { "" }) })
             continue
         }
         if ($f.Count -lt 4) { continue }
@@ -59,6 +64,15 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
             Name  = if ($f.Count -gt 4) { ConvertTo-GBText $f[4] } else { "" }
             Icon  = if ($f.Count -gt 5) { $f[5] } else { "" }
             Where = $where
+            Bound = ($f.Count -gt 6 -and $f[6] -eq "1")
+            Gear  = $null
+        }
+        if ($f.Count -ge 15) {
+            $names = { param($text) if ($text) { @($text.Split([char]';') | ForEach-Object { ConvertTo-GBText $_ }) } else { @() } }
+            $item.Gear = [pscustomobject]@{
+                Dura = ConvertTo-GBNumber $f[7]; MaxDura = ConvertTo-GBNumber $f[8]; Plus = ConvertTo-GBNumber $f[9]; Tier = ConvertTo-GBNumber $f[10]
+                FreeSlots = ConvertTo-GBNumber $f[11]; Stats = @(& $names $f[12]); Runes = @(& $names $f[13]); Color = $f[14]
+            }
         }
         if ($where -eq "bag") { $bag.Add($item) } else { $bank.Add($item) }
     }
@@ -66,6 +80,7 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
         Name      = ConvertTo-GBText (& $field 1)
         Class     = ConvertTo-GBText (& $field 2)
         Classes   = @($classes.ToArray())
+        Currencies = @($currencies.ToArray())
         Level     = ConvertTo-GBNumber (& $field 3)
         Gold      = ConvertTo-GBNumber (& $field 4)
         BagSlots  = ConvertTo-GBNumber (& $field 5)
@@ -223,6 +238,10 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
         if ($linkData.schemaVersion -ne 1 -or $null -eq $linkData.characters) { throw 'Unsupported CharacterLinks.json format' }
         $links = @($linkData.characters)
     }
+    # Looked up by name once, so thousands of characters don't each search every list.
+    $rewardsByName = @{}; foreach ($reward in $rewards) { $rewardsByName[[string]$reward.name] = @($rewardsByName[[string]$reward.name]) + @($reward) }
+    $linksByName = @{}; foreach ($link in $links) { $linksByName[[string]$link.name] = @($linksByName[[string]$link.name]) + @($link) }
+    $charCount = @{}; foreach ($c in $chars) { $charCount[[string]$c.Name] = 1 + [int]$charCount[[string]$c.Name] }
     $sb = New-Object System.Text.StringBuilder
     [void]$sb.Append('{"made":').Append((ConvertTo-GBJsonString $made)).Append(',"characters":[')
     $firstChar = $true
@@ -237,14 +256,20 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
             if (-not $firstClass) { [void]$sb.Append(',') }; $firstClass = $false
             [void]$sb.Append('{"name":').Append((ConvertTo-GBJsonString $class.Name)).Append(',"level":').Append($class.Level).Append('}')
         }
+        [void]$sb.Append('],"currencies":[')
+        $firstMoney = $true
+        foreach ($money in $c.Currencies) {
+            if (-not $firstMoney) { [void]$sb.Append(',') }; $firstMoney = $false
+            [void]$sb.Append('{"key":').Append((ConvertTo-GBJsonString $money.Key)).Append(',"amount":').Append($money.Amount).Append(',"name":').Append((ConvertTo-GBJsonString $money.Name)).Append('}')
+        }
         [void]$sb.Append('],"gold":').Append($c.Gold)
         [void]$sb.Append(',"bagSlots":').Append($c.BagSlots).Append(',"bankSlots":').Append($c.BankSlots)
         [void]$sb.Append(',"bankSeen":').Append($(if ($c.BankSeen) { 'true' } else { 'false' }))
         [void]$sb.Append(',"saved":').Append((ConvertTo-GBJsonString $c.Saved))
         [void]$sb.Append(',"note":').Append((ConvertTo-GBJsonString $c.Note))
-        $matchingRewards = @($rewards | Where-Object { $_.name -ieq $c.Name })
-        $matchingChars = @($chars | Where-Object { $_.Name -ieq $c.Name })
-        if (($c.Level -ge 100 -or @($c.Classes | Where-Object { $_.Level -ge 100 }).Count -gt 0) -and $matchingRewards.Count -eq 1 -and $matchingChars.Count -eq 1) {
+        $matchingRewards = @($rewardsByName[[string]$c.Name] | Where-Object { $_ })
+        $sameName = $charCount[[string]$c.Name]
+        if (($c.Level -ge 100 -or @($c.Classes | Where-Object { $_.Level -ge 100 }).Count -gt 0) -and $matchingRewards.Count -eq 1 -and $sameName -eq 1) {
             $reward = $matchingRewards[0]
             [void]$sb.Append(',"dailyLogin":{"collectedAt":').Append((ConvertTo-GBJsonString $reward.collectedAt))
             [void]$sb.Append(',"server":').Append((ConvertTo-GBJsonString $reward.server))
@@ -252,8 +277,8 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
         } else {
             [void]$sb.Append(',"dailyLogin":null')
         }
-        $matchingLinks = @($links | Where-Object { $_.name -ieq $c.Name })
-        if ($matchingLinks.Count -eq 1 -and $matchingChars.Count -eq 1) {
+        $matchingLinks = @($linksByName[[string]$c.Name] | Where-Object { $_ })
+        if ($matchingLinks.Count -eq 1 -and $sameName -eq 1) {
             [void]$sb.Append(',"accountId":').Append((ConvertTo-GBJsonString $matchingLinks[0].accountId))
         } else { [void]$sb.Append(',"accountId":null') }
         foreach ($part in @(@("bag", $c.Bag), @("bank", $c.Bank))) {
@@ -265,7 +290,17 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
                 [void]$sb.Append('{"slot":').Append($it.Slot).Append(',"count":').Append($it.Count)
                 [void]$sb.Append(',"id":').Append((ConvertTo-GBJsonString $it.Id))
                 [void]$sb.Append(',"name":').Append((ConvertTo-GBJsonString $it.Name))
-                [void]$sb.Append(',"icon":').Append((ConvertTo-GBJsonString $it.Icon)).Append('}')
+                [void]$sb.Append(',"icon":').Append((ConvertTo-GBJsonString $it.Icon))
+                if ($it.Bound) { [void]$sb.Append(',"bound":true') }
+                if ($it.Gear) {
+                    $gear = $it.Gear
+                    [void]$sb.Append(',"gear":{"dura":').Append($gear.Dura).Append(',"maxDura":').Append($gear.MaxDura).Append(',"plus":').Append($gear.Plus)
+                    [void]$sb.Append(',"tier":').Append($gear.Tier).Append(',"freeSlots":').Append($gear.FreeSlots)
+                    [void]$sb.Append(',"stats":[').Append(((@($gear.Stats) | ForEach-Object { ConvertTo-GBJsonString $_ }) -join ','))
+                    [void]$sb.Append('],"runes":[').Append(((@($gear.Runes) | ForEach-Object { ConvertTo-GBJsonString $_ }) -join ','))
+                    [void]$sb.Append('],"color":').Append((ConvertTo-GBJsonString $gear.Color)).Append('}')
+                }
+                [void]$sb.Append('}')
             }
             [void]$sb.Append(']')
         }

@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Nineteen package descriptions for Cherry's Kit 0.11.104, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Nineteen package descriptions for Cherry's Kit 0.11.110, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -332,6 +332,16 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
+## Updated in 0.11.0
+
+**Emoji in Say bubbles.** The bubble over your head is drawn by the game itself, and no addon can put pictures in it or change its font, so an emoji in it showed as two empty boxes. Cherry's Chat now sends emoji in **Say** as text the bubble can show. Pick how with **Say bubbles** in the `/cchat` settings:
+
+- **Symbols (^_^)**, the default: hearts, stars, suns and faces like (^_^) that the game font can draw, and text such as `:carrot:` for every emoji with no symbol. Others see the symbol instead of the picture.
+- **Text (:fire:)**: every emoji goes out as text like `:fire:`, and everyone with Cherry's Chat still sees the picture in chat.
+- **Emoji (boxes)**: sends the emoji itself, as before.
+
+Other channels have no bubbles and stay as they were. Bubbles over other players show what they sent.
+
 ## Updated in 0.10.12
 
 With the **Ultimate Mail Mod** mail window open, **Ctrl+click** or **Shift+click** a name in chat to put it in the mail's **To** field instead of the chat box. With the mail window closed these clicks work as before.
@@ -489,6 +499,26 @@ Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, add
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.12
+
+Gear no longer stacks in the Bank tab. Each piece shows its durability, plus level, tier upgrades, runes and stats when you hover it, and the name search finds stats too. A character saves these the next time it logs in.
+
+## Updated in 1.4.11
+
+The extension's page has a Currencies tab with every character's currencies, totals and a sort per currency. The Bank tab can exclude items, with an option to exclude bound items that can't be equipped, and an always-keep list. Characters save their currencies and which items are bound the next time they log in.
+
+## Updated in 1.4.10
+
+The auction cache now removes an item when its auction ends, not only after two days, and forgets old transfer records. The page also handles a character file of any size, for players with thousands of alts.
+
+## Updated in 1.4.9
+
+The Bank tab can now run without the local helper: choose your save folder, and your game folder for icons, and it reads them straight from there. The Terminal and Auctions tabs still need the helper.
+
+## Updated in 1.4.8
+
+The extension's page is now a full view of your bank, with no terminal window. Its **Bank** tab shows everything every character holds in one scrolling grid, with the game's own icons, a search and filters. Hover an item to see who has it and in which slot. **Update now** reads your save files. Its **Terminal** tab runs the helper's commands. To collect auction data and update automatically each time you log out, turn on **Start the Global Bank helper automatically when Chrome is open** at the top of the page. It runs hidden, stops when Chrome closes, and turning it off closes it. The top of the page shows whether the helper is running and for how long, and how many characters and items are saved.
 
 ## Updated in 1.4.7
 
@@ -768,6 +798,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns and stat ranges.**
 
 Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.4 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+
+## Updated in 6.2.5
+
+The auction cache now removes an item when its auction ends, not only after two days.
 
 ## Updated in 6.2.4
 
@@ -1310,5 +1344,5 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/lnc probe
 
 ## Credits and licence
 
-- Original project by **Pyrrhus**, MIT licence. Integration fixes by **Cherry**.
+- By **Cherry**, MIT licence.
 - Full licence text: `Interface\AddOns\LogNextChar\LICENSE.txt`.
