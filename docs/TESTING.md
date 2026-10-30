@@ -1,8 +1,20 @@
-# In-game checks for kit 0.11.101
+# In-game checks for kit 0.11.102
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+
+## 0.11.102 emoji in Say bubbles
+
+Cherry's Chat 0.11.0. The simulated client checks what goes out on each channel; the bubble's font and other players' chat need these checks. Bubbles are drawn by the client (C++ SpeakFrame) with no Lua access, which is why emoji go out as text.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| CB1 | With Say bubbles on **Text (:fire:)** (default), type `hi :fire` in Say. | The bubble shows `hi :fire`; your Cherry's Chat window shows the fire picture. |
+| CB2 | Paste a real emoji (Windows key + .) into a Say line. | The bubble shows `:code:` for it, not two boxes. |
+| CB3 | Click **Say bubbles** until it reads **Symbols (^_^)**, then say `:heart: :star: :smile:`. | The bubble shows ♥ ★ (^_^). Report any symbol that shows as a box. |
+| CB4 | With ":heart: when sending" on, say `:fire` in Party. | Party chat gets the real emoji, as before (no bubble there). |
+| CB5 | Click **Say bubbles** until **Emoji (boxes)** and say `:fire`. | Sends as before (boxes in the bubble if ":heart: when sending" is on). |
 
 ## 0.11.101 real time, daily reset, extension setup and single-addon installs
 

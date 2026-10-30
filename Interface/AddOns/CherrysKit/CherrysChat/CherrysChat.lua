@@ -34,7 +34,7 @@ function C.MarkOurs(wrapper)
   return wrapper
 end
 
-C.version = "0.10.12"
+C.version = "0.11.0"
 C.MAX_WINDOWS = 10
 C.MIN_FONT, C.MAX_FONT = 6, 40
 C.MIN_W, C.MIN_H = 120, 60
@@ -52,6 +52,7 @@ C.DEFAULTS = {
   emojiSize = 0, -- 0 = same height as the text
   smileys = false, -- also turn :) :( <3 ... into pictures
   sendShortcodes = false, -- :heart: in a message you send becomes the emoji itself
+  sayEmoji = "code", -- emoji in Say (shown in the bubble over your head): code | symbols | emoji
   copyButton = true, -- the C button on the chat: select mode for copying
   classColors = true, -- colour player names when their primary class is known
   allWindows = true, -- font and size changes go to every chat window
@@ -444,46 +445,49 @@ local function isSkinTone(ch)
   return #ch == 4 and string.sub(ch, 1, 3) == "\240\159\143" and string.byte(ch, 4) >= 187
 end
 
--- Swaps known emoji for symbols, text or (with pics, for Cherry's chat) picture marks. Skin tones
--- and joined sequences show their first emoji; an emoji we have no picture for is left as it is.
+-- Calls fn(entry, arg, original) for each known emoji in msg and puts in what it returns. Skin
+-- tones and joined sequences count as their first emoji; an emoji we do not know is left as it is.
+local function swapEmoji(msg, fn, arg)
+  if not string.find(msg, "[\226-\244]") then
+    return msg
+  end
+  local parts, i, n, changed = {}, 1, string.len(msg), false
+  while i <= n do
+    local len = charLen(string.byte(msg, i))
+    local ch = string.sub(msg, i, i + len - 1)
+    local entry = C.byText[ch]
+    local start = i
+    i = i + len
+    if entry then
+      changed = true
+      -- Swallow what belongs to this emoji: FE0F, a skin tone, and ZWJ + next emoji.
+      while i <= n do
+        local nlen = charLen(string.byte(msg, i))
+        local nxt = string.sub(msg, i, i + nlen - 1)
+        if nxt == VS16 or isSkinTone(nxt) then
+          i = i + nlen
+        elseif nxt == ZWJ and i + nlen <= n then
+          i = i + nlen
+          i = i + charLen(string.byte(msg, i))
+        else
+          break
+        end
+      end
+      parts[#parts + 1] = fn(entry, arg, string.sub(msg, start, i - 1))
+    else
+      parts[#parts + 1] = ch
+    end
+  end
+  return changed and table.concat(parts) or msg
+end
+
+-- Swaps known emoji for symbols, text or (with pics, for Cherry's chat) picture marks.
 local function decorateText(msg, pics)
   local d = db()
   if d.emoji == "off" or type(msg) ~= "string" then
     return msg
   end
-  local out = msg
-  if string.find(msg, "[\226-\244]") then
-    local parts, i, n, changed = {}, 1, string.len(msg), false
-    while i <= n do
-      local len = charLen(string.byte(msg, i))
-      local ch = string.sub(msg, i, i + len - 1)
-      local entry = C.byText[ch]
-      local start = i
-      i = i + len
-      if entry then
-        changed = true
-        -- Swallow what belongs to this emoji: FE0F, a skin tone, and ZWJ + next emoji.
-        while i <= n do
-          local nlen = charLen(string.byte(msg, i))
-          local nxt = string.sub(msg, i, i + nlen - 1)
-          if nxt == VS16 or isSkinTone(nxt) then
-            i = i + nlen
-          elseif nxt == ZWJ and i + nlen <= n then
-            i = i + nlen
-            i = i + charLen(string.byte(msg, i))
-          else
-            break
-          end
-        end
-        parts[#parts + 1] = render(entry, pics, string.sub(msg, start, i - 1))
-      else
-        parts[#parts + 1] = ch
-      end
-    end
-    if changed then
-      out = table.concat(parts)
-    end
-  end
+  local out = swapEmoji(msg, render, pics)
   if d.smileys then
     out = string.gsub(" " .. out .. " ", "(%s)(%S+)(%f[%s])", function(pre, word)
       local code = C.SMILEYS[word]
@@ -560,6 +564,34 @@ function C.ExpandShortcodes(msg)
   return C.ReplaceShortcodes(msg, function(entry)
     return entry.text
   end)
+end
+
+local function bubbleWord(entry, mode)
+  local sym = mode == "symbols" and CherrysChat_Symbols and CherrysChat_Symbols[entry.code]
+  return sym and sym[1] or ":" .. entry.code .. ":"
+end
+
+local function bubbleSymbol(entry)
+  return bubbleWord(entry, "symbols")
+end
+
+-- A Say line also shows in the bubble over your head. The client draws bubbles itself (C++
+-- SpeakFrame, straight from the network message, no Lua frame), in the game font: an emoji there is
+-- two boxes and a |T picture code stays raw text. So in Say, emoji go out as :code: (Cherry's Chat
+-- users still see the picture in chat) or, with "symbols", as the symbols the game font can draw.
+function C.BubbleText(msg, mode)
+  if type(msg) ~= "string" or (mode ~= "code" and mode ~= "symbols") then
+    return msg
+  end
+  msg = swapEmoji(msg, bubbleWord, mode)
+  if mode == "symbols" then
+    msg = C.ReplaceShortcodes(msg, bubbleSymbol)
+  end
+  return msg
+end
+
+function C.IsSay(kind)
+  return string.upper(tostring(kind or "SAY")) == "SAY"
 end
 
 ---------------------------------------------------------------------------
@@ -775,7 +807,11 @@ local function wrapSend()
   C.sendWrapped = true
   local orig = C.Real("SendChatMessage", SendChatMessage)
   SendChatMessage = C.MarkOurs(function(msg, ...)
-    if db().sendShortcodes then
+    local d = db()
+    local bubble = d.sayEmoji ~= "emoji" and C.IsSay((...))
+    if bubble then
+      msg = C.BubbleText(msg, d.sayEmoji)
+    elseif d.sendShortcodes then
       msg = C.ExpandShortcodes(msg)
     end
     if C.Crypt and C.Crypt.Outgoing(orig, msg, ...) then
@@ -1186,6 +1222,9 @@ end
 local EMOJI_MODES = { "symbols", "text", "off" }
 local EMOJI_LABELS = { symbols = "Symbols (^_^)", text = "Text (:smile:)", pictures = "Pictures", off = "Off" }
 
+local BUBBLE_MODES = { "code", "symbols", "emoji" }
+local BUBBLE_LABELS = { code = "Text (:fire:)", symbols = "Symbols (^_^)", emoji = "Emoji (boxes)" }
+
 local function onOff(v)
   return v and "|cff60ff60on|r" or "|cffff6060off|r"
 end
@@ -1207,6 +1246,7 @@ function C.Refresh()
   setText(CherrysChat_EmojiButton, "Game chat emoji: " .. EMOJI_LABELS[d.emoji])
   setText(CherrysChat_SmileyButton, ":) <3 as emoji: " .. onOff(d.smileys))
   setText(CherrysChat_SendButton, ":heart: when sending: " .. onOff(d.sendShortcodes))
+  setText(CherrysChat_BubbleButton, "Say bubbles: " .. (BUBBLE_LABELS[d.sayEmoji] or d.sayEmoji))
   setText(CherrysChat_CopyToggle, "Copy button on chat: " .. onOff(d.copyButton))
   if C.Crypt then
     C.Crypt.RefreshUI()
@@ -1273,6 +1313,14 @@ function C.Settings(action)
     d.smileys = not d.smileys
   elseif action == "send" then
     d.sendShortcodes = not d.sendShortcodes
+  elseif action == "bubble" then
+    local nextMode = BUBBLE_MODES[1]
+    for k, mode in ipairs(BUBBLE_MODES) do
+      if mode == d.sayEmoji then
+        nextMode = BUBBLE_MODES[k % #BUBBLE_MODES + 1]
+      end
+    end
+    d.sayEmoji = nextMode
   elseif action == "copybutton" then
     d.copyButton = not d.copyButton
     C.PlaceCopyButton()
