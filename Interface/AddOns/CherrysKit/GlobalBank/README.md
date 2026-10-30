@@ -8,7 +8,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Updated in 1.4.12
 
-Gear no longer stacks in the Bank tab. Each piece shows its durability, plus level, tier upgrades, runes and stats when you hover it, and the name search finds stats too. A character saves these the next time it logs in.
+Hovering an item in the in-game window now shows the game's own item tooltip, for any saved character. Gear no longer stacks in the Bank tab. Each piece shows its durability, plus level, tier upgrades, runes and stats when you hover it, and the name search finds stats too. A character saves these the next time it logs in.
 
 ## Updated in 1.4.11
 

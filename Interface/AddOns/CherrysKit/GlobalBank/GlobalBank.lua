@@ -17,7 +17,7 @@
 -- Snapshot string: header and records joined by "`", fields by "~":
 --   GB1~name~class~level~gold~bagSlots~bankSlots~bankSeen(0/1)~time
 --   B~slot~count~id~name~icon   (bag)     K~slot~count~id~name~icon   (bank)   then ~1 if the item is bound
---   gear then adds ~durability~maxDurability~plus~tierAdded~freeRuneSlots~stats~runes~colour (stats and runes joined by ;)
+--   gear then adds ~durability~maxDurability~plus~tierAdded~freeRuneSlots~stats~runes~colour~link (stats and runes joined by ;, link as the numbers of the item's link)
 --   M~key~amount~name   a currency other than gold, left out at zero
 
 GlobalBank = GlobalBank or {}
@@ -95,7 +95,7 @@ function GB.Serialize(c)
       local gear = it.gear
       if gear then
         record = table.concat({ record, it.bound and "1" or "", gear.dura, gear.maxDura, gear.plus, gear.tier, gear.freeSlots,
-          clean(table.concat(gear.stats, ";")), clean(table.concat(gear.runes, ";")), clean(gear.color) }, "~")
+          clean(table.concat(gear.stats, ";")), clean(table.concat(gear.runes, ";")), clean(gear.color), clean(gear.link) }, "~")
       elseif it.bound then
         record = record .. "~1"
       end
@@ -139,7 +139,7 @@ function GB.ParseGear(f)
     return list
   end
   return { dura = tonumber(f[8]) or 0, maxDura = tonumber(f[9]) or 0, plus = tonumber(f[10]) or 0, tier = tonumber(f[11]) or 0,
-    freeSlots = tonumber(f[12]) or 0, stats = names(f[13]), runes = names(f[14]), color = f[15] or "" }
+    freeSlots = tonumber(f[12]) or 0, stats = names(f[13]), runes = names(f[14]), color = f[15] or "", link = f[16] or "" }
 end
 
 -- Returns the character table, or nil for anything that is not a GB1 string.
@@ -248,7 +248,7 @@ function GB.ReadGear(id, link)
   local tierByte = math.floor(packed / 256) % 256
   local plusByte = math.floor(packed / 65536) % 256
   local gear = { dura = math.floor(data[11] / 100), maxDura = packed % 256, plus = plusByte % 32, freeSlots = math.floor(plusByte / 32),
-    tier = math.max(tierByte % 32 - 10, 0), stats = {}, runes = {}, color = string.match(link, "|h|c%x%x(%x%x%x%x%x%x)%[") or "" }
+    tier = math.max(tierByte % 32 - 10, 0), stats = {}, runes = {}, color = string.match(link, "|h|c%x%x(%x%x%x%x%x%x)%[") or "", link = hex }
   for i = 4, 6 do
     for _, short in ipairs({ data[i] % 65536, math.floor(data[i] / 65536) }) do
       if short > 0 then
