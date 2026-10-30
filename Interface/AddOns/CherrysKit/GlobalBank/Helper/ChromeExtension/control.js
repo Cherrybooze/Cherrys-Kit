@@ -64,10 +64,57 @@
       return GBFolders.answer(message);
     }
   }
-  const bank = GBBank.create(byId('tab-bank'), bankSend, bankStatus, (totals, made) => {
+  const bank = GBBank.create(byId('tab-bank'), bankSend, bankStatus, (totals, made, characters) => {
+    GBBank.renderCurrencies(byId('currency-view'), characters);
+    GBBank.renderRoster(byId('roster-view'), characters);
     const number = value => value.toLocaleString('en-US');
     byId('status-data').textContent = `${number(totals.characters)} characters · ${number(totals.items)} items in ${number(totals.stacks)} stacks`
       + (made ? ` · data from ${made}` : ' · no data saved yet');
+  });
+  // The Item Depot tab
+  let depot = null;
+  function renderDepot() {
+    const text = byId('depot-search').value.trim().toLowerCase();
+    const items = (depot?.items || []).filter(item => !text || item.name.toLowerCase().includes(text));
+    byId('depot-grid').replaceChildren(...items.map(item => {
+      const slot = document.createElement('div');
+      slot.className = 'bank-slot filled';
+      slot.title = item.count > 1 ? `${item.name} × ${item.count.toLocaleString('en-US')}` : item.name;
+      const letters = document.createElement('span');
+      letters.className = 'bank-letters';
+      letters.textContent = item.name.slice(0, 2);
+      slot.append(letters);
+      if (item.picture) {
+        const picture = document.createElement('img');
+        picture.alt = '';
+        picture.referrerPolicy = 'no-referrer';
+        picture.src = item.picture;
+        slot.append(picture);
+      }
+      if (item.count > 1) {
+        const count = document.createElement('span');
+        count.className = 'bank-count';
+        count.textContent = item.count > 9999 ? `${Math.floor(item.count / 1000)}k` : String(item.count);
+        slot.append(count);
+      }
+      return slot;
+    }));
+    byId('depot-status').textContent = depot
+      ? `${depot.items.length.toLocaleString('en-US')} items${depot.server ? ` on ${depot.server}` : ''}, read ${new Date(depot.read).toLocaleString()}.`
+      : 'Nothing read yet.';
+  }
+  byId('depot-search').addEventListener('input', renderDepot);
+  byId('depot-copy').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(depot?.outline || '');
+      byId('depot-status').textContent = depot?.outline ? 'Copied the page layout: tag and class names only, with no names, items or links.' : 'Open your item depot page first.';
+    } catch (error) {
+      byId('depot-status').textContent = 'Could not copy: ' + String(error.message || error);
+    }
+  });
+  chrome.storage.local.get('depot').then(result => { depot = result.depot || null; renderDepot(); }).catch(() => {});
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.depot) { depot = changes.depot.newValue || null; renderDepot(); }
   });
   // The status line and the toggle
   const statusHelper = byId('status-helper');

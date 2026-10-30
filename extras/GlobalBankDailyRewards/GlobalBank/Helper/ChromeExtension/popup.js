@@ -100,6 +100,26 @@ async function poll() {
   await refresh();
   refreshTimer = setTimeout(poll, 30000);
 }
+// The same setting as the toggle on the extension's page.
+const autoHelper = document.getElementById('auto-helper');
+chrome.storage.local.get('autoHelper').then(({autoHelper: on}) => { autoHelper.checked = !!on; }).catch(() => {});
+autoHelper.addEventListener('change', async () => {
+  const on = autoHelper.checked;
+  autoHelper.disabled = true;
+  helper.textContent = on ? 'Starting the helper…' : 'Stopping the helper…';
+  try {
+    await chrome.storage.local.set({autoHelper: on});
+    const response = await chrome.runtime.sendMessage({type: on ? 'helper-auto-start' : 'helper-auto-stop'});
+    if (!response?.ok) throw new Error(response?.error || 'No response from the local bridge.');
+    // A helper takes a moment to start
+    if (on) await new Promise(resolve => setTimeout(resolve, 3000));
+    await refresh();
+  } catch (error) {
+    helper.textContent = 'The helper could not be changed: ' + String(error.message || error);
+  } finally {
+    autoHelper.disabled = false;
+  }
+});
 document.getElementById('open-tools').addEventListener('click', event => {
   if (!event.isTrusted) return;
   chrome.tabs.create({url:chrome.runtime.getURL('control.html')});

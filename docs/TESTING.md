@@ -1,4 +1,4 @@
-# In-game checks for kit 0.11.106
+# In-game checks for kit 0.11.107
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
@@ -16,6 +16,9 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G7 | Turn on **Start the Global Bank helper automatically when Chrome is open**. | No window opens. Within a few seconds the top of the page says the helper is running, started automatically, and for how long. Log out of a character: the data updates by itself. |
 | G8 | Turn it off, then turn it on and close Chrome completely. | Off: the helper stops. Closing Chrome: it stops within a few seconds, and starts again the next time Chrome opens. A helper you opened in its own window isn't closed by the toggle. |
 | G9 | On the page, open **Read from folders instead of the helper** and choose your save folder and game folder. This only matters on a PC without the helper. | Chrome asks to allow each one. On a PC without the helper, the Bank tab fills from them. After a Chrome restart, **Allow access again** brings them back. |
+| G10 | Log in and out on a character with some currencies, then open the **Currencies** tab. | Its amounts match the game's own currency window, and clicking a heading sorts by it. Gold and the other currencies have an **All characters** total. |
+| G11 | On that character, have a bound item that isn't gear. In **Excluded items**, tick **Exclude bound items that can't be equipped**. | The item leaves the grid, and bound gear stays. Tick **Show excluded items, dimmed** and right-click it to keep it. |
+| G12 | Open your item depot page through ZShop, then the extension page's **Item Depot** tab. | The items appear in the grid, with counts and a read time. If they look wrong, press **Copy page layout** and send what it copies. |
 | G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
 | G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 

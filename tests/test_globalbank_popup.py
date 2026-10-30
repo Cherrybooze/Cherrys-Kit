@@ -41,13 +41,13 @@ const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8');
 function fixture(now, responses) {
-  const elements = Object.fromEntries(['helper','start','status','reset','reset-time','open-tools','reload-extension'].map(id => [id, {
+  const elements = Object.fromEntries(['helper','start','status','reset','reset-time','auto-helper','open-tools','reload-extension'].map(id => [id, {
     textContent:'', hidden:true, disabled:false, addEventListener(type, callback) { this.click = callback; }
   }]));
   const sent = [], timers = [];
   class Clock extends Date { constructor(...args) { super(...(args.length ? args : [now])); } }
   const context = vm.createContext({document:{getElementById:id => elements[id]}, Date:Clock, Intl,
-    chrome:{runtime:{sendMessage:async message => { sent.push(message.type); return typeof responses === 'function' ? responses(message.type) : responses; }}},
+    chrome:{storage:{local:{get:async () => ({}), set:async () => {}}},runtime:{sendMessage:async message => { sent.push(message.type); return typeof responses === 'function' ? responses(message.type) : responses; }}},
     setTimeout:(fn, ms) => { if (ms === 500) { queueMicrotask(fn); return 0; } timers.push({fn,ms}); return timers.length; },
     clearTimeout:() => {}, console});
   vm.runInContext(source, context);
@@ -105,12 +105,12 @@ const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resol
     def popup_in_context(self, body, zone='Europe/Helsinki'):
         self.run_js(r'''
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
-const elements = Object.fromEntries(['helper','start','status','reset','reset-time','open-tools','reload-extension'].map(id => [id, {
+const elements = Object.fromEntries(['helper','start','status','reset','reset-time','auto-helper','open-tools','reload-extension'].map(id => [id, {
   textContent:'', hidden:true, disabled:false, addEventListener() {}
 }]));
 class Clock extends Date { constructor(...args) { super(...(args.length ? args : ['2026-10-30T12:00:00Z'])); } }
 const context = vm.createContext({document:{getElementById:id => elements[id]}, Date:Clock, Intl,
-  chrome:{runtime:{sendMessage:async () => ({ok:true,running:true})}}, setTimeout:() => 0, clearTimeout:() => {}, console});
+  chrome:{storage:{local:{get:async () => ({}), set:async () => {}}},runtime:{sendMessage:async () => ({ok:true,running:true})}}, setTimeout:() => 0, clearTimeout:() => {}, console});
 vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8'), context);
 ''' + body, zone)
 
@@ -189,6 +189,10 @@ assert.equal(folders.savedString('x = 1\r\n' + line('GlobalBank_Char', 'a\\"b'),
 assert.equal(folders.savedString('MyGlobalBank_Char = "no"\r\n', 'GlobalBank_Char'), null);
 assert.equal(folders.savedString('GlobalBank_Char = "not closed\r\n', 'GlobalBank_Char'), null);
 assert.equal(folders.snapshot('nope', 'now'), null);
+const newer = folders.snapshot('GB1~A~Mage~1~0~0~0~0~t`M~12~345~Honor`M~bad~0~x`B~1~1~5~Name~icon~1`B~2~1~6~Name~icon', 'when');
+assert.deepEqual(JSON.parse(JSON.stringify(newer.currencies)), [{key:'12', amount:345, name:'Honor'}]);
+assert.equal(newer.bag[0].bound, true);
+assert.equal(newer.bag[1].bound, undefined);
 const character = folders.snapshot(snapshot, 'when');
 assert.equal(character.name, 'Jöhn');
 assert.deepEqual([character.level, character.gold, character.bagSlots, character.bankSlots, character.bankSeen], [50, 1200, 60, 80, true]);
@@ -241,6 +245,80 @@ const file = new Blob([Buffer.from('FDB0'), u32(entries.length), ...table, ...en
   assert.equal(await folders.readIcon(file, index['interface\\icons\\d.dds']), null);
 })().catch(error => { console.error(error); process.exit(1); });
 """)
+
+    def test_currencies_table_and_item_exclusions(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+const bank = context.GBBank;
+const characters = [
+  {name: 'Ann', gold: 100, currencies: [{key: '12', amount: 5, name: 'Honor'}, {key: 'account', amount: 9, name: ''}]},
+  {name: 'Bob', gold: 300, currencies: [{key: '12', amount: 2, name: 'Honor'}, {key: 'account', amount: 9, name: ''}]},
+  {name: 'Old', gold: 200},
+];
+let table = bank.currencyTable(characters, 'gold', true);
+assert.deepEqual([...table.columns.map(c => c.name)], ['Gold', 'Honor', 'Diamonds']);
+assert.deepEqual([...table.rows.map(r => r.name)], ['Bob', 'Old', 'Ann']);
+assert.equal(table.columns[0].total, 600);
+assert.equal(table.columns[1].total, 7);
+// Shared by an account, so never added up
+assert.equal(table.columns[2].total, null);
+assert.deepEqual([...bank.currencyTable(characters, '12', true).rows.map(r => r.name)], ['Ann', 'Bob', 'Old']);
+// The game's own order, with charges first and account currencies last
+const ordered = bank.currencyTable([{name: 'A', gold: 0, currencies: [{key: 'account', amount: 1, name: ''}, {key: '4', amount: 1, name: 'Honor'}, {key: 'transmutor', amount: 1, name: ''}, {key: '11', amount: 1, name: 'Shell'}]}], 'gold', true);
+assert.deepEqual([...ordered.columns.map(c => c.name)], ['Gold', 'Arcane Transmutor Charges', 'Shell', 'Honor', 'Diamonds']);
+const roster = [
+  {name: 'Ann', class: 'Mage', level: 100, gold: 5, saved: '2026-10-01 10:00', bag: [{}], bank: [{}, {}], dailyLogin: {collectedAt: '2026-10-30T12:00:00Z', server: 'S', day: 3}},
+  {name: 'Bob', class: 'Rogue', level: 20, gold: 9, saved: '2026-10-02 10:00', bag: [], bank: [], dailyLogin: null},
+  {name: 'Cid', class: 'Bard', level: 100, gold: 1, saved: '', bag: [], bank: [], dailyLogin: {collectedAt: '2026-10-31T12:00:00Z', server: 'S', day: 4}},
+];
+const names = (sort, descending) => [...bank.rosterRows(roster, sort, descending).map(r => r.name)];
+assert.deepEqual(names('taken', true), ['Cid', 'Ann', 'Bob']);
+assert.deepEqual(names('level', true), ['Ann', 'Cid', 'Bob']);
+assert.deepEqual(names('class', false), ['Cid', 'Ann', 'Bob']);
+assert.deepEqual(names('name', true), ['Cid', 'Bob', 'Ann']);
+assert.equal(bank.rosterRows(roster, 'name', false)[0].items, 3);
+assert.equal(bank.rosterRows(roster, 'name', false)[1].taken, 0);
+assert.deepEqual([...bank.currencyTable(characters, '12', false).rows.map(r => r.name)], ['Old', 'Bob', 'Ann']);
+assert.deepEqual([...bank.currencyTable(characters, 'name', true).rows.map(r => r.name)], ['Old', 'Bob', 'Ann']);
+assert.deepEqual(JSON.parse(JSON.stringify(bank.currencyTable([], 'gold', true).columns.map(c => c.total))), [0]);
+
+const settings = {excluded: new Set(), whitelist: new Set(), excludeBound: false};
+const boundStone = {id: '200', name: 'Stone', bound: true, type: 'Other'};
+const boundSword = {id: '211000', name: 'Sword', bound: true, type: 'Weapons'};
+const looseStone = {id: '201', name: 'Loose', bound: false, type: 'Other'};
+assert.equal(bank.isHidden(boundStone, settings), false);
+settings.excludeBound = true;
+assert.equal(bank.isHidden(boundStone, settings), true);
+assert.equal(bank.isHidden(boundSword, settings), false);
+assert.equal(bank.isHidden(looseStone, settings), false);
+// Right-click brings back what the rule hid, by keeping it always
+bank.toggleHidden(boundStone, settings);
+assert.equal(bank.isHidden(boundStone, settings), false);
+assert.ok(settings.whitelist.has('200'));
+// and right-click again excludes it, which beats the old always-keep
+bank.toggleHidden(boundStone, settings);
+assert.equal(bank.isHidden(boundStone, settings), true);
+assert.ok(settings.excluded.has('200'));
+assert.ok(!settings.whitelist.has('200'));
+// An excluded item the rule wouldn't hide just comes back
+bank.toggleHidden(looseStone, settings);
+assert.equal(bank.isHidden(looseStone, settings), true);
+bank.toggleHidden(looseStone, settings);
+assert.equal(bank.isHidden(looseStone, settings), false);
+assert.ok(!settings.whitelist.has('201'));
+// The list of entries carries the flag
+assert.equal(bank.entries([{name: 'A', bag: [{slot: 1, id: '1', name: 'x', bound: true}], bank: [{slot: 1, id: '2', name: 'y'}]}])[1].bound, false);
+assert.equal(bank.entries([{name: 'A', bag: [{slot: 1, id: '1', name: 'x', bound: true}]}])[0].bound, true);
+""")
+
+    def test_the_depot_page_address_is_never_kept(self):
+        source = (ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension/depot.js').read_text(encoding='utf-8')
+        self.assertNotIn('location.href', source)
+        self.assertNotIn('fetch(', source)
+        self.assertNotIn('XMLHttpRequest', source)
+        self.assertNotIn('__token', source)
 
     def test_a_big_character_file_comes_in_parts(self):
         self.run_js(r"""
@@ -356,9 +434,9 @@ const flush=async()=>{for(let i=0;i<8;i++) await new Promise(r=>setImmediate(r))
     def test_reload_button_only_reloads_after_a_user_click(self):
         self.run_js(r"""
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const elements=Object.fromEntries(['helper','start','status','reset','reset-time','open-tools','reload-extension'].map(id=>[id,{addEventListener(type,fn){this.click=fn}}]));
+const elements=Object.fromEntries(['helper','start','status','reset','reset-time','auto-helper','open-tools','reload-extension'].map(id=>[id,{addEventListener(type,fn){this.click=fn}}]));
 let reloads=0;
-const chrome={runtime:{sendMessage:async()=>({ok:true,running:true}),reload:()=>reloads++}};
+const chrome={storage:{local:{get:async()=>({}),set:async()=>{}}},runtime:{sendMessage:async()=>({ok:true,running:true}),reload:()=>reloads++}};
 vm.runInNewContext(fs.readFileSync(path.join(process.argv[1],'popup.js'),'utf8'),{document:{getElementById:id=>elements[id]},chrome,Date,Intl,setTimeout:()=>0,clearTimeout:()=>{}});
 elements['reload-extension'].click({isTrusted:false}); assert.equal(reloads,0);
 elements['reload-extension'].click({isTrusted:true}); assert.equal(reloads,1);
@@ -412,10 +490,16 @@ assert.deepEqual(sent, ['bank-data', 'bank-icons', 'bank-command']);
 for (const type of ['helper-info', 'helper-auto-start', 'helper-auto-stop']) { assert.equal(ask({type}), true); assert.equal(sent.pop(), type); }
 const others = [{id:'test',url:runtime.getURL('popup.html')}, {id:'other',url:runtime.getURL('control.html')},
   {id:'test',tab:{id:1},url:'https://eu-shop-runesofmagic.gameforge.com/dailies/display/5'}];
+// The popup has the toggle too, but nothing else here
+const popup = {id:'test',url:runtime.getURL('popup.html')};
+for (const type of ['helper-auto-start', 'helper-auto-stop']) { assert.equal(ask({type}, popup), true); assert.equal(sent.pop(), type); }
+assert.equal(ask({type:'helper-info'}, popup), undefined);
 for (const sender of others) {
   ask({type:'bank-data'}, sender);
-  ask({type:'helper-auto-stop'}, sender);
-  ask({type:'helper-auto-start'}, sender);
+  if (sender !== others[0]) {
+    ask({type:'helper-auto-stop'}, sender);
+    ask({type:'helper-auto-start'}, sender);
+  }
   ask({type:'bank-icons',names:['interface/icons/x']}, sender);
   ask({type:'bank-command',command:'erase Cherry'}, sender);
 }

@@ -15,7 +15,27 @@ const validPage = url => {
   try { const u = new URL(url); return u.protocol === 'https:' && /^[a-z0-9-]+-shop-runesofmagic\.gameforge\.com$/i.test(u.hostname) && /^\/dailies\/display\/5\/?$/.test(u.pathname); }
   catch { return false; }
 };
+const validDepot = url => {
+  try { const u = new URL(url); return u.protocol === 'https:' && /^[a-z0-9-]+-shop-runesofmagic\.gameforge\.com$/i.test(u.hostname) && /^\/depotitems\//.test(u.pathname); }
+  catch { return false; }
+};
+// What the depot page reported: its items and when, never its address.
+const cleanDepot = message => {
+  if (!Array.isArray(message.items) || message.items.length > 2000 || typeof message.outline !== 'string' || message.outline.length > 40000) return null;
+  const items = [];
+  for (const item of message.items) {
+    if (typeof item?.name !== 'string' || !item.name || item.name.length > 120 || !Number.isSafeInteger(item.count) || item.count < 1 || typeof item.picture !== 'string' || item.picture.length > 500) return null;
+    items.push({name: item.name, count: item.count, picture: item.picture.startsWith('https://') ? item.picture.split('?')[0] : ''});
+  }
+  return {items, outline: message.outline, server: typeof message.server === 'string' ? message.server.slice(0, 120) : '', read: new Date().toISOString()};
+};
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
+  if (sender.id === chrome.runtime.id && !!sender.tab && message?.type === 'depot-items' && validDepot(sender.url || '')) {
+    const depot = cleanDepot(message);
+    if (!depot) return;
+    chrome.storage.local.set({depot}).then(() => reply({ok:true}), error => reply({ok:false,error:String(error)}));
+    return true;
+  }
   const control = sender.url === chrome.runtime.getURL('control.html');
   const popup = !sender.tab && sender.url === chrome.runtime.getURL('popup.html');
   const shop = !!sender.tab && validPage(sender.url || '');
@@ -57,7 +77,7 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     });
     return true;
   }
-  if (control && (message?.type === 'helper-info' || message?.type === 'helper-auto-start' || message?.type === 'helper-auto-stop')) {
+  if ((control && message?.type === 'helper-info') || ((control || popup) && (message?.type === 'helper-auto-start' || message?.type === 'helper-auto-stop'))) {
     chrome.runtime.sendNativeMessage(HOST, {type:message.type}, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);

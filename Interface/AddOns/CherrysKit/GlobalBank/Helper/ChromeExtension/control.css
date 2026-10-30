@@ -30,6 +30,13 @@ main { max-width: 1180px; }
 .tabs button { color: #dbe3ea; background: #192533; border-color: #405468; border-bottom: 0; border-radius: 6px 6px 0 0; }
 .tabs button[aria-selected="true"] { color: #101820; background: #f1c85e; border-color: #e7c061; }
 .terminal { min-height: 320px; max-height: 60vh; white-space: pre-wrap; }
+.currency-table th button { padding: 2px 4px; color: inherit; background: none; border: 0; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.currency-table td:not(:first-child), .currency-table th:not(:first-child) { text-align: right; }
+.currency-table td { white-space: nowrap; }
+.currency-table .currency-total td { font-weight: 600; border-bottom: 2px solid #405468; }
+.bank-slot.bank-excluded { opacity: .35; }
+.bank-exclusion-list { margin: 4px 0 8px; padding-left: 18px; max-height: 160px; overflow-y: auto; }
+.bank-exclusion-list button { padding: 0 6px; font-size: .8rem; }
 .folders { margin-top: 8px; }
 .folder-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
 .bank-filters { position: sticky; top: 0; z-index: 5; margin: 12px 0; padding: 10px 14px; }

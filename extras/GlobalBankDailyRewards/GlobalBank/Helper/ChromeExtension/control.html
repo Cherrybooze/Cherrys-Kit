@@ -16,7 +16,7 @@
     <section class="status-bar" aria-label="Status">
       <p id="status-helper" role="status">Checking the helper…</p>
       <p id="status-data" class="hint"></p>
-      <label class="status-toggle"><input id="auto-helper" type="checkbox"> Start the Global Bank helper automatically when Chrome is open</label>
+      <label class="status-toggle"><input id="auto-helper" type="checkbox"> Keep the invisible helper running automatically when Chrome is open</label>
       <details id="folders" class="folders">
         <summary>Read from folders instead of the helper</summary>
         <p class="hint">On a PC without the helper, the Bank tab can read your characters and icons straight from these two folders. It only reads them, and nothing leaves this PC. The Terminal and Auctions tabs still need the helper.</p>
@@ -28,6 +28,9 @@
     </section>
     <nav class="tabs" role="tablist" aria-label="Global Bank">
       <button type="button" role="tab" data-tab="bank" aria-selected="true">Bank</button>
+      <button type="button" role="tab" data-tab="currencies" aria-selected="false">Currencies</button>
+      <button type="button" role="tab" data-tab="characters" aria-selected="false">Characters</button>
+      <button type="button" role="tab" data-tab="depot" aria-selected="false">Item Depot</button>
       <button type="button" role="tab" data-tab="terminal" aria-selected="false">Terminal</button>
       <button type="button" role="tab" data-tab="auctions" aria-selected="false">Auctions</button>
     </nav>
@@ -47,6 +50,19 @@
             <div class="bank-menu-buttons"><button id="bank-all" type="button">All</button><button id="bank-none" type="button">None</button></div>
             <div id="bank-character-list" class="bank-character-list"></div>
           </details>
+          <details class="bank-characters-menu">
+            <summary id="bank-exclusions-summary">Excluded items</summary>
+            <p class="hint">Right-click an item in the grid to exclude it. This only changes what this page shows.</p>
+            <label class="bank-check"><input id="bank-exclude-bound" type="checkbox"> Exclude bound items that can't be equipped</label>
+            <label class="bank-check"><input id="bank-show-excluded" type="checkbox"> Show excluded items, dimmed</label>
+            <label>Item name or ID <input id="bank-exclusion-item" maxlength="80" autocomplete="off"></label>
+            <div class="bank-menu-buttons"><button id="bank-exclusion-add" type="button">Exclude</button><button id="bank-whitelist-add" type="button">Always keep</button></div>
+            <p id="bank-exclusion-note" class="hint" role="status"></p>
+            <h3>Excluded</h3>
+            <ul id="bank-excluded-list" class="bank-exclusion-list"></ul>
+            <h3>Always kept</h3>
+            <ul id="bank-whitelist" class="bank-exclusion-list"></ul>
+          </details>
           <label class="bank-check"><input id="bank-stack" type="checkbox" checked> Stack the same item</label>
           <span id="bank-total" class="hint"></span>
         </div>
@@ -55,6 +71,32 @@
       <div id="bank-grid" class="bank-grid"></div>
       <p id="bank-made" class="hint"></p>
       <div id="bank-tooltip" class="bank-tooltip" hidden></div>
+    </div>
+    <div id="tab-currencies" class="tab-panel" hidden>
+      <section aria-labelledby="currencies-title">
+        <h2 id="currencies-title">Currencies</h2>
+        <p class="hint">Click a heading to sort by it. A character's other currencies appear once it has logged in with this version. Diamonds, Bonus and Billdin are per account, so they aren't added up.</p>
+        <div id="currency-view" class="auction-table-wrap"><table class="currency-table"><thead></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+    <div id="tab-characters" class="tab-panel" hidden>
+      <section aria-labelledby="characters-title">
+        <h2 id="characters-title">Characters</h2>
+        <p class="hint">Click a heading to sort by it. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p>
+        <div id="roster-view" class="auction-table-wrap"><table class="currency-table"><thead></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+    <div id="tab-depot" class="tab-panel" hidden>
+      <section aria-labelledby="depot-title">
+        <h2 id="depot-title">Item Depot</h2>
+        <p class="hint">Open your item depot page through ZShop in this browser and it fills in here. The page's address is never saved.</p>
+        <div class="bank-filter-row">
+          <label class="bank-wide">Item name <input id="depot-search" maxlength="80" autocomplete="off"></label>
+          <button id="depot-copy" type="button">Copy page layout</button>
+        </div>
+        <p id="depot-status" class="hint" role="status">Nothing read yet.</p>
+        <div id="depot-grid" class="bank-grid"></div>
+      </section>
     </div>
     <div id="tab-terminal" class="tab-panel" hidden>
       <section aria-labelledby="terminal-title">

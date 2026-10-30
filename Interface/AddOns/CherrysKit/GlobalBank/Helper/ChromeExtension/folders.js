@@ -36,22 +36,25 @@ const GBFolders = (() => {
     }
     return null;
   }
-  // GB1~name~class~level~gold~bagSlots~bankSlots~bankSeen~time, then C~class~level and B/K~slot~count~id~name~icon
+    // GB1~name~class~level~gold~bagSlots~bankSlots~bankSeen~time, then C~class~level, M~key~amount~name and
+  // B/K~slot~count~id~name~icon[~1 if bound] records,
   // records, all joined by backticks, into the character GlobalBank.json would hold.
   function snapshot(text, saved) {
     if (!text || !text.startsWith('GB1~')) return null;
     const records = text.split('`');
     const head = records[0].split('~');
     if (!head[1]) return null;
-    const character = {name: readable(head[1]), class: readable(head[2]), classes: [], level: number(head[3]), gold: number(head[4]),
+    const character = {name: readable(head[1]), class: readable(head[2]), classes: [], currencies: [], level: number(head[3]), gold: number(head[4]),
       bagSlots: number(head[5]), bankSlots: number(head[6]), bankSeen: head[7] === '1', saved, note: '', bag: [], bank: []};
     for (const record of records.slice(1)) {
       const field = record.split('~');
       if (field[0] === 'C' && field[1] && number(field[2]) > 0) {
         character.classes.push({name: readable(field[1]), level: number(field[2])});
+      } else if (field[0] === 'M' && field[1] && number(field[2]) > 0) {
+        character.currencies.push({key: field[1], amount: number(field[2]), name: readable(field[3])});
       } else if ((field[0] === 'B' || field[0] === 'K') && field.length >= 4) {
         (field[0] === 'B' ? character.bag : character.bank).push({slot: number(field[1]), count: Math.max(1, number(field[2])), id: field[3],
-          name: readable(field[4]), icon: field[5] || ''});
+          name: readable(field[4]), icon: field[5] || '', ...(field[6] === '1' ? {bound: true} : {})});
       }
     }
     return character;
