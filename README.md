@@ -18,7 +18,7 @@ Cherry's Kit combines original addons, rewrites and fixes to older favourites in
 
 ## What’s new in 0.11.102
 
-- **Global Bank 1.4.8**: the Daily Rewards extension's page shows every character's bag and bank as in game, with the game's own icons, and runs the helper's commands. Viewing your bank no longer needs a terminal window.
+- **Global Bank 1.4.8**: the Daily Rewards extension's page shows everything your characters hold in one grid with search and filters, using the game's own icons, and runs the helper's commands. Viewing your bank no longer needs a terminal window.
 
 ## In 0.11.101
 

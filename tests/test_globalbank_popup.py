@@ -175,27 +175,40 @@ assert.equal(context.GBIcons.decode(picture(4, 5000, 4, [0])), null);
 assert.equal(context.GBIcons.decode(new Uint8Array(3)), null);
 """)
 
-    def test_bank_lays_slots_out_as_the_game_does(self):
+    def test_bank_grid_filters_stacks_and_says_where_things_are(self):
         self.run_js(r"""
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
 const context = vm.createContext({console});
 vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
 const bank = context.GBBank;
-const character = {name:'Cherry', note:'bank alt', bagSlots:60, bankSlots:300, bankSeen:true,
-  bag:[{slot:1,name:'Mana Stone',count:3},{slot:31,name:'Rune',count:1}], bank:[{slot:41,name:'Mana Stone',count:2}]};
-assert.equal(bank.pageCount(character, 'bag'), 2);
-assert.equal(bank.pageCount(character, 'bank'), 8);
-let slots = bank.pageSlots(character, 'bag', 2);
-assert.equal(slots.length, 30);
-assert.equal(slots[0].slot, 31);
-assert.equal(slots[0].item.name, 'Rune');
-slots = bank.pageSlots(character, 'bank', 2);
-assert.equal(slots.length, 40);
-assert.equal(slots[0].item.name, 'Mana Stone');
-assert.equal(bank.pageCount({bagSlots:0, bag:[]}, 'bag'), 1);
-assert.equal(bank.totalOf(character, 'mana'), 5);
-for (const text of ['', 'cher', 'alt', 'rune']) assert.equal(bank.matches(character, text), true);
-assert.equal(bank.matches(character, 'nothing'), false);
+const characters = [
+  {name:'Cherry', level:100, bag:[{slot:1,id:'202845',name:'Mana Stone',icon:'interface/Icons/mana stone06',count:3}], bank:[{slot:45,id:'214491',name:'Great Sword',icon:'weapon/wp_blade',count:1}]},
+  {name:'Alt', level:10, bag:[{slot:31,id:'202845',name:'Mana Stone',icon:'interface/Icons/mana stone06',count:2}], bank:[]},
+];
+assert.equal(bank.locationLabel('bag', 31), 'Bag 31 (page 2, slot 1)');
+assert.equal(bank.locationLabel('bank', 45), 'Bank 45 (page 2, slot 5)');
+assert.equal(bank.locationLabel('bank', 40), 'Bank 40 (page 1, slot 40)');
+const all = bank.entries(characters);
+assert.equal(all.length, 3);
+const count = filters => bank.applyFilters(all, filters).length;
+assert.equal(count({}), 3);
+assert.equal(count({text:'mana'}), 2);
+assert.equal(count({type:'Weapons'}), 1);
+assert.equal(count({place:'bank'}), 1);
+assert.equal(count({minLevel:50}), 2);
+assert.equal(count({maxLevel:50}), 1);
+assert.equal(count({hidden:new Set(['Cherry'])}), 1);
+const stacked = bank.cells(all, true);
+assert.equal(stacked.length, 2);
+const stone = stacked.find(cell => cell.name === 'Mana Stone');
+assert.equal(stone.total, 5);
+assert.deepEqual(stone.places.map(place => place.character).join(), 'Cherry,Alt');
+assert.equal(bank.cells(all, false).length, 3);
+for (const [id, icon, type] of [['214491','weapon/wp_blade','Weapons'], ['220560','EQ_torso-leather','Armour'], ['235800','jewelry/earring_03','Jewellery'],
+  ['520090','run_tel_010','Runes'], ['550535','reci_car_001','Recipes'], ['200663','item_potion_050','Potions'], ['209902','Phantom/Material_c_02','Materials'],
+  ['202095','charger_04','Mounts and pets'], ['203165','quest_dust_01','Other'], ['n:Odd',null,'Other']]) {
+  assert.equal(bank.typeOf(id, icon), type, id);
+}
 """)
 
     def test_collected_countdown_and_invalidated_context_stop_quietly(self):

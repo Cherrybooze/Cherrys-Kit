@@ -1,50 +1,76 @@
 'use strict';
-// The Bank tab: every character's bag and bank, laid out as the game lays them out.
+// The Bank tab: everything every character holds, in one scrolling grid with a search and filters.
 const GBBank = (() => {
-  // The game's own layout: 30 bag slots a page, 6 across; 40 bank slots a page, 5 across.
-  const LAYOUT = {
-    bag: {label: 'Bag', perPage: 30, across: 6},
-    bank: {label: 'Bank', perPage: 40, across: 5},
-  };
+  // The game's own pages: 30 bag slots, 40 bank slots.
+  const PER_PAGE = {bag: 30, bank: 40};
+  const PLACE = {bag: 'Bag', bank: 'Bank'};
+  const MAX_TOOLTIP_ROWS = 12;
 
-  function formatGold(value) {
+  function formatNumber(value) {
     return Number(value || 0).toLocaleString('en-US');
   }
-  function holds(character, text) {
-    return ['bag', 'bank'].some(place => (character[place] || []).some(item => String(item.name || '').toLowerCase().includes(text)));
+  // Saved data has no item type, so this goes by the game's ID ranges and icon names. A good guess, not a fact.
+  function typeOf(id, icon) {
+    const number = Number(id) || 0;
+    const path = String(icon || '').toLowerCase();
+    if (number >= 520000 && number < 530000) return 'Runes';
+    if (number >= 550000 && number < 560000) return 'Recipes';
+    if (/earring|eq_ear|eq_neck|eq_finger|ring_|jewelry\//.test(path) && number >= 220000 && number < 240000) return 'Jewellery';
+    if (number >= 210000 && number < 220000) return 'Weapons';
+    if (number >= 220000 && number < 240000) return 'Armour';
+    if (/potion/.test(path)) return 'Potions';
+    if (/mana stone|fusnion_stone|item_ore|item_mat|phantom\/material/.test(path)) return 'Materials';
+    if (/mount|charger|pet_|egg/.test(path)) return 'Mounts and pets';
+    return 'Other';
   }
-  // Characters a search shows: its text in a name or note, or an item they hold.
-  function matches(character, text) {
-    if (!text) return true;
-    return String(character.name || '').toLowerCase().includes(text)
-      || String(character.note || '').toLowerCase().includes(text)
-      || holds(character, text);
+  // Bank 45 (page 2, slot 5)
+  function locationLabel(place, slot) {
+    const perPage = PER_PAGE[place];
+    const page = Math.floor((slot - 1) / perPage) + 1;
+    return `${PLACE[place]} ${slot} (page ${page}, slot ${slot - (page - 1) * perPage})`;
   }
-  function totalOf(character, text) {
-    let total = 0;
-    for (const place of ['bag', 'bank']) {
-      for (const item of character[place] || []) {
-        if (String(item.name || '').toLowerCase().includes(text)) total += Number(item.count) || 1;
+  // One row for each stack on each character
+  function entries(characters) {
+    const list = [];
+    for (const character of characters) {
+      for (const place of ['bag', 'bank']) {
+        for (const item of character[place] || []) {
+          list.push({id: item.id, name: String(item.name || 'Unknown item'), icon: item.icon, count: Number(item.count) || 1,
+            type: typeOf(item.id, item.icon), character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
+        }
       }
     }
-    return total;
+    return list;
   }
-  function pageCount(character, place) {
-    const layout = LAYOUT[place];
-    const slots = Number(place === 'bag' ? character.bagSlots : character.bankSlots) || 0;
-    const used = Math.max(0, ...(character[place] || []).map(item => Number(item.slot) || 0));
-    return Math.max(1, Math.ceil(Math.max(slots, used) / layout.perPage));
+  function applyFilters(list, filters) {
+    const text = (filters.text || '').toLowerCase();
+    return list.filter(entry => (!text || entry.name.toLowerCase().includes(text))
+      && (!filters.type || entry.type === filters.type)
+      && (!filters.place || entry.place === filters.place)
+      && (!filters.hidden || !filters.hidden.has(entry.character))
+      && (!filters.minLevel || entry.level >= filters.minLevel)
+      && (!filters.maxLevel || entry.level <= filters.maxLevel));
   }
-  // The slots of one page: [{slot, item or undefined}], in the game's order.
-  function pageSlots(character, place, page) {
-    const layout = LAYOUT[place];
-    const first = (page - 1) * layout.perPage + 1;
-    const bySlot = new Map((character[place] || []).map(item => [Number(item.slot), item]));
-    return Array.from({length: layout.perPage}, (_, i) => ({slot: first + i, item: bySlot.get(first + i)}));
+  // One cell for each item, or for each stack when stacking is off, and everywhere it is
+  function cells(list, stack) {
+    const found = new Map();
+    list.forEach((entry, index) => {
+      const key = stack ? String(entry.id || entry.name) : index;
+      if (!found.has(key)) found.set(key, {id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, total: 0, places: []});
+      const cell = found.get(key);
+      cell.total += entry.count;
+      cell.places.push(entry);
+    });
+    return [...found.values()];
   }
+  const SORTS = {
+    name: (a, b) => a.name.localeCompare(b.name),
+    count: (a, b) => b.total - a.total || a.name.localeCompare(b.name),
+    type: (a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
+  };
 
   function create(root, send, status) {
-    const state = {characters: [], name: null, place: 'bag', page: 1, search: ''};
+    const state = {characters: [], hidden: new Set(), sort: 'name'};
     const icons = new Map();
     const el = id => root.querySelector('#' + id);
     const tooltip = el('bank-tooltip');
@@ -55,92 +81,60 @@ const GBBank = (() => {
       if (text !== undefined) node.textContent = text;
       return node;
     }
-    function current() {
-      return state.characters.find(character => character.name === state.name) || null;
+    function moveTooltip(event) {
+      tooltip.style.left = Math.min(event.clientX + 14, window.innerWidth - 340) + 'px';
+      tooltip.style.top = Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 8) + 'px';
     }
-    function renderList() {
-      const list = el('bank-characters');
-      list.replaceChildren();
-      const text = state.search;
-      const shown = state.characters.filter(character => matches(character, text));
-      for (const character of shown) {
-        const button = make('button', 'bank-character' + (character.name === state.name ? ' selected' : ''));
-        button.type = 'button';
-        button.append(make('span', 'bank-name', character.name));
-        const held = text && holds(character, text) ? `${formatGold(totalOf(character, text))} found · ` : '';
-        button.append(make('span', 'bank-detail', `${held}${character.class || 'Level'} ${character.level || '?'} · ${formatGold(character.gold)} gold`));
-        if (character.note) button.append(make('span', 'bank-note', character.note));
-        button.addEventListener('click', () => {
-          state.name = character.name;
-          state.page = 1;
-          render();
-        });
-        list.append(button);
+    function showTooltip(event, cell) {
+      tooltip.replaceChildren(make('strong', '', cell.name), make('span', 'bank-tip-type', `${cell.type} · ${formatNumber(cell.total)} in all`));
+      const rows = [...cell.places].sort((a, b) => a.character.localeCompare(b.character) || a.place.localeCompare(b.place) || a.slot - b.slot);
+      for (const entry of rows.slice(0, MAX_TOOLTIP_ROWS)) {
+        const row = make('span', 'bank-tip-row');
+        row.append(make('b', '', entry.character), ` ${locationLabel(entry.place, entry.slot)}`);
+        if (entry.count > 1) row.append(` × ${formatNumber(entry.count)}`);
+        tooltip.append(row);
       }
-      if (!shown.length) list.append(make('p', 'hint', state.characters.length ? 'Nobody matches that search.' : 'No characters saved yet.'));
-      const total = state.characters.reduce((sum, character) => sum + (Number(character.gold) || 0), 0);
-      el('bank-total').textContent = `${state.characters.length} characters · ${formatGold(total)} gold`;
-    }
-    function showTooltip(event, item) {
-      tooltip.replaceChildren(make('strong', '', item.name || 'Unknown item'));
-      if ((Number(item.count) || 1) > 1) tooltip.append(make('span', '', `Count: ${formatGold(item.count)}`));
+      if (rows.length > MAX_TOOLTIP_ROWS) tooltip.append(make('span', 'bank-tip-type', `and ${rows.length - MAX_TOOLTIP_ROWS} more`));
       tooltip.hidden = false;
       moveTooltip(event);
     }
-    function moveTooltip(event) {
-      tooltip.style.left = Math.min(event.clientX + 14, window.innerWidth - 280) + 'px';
-      tooltip.style.top = event.clientY + 14 + 'px';
+    function filters() {
+      return {
+        text: el('bank-search').value.trim(),
+        type: el('bank-type').value,
+        place: el('bank-place').value,
+        hidden: state.hidden,
+        minLevel: Number(el('bank-min-level').value) || 0,
+        maxLevel: Number(el('bank-max-level').value) || 0,
+      };
     }
-    function renderWindow() {
-      const character = current();
-      const title = el('bank-window-title');
+    function renderGrid() {
       const grid = el('bank-grid');
-      const pages = el('bank-pages');
       grid.replaceChildren();
-      pages.replaceChildren();
       tooltip.hidden = true;
-      root.querySelectorAll('[data-place]').forEach(button => button.classList.toggle('selected', button.dataset.place === state.place));
-      if (!character) {
-        title.textContent = 'Choose a character';
-        el('bank-saved').textContent = '';
-        return;
-      }
-      title.textContent = character.name;
-      el('bank-saved').textContent = character.saved ? `Saved ${character.saved}` : '';
-      const layout = LAYOUT[state.place];
-      grid.style.gridTemplateColumns = `repeat(${layout.across}, var(--slot))`;
-      if (state.place === 'bank' && !character.bankSeen) {
-        grid.append(make('p', 'bank-empty', 'Not seen yet. Open the bank once on this character.'));
-        return;
-      }
-      const count = pageCount(character, state.place);
-      state.page = Math.min(state.page, count);
-      for (let page = 1; page <= count; page++) {
-        const button = make('button', 'bank-page' + (page === state.page ? ' selected' : ''), String(page));
-        button.type = 'button';
-        button.addEventListener('click', () => { state.page = page; renderWindow(); });
-        pages.append(button);
-      }
+      const list = applyFilters(entries(state.characters), filters());
+      const shown = cells(list, el('bank-stack').checked).sort(SORTS[state.sort]);
       const needed = [];
-      for (const {item} of pageSlots(character, state.place, state.page)) {
-        const slot = make('div', 'bank-slot');
-        if (item) {
-          slot.classList.add('filled');
-          if (state.search && !String(item.name || '').toLowerCase().includes(state.search)) slot.classList.add('dim');
-          slot.append(make('span', 'bank-letters', String(item.name || '?').slice(0, 2)));
-          const picture = make('img');
-          picture.alt = '';
-          picture.dataset.icon = item.icon || '';
-          if (icons.has(item.icon)) picture.src = icons.get(item.icon);
-          else if (item.icon) needed.push(item.icon);
-          slot.append(picture);
-          if ((Number(item.count) || 1) > 1) slot.append(make('span', 'bank-count', String(item.count)));
-          slot.addEventListener('mouseenter', event => showTooltip(event, item));
-          slot.addEventListener('mousemove', moveTooltip);
-          slot.addEventListener('mouseleave', () => { tooltip.hidden = true; });
-        }
+      for (const cell of shown) {
+        const slot = make('div', 'bank-slot filled');
+        slot.append(make('span', 'bank-letters', cell.name.slice(0, 2)));
+        const picture = make('img');
+        picture.alt = '';
+        picture.dataset.icon = cell.icon || '';
+        if (icons.has(cell.icon)) picture.src = icons.get(cell.icon);
+        else if (cell.icon) needed.push(cell.icon);
+        slot.append(picture);
+        if (cell.total > 1) slot.append(make('span', 'bank-count', cell.total > 9999 ? `${Math.floor(cell.total / 1000)}k` : String(cell.total)));
+        slot.addEventListener('mouseenter', event => showTooltip(event, cell));
+        slot.addEventListener('mousemove', moveTooltip);
+        slot.addEventListener('mouseleave', () => { tooltip.hidden = true; });
         grid.append(slot);
       }
+      if (!shown.length) grid.append(make('p', 'bank-empty', state.characters.length ? 'Nothing matches these filters.' : 'No characters saved yet.'));
+      const gold = state.characters.filter(character => !state.hidden.has(character.name)).reduce((sum, character) => sum + (Number(character.gold) || 0), 0);
+      const unseen = state.characters.filter(character => !character.bankSeen).length;
+      el('bank-total').textContent = `${formatNumber(shown.length)} shown · ${formatNumber(gold)} gold`
+        + (unseen ? ` · ${unseen} characters' banks not seen yet: open the bank once on them` : '');
       if (needed.length) {
         GBIcons.load(needed, send, (name, url) => {
           icons.set(name, url);
@@ -148,17 +142,43 @@ const GBBank = (() => {
         }).catch(error => { status(`Icons couldn't be read: ${error.message || error}`); });
       }
     }
-    function render() {
-      renderList();
-      renderWindow();
+    function renderSummary() {
+      const total = state.characters.length;
+      const shown = total - state.characters.filter(character => state.hidden.has(character.name)).length;
+      el('bank-character-summary').textContent = shown === total ? `All characters (${total})` : `${shown} of ${total} characters`;
+    }
+    function renderCharacters() {
+      const list = el('bank-character-list');
+      list.replaceChildren();
+      for (const character of state.characters) {
+        const label = make('label', 'bank-character');
+        const box = make('input');
+        box.type = 'checkbox';
+        box.checked = !state.hidden.has(character.name);
+        box.addEventListener('change', () => {
+          if (box.checked) state.hidden.delete(character.name);
+          else state.hidden.add(character.name);
+          renderSummary();
+          renderGrid();
+        });
+        const detail = `${character.class || 'Level'} ${character.level || '?'} · ${formatNumber(character.gold)} gold`;
+        label.append(box, make('span', 'bank-name', character.name), make('span', 'bank-detail', character.note ? `${detail} · ${character.note}` : detail));
+        list.append(label);
+      }
+      renderSummary();
+    }
+    function setAll(on) {
+      state.hidden = new Set(on ? [] : state.characters.map(character => character.name));
+      renderCharacters();
+      renderGrid();
     }
     async function reload() {
       const response = await send({type: 'bank-data'});
       const data = response.json ? JSON.parse(response.json) : {characters: []};
       state.characters = Array.isArray(data.characters) ? data.characters : [];
-      if (!current()) state.name = state.characters.length ? state.characters[0].name : null;
       el('bank-made').textContent = data.made ? `Data from ${data.made}` : 'No saved data yet: press Update now after logging out of a character.';
-      render();
+      renderCharacters();
+      renderGrid();
     }
     async function update() {
       const button = el('bank-update');
@@ -175,19 +195,13 @@ const GBBank = (() => {
       }
     }
 
-    root.querySelectorAll('[data-place]').forEach(button => {
-      button.addEventListener('click', () => {
-        state.place = button.dataset.place;
-        state.page = 1;
-        renderWindow();
-      });
-    });
-    el('bank-search').addEventListener('input', event => {
-      state.search = event.target.value.trim().toLowerCase();
-      render();
-    });
+    for (const id of ['bank-search', 'bank-min-level', 'bank-max-level']) el(id).addEventListener('input', renderGrid);
+    for (const id of ['bank-type', 'bank-place', 'bank-stack']) el(id).addEventListener('change', renderGrid);
+    el('bank-sort').addEventListener('change', event => { state.sort = event.target.value; renderGrid(); });
+    el('bank-all').addEventListener('click', () => setAll(true));
+    el('bank-none').addEventListener('click', () => setAll(false));
     el('bank-update').addEventListener('click', update);
     return {reload, update};
   }
-  return {create, matches, pageCount, pageSlots, totalOf};
+  return {create, typeOf, locationLabel, entries, applyFilters, cells};
 })();

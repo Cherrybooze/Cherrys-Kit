@@ -18,28 +18,29 @@
       <button type="button" role="tab" data-tab="auctions" aria-selected="false">Auctions</button>
     </nav>
     <div id="tab-bank" class="tab-panel">
-      <div class="bank-layout">
-        <section class="bank-side" aria-label="Characters">
-          <div class="bank-tools"><button id="bank-update" type="button">Update now</button></div>
-          <p id="bank-status" class="hint" role="status"></p>
-          <label for="bank-search">Find a character or item</label>
-          <input id="bank-search" maxlength="80" autocomplete="off" placeholder="For example: mana stone">
-          <p id="bank-total" class="hint"></p>
-          <div id="bank-characters" class="bank-characters"></div>
-        </section>
-        <section class="bank-window" aria-labelledby="bank-window-title">
-          <header class="bank-window-title"><h2 id="bank-window-title">Choose a character</h2></header>
-          <div class="bank-places">
-            <button type="button" data-place="bag">Bag</button>
-            <button type="button" data-place="bank">Bank</button>
-          </div>
-          <div id="bank-grid" class="bank-grid"></div>
-          <div id="bank-pages" class="bank-pages"></div>
-          <p id="bank-saved" class="hint"></p>
-          <p id="bank-made" class="hint"></p>
-        </section>
-        <div id="bank-tooltip" class="bank-tooltip" hidden></div>
-      </div>
+      <section class="bank-filters" aria-label="Search and filters">
+        <div class="bank-filter-row">
+          <label class="bank-wide">Item name <input id="bank-search" maxlength="80" autocomplete="off" placeholder="For example: mana stone"></label>
+          <label>Type <select id="bank-type"><option value="">All types</option><option>Armour</option><option>Weapons</option><option>Jewellery</option><option>Runes</option><option>Potions</option><option>Materials</option><option>Recipes</option><option>Mounts and pets</option><option>Other</option></select></label>
+          <label>Where <select id="bank-place"><option value="">Bag and bank</option><option value="bag">Bag</option><option value="bank">Bank</option></select></label>
+          <label>Character level <span class="bank-levels"><input id="bank-min-level" type="number" min="0" placeholder="Min" aria-label="Lowest character level"><input id="bank-max-level" type="number" min="0" placeholder="Max" aria-label="Highest character level"></span></label>
+          <label>Sort by <select id="bank-sort"><option value="name">Name</option><option value="count">Count</option><option value="type">Type</option></select></label>
+          <button id="bank-update" type="button">Update now</button>
+        </div>
+        <div class="bank-filter-row">
+          <details class="bank-characters-menu">
+            <summary id="bank-character-summary">All characters</summary>
+            <div class="bank-menu-buttons"><button id="bank-all" type="button">All</button><button id="bank-none" type="button">None</button></div>
+            <div id="bank-character-list" class="bank-character-list"></div>
+          </details>
+          <label class="bank-check"><input id="bank-stack" type="checkbox" checked> Stack the same item</label>
+          <span id="bank-total" class="hint"></span>
+        </div>
+        <p id="bank-status" class="hint" role="status"></p>
+      </section>
+      <div id="bank-grid" class="bank-grid"></div>
+      <p id="bank-made" class="hint"></p>
+      <div id="bank-tooltip" class="bank-tooltip" hidden></div>
     </div>
     <div id="tab-terminal" class="tab-panel" hidden>
       <section aria-labelledby="terminal-title">

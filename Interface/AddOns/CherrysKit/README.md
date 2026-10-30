@@ -8,7 +8,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Kit 0.11.102 playtest
 
-- **Global Bank 1.4.8:** the extension's page shows every character's bag and bank as in game, and runs the helper's commands, with no terminal window.
+- **Global Bank 1.4.8:** the extension's page shows everything your characters hold in one grid with filters, and runs the helper's commands, with no terminal window.
 
 ## Kit 0.11.101 playtest
 
