@@ -72,3 +72,7 @@ main { max-width: 1180px; }
 .bank-stale { color: #f0a35e; }
 .bank-character .bank-stale { grid-column: 2; }
 .bank-letters { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .78rem; color: #d9b65c; }
+.status-bar { margin: 0 0 12px; padding: 10px 14px; }
+.status-bar p { margin: 0 0 4px; }
+.status-toggle { display: flex; gap: 6px; align-items: center; margin: 6px 0 0; font-weight: 400; }
+.status-toggle input { width: auto; }

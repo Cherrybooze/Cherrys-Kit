@@ -28,7 +28,7 @@ The local bank and auction tools are included in version **1.0.3 and later**. Th
 3. Under **Characters, bags and bank**, try `list`, `list gold`, `search mana`, or `show Name`. Type `help` for more commands.
 4. Under **Auction cache search**, enter an item name or ID and optionally a realm. The results show saved observations, which may be out of date. If the cache is empty, search in the game and let the helper collect the data.
 
-The **Bank** tab shows everything every character holds in one grid, with the game's own icons, a search and filters; hover an item to see who has it and in which slot. **Update now** reads your save files. The **Terminal** tab runs the helper's commands, including ones that change local data, such as `note` and `erase`. Nothing on this page can buy items. It does not need Python, your game password or the helper window. You only need that window for collecting auction data and for automatic updates each time you log out.
+The **Bank** tab shows everything every character holds in one grid, with the game's own icons, a search and filters; hover an item to see who has it and in which slot. **Update now** reads your save files. The **Terminal** tab runs the helper's commands, including ones that change local data, such as `note` and `erase`. Nothing on this page can buy items. It does not need Python, your game password or the helper window. To collect auction data and update automatically each time you log out, turn on **Start the Global Bank helper automatically when Chrome is open** at the top of the page: it runs hidden, stops when Chrome closes, and turning it off closes it.
 
 ## Privacy and scope
 
