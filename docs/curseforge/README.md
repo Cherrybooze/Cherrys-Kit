@@ -1,6 +1,6 @@
 # CurseForge descriptions
 
-These descriptions started with the [Opus handoff](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ) and are maintained with the addon guides. The [original 0.11.77 text](https://github.com/Cherrybooze/Cherrys-Kit/tree/v0.11.77/docs/curseforge) remains in the first release. Use the matching numbered file when filling in a CurseForge project description.
+These descriptions started as an initial hand-off text and are maintained with the addon guides. The [original 0.11.77 text](https://github.com/Cherrybooze/Cherrys-Kit/tree/v0.11.77/docs/curseforge) remains in the first release. Use the matching numbered file when filling in a CurseForge project description.
 
 [All descriptions and publishing notes](descriptions.md) · [Release and packaging guide](../RELEASING.md)
 
