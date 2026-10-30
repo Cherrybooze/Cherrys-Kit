@@ -503,15 +503,28 @@ D.Add({
 })
 
 ---------------------------------------------------------------------------
--- Clock: looks at the time once a second and redraws once a minute
+-- Clock: looks at the time once a second and redraws once a minute. The game's Lua has no os library
+-- and no real-time call. CherrysClock (Cherry's Loginxml) gives the time once it is known; until then
+-- the time tokens show the time online, and the tooltip says so.
 ---------------------------------------------------------------------------
+
+local function clockTime()
+  if type(CherrysClock) == "table" and type(CherrysClock.Time) == "function" then
+    local hour, minute = CherrysClock.Time()
+    if hour then
+      return hour, minute
+    end
+  end
+  return nil
+end
 
 D.Add({
   key = "Clock", label = "Time", title = "Clock", bar = "top", side = "right", order = 30,
   icon = Icon("Clock"), fmt = "[TIME24]", every = 1,
   tokens = "[TIME24] [TIME12] [DATE] [ONLINE] this session [TOTAL] all characters",
   tick = function(def)
-    local minute = math.floor(os.time() / 60)
+    local _, clockMinute = clockTime()
+    local minute = clockMinute or math.floor(now() / 60)
     if minute == def.minute then
       return false
     end
@@ -523,16 +536,26 @@ D.Add({
     return true
   end,
   read = function(v)
-    v.TIME24 = os.date("%H:%M")
-    v.TIME12 = os.date("%I:%M %p")
-    v.DATE = os.date("%a %d-%m-%Y")
     v.ONLINE = hoursMinutes(math.floor((now() - session.start) / 60))
+    local hour, minute = clockTime()
+    if hour then
+      v.TIME24 = string.format("%02d:%02d", hour, minute)
+      v.TIME12 = string.format("%02d:%02d %s", (hour + 11) % 12 + 1, minute, hour < 12 and "AM" or "PM")
+      local year, month, day = CherrysClock.Date()
+      v.DATE = string.format("%02d-%02d-%04d", day, month, year)
+    else
+      v.TIME24, v.TIME12, v.DATE = v.ONLINE, v.ONLINE, "?"
+    end
     local total = tonumber(G.S().playedMins) or 0
     v.TOTAL = string.format("%dd %s", math.floor(total / 1440), hoursMinutes(total % 1440))
   end,
   tip = function(v)
-    tipPair("Date", v.DATE)
-    tipPair("Time", v.TIME24)
+    if clockTime() then
+      tipPair("Date", v.DATE)
+      tipPair("Time", v.TIME24)
+    else
+      GameTooltip:AddLine("The game gives addons no real time, so this shows your time online.")
+    end
     tipPair("Online this session", v.ONLINE)
     tipPair("Online in total", v.TOTAL)
   end,

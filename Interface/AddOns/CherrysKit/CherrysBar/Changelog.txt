@@ -1,5 +1,11 @@
 Cherry's Bar
 
+1.1.5
+  Fixes an error raised once a second from the update loop: the Clock asked for the os library, which
+  this client does not have, and that also stopped the displays after it from updating on time. It now
+  shows the time online until CherrysClock knows the time. A failing display timer can no longer
+  escape the loop. New /cbar perf records frame times, Lua memory and addons' per-frame cost.
+
 1.1.4
   The bottom bar now lifts the whole interface and fits underneath: the action bars, chat, cast bar,
   bags and other addons' frames all rise together, by raising the bottom edge of UIParent. If the client

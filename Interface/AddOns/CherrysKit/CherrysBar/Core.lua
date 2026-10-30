@@ -5,12 +5,12 @@
 --
 -- Files: Core (settings, events, the one update loop, commands), Bars (the two bars, auto-hide, making
 -- room for them), Displays (drawing, placing and dragging displays), DisplayList (the displays
--- themselves), Menu (the pop-up menu), Options (/cbar window), Probe (/cbar probe).
+-- themselves), Menu (the pop-up menu), Options (/cbar window), Probe (/cbar probe), Perf (/cbar perf).
 
 CherrysBar = {}
 local G = CherrysBar
 
-G.version = "1.1.4"
+G.version = "1.1.5"
 G.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.CherrysBar) or "Interface/AddOns/CherrysBar/"
 G.MEDIA = G.BASE_PATH .. "Media/"
 G.BAR_NAMES = { "top", "bottom" }
@@ -224,6 +224,9 @@ function G.OnUpdate(elapsed)
     G.TryStart()
     return
   end
+  if G.perfFrame then
+    G.perfFrame(elapsed)
+  end
   sinceTick = sinceTick + (tonumber(elapsed) or 0)
   if sinceTick < tickEvery then
     return
@@ -250,6 +253,7 @@ function G.Help()
   chat(" /cbar top | bottom | both  chooses which bars show")
   chat(" /cbar unlock | lock  allows or stops dragging displays along the bars")
   chat(" /cbar reset  puts every setting back to its default")
+  chat(" /cbar perf [seconds] | stop  records frame times, Lua memory and addons' per-frame cost")
   chat(" /cbar probe  checks what this game client offers")
 end
 
@@ -276,6 +280,13 @@ function G.Command(msg)
     G.ShowBars(true, true)
   elseif word == "lock" or word == "unlock" then
     G.Bars.SetLocked(word == "lock")
+  elseif word == "perf" then
+    local arg = string.match(tostring(msg), "^%s*%S+%s+(%S+)")
+    if arg == "stop" then
+      G.Perf.Stop()
+    else
+      G.Perf.Start(arg)
+    end
   elseif word == "reset" then
     G.ResetAll()
     G.Options.Refresh()

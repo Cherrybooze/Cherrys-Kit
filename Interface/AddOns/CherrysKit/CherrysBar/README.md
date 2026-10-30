@@ -1,6 +1,6 @@
 # Cherry's Bar
 
-Version **1.1.4** · Kit release **0.11.96** · [All addons / hub](../README.md)
+Version **1.1.5** · Kit release **0.11.97** · [All addons / hub](../README.md)
 
 **Full-width information bars at the top of the screen, the bottom, or both. A fork of XBar III, with bars and settings in the spirit of Titan Panel.**
 
@@ -34,10 +34,13 @@ There are three ways, and they all do the same thing:
 - `/cbar top`, `/cbar bottom`, `/cbar both`: which bars show
 - `/cbar unlock`, `/cbar lock`: drag displays on the bars, or stop
 - `/cbar reset`: every setting back to its default
+- `/cbar perf`, `/cbar perf 120`, `/cbar perf stop`: records frame times, Lua memory and addons' per-frame cost, for 60 seconds unless you say otherwise, then prints them to chat. Reload UI saves the result in `CherrysBar_DB.perf`.
 - `/cbar probe`: checks what this game client offers
 - `/cbar help`
 
 ## Limits
+
+The game gives addons no real time. The Clock shows your time online until Cherry's Loginxml's clock knows the time.
 
 None of this has run in the real game client yet; the tests use a simulated one. These may need changes after the [in-game checks](../../../../docs/TESTING.md):
 

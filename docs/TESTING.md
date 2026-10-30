@@ -1,10 +1,10 @@
-# In-game checks for kit 0.11.96
+# In-game checks for kit 0.11.97
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.4 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.5 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
 
-## 0.11.96 Cherry's Bar
+## 0.11.97 Cherry's Bar
 
 Cherry's Bar is new, and none of it has run in the real client yet. Delete any old `Interface/AddOns/XBar` folder first.
 
@@ -32,6 +32,7 @@ Cherry's Bar is new, and none of it has run in the real client yet. Delete any o
 | B20 | Put XBar back in `Interface/AddOns/XBar` and Reload UI, then delete it again. | Cherry's Bar stays off and the hub says to delete `AddOns\XBar`. |
 | B21 | Run `/ckload` after playing for a while, in and out of combat. | Cherry's Bar's memory stays small and does not keep growing. |
 | B22 | With "Show current mode" ticked in Kitty, Reload UI. Click the Kitty mode display and pick a mode. Use a Change kitty mode action or `/kc mode aoe`. Then hide the display, and show it again. | Kitty's "Mode:" plate is gone from the top of the screen and the display shows the mode's picture and name. The pictures open at the display, and every way of changing the mode shows on the bar within a second. Hiding the display brings the plate back; showing it hides the plate again. |
+| B23 | Reload UI, then `/cbar perf` and play as usual for a minute where frames drop. Reload UI again and send the chat result. | The clock shows time online and counts up. The result lists fps, the longest frames, Lua memory and the costliest addons. Compare the frame drops with 0.11.96. |
 
 ## 0.11.90 names from chat into Ultimate Mail Mod
 

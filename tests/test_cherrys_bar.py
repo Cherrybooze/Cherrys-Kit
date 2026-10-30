@@ -14,7 +14,7 @@ from lupa.lua51 import LuaRuntime
 ROOT = Path(__file__).resolve().parents[1]
 KIT = ROOT / "Interface/AddOns/CherrysKit"
 SOURCE = KIT / "CherrysBar"
-FILES = ("Core.lua", "Bars.lua", "Displays.lua", "DisplayList.lua", "Menu.lua", "Options.lua", "Probe.lua")
+FILES = ("Core.lua", "Bars.lua", "Displays.lua", "DisplayList.lua", "Menu.lua", "Options.lua", "Probe.lua", "Perf.lua")
 NS = "{http://www.runewaker.com/}"
 SKINS = ("Ironstone", "Blacksteel", "Froststeel", "Darkwood", "Verdant", "Arcane", "Slate")
 
@@ -27,7 +27,9 @@ uiScale = 1
 cursor = { 300, 12 }
 volume = 0.8
 state = { used = 10, total = 60, gold = 1234567, fps = 60, ping = 40, xp = 500, xpMax = 1000 }
+os = nil  -- the game's Lua has no os library
 function GetTime() return now end
+function GetTickCount() return math.floor(now * 1000) end
 function GetUIScale() return uiScale end
 function GetCursorPos() return cursor[1], cursor[2] end
 function GetScreenWidth() return 1024 end
@@ -581,6 +583,66 @@ class BarTest(unittest.TestCase):
             D.Rebuild()
         """)
         self.assertEqual(self.text_of("Bag"), "Bag 10 of 60 (50 free, 17%) [NOPE]")
+
+    def test_no_error_escapes_the_update_loop_from_a_display_timer(self):
+        self.run_lua("""
+            local D = CherrysBar.Displays
+            D.byKey.Perf.tick = function() error('broken timer') end
+            for i = 1, 40 do now = now + 0.3; CherrysBar.OnUpdate(0.3) end
+        """)
+        self.assertIn("broken timer", self.ev("CherrysBar.Displays.byKey.Perf.err"))
+
+    def test_clock_shows_time_online_without_a_real_clock(self):
+        self.assertEqual(self.text_of("Clock"), "00:00")
+        self.assertIsNone(self.ev("CherrysBar.Displays.byKey.Clock.err"))
+        self.tick(61)
+        self.tick(1)
+        self.assertEqual(self.text_of("Clock"), "00:01")
+
+    def test_clock_uses_cherrys_clock_once_it_knows_the_time(self):
+        self.run_lua("""
+            CherrysClock = { Time = function() return 21, 7, 30 end, Date = function() return 2026, 10, 30 end }
+            local D = CherrysBar.Displays
+            D.Config(D.byKey.Clock).fmt = '[TIME24] [TIME12] [DATE]'
+            D.Rebuild()
+        """)
+        self.assertEqual(self.text_of("Clock"), "21:07 09:07 PM 30-10-2026")
+
+    def test_clock_waits_when_cherrys_clock_does_not_know_yet(self):
+        self.run_lua("""
+            CherrysClock = { Time = function() return nil end }
+            CherrysBar.Displays.Rebuild()
+        """)
+        self.assertEqual(self.text_of("Clock"), "00:00")
+
+    def test_perf_records_frames_memory_and_addon_cost_then_restores(self):
+        self.run_lua("""
+            CherrysGrid = { OnUpdate = function(e) now = now + 0.002; return 'kept' end }
+            original = CherrysGrid.OnUpdate
+            CherrysBar.Command('perf 2')
+            result = CherrysGrid.OnUpdate(0.016)
+            for i = 1, 30 do CherrysBar.OnUpdate(0.016); CherrysGrid.OnUpdate(0.016) end
+            CherrysBar.OnUpdate(0.3)
+            for i = 1, 100 do CherrysBar.OnUpdate(0.016); CherrysGrid.OnUpdate(0.016) end
+        """)
+        self.assertEqual(self.ev("result"), "kept")
+        self.assertFalse(self.ev("CherrysBar.Perf.IsRunning()"))
+        self.assertTrue(self.ev("CherrysGrid.OnUpdate == original"))
+        self.assertIsNone(self.ev("CherrysBar.perfFrame"))
+        self.assertEqual(self.ev("CherrysBar.S().perf.longestMs"), 300)
+        self.assertEqual(self.ev("CherrysBar.S().perf.over250"), 1)
+        self.assertEqual(self.ev("CherrysBar.S().perf.hitches[1].ms"), 300)
+        self.assertEqual(self.ev("CherrysBar.S().perf.addons[1].name"), "CherrysGrid.OnUpdate")
+        self.assertGreater(self.ev("CherrysBar.S().perf.addons[1].totalMs"), 50)
+        self.assertTrue(any("longest" in str(m).lower() for m in self.ev("messages").values()))
+
+    def test_perf_stop_and_double_start(self):
+        self.run_lua("CherrysBar.Command('perf stop')")
+        self.assertIn("not recording", self.ev("messages[#messages]"))
+        self.run_lua("CherrysBar.Command('perf'); CherrysBar.Command('perf')")
+        self.assertIn("already", self.ev("messages[#messages]"))
+        self.run_lua("CherrysBar.Command('perf stop')")
+        self.assertFalse(self.ev("CherrysBar.Perf.IsRunning()"))
 
     def test_every_display_uses_cherrys_icons(self):
         for key in self.ev("CherrysBar.Displays.byKey").keys():

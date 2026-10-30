@@ -220,7 +220,11 @@ function D.Tick(dt)
       if def.timer >= def.every then
         def.timer = 0
         if def.tick then
-          if def.tick(def) then
+          -- The tick runs from the update loop: an error here would stop every other display.
+          local ok, changed = pcall(def.tick, def)
+          if not ok then
+            def.err = tostring(changed)
+          elseif changed then
             def.dirty = true
           end
         else
