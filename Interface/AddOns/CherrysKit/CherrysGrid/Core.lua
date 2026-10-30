@@ -10,7 +10,7 @@
 CherrysGrid = {}
 local G = CherrysGrid
 
-G.version = "1.1.3"
+G.version = "1.1.4"
 G.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.CherrysGrid) or "Interface/AddOns/CherrysGrid/"
 G.MEDIA = G.BASE_PATH .. "Media/"
 G.MAX_UNITS = 48 -- 36 members + 12 pets; the frames are declared in CherrysGrid.xml

@@ -1,10 +1,10 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.85/CherrysKit-Full-0.11.85.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.87/CherrysKit-Full-0.11.87.zip)
 
 # Cherry's Kit
 
-> Playtest build: kit **0.11.85**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
+> Playtest build: kit **0.11.87**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.85/CherrysKit-Full-0.11.85.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.87/CherrysKit-Full-0.11.87.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -12,21 +12,25 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest build: **0.11.85** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.85)
+Current playtest build: **0.11.87** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.87)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
-## What’s new in 0.11.85
+## What’s new in 0.11.87
 
-- **KittyCombo 1.7.15**: the mode pictures open even while the mode button is hidden, which is the default. Two **Change kitty mode** rows can no longer flip the mode on every key press, and saving a kitty warns about rows that would take turns. `/kc window 0.6` tries the older ready window; `/kc window default` goes back.
-- **rom weakauras 0.9.27**: less work on every frame (text formatting, screen-size checks and target health). Clickthrough, on by default since 0.9.25, hides aura tooltips; untick **Make clickthrough** in an aura to get its tooltip back.
-- **Ultimate Mail Mod 7.0.1-ck8**: clicking an item in Mass Send keeps the cursor in the To field, item tooltips stop repeating the drag help after your first box, and the open mail window checks the screen twice a second instead of every frame.
+- **No work on every frame.** No kit addon does its work on every frame any more unless you are moving, sizing, sorting or selecting something. **rom weakauras 0.9.28** makes about 98% less garbage per second (about 4.6 MB down to 90 KB every 10 seconds with 15 buffs and 6 debuffs), and **pbInfo**, **Ultimate Mail Mod**, **zBag**, **Cherry's Grid** and **KittyCombo** check a few times a second instead.
+- **Cherry's Chat 0.10.10**: no more freeze when many lines arrive at once, such as after raising a skill to its maximum and confirming, and a working scroll bar made from the game's own scroll parts.
+- **rom weakauras 0.9.28**: the corner at an aura's bottom right scales it without a key, and the Position section is open. **Target health** shows the percentage above the bar and the HP number inside it, learned the way pbInfo does it (`?` until known).
+- **Ultimate Mail Mod 7.0.1-ck9**: gold presets stop at 999,999,999 and get commas while you type, and **Forget own chars** asks Yes or No first.
+- **Addon LoadTimes 1.3.0** is a troubleshooting addon now: it comes switched off in `LoadTimes/Switch.txt` and then uses no memory. The hub no longer bundles it.
 
 ## Also in this playtest
 
-- **KittyCombo**: a mode picker with pictures for the mode button, the "Mode:" readout and the new **Change kitty mode** action, with pages when you have many modes. The mode button sits a little lower to clear the housing controls.
-- **rom weakauras**: clickthrough auras, a Scale setting for whole auras, optional scaling with your screen size (off by default), move and scale grips, **Reset position**, target HP with percentage (`~` for estimates, `?` when unknown), and cast bars for transport books and other casts that are not spells.
-- **Ultimate Mail Mod**: drag a box to select items across all six bags, a **Recently sent** list beside Mass Send, **Use last** and gold buttons, and a **History** tab with your last 20 recipients, shared by all your characters.
+- **Cherry's Quests 1.0.0** (from 0.11.86): a prettier quest tracker. Ctrl+click a quest to cycle through the NPCs it names and track one.
+- **KittyCombo 1.7.15** (from 0.11.85): the mode pictures open even while the mode button is hidden, two **Change kitty mode** rows can no longer flip the mode on every key press, and `/kc window 0.6` tries the older ready window.
+- **KittyCombo**: a mode picker with pictures for the mode button, the "Mode:" readout and the **Change kitty mode** action, with pages when you have many modes. The mode button sits a little lower to clear the housing controls.
+- **rom weakauras**: clickthrough auras (untick **Make clickthrough** to get an aura's tooltip back), a Scale setting for whole auras, optional scaling with your screen size (off by default), **Reset position**, and cast bars for transport books and other casts that are not spells.
+- **Ultimate Mail Mod**: drag a box to select items across all six bags, a **Recently sent** list beside Mass Send, **Use last** and gold buttons, and a **History** tab with your last 20 recipients, shared by all your characters. Clicking an item keeps the cursor in the To field.
 - **zBag**: the split-stack box stays open when your bags update, and slot numbers are smaller by default with a **Font size** setting in /zb.
 - **Advanced AuctionHouse**: reads items with its own hidden tooltip instead of borrowing the game's upgrade tooltip.
 - [Emoji pictures above players' heads](docs/CHAT_BUBBLES.md) are still not possible: the game gives addons no way to draw them.
@@ -41,7 +45,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.85/CherrysKit-Full-0.11.85.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.87/CherrysKit-Full-0.11.87.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -65,27 +69,27 @@ If you already downloaded `Cherrys-Kit-main.zip`, use the install ZIP linked abo
 
 Remove old separate copies of the same addons from `Interface/AddOns/` first; the hub keeps its copy idle if another copy is detected. Your saved settings live outside the addon folders. The [hub README](Interface/AddOns/CherrysKit/README.md) explains this in more detail.
 
-The current hub includes **Addon LoadTimes**, because the shared loader uses its hooks. The separate LoadTimes ZIP updates those same files. The other individual addon ZIPs require the hub.
+**Addon LoadTimes** is a troubleshooting addon with its own ZIP. It comes switched off in its `LoadTimes/Switch.txt` and then uses no memory. Every individual addon ZIP requires the hub.
 
 ## What's included
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.21 |
-| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.15 |
-| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.27 |
-| [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.9 |
-| [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck14 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.22 |
+| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.16 |
+| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.28 |
+| [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.10 |
+| [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck15 |
 | [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold. | `/gb` | 1.4.6 |
 | [Extended Macro Icons](Interface/AddOns/CherrysKit/ExtendedMacroIcons/README.md) | A larger, categorised macro icon picker. | `/emi` | 3.0.4 |
 | [TooltipIds](Interface/AddOns/CherrysKit/TooltipIds/README.md) | ID numbers for items, buffs, skills and other game data. | `/ti` | 1.0b3-ck3 |
-| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck8 |
+| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck9 |
 | [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Auction searching, stat filters, history and a resizable window. | `/aah` | 6.2.4 |
-| [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Loading times and memory use for the kit and other addons. | `/ckload` | 1.2.1 |
+| [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Troubleshooting: loading times and memory use, off until its Switch.txt turns it on. | `/ckload` | 1.3.0 |
 | [ZShop](Interface/AddOns/CherrysKit/ZShop/README.md) | Item-shop access and a daily loyalty reward shortcut. | `/zshop` | 1.2.0-ck4 |
-| [pbInfo](Interface/AddOns/CherrysKit/pbInfo/README.md) | Richer tooltips, quest tracking, chat filters and cast-bar options. | `/pbinfo` | 0.60-ck4 |
+| [pbInfo](Interface/AddOns/CherrysKit/pbInfo/README.md) | Richer tooltips, quest tracking, chat filters and cast-bar options. | `/pbinfo` | 0.60-ck5 |
 | [PortraitHP](Interface/AddOns/CherrysKit/PortraitHP/README.md) | Your target's health percentage on its portrait. | `/php` | 2019.07.14-ck2 |
-| [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click. | `/grid` | 1.1.3 |
+| [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click. | `/grid` | 1.1.4 |
 | [Cherry's Quests](Interface/AddOns/CherrysKit/CherrysQuests/README.md) | A prettier quest tracker; Ctrl+click a quest to track the NPCs it names. | `/cq` | 1.0.0 |
 
 Some integrations need both addons: for example, running a kitty from Grid needs KittyCombo. Each addon's README lists its requirements and current limits. Features still being tested are labelled there.

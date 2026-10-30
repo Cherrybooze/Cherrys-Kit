@@ -1,10 +1,25 @@
 # Cherry's Addon LoadTimes
 
-Version **1.2.1** · Kit release **0.11.80** · [All addons / hub](../README.md)
+Version **1.3.0** · Kit release **0.11.87** · [All addons / hub](../README.md)
 
 **Find out which addons make your loading screen slow.**
 
-A small report of how long each addon took while the loading screen was up, and how much memory it added.
+A small report of how long each addon took while the loading screen was up, and how much memory it added. It is a troubleshooting tool, so it comes switched off and then uses no memory at all.
+
+## Turning it on and off
+
+Addons cannot change their own files, so the switch is a small text file you edit yourself:
+
+1. Open `Interface\AddOns\CherrysKit\LoadTimes\Switch.txt` in Notepad.
+2. Change `LoadTimes = false` to `LoadTimes = true` and save the file.
+3. Restart the game (times measured after a Reload UI are not comparable), wait for the loading screen to finish and type `/ckload`.
+4. Set it back to `false` when you are done.
+
+While it is off, nothing of it loads except the switch check, and `/ckload` tells you how to turn it on.
+
+## Updated in 1.3.0
+
+Now a troubleshooting addon that stays off until `Switch.txt` turns it on, as described above. Switched off, the kit only reads that small file and keeps nothing of LoadTimes in memory. The hub no longer bundles it: it is its own optional download, and it needs hub 0.4.22 or later.
 
 ## Updated in 1.2.1
 
@@ -22,7 +37,7 @@ Both probe frames stop after the loading screen is gone, so a tiny hidden frame 
 
 ## Chat commands
 
-- `/ckload` (also `/loadtimes`): show the report (type it after the loading screen)
+- `/ckload` (also `/loadtimes`): show the report (type it after the loading screen). While it is switched off, it says how to turn it on.
 - `/ckload probe`: what this client allows (send it with bug reports)
 
 ## Install
@@ -32,13 +47,13 @@ Requires the [Cherry's Kit hub](../README.md). Download ZIPs from [Releases](htt
 1. Install the full kit, or install the hub ZIP and this addon's ZIP.
 2. Extract into your game's `Interface/AddOns/` folder, merging the `CherrysKit` folders. This addon must end up at `Interface/AddOns/CherrysKit/LoadTimes/`.
 3. Remove any old separate copy from `Interface/AddOns/`, as described below.
-4. Start the game or Reload UI. Open `/ck` to find this addon, then use `/ckload` for its own controls.
+4. Turn it on in `LoadTimes\Switch.txt` when you want to measure (see above), then start the game. Open `/ck` to find this addon, then use `/ckload` for its own controls.
 
 ### Addon-specific notes
 
 - **Delete the old `Interface\AddOns\!CherrysLoadTimes` folder** if you have it from an older kit.
 
-LoadTimes is already included in the current hub ZIP: its hooks are needed by the shared loader. The separate LoadTimes ZIP updates those same files; it is not needed on top of the matching hub or full kit.
+Since kit 0.11.87 the hub no longer includes LoadTimes: install its own ZIP (or the full kit) when you need it. The full kit installs it switched off.
 
 ## Bug reports
 

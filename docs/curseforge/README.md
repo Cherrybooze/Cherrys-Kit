@@ -7,7 +7,7 @@ These descriptions started with the [Opus handoff](https://claude.ai/artifact/HX
 ## Before publishing
 
 - Set Cherry's Kit as a Required dependency on each addon project before claiming it is installed automatically.
-- The hub currently includes LoadTimes because it supplies the loader hooks. Its separate ZIP is an update package.
+- The hub no longer includes LoadTimes (since kit 0.11.87). LoadTimes is an ordinary addon project that requires hub 0.4.22 or later and comes switched off.
 - Preserve the existing credits and licence notices, including the ZShop note in the handoff.
 - Keep the existing notes about features still being tested. GitHub packaging checks do not prove behaviour in the game.
 

@@ -1,10 +1,14 @@
 # zBag
 
-Version **5.07-ck14** · Kit release **0.11.83** · [All addons / hub](../README.md)
+Version **5.07-ck15** · Kit release **0.11.87** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
+
+## Updated in 5.07-ck15
+
+Lighter while you play. Item slots no longer run an empty script on every frame (each open slot did), the bag sorter's timer runs only while a sort is in progress, and the checks that keep the bag and bank windows in step run 20 times a second instead of on every frame. Resizing a bag still follows the mouse every frame, and sorting still moves an item every frame.
 
 ## Updated in 5.07-ck14
 

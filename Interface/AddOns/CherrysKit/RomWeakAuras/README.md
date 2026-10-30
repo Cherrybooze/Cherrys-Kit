@@ -1,10 +1,17 @@
 # rom weakauras
 
-Version **0.9.27** · Kit release **0.11.85** · [All addons / hub](../README.md)
+Version **0.9.28** · Kit release **0.11.87** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Updated in 0.9.28
+
+- **The scale corner works.** In an unlocked placement view, drag the corner at an aura's bottom right to scale it: no key needed, and the percentage shows while you drag. The arrows at its top left move it. The **Position** section (X, Y and Scale) is now open when you edit an aura.
+- **Target health** puts the percentage centred just above the bar and the target's HP as a real number inside the bar's right end, such as `75%` above and `3,000` inside. Other displays that use `%v / %t` read `3,000 / 4,000 (75%)`.
+- Monster HP is learned the way pbInfo does it: when you first see a monster at full health, the game reports its whole HP once, and rom weakauras remembers that for the session by name, level and class, so the next one of that kind already has a number when you target it hurt. With pbInfo on, its saved list is read too. Until a maximum is known the number is `?`. In 0.9.27 monsters always showed `? / ?`, because the game answers "is this a player?" with nothing for monsters. The stock aura's description is updated; a description you wrote yourself is kept. See [health source details](https://github.com/Cherrybooze/Cherrys-Kit/blob/main/docs/TARGET_HEALTH.md).
+- **Far less work while you play**: aura updates reuse their tables instead of making new ones, and auras redraw at most 20 times a second (every frame while you drag one). In a test with 15 buffs and 6 debuffs, the memory made every 10 seconds fell from about 4.6 MB to 90 KB, which means less garbage collection in a client already short of memory.
 
 ## Updated in 0.9.27
 
@@ -26,7 +33,7 @@ The **Position** section edits **X**, **Y** and **Scale** (it starts open since 
 
 Each unlocked placement preview has two handles: drag the **arrows** at its top-left to move the entire aura, and the **corner** at its bottom-right to scale it (down or right enlarges, up or left shrinks; the percentage shows while you drag). Shift-dragging the arrows sideways also scales. Handles keep a usable size, cover independent/linked outputs together, and disappear when positions are locked or normal gameplay resumes. Interrupted drags stop on navigation, reload, lock or close. **Reset position** restores recognized factory placements or centres a custom aura, retaining its scale, screen-scaling reference, rules and relative offsets. Both operations remain draft-only until Save aura. New presets/reset positions use the approved saved layout; startup never reapplies factory coordinates to existing auras.
 
-**Target health** now shows HP **and** percentage on a full-width line below its bar. It uses directly exposed HP where available; unowned NPCs often expose only rounded percentages. A learned maximum from the current target or pbInfo's optional cache yields a `~` estimate, such as `~3000 / 4000 (75%)`; unknown HP is `? / ? (75%)`. Rule values and bar progress retain the original API values. See [health source details](https://github.com/Cherrybooze/Cherrys-Kit/blob/main/docs/TARGET_HEALTH.md).
+**Target health** now shows HP **and** percentage on a full-width line below its bar (0.9.28 moved the percentage above the bar and the HP inside it). It uses directly exposed HP where available; unowned NPCs often expose only rounded percentages. A learned maximum from the current target or pbInfo's optional cache yields a `~` estimate, such as `~3000 / 4000 (75%)`; unknown HP is `? / ? (75%)`. Rule values and bar progress retain the original API values. See [health source details](https://github.com/Cherrybooze/Cherrys-Kit/blob/main/docs/TARGET_HEALTH.md).
 
 Section headers now use **Expand / Collapse** in place of maximizers. Collapsing or closing a section preserves its draft input. These input/geometry changes have simulated-client coverage; native click pass-through, scaling and placement still need in-game validation.
 

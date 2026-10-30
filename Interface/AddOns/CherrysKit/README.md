@@ -1,10 +1,22 @@
 # Cherry's Kit
 
-Version **0.4.21** · Kit release **0.11.86** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.22** · Kit release **0.11.87** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.87 playtest
+
+Fixes and speed-ups from playing 0.11.86:
+
+- **No more work on every frame.** No kit addon does its work on every frame any more unless you are moving, sizing, sorting or selecting something. rom weakauras 0.9.28 makes about 98% less garbage per second, and pbInfo, Ultimate Mail Mod, zBag, Cherry's Grid and KittyCombo check a few times a second instead.
+- **Cherry's Chat 0.10.10**: no freeze when many lines arrive at once (raising a skill to the maximum and confirming), and a working scroll bar made from the game's own scroll parts.
+- **rom weakauras 0.9.28**: the scale corner works without a key, and the Position section is open. Target health shows the percentage above the bar and the HP number inside it, learned the way pbInfo does.
+- **Ultimate Mail Mod 7.0.1-ck9**: gold presets stop at 999,999,999 and show commas while you type; **Forget own chars** asks Yes or No first.
+- **Addon LoadTimes 1.3.0** is a troubleshooting addon now: it stays off, using no memory, until you turn it on in `LoadTimes\Switch.txt`. Hub 0.4.22 no longer bundles it.
+
+Everything from 0.11.86, including Cherry's Quests 1.0.0, is included unchanged. All of this still needs testing in the game client.
 
 ## Kit 0.11.86 playtest
 
@@ -59,7 +71,7 @@ Each one is its own download and needs Cherry's Kit:
 - **PortraitHP**: target health percent on its portrait (`/php`)
 - **Cherry's Grid**: party and raid frames that run kitties on click (`/grid`)
 - **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
-- **Cherry's Addon LoadTimes**: how long each addon takes to load (`/ckload`)
+- **Cherry's Addon LoadTimes**: how long each addon takes to load, for troubleshooting; off until its `Switch.txt` turns it on (`/ckload`)
 
 ## Chat commands
 
@@ -75,7 +87,7 @@ Download packages from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/rel
 3. Remove old separate copies of the same addons from `Interface/AddOns/` (the list is in the Features and addon sections above). Saved settings live separately from these addon files.
 4. Start the game or Reload UI, then type `/ck`.
 
-The hub ZIP includes shared files, the manifest, path and load markers, its media, and **LoadTimes**. The current loader uses LoadTimes' hooks even when you only want the hub. Other addon ZIPs contain their own subfolders and require this hub. Optional integrations such as Grid running a kitty also need the relevant addon.
+The hub ZIP includes shared files, the manifest, path and load markers, and its media. Every addon ZIP, LoadTimes included, contains its own subfolder and requires this hub. Optional integrations such as Grid running a kitty also need the relevant addon.
 
 ## Bug reports
 

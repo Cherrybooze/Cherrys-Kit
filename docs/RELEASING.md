@@ -13,8 +13,8 @@ python tools/build_release.py
 Outputs go to `dist/<kit version>/`, which is ignored by Git. Each version gets its own folder so old and new release files cannot be mixed:
 
 - `CherrysKit-Full-<kit version>.zip`: the complete installed tree.
-- `CherrysKit-Hub-<kit version>.zip`: shared root files, KitLoad, Media, hub reference docs, and LoadTimes.
-- One `CherrysKit-<folder>-<addon version>.zip` per addon, including LoadTimes.
+- `CherrysKit-Hub-<kit version>.zip`: shared root files, KitLoad, Media and hub reference docs.
+- One `CherrysKit-<folder>-<addon version>.zip` per addon, LoadTimes included.
 - `CherrysKit-GlobalBankDailyRewards-<extension version>.zip`: optional Chrome extension and local bridge, installed separately on top of Global Bank.
 - `release-manifest.json`: package versions, dependency notes, file inventories and hashes.
 - `SHA256SUMS.txt`: hashes of every ZIP and the release manifest.
@@ -22,7 +22,7 @@ Outputs go to `dist/<kit version>/`, which is ignored by Git. Each version gets 
 
 The builder uses fixed ZIP timestamps and a sorted file order. With the same source and Python/zlib version, ZIP contents and checksums are reproducible. It checks ZIP integrity, compares every archived file with the source, verifies the full kit equals the union of the hub and individual addons, checks the shared manifest, and checks local Markdown links.
 
-The hub's manifest lists the optional addons in a fixed order. The hub includes LoadTimes because `KitLoad/*.lua` and `LoadTimesLast.xml` call its hooks. The individual LoadTimes ZIP is an update to files already shipped with the hub. Keep that duplicate dependency explicit until the loader is deliberately changed.
+The hub's manifest lists the optional addons in a fixed order. Its first two entries are `KitLoad/start.lua`, which gives the load marks a do-nothing default, and `LoadTimes/Load.lua`, which reads `LoadTimes/Switch.txt` and only then loads LoadTimes' timing code; the builder checks that order. Without LoadTimes, or with it switched off, the marks stay do-nothing and the probe frames in `LoadTimes/CherrysLoadTimes.xml` and `LoadTimesLast.xml` stop on their first frame. Since kit 0.11.87 the hub does not bundle LoadTimes.
 
 The hub alone and hub-plus-addon selections deliberately lack the unselected addons listed in the shared manifest. The package check distinguishes those optional paths from missing shared files; it cannot prove the client's behaviour with absent optional paths. The full kit has no missing manifest files. Test partial installations in game before claiming they have been tested.
 

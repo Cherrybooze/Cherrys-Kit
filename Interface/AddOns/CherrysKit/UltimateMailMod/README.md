@@ -1,10 +1,16 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck8** · Kit release **0.11.85** · [All addons / hub](../README.md)
+Version **7.0.1-ck9** · Kit release **0.11.87** · [All addons / hub](../README.md)
 
 **A better mail window with mass send that no longer gets stuck after about 60 mails.**
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
+
+## Updated in 7.0.1-ck9
+
+- The two **gold presets** in the settings put a comma every three digits while you type, like the gold in your backpack, and stop at **999,999,999**, the most gold a character can hold. Gold in UMM's confirmation boxes uses the same commas.
+- **Forget own chars** first asks "Confirm resetting own character list?" with **Yes** and **No**. **No** sits where the button was, so a double click cannot confirm by accident.
+- With the mailbox closed and nothing being sent, UMM checks twice a second instead of on every frame. Opening the mailbox wakes it at once.
 
 ## Updated in 7.0.1-ck8
 

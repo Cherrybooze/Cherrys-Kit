@@ -1,8 +1,32 @@
-# In-game checks for kit 0.11.86
+# In-game checks for kit 0.11.87
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.27 requires hub 0.4.14 or later; UMM 7.0.1-ck8 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**. The Full ZIP includes hub **0.4.21**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.28 requires hub 0.4.14 or later; UMM 7.0.1-ck9 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. The Full ZIP includes hub **0.4.22**.
+
+## 0.11.87 fixes and speed-ups
+
+These come from playing 0.11.86. The simulated client measures Lua work and memory, not the real client's frame rate, so compare with 0.11.86 where you can. To watch memory, type `/script DEFAULT_CHAT_FRAME:AddMessage(math.floor(collectgarbage("count")) .. " KB")` a few times during a fight: it rises between garbage collections, and slower is better.
+
+| ID | Steps | Expected result |
+| --- | --- | --- |
+| C1 | In the skill window raise a skill from 0 to its maximum and click Confirm. | No freeze or long stall. The chat lines appear within a moment and chat stays responsive. |
+| C2 | Fill a chat window with lines. Drag the scroll bar's knob, click the track above and below it, click its arrows, use the mouse wheel, then resize the window and let new lines arrive. | The bar at the right edge uses the game's scroll graphics and moves the text. It follows new lines, stays where you scrolled to while you read, and fits the new window height. The game's own chat scroll bar does not show at the same time. |
+| C3 | Turn Cherry's Chat off in `/ck` and Reload UI. | The game's own chat and its scroll bar are back and work. |
+| W14 | Open /wa, unlock positions, and drag the corner at an aura's bottom right without holding any key; then drag the arrows at its top left. Edit an aura. | Dragging the corner down or right makes the aura bigger, up or left smaller, and the percentage shows while you drag. The arrows move it. The Position section (X, Y, Scale) is open in the editor. |
+| W15 | Target a monster that is still at full health, hit it, then target a second monster of the same kind that is already hurt. Target a player and your pet. Repeat with pbInfo off. | The stock Target health aura shows the percentage centred just above the bar and the HP number at the right end inside it, for example `75%` and `3,000`. The monster seen at full health gets a number, and the second one of its kind has one at once. A kind never seen at full health shows `?`. Players and pets show their real HP. |
+| W16 | Fight for a minute with several auras showing (buffs, debuffs, a cast bar, a timer) and watch memory with the line above. Compare with 0.11.86 if you can. | Memory climbs clearly slower than in 0.11.86. Timers and bars still move smoothly, and dragging an aura still follows the mouse. |
+| P1 | With pbInfo on, hover monsters, players and gathering nodes, moving straight from one to the next, and hover items in your bags. Try with **Sticky tooltip** on and off. | pbInfo's lines (level, class, HP, quest lines) are there at once on every new tooltip, and HP updates while you watch. Nothing flickers back to the plain game tooltip, and sticky tooltips do not jump. |
+| P2 | Cast a few spells with **Hide default castbar** on. Turn it off and cast again, then turn on **Show cast time**. | With it on, the game's cast bar never flashes. With it off, the bar shows again, and the cast time counts down in tenths of a second. |
+| P3 | Hover a player pbInfo has not seen before, and keep hovering for a few seconds. | The tooltip works and the game does not lag while you hover. |
+| M13 | In the UMM settings type a gold preset digit by digit up to ten digits, then paste a very large number. | Commas appear every three digits while you type (1,234,567), and the value stops at 999,999,999. |
+| M14 | Click **Forget own chars**, then **No**. Click it again, then **Yes**. Then double-click it quickly. | The first time nothing is reset; the second time your own character list is reset. The double click lands on No, not Yes. |
+| M15 | Send a few mails, close the mailbox, wait a minute, and open it again. | Mailing works as before, and the mail window answers at once when you open it. |
+| Z1 | Open your bags and the bank, sort the bags, search, and resize a bag. | Everything works as before, and item slots still react to hover and clicks. |
+| G2 | In a party or raid, take damage and heal while watching the frames, and use a 2nd click action with a delay. | Damage and heal flashes still fade smoothly, and 2nd actions still run after their delay. |
+| K12 | Use your kitties in a fight. | They work as before; an error, if any, still shows in chat. |
+| L1 | Without changing anything, type `/ckload`. Then set `LoadTimes = true` in `CherrysKit\LoadTimes\Switch.txt`, restart the game and type `/ckload` again. Set it back to `false` afterwards. | First a message says LoadTimes is switched off and how to turn it on. After switching it on, the usual report appears. The hub works the same either way. |
+| L2 | In a test copy of the game folder, install only the Hub ZIP and start the game. | The hub loads without errors about LoadTimes. |
 
 ## 0.11.86 Cherry's Quests
 
@@ -32,7 +56,7 @@ These follow up the 0.11.84 review. The simulated client cannot show whether a f
 | K10 | From **Choose mode...**, hover the pictures, then scroll the command list while they are open. | The tooltips say "Click to use this mode for the action". Scrolling closes the pictures and changes nothing. |
 | K11 | Type `/kc window`, `/kc window 0.6`, Reload UI, `/kc window`, `/kc window 5`, then `/kc window default`. | It reports 0.2, then 0.6, still 0.6 after the reload, refuses 5, then 0.2 again. |
 | W11 | Show several bars and texts, including a timer. Open /wa and drag an aura with its grip. Turn on screen scaling for one aura and change the UI scale. | Texts and timers update as before. The scaled aura follows the new UI scale within a moment. No errors. |
-| W12 | Target a player, a pet, an NPC, then another NPC with the same name; switch quickly with Tab and by clicking. | The target health text always matches the current target (HP for players and pets, `?` or `~` for NPCs) and never shows the previous target's numbers. |
+| W12 | Target a player, a pet, an NPC, then another NPC with the same name; switch quickly with Tab and by clicking. | The target health text always matches the current target (HP for players and pets, a learned number or `?` for NPCs since 0.11.87) and never shows the previous target's numbers. |
 | W13 | Hover an aura in normal play. Untick **Make clickthrough** on it, save, and hover again. | No tooltip while clickthrough is on; the tooltip comes back after unticking. |
 | M10 | In Mass Send Items type half a name in **To**, click an item, then keep typing. Then drag a box and press Escape. | The click marks the item and your typing continues in To. While you drag a box Escape cancels it. |
 | M11 | Hover items before and after dragging your first box. | The drag help line shows on item tooltips only until the first box; the bag background tooltip still shows it. |

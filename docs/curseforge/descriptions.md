@@ -68,7 +68,7 @@ Each one is its own download and needs Cherry's Kit:
 - **PortraitHP**: target health percent on its portrait (`/php`)
 - **Cherry's Grid**: party and raid frames that run kitties on click (`/grid`)
 - **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
-- **Cherry's Addon LoadTimes**: how long each addon takes to load (`/ckload`)
+- **Cherry's Addon LoadTimes**: how long each addon takes to load, for troubleshooting; off until its `Switch.txt` turns it on (`/ckload`)
 
 ## Chat commands
 
@@ -104,6 +104,10 @@ Some kit addons contain parts under Creative Commons **NonCommercial** licences 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
+
+## Updated in 1.7.16
+
+Kitty's control frame no longer makes two new functions and a table on every frame and every event just to catch errors. Errors are still caught and reported in chat as before.
 
 ## Updated in 1.7.15
 
@@ -189,6 +193,13 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Updated in 0.9.28
+
+- **The scale corner works.** In an unlocked placement view, drag the corner at an aura's bottom right to scale it: no key needed, and the percentage shows while you drag. The arrows at its top left move it. The **Position** section (X, Y and Scale) is now open when you edit an aura.
+- **Target health** puts the percentage centred just above the bar and the target's HP as a real number inside the bar's right end, such as `75%` above and `3,000` inside. Other displays that use `%v / %t` read `3,000 / 4,000 (75%)`.
+- Monster HP is learned the way pbInfo does it: when you first see a monster at full health, the game reports its whole HP once, and rom weakauras remembers that for the session by name, level and class, so the next one of that kind already has a number when you target it hurt. With pbInfo on, its saved list is read too. Until a maximum is known the number is `?`. In 0.9.27 monsters always showed `? / ?`, because the game answers "is this a player?" with nothing for monsters. The stock aura's description is updated; a description you wrote yourself is kept. See [health source details](https://github.com/Cherrybooze/Cherrys-Kit/blob/main/docs/TARGET_HEALTH.md).
+- **Far less work while you play**: aura updates reuse their tables instead of making new ones, and auras redraw at most 20 times a second (every frame while you drag one). In a test with 15 buffs and 6 debuffs, the memory made every 10 seconds fell from about 4.6 MB to 90 KB, which means less garbage collection in a client already short of memory.
 
 ## Updated in 0.9.27
 
@@ -287,6 +298,11 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
+## Updated in 0.10.10
+
+- **No more freeze when many lines arrive at once**, for example after raising a skill to its maximum and confirming: the window draws new lines together at most ten times a second instead of once per line, and a long log is trimmed in batches.
+- **A working scroll bar** at the right edge of each chat window, made from the game's own scroll track, knob and arrows. Drag the knob, click the track or the arrows, or use the mouse wheel; it follows new lines and the window's height. The game's own chat scroll bar stays hidden while Cherry's Chat draws the window and comes back if Cherry's Chat stops drawing it.
+
 ## Updated in 0.10.9
 
 Releasing the pressed button over another chat overlay clears the originating drag state and keeps its selection. Unrelated button releases do not end it, and hyperlinks activate only for a plain click released in its original window. Normal selection and native/modified link clicks retain regression coverage; cross-window input still needs an in-game check.
@@ -352,6 +368,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat pro
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
+
+## Updated in 5.07-ck15
+
+Lighter while you play. Item slots no longer run an empty script on every frame (each open slot did), the bag sorter's timer runs only while a sort is in progress, and the checks that keep the bag and bank windows in step run 20 times a second instead of on every frame. Resizing a bag still follows the mouse every frame, and sorting still moves an item every frame.
 
 ## Updated in 5.07-ck14
 
@@ -585,6 +605,12 @@ Write to **cherry** on the Runes of Magic Discord.
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
 
+## Updated in 7.0.1-ck9
+
+- The two **gold presets** in the settings put a comma every three digits while you type, like the gold in your backpack, and stop at **999,999,999**, the most gold a character can hold. Gold in UMM's confirmation boxes uses the same commas.
+- **Forget own chars** first asks "Confirm resetting own character list?" with **Yes** and **No**. **No** sits where the button was, so a double click cannot confirm by accident.
+- With the mailbox closed and nothing being sent, UMM checks twice a second instead of on every frame. Opening the mailbox wakes it at once.
+
 ## Updated in 7.0.1-ck8
 
 - Clicking an item in **Mass Send Items** no longer takes the cursor out of the **To** field. Only a box you really drag takes the keyboard, so Escape can cancel it.
@@ -752,7 +778,22 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/aah probe
 
 **Find out which addons make your loading screen slow.**
 
-A small report of how long each addon took while the loading screen was up, and how much memory it added.
+A small report of how long each addon took while the loading screen was up, and how much memory it added. It is a troubleshooting tool, so it comes switched off and then uses no memory at all.
+
+## Turning it on and off
+
+Addons cannot change their own files, so the switch is a small text file you edit yourself:
+
+1. Open `Interface\AddOns\CherrysKit\LoadTimes\Switch.txt` in Notepad.
+2. Change `LoadTimes = false` to `LoadTimes = true` and save the file.
+3. Restart the game (times measured after a Reload UI are not comparable), wait for the loading screen to finish and type `/ckload`.
+4. Set it back to `false` when you are done.
+
+While it is off, nothing of it loads except the switch check, and `/ckload` tells you how to turn it on.
+
+## Updated in 1.3.0
+
+Now a troubleshooting addon that stays off until `Switch.txt` turns it on, as described above. Switched off, the kit only reads that small file and keeps nothing of LoadTimes in memory. The hub no longer bundles it: it is its own optional download, and it needs hub 0.4.22 or later.
 
 ## Updated in 1.2.1
 
@@ -770,12 +811,12 @@ Both probe frames stop after the loading screen is gone, so a tiny hidden frame 
 
 ## Chat commands
 
-- `/ckload` (also `/loadtimes`): show the report (type it after the loading screen)
+- `/ckload` (also `/loadtimes`): show the report (type it after the loading screen). While it is switched off, it says how to turn it on.
 - `/ckload probe`: what this client allows (send it with bug reports)
 
 ## Install
 
-- **Requires Cherry's Kit** (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\LoadTimes\` and loads first in the kit.
+- **Requires Cherry's Kit** 0.4.22 or later (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\LoadTimes\` and loads first in the kit. It comes switched off: see **Turning it on and off** above.
 - **Delete the old `Interface\AddOns\!CherrysLoadTimes` folder** if you have it from an older kit.
 
 ## Bug reports
@@ -849,6 +890,16 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zshop pro
 **More information everywhere: richer mob and player tooltips, a quest tracker, chat filters and timestamps, chat history, cast bar options and auto repair.**
 
 pbInfo v0.60 by p.b. a.k.a. novayuna (later odie2), updated for Cherry's Kit. Parts that other kit addons already do are left out: the threat meter is now rom weakauras' Threat meter aura, and target health numbers are PortraitHP.
+
+## Updated in 0.60-ck5
+
+Lighter while you play:
+
+- The tooltip was rebuilt on every frame while any tooltip showed, which made dozens of new texts and tables 30 to 60 times a second while you hovered a monster. It now refreshes 10 times a second, and still at once when a tooltip opens, its first line changes or the mouse moves to another unit.
+- **Hide default castbar** hides the game's cast bar as each cast starts instead of checking on every frame, with a check 4 times a second for anything else that shows it.
+- **Show cast time** changes its text only when the tenth of a second it shows changes.
+- Hovering a player pbInfo does not know yet asks the game's player search at most once a second, instead of on every tooltip refresh.
+- The character data timer now always stops once your character is known.
 
 ## Updated in 0.60-ck4
 
@@ -934,6 +985,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/php probe
 # Cherry's Grid
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
+
+## Updated in 1.1.4
+
+Less memory churn in fights: damage and heal flashes fade 20 times a second and reuse their tables, and marking members for a redraw or waiting 2nd click actions no longer make new lists on every frame. Members still redraw ten times a second.
 
 ## Updated in 1.1.3
 

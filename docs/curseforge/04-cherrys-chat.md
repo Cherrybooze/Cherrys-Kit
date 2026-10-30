@@ -4,6 +4,11 @@
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
+## Updated in 0.10.10
+
+- **No more freeze when many lines arrive at once**, for example after raising a skill to its maximum and confirming: the window draws new lines together at most ten times a second instead of once per line, and a long log is trimmed in batches.
+- **A working scroll bar** at the right edge of each chat window, made from the game's own scroll track, knob and arrows. Drag the knob, click the track or the arrows, or use the mouse wheel; it follows new lines and the window's height. The game's own chat scroll bar stays hidden while Cherry's Chat draws the window and comes back if Cherry's Chat stops drawing it.
+
 ## Updated in 0.10.9
 
 Releasing the pressed button over another chat overlay clears the originating drag state and keeps its selection. Unrelated button releases do not end it, and hyperlinks activate only for a plain click released in its original window. Normal selection and native/modified link clicks retain regression coverage; cross-window input still needs an in-game check.
