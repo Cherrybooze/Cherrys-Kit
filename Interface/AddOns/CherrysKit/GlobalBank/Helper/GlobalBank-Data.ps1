@@ -65,6 +65,14 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
             Icon  = if ($f.Count -gt 5) { $f[5] } else { "" }
             Where = $where
             Bound = ($f.Count -gt 6 -and $f[6] -eq "1")
+            Gear  = $null
+        }
+        if ($f.Count -ge 15) {
+            $names = { param($text) if ($text) { @($text.Split([char]';') | ForEach-Object { ConvertTo-GBText $_ }) } else { @() } }
+            $item.Gear = [pscustomobject]@{
+                Dura = ConvertTo-GBNumber $f[7]; MaxDura = ConvertTo-GBNumber $f[8]; Plus = ConvertTo-GBNumber $f[9]; Tier = ConvertTo-GBNumber $f[10]
+                FreeSlots = ConvertTo-GBNumber $f[11]; Stats = @(& $names $f[12]); Runes = @(& $names $f[13]); Color = $f[14]
+            }
         }
         if ($where -eq "bag") { $bag.Add($item) } else { $bank.Add($item) }
     }
@@ -284,6 +292,14 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
                 [void]$sb.Append(',"name":').Append((ConvertTo-GBJsonString $it.Name))
                 [void]$sb.Append(',"icon":').Append((ConvertTo-GBJsonString $it.Icon))
                 if ($it.Bound) { [void]$sb.Append(',"bound":true') }
+                if ($it.Gear) {
+                    $gear = $it.Gear
+                    [void]$sb.Append(',"gear":{"dura":').Append($gear.Dura).Append(',"maxDura":').Append($gear.MaxDura).Append(',"plus":').Append($gear.Plus)
+                    [void]$sb.Append(',"tier":').Append($gear.Tier).Append(',"freeSlots":').Append($gear.FreeSlots)
+                    [void]$sb.Append(',"stats":[').Append(((@($gear.Stats) | ForEach-Object { ConvertTo-GBJsonString $_ }) -join ','))
+                    [void]$sb.Append('],"runes":[').Append(((@($gear.Runes) | ForEach-Object { ConvertTo-GBJsonString $_ }) -join ','))
+                    [void]$sb.Append('],"color":').Append((ConvertTo-GBJsonString $gear.Color)).Append('}')
+                }
                 [void]$sb.Append('}')
             }
             [void]$sb.Append(']')

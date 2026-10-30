@@ -193,6 +193,11 @@ const newer = folders.snapshot('GB1~A~Mage~1~0~0~0~0~t`M~12~345~Honor`M~bad~0~x`
 assert.deepEqual(JSON.parse(JSON.stringify(newer.currencies)), [{key:'12', amount:345, name:'Honor'}]);
 assert.equal(newer.bag[0].bound, true);
 assert.equal(newer.bag[1].bound, undefined);
+const worn = folders.snapshot('GB1~A~Mage~1~0~0~0~0~t`B~1~1~211000~Sword~icon~~90~100~3~2~1~Genius I;Monk V;~~a864a8', 'when').bag[0];
+assert.equal(worn.bound, undefined);
+assert.equal(worn.gear.maxDura, 100);
+assert.equal(worn.gear.color, 'a864a8');
+assert.equal(worn.gear.runes.length, 0);
 const character = folders.snapshot(snapshot, 'when');
 assert.equal(character.name, 'Jöhn');
 assert.deepEqual([character.level, character.gold, character.bagSlots, character.bankSlots, character.bankSeen], [50, 1200, 60, 80, true]);
@@ -311,6 +316,21 @@ assert.ok(!settings.whitelist.has('201'));
 // The list of entries carries the flag
 assert.equal(bank.entries([{name: 'A', bag: [{slot: 1, id: '1', name: 'x', bound: true}], bank: [{slot: 1, id: '2', name: 'y'}]}])[1].bound, false);
 assert.equal(bank.entries([{name: 'A', bag: [{slot: 1, id: '1', name: 'x', bound: true}]}])[0].bound, true);
+// Gear never stacks, with details or, in an older save, by its type; other things still do
+const gear = {dura: 90, maxDura: 100, plus: 3, tier: 2, freeSlots: 1, stats: ['Genius I', 'Monk V'], runes: ['Quick II'], color: 'a864a8'};
+const held = bank.entries([
+  {name: 'A', level: 1, bag: [{slot: 1, count: 1, id: '211000', name: 'Sword', gear}, {slot: 2, count: 1, id: '211000', name: 'Sword', gear: {...gear, plus: 0}}, {slot: 3, count: 1, id: '220000', name: 'Old Boots'}, {slot: 4, count: 1, id: '220000', name: 'Old Boots'}, {slot: 5, count: 2, id: '200000', name: 'Herb'}, {slot: 6, count: 3, id: '200000', name: 'Herb'}]},
+]);
+const stackedCells = bank.cells(held, true);
+assert.equal(stackedCells.length, 5);
+assert.equal(stackedCells.find(cell => cell.name === 'Herb').total, 5);
+assert.equal(stackedCells.filter(cell => cell.name === 'Sword').length, 2);
+assert.deepEqual([...bank.gearLines(gear)], ['Durability 90 / 100', '+3 · Tier +2', 'Stats: Genius I, Monk V', 'Runes: Quick II', 'Free rune slots: 1']);
+assert.deepEqual([...bank.gearLines({dura: 1, maxDura: 2, plus: 0, tier: 0, freeSlots: 0, stats: [], runes: [], color: ''})], ['Durability 1 / 2']);
+// The search finds stats and runes too
+assert.equal(bank.applyFilters(held, {text: 'monk'}).length, 2);
+assert.equal(bank.applyFilters(held, {text: 'quick'}).length, 2);
+assert.equal(bank.applyFilters(held, {text: 'herb'}).length, 2);
 """)
 
     def test_the_depot_page_address_is_never_kept(self):

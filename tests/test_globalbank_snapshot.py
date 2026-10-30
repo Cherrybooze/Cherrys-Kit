@@ -68,4 +68,35 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         self.assertEqual(lua.eval('#GlobalBank.Parse("GB1~Old~Warrior~40~0~0~0~0~x`B~1~1~5~Name~icon").currencies'), 0)
         self.assertEqual(lua.eval('GlobalBank.Parse("GB1~Old~Warrior~40~0~0~0~0~x`B~1~1~5~Name~icon").bag[1].name'), 'Name')
 
+    def test_gear_details_come_from_the_link_and_round_trip(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          UnitName=function() return 'Example' end
+          UnitClass=function() return 'Warrior' end
+          UnitLevel=function() return 60 end
+          NAMES={Sys511040_name='Genius I', Sys511904_name='Devour V', Sys520090_name='Quick II'}
+          TEXT=function(key) return NAMES[key] or key end
+          -- Real links from the auction cache, the first with a rune added
+          LINKS={'|Hitem:34182 3 74000a5f cfa0cc40 0 0 7ef8a 0 0 0 251c 967d|h|cffc805f8[Craft Crystal Staff]|r|h',
+                 '|Hitem:36e61 23 120f64 db3fdb3e db4bdaa0 dbbedace 0 0 0 0 4e20 3c3c|h|cffa864a8[Sparkling Wings]|r|h',
+                 '|Hitem:30d40 3 0|h|cffffffff[Stone]|r|h'}
+          GetBagItemInfo=function(i) if LINKS[i] then return i, 'icon', 'Item' .. i, 1 end end
+          GetBagItemLink=function(i) return LINKS[i] end
+          GetBagCount=function() return 3, 30, 180 end
+          GlobalBank.ReadMoney=function() return 7 end
+          GlobalBank.Snapshot(false,false)
+          parsed=GlobalBank.Parse(GlobalBank_Char)
+        """)
+        for path, value in (('dura', 95), ('maxDura', 95), ('plus', 0), ('tier', 0), ('freeSlots', 0)):
+            self.assertEqual(lua.eval('parsed.bag[1].gear.%s' % path), value, path)
+        self.assertEqual(lua.eval('table.concat(parsed.bag[1].gear.stats, ",")'), 'Genius I,Devour V')
+        self.assertEqual(lua.eval('parsed.bag[1].gear.color'), 'c805f8')
+        self.assertEqual(lua.eval('parsed.bag[2].gear.plus'), 18)
+        self.assertEqual(lua.eval('parsed.bag[2].gear.tier'), 5)
+        self.assertEqual(lua.eval('parsed.bag[2].gear.maxDura'), 100)
+        self.assertEqual(lua.eval('#parsed.bag[2].gear.stats'), 6)
+        self.assertEqual(lua.eval('parsed.bag[3].gear'), None)
+        self.assertEqual(lua.eval('GlobalBank.Serialize(parsed)'), lua.eval('GlobalBank_Char'))
+
 if __name__ == '__main__': unittest.main()

@@ -37,7 +37,7 @@ const GBFolders = (() => {
     return null;
   }
     // GB1~name~class~level~gold~bagSlots~bankSlots~bankSeen~time, then C~class~level, M~key~amount~name and
-  // B/K~slot~count~id~name~icon[~1 if bound] records,
+  // B/K~slot~count~id~name~icon[~1 if bound][~gear details] records,
   // records, all joined by backticks, into the character GlobalBank.json would hold.
   function snapshot(text, saved) {
     if (!text || !text.startsWith('GB1~')) return null;
@@ -54,7 +54,9 @@ const GBFolders = (() => {
         character.currencies.push({key: field[1], amount: number(field[2]), name: readable(field[3])});
       } else if ((field[0] === 'B' || field[0] === 'K') && field.length >= 4) {
         (field[0] === 'B' ? character.bag : character.bank).push({slot: number(field[1]), count: Math.max(1, number(field[2])), id: field[3],
-          name: readable(field[4]), icon: field[5] || '', ...(field[6] === '1' ? {bound: true} : {})});
+          name: readable(field[4]), icon: field[5] || '', ...(field[6] === '1' ? {bound: true} : {}),
+          ...(field.length >= 15 ? {gear: {dura: number(field[7]), maxDura: number(field[8]), plus: number(field[9]), tier: number(field[10]), freeSlots: number(field[11]),
+            stats: field[12] ? field[12].split(';').map(readable) : [], runes: field[13] ? field[13].split(';').map(readable) : [], color: field[14]}} : {})});
       }
     }
     return character;

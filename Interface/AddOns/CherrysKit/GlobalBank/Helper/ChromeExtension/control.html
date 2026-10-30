@@ -37,7 +37,7 @@
     <div id="tab-bank" class="tab-panel">
       <section class="bank-filters" aria-label="Search and filters">
         <div class="bank-filter-row">
-          <label class="bank-wide">Item name <input id="bank-search" maxlength="80" autocomplete="off" placeholder="For example: mana stone"></label>
+          <label class="bank-wide">Item or stat <input id="bank-search" maxlength="80" autocomplete="off" placeholder="A name or a stat"></label>
           <label>Type <select id="bank-type"><option value="">All types</option><option>Armour</option><option>Weapons</option><option>Jewellery</option><option>Runes</option><option>Potions</option><option>Materials</option><option>Recipes</option><option>Mounts and pets</option><option>Other</option></select></label>
           <label>Where <select id="bank-place"><option value="">Bag and bank</option><option value="bag">Bag</option><option value="bank">Bank</option></select></label>
           <label>Character level <span class="bank-levels"><input id="bank-min-level" type="number" min="0" placeholder="Min" aria-label="Lowest character level"><input id="bank-max-level" type="number" min="0" placeholder="Max" aria-label="Highest character level"></span></label>
@@ -63,7 +63,7 @@
             <h3>Always kept</h3>
             <ul id="bank-whitelist" class="bank-exclusion-list"></ul>
           </details>
-          <label class="bank-check"><input id="bank-stack" type="checkbox" checked> Stack the same item</label>
+          <label class="bank-check"><input id="bank-stack" type="checkbox" checked> Stack the same item (never gear)</label>
           <span id="bank-total" class="hint"></span>
         </div>
         <p id="bank-status" class="hint" role="status"></p>
