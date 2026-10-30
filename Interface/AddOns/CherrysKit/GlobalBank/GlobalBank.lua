@@ -16,12 +16,14 @@
 --
 -- Snapshot string: header and records joined by "`", fields by "~":
 --   GB1~name~class~level~gold~bagSlots~bankSlots~bankSeen(0/1)~time
---   B~slot~count~id~name~icon   (bag)     K~slot~count~id~name~icon   (bank)
+--   B~slot~count~id~name~icon   (bag)     K~slot~count~id~name~icon   (bank)   then ~1 if the item is bound
+--   gear then adds ~durability~maxDurability~plus~tierAdded~freeRuneSlots~stats~runes~colour (stats and runes joined by ;)
+--   M~key~amount~name   a currency other than gold, left out at zero
 
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.4.7"
+GB.version = "1.4.12"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -89,11 +91,22 @@ function GB.Serialize(c)
     tostring(c.bagMax or 0), tostring(c.bankMax or 0), c.bank and "1" or "0", clean(c.when) }, "~") }
   local function add(tag, list)
     for _, it in ipairs(list or {}) do
-      parts[#parts + 1] = table.concat({ tag, it.slot, it.count, it.id, clean(it.name), clean(it.icon) }, "~")
+      local record = table.concat({ tag, it.slot, it.count, it.id, clean(it.name), clean(it.icon) }, "~")
+      local gear = it.gear
+      if gear then
+        record = table.concat({ record, it.bound and "1" or "", gear.dura, gear.maxDura, gear.plus, gear.tier, gear.freeSlots,
+          clean(table.concat(gear.stats, ";")), clean(table.concat(gear.runes, ";")), clean(gear.color) }, "~")
+      elseif it.bound then
+        record = record .. "~1"
+      end
+      parts[#parts + 1] = record
     end
   end
   for _, class in ipairs(c.classes or {}) do
     parts[#parts + 1] = table.concat({ "C", clean(class.name), tostring(class.level or 0) }, "~")
+  end
+  for _, money in ipairs(c.currencies or {}) do
+    parts[#parts + 1] = table.concat({ "M", clean(money.key), tostring(money.amount), clean(money.name) }, "~")
   end
   add("B", c.bag)
   add("K", c.bank)
@@ -113,6 +126,22 @@ local function split(text, sep)
   end
 end
 
+-- The gear fields of an item record, split into a table; nil for anything else.
+function GB.ParseGear(f)
+  if not tonumber(f[8]) then
+    return nil
+  end
+  local function names(text)
+    local list = {}
+    if text and text ~= "" then
+      list = split(text, ";")
+    end
+    return list
+  end
+  return { dura = tonumber(f[8]) or 0, maxDura = tonumber(f[9]) or 0, plus = tonumber(f[10]) or 0, tier = tonumber(f[11]) or 0,
+    freeSlots = tonumber(f[12]) or 0, stats = names(f[13]), runes = names(f[14]), color = f[15] or "" }
+end
+
 -- Returns the character table, or nil for anything that is not a GB1 string.
 function GB.Parse(text)
   if type(text) ~= "string" or string.sub(text, 1, 4) ~= "GB1~" then
@@ -124,7 +153,7 @@ function GB.Parse(text)
     return nil
   end
   local c = { name = h[2], cls = h[3] or "", lvl = tonumber(h[4]) or 0, money = tonumber(h[5]) or 0,
-    bagMax = tonumber(h[6]) or 0, bankMax = tonumber(h[7]) or 0, when = h[9] or "", bag = {}, classes = {} }
+    bagMax = tonumber(h[6]) or 0, bankMax = tonumber(h[7]) or 0, when = h[9] or "", bag = {}, classes = {}, currencies = {} }
   if h[8] == "1" then
     c.bank = {}
   end
@@ -133,9 +162,12 @@ function GB.Parse(text)
     if f[1] == "C" and f[2] and f[2] ~= "" and tonumber(f[3]) then
       c.classes[#c.classes + 1] = { name = f[2], level = tonumber(f[3]) }
     end
+    if f[1] == "M" and f[2] and f[2] ~= "" and tonumber(f[3]) then
+      c.currencies[#c.currencies + 1] = { key = f[2], amount = tonumber(f[3]), name = f[4] or "" }
+    end
     local list = (f[1] == "B" and c.bag) or (f[1] == "K" and c.bank) or nil
     if list and f[4] then
-      list[#list + 1] = { slot = tonumber(f[2]) or 0, count = tonumber(f[3]) or 1, id = f[4], name = f[5] or "", icon = f[6] or "" }
+      list[#list + 1] = { slot = tonumber(f[2]) or 0, count = tonumber(f[3]) or 1, id = f[4], bound = f[7] == "1" or nil, gear = GB.ParseGear(f), name = f[5] or "", icon = f[6] or "" }
     end
   end
   return c
@@ -177,13 +209,97 @@ function GB.ReadMoney()
   return type(money) == "number" and money or 0
 end
 
+-- An item link's second number is the item's mode, and its lowest bit says it can be traded. A nil is
+-- no link to go by.
+function GB.IsBound(link)
+  local mode = type(link) == "string" and string.match(link, "|Hitem:%x+ (%x+)")
+  mode = mode and tonumber(mode, 16)
+  if mode then
+    return mode % 2 == 0
+  end
+end
+
+-- What a weapon's, armour's or jewellery's link holds, after its ID and mode: a number packing maximum durability,
+-- tier and rarity, and plus and free rune slots; three numbers holding two stats each (their IDs less 0x70000);
+-- four rune IDs; then durability times 100. Names come from the game's own strings, in the player's language.
+local function objectName(id)
+  local key = "Sys" .. id .. "_name"
+  local name = call(TEXT, key)
+  return type(name) == "string" and name ~= key and name or nil
+end
+
+function GB.ReadGear(id, link)
+  id = tonumber(id)
+  if type(link) ~= "string" or not id or id < 210000 or id >= 240000 then
+    return nil
+  end
+  local hex = string.match(link, "|Hitem:([%x ]+)|h")
+  if not hex then
+    return nil
+  end
+  local data = {}
+  for value in string.gmatch(hex, "%x+") do
+    data[#data + 1] = tonumber(value, 16)
+  end
+  if not data[11] then
+    return nil
+  end
+  local packed = data[3]
+  local tierByte = math.floor(packed / 256) % 256
+  local plusByte = math.floor(packed / 65536) % 256
+  local gear = { dura = math.floor(data[11] / 100), maxDura = packed % 256, plus = plusByte % 32, freeSlots = math.floor(plusByte / 32),
+    tier = math.max(tierByte % 32 - 10, 0), stats = {}, runes = {}, color = string.match(link, "|h|c%x%x(%x%x%x%x%x%x)%[") or "" }
+  for i = 4, 6 do
+    for _, short in ipairs({ data[i] % 65536, math.floor(data[i] / 65536) }) do
+      if short > 0 then
+        gear.stats[#gear.stats + 1] = objectName(short + 458752) or ("Stat " .. (short + 458752))
+      end
+    end
+  end
+  for i = 7, 10 do
+    if data[i] > 0 then
+      gear.runes[#gear.runes + 1] = objectName(data[i]) or ("Rune " .. data[i])
+    end
+  end
+  return gear
+end
+
+-- The rows of the game's own currency window: its group, its row, and the number of its name.
+GB.CURRENCY_ROWS = {
+  { 1, 1, 11 }, { 1, 2, 12 }, { 1, 3, 10 }, { 1, 4, 17 }, { 1, 5, 21 },
+  { 2, 1, 9 }, { 2, 2, 13 }, { 2, 3, 15 }, { 2, 4, 16 },
+  { 3, 1, 4 }, { 3, 2, 8 }, { 3, 3, 14 }, { 3, 4, 18 }, { 3, 5, 19 }, { 3, 6, 22 }, { 3, 7, 23 },
+}
+GB.SHOP_CURRENCIES = { "account", "bonus", "billdin" }
+
+function GB.ReadCurrencies()
+  local list = {}
+  for _, row in ipairs(GB.CURRENCY_ROWS) do
+    local amount = tonumber((call(GetPlayerPointInfo, row[1], row[2], "SYS_MONEY_TIPS_" .. row[3])))
+    if amount and amount > 0 then
+      list[#list + 1] = { key = tostring(row[3]), amount = amount, name = call(TEXT, "SYS_MONEY_TYPE_" .. row[3]) or "" }
+    end
+  end
+  local charges = tonumber((call(GetMagicBoxEnergy)))
+  if charges and charges > 0 then
+    list[#list + 1] = { key = "transmutor", amount = charges, name = "" }
+  end
+  for _, key in ipairs(GB.SHOP_CURRENCIES) do
+    local amount = tonumber((call(GetPlayerMoney, key)))
+    if amount and amount > 0 then
+      list[#list + 1] = { key = key, amount = amount, name = "" }
+    end
+  end
+  return list
+end
+
 function GB.ReadBag()
   local list = {}
   for i = 1, GB.BAG_SLOTS do
     local index, icon, name, count = call(GetBagItemInfo, i)
     if type(name) == "string" and name ~= "" then
       local link = index and call(GetBagItemLink, index)
-      list[#list + 1] = { slot = i, count = tonumber(count) or 1, id = GB.ItemId(link, name), name = name, icon = icon }
+      list[#list + 1] = { slot = i, count = tonumber(count) or 1, id = GB.ItemId(link, name), bound = GB.IsBound(link), gear = GB.ReadGear(GB.ItemId(link, name), link), name = name, icon = icon }
     end
   end
   -- GetBagCount: used, available, total (180 with every page bought)
@@ -196,7 +312,8 @@ function GB.ReadBank()
   for i = 1, GB.BANK_SLOTS do
     local icon, name, count = call(GetBankItemInfo, i)
     if type(name) == "string" and name ~= "" then
-      list[#list + 1] = { slot = i, count = tonumber(count) or 1, id = GB.ItemId(call(GetBankItemLink, i), name), name = name, icon = icon }
+      local link = call(GetBankItemLink, i)
+      list[#list + 1] = { slot = i, count = tonumber(count) or 1, id = GB.ItemId(link, name), bound = GB.IsBound(link), gear = GB.ReadGear(GB.ItemId(link, name), link), name = name, icon = icon }
     end
   end
   local a, b = call(GetBankNumItems)
@@ -238,6 +355,7 @@ function GB.Snapshot(withBank, authoritative)
     if #classes == count then c.classes = classes end
   end
   c.money = GB.ReadMoney()
+  c.currencies = GB.ReadCurrencies()
   c.bag, c.bagMax = GB.ReadBag()
   if withBank then
     local bank, max = GB.ReadBank()

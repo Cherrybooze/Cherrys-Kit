@@ -150,7 +150,7 @@ function me.onLoad(frame)
   frame:SetHeight(#me.toggles * 24 + 116)
   local hint = _G['LoginServerFrame_options_hint']
   if hint then
-    hint:SetText(me.hasSetup and 'Applies at once. Saved when you log out or quit.'
+    hint:SetText(me.hasSetup and 'Applies at once. Saved once you enter the game, then log out or quit.'
       or 'Applies at once. Run Install login screen.bat once to keep these after a restart.')
   end
   me.refresh()

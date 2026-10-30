@@ -159,6 +159,57 @@ try { if (Remove-AAHAcknowledgedOutbox $file $original $root @() 0) { throw 'Rea
 ''')
         self.assertIn(before.encode('latin1'), self.hero.read_bytes())
 
+    def test_helper_json_carries_currencies_and_bound_items(self):
+        data_script = HELPER.with_name('GlobalBank-Data.ps1')
+        out = self.data / 'GlobalBank.json'
+        self.run_ps(". '" + str(data_script).replace("'", "''") + "'\n" + '''
+$snapshot = 'GB1~A~Mage~1~5~0~0~0~t`M~12~345~Honor`M~gone~0~x`B~1~1~5~Name~icon~1`K~2~1~6~Other~icon`K~3~1~211000~Sword~icon~~90~100~3~2~1~Genius I;Monk V~~a864a8'
+$c = ConvertFrom-GBSnapshot $snapshot 'when'
+Export-GBJson @($c) (Join-Path $data 'GlobalBank.json') 'now'
+''')
+        character = json.loads(out.read_text(encoding='utf-8'))['characters'][0]
+        self.assertEqual(character['currencies'], [dict(key='12', amount=345, name='Honor')])
+        self.assertIs(character['bag'][0]['bound'], True)
+        self.assertNotIn('bound', character['bank'][0])
+        self.assertNotIn('gear', character['bank'][0])
+        self.assertEqual(character['bank'][1]['gear'], dict(dura=90, maxDura=100, plus=3, tier=2, freeSlots=1, stats=['Genius I', 'Monk V'], runes=[], color='a864a8'))
+
+    def test_the_bank_file_goes_to_the_page_in_parts(self):
+        control = HELPER.with_name('GlobalBank-Control.ps1')
+        (self.data / 'GlobalBank.json').write_text('é' * 700000, encoding='utf-8')
+        out = self.run_ps(". '" + str(control).replace("'", "''") + "'\n" + '''
+$offset = 0; $got = ''
+do { $part = Get-ControlBankFile $data $offset; $got += $part.json; $offset = $got.Length; [Text.Encoding]::UTF8.GetByteCount($part.json) } while ($offset -lt $part.total)
+"whole:$($got.Length):$($part.total)"
+try { Get-ControlBankFile $data 700001; 'accepted' } catch { 'refused' }
+(Get-ControlBankFile (Join-Path $data 'nowhere')).total
+''')
+        lines = out.split()
+        self.assertTrue(all(int(size) < 1000000 for size in lines[:-3]))
+        self.assertEqual(lines[-3:], ['whole:700000:700000', 'refused', '0'])
+
+    def test_auctions_leave_the_cache_when_they_end(self):
+        def ending(key, minutes, seen):
+            entry = self.entry(key, seen)
+            entry['data']['leftTime'] = minutes
+            return entry
+        self.write([ending('ended', 60, self.now - 3700), ending('live', 60, self.now - 3000), self.entry('no-time', self.now - 3700)])
+        self.import_file()
+        self.assertEqual(sorted(e['key'] for e in self.state()['realms']['Realm']['entries']), ['live', 'no-time'])
+        # An auction that ends later goes at the next import of any character
+        cache = self.state()
+        cache['realms']['Realm']['entries'] = [dict(e, lastSeenTrustedUTC=self.now - 3700) if e['key'] == 'live' else e for e in cache['realms']['Realm']['entries']]
+        cache['realms']['Realm']['processedTransfers']['old'] = self.now - 604801
+        cache['realms']['Realm']['processedTransfers']['recent'] = self.now - 600
+        (self.data / 'AAHBroadCache.json').write_text(json.dumps(cache), encoding='utf-8')
+        self.run_ps("Import-AAHBroadOutbox -File '' -Text '' -DataFolder $data -SaveFolder $root")
+        realm = self.state()['realms']['Realm']
+        self.assertEqual([e['key'] for e in realm['entries']], ['no-time'])
+        self.assertNotIn('old', realm['processedTransfers'])
+        self.assertIn('recent', realm['processedTransfers'])
+        # The mirror the game reads follows
+        self.assertNotIn('live', (self.data / 'AAHBroadCache.lua').read_text(encoding='utf-8'))
+
     def test_invalid_or_uncommitted_outboxes_remain_and_ttl_is_helper_utc(self):
         self.write([self.entry('expired', self.now-172801), self.entry('fresh')])
         self.import_file()
