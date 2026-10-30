@@ -1227,12 +1227,27 @@ local function nameOf(link)
   return link and string.match(link, "^player:([^:]+)")
 end
 
--- Modified player clicks insert the name into an open chat box, or inquire when closed.
--- Shift-clicking an item still inserts the complete encoded link into chat.
+-- Another kit addon can take a Ctrl/Shift-clicked name first: Ultimate Mail Mod puts it in To
+-- while the mail window is open. CherrysKit_NameTakers maps an addon to a function(name) that
+-- returns true when it used the name.
+function Wn.GiveName(name)
+  if type(CherrysKit_NameTakers) ~= "table" then return false end
+  for _, take in pairs(CherrysKit_NameTakers) do
+    if type(take) == "function" then
+      local ok, used = pcall(take, name)
+      if ok and used then return true end
+    end
+  end
+  return false
+end
+
+-- Modified player clicks go to an addon that takes names, else insert the name into an open chat
+-- box, or inquire when closed. Shift-clicking an item still inserts the complete encoded link into chat.
 function Wn.LinkLeftClick(i, span, key)
   local name = nameOf(span.link)
   local ctrl = type(IsCtrlKeyDown) == "function" and IsCtrlKeyDown()
   if name and (ctrl or shiftDown()) then
+    if Wn.GiveName(name) then return end
     local box = Wn.ChatBox()
     local visible, isOpen = try(box, "IsVisible")
     if visible and isOpen and isOpen ~= 0 then

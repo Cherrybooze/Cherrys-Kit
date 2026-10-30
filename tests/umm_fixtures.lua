@@ -74,6 +74,7 @@ function Widget:SetChecked(value) self.checked=value end
 function Widget:IsChecked() return self.checked end
 function Widget:Enable() self.enabled=true end
 function Widget:Disable() self.enabled=false end
+function Widget:IsEnable() return self.enabled end
 function Widget:SetFocus() self.focus=true end
 function Widget:ClearFocus() self.focus=false end
 function Widget:RegisterForClicks(...) self.clicks={...} end

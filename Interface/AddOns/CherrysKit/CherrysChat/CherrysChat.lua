@@ -34,7 +34,7 @@ function C.MarkOurs(wrapper)
   return wrapper
 end
 
-C.version = "0.10.11"
+C.version = "0.10.12"
 C.MAX_WINDOWS = 10
 C.MIN_FONT, C.MAX_FONT = 6, 40
 C.MIN_W, C.MIN_H = 120, 60

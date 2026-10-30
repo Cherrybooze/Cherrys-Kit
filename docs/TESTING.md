@@ -1,8 +1,18 @@
-# In-game checks for kit 0.11.89
+# In-game checks for kit 0.11.90
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck9 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. The Full ZIP includes hub **0.4.22**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. The Full ZIP includes hub **0.4.22**.
+
+## 0.11.90 names from chat into Ultimate Mail Mod
+
+Ultimate Mail Mod 7.0.1-ck10 and Cherry's Chat 0.10.12: with the mail window open, Ctrl+click or Shift+click on a player's name in chat puts it in To. The simulated client checks which field gets the name and when the click is left to the game; the real client's name links and modifier keys need these checks.
+
+| ID | Steps | Expected result |
+| --- | --- | --- |
+| C5 | Open the mailbox. Ctrl+click a player's name in chat, then Shift+click another name. Close the mailbox, open the chat typing box and Shift+click a name again. | With the mail window open, UMM switches to Compose, the name goes into To and the cursor moves to Subject; nothing goes into the chat box. With the mailbox closed the name goes into the typing box as before. A plain click on a name still whispers. |
+| M16 | Type `/cchat window` so the game draws the chat itself. Open the mailbox, then Ctrl+click and Shift+click a player's name in chat. Type `/cchat window` again afterwards. | As in C5, the name goes into Compose's To, and a plain click still whispers. |
+| M17 | On **Mass Send Items** mark a few items, then Shift+click a name in chat. Then on Compose type a recipient, put gold in Send Gold, click Send, and Shift+click a name while the gold confirmation is open. | The name goes into the mass-send To field, the items stay marked and Mass Send Items stays open. While the gold confirmation is open, To keeps the recipient the confirmation names. |
 
 ## 0.11.89 chat menu placement
 

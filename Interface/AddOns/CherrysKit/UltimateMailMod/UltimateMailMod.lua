@@ -42,7 +42,7 @@ UMM_VERSION = {
   Minor     = 0,
   Revision  = 2,
   Build     = 20211118,	-- 2787
-  ummRev    = '023-ck9';	-- Cherry's Kit 2026-10-30
+  ummRev    = '023-ck10';	-- Cherry's Kit 2026-10-30
 }
 
 -- ##### Local Variables #####
@@ -167,6 +167,7 @@ function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
     ModEnabled = true;
     UMMBagManager:Invalidate();
     UMMSettings:Init();
+    UMMHookNameClicks();
     if (AddonManager or CherrysKit) then
       -- Skip displaying the prompt for those running AddonManager or Cherry's Kit
     else

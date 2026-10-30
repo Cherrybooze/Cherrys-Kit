@@ -1,10 +1,14 @@
 # Cherry's Chat
 
-Version **0.10.11** · Kit release **0.11.89** · [All addons / hub](../README.md)
+Version **0.10.12** · Kit release **0.11.90** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
+
+## Updated in 0.10.12
+
+With the **Ultimate Mail Mod** mail window open, **Ctrl+click** or **Shift+click** a name in chat to put it in the mail's **To** field instead of the chat box. With the mail window closed these clicks work as before.
 
 ## Updated in 0.10.11
 
@@ -33,7 +37,7 @@ The long-text copy box keeps its payload when focus moves elsewhere and no longe
 
 - **Copy chat**: hold the left mouse button and drag over lines (they turn blue; drag past the edge to scroll), then right-click and pick **Copy to clipboard**. Paste anywhere with Ctrl+V.
 - **Right-click menu** on a line: Copy line(s), Copy name, Whisper, Add friend, Ignore.
-- **Chat links**: click a name to whisper, or Ctrl+click or Shift+click it to insert the name when chat is open, or request player information when it is closed. Click an item link for its tooltip, or Shift+click it to put it into the chat box.
+- **Chat links**: click a name to whisper, or Ctrl+click or Shift+click it to insert the name when chat is open, or request player information when it is closed. With Ultimate Mail Mod's mail window open, Ctrl+click or Shift+click puts the name in the mail's To field. Click an item link for its tooltip, or Shift+click it to put it into the chat box.
 - **Emoji pictures**: 415 emoji drawn as small colour pictures in the chat, both real emoji and typed codes like `:skull` or `:cat:` (the closing colon is optional, except for one- or two-letter codes like `:x:`). Copying gives back what was typed. `/cchat emojis` lists them all.
 - **Emoji in the game's own chat** (where Cherry's Chat is off): they become hearts, stars, suns, notes and faces like (^_^) that the chat font can show, or `:shortcode:`. Optional: turn `:) <3` into emoji, and send `:heart:` as a real emoji.
 - **Encrypted chat**: pick a channel (guild, party, raid, whisper, say, yell, zone or a numbered channel) in the settings and type a key. What you send there goes out scrambled, and players with the same key read it as normal text, marked with a lock. An empty key means normal chat. This keeps casual readers out; it is not strong security (keys are stored as plain text).

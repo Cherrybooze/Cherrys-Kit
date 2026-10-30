@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Sixteen package descriptions for Cherry's Kit 0.11.89, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Sixteen package descriptions for Cherry's Kit 0.11.90, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -306,6 +306,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
 
+## Updated in 0.10.12
+
+With the **Ultimate Mail Mod** mail window open, **Ctrl+click** or **Shift+click** a name in chat to put it in the mail's **To** field instead of the chat box. With the mail window closed these clicks work as before.
+
 ## Updated in 0.10.11
 
 The **right-click menu** (Copy line, Copy name, Whisper, Add friend, Ignore) now opens just right of the chat window's scroll bar, level with the middle of the window, wherever you click in it. At the mouse it could hang below the bottom of the screen when the chat sits low. If the window touches the right edge of the screen, the menu opens on its left side instead, and it always stays on the screen.
@@ -327,7 +331,7 @@ The default native click dispatch sends the complete original hyperlink, includi
 
 - **Copy chat**: hold the left mouse button and drag over lines (they turn blue; drag past the edge to scroll), then right-click and pick **Copy to clipboard**. Paste anywhere with Ctrl+V.
 - **Right-click menu** on a line: Copy line(s), Copy name, Whisper, Add friend, Ignore.
-- **Chat links**: click a name to whisper, or Ctrl+click or Shift+click it to insert the name when chat is open, or request player information when it is closed. Click an item link for its tooltip, or Shift+click it to put it into the chat box.
+- **Chat links**: click a name to whisper, or Ctrl+click or Shift+click it to insert the name when chat is open, or request player information when it is closed. With Ultimate Mail Mod's mail window open, Ctrl+click or Shift+click puts the name in the mail's To field. Click an item link for its tooltip, or Shift+click it to put it into the chat box.
 - **Emoji pictures**: 415 emoji drawn as small colour pictures in the chat, both real emoji and typed codes like `:skull` or `:cat:` (the closing colon is optional, except for one- or two-letter codes like `:x:`). Copying gives back what was typed. `/cchat emojis` lists them all.
 - **Emoji in the game's own chat** (where Cherry's Chat is off): they become hearts, stars, suns, notes and faces like (^_^) that the chat font can show, or `:shortcode:`. Optional: turn `:) <3` into emoji, and send `:heart:` as a real emoji.
 - **Encrypted chat**: pick a channel (guild, party, raid, whisper, say, yell, zone or a numbered channel) in the settings and type a key. What you send there goes out scrambled, and players with the same key read it as normal text, marked with a lock. An empty key means normal chat. This keeps casual readers out; it is not strong security (keys are stored as plain text).
@@ -617,6 +621,11 @@ Write to **cherry** on the Runes of Magic Discord.
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
 
+## Updated in 7.0.1-ck10
+
+- With the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To**. On **Mass Send Items** it fills the mass-send To field and your marked items stay marked; from the inbox or **History** it opens Compose with that name.
+- While a mail is still sending, UMM says so and To stays as it is. While the gold confirmation is open, a mass-send list is waiting for Send, or the inbox is taking mail, the click does what it normally does.
+
 ## Updated in 7.0.1-ck9
 
 - The two **gold presets** in the settings put a comma every three digits while you type, like the gold in your backpack, and stop at **999,999,999**, the most gold a character can hold. Gold in UMM's confirmation boxes uses the same commas.
@@ -657,6 +666,7 @@ New in the Cherry's Kit version:
 - **Send fast or Send safely**: under 40 mails there is one Send button (fast). From 40 mails you choose: *Send fast* (quick pace, stops at the first failure) or *Send safely* (paced, with a short pause every 20 mails). C.O.D. mails always go the safe way. A **Stop** button stops after the current mail; unsent items stay marked.
 - **Bound items in red**, also when several are marked; they are skipped with "(N bound, not sent)".
 - **Ctrl+click** a marked item to unmark its whole group.
+- **Names from chat**: with the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To** (Compose, or Mass Send Items while that tab is open).
 - **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, mail shortcuts and gold presets, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
 - Faster bag handling (the bag list is no longer rebuilt on every bag change) and a faster loading screen.
 
