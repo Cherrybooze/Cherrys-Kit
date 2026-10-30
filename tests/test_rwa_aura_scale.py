@@ -81,7 +81,7 @@ class AuraScaleTests(unittest.TestCase):
         self.rwa.ToggleOptions()
         self.rwa.ShowEditor("Scale")
         editor = self.rwa.UnifiedEditor
-        self.h.script(editor.sections.position.collapse.name, "OnClick", key="LBUTTON")
+        self.assertTrue(editor.scale.box.IsVisible(editor.scale.box))  # Position starts open
         return editor
 
     def test_scale_field_steps_validation_drafts_save_and_revert(self):

@@ -726,7 +726,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W1More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -973,6 +973,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W1Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W1BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W1BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W1BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W1BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W1BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W1BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(1, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W1BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(1, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(1, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(1, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W1BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(1, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(1, key);</OnMouseUp>
@@ -1348,7 +1395,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W2More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -1595,6 +1642,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W2Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W2BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W2BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W2BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W2BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W2BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W2BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(2, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W2BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(2, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(2, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(2, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W2BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(2, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(2, key);</OnMouseUp>
@@ -1970,7 +2064,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W3More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -2217,6 +2311,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W3Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W3BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W3BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W3BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W3BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W3BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W3BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(3, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W3BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(3, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(3, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(3, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W3BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(3, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(3, key);</OnMouseUp>
@@ -2592,7 +2733,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W4More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -2839,6 +2980,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W4Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W4BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W4BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W4BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W4BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W4BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W4BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(4, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W4BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(4, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(4, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(4, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W4BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(4, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(4, key);</OnMouseUp>
@@ -3214,7 +3402,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W5More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -3461,6 +3649,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W5Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W5BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W5BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W5BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W5BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W5BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W5BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(5, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W5BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(5, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(5, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(5, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W5BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(5, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(5, key);</OnMouseUp>
@@ -3836,7 +4071,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W6More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -4083,6 +4318,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W6Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W6BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W6BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W6BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W6BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W6BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W6BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(6, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W6BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(6, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(6, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(6, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W6BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(6, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(6, key);</OnMouseUp>
@@ -4458,7 +4740,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W7More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -4705,6 +4987,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W7Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W7BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W7BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W7BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W7BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W7BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W7BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(7, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W7BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(7, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(7, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(7, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W7BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(7, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(7, key);</OnMouseUp>
@@ -5080,7 +5409,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W8More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -5327,6 +5656,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W8Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W8BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W8BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W8BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W8BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W8BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W8BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(8, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W8BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(8, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(8, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(8, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W8BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(8, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(8, key);</OnMouseUp>
@@ -5702,7 +6078,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W9More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -5949,6 +6325,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W9Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W9BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W9BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W9BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W9BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W9BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W9BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(9, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W9BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(9, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(9, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(9, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W9BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(9, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(9, key);</OnMouseUp>
@@ -6324,7 +6747,7 @@
 				</FontString>
 				<FontString name="CherrysChat_W10More" inherits="GameFontNormal" justifyH="RIGHT" text="">
 					<Size><AbsDimension x="60" y="14" /></Size>
-					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-4" y="-2" /></Offset></Anchor></Anchors>
+					<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-22" y="-2" /></Offset></Anchor></Anchors>
 					<FontHeight><AbsValue val="12" /></FontHeight>
 				</FontString>
 			</Layer>
@@ -6571,6 +6994,53 @@
 				</Texture>
 			</Layer>
 		</Layers>
+		<Frames>
+			<!-- Scroll bar: the game's standard track, knob and arrows (ChatWindow.lua, Wn.SyncBar). -->
+			<Slider name="CherrysChat_W10Bar" enableMouse="true" minValue="0" maxValue="0" defaultValue="0">
+				<Size><AbsDimension x="16" y="140" /></Size>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-2" y="20" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CherrysChat_W10BarTop" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="TOP" /></Anchors>
+							<TexCoords left="0" right="1" top="0" bottom="0.25" />
+						</Texture>
+						<Texture name="CherrysChat_W10BarBottom" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="16" /></Size>
+							<Anchors><Anchor point="BOTTOM" /></Anchors>
+							<TexCoords left="0" right="1" top="0.75" bottom="1" />
+						</Texture>
+						<Texture name="CherrysChat_W10BarMiddle" file="Interface\Common\PanelScrollBar-Broder">
+							<Size><AbsDimension x="16" y="1" /></Size>
+							<Anchors>
+								<Anchor point="TOP" relativeTo="CherrysChat_W10BarTop" relativePoint="BOTTOM" />
+								<Anchor point="BOTTOM" relativeTo="CherrysChat_W10BarBottom" relativePoint="TOP" />
+							</Anchors>
+							<TexCoords left="0" right="1" top="0.25" bottom="0.75" />
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="CherrysChat_W10BarUp" inherits="UIPanelScrollUpButtonTemplate">
+						<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(10, 1);</OnClick></Scripts>
+					</Button>
+					<Button name="CherrysChat_W10BarDown" inherits="UIPanelScrollDownButtonTemplate">
+						<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+						<Scripts><OnClick>CherrysChat.Win.Scroll(10, -1);</OnClick></Scripts>
+					</Button>
+				</Frames>
+				<Scripts>
+					<OnValueChanged>CherrysChat.Win.BarMoved(10, arg1);</OnValueChanged>
+					<OnMouseWheel>CherrysChat.Win.Scroll(10, delta or arg1);</OnMouseWheel>
+				</Scripts>
+				<ThumbTexture name="CherrysChat_W10BarThumb" file="Interface\Buttons\ScrollBar-Knob">
+					<Size><AbsDimension x="16" y="42" /></Size>
+					<TexCoords left="0" right="1" top="0" bottom="0.65625" />
+				</ThumbTexture>
+			</Slider>
+		</Frames>
 		<Scripts>
 			<OnMouseDown>CherrysChat.Win.MouseDown(10, key);</OnMouseDown>
 			<OnMouseUp>CherrysChat.Win.MouseUp(10, key);</OnMouseUp>

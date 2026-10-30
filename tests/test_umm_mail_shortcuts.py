@@ -252,13 +252,108 @@ class MailShortcutsTests(unittest.TestCase):
         second.SetText(second, "1750000")
         self.script(second.name, "OnEnterPressed")
         self.assertEqual((self.g.UMMConfig.Settings.GoldPreset1, self.g.UMMConfig.Settings.GoldPreset2), (250000, 1750000))
-        self.assertEqual(self.g.UMMFrameTab2ComposerFooterGoldPreset2.text, "1.750.000")
+        self.assertEqual(self.g.UMMFrameTab2ComposerFooterGoldPreset2.text, "1,750,000")
         for bad in ("-1", "1.5", "1000000000", "1e6", "NaN", ""):
             first.SetText(first, bad)
             self.assertFalse(self.g.UMMSettingsUI_SavePresets())
             self.assertEqual(self.g.UMMConfig.Settings.GoldPreset1, 250000)
         self.script(first.name, "OnEscapePressed")
-        self.assertEqual(first.text, "250000")
+        self.assertEqual(first.text, "250,000")
+
+    def type_keys(self, box, keys):
+        """Client EditBox order: change the text, OnTextChanged, then move the caret.
+        The helper frame's OnUpdate runs on the next frame."""
+        for key in keys:
+            text, caret = box.text, int(box.caret or 0)
+            if key == "BACK":
+                if caret == 0:
+                    continue
+                text, caret = text[:caret - 1] + text[caret:], caret - 1
+            elif key == "DEL":
+                text = text[:caret] + text[caret + 1:]
+            elif len(text) >= 11:  # letters="11" in the template
+                continue
+            else:
+                text, caret = text[:caret] + key + text[caret:], caret + 1
+            box.text = text
+            self.script(box.name, "OnTextChanged")
+            box.caret = caret
+            self.next_frame()
+
+    def next_frame(self):
+        helper = self.g.UMMSettingsFramePresetFormat
+        if helper.visible:
+            self.script(helper.name, "OnUpdate")
+        self.assertFalse(helper.visible)
+
+    def test_gold_presets_show_backpack_commas_while_typing_and_cap_at_999_999_999(self):
+        self.g.UMMSettingsFrame.Show(self.g.UMMSettingsFrame)
+        first, second = self.g.UMMSettingsFramePreset1, self.g.UMMSettingsFramePreset2
+        self.assertEqual((first.text, second.text), ("100,000", "1,000,000"))
+        self.assertFalse(self.g.UMMSettingsFramePresetFormat.visible)
+        first.caret = len(first.text)
+        self.type_keys(first, "000")
+        self.assertEqual((first.text, first.caret, first.selStart), ("100,000,000", 11, 11))
+        self.type_keys(first, "5")  # full: nine digits are the most a preset can hold
+        self.assertEqual(first.text, "100,000,000")
+        first.caret = 4
+        self.type_keys(first, ["BACK", "BACK"])  # over the comma, then the zero before it
+        self.assertEqual((first.text, first.caret), ("1,000,000", 1))
+        self.type_keys(first, "9")
+        self.assertEqual((first.text, first.caret), ("19,000,000", 2))
+        first.caret = len(first.text)
+        self.type_keys(first, ["BACK"] * 3)
+        self.assertEqual((first.text, first.caret), ("19,000", 6))
+        first.caret = 0
+        self.type_keys(first, "7")
+        self.assertEqual((first.text, first.caret), ("719,000", 1))
+        # A paste can bring more digits than typing allows: the cap applies.
+        first.text, first.caret = "12345678901", 11
+        self.script(first.name, "OnTextChanged")
+        self.next_frame()
+        self.assertEqual((first.text, first.caret), ("999,999,999", 11))
+        second.caret = len(second.text)
+        self.type_keys(second, ["BACK"] * 6 + list("25"))
+        self.assertEqual(second.text, "125")
+        self.click("UMMSettingsFrameSavePresets")
+        self.assertEqual((self.g.UMMConfig.Settings.GoldPreset1, self.g.UMMConfig.Settings.GoldPreset2), (999999999, 125))
+        self.assertEqual((first.text, second.text), ("999,999,999", "125"))
+        for before, text, expected in (("1,234", "1,2340", ("12,340", 6)), ("", "0001", ("0,001", 5)),
+                                       ("1,234", "1234", ("234", 0)), ("999,999,999", "", ("", 0))):
+            self.assertEqual(tuple(self.g.UMMSettingsUI_RegroupGold(before, text)), expected)
+
+    def test_forget_own_chars_asks_yes_or_no_before_resetting_the_list(self):
+        self.lua.execute('UMMConfig.Characters={"SenderOne","AltOne","AltTwo"}')
+        self.g.UMMSettingsFrame.Show(self.g.UMMSettingsFrame)
+        buttons = ("Check", "Trace", "Defaults", "Reset")
+        question = ("ConfirmText", "ConfirmYes", "ConfirmNo")
+
+        def shown(names):
+            return [self.g["UMMSettingsFrame" + name].visible for name in names]
+
+        self.assertEqual(shown(question), [False] * 3)
+        self.click("UMMSettingsFrameReset")
+        self.assertEqual(shown(buttons), [False] * 4)
+        self.assertEqual(shown(question), [True] * 3)
+        self.assertEqual(self.g.UMMSettingsFrameConfirmText.text, "Confirm resetting own character list?")
+        self.assertEqual((self.g.UMMSettingsFrameConfirmYes.text, self.g.UMMSettingsFrameConfirmNo.text), ("Yes", "No"))
+        # No takes the clicked button's place, so a double click cannot confirm.
+        self.assertEqual(list(self.g.UMMSettingsFrameConfirmNo.anchor.values()),
+                         list(self.g.UMMSettingsFrameReset.anchor.values()))
+        self.assertEqual(len(list(self.g.UMMConfig.Characters.values())), 3)
+        self.click("UMMSettingsFrameConfirmNo")
+        self.assertEqual(shown(buttons), [True] * 4)
+        self.assertEqual(shown(question), [False] * 3)
+        self.assertEqual(len(list(self.g.UMMConfig.Characters.values())), 3)
+        self.click("UMMSettingsFrameReset")
+        self.g.UMMSettingsFrame.Hide(self.g.UMMSettingsFrame)  # closing the window answers no
+        self.assertEqual(shown(buttons) + shown(question), [True] * 4 + [False] * 3)
+        self.g.UMMSettingsFrame.Show(self.g.UMMSettingsFrame)
+        self.click("UMMSettingsFrameReset")
+        self.click("UMMSettingsFrameConfirmYes")
+        self.assertEqual(list(self.g.UMMConfig.Characters.values()), ["SenderOne"])
+        self.assertIn("List of own characters has been reset.", self.g.ummMessages[len(self.g.ummMessages)])
+        self.assertEqual(shown(buttons), [True] * 4)
 
     def test_history_tab_is_visually_third_retains_mass_send_and_only_composes_on_selection(self):
         self.send("Older")
@@ -317,9 +412,12 @@ class MailShortcutsTests(unittest.TestCase):
         self.lua.execute('''
           SlashCmdList.UMM(nil,"gold 1000001 2000002")
           assert(UMMSettings:GoldPreset(1)==1000001 and UMMSettings:GoldPreset(2)==2000002)
-          assert(UMMFormatNumber(1000001)=="1.000.001")
-          assert(UMMFormatNumber(1000000001)=="1.000.000.001")
-          assert(UMMComposeConfirm:internal_FormatNumber(1000001)=="1.000.001")
+          assert(UMMFormatNumber(1000001)=="1,000,001")
+          assert(UMMFormatNumber(1000000001)=="1,000,000,001")
+          assert(UMMFormatNumber(999)=="999" and UMMFormatNumber(1000)=="1,000" and UMMFormatNumber(0)=="0")
+          assert(UMMComposeConfirm:internal_FormatNumber(1000001)=="1,000,001")
+          SlashCmdList.UMM(nil,"gold 1,500,000 2,500,000")
+          assert(UMMSettings:GoldPreset(1)==1500000 and UMMSettings:GoldPreset(2)==2500000)
           SlashCmdList.UMM(nil,"shortcuts off");assert(not UMMSettings:ShortcutsEnabled())
           SlashCmdList.UMM(nil,"shortcuts on");assert(UMMSettings:ShortcutsEnabled())
         ''')

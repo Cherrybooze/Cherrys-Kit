@@ -1,0 +1,9 @@
+-- Cherry's Addon LoadTimes on/off switch.
+--
+-- LoadTimes measures how long each addon takes while the loading screen is up. It is only
+-- needed for troubleshooting, so it is off: with false nothing of it loads and it uses no memory.
+--
+-- To measure: change false to true, save this file, restart the game, wait for the loading
+-- screen to finish and type /ckload. Set it back to false when you are done.
+
+LoadTimes = false

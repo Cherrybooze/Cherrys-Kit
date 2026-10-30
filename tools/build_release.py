@@ -141,9 +141,9 @@ def build(output: Path) -> None:
         )
     markdown_count = validate_markdown()
 
-    # Current loader marks and trailing XML call LoadTimes unconditionally.
-    # Keep that dependency in the hub without changing the imported runtime.
-    hub = {name: data for name, data in sources.items() if name.split("/")[0] not in folders - {"LoadTimes"}}
+    # The hub supplies the loader marks itself (KitLoad/start.lua), so Addon LoadTimes is an
+    # ordinary optional package: a troubleshooting tool that its Switch.txt keeps off.
+    hub = {name: data for name, data in sources.items() if name.split("/")[0] not in folders}
     modules = {
         addon["folder"]: {
             name: data for name, data in sources.items()
@@ -154,26 +154,25 @@ def build(output: Path) -> None:
     combined = dict(hub)
     for folder, files in modules.items():
         overlaps = combined.keys() & files.keys()
-        require(
-            all(name.startswith("LoadTimes/") and combined[name] == files[name] for name in overlaps),
-            f"Unexpected overlap between packages: {folder}",
-        )
+        require(not overlaps, f"Unexpected overlap between packages: {folder}")
         combined.update(files)
         selection = hub | files
         missing = [ref for ref in references if ref not in selection]
         require(
-            all(ref.split("/")[0] in folders - {"LoadTimes", folder} for ref in missing),
+            all(ref.split("/")[0] in folders - {folder} for ref in missing),
             f"Missing shared files in hub + {folder}.",
         )
     require(combined == sources, "Hub and addon packages do not reconstruct the complete kit.")
-    require(all(ref.split("/")[0] in folders - {"LoadTimes"} for ref in references if ref not in hub),
+    require(all(ref.split("/")[0] in folders for ref in references if ref not in hub),
             "Hub is missing required shared files.")
+    require(references[:2] == ["KitLoad/start.lua", "LoadTimes/Load.lua"],
+            "The loader marks and the LoadTimes switch must be the first manifest entries.")
 
     output.mkdir(parents=True, exist_ok=True)
     packages = []
     for kind, title, package_version, files, bundled in [
         ("Full", "Full kit", version, sources, sorted(folders)),
-        ("Hub", "Control hub", version, hub, ["LoadTimes"]),
+        ("Hub", "Control hub", version, hub, []),
         *((addon["folder"], addon["title"], addon["version"], modules[addon["folder"]], [addon["folder"]])
           for addon in addons),
     ]:
@@ -216,7 +215,7 @@ def build(output: Path) -> None:
         "source_dirty": bool(status),
         "extract_into": "<Runes of Magic>/Interface/AddOns/",
         "archive_root": "CherrysKit/",
-        "hub_bundles_loadtimes": True,
+        "hub_bundles_loadtimes": False,
         "manifest_entries_checked": len(references),
         "markdown_files_checked": markdown_count,
         "runtime_validation": metadata["runtime_validation"],
@@ -256,8 +255,8 @@ def build(output: Path) -> None:
         f"Choose **Full** for the addons, or **Hub** plus the addon ZIPs you want. "
         f"Extract into {tick}Interface/AddOns/{tick}, merging the {tick}CherrysKit/{tick} folders. "
         f"Remove old separate copies, start the game or Reload UI, and type {tick}/ck{tick}.", "",
-        "The hub includes Addon LoadTimes because the shared loader needs its hooks. "
-        "The separate LoadTimes ZIP updates those same files. Other individual ZIPs require the hub.", "",
+        "Addon LoadTimes is a troubleshooting addon: it is switched off in its "
+        f"{tick}LoadTimes/Switch.txt{tick} and then uses no memory. Individual ZIPs require the hub.", "",
         hub_note, "",
         "The optional Chrome extension is a separate ZIP; see its included installation instructions.", "",
         "## Downloads", "",

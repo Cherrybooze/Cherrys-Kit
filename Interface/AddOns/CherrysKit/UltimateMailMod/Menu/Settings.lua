@@ -31,10 +31,16 @@ local CHECKS = {
 };
 
 local goldDirty, refreshingGold = false, false;
+local shownGold = {};   -- preset box name -> its text as last grouped
 
 local BUTTONS = {
   Check = "Run check", Trace = "Show trace", Defaults = "Defaults", Reset = "Forget own chars",
+  ConfirmYes = "Yes", ConfirmNo = "No",
 };
+-- "Forget own chars" asks first: the question and Yes/No take the place of these buttons.
+-- No sits where the clicked button was, so a double click cannot confirm.
+local CONFIRM_HIDES = { "Check", "Trace", "Defaults", "Reset" };
+local CONFIRM_SHOWS = { "ConfirmText", "ConfirmYes", "ConfirmNo" };
 
 local function Get(i)
   return UMMSendSetting(ROWS[i][1]);
@@ -59,6 +65,7 @@ function UMMSettingsUI_OnLoad(this)
     getglobal(this:GetName().."Preset"..i.."Label"):SetText(string.format(UMM_SETTINGS_GOLDPRESET, i));
   end
   getglobal(this:GetName().."SavePresets"):SetText(UMM_SETTINGS_SAVEPRESETS);
+  getglobal(this:GetName().."ConfirmText"):SetText("Confirm resetting own character list?");
 end
 
 function UMMSettingsUI_Refresh(resetGold)
@@ -73,7 +80,11 @@ function UMMSettingsUI_Refresh(resetGold)
   end
   if (resetGold or not goldDirty) then
     refreshingGold = true;
-    for i = 1, 2 do getglobal("UMMSettingsFramePreset"..i):SetText(string.format("%.0f", UMMSettings:GoldPreset(i))); end
+    for i = 1, 2 do
+      local box = getglobal("UMMSettingsFramePreset"..i);
+      shownGold[box:GetName()] = UMMFormatNumber(UMMSettings:GoldPreset(i));
+      box:SetText(shownGold[box:GetName()]);
+    end
     refreshingGold, goldDirty = false, false;
     getglobal("UMMSettingsFramePresetStatus"):SetText(UMM_SETTINGS_PRESETHELP);
   end
@@ -84,6 +95,51 @@ function UMMSettingsUI_PresetEdited()
     goldDirty = true;
     local status = getglobal("UMMSettingsFramePresetStatus");
     if (status) then status:SetText(UMM_SETTINGS_PRESETHELP); end
+    -- The client moves the caret after this handler returns, so the commas are put
+    -- back on the next frame by a helper frame that hides itself again.
+    local later = getglobal("UMMSettingsFramePresetFormat");
+    if (later) then later:Show(); end
+  end
+end
+
+-- Groups an edited preset like the backpack's gold (1,234,567) and caps it at 9 digits
+-- (999,999,999). Returns the new text and the caret position after the same digits.
+function UMMSettingsUI_RegroupGold(before, text)
+  -- the edit lies between the unchanged first p and last s characters
+  local short, p, s = math.min(string.len(before), string.len(text)), 0, 0;
+  while (p < short and string.byte(before, p + 1) == string.byte(text, p + 1)) do p = p + 1; end
+  while (s < short - p and string.byte(before, -1 - s) == string.byte(text, -1 - s)) do s = s + 1; end
+  local digits = string.gsub(text, "%D", "");
+  local lead = string.len((string.gsub(string.sub(text, 1, string.len(text) - s), "%D", "")));
+  if (string.len(text) < string.len(before) and lead > 0
+      and string.len(digits) == string.len((string.gsub(before, "%D", "")))) then
+    -- only a comma went (Backspace over it): take the digit in front of it too
+    digits = string.sub(digits, 1, lead - 1)..string.sub(digits, lead + 1);
+    lead = lead - 1;
+  end
+  if (string.len(digits) > 9) then digits, lead = "999999999", 9; end
+  local result, caret = UMMGroupDigits(digits), 0;
+  while (lead > 0 and caret < string.len(result)) do
+    caret = caret + 1;
+    if (string.sub(result, caret, caret) ~= ",") then lead = lead - 1; end
+  end
+  return result, caret;
+end
+
+function UMMSettingsUI_FormatPresets()
+  for i = 1, 2 do
+    local box = getglobal("UMMSettingsFramePreset"..i);
+    local name, text = box:GetName(), box:GetText() or "";
+    if (text ~= shownGold[name]) then
+      local grouped, caret = UMMSettingsUI_RegroupGold(shownGold[name] or "", text);
+      shownGold[name] = grouped;
+      if (grouped ~= text) then
+        refreshingGold = true;
+        box:SetText(grouped);
+        refreshingGold = false;
+        box:HighlightText(caret, caret);   -- caret without a selection; SetPlaceCaret(0) jumps to the end
+      end
+    end
   end
 end
 
@@ -121,6 +177,17 @@ function UMMSettingsUI_Check(i, checked)
   UMMSettingsUI_Refresh();
 end
 
+local function AskReset(asking)
+  for _, name in ipairs(CONFIRM_HIDES) do
+    local part = getglobal("UMMSettingsFrame"..name);
+    if (asking) then part:Hide(); else part:Show(); end
+  end
+  for _, name in ipairs(CONFIRM_SHOWS) do
+    local part = getglobal("UMMSettingsFrame"..name);
+    if (asking) then part:Show(); else part:Hide(); end
+  end
+end
+
 function UMMSettingsUI_Button(action)
   if (action == "check") then
     SlashCmdList["UMM"](nil, "x");
@@ -136,8 +203,13 @@ function UMMSettingsUI_Button(action)
     UMMPrompt("send settings back to defaults");
     UMMSettingsUI_Refresh(true);
   elseif (action == "resetchars") then
-    SlashCmdList["UMM"](nil, "reset");
+    AskReset(true);
   end
+end
+
+function UMMSettingsUI_ConfirmReset(yes)
+  AskReset(false);
+  if (yes) then SlashCmdList["UMM"](nil, "reset"); end
 end
 
 function UMMSettingsUI_Toggle()

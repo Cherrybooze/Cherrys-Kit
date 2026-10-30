@@ -43,6 +43,7 @@ function Widget:SetAnchor(point, relativePoint, relativeTo, x, y)
   self.x, self.y = x, y
 end
 function Widget:GetPos() return self.x or 0, self.y or 0 end
+function Widget:GetRealSize() return self.width * (self.scale or 1), self.height * (self.scale or 1) end
 function Widget:SetText(text)
   local changed = self.text ~= text
   self.text = text

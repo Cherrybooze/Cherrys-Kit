@@ -51,29 +51,36 @@ class PlacementTests(unittest.TestCase):
         self.h.tick()
         return self.rwa.loaded[name]
 
-    def drag(self, aura, dx, dy=0, *, resize=False, finish=True):
+    def drag(self, aura, dx, dy=0, *, resize=False, corner=False, finish=True):
+        """Drags the top-left move grip (Shift held when resize) or the bottom-right scale corner."""
         self.lua.globals().shift = resize
-        self.h.script(aura.grip.frame.name, "OnMouseDown", key="LBUTTON")
+        frame = (aura.grip.scaleFrame if corner else aura.grip.frame).name
+        self.h.script(frame, "OnMouseDown", key="LBUTTON")
         self.lua.globals().cursorX += dx
         self.lua.globals().cursorY += dy
         self.h.tick()
         if finish:
-            self.h.script(aura.grip.frame.name, "OnMouseUp", key="LBUTTON")
+            self.h.script(frame, "OnMouseUp", key="LBUTTON")
 
     def test_xml_grips_cover_disabled_previews_and_retire_on_lock_and_window_hide(self):
         self.assertIsNone(self.rwa.loaded["Player health"].grip)
         self.open()
         grips = [self.rwa.loaded[name].grip for name in ("Player health", "Other")]
+        handles = [part for grip in grips for part in (grip.frame, grip.scaleFrame)]
+        for handle in handles:
+            self.assertTrue(handle.IsVisible(handle))
+            self.assertTrue(handle.mouse)
+            self.assertIn("OnMouseDown", self.lua.globals().fixtureXmlScripts[handle.name])
+            self.assertIsNone(handle.scripts.OnMouseDown)
+            self.assertEqual((handle.width, handle.height), (16, 16))
         for grip in grips:
-            self.assertTrue(grip.frame.IsVisible(grip.frame))
-            self.assertTrue(grip.frame.mouse)
-            self.assertIn("OnMouseDown", self.lua.globals().fixtureXmlScripts[grip.frame.name])
-            self.assertIsNone(grip.frame.scripts.OnMouseDown)
-            self.assertEqual((grip.frame.width, grip.frame.height), (16, 16))
+            self.assertTrue(grip.art.texture.endswith("Textures/UI/move.tga"))
+            self.assertTrue(grip.scaleArt.texture.endswith("Textures/Grip_Highlight.tga"))
+            self.assertFalse(grip.scaleText.visible)
         self.rwa.SetEditMode(False)
-        for grip in grips:
-            self.assertFalse(grip.frame.visible)
-            self.assertFalse(grip.frame.mouse)
+        for handle in handles:
+            self.assertFalse(handle.visible)
+            self.assertFalse(handle.mouse)
         self.h.tick()
         self.assertTrue(self.rwa.loaded.Other.region.shown)
         self.lua.globals().RWA_OptionsWindow.Hide(self.lua.globals().RWA_OptionsWindow)
@@ -125,6 +132,48 @@ class PlacementTests(unittest.TestCase):
         self.assertEqual((aura.grip.frame.width, aura.grip.frame.height), (16, 16))
         self.assertEqual(self.lua.globals().placementEffects, 0)
 
+    def test_corner_scales_without_shift_and_shows_the_percentage_only_while_dragging(self):
+        aura = self.open()
+        grip = aura.grip
+        self.drag(aura, 12, 8, corner=True, finish=False)
+        self.assertAlmostEqual(aura.data.scale, 1.35)  # 1% per 2 UI pixels, right plus down
+        self.assertTrue(grip.scaleText.visible)
+        self.assertEqual(grip.scaleText.text, "135%")
+        self.h.script(grip.scaleFrame.name, "OnMouseUp", key="LBUTTON")
+        self.assertFalse(grip.scaleText.visible)
+        self.assertEqual((aura.data.x, aura.data.y), (25.5, -80.25))
+        self.assertEqual(self.rwa.GetAura("Player health").scale, 1.25)
+        self.assertTrue(self.rwa.UnifiedEditor.dirty["Player health"])
+        self.drag(aura, -100000, -100000, corner=True)
+        self.assertEqual(aura.data.scale, 0.1)
+        self.drag(aura, 0, 100000, corner=True)
+        self.assertEqual(aura.data.scale, 4)
+        self.drag(aura, 30, 30)  # the move grip without Shift only moves
+        self.assertEqual(aura.data.scale, 4)
+        self.assertEqual((aura.data.x, aura.data.y), (55.5, -50.25))
+        self.drag(aura, -6, -4, corner=True, finish=False)
+        self.assertTrue(grip.scaleText.visible)
+        self.rwa.SetEditMode(False)
+        self.assertFalse(grip.scaleText.visible)
+        self.assertFalse(grip.scaleFrame.visible)
+        self.assertEqual(self.lua.globals().placementEffects, 0)
+
+    def test_grip_tooltips_name_move_and_scale(self):
+        self.lua.execute('''
+          GameTooltip={SetOwner=function(self,owner) self.owner=owner;self.lines={} end,
+            SetText=function(self,text) self.title=text end,
+            AddLine=function(self,text) table.insert(self.lines,text) end,
+            Show=function(self) self.shown=true end,Hide=function(self) self.shown=false end}
+        ''')
+        aura = self.open()
+        tooltip = self.lua.globals().GameTooltip
+        self.h.script(aura.grip.frame.name, "OnEnter")
+        self.assertEqual(tooltip.title, "Player health - move")
+        self.assertIn("Drag the bottom-right corner to scale it.", list(tooltip.lines.values()))
+        self.h.script(aura.grip.scaleFrame.name, "OnEnter")
+        self.assertEqual(tooltip.title, "Player health - scale 125%")
+        self.assertIn("Exact scale: Position in the aura editor.", list(tooltip.lines.values()))
+
     def test_ui_and_screen_scaling_convert_drag_back_to_authored_values(self):
         self.lua.execute('assert(RWA.SetAutoScaleScreen(RWA.GetAura("Player health"),true));uiScale=2')
         aura = self.open()
@@ -149,6 +198,39 @@ class PlacementTests(unittest.TestCase):
         grip = self.rwa.loaded["Player health"].grip
         self.assertEqual((grip.frame.anchor[1], grip.frame.anchor[2], grip.frame.anchor[3]), ("TOPLEFT", "TOPLEFT", "UIParent"))
         self.assertEqual((grip.frame.anchor[4], grip.frame.anchor[5]), (244, 179))
+
+    def test_scale_corner_sits_at_the_bottom_right_of_all_outputs(self):
+        self.open()
+        self.lua.execute('''
+          uiScale=2
+          local a=RWA.loaded["Player health"]
+          for i,box in ipairs({{600,440,200,40},{520,450,48,48},{700,390,200,48}}) do
+            local frame=a.outputs[i].region.frame
+            frame.GetPos=function() return box[1],box[2] end
+            frame.GetRealSize=function() return box[3],box[4] end
+          end
+        ''')
+        self.h.tick()
+        corner = self.rwa.loaded["Player health"].grip.scaleFrame
+        self.assertEqual(tuple(corner.anchor[i] for i in range(1, 6)), ("TOPLEFT", "TOPLEFT", "UIParent", 450, 249))
+        self.lua.execute('RWA.loaded["Player health"].outputs[3].region.frame.GetPos=function() return 5000,5000 end')
+        self.h.tick()
+        self.assertEqual((corner.anchor[4], corner.anchor[5]), (944, 524))  # kept on the 960x540 screen
+
+    def test_grips_pooled_before_reload_gain_the_scale_corner_and_move_art(self):
+        self.open()
+        self.rwa.CloseOptions()
+        self.lua.execute('''
+          for _,grip in ipairs(RWA.placementGrips) do
+            grip.scaleFrame,grip.scaleArt,grip.scaleText=nil,nil,nil
+            grip.art:SetTexture("Interface/AddOns/CherrysKit/RomWeakAuras/Media/Textures/Grip_Highlight.tga")
+          end
+        ''')
+        aura = self.open()
+        self.assertTrue(aura.grip.scaleFrame.visible)
+        self.assertTrue(aura.grip.art.texture.endswith("Textures/UI/move.tga"))
+        self.drag(aura, 10, 10, corner=True)
+        self.assertAlmostEqual(aura.data.scale, 1.35)
 
     def test_interrupted_drags_cannot_mutate_old_draft_after_lock_reload_navigation_or_close(self):
         for route in ("lock", "reload", "switch", "hide", "revert", "delete"):
@@ -196,7 +278,7 @@ class PlacementTests(unittest.TestCase):
         self.lua.execute('assert(RWA.SetAutoScaleScreen(RWA.GetAura("Player health"),true));uiScale=2')
         self.open()
         editor = self.rwa.UnifiedEditor
-        self.h.script(editor.sections.position.collapse.name, "OnClick", key="LBUTTON")
+        self.assertTrue(editor.scale.box.IsVisible(editor.scale.box))  # Position starts open
         self.h.type_text(editor.x.box, "invalid position")
         self.h.type_text(editor.scale.box, "invalid scale")
         self.h.script(editor.resetPosition.name, "OnClick", key="LBUTTON")

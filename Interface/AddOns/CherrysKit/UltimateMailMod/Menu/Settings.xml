@@ -37,7 +37,9 @@
     </Frames>
   </Frame>
 
-  <EditBox name="UMMSettingsGoldPresetTemplate" inherits="UIPanelEditBoxTemplate" virtual="true" numeric="true" letters="9" historylines="0">
+  <!-- numeric only filters typing: the commas come from UMMSettingsUI_FormatPresets.
+       11 letters = 999,999,999. -->
+  <EditBox name="UMMSettingsGoldPresetTemplate" inherits="UIPanelEditBoxTemplate" virtual="true" numeric="true" letters="11" historylines="0">
     <Size><AbsDimension x="142" y="26"/></Size>
     <Scripts>
       <OnTextChanged>UMMSettingsUI_PresetEdited();</OnTextChanged>
@@ -63,6 +65,10 @@
       <FontString name="$parentPresetStatus" inherits="GameFontNormal" justifyH="LEFT" text="">
         <Size><AbsDimension x="300" y="32"/></Size>
         <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="440"/></Offset></Anchor></Anchors>
+      </FontString>
+      <FontString name="$parentConfirmText" inherits="GameFontHighlight" justifyH="LEFT" text="" hidden="true">
+        <Size><AbsDimension x="300" y="24"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="478"/></Offset></Anchor></Anchors>
       </FontString>
     </Layer></Layers>
     <Frames>
@@ -128,10 +134,27 @@
         <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="150" y="508"/></Offset></Anchor></Anchors>
         <Scripts><OnClick>UMMSettingsUI_Button("resetchars");</OnClick></Scripts>
       </Button>
+      <Button name="$parentConfirmYes" inherits="UIPanelButtonTemplate" text="" hidden="true">
+        <Size><AbsDimension x="120" y="24"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="508"/></Offset></Anchor></Anchors>
+        <Scripts><OnClick>UMMSettingsUI_ConfirmReset(true);</OnClick></Scripts>
+      </Button>
+      <Button name="$parentConfirmNo" inherits="UIPanelButtonTemplate" text="" hidden="true">
+        <Size><AbsDimension x="120" y="24"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="150" y="508"/></Offset></Anchor></Anchors>
+        <Scripts><OnClick>UMMSettingsUI_ConfirmReset(false);</OnClick></Scripts>
+      </Button>
+      <!-- Shown for one frame after a gold preset edit to put the commas back. -->
+      <Frame name="$parentPresetFormat" hidden="true">
+        <Size><AbsDimension x="0" y="0"/></Size>
+        <Anchors><Anchor point="TOPLEFT"/></Anchors>
+        <Scripts><OnUpdate>this:Hide(); UMMSettingsUI_FormatPresets();</OnUpdate></Scripts>
+      </Frame>
     </Frames>
     <Scripts>
       <OnLoad>UMMSettingsUI_OnLoad(this);</OnLoad>
       <OnShow>UMMSettingsUI_Refresh(true);</OnShow>
+      <OnHide>UMMSettingsUI_ConfirmReset(false);</OnHide>
     </Scripts>
   </Frame>
 </Ui>
