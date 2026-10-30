@@ -107,7 +107,8 @@ const GBIcons = (() => {
       if (Array.isArray(response.later)) missing.push(...response.later);
       const store = {};
       for (const [name, data] of Object.entries(response.icons || {})) {
-        const picture = decode(fromBase64(data));
+        // The local host sends base64, folders.js the bytes themselves.
+        const picture = decode(typeof data === 'string' ? fromBase64(data) : data);
         if (!picture) continue;
         const url = toDataUrl(picture);
         store[CACHE + name.toLowerCase()] = url;

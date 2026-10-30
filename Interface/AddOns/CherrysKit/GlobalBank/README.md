@@ -1,10 +1,14 @@
 # Global Bank
 
-Version **1.4.8** · Kit release **0.11.103** · [All addons / hub](../README.md)
+Version **1.4.9** · Kit release **0.11.104** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.9
+
+The Bank tab can now run without the local helper: choose your save folder, and your game folder for icons, and it reads them straight from there. The Terminal and Auctions tabs still need the helper.
 
 ## Updated in 1.4.8
 

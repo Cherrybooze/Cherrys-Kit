@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Global Bank</title>
   <link rel="stylesheet" href="control.css">
+  <script defer src="folders.js"></script>
   <script defer src="icons.js"></script>
   <script defer src="bank.js"></script>
   <script defer src="control.js"></script>
@@ -16,6 +17,14 @@
       <p id="status-helper" role="status">Checking the helper…</p>
       <p id="status-data" class="hint"></p>
       <label class="status-toggle"><input id="auto-helper" type="checkbox"> Start the Global Bank helper automatically when Chrome is open</label>
+      <details id="folders" class="folders">
+        <summary>Read from folders instead of the helper</summary>
+        <p class="hint">On a PC without the helper, the Bank tab can read your characters and icons straight from these two folders. It only reads them, and nothing leaves this PC. The Terminal and Auctions tabs still need the helper.</p>
+        <div class="folder-row"><button id="choose-saves" type="button">Choose save folder</button><span id="saves-status" class="hint">Usually Documents\Runes of Magic.</span></div>
+        <div class="folder-row"><button id="choose-game" type="button">Choose game folder</button><span id="game-status" class="hint">The folder Runes of Magic is installed in, for item icons. Optional.</span></div>
+        <button id="folders-allow" type="button" hidden>Allow access again</button>
+        <p id="folders-status" class="hint" role="status"></p>
+      </details>
     </section>
     <nav class="tabs" role="tablist" aria-label="Global Bank">
       <button type="button" role="tab" data-tab="bank" aria-selected="true">Bank</button>

@@ -1,4 +1,4 @@
-# In-game checks for kit 0.11.103
+# In-game checks for kit 0.11.104
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
@@ -15,6 +15,7 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G3 | Try the name search, Type, Where, character level, the character list, Sort by, and Stack the same item. | The grid and the count follow each one, and it stays easy to scroll. Item types are a guess from IDs and icon names, so tell me where one is wrong. |
 | G7 | Turn on **Start the Global Bank helper automatically when Chrome is open**. | No window opens. Within a few seconds the top of the page says the helper is running, started automatically, and for how long. Log out of a character: the data updates by itself. |
 | G8 | Turn it off, then turn it on and close Chrome completely. | Off: the helper stops. Closing Chrome: it stops within a few seconds, and starts again the next time Chrome opens. A helper you opened in its own window isn't closed by the toggle. |
+| G9 | On the page, open **Read from folders instead of the helper** and choose your save folder and game folder. This only matters on a PC without the helper. | Chrome asks to allow each one. On a PC without the helper, the Bank tab fills from them. After a Chrome restart, **Allow access again** brings them back. |
 | G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
 | G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 
