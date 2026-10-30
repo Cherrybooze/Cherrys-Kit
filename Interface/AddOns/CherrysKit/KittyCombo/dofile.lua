@@ -8,7 +8,7 @@ end
 -- Display name. The folder, slash commands and saved variables keep the
 -- original "KittyCombo" names so existing settings carry over.
 Kitty.ADDON_NAME = "Cherry's KittyCombo";
-Kitty.ADDON_VERSION = "1.7.16";
+Kitty.ADDON_VERSION = "1.7.17";
 Kitty.version = Kitty.ADDON_VERSION;	-- read by the Cherry's Kit hub (/ck)
 -- Where this addon's files are: its own folder when installed alone, or a
 -- subfolder of CherrysKit (the kit's KitPaths.lua sets CherrysKit_Paths).

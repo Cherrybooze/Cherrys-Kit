@@ -107,6 +107,10 @@ Some kit addons contain parts under Creative Commons **NonCommercial** licences 
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
+## Updated in 1.7.17
+
+When **Cherry's Bar** is installed, the "Mode:" plate moves onto its bar, so it no longer sits at the top of the screen. Clicking the bar's Mode display opens the same mode pictures. Hide that display in `/cbar`, or turn Cherry's Bar off, and the plate comes back if "Show current mode" is ticked.
+
 ## Updated in 1.7.16
 
 Kitty's control frame no longer makes two new functions and a table on every frame and every event just to catch errors. Errors are still caught and reported in chat as before.
@@ -1106,7 +1110,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cq probe`
 ## Features
 
 - **Top bar, bottom bar or both.** Only the top bar shows at first. Each bar has its own style, opacity and auto-hide.
-- **Eighteen displays**: Menu (the game's windows and settings), Experience, Bags, Gold, Currencies, Mail, Performance, Clock, Location, Friends, Guild, Ammo, Durability, Damage, Daily quests, Class, Gathering and Volume.
+- **Nineteen displays**: Kitty mode (with Cherry's KittyCombo, replacing its "Mode:" plate), Menu (the game's windows and settings), Experience, Bags, Gold, Currencies, Mail, Performance, Clock, Location, Friends, Guild, Ammo, Durability, Damage, Daily quests, Class, Gathering and Volume.
 - **Easy to rearrange**: drag displays on a map of the bars in `/cbar`, or on the bars themselves, or use the Left, Right, top bar, bottom bar and Hide buttons. Right-click an empty part of a bar to tick displays on and off.
 - **Right-click any display** for its options: icon, label, colours and where it goes. Left-click does its job, such as opening your bag or listing friends online.
 - **Your own text**: rewrite any display with tokens such as `[FREE]`, `[GPH]` for gold per hour or `[TTL]` for time to level.

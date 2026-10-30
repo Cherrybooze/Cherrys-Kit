@@ -515,6 +515,27 @@
 			<OnMouseWheel>CherrysBar.Displays.Wheel(18, delta);</OnMouseWheel>
 		</Scripts>
 	</Frame>
+	<Frame name="CBar_D19" parent="UIParent" frameStrata="BACKGROUND" frameLevel="1" enableMouse="true" movable="true" hidden="true">
+		<Size><AbsDimension x="60" y="24" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="CBar_D19Grip" file="Interface\AddOns\CherrysKit\CherrysBar\Media\Icons\Resize" hidden="true"><Size><AbsDimension x="14" y="14" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+				<Texture name="CBar_D19Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="16" y="16" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="4" y="0" /></Offset></Anchor></Anchors></Texture>
+				<FontString name="CBar_D19Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="12" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="24" y="0" /></Offset></Anchor></Anchors></FontString>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture name="CBar_D19Hover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.25" g="0.25" b="0.25" /></Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnEnter>CherrysBar.Displays.Enter(19, this);</OnEnter>
+			<OnLeave>CherrysBar.Displays.Leave(19);</OnLeave>
+			<OnMouseDown>CherrysBar.Displays.MouseDown(19, key);</OnMouseDown>
+			<OnMouseUp>CherrysBar.Displays.MouseUp(19, key);</OnMouseUp>
+			<OnMouseWheel>CherrysBar.Displays.Wheel(19, delta);</OnMouseWheel>
+		</Scripts>
+	</Frame>
 	<Frame name="CBar_Menu" parent="UIParent" frameStrata="DIALOG" enableMouse="true" hidden="true">
 		<Size><AbsDimension x="230" y="120" /></Size>
 		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
@@ -1464,6 +1485,28 @@
 					<OnLeave>GameTooltip:Hide();</OnLeave>
 					<OnMouseDown>CherrysBar.Options.ChipDown(18, key);</OnMouseDown>
 					<OnMouseUp>CherrysBar.Options.ChipUp(18, key);</OnMouseUp>
+				</Scripts>
+			</Frame>
+			<Frame name="CBar_Chip19" enableMouse="true" movable="true" hidden="true">
+				<Size><AbsDimension x="64" y="24" /></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="90" y="216" /></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="CBar_Chip19Bg" file="Interface\Common\Bar\Smooth"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.05" g="0.05" b="0.07" a="0.75" /></Texture>
+					</Layer>
+					<Layer level="BORDER">
+						<Texture name="CBar_Chip19Mark" file="Interface\Common\Bar\Smooth" hidden="true"><Anchors><Anchor point="TOPLEFT" /><Anchor point="BOTTOMRIGHT" /></Anchors><Color r="0.85" g="0.65" b="0.2" a="0.55" /></Texture>
+					</Layer>
+					<Layer level="ARTWORK">
+						<Texture name="CBar_Chip19Icon" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="18" y="18" /></Size><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="3" y="0" /></Offset></Anchor></Anchors></Texture>
+						<FontString name="CBar_Chip19Text" inherits="GameFontHighlight" justifyH="LEFT" text=""><FontHeight><AbsValue val="11" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT"><Offset><AbsDimension x="23" y="0" /></Offset></Anchor></Anchors></FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter>CherrysBar.Options.ChipEnter(19, this);</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+					<OnMouseDown>CherrysBar.Options.ChipDown(19, key);</OnMouseDown>
+					<OnMouseUp>CherrysBar.Options.ChipUp(19, key);</OnMouseUp>
 				</Scripts>
 			</Frame>
 			<Button name="CBar_OptionsLeft" inherits="UIPanelButtonTemplate" text="&lt; Left"><Size><AbsDimension x="66" y="24" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="150" y="254" /></Offset></Anchor></Anchors><Scripts><OnClick>CherrysBar.Options.Move(&quot;left&quot;);</OnClick></Scripts></Button>

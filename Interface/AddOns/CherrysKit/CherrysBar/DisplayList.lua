@@ -6,6 +6,7 @@
 --   events: { "EVENT", "TOKEN", ... }: see Displays.lua
 --   every, tick: seconds between tick(def) calls; tick returns true when there is something new
 --   read(v, def, cfg): writes the tokens into v; called only when redrawing or hovering
+--   available(): nil unless the addon it needs is there; placed(def, shown): told after each rebuild
 --   tip(v, def), click(def, frame), wheel(def, delta), hint, tokens (for the options window),
 --   extra (rows for its right-click menu)
 
@@ -101,6 +102,50 @@ local function classColor(class)
   end
   return "|cffffffff"
 end
+
+---------------------------------------------------------------------------
+-- Kitty mode: takes over Cherry's KittyCombo's "Mode:" plate while it is on a bar
+---------------------------------------------------------------------------
+
+local function modeUI()
+  return type(Kitty) == "table" and type(Kitty.ModeUI) == "table" and Kitty.ModeUI or nil
+end
+
+local modeDisplay
+local function modeChanged()
+  modeDisplay.dirty = true
+end
+
+modeDisplay = {
+  key = "Mode", label = "Mode", title = "Kitty mode", showLabel = true, bar = "top", side = "left", order = 5,
+  icon = Icon("Reload"), fmt = "[MODE]",
+  tokens = "[MODE] the kitty mode that is on",
+  available = function()
+    local ui = modeUI()
+    return ui and type(ui.setTextHost) == "function" and not (Kitty.isTurnedOff and Kitty.isTurnedOff())
+  end,
+  placed = function(def, shown)
+    local ui = modeUI()
+    if ui and type(ui.setTextHost) == "function" then
+      ui.setTextHost(shown and modeChanged or nil)
+    end
+  end,
+  read = function(v, def)
+    local ui = modeUI()
+    local current = ui.current()
+    v.MODE = "|cff7fe0ff" .. (current or (Kitty.L and Kitty.L("ModeNone", "none")) or "none") .. RESET
+    D.SetIcon(def, ui.iconPath(current or ""))
+  end,
+  tip = function(v)
+    local _, on = modeUI().current()
+    if on and #on > 1 then
+      tipPair("On", table.concat(on, ", "))
+    end
+  end,
+  click = function(def, frame) modeUI().toggleFlyout(frame) end,
+  hint = "Click: pick a mode",
+}
+D.Add(modeDisplay)
 
 ---------------------------------------------------------------------------
 -- Menu: the game's windows (XBar III's lists)

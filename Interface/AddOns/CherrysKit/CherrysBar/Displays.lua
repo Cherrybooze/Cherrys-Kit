@@ -54,8 +54,13 @@ local function widget(def, part)
   return _G["CBar_D" .. def.slot .. part]
 end
 
-local function onBar(cfg)
-  return cfg.bar ~= "off" and G.Bars.IsShown(cfg.bar)
+-- A display that needs another addon does not exist without it.
+function D.IsAvailable(def)
+  return (not def.available or def.available()) and true or false
+end
+
+local function onBar(def, cfg)
+  return D.IsAvailable(def) and cfg.bar ~= "off" and G.Bars.IsShown(cfg.bar)
 end
 
 local function unlocked()
@@ -256,7 +261,7 @@ function D.Row(bar, side)
   local row = {}
   for _, def in ipairs(D.list) do
     local cfg = D.Config(def)
-    if cfg.bar == bar and (side == nil or cfg.side == side) then
+    if cfg.bar == bar and (side == nil or cfg.side == side) and D.IsAvailable(def) then
       row[#row + 1] = def
     end
   end
@@ -352,7 +357,11 @@ function D.Rebuild()
     local cfg = D.Config(def)
     local frame = widget(def, "")
     if frame then
-      if onBar(cfg) then
+      local shown = onBar(def, cfg)
+      if def.placed then
+        pcall(def.placed, def, shown)
+      end
+      if shown then
         active[#active + 1] = def
         def.timer = 0
         def.dirty = true

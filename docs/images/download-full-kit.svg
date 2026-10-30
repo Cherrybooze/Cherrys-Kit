@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="320" viewBox="0 0 1120 320" role="img" aria-labelledby="title description">
   <title id="title">Download Cherry's Kit — full install ZIP</title>
-  <desc id="description">Click to download CherrysKit-Full-0.11.94.zip. Extract into your game's Interface/AddOns folder. Use this installer instead of GitHub's Code Download ZIP source archive.</desc>
+  <desc id="description">Click to download CherrysKit-Full-0.11.95.zip. Extract into your game's Interface/AddOns folder. Use this installer instead of GitHub's Code Download ZIP source archive.</desc>
   <defs>
     <clipPath id="card">
       <rect x="1" y="1" width="1118" height="318" rx="18"/>
@@ -11,7 +11,7 @@
     <rect x="32" y="24" width="132" height="30" rx="15" fill="#cf3343"/>
     <text x="98" y="45" fill="#ffffff" font-size="16" font-weight="700" text-anchor="middle" letter-spacing="1">START HERE</text>
     <text x="32" y="113" fill="#ffffff" font-size="48" font-weight="700">DOWNLOAD THE FULL KIT</text>
-    <text x="34" y="152" fill="#b8c0cc" font-size="23">CherrysKit-Full-0.11.94.zip</text>
+    <text x="34" y="152" fill="#b8c0cc" font-size="23">CherrysKit-Full-0.11.95.zip</text>
     <text x="34" y="202" fill="#f0b54d" font-size="25" font-weight="700">Extract into: Interface/AddOns/</text>
     <text x="34" y="241" fill="#b8c0cc" font-size="20">Creates CherrysKit/CherrysKit.toc · Then type /ck in game</text>
     <circle cx="1016" cy="113" r="52" fill="#f0b54d"/>

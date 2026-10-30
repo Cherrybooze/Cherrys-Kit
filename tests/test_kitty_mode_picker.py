@@ -92,6 +92,31 @@ class ModePickerTests(unittest.TestCase):
                     saved = self.mode.setting()
                     self.assertEqual((saved.x, saved.y, saved.tx, saved.ty), (19, 23, 25, 29))
 
+    def test_cherrys_bar_can_carry_the_readout(self):
+        self.lua.execute('''
+          hostCalls=0
+          Kitty.Skin.color=function() end
+          modeWidget("KittyModeTextText")
+          modeWidget("KittyModeText_SkinBg")
+          Kitty.ModeUI.refreshText()
+        ''')
+        g = self.lua.globals()
+        self.assertTrue(g.KittyModeText.visible)
+        self.lua.execute('Kitty.ModeUI.setTextHost(function() hostCalls=hostCalls+1 end)')
+        self.assertFalse(g.KittyModeText.visible)
+        self.assertEqual(g.hostCalls, 1)
+        self.mode.set("boss")
+        self.assertGreater(g.hostCalls, 1)
+        self.assertFalse(g.KittyModeText.visible)
+        self.lua.execute('Kitty.ModeUI.setTextHost(nil)')
+        self.assertTrue(g.KittyModeText.visible)
+        self.lua.execute('''
+          hostCalls=0
+          Kitty.ModeUI.setTextHost(function() error("a broken host must not break Kitty") end)
+          Kitty.ModeUI.refreshText()
+        ''')
+        self.assertFalse(g.KittyModeText.visible)
+
     def test_upper_left_opens_top_down_and_readout_uses_the_same_icon_picker(self):
         self.mode.toggleFlyout()
         first = self.lua.globals().KittyModeFlyout_Button1

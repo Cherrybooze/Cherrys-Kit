@@ -210,7 +210,7 @@ class BarTest(unittest.TestCase):
             self.assertIn("Skins/Ironstone/bottom", self.ev(f"CBar_BarBottomT{i}.texture"))
         self.assertEqual(self.ev("CBar_BarTop.h"), 24)
         self.assertEqual(self.ev("CBar_BarTopT1.h"), 24)
-        self.assertEqual(self.ev("CBar_D1Icon.w"), 16)
+        self.assertEqual(self.ev("_G['CBar_D' .. CherrysBar.Displays.byKey.Bag.slot .. 'Icon'].w"), 16)
 
     def test_what_sits_on_a_bar_clears_the_rail(self):
         self.run_lua("CherrysBar.Command('both'); local D = CherrysBar.Displays; D.SetBar(D.byKey.Zone, 'bottom')")
@@ -388,7 +388,7 @@ class BarTest(unittest.TestCase):
         """)
         self.assertLess(self.ev("chipOf('Bag').w"), 50)
         self.assertFalse(self.ev("_G['CBar_Chip' .. CherrysBar.Displays.byKey.Bag.slot .. 'Text'].shown"))
-        lefts = sorted(self.ev(f"chipOf('{k}').anchors[1][4]") for k in self.ev("CherrysBar.Displays.byKey").keys())
+        lefts = sorted(self.ev(f"chipOf('{k}').anchors[1][4]") for k in self.ev("CherrysBar.Displays.byKey").keys() if k != "Mode")
         self.assertLess(lefts[-1] + 45, 90 + 776 + 8)
         self.assertEqual(len(set(lefts)), 18)
 
@@ -904,7 +904,72 @@ class BarTest(unittest.TestCase):
         self.run_lua(f"for i = 1, 20 do CherrysBar.Displays.Wheel({slot}, 1) end")
         self.assertEqual(self.ev("volume"), 1)
 
+    def with_kitty(self):
+        self.run_lua("""
+            Kitty = { L = function(_, d) return d end, Modes = { boss = true } }
+            kittyMode, kittyHost, kittyFlyout = 'boss', nil, nil
+            Kitty.ModeUI = {
+              current = function() return kittyMode, { kittyMode } end,
+              iconPath = function(name) return 'Kitty/gfx/modes/' .. name .. '.tga' end,
+              setTextHost = function(host) kittyHost = host end,
+              toggleFlyout = function(anchor) kittyFlyout = anchor end,
+            }
+            CherrysBar.Refresh()
+        """)
+
+    def test_mode_display_appears_with_kitty_and_takes_over_its_plate(self):
+        self.assertFalse(self.ev("frameOf('Mode').shown"))
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Bag,Money")
+        self.with_kitty()
+        self.assertTrue(self.ev("frameOf('Mode').shown"))
+        self.assertEqual(self.ev("row('top', 'left')"), "Mode,Menu,Exp,Bag,Money")
+        self.assertEqual(self.ev("frameOf('Mode').anchors[1][4]"), 410)
+        self.assertEqual(self.ev("type(kittyHost)"), "function")
+        self.assertIn("boss", self.text_of("Mode"))
+        self.assertIn("Mode", self.text_of("Mode"))
+        self.assertIn("modes/boss", self.ev("_G['CBar_D' .. CherrysBar.Displays.byKey.Mode.slot .. 'Icon'].texture"))
+
+    def test_mode_display_follows_the_mode_without_polling(self):
+        self.with_kitty()
+        self.tick(5)
+        self.assertIn("boss", self.text_of("Mode"))
+        self.run_lua("kittyMode = 'aoe'")
+        self.tick(5)
+        self.assertIn("boss", self.text_of("Mode"))  # nothing has told it yet
+        self.run_lua("kittyHost()")
+        self.tick()
+        self.assertIn("aoe", self.text_of("Mode"))
+        self.assertIn("modes/aoe", self.ev("_G['CBar_D' .. CherrysBar.Displays.byKey.Mode.slot .. 'Icon'].texture"))
+
+    def test_clicking_the_mode_display_opens_kittys_picker_at_it(self):
+        self.with_kitty()
+        self.run_lua("local D = CherrysBar.Displays; D.MouseUp(D.byKey.Mode.slot, 'LBUTTON')")
+        self.assertEqual(self.ev("kittyFlyout == frameOf('Mode')"), True)
+
+    def test_kittys_plate_comes_back_when_the_display_is_not_on_a_bar(self):
+        self.with_kitty()
+        self.run_lua("local D = CherrysBar.Displays; D.SetBar(D.byKey.Mode, 'off')")
+        self.assertIsNone(self.ev("kittyHost"))
+        self.run_lua("local D = CherrysBar.Displays; D.SetBar(D.byKey.Mode, 'top')")
+        self.assertEqual(self.ev("type(kittyHost)"), "function")
+        self.run_lua("CherrysBar.Command('bottom')")
+        self.assertIsNone(self.ev("kittyHost"))
+
+    def test_mode_display_stays_away_when_kitty_is_turned_off(self):
+        self.with_kitty()
+        self.run_lua("Kitty.isTurnedOff = function() return true end; CherrysBar.Refresh()")
+        self.assertFalse(self.ev("frameOf('Mode').shown"))
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Bag,Money")
+
+    def test_bar_menu_lists_mode_only_with_kitty(self):
+        self.run_lua("CherrysBar.Bars.BarClick('top', 'RBUTTON')")
+        self.assertNotIn("Kitty mode", self.menu_rows())
+        self.with_kitty()
+        self.run_lua("CherrysBar.Bars.BarClick('top', 'RBUTTON')")
+        self.assertIn("Kitty mode", self.menu_rows())
+
     def test_every_display_reads_and_tips_without_error(self):
+        self.with_kitty()
         for key in self.ev("CherrysBar.Displays.byKey").keys():
             self.run_lua(f"""
                 local D = CherrysBar.Displays
@@ -1015,7 +1080,7 @@ class PackageTest(unittest.TestCase):
         names = {el.get("name") for el in tree.iter(NS + "Frame")}
         lua = self.fresh()
         count = lua.eval("#CherrysBar.Displays.list")
-        self.assertEqual(count, 18)
+        self.assertEqual(count, 19)
         for i in range(1, count + 1):
             self.assertIn(f"CBar_D{i}", names)
             self.assertIn(f"CBar_Chip{i}", names)

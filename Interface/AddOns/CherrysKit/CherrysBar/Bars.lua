@@ -257,15 +257,17 @@ end
 function B.MenuRows(name)
   local rows = { { text = (name == "bottom") and "Bottom bar" or "Top bar" } }
   for _, def in ipairs(G.Displays.list) do
-    local cfg = G.Displays.Config(def)
-    rows[#rows + 1] = {
-      text = def.title or def.label or def.key, checked = cfg.bar == name, keepOpen = true,
-      click = function()
-        G.Displays.SetBar(def, cfg.bar == name and "off" or name)
-        G.Options.Refresh()
-        G.Menu.Replace(B.MenuRows(name))
-      end,
-    }
+    if G.Displays.IsAvailable(def) then
+      local cfg = G.Displays.Config(def)
+      rows[#rows + 1] = {
+        text = def.title or def.label or def.key, checked = cfg.bar == name, keepOpen = true,
+        click = function()
+          G.Displays.SetBar(def, cfg.bar == name and "off" or name)
+          G.Options.Refresh()
+          G.Menu.Replace(B.MenuRows(name))
+        end,
+      }
+    end
   end
   local S = G.S()
   rows[#rows + 1] = { text = "Auto-hide", checked = S.bars[name].autoHide, keepOpen = true, click = function()

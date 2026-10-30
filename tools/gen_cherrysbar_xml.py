@@ -8,7 +8,7 @@ changing the frame list: python tools/gen_cherrysbar_xml.py
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parents[1] / "Interface/AddOns/CherrysKit/CherrysBar/CherrysBar.xml"
-DISPLAYS = 18
+DISPLAYS = 19
 MENU_ROWS = 24
 GENERAL_ROWS = 6
 TILES = 16  # 256 wide each: enough for any screen, and past the screen's edge nothing is drawn

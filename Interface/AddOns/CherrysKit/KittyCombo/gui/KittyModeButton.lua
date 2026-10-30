@@ -12,6 +12,7 @@ Kitty.Modes = Kitty.Modes or {};
 Kitty.ModeUI = Kitty.ModeUI or {};
 local M = Kitty.ModeUI;
 M.pickHandler, M.pickerChoices, M.flyoutAnchor, M.page = nil, nil, nil, 0;
+M.textHost = nil;	-- Reload UI re-runs this file: whoever carries the readout says so again
 
 M.MAX = 15;	-- flyout buttons for modes (plus one for "no mode")
 M.PER_ROW = 4;
@@ -667,12 +668,21 @@ end
 M.textLabel = function()
 	return Kitty.L("ModeReadout", "Mode: <<1>>", Kitty.colorCyan(M.current() or Kitty.L("ModeNone", "none")));
 end
+-- Cherry's Bar shows the mode on a bar when it is installed. While it does, it is told when the mode
+-- may have changed and Kitty's own plate stays hidden; passing nil gives the plate back.
+M.setTextHost = function(host)
+	M.textHost = host;
+	M.refreshText();
+end
 M.refreshText = function()
+	if(M.textHost) then
+		pcall(M.textHost);
+	end
 	local readout = find("KittyModeText");
 	if(readout == nil) then
 		return;
 	end
-	if(not M.isTextShown()) then
+	if(M.textHost or not M.isTextShown()) then
 		readout:Hide();
 		return;
 	end

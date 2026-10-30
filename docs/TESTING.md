@@ -1,16 +1,16 @@
-# In-game checks for kit 0.11.94
+# In-game checks for kit 0.11.95
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.2 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.3 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
 
-## 0.11.94 Cherry's Bar
+## 0.11.95 Cherry's Bar
 
 Cherry's Bar is new, and none of it has run in the real client yet. Delete any old `Interface/AddOns/XBar` folder first.
 
 | ID | Steps | Expected result |
 | --- | --- | --- |
-| B1 | Reload UI. Run `/cbar probe`. | Only the top bar shows, in the Ironstone style, with Menu, XP, Bag and Gold on the left and Mail, FPS and the clock on the right. The probe lists missing functions (ideally none), says how many frames it moved and gives text widths above 0. |
+| B1 | Reload UI. Run `/cbar probe`. | Only the top bar shows, in the Ironstone style, with Kitty mode, Menu, XP, Bag and Gold on the left and Mail, FPS and the clock on the right. The probe lists missing functions (ideally none), says how many frames it moved and gives text widths above 0. |
 | B2 | Look along the whole bar, on your full screen width. | The art runs edge to edge with no visible seams between tiles, and the gold rail faces the middle of the screen. Text and icons sit in the dark part, clear of the rail, and are easy to read. Icons are clean, with no box or halo around them. |
 | B3 | Look along the top of the screen, with a target selected and some buffs on. Open the housing controls in your house. Click the portrait, the small buttons beside it and the housing controls. | The bar runs behind all of them, none of them has moved, and every one still takes clicks. The displays sit in the clear stretch, past the portrait and housing controls and short of the buffs and minimap. Note the Clear left and Clear right values that suit your screen. |
 | B4 | Run `/cbar bottom`, then `/cbar both`, then `/cbar top`. Then tick Move frames for the top bar, and untick it. | The bars switch at once. With a bottom bar the action bar and experience bar sit above it, and they go back afterwards. With Move frames on the top bar, the portrait, its small buttons, the target, buffs and minimap all move below it together, and go back when it is unticked. |
@@ -31,6 +31,7 @@ Cherry's Bar is new, and none of it has run in the real client yet. Delete any o
 | B19 | In `/ck` turn Cherry's Bar off and Reload UI. | No bars, and no frames moved. |
 | B20 | Put XBar back in `Interface/AddOns/XBar` and Reload UI, then delete it again. | Cherry's Bar stays off and the hub says to delete `AddOns\XBar`. |
 | B21 | Run `/ckload` after playing for a while, in and out of combat. | Cherry's Bar's memory stays small and does not keep growing. |
+| B22 | With "Show current mode" ticked in Kitty, Reload UI. Click the Kitty mode display and pick a mode. Use a Change kitty mode action or `/kc mode aoe`. Then hide the display, and show it again. | Kitty's "Mode:" plate is gone from the top of the screen and the display shows the mode's picture and name. The pictures open at the display, and every way of changing the mode shows on the bar within a second. Hiding the display brings the plate back; showing it hides the plate again. |
 
 ## 0.11.90 names from chat into Ultimate Mail Mod
 

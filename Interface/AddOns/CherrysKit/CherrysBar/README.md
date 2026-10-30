@@ -1,19 +1,23 @@
 # Cherry's Bar
 
-Version **1.1.2** · Kit release **0.11.94** · [All addons / hub](../README.md)
+Version **1.1.3** · Kit release **0.11.95** · [All addons / hub](../README.md)
 
 **Full-width information bars at the top of the screen, the bottom, or both. A fork of XBar III, with bars and settings in the spirit of Titan Panel.**
 
 ## Features
 
 - **Top bar, bottom bar or both.** Only the top bar shows at first. Each bar has its own style, opacity and auto-hide. `/cbar top`, `/cbar bottom` and `/cbar both` switch quickly.
-- **Eighteen displays**, each on the top bar, the bottom bar or hidden, and on the left or right: Menu (the game's windows and settings), Experience, Bags, Gold, Currencies, Mail, Performance, Clock, Location, Friends, Guild, Ammo, Durability, Damage, Daily quests, Class, Gathering and Volume. Seven show at first; the rest are one click away.
+- **Nineteen displays**, each on the top bar, the bottom bar or hidden, and on the left or right: Kitty mode (with Cherry's KittyCombo), Menu (the game's windows and settings), Experience, Bags, Gold, Currencies, Mail, Performance, Clock, Location, Friends, Guild, Ammo, Durability, Damage, Daily quests, Class, Gathering and Volume. The first few show at first; the rest are one click away.
 - **Your own text.** Every display's text can be rewritten with tokens, such as `[FREE]` for free bag slots, `[GPH]` for gold per hour or `[TTL]` for time to level. `/cbar` lists the tokens of the display you pick.
 - **Seven styles:** Ironstone, Blacksteel, Froststeel, Darkwood, Verdant, Arcane and plain Slate, with a matching set of icons.
 - **Auto-hide** per bar: it tucks away and comes back when the mouse reaches the screen's edge.
 - **Drawn under the game.** The portrait, housing controls, target, buffs and minimap stay on top and stay where they are. Each bar has a **Clear left** and **Clear right** distance, so the top bar's displays start past the portrait and housing controls and stop short of the buffs and minimap.
 - **Move frames**, per bar, moves the game's frames off the bar instead. It is on for the bottom bar, which would otherwise sit under the action bar, and off for the top. The addon can also hide the game's menu bar, XP bar and damaged-gear figure.
 - **Light:** displays read the game only on its events or slow timers, and only when something they show can have changed. Bursts of events become one redraw, ticks are four times rarer in combat, and displays you hid do nothing at all.
+
+## With Cherry's KittyCombo
+
+The **Kitty mode** display takes over Kitty's "Mode:" plate, showing the mode's picture and name on the bar. Click it to pick a mode. While the display is on a bar the plate stays hidden. Hide the display, turn off its bar or turn Cherry's Bar off, and the plate comes back if "Show current mode" is ticked in Kitty.
 
 ## Moving displays
 
