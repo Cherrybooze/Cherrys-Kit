@@ -1,8 +1,16 @@
-# In-game checks for kit 0.11.88
+# In-game checks for kit 0.11.89
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck9 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. The Full ZIP includes hub **0.4.22**.
+
+## 0.11.89 chat menu placement
+
+Cherry's Chat 0.10.11 opens its right-click menu beside the chat window instead of at the mouse. The simulated client checks the numbers; the real client's frame positions need this check.
+
+| ID | Steps | Expected result |
+| --- | --- | --- |
+| C4 | Move a chat window to the bottom of the screen. Right-click a line near its bottom, then a line near its top. Then move the window against the right edge of the screen and right-click a line again. | Each time the menu opens just right of the scroll bar, level with the middle of the chat window, in the same place wherever you clicked, and fully on the screen. Against the right edge it opens on the window's left side. Copy line and Copy name still copy. |
 
 ## 0.11.88 short rom weakauras share codes
 

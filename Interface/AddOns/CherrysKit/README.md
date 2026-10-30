@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.22** · Kit release **0.11.88** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.22** · Kit release **0.11.89** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.89 playtest
+
+- **Cherry's Chat 0.10.11**: the right-click menu opens just right of the chat window's scroll bar, level with the middle of the window, instead of at the mouse, where it could hang below the bottom of the screen.
 
 ## Kit 0.11.88 playtest
 

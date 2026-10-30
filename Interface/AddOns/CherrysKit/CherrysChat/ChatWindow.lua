@@ -1340,6 +1340,49 @@ end
 -- Menu entries, in order; the ones that need a player name are left out when there is none.
 Wn.MENU = { "copy", "copyname", "whisper", "friend", "ignore", "cancel" }
 Wn.MENU_BUTTON_H = 26
+Wn.MENU_W = 212
+Wn.MENU_GAP = 4
+
+local function positive(fn, ...)
+  if type(fn) ~= "function" then
+    return nil
+  end
+  local ok, n = pcall(fn, ...)
+  return (ok and type(n) == "number" and n > 0 and n < math.huge) and n or nil
+end
+
+-- The screen in UI units: GetScreenWidth/Height are pixels, UIParent's size is UI units.
+local function screenSize()
+  local w, h = positive(GetScreenWidth), positive(GetScreenHeight)
+  if w and h then
+    return w / scale(), h / scale()
+  end
+  return positive(UIParent and UIParent.GetWidth, UIParent), positive(UIParent and UIParent.GetHeight, UIParent)
+end
+
+-- Where the menu opens, in UI units from the screen's top left: just right of the window's scroll
+-- bar, centred on the window's height. At the mouse it hung below the screen under a low chat
+-- window (players asked, 2026-10-30). Without room on the right it opens left of the window, and
+-- it always stays on the screen.
+function Wn.MenuSpot(i, w, h)
+  local o, s = overlay(i), st(i)
+  -- The menu only opens over a row, and finding that row already needed the window's position.
+  local left, top = o:GetLeft() / scale(), o:GetTop() / scale()
+  local width = s.w or positive(o.GetWidth, o) or 0
+  local height = s.h or positive(o.GetHeight, o) or 0
+  local x, y = left + width + Wn.MENU_GAP, top + (height - h) / 2
+  local screenW, screenH = screenSize()
+  if screenW and x + w > screenW then
+    x = left - Wn.MENU_GAP - w
+    if x < 0 then
+      x = screenW - w
+    end
+  end
+  if screenH then
+    y = math.min(y, screenH - h)
+  end
+  return math.max(0, x), math.max(0, y)
+end
 
 function Wn.OpenMenu(i)
   local s = st(i)
@@ -1380,11 +1423,12 @@ function Wn.OpenMenu(i)
       b:Hide()
     end
   end
-  local cx, cy = GetCursorPos()
   local menu = CherrysChat_Menu
-  try(menu, "SetSize", 212, 12 + shown * Wn.MENU_BUTTON_H)
+  local h = 12 + shown * Wn.MENU_BUTTON_H
+  local x, y = Wn.MenuSpot(i, Wn.MENU_W, h)
+  try(menu, "SetSize", Wn.MENU_W, h)
   try(menu, "ClearAllAnchors")
-  try(menu, "SetAnchor", "TOPLEFT", "TOPLEFT", UIParent, cx / scale() + 4, cy / scale() + 4)
+  try(menu, "SetAnchor", "TOPLEFT", "TOPLEFT", UIParent, x, y)
   menu:Show()
 end
 

@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Sixteen package descriptions for Cherry's Kit 0.11.88, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Sixteen package descriptions for Cherry's Kit 0.11.89, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -305,6 +305,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
+
+## Updated in 0.10.11
+
+The **right-click menu** (Copy line, Copy name, Whisper, Add friend, Ignore) now opens just right of the chat window's scroll bar, level with the middle of the window, wherever you click in it. At the mouse it could hang below the bottom of the screen when the chat sits low. If the window touches the right edge of the screen, the menu opens on its left side instead, and it always stays on the screen.
 
 ## Updated in 0.10.10
 
