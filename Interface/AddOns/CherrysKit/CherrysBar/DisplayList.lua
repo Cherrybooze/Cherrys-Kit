@@ -554,7 +554,8 @@ D.Add({
       tipPair("Date", v.DATE)
       tipPair("Time", v.TIME24)
     else
-      GameTooltip:AddLine("The game gives addons no real time, so this shows your time online.")
+      GameTooltip:AddLine("The game gives addons no clock. The time comes from the item shop:")
+      GameTooltip:AddLine("open it or take your daily reward once to set it. Until then this is your time online.")
     end
     tipPair("Online this session", v.ONLINE)
     tipPair("Online in total", v.TOTAL)

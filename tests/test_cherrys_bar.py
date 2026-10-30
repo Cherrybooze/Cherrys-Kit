@@ -600,6 +600,12 @@ class BarTest(unittest.TestCase):
         self.tick(1)
         self.assertEqual(self.text_of("Clock"), "00:01")
 
+    def test_clock_tooltip_says_where_the_time_comes_from(self):
+        self.run_lua("local D = CherrysBar.Displays; D.Enter(D.byKey.Clock.slot, frameOf('Clock'))")
+        lines = " ".join(str(v) for v in self.ev("GameTooltip.lines").values())
+        self.assertIn("item shop", lines)
+        self.assertIn("daily reward", lines)
+
     def test_clock_uses_cherrys_clock_once_it_knows_the_time(self):
         self.run_lua("""
             CherrysClock = { Time = function() return 21, 7, 30 end, Date = function() return 2026, 10, 30 end }
