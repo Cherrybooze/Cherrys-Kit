@@ -1,6 +1,6 @@
 ## Title: LogNextChar
 ## Version: 1.2.0
-## Description: Next / Prev character buttons and /lnc. Requires Cherry's Loginxml. Works with the Cherry's Kit hub. Integration fixes by Cherry.
+## Description: Next / Prev character buttons and /lnc. Requires Cherry's Loginxml. Works with the Cherry's Kit hub.
 ## Author: Cherry
 ## SavedVariables: LogNextChar_Settings
 

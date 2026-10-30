@@ -1310,5 +1310,5 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/lnc probe
 
 ## Credits and licence
 
-- Original project by **Pyrrhus**, MIT licence. Integration fixes by **Cherry**.
+- By **Cherry**, MIT licence.
 - Full licence text: `Interface\AddOns\LogNextChar\LICENSE.txt`.

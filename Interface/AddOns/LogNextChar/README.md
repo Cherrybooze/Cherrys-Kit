@@ -34,4 +34,4 @@ For macros, `ChangeChar(slot)` does the same as `/lnc <slot>`.
 
 ## Credits and licence
 
-Works with Cherry's Loginxml, whose original project is Rom Autologin by Pyrrhus. Integration fixes by Cherry. MIT licence, see `LICENSE.txt`.
+By Cherry. Needs Cherry's Loginxml, which has its own credits. MIT licence, see `LICENSE.txt`.
