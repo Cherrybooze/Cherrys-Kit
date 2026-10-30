@@ -1,12 +1,12 @@
 # Cherry's Kit
 
-Version **0.4.24** · Kit release **0.11.110** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.24** · Kit release **0.11.111** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
 
-## Kit 0.11.110 playtest
+## Kit 0.11.111 playtest
 
 - **Cherry's Bar 1.1.9:** Location can show your coordinates on the bar.
 

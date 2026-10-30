@@ -4,6 +4,10 @@
 
 **Requires Cherry's Kit and Cherry's Loginxml.** Cherry's Loginxml picks the character on the login screen; without it you are only logged out. In the hub, LogNextChar gets a row (`/ck`): **Settings** opens the options below, and **Turn off** switches it off.
 
+## Updated in 1.2.1
+
+Next, Prev and the other switches now close the mailbox and Ultimate Mail Mod's window first, so the mailbox still opens on the next character.
+
 ## Install
 
 Extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\LogNextChar\LogNextChar.toc`.
