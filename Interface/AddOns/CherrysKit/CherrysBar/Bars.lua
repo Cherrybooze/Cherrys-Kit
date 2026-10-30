@@ -11,6 +11,8 @@ B.HIDE_DELAY = 1    -- seconds an auto-hide bar stays after the mouse leaves
 
 local revealed = {} -- auto-hide bars on screen just now
 local hideIn = {}   -- bar name -> seconds left before it tucks away
+local liftNow        -- the height UIParent's edge is raised by in this session; nil until first set
+local verifyLift     -- defined with the lift, below
 
 function B.Frame(name)
   return name == "bottom" and CBar_BarBottom or CBar_BarTop
@@ -55,8 +57,10 @@ end
 local function placeAlongEdge(frame, name, height)
   frame:ClearAllAnchors()
   if name == "bottom" then
-    frame:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", "UIParent", 0, 0)
-    frame:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", "UIParent", 0, 0)
+    -- Below UIParent, which the bar lifts.
+    local screen = WorldFrame and "WorldFrame" or "UIParent"
+    frame:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", screen, 0, 0)
+    frame:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", screen, 0, 0)
   else
     frame:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", 0, 0)
     frame:SetAnchor("TOPRIGHT", "TOPRIGHT", "UIParent", 0, 0)
@@ -244,8 +248,16 @@ function B.Tick(dt)
     B.recheckIn = B.recheckIn - dt
     if B.recheckIn <= 0 then
       B.recheckIn = nil
+      liftNow = nil -- anchored again, in case loading reset it
       B.MakeRoom()
       B.ApplyHidden()
+    end
+  end
+  if B.verifyIn then
+    B.verifyIn = B.verifyIn - dt
+    if B.verifyIn <= 0 then
+      B.verifyIn = nil
+      pcall(verifyLift)
     end
   end
 end
@@ -293,7 +305,7 @@ end
 
 ---------------------------------------------------------------------------
 -- Making room, a per-bar choice. The bars are drawn under the game's frames, so the top bar leaves them
--- alone by default; the bottom bar lifts the action bar, which would otherwise cover its displays.
+-- alone by default; the bottom bar lifts the whole interface and fits underneath it.
 -- Top frames near the edge move down by the bar's height, and back when the bar goes. A frame moved
 -- by someone else since counts from its new place. Nothing is saved: Reload UI starts again from
 -- the game's own positions. An auto-hide bar takes no room.
@@ -317,7 +329,7 @@ B.TOP_GROUPS = {
   { "PetHeadFrame" },
   { "HouseFrame" },
 }
-B.MAX_TOP_OFFSET = 180 -- a frame further down than this is not in the bar's way
+B.MAX_OFFSET = { TOP = 180, BOTTOM = 340 } -- a frame further in than this is not in the bar's way
 
 -- First frame name -> { delta, y } of the last move. Kept in globals because Reload UI re-runs this
 -- file in the same Lua state: a frame that came back at the game's position no longer matches y, and
@@ -344,7 +356,7 @@ local function shiftFrame(frame, delta)
   return y + delta
 end
 
-local function moveGroup(group, want)
+local function moveGroup(group, want, edge)
   local first = _G[group[1]]
   if not first or type(first.GetAnchor) ~= "function" then
     return false
@@ -357,7 +369,7 @@ local function moveGroup(group, want)
   -- Moved by someone else since: that spot is the new starting point.
   local have = (record and record.y == y) and record.delta or 0
   local base = y - have
-  if string.sub(point, 1, 3) ~= "TOP" or base > B.MAX_TOP_OFFSET then
+  if not string.find(point, edge, 1, true) or math.abs(base) > B.MAX_OFFSET[edge] then
     want = 0
   end
   local delta = want - have
@@ -379,28 +391,85 @@ local function moveGroup(group, want)
   return true
 end
 
--- The game's bottom frames have fixed places (XBar III's), so they are set rather than shifted.
-local function moveBottom(want)
-  if want == 0 and not CherrysBar_BottomMoved then
-    return -- never moved: the game's frames stay untouched
-  end
-  if MainMenuFrame and type(MainMenuFrame.GetAnchor) == "function" then
-    local _, _, _, _, y = MainMenuFrame:GetAnchor()
-    if y == -want then
-      CherrysBar_BottomMoved = want > 0 or nil
-      return
+---------------------------------------------------------------------------
+-- The bottom bar lifts the whole interface. Everything the game and other addons place along the
+-- bottom of the screen hangs from UIParent, so raising UIParent's bottom edge lifts all of it at once
+-- and the bar fits in the space left, anchored to WorldFrame below it. If the client does not honour
+-- that, the known frames are moved one by one instead: other addons' frames then stay where they are.
+---------------------------------------------------------------------------
+
+-- The game's frames along the bottom, from its own layout files. ExperienceFrame has two anchors.
+B.BOTTOM_GROUPS = {
+  { "MainMenuFrame" }, { "MainActionBarFrame" }, { "ImplementActionBarFrame" }, { "CastingBarFrame" },
+  { "EquipDameFrame" }, { "ItemQueueFrame" }, { "FocusFrame" }, { "RaidFocusFrame" }, { "GroupLootFrame1" },
+  { "CharacterSkillPointButton" }, { "DefendTowerBloodFrame" }, { "BagFrame" }, { "GoodsFrame" }, { "GarbageFrame" },
+  { "ChatFrame1" }, { "ChatFrame2" }, { "ChatFrame3" }, { "ChatFrame4" }, { "ChatFrame5" },
+  { "ChatFrame6" }, { "ChatFrame7" }, { "ChatFrame8" }, { "ChatFrame9" }, { "ChatFrame10" },
+}
+B.VERIFY_AFTER = 1 -- seconds before looking whether the client honoured the lift
+
+local function canLiftParent()
+  return type(UIParent) == "table" and type(UIParent.SetAnchor) == "function"
+    and type(UIParent.ClearAllAnchors) == "function" and WorldFrame ~= nil
+end
+
+local function parentHeight()
+  if type(UIParent) == "table" and type(UIParent.GetHeight) == "function" then
+    local ok, height = pcall(UIParent.GetHeight, UIParent)
+    if ok then
+      return tonumber(height)
     end
   end
-  if ExperienceFrame then
+  return nil
+end
+
+local function setParentEdge(want)
+  UIParent:ClearAllAnchors()
+  UIParent:SetAnchor("TOPLEFT", "TOPLEFT", "WorldFrame", 0, 0)
+  UIParent:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", "WorldFrame", 0, -want)
+end
+
+local function liftFrames(want)
+  for _, group in ipairs(B.BOTTOM_GROUPS) do
+    pcall(moveGroup, group, -want, "BOTTOM")
+  end
+  if ExperienceFrame and B.xpLift ~= want and (want > 0 or B.xpLift) then
     ExperienceFrame:ClearAllAnchors()
-    ExperienceFrame:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", "UIParent", 0, -want)
-    ExperienceFrame:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", "UIParent", 0, -want)
+    ExperienceFrame:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", "UIParent", 100, -want)
+    ExperienceFrame:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", "UIParent", -106, -want)
+    B.xpLift = want > 0 and want or nil
   end
-  if MainMenuFrame then
-    MainMenuFrame:ClearAllAnchors()
-    MainMenuFrame:SetAnchor("BOTTOM", "BOTTOM", "UIParent", 0, -want)
+end
+
+local function lift(want)
+  if B.liftMode == "frames" or not canLiftParent() then
+    B.liftMode = "frames"
+    liftFrames(want)
+    return
   end
-  CherrysBar_BottomMoved = want > 0 or nil
+  B.liftMode = "parent"
+  if want == liftNow or (want == 0 and not CherrysBar_Lifted and not liftNow) then
+    return
+  end
+  if not liftNow or liftNow == 0 then
+    B.fullHeight = parentHeight()
+  end
+  setParentEdge(want)
+  liftNow = want
+  CherrysBar_Lifted = want > 0 or nil
+  B.verifyIn = want > 0 and B.VERIFY_AFTER or nil
+end
+
+verifyLift = function()
+  local height = parentHeight()
+  if liftNow and liftNow > 0 and B.fullHeight and height and B.fullHeight - height < liftNow / 2 then
+    local want = liftNow
+    setParentEdge(0)
+    liftNow, CherrysBar_Lifted = 0, nil
+    B.liftMode = "frames"
+    liftFrames(want)
+    B.status = B.status .. ", the client did not lift UIParent, so frames were moved one by one"
+  end
 end
 
 local function roomFor(name)
@@ -412,15 +481,16 @@ function B.MakeRoom()
   local done, failed = 0, 0
   local topWant = roomFor("top")
   for _, group in ipairs(B.TOP_GROUPS) do
-    local ok, result = pcall(moveGroup, group, topWant)
+    local ok, result = pcall(moveGroup, group, topWant, "TOP")
     if ok and result then
       done = done + 1
     else
       failed = failed + 1
     end
   end
-  local ok = pcall(moveBottom, roomFor("bottom"))
-  B.status = "top frames moved " .. done .. ", skipped " .. failed .. ", bottom " .. (ok and "ok" or "failed")
+  local ok = pcall(lift, roomFor("bottom"))
+  B.status = "top frames moved " .. done .. ", skipped " .. failed .. ", bottom " .. tostring(B.liftMode)
+    .. (ok and "" or " failed")
 end
 
 -- Frames the game may put back after loading: looked at again once, a few seconds after each load.

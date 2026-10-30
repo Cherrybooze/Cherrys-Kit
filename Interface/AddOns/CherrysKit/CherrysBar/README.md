@@ -1,6 +1,6 @@
 # Cherry's Bar
 
-Version **1.1.3** · Kit release **0.11.95** · [All addons / hub](../README.md)
+Version **1.1.4** · Kit release **0.11.96** · [All addons / hub](../README.md)
 
 **Full-width information bars at the top of the screen, the bottom, or both. A fork of XBar III, with bars and settings in the spirit of Titan Panel.**
 
@@ -12,7 +12,8 @@ Version **1.1.3** · Kit release **0.11.95** · [All addons / hub](../README.md)
 - **Seven styles:** Ironstone, Blacksteel, Froststeel, Darkwood, Verdant, Arcane and plain Slate, with a matching set of icons.
 - **Auto-hide** per bar: it tucks away and comes back when the mouse reaches the screen's edge.
 - **Drawn under the game.** The portrait, housing controls, target, buffs and minimap stay on top and stay where they are. Each bar has a **Clear left** and **Clear right** distance, so the top bar's displays start past the portrait and housing controls and stop short of the buffs and minimap.
-- **Move frames**, per bar, moves the game's frames off the bar instead. It is on for the bottom bar, which would otherwise sit under the action bar, and off for the top. The addon can also hide the game's menu bar, XP bar and damaged-gear figure.
+- **The bottom bar lifts the whole interface** by its height and fits underneath: the action bars, chat, cast bar, bags and other addons' frames along the bottom all rise together.
+- **Move frames**, per bar, controls that lift. It is on for the bottom bar. On the top bar it is off, and turning it on moves the portrait, target, buffs and minimap below the bar. The addon can also hide the game's menu bar, XP bar and damaged-gear figure.
 - **Light:** displays read the game only on its events or slow timers, and only when something they show can have changed. Bursts of events become one redraw, ticks are four times rarer in combat, and displays you hid do nothing at all.
 
 ## With Cherry's KittyCombo
@@ -41,6 +42,7 @@ There are three ways, and they all do the same thing:
 None of this has run in the real game client yet; the tests use a simulated one. These may need changes after the [in-game checks](../../../../docs/TESTING.md):
 
 - The clear distances come from the installed client's layout at the default size. On a small screen or with frames you have moved, the displays may need other values. The target frame sits in the middle of the clear stretch, over any display there.
+- The lift works by raising the bottom edge of the frame the whole interface hangs from, which has not been tried in the real client. If the client ignores it, the addon notices and moves the game's own bottom frames one by one instead, which leaves other addons' frames where they are. `/cbar probe` says which is in use. Frames anchored to the middle of the screen rise by half the bar's height.
 - Moving the game's frames relies on the client reporting where a frame is anchored. `/cbar probe` shows how many it could move.
 - Text widths use the same measuring trick as Cherry's Chat. If displays overlap or gap, send the probe's width list.
 - Several game calls come from XBar III's 2010 client. A call the client has dropped shows up as an error in the probe, and that display keeps its old text. Map coordinates (`[X]`, `[Y]`) and Volume use calls not yet seen working in this kit.

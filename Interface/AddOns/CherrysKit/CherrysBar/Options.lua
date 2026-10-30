@@ -14,7 +14,7 @@ O.CHIP_H, O.CHIP_MAX, O.CHIP_MIN_TEXT = 24, 66, 50
 O.DRAG_PIXELS = 4
 O.GAP_STEP, O.GAP_MAX = 20, 1200
 O.BAR_TIPS = {
-  room = "Moves the game's frames off this bar. Off, the bar is simply drawn under them.",
+  room = "Top bar: moves the portrait, target, buffs and minimap below it. Bottom bar: lifts the whole interface so the bar fits underneath. Off, the bar is simply drawn under them.",
   left = "Left-side displays start this far from the screen's edge. 400 clears the portrait and housing controls.",
   right = "Right-side displays stop this far from the screen's edge. 490 clears the buffs and minimap.",
 }

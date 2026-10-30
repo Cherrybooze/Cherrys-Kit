@@ -129,7 +129,17 @@ GameFrame("PlayerBuffButton1", -200, 10, "TOPRIGHT")
 GameFrame("UnitFrame_party1", 2, 118)
 GameFrame("MinimapFrame", -12, 32, "TOPRIGHT")
 GameFrame("MinimapFrameBorder", 0, -1, "TOPRIGHT")
+MakeWidget("WorldFrame", true)
+MakeWidget("UIParent", true)
+UIParent:SetAnchor("TOPLEFT", "TOPLEFT", "WorldFrame", 0, 0)
+UIParent:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", "WorldFrame", 0, 0)
+function UIParent:GetHeight()
+  local a = self.anchors and self.anchors[2]
+  return 1000 + (a and a[5] or 0)
+end
 GameFrame("MainMenuFrame", 0, 0, "BOTTOM")
+GameFrame("MainActionBarFrame", -96, -16, "BOTTOMRIGHT")
+GameFrame("ChatFrame1", 0, -36, "BOTTOMLEFT")
 GameFrame("PlayerFramePartyBoardButton", 308, 30)
 GameFrame("PetBookFrameButton", 138, 98)
 GameFrame("HouseFrame", 0, 0)
@@ -699,14 +709,10 @@ class BarTest(unittest.TestCase):
         self.assertEqual(self.anchor_y("TargetFrame"), 26)
         self.assertEqual(self.anchor_y("MinimapFrame"), 56)
         self.assertEqual(self.anchor_y("MinimapFrameBorder"), 23)
-        self.assertEqual(self.anchor_y("MainMenuFrame"), 0)
         self.run_lua("CherrysBar.Command('bottom')")
         self.assertEqual(self.anchor_y("PlayerFrame"), 0)
         self.assertEqual(self.anchor_y("MinimapFrame"), 32)
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
-        self.assertEqual(self.anchor_y("ExperienceFrame"), -24)
         self.run_lua("CherrysBar.Command('top')")
-        self.assertEqual(self.anchor_y("MainMenuFrame"), 0)
         self.assertEqual(self.anchor_y("PlayerFrame"), 24)
 
     def test_make_room_is_not_applied_twice(self):
@@ -732,10 +738,67 @@ class BarTest(unittest.TestCase):
             self.assertEqual(self.anchor_y(frame), start, frame)
         self.assertEqual(self.anchor_y("MainMenuFrame"), 0)
 
-    def test_bottom_bar_still_lifts_the_action_bar_by_default(self):
+    def ui_lift(self):
+        return self.ev("UIParent.anchors[2][5]")
+
+    def test_bottom_bar_lifts_the_whole_interface_and_sits_below_it(self):
+        self.assertEqual(self.ui_lift(), 0)
         self.run_lua("CherrysBar.Command('both')")
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
+        self.assertEqual(self.ui_lift(), -24)
+        self.assertEqual(self.ev("UIParent.anchors[1][3]"), "WorldFrame")
+        self.assertEqual(self.ev("CBar_BarBottom.anchors[1][3]"), "WorldFrame")
+        self.assertEqual(self.ev("CBar_BarTop.anchors[1][3]"), "UIParent")
+        self.assertEqual(self.anchor_y("MainMenuFrame"), 0)  # lifted with its parent, not moved itself
         self.assertEqual(self.anchor_y("PlayerFrame"), 0)
+        self.run_lua("CherrysBar.Command('top')")
+        self.assertEqual(self.ui_lift(), 0)
+
+    def test_lift_follows_the_bar_height_and_its_settings(self):
+        self.run_lua("CherrysBar.Command('both'); CherrysBar.S().barHeight = 30; CherrysBar.Refresh()")
+        self.assertEqual(self.ui_lift(), -30)
+        self.run_lua("CherrysBar.Options.BarClick('bottom', 'room')")
+        self.assertEqual(self.ui_lift(), 0)
+        self.run_lua("CherrysBar.Options.BarClick('bottom', 'room')")
+        self.assertEqual(self.ui_lift(), -30)
+        self.run_lua("CherrysBar.Bars.SetAutoHide('bottom', true)")
+        self.assertEqual(self.ui_lift(), 0)
+
+    def test_lift_survives_the_game_resetting_it_while_loading(self):
+        self.run_lua("""
+            CherrysBar.Command('both')
+            UIParent:ClearAllAnchors()
+            UIParent:SetAnchor('TOPLEFT', 'TOPLEFT', 'WorldFrame', 0, 0)
+            UIParent:SetAnchor('BOTTOMRIGHT', 'BOTTOMRIGHT', 'WorldFrame', 0, 0)
+            CherrysBar.OnEvent('LOADING_END')
+        """)
+        self.tick(4)
+        self.assertEqual(self.ui_lift(), -24)
+
+    def test_a_client_that_ignores_the_lift_gets_frames_moved_instead(self):
+        self.run_lua("""
+            function UIParent:GetHeight() return 1000 end
+            CherrysBar.Command('both')
+        """)
+        self.assertEqual(self.ui_lift(), -24)
+        self.tick(2)
+        self.assertEqual(self.ui_lift(), 0)
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
+        self.assertEqual(self.anchor_y("MainActionBarFrame"), -40)
+        self.assertEqual(self.anchor_y("ChatFrame1"), -60)
+        self.assertEqual(self.ev("ExperienceFrame.anchors[1][4]"), 100)
+        self.assertEqual(self.ev("ExperienceFrame.anchors[2][4]"), -106)
+        self.assertEqual(self.anchor_y("ExperienceFrame"), -24)
+        self.run_lua("CherrysBar.Command('top')")
+        self.assertEqual(self.anchor_y("MainMenuFrame"), 0)
+        self.assertEqual(self.anchor_y("MainActionBarFrame"), -16)
+        self.assertEqual(self.anchor_y("ChatFrame1"), -36)
+        self.assertEqual(self.anchor_y("ExperienceFrame"), 0)
+        self.assertEqual(self.ev("ExperienceFrame.anchors[2][4]"), -106)
+
+    def test_a_client_without_those_calls_gets_frames_moved_too(self):
+        self.run_lua("WorldFrame = nil; CherrysBar.Command('both')")
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
+        self.assertEqual(self.ev("CBar_BarBottom.anchors[1][3]"), "UIParent")
 
     def test_make_room_is_a_choice_per_bar_and_takes_the_portrait_cluster_along(self):
         self.run_lua("CherrysBar.Options.Toggle(); CherrysBar.Options.BarClick('top', 'room')")
@@ -800,20 +863,27 @@ class BarTest(unittest.TestCase):
         self.assertEqual(self.anchor_y("PlayerFrame"), 24)
         self.assertEqual(self.anchor_y("MinimapFrame"), 56)
         self.run_lua("CherrysBar.Command('bottom')")
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
+        self.assertEqual(self.ui_lift(), -24)
         self.load_addon()
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
+        self.assertEqual(self.ui_lift(), -24)
         # ...and frames the reload rebuilt at the game's own positions.
         self.run_lua("""
-            MainMenuFrame:ClearAllAnchors()
-            MainMenuFrame:SetAnchor('BOTTOM', 'BOTTOM', 'UIParent', 0, 0)
+            UIParent:ClearAllAnchors()
+            UIParent:SetAnchor('TOPLEFT', 'TOPLEFT', 'WorldFrame', 0, 0)
+            UIParent:SetAnchor('BOTTOMRIGHT', 'BOTTOMRIGHT', 'WorldFrame', 0, 0)
             CherrysBar.S().bars.top.show = true
             PlayerFrame:ClearAllAnchors()
             PlayerFrame:SetAnchor('TOPLEFT', 'TOPLEFT', 'UIParent', 0, 0)
         """)
         self.load_addon()
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
+        self.assertEqual(self.ui_lift(), -24)
         self.assertEqual(self.anchor_y("PlayerFrame"), 24)
+        # Turned off for good: the next session puts UIParent back if it kept the lift.
+        self.run_lua("""
+            CherrysBar.S().bars.bottom.show = false
+        """)
+        self.load_addon()
+        self.assertEqual(self.ui_lift(), 0)
 
     # Displays
 

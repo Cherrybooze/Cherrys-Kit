@@ -61,7 +61,8 @@ function P.Run()
     end
   end
   G.Print("layers: " .. (#layers > 0 and table.concat(layers, ", ") or "the client does not report them"))
-  G.Print("moving frames: " .. G.Bars.status)
+  G.Print("moving frames: " .. G.Bars.status .. ", interface height "
+    .. tostring(UIParent and type(UIParent.GetHeight) == "function" and UIParent:GetHeight()))
   local x, y = G.FramePos(CBar_BarTop)
   G.Print("top bar at " .. tostring(x) .. ", " .. tostring(y) .. ", middle of the screen " .. tostring(G.MiddleX())
     .. ", UI scale " .. tostring(G.UIScale()) .. ", locked " .. tostring(G.S().locked))

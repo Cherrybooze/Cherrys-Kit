@@ -1,5 +1,10 @@
 Cherry's Bar
 
+1.1.4
+  The bottom bar now lifts the whole interface and fits underneath: the action bars, chat, cast bar,
+  bags and other addons' frames all rise together, by raising the bottom edge of UIParent. If the client
+  ignores that, the game's own bottom frames are moved one by one instead.
+
 1.1.3
   New Kitty mode display, first on the top bar when Cherry's KittyCombo is installed. It takes over
   Kitty's "Mode:" plate while it is on a bar: click it to pick a mode. Needs KittyCombo 1.7.17.

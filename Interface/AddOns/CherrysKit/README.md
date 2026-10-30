@@ -1,14 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.23** · Kit release **0.11.95** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.23** · Kit release **0.11.96** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
 
-## Kit 0.11.95 playtest
+## Kit 0.11.96 playtest
 
-- **Cherry's Bar 1.1.3** (`/cbar`) is new: information bars at the top of the screen, the bottom, or both, with displays set per bar. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed.
+- **Cherry's Bar 1.1.4** (`/cbar`) is new: information bars at the top of the screen, the bottom, or both, with displays set per bar. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed.
 
 ## Kit 0.11.90 playtest
 
