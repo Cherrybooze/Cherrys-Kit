@@ -84,6 +84,18 @@ try {
         }
         exit 0
     }
+    if ($message.type -eq 'helper-info' -or $message.type -eq 'helper-auto-start' -or $message.type -eq 'helper-auto-stop') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
+        $data = Get-HelperDataDirectory
+        $info = switch ($message.type) {
+            'helper-info' { Get-ControlHelperInfo $data }
+            'helper-auto-start' { Start-ControlHelperAuto $data }
+            default { Stop-ControlHelperAuto $data }
+        }
+        $info.ok = $true
+        Send-Response $info
+        exit 0
+    }
     if ($message.type -eq 'bank-data' -or $message.type -eq 'bank-icons' -or $message.type -eq 'bank-command') {
         . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
         $data = Get-HelperDataDirectory

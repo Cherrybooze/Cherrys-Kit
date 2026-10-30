@@ -12,6 +12,11 @@
 <body>
   <main>
     <h1>Global Bank</h1>
+    <section class="status-bar" aria-label="Status">
+      <p id="status-helper" role="status">Checking the helper…</p>
+      <p id="status-data" class="hint"></p>
+      <label class="status-toggle"><input id="auto-helper" type="checkbox"> Start the Global Bank helper automatically when Chrome is open</label>
+    </section>
     <nav class="tabs" role="tablist" aria-label="Global Bank">
       <button type="button" role="tab" data-tab="bank" aria-selected="true">Bank</button>
       <button type="button" role="tab" data-tab="terminal" aria-selected="false">Terminal</button>
@@ -57,7 +62,7 @@
         <p id="helper-status" role="status">Checking the local helper…</p>
         <button id="check-helper" type="button">Check helper</button>
         <button id="start-helper" type="button" disabled>Start helper</button>
-        <p class="hint">You only need this window for collecting auction data, and for automatic updates each time you log out. Update now does the rest.</p>
+        <p class="hint">You don't need this window if the automatic option at the top of the page is on.</p>
       </section>
     </div>
     <div id="tab-auctions" class="tab-panel" hidden>

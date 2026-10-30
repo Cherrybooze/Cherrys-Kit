@@ -25,6 +25,19 @@ const GBBank = (() => {
     if (/mount|charger|pet_|egg/.test(path)) return 'Mounts and pets';
     return 'Other';
   }
+  // How long something has run: 45 min, or 2 h 14 min, or 3 days 2 h
+  function formatDuration(seconds) {
+    const minutes = Math.max(0, Math.floor(seconds / 60));
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} h ${minutes % 60} min`;
+    return `${Math.floor(hours / 24)} days ${hours % 24} h`;
+  }
+  // Characters, stacks and items in all, for the page's status line
+  function totals(characters) {
+    const list = entries(characters);
+    return {characters: characters.length, stacks: list.length, items: list.reduce((sum, entry) => sum + entry.count, 0)};
+  }
   // Bank 45 (page 2, slot 5)
   function locationLabel(place, slot) {
     const perPage = PER_PAGE[place];
@@ -80,7 +93,7 @@ const GBBank = (() => {
     type: (a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
   };
 
-  function create(root, send, status) {
+  function create(root, send, status, onData) {
     const state = {characters: [], hidden: new Set(), sort: 'name'};
     const icons = new Map();
     const el = id => root.querySelector('#' + id);
@@ -194,6 +207,7 @@ const GBBank = (() => {
       el('bank-made').textContent = data.made ? `Data from ${data.made}` : 'No saved data yet: press Update now after logging out of a character.';
       renderCharacters();
       renderGrid();
+      if (onData) onData(totals(state.characters), data.made);
     }
     async function update() {
       const button = el('bank-update');
@@ -218,5 +232,5 @@ const GBBank = (() => {
     el('bank-update').addEventListener('click', update);
     return {reload, update};
   }
-  return {create, typeOf, locationLabel, entries, applyFilters, cells, staleNote};
+  return {create, typeOf, locationLabel, entries, applyFilters, cells, staleNote, formatDuration, totals};
 })();

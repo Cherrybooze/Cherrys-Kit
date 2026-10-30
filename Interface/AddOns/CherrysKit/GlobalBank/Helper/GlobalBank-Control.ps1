@@ -185,3 +185,42 @@ function Invoke-ControlCommand([string]$command) {
     if ($text.Length -gt 800000) { $text = $text.Substring(0, 800000) + "`n(cut short)" }
     return $text
 }
+
+# What the page's status line needs: whether the helper runs, since when, and whether the toggle started it.
+function Get-ControlHelperInfo([string]$dataDirectory) {
+    $running = $false
+    try { $existing = [System.Threading.Mutex]::OpenExisting('Local\CherrysKitGlobalBankHelper'); $running = $true; $existing.Dispose() } catch [System.Threading.WaitHandleCannotBeOpenedException] { }
+    $info = @{running=$running;since=$null;auto=$false}
+    if (-not $running) { return $info }
+    $process = Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe' OR Name = 'pwsh.exe'" |
+        Where-Object { $_.CommandLine -like '*GlobalBank-Update.ps1*-Watch*' } | Select-Object -First 1
+    if ($process) {
+        $info.since = $process.CreationDate.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
+        $info.auto = $process.CommandLine -like '*-Auto*'
+    }
+    return $info
+}
+
+function Start-ControlHelperAuto([string]$dataDirectory) {
+    $info = Get-ControlHelperInfo $dataDirectory
+    if ($info.running) { return $info }
+    Remove-Item -LiteralPath (Join-Path $dataDirectory 'GlobalBankHelperAuto.stop') -Force -ErrorAction SilentlyContinue
+    $helper = Join-Path $PSScriptRoot 'GlobalBank-Update.ps1'
+    if (-not (Test-Path -LiteralPath $helper)) { throw 'Global Bank helper was not found' }
+    Start-Process -FilePath 'powershell.exe' -WindowStyle Hidden -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Watch -Auto' -f $helper)
+    return @{running=$false;since=$null;auto=$true;starting=$true}
+}
+
+# Only a helper the toggle started: one the player opened in a window stays open. It gets ten seconds to stop itself.
+function Stop-ControlHelperAuto([string]$dataDirectory) {
+    $info = Get-ControlHelperInfo $dataDirectory
+    if (-not $info.running -or -not $info.auto) { return $info }
+    $flag = Join-Path $dataDirectory 'GlobalBankHelperAuto.stop'
+    [IO.File]::WriteAllText($flag, 'stop')
+    $deadline = (Get-Date).AddSeconds(10)
+    while ((Get-Date) -lt $deadline -and (Get-ControlHelperInfo $dataDirectory).running) { Start-Sleep -Milliseconds 300 }
+    $after = Get-ControlHelperInfo $dataDirectory
+    if ($after.running) { throw 'The helper did not stop. Close it from Task Manager, or restart Chrome.' }
+    Remove-Item -LiteralPath $flag -Force -ErrorAction SilentlyContinue
+    return $after
+}

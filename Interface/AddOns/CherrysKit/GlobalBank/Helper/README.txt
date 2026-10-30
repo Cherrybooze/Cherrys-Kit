@@ -81,8 +81,9 @@ Local bank and auction tools in Chrome
    see who has it and in which slot. Update now reads your save files.
 3. Terminal tab: the helper's commands, including note and erase, without its window.
 4. Auctions tab: search the auction cache. Prices are saved observations and may have changed.
-You only need the helper window for collecting auction data and for automatic updates each time you
-log out. Nothing on the page can buy items. Keep Interface\GlobalBankHelper private.
+To collect auction data and update each time you log out, either keep the helper window open or turn
+on "Start the Global Bank helper automatically when Chrome is open" at the top of the page: it runs
+hidden, stops when Chrome closes, and turning it off closes it. Nothing on the page can buy items. Keep Interface\GlobalBankHelper private.
 
 The bank results come from your saved character snapshots. Auction results are the last prices
 seen by the helper, so an item may have sold or its price may have changed. Search in the game's

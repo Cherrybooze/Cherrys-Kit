@@ -186,6 +186,11 @@ const characters = [
   {name:'Alt', level:10, bag:[{slot:31,id:'202845',name:'Mana Stone',icon:'interface/Icons/mana stone06',count:2}], bank:[]},
 ];
 assert.equal(bank.locationLabel('bag', 31), 'Bag 31 (page 2, slot 1)');
+assert.equal(bank.formatDuration(59), '0 min');
+assert.equal(bank.formatDuration(45 * 60), '45 min');
+assert.equal(bank.formatDuration(134 * 60), '2 h 14 min');
+assert.equal(bank.formatDuration(74 * 3600), '3 days 2 h');
+assert.deepEqual(JSON.parse(JSON.stringify(bank.totals(characters))), {characters:2, stacks:3, items:6});
 const now = Date.parse('2026-10-30T12:00');
 assert.equal(bank.staleNote('2026-10-20 12:00', now), 'saved 10 days ago, may be out of date');
 assert.equal(bank.staleNote('2026-10-24 12:00', now), '');
@@ -311,10 +316,13 @@ assert.equal(ask({type:'bank-data'}), true);
 assert.equal(ask({type:'bank-icons',names:['interface/icons/x']}), true);
 assert.equal(ask({type:'bank-command',command:'list gold'}), true);
 assert.deepEqual(sent, ['bank-data', 'bank-icons', 'bank-command']);
+for (const type of ['helper-info', 'helper-auto-start', 'helper-auto-stop']) { assert.equal(ask({type}), true); assert.equal(sent.pop(), type); }
 const others = [{id:'test',url:runtime.getURL('popup.html')}, {id:'other',url:runtime.getURL('control.html')},
   {id:'test',tab:{id:1},url:'https://eu-shop-runesofmagic.gameforge.com/dailies/display/5'}];
 for (const sender of others) {
   ask({type:'bank-data'}, sender);
+  ask({type:'helper-auto-stop'}, sender);
+  ask({type:'helper-auto-start'}, sender);
   ask({type:'bank-icons',names:['interface/icons/x']}, sender);
   ask({type:'bank-command',command:'erase Cherry'}, sender);
 }
@@ -330,19 +338,32 @@ assert.equal(sent.length, 3);
     def test_background_stamps_the_clock_when_chrome_starts_or_the_extension_loads(self):
         self.run_js(r'''
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+(async () => {
 const listeners = {}, sent = [];
 const event = name => ({addListener:fn => { listeners[name] = fn; }});
 const runtime = {id:'test',getURL:file => 'chrome-extension://test/' + file,
   onMessage:event('message'), onStartup:event('startup'), onInstalled:event('installed'),
   sendNativeMessage:(host,message,reply) => { sent.push(host + ':' + message.type); reply({ok:true}); }};
-vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime},URL});
+let autoHelper = false;
+const storage = {local:{get:async () => ({autoHelper})}};
+vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime,storage},URL});
+const flush = () => new Promise(resolve => setImmediate(resolve));
 assert.equal(sent.length, 0); // Waking the worker alone starts no process.
 listeners.startup();
 listeners.installed({reason:'install'});
+await flush();
 assert.deepEqual(sent, ['com.cherryskit.globalbank:clock', 'com.cherryskit.globalbank:clock']);
+// With the page's toggle on, a Chrome start also starts the helper.
+sent.length = 0;
+autoHelper = true;
+listeners.startup();
+await flush();
+assert.deepEqual(sent, ['com.cherryskit.globalbank:clock', 'com.cherryskit.globalbank:helper-auto-start']);
+sent.length = 0;
 // A missing host stays quiet.
 runtime.lastError = {message:'Native host not found'};
 listeners.startup();
+})().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
 
@@ -433,6 +454,12 @@ class NativeStatusTests(unittest.TestCase):
         self.send({'type':'bank-command','command':f'help; New-Item "{marker}"'})
         self.send({'type':'bank-command','command':f'$(New-Item {marker})'})
         self.assertFalse(marker.exists())
+
+    def test_status_says_when_nothing_runs(self):
+        response = self.send({'type':'helper-info'})
+        self.assertTrue(response['ok'], response)
+        self.assertFalse(response['running'])
+        self.assertIsNone(response['since'])
 
     def clock_file(self):
         return self.data / 'CherrysClockStamp.lua'

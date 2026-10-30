@@ -51,7 +51,46 @@
 
   // The Bank tab
   const bankStatus = text => { byId('bank-status').textContent = text; };
-  const bank = GBBank.create(byId('tab-bank'), send, bankStatus);
+  const bank = GBBank.create(byId('tab-bank'), send, bankStatus, (totals, made) => {
+    const number = value => value.toLocaleString('en-US');
+    byId('status-data').textContent = `${number(totals.characters)} characters · ${number(totals.items)} items in ${number(totals.stacks)} stacks`
+      + (made ? ` · data from ${made}` : ' · no data saved yet');
+  });
+  // The status line and the toggle
+  const statusHelper = byId('status-helper');
+  const autoHelper = byId('auto-helper');
+  async function refreshStatus() {
+    try {
+      const info = await send({type:'helper-info'});
+      if (!info.running) {
+        statusHelper.textContent = 'Helper: not running.';
+      } else {
+        const ran = info.since ? ` for ${GBBank.formatDuration((Date.now() - Date.parse(info.since)) / 1000)}` : '';
+        statusHelper.textContent = `Helper: running${ran}, ${info.auto ? 'started automatically' : 'in its own window'}.`;
+      }
+    } catch (error) {
+      statusHelper.textContent = 'Helper: cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder.';
+    }
+  }
+  chrome.storage.local.get('autoHelper').then(({autoHelper: on}) => { autoHelper.checked = !!on; });
+  autoHelper.addEventListener('change', async () => {
+    const on = autoHelper.checked;
+    autoHelper.disabled = true;
+    statusHelper.textContent = on ? 'Helper: starting…' : 'Helper: stopping…';
+    try {
+      await chrome.storage.local.set({autoHelper: on});
+      await send({type: on ? 'helper-auto-start' : 'helper-auto-stop'});
+      // A helper takes a moment to start
+      if (on) await new Promise(resolve => setTimeout(resolve, 3000));
+    } catch (error) {
+      bankStatus('The helper could not be changed: ' + String(error.message || error));
+    } finally {
+      autoHelper.disabled = false;
+      refreshStatus();
+    }
+  });
+  refreshStatus();
+  setInterval(refreshStatus, 30000);
   bank.reload().catch(error => bankStatus('Cannot read your saved data. Run Install Chrome extension.bat in the installed GlobalBank Helper folder. ' + String(error.message || error)));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) bank.reload().catch(() => {}); });
 
