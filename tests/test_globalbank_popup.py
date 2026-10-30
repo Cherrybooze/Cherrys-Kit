@@ -186,6 +186,12 @@ const characters = [
   {name:'Alt', level:10, bag:[{slot:31,id:'202845',name:'Mana Stone',icon:'interface/Icons/mana stone06',count:2}], bank:[]},
 ];
 assert.equal(bank.locationLabel('bag', 31), 'Bag 31 (page 2, slot 1)');
+const now = Date.parse('2026-10-30T12:00');
+assert.equal(bank.staleNote('2026-10-20 12:00', now), 'saved 10 days ago, may be out of date');
+assert.equal(bank.staleNote('2026-10-24 12:00', now), '');
+assert.equal(bank.staleNote('2026-10-23 12:00', now), 'saved 7 days ago, may be out of date');
+assert.equal(bank.staleNote('', now), '');
+assert.equal(bank.staleNote(undefined, now), '');
 assert.equal(bank.locationLabel('bank', 45), 'Bank 45 (page 2, slot 5)');
 assert.equal(bank.locationLabel('bank', 40), 'Bank 40 (page 1, slot 40)');
 const all = bank.entries(characters);

@@ -13,6 +13,7 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G1 | Reload the extension, then its icon, then **Open local bank and auction tools**. | The Bank tab shows one grid of everything, with real icons. About 2% of the game's icons use a packing the page can't read; those show the item's first two letters. |
 | G2 | Hover an item you have in several places. | The tooltip lists each character with its bag or bank slot and count, such as Bank 45 (page 2, slot 5). |
 | G3 | Try the name search, Type, Where, character level, the character list, Sort by, and Stack the same item. | The grid and the count follow each one, and it stays easy to scroll. Item types are a guess from IDs and icon names, so tell me where one is wrong. |
+| G6 | Look at a character you haven't logged into on this PC for a week. | The character list and the item tooltip say when it was saved and that it may be out of date. Its items stay in the grid. |
 | G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
 | G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 
