@@ -399,10 +399,11 @@ end
 ---------------------------------------------------------------------------
 
 -- The game's frames along the bottom, from its own layout files. ExperienceFrame has two anchors.
+-- BagFrame stays out: zBag keeps it off screen, and moving it could bring it back.
 B.BOTTOM_GROUPS = {
   { "MainMenuFrame" }, { "MainActionBarFrame" }, { "ImplementActionBarFrame" }, { "CastingBarFrame" },
   { "EquipDameFrame" }, { "ItemQueueFrame" }, { "FocusFrame" }, { "RaidFocusFrame" }, { "GroupLootFrame1" },
-  { "CharacterSkillPointButton" }, { "DefendTowerBloodFrame" }, { "BagFrame" }, { "GoodsFrame" }, { "GarbageFrame" },
+  { "CharacterSkillPointButton" }, { "DefendTowerBloodFrame" }, { "GoodsFrame" }, { "GarbageFrame" },
   { "ChatFrame1" }, { "ChatFrame2" }, { "ChatFrame3" }, { "ChatFrame4" }, { "ChatFrame5" },
   { "ChatFrame6" }, { "ChatFrame7" }, { "ChatFrame8" }, { "ChatFrame9" }, { "ChatFrame10" },
 }

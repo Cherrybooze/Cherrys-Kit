@@ -1,5 +1,10 @@
 Cherry's Bar
 
+1.1.7
+  The frame-by-frame fallback for the bottom bar no longer moves the game's backpack, which zBag keeps
+  off screen. Eight icon files had the wrong letter case in the repository, which only matters on
+  systems that tell the difference.
+
 1.1.6
   Fixes Volume: it treated the game's master volume as 0 to 1, but the client's runs 0 to 100 in whole
   numbers, so a scroll step was rounded away and clicking restored almost nothing.

@@ -1,6 +1,6 @@
 # Cherry's Bar
 
-Version **1.1.6** · Kit release **0.11.98** · [All addons / hub](../README.md)
+Version **1.1.7** · Kit release **0.11.99** · [All addons / hub](../README.md)
 
 **Full-width information bars at the top of the screen, the bottom, or both. A fork of XBar III, with bars and settings in the spirit of Titan Panel.**
 
