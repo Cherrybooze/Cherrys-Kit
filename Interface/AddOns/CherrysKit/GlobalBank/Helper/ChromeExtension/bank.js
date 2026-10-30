@@ -221,7 +221,7 @@ const GBBank = (() => {
     type: (a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
   };
 
-  function create(root, send, status, onData) {
+  function create(root, send, status, onData, menu) {
     const state = {characters: [], hidden: new Set(), sort: 'name'};
     const settings = {excluded: new Set(), whitelist: new Set(), excludeBound: false};
     const icons = new Map();
@@ -251,7 +251,7 @@ const GBBank = (() => {
         tooltip.append(row);
       }
       if (rows.length > MAX_TOOLTIP_ROWS) tooltip.append(make('span', 'bank-tip-type', `and ${rows.length - MAX_TOOLTIP_ROWS} more`));
-      tooltip.append(make('span', 'bank-tip-type', isHidden(cell.places[0], settings) ? 'Right-click to bring it back' : 'Right-click to exclude it'));
+      tooltip.append(make('span', 'bank-tip-type', 'Right-click to exclude it or copy a login'));
       tooltip.hidden = false;
       moveTooltip(event);
     }
@@ -276,9 +276,12 @@ const GBBank = (() => {
       for (const cell of shown) {
         const slot = make('div', isHidden(cell.places[0], settings) ? 'bank-slot filled bank-excluded' : 'bank-slot filled');
         slot.addEventListener('contextmenu', event => {
-          event.preventDefault();
-          toggleHidden(cell.places[0], settings);
-          settingsChanged();
+          tooltip.hidden = true;
+          const hidden = isHidden(cell.places[0], settings);
+          menu(event, [{label: hidden ? 'Bring this item back' : 'Exclude this item', run() {
+            toggleHidden(cell.places[0], settings);
+            settingsChanged();
+          }}], cell.places.map(place => place.character));
         });
         slot.append(make('span', 'bank-letters', cell.name.slice(0, 2)));
         const picture = make('img');

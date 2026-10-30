@@ -1,6 +1,6 @@
 # ZShop
 
-Version **1.2.0-ck5** · Kit release **0.11.111** · [All addons / hub](../README.md)
+Version **1.2.0-ck5** · Kit release **0.11.112** · [All addons / hub](../README.md)
 
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 

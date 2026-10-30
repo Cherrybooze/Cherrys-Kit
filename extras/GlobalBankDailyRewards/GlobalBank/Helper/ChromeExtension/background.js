@@ -1,5 +1,7 @@
 'use strict';
 const HOST = 'com.cherryskit.globalbank';
+// Only this extension's own pages can read what it stores locally, not its scripts running on web pages.
+chrome.storage?.local?.setAccessLevel?.({accessLevel: 'TRUSTED_CONTEXTS'})?.catch?.(() => {});
 // Any message makes the local host write Windows' time for the game's addons. Once per Chrome
 // start is enough: the game carries that time on until Windows restarts.
 const stampClock = () => chrome.runtime.sendNativeMessage(HOST, {type:'clock'}, () => void chrome.runtime.lastError);
@@ -79,6 +81,20 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
   }
   if ((control && message?.type === 'helper-info') || ((control || popup) && (message?.type === 'helper-auto-start' || message?.type === 'helper-auto-stop'))) {
     chrome.runtime.sendNativeMessage(HOST, {type:message.type}, response => {
+      const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
+      reply(error ? {ok:false,error} : response);
+    });
+    return true;
+  }
+  // The encrypted accounts file only, and only for the extension's own page. It holds no key and no password.
+  if (control && (message?.type === 'gf-save' || message?.type === 'gf-load' || message?.type === 'gf-delete')) {
+    const request = {type: message.type};
+    if (message.type === 'gf-save') {
+      if (typeof message.text !== 'string' || message.text.length > 16777216) return;
+      request.text = message.text;
+    }
+    if (message.type === 'gf-load') request.offset = Number.isSafeInteger(message.offset) && message.offset > 0 ? message.offset : 0;
+    chrome.runtime.sendNativeMessage(HOST, request, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);
     });

@@ -1,10 +1,14 @@
 # Global Bank
 
-Version **1.4.12** · Kit release **0.11.111** · [All addons / hub](../README.md)
+Version **1.4.13** · Kit release **0.11.112** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.13
+
+The extension's page has a Gold heatmap tab, with a column per server and full caps pooled together, and a Gameforge accounts tab for copying logins and linking characters to accounts in bulk. Right-click an item or a heatmap cell to copy a character, account or password. Accounts and passwords stay in this Chrome profile, unencrypted. A character saves its server the next time it logs in.
 
 ## Updated in 1.4.12
 

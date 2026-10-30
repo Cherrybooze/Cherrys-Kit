@@ -51,6 +51,7 @@
 
   // The Bank tab
   const bankStatus = text => { byId('bank-status').textContent = text; };
+  const accounts = GBAccounts.create(send);
   // The local host if there is one, otherwise the folders the player chose
   let usingFolders = false;
   async function bankSend(message) {
@@ -67,10 +68,11 @@
   const bank = GBBank.create(byId('tab-bank'), bankSend, bankStatus, (totals, made, characters) => {
     GBBank.renderCurrencies(byId('currency-view'), characters);
     GBBank.renderRoster(byId('roster-view'), characters);
+    accounts.setCharacters(characters);
     const number = value => value.toLocaleString('en-US');
     byId('status-data').textContent = `${number(totals.characters)} characters · ${number(totals.items)} items in ${number(totals.stacks)} stacks`
       + (made ? ` · data from ${made}` : ' · no data saved yet');
-  });
+  }, accounts.openMenu);
   // The Item Depot tab
   let depot = null;
   function renderDepot() {

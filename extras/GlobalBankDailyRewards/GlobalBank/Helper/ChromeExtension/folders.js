@@ -50,6 +50,8 @@ const GBFolders = (() => {
       const field = record.split('~');
       if (field[0] === 'C' && field[1] && number(field[2]) > 0) {
         character.classes.push({name: readable(field[1]), level: number(field[2])});
+      } else if (field[0] === 'S' && field[1]) {
+        character.server = readable(field[1]);
       } else if (field[0] === 'M' && field[1] && number(field[2]) > 0) {
         character.currencies.push({key: field[1], amount: number(field[2]), name: readable(field[3])});
       } else if ((field[0] === 'B' || field[0] === 'K') && field.length >= 4) {

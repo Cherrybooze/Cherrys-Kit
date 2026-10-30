@@ -10,6 +10,10 @@ Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, add
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
 
+## Updated in 1.4.13
+
+The extension's page has a Gold heatmap tab, with a column per server and full caps pooled together, and a Gameforge accounts tab for copying logins and linking characters to accounts in bulk. Right-click an item or a heatmap cell to copy a character, account or password. Accounts and passwords stay in this Chrome profile, unencrypted. A character saves its server the next time it logs in.
+
 ## Updated in 1.4.12
 
 Hovering an item in the in-game window now shows the game's own item tooltip, for any saved character. Gear no longer stacks in the Bank tab. Each piece shows its durability, plus level, tier upgrades, runes and stats when you hover it, and the name search finds stats too. A character saves these the next time it logs in.

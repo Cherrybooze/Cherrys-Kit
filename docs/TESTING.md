@@ -1,10 +1,10 @@
-# In-game checks for kit 0.11.111
+# In-game checks for kit 0.11.112
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
 
-## 0.11.111 Cherry's Bar coordinates
+## 0.11.112 Cherry's Bar coordinates
 
 None of this has run in the game yet. The tests use a simulated client.
 
@@ -45,6 +45,9 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G14 | In game, open `/gb` and hover items on another character, both gear and other things. | The game's own item tooltip shows, plus the count and slot. Gear shows that piece's durability and stats after that character has logged in once with this version. |
 | G15 | Run the login screen's installer again, restart the game and reach the character screen with the helper's data saved. | Each character shows its gold and last save, at the right of its row. The server screen says whether the helper is running. With the helper closed it says so within about a minute, and at once if the Chrome extension is set up. |
 | G16 | With the mailbox open, press **Prev** or **Next** on LogNextChar, then open a mailbox on the next character. | The mailbox and Ultimate Mail Mod's window close before logging out, and the mailbox opens normally afterwards. |
+| G17 | Open **Gold heatmap**. | There's a column per server. A character with no gold is red, exactly 500,000,000 is orange, a full cap is bright green and pooled at the top of its column. Hovering shows the full value. A character shows under "Server unknown" until it logs in with this version. |
+| G19 | On **Gameforge accounts**, choose a password and add an account. Close and reopen the page. Press **Copy encryption key**, and keep it. | `GameforgeAccounts.json` in `Interface\\GlobalBankHelper` holds no readable names. The page opens locked, and the heatmap shows "Accounts locked" until you enter the password at the top. |
+| G18 | On **Gameforge accounts**, add an account, tick characters and press **Link ticked**, then right-click a linked character on the heatmap. | Passwords show as *** until **Reveal passwords** is ticked, and it's off again after reopening the page. The right-click menu stays open, so the account name and then the password are two clicks to copy. Linked characters group under the account. |
 | G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
 | G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 
