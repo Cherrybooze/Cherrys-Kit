@@ -68,6 +68,7 @@
   const bank = GBBank.create(byId('tab-bank'), bankSend, bankStatus, (totals, made, characters) => {
     GBBank.renderCurrencies(byId('currency-view'), characters);
     GBBank.renderRoster(byId('roster-view'), characters);
+    GBBank.renderStats(byId('tab-stats'), characters);
     accounts.setCharacters(characters);
     const number = value => value.toLocaleString('en-US');
     byId('status-data').textContent = `${number(totals.characters)} characters · ${number(totals.items)} items in ${number(totals.stacks)} stacks`

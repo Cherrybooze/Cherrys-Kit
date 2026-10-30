@@ -1,10 +1,10 @@
-# In-game checks for kit 0.11.112
+# In-game checks for kit 0.11.113
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
 
-## 0.11.112 Cherry's Bar coordinates
+## 0.11.113 Cherry's Bar coordinates
 
 None of this has run in the game yet. The tests use a simulated client.
 
@@ -48,6 +48,7 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G17 | Open **Gold heatmap**. | There's a column per server. A character with no gold is red, exactly 500,000,000 is orange, a full cap is bright green and pooled at the top of its column. Hovering shows the full value. A character shows under "Server unknown" until it logs in with this version. |
 | G19 | On **Gameforge accounts**, choose a password and add an account. Close and reopen the page. Press **Copy encryption key**, and keep it. | `GameforgeAccounts.json` in `Interface\\GlobalBankHelper` holds no readable names. The page opens locked, and the heatmap shows "Accounts locked" until you enter the password at the top. |
 | G18 | On **Gameforge accounts**, add an account, tick characters and press **Link ticked**, then right-click a linked character on the heatmap. | Passwords show as *** until **Reveal passwords** is ticked, and it's off again after reopening the page. The right-click menu stays open, so the account name and then the password are two clicks to copy. Linked characters group under the account. |
+| G20 | Log in and out on a character holding mana stones with stats. Open **Stats**, and switch between stats on items and on mana stones. In **Bank**, set **Search in** to each kind and search a stat. | The names and counts match the stones' tooltips in game, with a breakdown per character. Stones with different stats have their own slots. |
 | G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
 | G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 

@@ -68,6 +68,10 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
             Where = $where
             Bound = ($f.Count -gt 6 -and $f[6] -eq "1")
             Gear  = $null
+            Stats = $null
+        }
+        if ($f.Count -ge 9 -and $f[7] -ceq 'ST') {
+            $item.Stats = @(if ($f[8]) { $f[8].Split([char]';') | ForEach-Object { ConvertTo-GBText $_ } })
         }
         if ($f.Count -ge 15) {
             $names = { param($text) if ($text) { @($text.Split([char]';') | ForEach-Object { ConvertTo-GBText $_ }) } else { @() } }
@@ -295,6 +299,9 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
                 [void]$sb.Append(',"name":').Append((ConvertTo-GBJsonString $it.Name))
                 [void]$sb.Append(',"icon":').Append((ConvertTo-GBJsonString $it.Icon))
                 if ($it.Bound) { [void]$sb.Append(',"bound":true') }
+                if ($null -ne $it.Stats) {
+                    [void]$sb.Append(',"stats":[').Append(((@($it.Stats) | ForEach-Object { ConvertTo-GBJsonString $_ }) -join ',')).Append(']')
+                }
                 if ($it.Gear) {
                     $gear = $it.Gear
                     [void]$sb.Append(',"gear":{"dura":').Append($gear.Dura).Append(',"maxDura":').Append($gear.MaxDura).Append(',"plus":').Append($gear.Plus)

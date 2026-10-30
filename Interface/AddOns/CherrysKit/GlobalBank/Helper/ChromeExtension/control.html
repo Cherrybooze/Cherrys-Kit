@@ -36,6 +36,7 @@
     <nav class="tabs" role="tablist" aria-label="Global Bank">
       <button type="button" role="tab" data-tab="bank" aria-selected="true">Bank</button>
       <button type="button" role="tab" data-tab="currencies" aria-selected="false">Currencies</button>
+      <button type="button" role="tab" data-tab="stats" aria-selected="false">Stats</button>
       <button type="button" role="tab" data-tab="heatmap" aria-selected="false">Gold heatmap</button>
       <button type="button" role="tab" data-tab="characters" aria-selected="false">Characters</button>
       <button type="button" role="tab" data-tab="accounts" aria-selected="false">Gameforge accounts</button>
@@ -47,6 +48,7 @@
       <section class="bank-filters" aria-label="Search and filters">
         <div class="bank-filter-row">
           <label class="bank-wide">Item or stat <input id="bank-search" maxlength="80" autocomplete="off" placeholder="A name or a stat"></label>
+          <label>Search in <select id="bank-search-in"><option value="">Names and stats</option><option value="items">Stats on items</option><option value="stones">Stats on mana stones</option></select></label>
           <label>Type <select id="bank-type"><option value="">All types</option><option>Armour</option><option>Weapons</option><option>Jewellery</option><option>Runes</option><option>Potions</option><option>Materials</option><option>Recipes</option><option>Mounts and pets</option><option>Other</option></select></label>
           <label>Where <select id="bank-place"><option value="">Bag and bank</option><option value="bag">Bag</option><option value="bank">Bank</option></select></label>
           <label>Character level <span class="bank-levels"><input id="bank-min-level" type="number" min="0" placeholder="Min" aria-label="Lowest character level"><input id="bank-max-level" type="number" min="0" placeholder="Max" aria-label="Highest character level"></span></label>
@@ -86,6 +88,18 @@
         <h2 id="currencies-title">Currencies</h2>
         <p class="hint">Click a heading to sort by it. A character's other currencies appear once it has logged in with this version. Diamonds, Bonus and Billdin are per account, so they aren't added up.</p>
         <div id="currency-view" class="auction-table-wrap"><table class="currency-table"><thead></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+    <div id="tab-stats" class="tab-panel" hidden>
+      <section aria-labelledby="stats-title">
+        <h2 id="stats-title">Stats</h2>
+        <div class="bank-filter-row">
+          <label class="bank-wide">Stat name <input id="stat-search" maxlength="80" autocomplete="off"></label>
+          <label>Look at <select id="stat-kind"><option value="items">Stats on items</option><option value="stones">Stats on mana stones</option></select></label>
+          <span id="stat-total" class="hint"></span>
+        </div>
+        <p class="hint">Click a heading to sort by it. Stats appear once a character has logged in with this version. Mana stones include fusion stones.</p>
+        <div class="auction-table-wrap"><table class="currency-table stat-table"><thead></thead><tbody></tbody></table></div>
       </section>
     </div>
     <div id="tab-heatmap" class="tab-panel" hidden>

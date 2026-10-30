@@ -1,10 +1,14 @@
 # Global Bank
 
-Version **1.4.13** · Kit release **0.11.112** · [All addons / hub](../README.md)
+Version **1.4.14** · Kit release **0.11.113** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.14
+
+The extension's page has a Stats tab listing every stat, how many there are and which characters hold them, for items or for mana stones separately. The Bank tab's search can look at stats on items or on mana stones, and mana stones with different stats no longer stack. A character saves mana stone stats the next time it logs in.
 
 ## Updated in 1.4.13
 
