@@ -10,6 +10,10 @@ Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, add
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
 
+## Updated in 1.4.10
+
+The auction cache now removes an item when its auction ends, not only after two days, and forgets old transfer records. The page also handles a character file of any size, for players with thousands of alts.
+
 ## Updated in 1.4.9
 
 The Bank tab can now run without the local helper: choose your save folder, and your game folder for icons, and it reads them straight from there. The Terminal and Auctions tabs still need the helper.

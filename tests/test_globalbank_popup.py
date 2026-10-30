@@ -242,6 +242,38 @@ const file = new Blob([Buffer.from('FDB0'), u32(entries.length), ...table, ...en
 })().catch(error => { console.error(error); process.exit(1); });
 """)
 
+    def test_a_big_character_file_comes_in_parts(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const stub = () => ({value:'', checked:false, textContent:'', style:{}, dataset:{}, addEventListener() {}, replaceChildren() {}, append() {}, querySelectorAll: () => []});
+const context = vm.createContext({console, document: {createElement: stub}});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+const characters = Array.from({length: 3000}, (_, i) => ({name: 'Alt' + i, level: 1, gold: 0, bag: [{slot: 1, count: 1, id: '1', name: 'x'.repeat(200), icon: ''}], bank: []}));
+const whole = JSON.stringify({made: 'now', characters});
+assert.ok(whole.length > 600000);
+const asked = [];
+const send = async message => {
+  asked.push(message.offset);
+  return {ok: true, json: whole.slice(message.offset, message.offset + 300000), total: whole.length};
+};
+let told;
+const elements = new Map();
+const root = {querySelector: id => { if (!elements.has(id)) elements.set(id, stub()); return elements.get(id); }};
+const bank = context.GBBank.create(root, send, () => {}, totals => { told = totals; });
+(async () => {
+  await bank.reload();
+  assert.equal(told.characters, 3000);
+  assert.deepEqual(asked.slice(0, 2), [0, 300000]);
+  assert.equal(asked.length, Math.ceil(whole.length / 300000));
+  // Folders answer with all of it and no total, and an empty answer ends it
+  asked.length = 0;
+  const once = context.GBBank.create(root, async message => { asked.push(message.offset); return {ok: true, json: '{"characters":[]}'}; }, () => {}, totals => { told = totals; });
+  await once.reload();
+  assert.equal(asked.length, 1);
+  assert.equal(told.characters, 0);
+})().catch(error => { console.error(error); process.exit(1); });
+""")
+
     def test_bank_grid_filters_stacks_and_says_where_things_are(self):
         self.run_js(r"""
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');

@@ -1,4 +1,4 @@
-# In-game checks for kit 0.11.105
+# In-game checks for kit 0.11.106
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 

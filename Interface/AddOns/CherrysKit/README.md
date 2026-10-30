@@ -1,13 +1,15 @@
 # Cherry's Kit
 
-Version **0.4.24** · Kit release **0.11.105** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.24** · Kit release **0.11.106** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
 
-## Kit 0.11.105 playtest
+## Kit 0.11.106 playtest
 
+- **Global Bank 1.4.10:** The auction cache now removes an item when its auction ends, not only after two days, and forgets old transfer records. The page also handles a character file of any size, for players with thousands of alts.
+- **Advanced AuctionHouse 6.2.5:** The auction cache now removes an item when its auction ends, not only after two days.
 - **Global Bank 1.4.9:** The Bank tab can now run without the local helper: choose your save folder, and your game folder for icons, and it reads them straight from there. The Terminal and Auctions tabs still need the helper.
 - **Global Bank 1.4.8:** the extension's page shows everything your characters hold in one grid with filters, and runs the helper's commands, with no terminal window.
 

@@ -1,10 +1,14 @@
 # Global Bank
 
-Version **1.4.9** · Kit release **0.11.105** · [All addons / hub](../README.md)
+Version **1.4.10** · Kit release **0.11.106** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.10
+
+The auction cache now removes an item when its auction ends, not only after two days, and forgets old transfer records. The page also handles a character file of any size, for players with thousands of alts.
 
 ## Updated in 1.4.9
 

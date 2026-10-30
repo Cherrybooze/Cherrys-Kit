@@ -1,10 +1,14 @@
 # Advanced AuctionHouse
 
-Version **6.2.4** · Kit release **0.11.83** · [All addons / hub](../README.md)
+Version **6.2.5** · Kit release **0.11.83** · [All addons / hub](../README.md)
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns and stat ranges.**
 
 Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.4 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+
+## Updated in 6.2.5
+
+The auction cache now removes an item when its auction ends, not only after two days.
 
 ## Updated in 6.2.4
 

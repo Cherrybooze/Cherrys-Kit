@@ -49,7 +49,15 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     });
     return true;
   }
-  if (control && (message?.type === 'bank-data' || message?.type === 'helper-info' || message?.type === 'helper-auto-start' || message?.type === 'helper-auto-stop')) {
+  if (control && message?.type === 'bank-data') {
+    const offset = Number.isSafeInteger(message.offset) && message.offset > 0 ? message.offset : 0;
+    chrome.runtime.sendNativeMessage(HOST, {type:'bank-data', offset}, response => {
+      const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
+      reply(error ? {ok:false,error} : response);
+    });
+    return true;
+  }
+  if (control && (message?.type === 'helper-info' || message?.type === 'helper-auto-start' || message?.type === 'helper-auto-stop')) {
     chrome.runtime.sendNativeMessage(HOST, {type:message.type}, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);

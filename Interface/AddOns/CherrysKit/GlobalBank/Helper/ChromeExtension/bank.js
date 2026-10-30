@@ -186,8 +186,14 @@ const GBBank = (() => {
       renderGrid();
     }
     async function reload() {
-      const response = await send({type: 'bank-data'});
-      const data = response.json ? JSON.parse(response.json) : {characters: []};
+      // A big file comes in parts, and the local host says how long the whole of it is.
+      let json = '';
+      for (;;) {
+        const response = await send({type: 'bank-data', offset: json.length});
+        json += response.json || '';
+        if (!response.json || !response.total || json.length >= response.total) break;
+      }
+      const data = json ? JSON.parse(json) : {characters: []};
       state.characters = Array.isArray(data.characters) ? data.characters : [];
       el('bank-made').textContent = data.made ? `Data from ${data.made}` : 'No saved data yet: press Update now after logging out of a character.';
       renderCharacters();

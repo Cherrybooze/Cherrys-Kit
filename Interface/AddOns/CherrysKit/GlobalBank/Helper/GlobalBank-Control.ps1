@@ -24,6 +24,11 @@ function Limit-ControlLines($lines) {
     if ($items.Count -gt $maxLines) { $out.Add('More results were omitted. Narrow your search to see them.') }
     return ($out -join "`n")
 }
+# The file is only rewritten when a character's auctions come in, so one can have ended since.
+function Test-ControlAuctionEnded($entry, [double]$now) {
+    $left = $entry.data.leftTime
+    return $null -ne $left -and $left -isnot [string] -and ([double]$entry.lastSeenTrustedUTC + [double]$left * 60) -le $now
+}
 function Get-ControlAuctionQuery([string]$dataDirectory, [string]$search, [string]$realmFilter) {
     if (-not $search -or $search.Length -gt 128 -or $search -match '[\x00-\x1f]') { throw 'Enter an item name or ID of at most 128 characters.' }
     if ($realmFilter.Length -gt 120 -or $realmFilter -match '[\x00-\x1f]') { throw 'The realm name is too long or contains an invalid character.' }
@@ -38,6 +43,7 @@ function Get-ControlAuctionQuery([string]$dataDirectory, [string]$search, [strin
         foreach ($entry in @($realm.Value.entries)) {
             if (-not $entry -or -not $entry.data) { continue }
             $item = $entry.data
+            if (Test-ControlAuctionEnded $entry $now) { continue }
             if (([string]$item.name).IndexOf($search, [StringComparison]::OrdinalIgnoreCase) -lt 0 -and ([string]$item.itemid).IndexOf($search, [StringComparison]::OrdinalIgnoreCase) -lt 0) { continue }
             $matches++
             if ($matches -gt 150) { continue }
@@ -70,11 +76,13 @@ function Get-ControlAuctionPage([string]$dataDirectory, [string]$search, [string
     $data = Read-ControlJson $dataDirectory 'AAHBroadCache.json'
     if ($data.schemaVersion -ne 1 -or $null -eq $data.realms) { throw 'The auction cache has an unsupported format.' }
     $found = New-Object 'System.Collections.Generic.List[object]'
+    $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
     foreach ($realm in $data.realms.PSObject.Properties) {
         if ($realmFilter -and $realm.Name.IndexOf($realmFilter, [StringComparison]::OrdinalIgnoreCase) -lt 0) { continue }
         foreach ($entry in @($realm.Value.entries)) {
             if (-not $entry -or -not $entry.data) { continue }
             $item = $entry.data
+            if (Test-ControlAuctionEnded $entry $now) { continue }
             if ($search -and ([string]$item.name).IndexOf($search, [StringComparison]::OrdinalIgnoreCase) -lt 0 -and ([string]$item.itemid).IndexOf($search, [StringComparison]::OrdinalIgnoreCase) -lt 0 -and ([string]$item.statNames).IndexOf($search, [StringComparison]::OrdinalIgnoreCase) -lt 0) { continue }
             $statValue = $null
             if ($item.details -and $stat) { $prop = $item.PSObject.Properties['raw_' + $stat]; if ($prop -and $null -ne $prop.Value) { $statValue = [double]$prop.Value } }
@@ -96,12 +104,14 @@ function Get-ControlAuctionPage([string]$dataDirectory, [string]$search, [string
     return @{ rows=$page; total=$sorted.Count; offset=$offset; pageSize=$size }
 }
 
-# The whole character file, for the Bank tab. Chrome takes at most 1 MB in a message.
-function Get-ControlBankFile([string]$dataDirectory) {
+# The character file, for the Bank tab. Chrome takes at most 1 MB in a message, so a big one goes in parts:
+# 300,000 characters is at most 900 KB of UTF-8. The page asks again from where it got to.
+function Get-ControlBankFile([string]$dataDirectory, [int]$offset = 0) {
     $path = Join-Path $dataDirectory 'GlobalBank.json'
-    if (-not (Test-Path -LiteralPath $path)) { return $null }
-    if ((Get-Item -LiteralPath $path).Length -gt 900000) { throw 'Your character file is too large for this page. Use the Terminal tab.' }
-    return [System.IO.File]::ReadAllText($path, [Text.Encoding]::UTF8)
+    if (-not (Test-Path -LiteralPath $path)) { return @{json=$null;total=0} }
+    $text = [System.IO.File]::ReadAllText($path, [Text.Encoding]::UTF8)
+    if ($offset -lt 0 -or $offset -gt $text.Length) { throw 'The character file changed. Try again.' }
+    return @{json=$text.Substring($offset, [Math]::Min(300000, $text.Length - $offset));total=$text.Length}
 }
 
 # Item icons from the game's own interface.fdb, as base64. Only item icons can be asked for.
