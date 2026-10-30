@@ -29,7 +29,8 @@ The helper stores its exclusion list in Interface\GlobalBankHelper\ExcludedChara
 next to the private character database. Never share that folder. The list is not part of the addon.
 Erasing does not delete the game character or its save file. After unbanning, update the helper to
 read that character's saved data again. Class levels appear after logging in with the updated addon.
-Daily status is based on the local reward confirmation and the 01:00 local reset. Unknown means
+Daily status is based on the local reward confirmation and the reset at 00:00 in Germany, converted
+to your time zone. Unknown means
 there is no unambiguous confirmation; it does not prove whether a reward was collected.
     status               character count, uptime and heartbeat setting
     heartbeat on|off     enable/disable the text heartbeat (also: heartbeat 1|0)
@@ -65,9 +66,8 @@ Interface\GlobalBankHelper: it shows what all your characters own.
 
 Chrome daily reward extension (Windows)
 1. From the installed Helper folder, run "Install Chrome extension.bat".
-2. The setup window shows each step, opens Chrome extensions and copies the folder path.
-   Turn on Developer mode, click Load unpacked, then in the folder picker press Alt+D,
-   Ctrl+V, Enter and Select Folder. An empty folder list there is normal.
+2. It opens Chrome's extensions page and a small setup window. Turn on Developer mode and click
+   Load unpacked; the setup window fills in the folder and closes when the extension connects.
 3. Open a level 100+ character's daily page through ZShop. The available reward is clicked.
    It is recorded only after the page marks that chest redeemed. When the shop shows a redeemed
    current chest and the next reward countdown, the popup reports the collection and wait time.
