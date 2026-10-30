@@ -1021,6 +1021,87 @@ class BarTest(unittest.TestCase):
         self.tick(4)
         self.assertIn("Howling", self.text_of("Zone"))
 
+    def test_location_coordinates_tick_in_the_right_click_menu(self):
+        self.run_lua("""
+            local D = CherrysBar.Displays
+            D.SetBar(D.byKey.Zone, 'top')
+            D.MouseUp(D.byKey.Zone.slot, 'RBUTTON')
+        """)
+        name = "Show coordinates on the bar"
+        rows = self.menu_rows()
+        self.assertIn("CheckboxOff", self.ev(f"CBar_MenuRow{rows[name]}Icon.texture"))
+        self.run_lua(f"CherrysBar.Menu.RowClick({rows[name]}, 'LBUTTON')")
+        self.assertEqual(self.text_of("Zone"), "Varanas (12.3, 45.6)")
+        self.assertIn("CheckboxOn", self.ev(f"CBar_MenuRow{self.menu_rows()[name]}Icon.texture"))
+        self.run_lua(f"CherrysBar.Menu.RowClick({self.menu_rows()[name]}, 'LBUTTON')")
+        self.assertEqual(self.text_of("Zone"), "Varanas")
+        self.assertEqual(self.ev("cfg('Zone').fmt"), "[ZONE]")
+        self.run_lua("CherrysBar.Displays.MouseUp(CherrysBar.Displays.byKey.Bag.slot, 'RBUTTON')")
+        self.assertNotIn(name, self.menu_rows())
+
+    def test_location_coordinates_tick_in_the_options_window(self):
+        self.run_lua("""
+            CherrysBar.Options.Toggle()
+            local D = CherrysBar.Displays
+            D.SetBar(D.byKey.Zone, 'top')
+            CherrysBar.Options.ChipUp(D.byKey.Zone.slot, 'LBUTTON')
+        """)
+        self.assertTrue(self.ev("CBar_OptionsOption.shown"))
+        self.assertEqual(self.ev("CBar_OptionsOptionLabel.text"), "Show coordinates on the bar")
+        self.run_lua("CherrysBar.Options.PickedOption()")
+        self.assertEqual(self.text_of("Zone"), "Varanas (12.3, 45.6)")
+        self.assertEqual(self.ev("CBar_OptionsFormat.text"), "[ZONE] ([X], [Y])")
+        self.assertTrue(self.ev("CBar_OptionsOption.checked"))
+        self.run_lua("CherrysBar.Options.PickedOption()")
+        self.assertEqual(self.ev("CBar_OptionsFormat.text"), "[ZONE]")
+        self.assertFalse(self.ev("CBar_OptionsOption.checked"))
+        self.run_lua("CherrysBar.Options.ChipUp(CherrysBar.Displays.byKey.Bag.slot, 'LBUTTON')")
+        self.assertFalse(self.ev("CBar_OptionsOption.shown"))
+        self.assertFalse(self.ev("CBar_OptionsOptionLabel.shown"))
+
+    def test_location_coordinates_redraw_once_a_second_and_only_on_a_move(self):
+        self.run_lua("""
+            mapReads = 0
+            mapX = 0.1
+            GetPlayerWorldMapPos = function() mapReads = mapReads + 1; return mapX, 0.2 end
+            local D = CherrysBar.Displays
+            D.SetBar(D.byKey.Zone, 'top')
+        """)
+        self.tick(4)
+        self.assertEqual(self.ev("mapReads"), 0)  # off: never read
+        self.run_lua("""
+            local D = CherrysBar.Displays
+            local def = D.byKey.Zone
+            def.option.flip(D.Config(def))
+            D.Rebuild()
+            redraws = 0
+            local update = D.Update
+            D.Update = function(d) if d == def then redraws = redraws + 1 end; update(d) end
+        """)
+        self.assertEqual(self.text_of("Zone"), "Varanas (10.0, 20.0)")
+        self.tick(1)  # the first tick learns the position
+        self.run_lua("mapReads = 0; redraws = 0")
+        for _ in range(4):
+            self.tick(0.25)
+        self.assertEqual(self.ev("mapReads"), 1)
+        self.assertEqual(self.ev("redraws"), 0)  # standing still
+        self.run_lua("mapX = 0.5")
+        for _ in range(4):
+            self.tick(0.25)
+        self.assertEqual(self.ev("redraws"), 1)
+        self.assertEqual(self.text_of("Zone"), "Varanas (50.0, 20.0)")
+
+    def test_location_coordinates_with_no_position_show_a_question_mark(self):
+        self.run_lua("""
+            GetPlayerWorldMapPos = function() return nil end
+            local D = CherrysBar.Displays
+            local def = D.byKey.Zone
+            D.SetBar(def, 'top')
+            def.option.flip(D.Config(def))
+            D.Rebuild()
+        """)
+        self.assertEqual(self.text_of("Zone"), "Varanas (?, ?)")
+
     def test_volume_mutes_restores_scrolls_and_changes_its_speaker(self):
         self.run_lua("local D = CherrysBar.Displays; D.SetBar(D.byKey.Volume, 'top')")
         self.assertEqual(self.text_of("Volume"), "80%")

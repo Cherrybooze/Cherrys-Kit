@@ -136,6 +136,12 @@ local function refreshPicked()
   CBar_OptionsIcon:SetChecked(cfg.icon and 1 or nil)
   CBar_OptionsLabel:SetChecked(cfg.label and 1 or nil)
   CBar_OptionsColor:SetChecked(cfg.color and 1 or nil)
+  shown(CBar_OptionsOption, def.option)
+  shown(CBar_OptionsOptionLabel, def.option)
+  if def.option then
+    CBar_OptionsOptionLabel:SetText(def.option.text)
+    CBar_OptionsOption:SetChecked(def.option.checked(cfg) and 1 or nil)
+  end
   if def.tokens then
     CBar_OptionsTokens:SetText(def.tokens)
     CBar_OptionsFormat:SetText(cfg.fmt)
@@ -354,11 +360,21 @@ function O.PickedFlip(what)
   end
 end
 
+function O.PickedOption()
+  local def = pickedDef()
+  if def and def.option then
+    def.option.flip(G.Displays.Config(def))
+    G.Displays.Rebuild()
+    refreshPicked()
+  end
+end
+
 function O.ApplyFormat()
   local def = pickedDef()
   if def and CBar_OptionsFormat then
     G.Displays.Config(def).fmt = CBar_OptionsFormat:GetText() or ""
     G.Displays.Rebuild()
+    refreshPicked()
   end
 end
 

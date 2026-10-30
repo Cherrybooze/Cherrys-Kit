@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.4.7** · Kit release **0.11.101** · [All addons / hub](../README.md)
+Version **1.4.7** · Kit release **0.11.104** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 

@@ -1,14 +1,16 @@
 # Cherry's Kit
 
-Version **0.4.24** · Kit release **0.11.101** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.24** · Kit release **0.11.104** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
 
-## Kit 0.11.101 playtest
+## Kit 0.11.104 playtest
 
-- **Real time for addons:** the hub now has a clock, fed by Global Bank's Daily Rewards Chrome extension 1.0.9. **Cherry's Bar 1.1.8**'s Clock and **ZShop 1.2.0-ck5** read it. See [Real time for addons](#real-time-for-addons).
+- **Cherry's Bar 1.1.9:** Location can show your coordinates on the bar.
+
+- **Real time for addons:** the hub now has a clock, fed by Global Bank's Daily Rewards Chrome extension 1.0.9. Cherry's Bar's Clock and **ZShop 1.2.0-ck5** read it. See [Real time for addons](#real-time-for-addons).
 
 - **Global Bank 1.4.7:** the daily reset follows 00:00 in Germany in any time zone, and the extension's setup takes one click plus Chrome's two.
 

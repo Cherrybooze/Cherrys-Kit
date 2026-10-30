@@ -331,6 +331,7 @@ def build():
 				{label("CBar_OptionsColorLabel", "Colour", 12, 48, 20, 798, 256)}
 				{label("CBar_OptionsTextLabel", "Text", 12, 40, 20, 16, 292)}
 				{label("CBar_OptionsTokens", "", 11, 850, 50, 16, 322)}
+				{label("CBar_OptionsOptionLabel", "", 12, 210, 20, 658, 324)}
 				{label("CBar_OptionsHeadGeneral", "General", 13, 200, 18, 16, 386, inherits="GameFontNormal")}
 			</Layer>
 		</Layers>
@@ -348,6 +349,7 @@ def build():
 			{check("CBar_OptionsIcon", 634, 254, o + ".PickedFlip(&quot;icon&quot;);")}
 			{check("CBar_OptionsLabel", 702, 254, o + ".PickedFlip(&quot;label&quot;);")}
 			{check("CBar_OptionsColor", 774, 254, o + ".PickedFlip(&quot;color&quot;);")}
+			{check("CBar_OptionsOption", 634, 322, o + ".PickedOption();")}
 			<EditBox name="CBar_OptionsFormat" letters="120" historyLines="0" autoFocus="false" enableMouse="true">
 				{size(640, 30)}
 				{anchor(x=60, y=286)}
