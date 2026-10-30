@@ -185,9 +185,9 @@ Export-GBJson @($c) (Join-Path $data 'GlobalBank.json') 'now'
                dict(schema=1, kdf='PBKDF2-SHA256', iterations=1, salt='AAAA', iv='AAAA', data='QUJD', saved=1, notes='extra')]
         (self.root / 'bad.txt').write_text('\n'.join(json.dumps(item) for item in bad), encoding='utf-8')
         out = self.run_ps(". '" + str(control).replace("'", "''") + "'\n" + f'''
-foreach ($line in [IO.File]::ReadAllLines('{self.root}\\bad.txt')) {{ try {{ Save-ControlAccountsFile $data $line; 'written' }} catch {{ 'refused' }} }}
+foreach ($line in [IO.File]::ReadAllLines('{self.root / 'bad.txt'}')) {{ try {{ Save-ControlAccountsFile $data $line; 'written' }} catch {{ 'refused' }} }}
 "exists:$(Test-Path (Join-Path $data 'GameforgeAccounts.json'))"
-Save-ControlAccountsFile $data ([IO.File]::ReadAllText('{self.root}\\good.txt'))
+Save-ControlAccountsFile $data ([IO.File]::ReadAllText('{self.root / 'good.txt'}'))
 (Get-ControlAccountsFile $data 0).json
 ''')
         self.assertEqual(out.split()[:4], ['refused', 'refused', 'refused', 'exists:False'])
