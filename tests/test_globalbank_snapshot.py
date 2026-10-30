@@ -97,6 +97,37 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         self.assertEqual(lua.eval('parsed.bag[2].gear.maxDura'), 100)
         self.assertEqual(lua.eval('#parsed.bag[2].gear.stats'), 6)
         self.assertEqual(lua.eval('parsed.bag[3].gear'), None)
+        self.assertEqual(lua.eval('parsed.bag[1].gear.link'), '34182 3 74000a5f cfa0cc40 0 0 7ef8a 0 0 0 251c 967d')
         self.assertEqual(lua.eval('GlobalBank.Serialize(parsed)'), lua.eval('GlobalBank_Char'))
+
+    def test_hovering_an_item_uses_the_game_tooltip(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute(SOURCE.with_name('GlobalBankUI.lua').read_text(encoding='utf-8'))
+        lua.execute("""
+          tipTitle=nil; asked=nil; lines={}
+          GameTooltipTextLeft1={GetText=function() return tipTitle end}
+          GameTooltip={SetOwner=function() end, Show=function() end,
+            SetHyperLink=function(self, link) asked=link; if failLink then error('no') end; if hasTitle then tipTitle='From the game' end end,
+            SetText=function(self, text) tipTitle=text end,
+            AddLine=function(self, text) lines[#lines+1]=text end}
+          ITEMS={{id='211000', name='Sword', count=1, slot=4, gear={link='33a18 3 5f'}},
+                 {id='200000', name='Herb', count=5, slot=2}, {id='n:Odd', name='Odd', count=1, slot=3}}
+          GlobalBank.DetailItems=function() return ITEMS end
+          GlobalBank.gridOffset, GlobalBank.COLS, GlobalBank.tab = 0, 10, 'bag'
+          hasTitle=true
+        """)
+        lua.execute('GlobalBank.OnItemEnter({}, 1)')
+        self.assertEqual(lua.eval('asked'), '|Hitem:33a18 3 5f|h|h')
+        self.assertEqual(lua.eval('tipTitle'), 'From the game')
+        lua.execute('tipTitle=nil; GlobalBank.OnItemEnter({}, 2)')
+        self.assertEqual(lua.eval('asked'), '|Hitem:30d40|h|h')
+        self.assertEqual(lua.eval('lines[#lines-1]'), 'Count: 5')
+        # With no ID, or if the game can't show it, the saved name still shows
+        lua.execute('tipTitle=nil; asked=nil; GlobalBank.OnItemEnter({}, 3)')
+        self.assertIsNone(lua.eval('asked'))
+        self.assertEqual(lua.eval('tipTitle'), 'Odd')
+        lua.execute('tipTitle=nil; failLink=true; GlobalBank.OnItemEnter({}, 1)')
+        self.assertEqual(lua.eval('tipTitle'), 'Sword')
 
 if __name__ == '__main__': unittest.main()
