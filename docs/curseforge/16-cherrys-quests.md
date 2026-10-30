@@ -1,5 +1,9 @@
 # Cherry's Quests
 
+> **Requires:** Cherry's Kit (hub 0.4.21 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** rom weakauras (more fonts to choose from) and pbInfo (keeps its quest tracker out of the way).
+
 **A prettier quest tracker for Runes of Magic. Ctrl+click a quest to cycle through the NPCs it names and put one in the game's NPC tracking list.**
 
 ## Features

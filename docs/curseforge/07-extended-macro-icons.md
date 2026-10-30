@@ -1,5 +1,9 @@
 # Extended Macro Icons
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional:** nothing else is needed.
+
 **The game's macro window with about 10,500 more icons for your macros, in 58 categories.**
 
 Based on ExtendedMacroIcons 2.15 by Amurilon, cleaned up for Cherry's Kit.

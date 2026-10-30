@@ -1,5 +1,9 @@
 # Ultimate Mail Mod
 
+> **Requires:** Cherry's Kit (hub 0.4.17 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Cherry's Chat (Ctrl+click a name in chat to fill the mail's To).
+
 **A better mail window with mass send that no longer gets stuck after about 60 mails.**
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.

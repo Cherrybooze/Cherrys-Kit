@@ -1,5 +1,9 @@
 # TooltipIds
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** pbInfo (ID numbers in its tooltips too).
+
 **Shows the ID numbers of units, items, skills, buffs and more in their tooltips.**
 
 TooltipIds 1.0b3 by Rock5, updated for Cherry's Kit. Handy for rom weakauras (track a buff by its ID) and for macros.

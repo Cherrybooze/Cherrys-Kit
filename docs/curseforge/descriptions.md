@@ -2,7 +2,7 @@
 
 Source: [Cherry's Kit CurseForge Pages](https://claude.ai/artifact/HX27i3qBAgA9Dfj87cTUgZ)
 
-Sixteen package descriptions for Cherry's Kit 0.11.90, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
+Nineteen package descriptions for Cherry's Kit 0.11.101, ready to paste into CurseForge. These started with the linked handoff and are maintained alongside the numbered files in this folder. The original Markdown remains available in the v0.11.77 Git snapshot.
 
 ## Check before publishing
 
@@ -30,10 +30,14 @@ Sixteen package descriptions for Cherry's Kit 0.11.90, ready to paste into Curse
 - [Cherry's Grid](15-cherrys-grid.md)
 - [Cherry's Quests](16-cherrys-quests.md)
 - [Cherry's Bar](17-cherrys-bar.md)
+- [Cherry's Loginxml](18-cherrys-loginxml.md)
+- [LogNextChar](19-lognextchar.md)
 
 <!-- 01-cherrys-kit.md -->
 
 # Cherry's Kit
+
+> **Requires:** nothing. This is the base package: every other Cherry's Kit addon needs it.
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
@@ -49,6 +53,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 - **Resizable**: the - and + buttons next to the close button, or drag the bottom right corner (right for bigger, left for smaller). The size is saved.
 - **Your own chat commands**: every command is listed in `Interface\AddOns\CherrysKit\Commands.lua`. Open it in Notepad, change the text between the quotes, save and Reload UI. Commands an addon already owns keep working with extra words (`/kc <class>`, `/rwa unlock`).
 - **Old copy check**: if an old separate copy of a kit addon is still installed (for example `Interface\AddOns\zBag` next to `Interface\AddOns\CherrysKit`), the hub keeps the kit version off so the two don't fight, marks the row "off: old copy in AddOns\<Folder>" and says so in chat once.
+- **A real clock for other addons**, once Global Bank's Daily Rewards Chrome extension has told it the time. Chrome starting is enough, and it lasts until Windows restarts.
 - Only lists the kit addons you actually have installed.
 
 ## The addons
@@ -71,6 +76,8 @@ Each one is its own download and needs Cherry's Kit:
 - **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
 - **Cherry's Bar**: information bars at the top, bottom or both, with displays set per bar (`/cbar`)
 - **Cherry's Addon LoadTimes**: how long each addon takes to load, for troubleshooting; off until its `Switch.txt` turns it on (`/ckload`)
+- **Cherry's Loginxml**: a better login screen, a separate folder in `Interface\AddOns`
+- **LogNextChar**: Next and Prev character buttons (`/lnc`), needs Cherry's Loginxml
 
 ## Chat commands
 
@@ -96,12 +103,15 @@ Cherry's Kit is written by Cherry and is free software under the **GNU General P
 
 Some kit addons contain parts under Creative Commons **NonCommercial** licences (zBag's BagSearch and quick-sell filter, pbInfo, some rom weakauras sounds). **Cherry's Kit and its addons are free and must never be sold.**
 
-
 ---
 
 <!-- 02-cherrys-kittycombo.md -->
 
 # Cherry's KittyCombo
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** rom weakauras (use your auras as combo conditions) and Cherry's Chat (shares its copy-box size).
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
@@ -189,12 +199,15 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 - Compression by **LibDeflate**, (C) 2018-2021 Haoqian He, zlib License (text at the top of `lib/LibDeflate.lua`).
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 03-rom-weakauras.md -->
 
 # rom weakauras
+
+> **Requires:** Cherry's Kit (hub 0.4.14 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Cherry's KittyCombo (track its next skills and modes) and pbInfo (mob information for triggers).
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
@@ -305,12 +318,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 - The **Past second** trigger and Hits per second aura are based on the idea of **WhiteCount**, a small hits-per-second counter (no author named). It is a new implementation with none of its code.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Because some sounds are NonCommercial, rom weakauras must never be sold.
 
-
 ---
 
 <!-- 04-cherrys-chat.md -->
 
 # Cherry's Chat
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** pbInfo (class colours from its player list) and Ultimate Mail Mod (Ctrl+click a name in chat to fill the mail's To).
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
@@ -384,12 +400,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat pro
 - Emoji pictures rendered from **Noto Color Emoji**, Copyright 2013-2017 Google Inc. and Arjen Nienhuis: font under the SIL Open Font License 1.1, images under the Apache License 2.0.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 05-zbag.md -->
 
 # zBag
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Global Bank (a Global Bank button on the one-bag window) and Advanced AuctionHouse (clicks in the bag work in the auction window).
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
@@ -455,18 +474,25 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zb probe`
 - **Because of the NonCommercial licences above, zBag and Cherry's Kit must never be sold.**
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit).
 
-
 ---
 
 <!-- 06-global-bank.md -->
 
 # Global Bank
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** zBag (a button on the one-bag window) and Advanced AuctionHouse (its searches fill the helper's auction cache).
+
 Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, adds coloured command help and fatal-error logs, and supports the extension popup helper status/start button and confirmed daily-collection/reset display.
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.7
+
+The daily reset now follows 00:00 in Germany in any time zone, instead of a fixed 01:00 local time. Setup takes one click plus Chrome's own two: it brings up the extensions page, which Chrome refuses to open from a command line, and fills in the folder window. The extension's local bridge also writes Windows' time for addons that have no clock.
 
 ## Updated in 1.4.6
 
@@ -534,12 +560,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/gb probe`
 - Written by Cherry for Cherry's Kit, under the **GNU GPL v2**.
 - Full licence text: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 07-extended-macro-icons.md -->
 
 # Extended Macro Icons
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional:** nothing else is needed.
 
 **The game's macro window with about 10,500 more icons for your macros, in 58 categories.**
 
@@ -581,12 +610,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/emi probe
 - The icon lists name pictures that belong to the Runes of Magic game client; none are shipped, except one button texture from the original addon.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 08-tooltipids.md -->
 
 # TooltipIds
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** pbInfo (ID numbers in its tooltips too).
 
 **Shows the ID numbers of units, items, skills, buffs and more in their tooltips.**
 
@@ -624,12 +656,15 @@ Write to **cherry** on the Runes of Magic Discord.
 - Based on **TooltipIds 1.0b3 by Rock5**. The original has no licence statement, so its copyright stays with its author and those parts are not covered by the GPL. Cherry's changes (kit on/off switch, hub entry, chat commands at load, nil-safe buff/debuff lines) are offered under the **GNU GPL v2**.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 09-ultimate-mail-mod.md -->
 
 # Ultimate Mail Mod
+
+> **Requires:** Cherry's Kit (hub 0.4.17 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Cherry's Chat (Ctrl+click a name in chat to fill the mail's To).
 
 **A better mail window with mass send that no longer gets stuck after about 60 mails.**
 
@@ -720,12 +755,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 - Cherry's changes (send queue rewrite, drag-box selection, bag handling, ctrl+click toggle, bound items in red, shared history/recipient panes/mail shortcuts, settings window, kit switch, /umm commands) are offered under the **GNU GPL v2**.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 10-advanced-auctionhouse.md -->
 
 # Advanced AuctionHouse
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Global Bank (its helper keeps a searchable auction cache) and zBag (clicks in the bag work in the auction window).
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns and stat ranges.**
 
@@ -805,12 +843,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/aah probe
 - Cherry's changes for the kit (resizable window, Stats and Dura columns, filter dropdowns and stat filters, rarity range, alt+click search, paging, settings window, kit switch, /aah commands) are offered under the same **GPL v3**, as that licence requires.
 - Full GPL v3 text: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 11-cherrys-addon-loadtimes.md -->
 
 # Cherry's Addon LoadTimes
+
+> **Requires:** Cherry's Kit (hub 0.4.22 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional:** nothing else is needed.
 
 **Find out which addons make your loading screen slow.**
 
@@ -864,16 +905,23 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/ckload pr
 - Written by Cherry for Cherry's Kit, under the **GNU GPL v2**.
 - Full licence text: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 12-zshop.md -->
 
 # ZShop
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Global Bank (its Chrome extension or helper tells ZShop the time, for the daily reminder).
+
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
+
+## Updated in 1.2.0-ck5
+
+ZShop can now read the time from the hub's clock, so the daily reminder works without the Global Bank helper window.
 
 ## Updated in 1.2.0-ck4
 
@@ -916,12 +964,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zshop pro
 - **ZShop** written mostly by **Pyrr**, as a joint project of Pyrr and Cherry. The kit version (no pylib, daily reward and depot buttons, window, kit switch) is offered under the **GNU GPL v2**.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 13-pbinfo.md -->
 
 # pbInfo
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** TooltipIds (ID numbers in its tooltips), Cherry's Chat (class colours from its player list), rom weakauras (mob information for triggers) and Cherry's Quests (takes over from its quest tracker).
 
 **More information everywhere: richer mob and player tooltips, a quest tracker, chat filters and timestamps, chat history, cast bar options and auto repair.**
 
@@ -976,12 +1027,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/pbinfo pr
 - **Non-commercial: pbInfo and Cherry's Kit must never be sold.**
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit).
 
-
 ---
 
 <!-- 14-portraithp.md -->
 
 # PortraitHP
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional:** nothing else is needed.
 
 **Your target's health in percent, right on its portrait.**
 
@@ -1013,12 +1067,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/php probe
 - Based on **PortraitHP v2019.07.14 by Nonante@Nuada**. The original has no licence statement, so its copyright stays with its author and those parts are not covered by the GPL. Cherry's changes are offered under the **GNU GPL v2**.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
-
 ---
 
 <!-- 15-cherrys-grid.md -->
 
 # Cherry's Grid
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Cherry's KittyCombo (run a kitty when you click a frame).
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
 
@@ -1072,6 +1129,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/grid prob
 
 # Cherry's Quests
 
+> **Requires:** Cherry's Kit (hub 0.4.21 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** rom weakauras (more fonts to choose from) and pbInfo (keeps its quest tracker out of the way).
+
 **A prettier quest tracker for Runes of Magic. Ctrl+click a quest to cycle through the NPCs it names and put one in the game's NPC tracking list.**
 
 ## Features
@@ -1113,6 +1174,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cq probe`
 
 # Cherry's Bar
 
+> **Requires:** Cherry's Kit (hub 0.4.23 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Cherry's KittyCombo (the Kitty mode display) and Global Bank (its Chrome extension gives the Clock the real time).
+
 **Full-width information bars for Runes of Magic: at the top of the screen, the bottom, or both, with your choice of displays on each.**
 
 ## Features
@@ -1151,3 +1216,99 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cbar prob
 - The bars and settings follow the ideas of **Titan Panel** for World of Warcraft by the **Titan Panel Development Team**. It contains none of Titan Panel's code or pictures, and Titan Panel has not endorsed it.
 - Bar styles and icons are Cherry's Studio Panel Assets, made for this addon with Titan Panel's art as a style reference only.
 - Offered under **CC BY-NC-SA 3.0**, like XBar: see `Interface\AddOns\CherrysKit\CherrysBar\LICENSE-CherrysBar.txt`. Free, never to be sold.
+
+---
+
+<!-- 18-cherrys-loginxml.md -->
+
+# Cherry's Loginxml
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first.
+>
+> **Optional, when you have them:** LogNextChar (Next and Prev character buttons in game).
+>
+> **After installing:** close the game and double-click `Interface\AddOns\CherrysLoginxml\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there.
+
+**A better login screen: gets past a stuck "obtaining server list", remembers your logins and works from the keyboard.**
+
+A replacement for the game's login screen. Original project: Rom Autologin by Pyrrhus. Integration fixes by Cherry.
+
+## Features
+
+- **Gets past a stuck "obtaining server list"**, including for Steam and Gameforge launcher logins, which retry on their own.
+- **Saved logins**, with account or character lists and notes for NoCheckVersion accounts.
+- **Fills in the secondary password.**
+- **Cleaner server and character select**, usable from the keyboard: Up and Down to choose, Enter to go, Esc to go back.
+- **Settings as toggle buttons on the server screen.** A click applies at once, and the game saves it when you log out or quit.
+- **Log straight in**: when an account has only one character, or the first character in the list. Hold Ctrl to stop at character select anyway.
+- **Joins your preferred channel.**
+- Works with **LogNextChar** for Next and Prev buttons in game.
+
+## Install
+
+1. Remove any other login addon first. Only one can replace the login screen.
+2. Install this addon, or extract the zip into `Interface\AddOns`.
+3. Close the game and double-click `Interface\AddOns\CherrysLoginxml\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there. It leaves nothing running.
+4. Start the game. The login screen shows `(Cherry's Loginxml)` and its version next to the client version in the top right corner.
+
+Run the same file again after updating. It never touches your own accounts, passwords or settings, and the addon tells you in chat if you forget.
+
+## Your accounts and passwords
+
+Saved logins are kept in plain files on your own PC, in `Interface\loginxml`. **They hold passwords: never share them, and never send them with a bug report.**
+
+## Bug reports
+
+Write to **cherry** on the Runes of Magic Discord.
+
+## Credits and licence
+
+- Original project: **Rom Autologin by Pyrrhus**, MIT licence. Integration fixes by **Cherry**.
+- Full licence text: `Interface\AddOns\CherrysLoginxml\LICENSE.txt`.
+
+---
+
+<!-- 19-lognextchar.md -->
+
+# LogNextChar
+
+> **Requires:** Cherry's Kit and Cherry's Loginxml. The CurseForge app installs them for you; if you install by hand, install them first.
+>
+> **Optional:** nothing else is needed.
+
+**Next and Prev buttons in game: log out and straight into the neighbouring character on your account.**
+
+Made for alts. One click, and you are on the next character without touching the login screen.
+
+## Features
+
+- **Next and Prev buttons** just below the minimap, Next on top and Prev under it, the same way round as the character list. They follow the minimap at any UI scale or resolution.
+- **Hover to see who is next.** The tooltip names the character each button will pick.
+- **Greyed out when there is nobody to switch to**, on accounts with one character.
+- **Move them if you like**: unlock them in the settings window, then right-drag or Shift+drag.
+- **A row in the Cherry's Kit hub** (`/ck`), whose Settings button opens the settings window.
+
+## Commands
+
+- `/lnc` or `/lnc next`: the next character
+- `/lpc` or `/lnc prev`: the previous character
+- `/lnc current`: log out and back in to the same character
+- `/lnc 3`: the character in slot 3, in the order the characters were created
+- `/lnc settings`: the settings window
+- `/lnc show`, `/lnc hide`: show or hide the buttons
+- `/lnc lock`, `/lnc unlock`: stop or allow moving them
+- `/lnc reset`: put them back in their default spot
+- `/lnc probe`: positions and state, for a bug report
+
+## Install
+
+Install this addon, or extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\LogNextChar\LogNextChar.toc`.
+
+## Bug reports
+
+Write to **cherry** on the Runes of Magic Discord. Add the output of `/lnc probe` if you can.
+
+## Credits and licence
+
+- Original project by **Pyrrhus**, MIT licence. Integration fixes by **Cherry**.
+- Full licence text: `Interface\AddOns\LogNextChar\LICENSE.txt`.

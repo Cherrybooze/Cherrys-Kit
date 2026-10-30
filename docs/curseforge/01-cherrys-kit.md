@@ -1,5 +1,7 @@
 # Cherry's Kit
 
+> **Requires:** nothing. This is the base package: every other Cherry's Kit addon needs it.
+
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
@@ -14,6 +16,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 - **Resizable**: the - and + buttons next to the close button, or drag the bottom right corner (right for bigger, left for smaller). The size is saved.
 - **Your own chat commands**: every command is listed in `Interface\AddOns\CherrysKit\Commands.lua`. Open it in Notepad, change the text between the quotes, save and Reload UI. Commands an addon already owns keep working with extra words (`/kc <class>`, `/rwa unlock`).
 - **Old copy check**: if an old separate copy of a kit addon is still installed (for example `Interface\AddOns\zBag` next to `Interface\AddOns\CherrysKit`), the hub keeps the kit version off so the two don't fight, marks the row "off: old copy in AddOns\<Folder>" and says so in chat once.
+- **A real clock for other addons**, once Global Bank's Daily Rewards Chrome extension has told it the time. Chrome starting is enough, and it lasts until Windows restarts.
 - Only lists the kit addons you actually have installed.
 
 ## The addons
@@ -36,6 +39,8 @@ Each one is its own download and needs Cherry's Kit:
 - **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
 - **Cherry's Bar**: information bars at the top, bottom or both, with displays set per bar (`/cbar`)
 - **Cherry's Addon LoadTimes**: how long each addon takes to load, for troubleshooting; off until its `Switch.txt` turns it on (`/ckload`)
+- **Cherry's Loginxml**: a better login screen, a separate folder in `Interface\AddOns`
+- **LogNextChar**: Next and Prev character buttons (`/lnc`), needs Cherry's Loginxml
 
 ## Chat commands
 

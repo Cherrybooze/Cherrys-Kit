@@ -1,5 +1,9 @@
 # zBag
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Global Bank (a Global Bank button on the one-bag window) and Advanced AuctionHouse (clicks in the bag work in the auction window).
+
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.

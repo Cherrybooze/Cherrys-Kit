@@ -1,5 +1,9 @@
 # Cherry's Bar
 
+> **Requires:** Cherry's Kit (hub 0.4.23 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Cherry's KittyCombo (the Kitty mode display) and Global Bank (its Chrome extension gives the Clock the real time).
+
 **Full-width information bars for Runes of Magic: at the top of the screen, the bottom, or both, with your choice of displays on each.**
 
 ## Features

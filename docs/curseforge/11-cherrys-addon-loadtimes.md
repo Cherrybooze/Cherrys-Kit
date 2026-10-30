@@ -1,5 +1,9 @@
 # Cherry's Addon LoadTimes
 
+> **Requires:** Cherry's Kit (hub 0.4.22 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional:** nothing else is needed.
+
 **Find out which addons make your loading screen slow.**
 
 A small report of how long each addon took while the loading screen was up, and how much memory it added. It is a troubleshooting tool, so it comes switched off and then uses no memory at all.

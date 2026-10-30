@@ -1,8 +1,16 @@
 # ZShop
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Global Bank (its Chrome extension or helper tells ZShop the time, for the daily reminder).
+
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
+
+## Updated in 1.2.0-ck5
+
+ZShop can now read the time from the hub's clock, so the daily reminder works without the Global Bank helper window.
 
 ## Updated in 1.2.0-ck4
 

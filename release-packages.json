@@ -1,8 +1,8 @@
 {
-  "kit_version": "0.11.100",
-  "hub_version": "0.4.23",
-  "release_summary": "A playtest that adds Cherry's Bar 1.1.7 (/cbar): full-width information bars at the top of the screen, the bottom, or both, with nineteen displays set per bar and seven styles and icons from Cherry's Studio Panel art. Displays can be dragged on a map of the bars in /cbar or on the bars themselves, or moved with buttons and right-click menus. It is a fork of XBar III, with bars and settings in the spirit of Titan Panel, and shows only the top bar at first, drawn under the game's frames with its displays kept clear of them. A bottom bar lifts the whole interface and fits underneath. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed. KittyCombo 1.7.17 hands its \"Mode:\" plate to the bar's Kitty mode display while that is on a bar. rom weakauras 0.9.30 makes the scale corner and move arrows draggable. zBag 5.07-ck16 keeps the game's backpack and bank hidden in one bag. Everything else from the 0.11.90 playtest is included unchanged.",
-  "runtime_validation": "Lua 5.1 simulated-client suite: 808 tests; 782 passed and 26 retired-editor tests skipped. Cherry's Bar has 100 regressions, now including a client with no os library, display timers that fail, the clock with and without CherrysClock, the 0 to 100 master volume, and the /cbar perf recorder. The placement tests use a client double that, like the game, ignores templates on frames made at runtime. Frame strata, sizes and positions were read from the installed client's own layout files. The os error was found by reading the code and the client's recorded environment; whether it caused the reported frame drops has not been measured. Drawing order, lifting UIParent, text widths, dragging, the picker opening from the bar, the new coordinate and volume calls and the game calls inherited from XBar III need the in-game checks in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
+  "kit_version": "0.11.101",
+  "hub_version": "0.4.24",
+  "release_summary": "Real time for addons: the hub has a clock (CherrysClock), fed by Global Bank's Daily Rewards Chrome extension 1.0.9, whose local host writes Windows' time when Chrome starts. Cherry's Bar 1.1.8's Clock and ZShop 1.2.0-ck5 read it. Global Bank 1.4.7 follows the daily reset at 00:00 in Germany in any time zone, and its extension setup takes one click plus Chrome's two. Hub 0.4.24 stops single-addon installs from lighting the minimap's bug button. New separate packages: Cherry's Loginxml 1.2.0, a replacement login screen, and LogNextChar 1.2.0, Next and Prev character buttons. Everything else from the 0.11.100 playtest is included unchanged.",
+  "runtime_validation": "Lua 5.1 simulated-client suite: 925 tests; 899 passed and 26 retired-editor tests skipped. New tests cover CherrysClock, the daily reset in five time zones and across Germany's clock changes, the local host's time file, Cherry's Loginxml's addon and installer, LogNextChar, the CurseForge pages, and each addon installed with only the hub, compared with the full kit on a stand-in client. Chrome's side ran end to end on real Chrome 155 with a test profile: setup opened the extensions page, filled in the folder and loaded the extension, which wrote the time file, and a Chrome start wrote it again. Nothing new has run in the game yet: docs/TESTING.md lists the checks. Unchanged addon packages keep their versions and byte-identical files.",
   "addons": [
     {
       "folder": "KittyCombo",
@@ -10,7 +10,17 @@
       "version": "1.7.17",
       "command": "/kc",
       "description_file": "02-cherrys-kittycombo.md",
-      "summary": "One-key priority combos, safer prediction and shared rotation codes."
+      "summary": "One-key priority combos, safer prediction and shared rotation codes.",
+      "works_with": [
+        {
+          "package": "RomWeakAuras",
+          "for": "use your auras as combo conditions"
+        },
+        {
+          "package": "CherrysChat",
+          "for": "shares its copy-box size"
+        }
+      ]
     },
     {
       "folder": "RomWeakAuras",
@@ -19,7 +29,17 @@
       "command": "/wa",
       "description_file": "03-rom-weakauras.md",
       "summary": "Custom buff, debuff, cooldown, cast and status displays.",
-      "minimum_hub_version": "0.4.14"
+      "minimum_hub_version": "0.4.14",
+      "works_with": [
+        {
+          "package": "KittyCombo",
+          "for": "track its next skills and modes"
+        },
+        {
+          "package": "pbInfo",
+          "for": "mob information for triggers"
+        }
+      ]
     },
     {
       "folder": "CherrysChat",
@@ -27,7 +47,17 @@
       "version": "0.10.12",
       "command": "/cchat",
       "description_file": "04-cherrys-chat.md",
-      "summary": "Selectable chat, copying, emoji and chat display settings."
+      "summary": "Selectable chat, copying, emoji and chat display settings.",
+      "works_with": [
+        {
+          "package": "pbInfo",
+          "for": "class colours from its player list"
+        },
+        {
+          "package": "UltimateMailMod",
+          "for": "Ctrl+click a name in chat to fill the mail's To"
+        }
+      ]
     },
     {
       "folder": "zBag",
@@ -35,15 +65,35 @@
       "version": "5.07-ck16",
       "command": "/zb",
       "description_file": "05-zbag.md",
-      "summary": "Bags, searching, sorting, quick sell and an All bags view."
+      "summary": "Bags, searching, sorting, quick sell and an All bags view.",
+      "works_with": [
+        {
+          "package": "GlobalBank",
+          "for": "a Global Bank button on the one-bag window"
+        },
+        {
+          "package": "AdvancedAuctionHouse",
+          "for": "clicks in the bag work in the auction window"
+        }
+      ]
     },
     {
       "folder": "GlobalBank",
       "title": "Global Bank",
-      "version": "1.4.6",
+      "version": "1.4.7",
       "command": "/gb",
       "description_file": "06-global-bank.md",
-      "summary": "A searchable view of your characters' bags, banks and gold."
+      "summary": "A searchable view of your characters' bags, banks and gold.",
+      "works_with": [
+        {
+          "package": "zBag",
+          "for": "a button on the one-bag window"
+        },
+        {
+          "package": "AdvancedAuctionHouse",
+          "for": "its searches fill the helper's auction cache"
+        }
+      ]
     },
     {
       "folder": "ExtendedMacroIcons",
@@ -59,7 +109,13 @@
       "version": "1.0b3-ck3",
       "command": "/ti",
       "description_file": "08-tooltipids.md",
-      "summary": "ID numbers for items, buffs, skills and other game data."
+      "summary": "ID numbers for items, buffs, skills and other game data.",
+      "works_with": [
+        {
+          "package": "pbInfo",
+          "for": "ID numbers in its tooltips too"
+        }
+      ]
     },
     {
       "folder": "UltimateMailMod",
@@ -68,7 +124,13 @@
       "command": "/umm",
       "description_file": "09-ultimate-mail-mod.md",
       "summary": "Mail management, drag-box selection, shared recipients, gold presets and mass sending.",
-      "minimum_hub_version": "0.4.17"
+      "minimum_hub_version": "0.4.17",
+      "works_with": [
+        {
+          "package": "CherrysChat",
+          "for": "Ctrl+click a name in chat to fill the mail's To"
+        }
+      ]
     },
     {
       "folder": "AdvancedAuctionHouse",
@@ -76,7 +138,17 @@
       "version": "6.2.4",
       "command": "/aah",
       "description_file": "10-advanced-auctionhouse.md",
-      "summary": "Auction searching, stat filters, history and a resizable window."
+      "summary": "Auction searching, stat filters, history and a resizable window.",
+      "works_with": [
+        {
+          "package": "GlobalBank",
+          "for": "its helper keeps a searchable auction cache"
+        },
+        {
+          "package": "zBag",
+          "for": "clicks in the bag work in the auction window"
+        }
+      ]
     },
     {
       "folder": "LoadTimes",
@@ -90,10 +162,16 @@
     {
       "folder": "ZShop",
       "title": "ZShop",
-      "version": "1.2.0-ck4",
+      "version": "1.2.0-ck5",
       "command": "/zshop",
       "description_file": "12-zshop.md",
-      "summary": "Item-shop access and a daily loyalty reward shortcut."
+      "summary": "Item-shop access and a daily loyalty reward shortcut.",
+      "works_with": [
+        {
+          "package": "GlobalBank",
+          "for": "its Chrome extension or helper tells ZShop the time, for the daily reminder"
+        }
+      ]
     },
     {
       "folder": "pbInfo",
@@ -101,7 +179,25 @@
       "version": "0.60-ck5",
       "command": "/pbinfo",
       "description_file": "13-pbinfo.md",
-      "summary": "Richer tooltips, quest tracking, chat filters and cast-bar options."
+      "summary": "Richer tooltips, quest tracking, chat filters and cast-bar options.",
+      "works_with": [
+        {
+          "package": "TooltipIds",
+          "for": "ID numbers in its tooltips"
+        },
+        {
+          "package": "CherrysChat",
+          "for": "class colours from its player list"
+        },
+        {
+          "package": "RomWeakAuras",
+          "for": "mob information for triggers"
+        },
+        {
+          "package": "CherrysQuests",
+          "for": "takes over from its quest tracker"
+        }
+      ]
     },
     {
       "folder": "PortraitHP",
@@ -117,7 +213,13 @@
       "version": "1.1.4",
       "command": "/grid",
       "description_file": "15-cherrys-grid.md",
-      "summary": "Party and raid frames, with KittyCombo actions on click."
+      "summary": "Party and raid frames, with KittyCombo actions on click.",
+      "works_with": [
+        {
+          "package": "KittyCombo",
+          "for": "run a kitty when you click a frame"
+        }
+      ]
     },
     {
       "folder": "CherrysQuests",
@@ -126,16 +228,64 @@
       "command": "/cq",
       "description_file": "16-cherrys-quests.md",
       "summary": "A prettier quest tracker; Ctrl+click a quest to track the NPCs it names.",
-      "minimum_hub_version": "0.4.21"
+      "minimum_hub_version": "0.4.21",
+      "works_with": [
+        {
+          "package": "RomWeakAuras",
+          "for": "more fonts to choose from"
+        },
+        {
+          "package": "pbInfo",
+          "for": "keeps its quest tracker out of the way"
+        }
+      ]
     },
     {
       "folder": "CherrysBar",
       "title": "Cherry's Bar",
-      "version": "1.1.7",
+      "version": "1.1.8",
       "command": "/cbar",
       "description_file": "17-cherrys-bar.md",
       "summary": "Information bars at the top, bottom or both, with displays set per bar.",
-      "minimum_hub_version": "0.4.23"
+      "minimum_hub_version": "0.4.23",
+      "works_with": [
+        {
+          "package": "KittyCombo",
+          "for": "the Kitty mode display"
+        },
+        {
+          "package": "GlobalBank",
+          "for": "its Chrome extension gives the Clock the real time"
+        }
+      ]
+    }
+  ],
+  "hub_description_file": "01-cherrys-kit.md",
+  "standalone_packages": [
+    {
+      "folder": "CherrysLoginxml",
+      "title": "Cherry's Loginxml",
+      "version": "1.2.0",
+      "description_file": "18-cherrys-loginxml.md",
+      "summary": "A better login screen: gets past a stuck server list, saved logins, keyboard controls.",
+      "works_with": [
+        {
+          "package": "LogNextChar",
+          "for": "Next and Prev character buttons in game"
+        }
+      ],
+      "after_install": "close the game and double-click `Interface\\AddOns\\CherrysLoginxml\\Install login screen.bat`. The game only reads a login screen from `Interface\\loginxml`, so this copies it there."
+    },
+    {
+      "folder": "LogNextChar",
+      "title": "LogNextChar",
+      "version": "1.2.0",
+      "command": "/lnc",
+      "description_file": "19-lognextchar.md",
+      "summary": "Next and Prev buttons that log you straight into the neighbouring character.",
+      "requires": [
+        "CherrysLoginxml"
+      ]
     }
   ]
 }

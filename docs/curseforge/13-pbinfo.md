@@ -1,5 +1,9 @@
 # pbInfo
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** TooltipIds (ID numbers in its tooltips), Cherry's Chat (class colours from its player list), rom weakauras (mob information for triggers) and Cherry's Quests (takes over from its quest tracker).
+
 **More information everywhere: richer mob and player tooltips, a quest tracker, chat filters and timestamps, chat history, cast bar options and auto repair.**
 
 pbInfo v0.60 by p.b. a.k.a. novayuna (later odie2), updated for Cherry's Kit. Parts that other kit addons already do are left out: the threat meter is now rom weakauras' Threat meter aura, and target health numbers are PortraitHP.
