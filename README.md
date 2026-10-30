@@ -1,10 +1,10 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.104/CherrysKit-Full-0.11.104.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.105/CherrysKit-Full-0.11.105.zip)
 
 # Cherry's Kit
 
-> Playtest build: kit **0.11.104**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
+> Playtest build: kit **0.11.105**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.104/CherrysKit-Full-0.11.104.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.105/CherrysKit-Full-0.11.105.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -12,11 +12,11 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest build: **0.11.104** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.104)
+Current playtest build: **0.11.105** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.105)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
-## What’s new in 0.11.104
+## What’s new in 0.11.105
 
 - **Global Bank 1.4.9**: The Bank tab can now run without the local helper: choose your save folder, and your game folder for icons, and it reads them straight from there. The Terminal and Auctions tabs still need the helper.
 - **Global Bank 1.4.8**: the Daily Rewards extension's page shows everything your characters hold in one grid with search and filters, using the game's own icons, and runs the helper's commands. Viewing your bank no longer needs a terminal window.
@@ -78,7 +78,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.104/CherrysKit-Full-0.11.104.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.105/CherrysKit-Full-0.11.105.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -139,7 +139,7 @@ These aren't in the full kit. Each is its own folder in `Interface/AddOns/`, and
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome 1.0.11](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.104/CherrysKit-GlobalBankDailyRewards-1.0.11.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
+[Download Global Bank Daily Rewards for Chrome 1.0.11](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.105/CherrysKit-GlobalBankDailyRewards-1.0.11.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
 
 Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step. Automatic page processing is limited to the Gameforge daily shop page; the extension does not send your local data to the developer.
 
