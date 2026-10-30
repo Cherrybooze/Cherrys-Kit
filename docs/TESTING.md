@@ -1,8 +1,20 @@
-# In-game checks for kit 0.11.101
+# In-game checks for kit 0.11.102
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+
+## 0.11.102 Global Bank without the terminal window
+
+This runs in Chrome, not the game. It has run on real Chrome 155 with a test profile and C's real saved data: icons, both tabs and Update now all worked.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| G1 | Reload the extension, then its icon, then **Open local bank and auction tools**. | The Bank tab lists your characters. Click one: its bag shows as in game, with real icons. About 2% of the game's icons use a packing the page can't read; those show the item's first two letters. |
+| G2 | Click **Bank**, then the page numbers. | 5 across, 40 a page. A character whose bank was never opened says so. |
+| G3 | Type an item's name in the search box. | The list shows who holds it and how many, and other items dim. |
+| G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
+| G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 
 ## 0.11.101 real time, daily reset, extension setup and single-addon installs
 

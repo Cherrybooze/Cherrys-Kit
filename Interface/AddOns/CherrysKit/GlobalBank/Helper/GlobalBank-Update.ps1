@@ -15,7 +15,7 @@
 #                     addon can tell.
 #   -Command "<cmd>"  run one command and exit, e.g. -Command "get goldtotal" (for other tools)
 #   (no switch)       update the database once
-param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "", [ValidateSet(0, 1)][int]$Heartbeat = 1)
+param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "", [ValidateSet(0, 1)][int]$Heartbeat = 1, [switch]$SkipAuctions)
 
 $ErrorActionPreference = "Stop"
 
@@ -281,6 +281,8 @@ function Stop-AAHWorker {
 
 function Import-CharacterAAH([string]$file, [string]$text) {
     if ($Watch) { $script:AAHPendingPaths[$file] = $true; return }
+    # The extension's page: a backlog can take minutes, and it waits in the save file for the helper window.
+    if ($SkipAuctions) { return }
     $cacheLock = New-Object Threading.Mutex($false, (Get-HelperCacheMutexName))
     $locked = $false
     try {

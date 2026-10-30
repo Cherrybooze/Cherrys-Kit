@@ -33,14 +33,36 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     });
     return true;
   }
-  // Only the local extension page may request these fixed, read-only queries.
-  if (control && (message?.type === 'bank-query' || message?.type === 'auction-query')) {
-    const request = message.type === 'bank-query'
-      ? {type:'bank-query', command:message.command}
-      : {type:'auction-query', search:message.search, realm:message.realm, pageOptions:message.pageOptions};
-    if (message.type === 'bank-query' && (typeof request.command !== 'string' || !request.command.trim() || request.command.length > 256)) return;
-    if (message.type === 'auction-query' && (typeof request.search !== 'string' || (!request.search.trim() && !request.pageOptions) || request.search.length > 128 || typeof request.realm !== 'string' || request.realm.length > 120)) return;
+  // Only the local extension page may ask for these.
+  if (control && message?.type === 'auction-query') {
+    const request = {type:'auction-query', search:message.search, realm:message.realm, pageOptions:message.pageOptions};
+    if (typeof request.search !== 'string' || (!request.search.trim() && !request.pageOptions) || request.search.length > 128 || typeof request.realm !== 'string' || request.realm.length > 120) return;
     chrome.runtime.sendNativeMessage(HOST, request, response => {
+      const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
+      reply(error ? {ok:false,error} : response);
+    });
+    return true;
+  }
+  if (control && message?.type === 'bank-data') {
+    chrome.runtime.sendNativeMessage(HOST, {type:'bank-data'}, response => {
+      const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
+      reply(error ? {ok:false,error} : response);
+    });
+    return true;
+  }
+  if (control && message?.type === 'bank-icons') {
+    const names = message.names;
+    if (!Array.isArray(names) || !names.length || names.length > 25 || names.some(name => typeof name !== 'string' || name.length > 200)) return;
+    chrome.runtime.sendNativeMessage(HOST, {type:'bank-icons', names}, response => {
+      const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
+      reply(error ? {ok:false,error} : response);
+    });
+    return true;
+  }
+  if (control && message?.type === 'bank-command') {
+    const command = message.command;
+    if (typeof command !== 'string' || !command.trim() || command.length > 256) return;
+    chrome.runtime.sendNativeMessage(HOST, {type:'bank-command', command}, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);
     });
