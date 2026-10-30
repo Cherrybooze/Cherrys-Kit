@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.23** · Kit release **0.11.98** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.23** · Kit release **0.11.99** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.99 playtest
+
+- **rom weakauras 0.9.30**: the scale corner and the move arrows on auras in the placement view respond to the mouse at last. Shift-drag on an aura also scales it.
 
 ## Kit 0.11.98 playtest
 

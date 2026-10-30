@@ -762,11 +762,10 @@ function RWA.TestAuras(id)
   RWA.Print("showing", count, "aura(s) for 10 seconds")
 end
 
--- Two fixed-size XML-scripted grips per concurrently movable aura: the move handle on the
--- top-left corner and the scale corner (the usual resize look) on the bottom-right one. These
--- native frames survive Reload UI, so retain/reuse the bounded pool and retire old owners.
-local placementGrips=RWA.placementGrips or {}
-RWA.placementGrips=placementGrips
+-- Two 16-unit grips per movable aura from the RWA_PlaceGrip pool in Frames.xml: the move handle
+-- on the top-left corner and the scale corner (the usual resize look) on the bottom-right one.
+-- A frame made at runtime gets no mouse scripts in game, so only pooled frames can be dragged.
+-- Reload UI re-runs this file and Widgets.lua counts its pool from 1 again: retire old grips.
 local function hideGrip(grip)
   grip.owner,grip.shown,grip.x,grip.y,grip.relative=nil,nil,nil,nil,nil
   grip.scaleX,grip.scaleY,grip.scaleRelative,grip.scaleShown=nil,nil,nil,nil
@@ -776,10 +775,12 @@ local function hideGrip(grip)
     RWA.Try(grip.scaleText,"Hide")
   end
 end
-for _,grip in ipairs(placementGrips) do
+for _,grip in ipairs(RWA.placementGrips or {}) do
   if grip.owner and grip.owner.cancelDrag then grip.owner.cancelDrag() end
   hideGrip(grip)
 end
+local placementGrips={}
+RWA.placementGrips=placementGrips
 
 releasePlacement=function(a)
   if a.cancelDrag then a.cancelDrag() end
@@ -791,7 +792,8 @@ releasePlacement=function(a)
 end
 
 local function gripFrame(file)
-  local frame=W.ChildRegionFrame("UIParent")
+  local frame=W.PlacementGripFrame()
+  if not frame then return end
   W.SetSize(frame,16,16)
   RWA.Try(frame,"SetFrameStrata","MEDIUM");RWA.Try(frame,"SetFrameLevel",10)
   local art=W.Texture(frame,"OVERLAY",file)
@@ -803,13 +805,12 @@ local function acquirePlacementGrip(a)
   local grip
   for _,candidate in ipairs(placementGrips) do if not candidate.owner then grip=candidate;break end end
   if not grip then
-    grip={}
-    grip.frame,grip.art=gripFrame("UI/move")
-    placementGrips[#placementGrips+1]=grip
-  end
-  if not grip.scaleFrame then -- also a grip pooled by an older version before Reload UI
-    W.SetTexture(grip.art,"UI/move");W.SetColor(grip.art,1,1,1,1)
+    local frame,art=gripFrame("UI/move")
+    if not frame then return end -- pool used up: the aura itself still drags
+    grip={frame=frame,art=art}
     grip.scaleFrame,grip.scaleArt=gripFrame("Grip_Highlight")
+    if not grip.scaleFrame then RWA.Try(frame,"Hide");return end
+    placementGrips[#placementGrips+1]=grip
     grip.scaleText=W.FontString(grip.scaleFrame,"OVERLAY",12)
     W.SetSize(grip.scaleText,60,16);W.SetPoint(grip.scaleText,"LEFT",grip.scaleFrame,"RIGHT",2,0)
     RWA.Try(grip.scaleText,"Hide")
@@ -944,7 +945,7 @@ function RWA.MakeMovable(a)
     if a.data.autoScaleScreen==true then width,height=RWA.ViewportSize() end
     a.placementDrag={cx=cx,cy=cy,x=x,y=y,scale=RWA.AuraScale(a.data),uiScale=placementUIScale(),
       kind=resize and "scale" or "position",corner=corner,width=width,height=height}
-    if corner and grip.scaleText then
+    if corner and grip then
       W.SetText(grip.scaleText,math.floor(RWA.AuraScale(a.data)*100+.5).."%")
       RWA.Try(grip.scaleText,"Show")
     end
@@ -954,14 +955,16 @@ function RWA.MakeMovable(a)
     local drag=a.placementDrag
     if not drag then return end
     a.dragUpdate();a.placementDrag=nil
-    RWA.Try(grip.scaleText,"Hide")
+    if grip then RWA.Try(grip.scaleText,"Hide") end
     if valid() and RWA.OnAuraMoved then RWA.OnAuraMoved(a.data.id,drag.kind,drag.changed==true) end
   end
-  W.SetScript(a.region.frame,"OnMouseDown",function(_,key) begin(key,false) end)
+  local function shiftDrag(_,key) -- Shift-drag scales too, also when the grip pool is used up
+    begin(key,type(IsShiftKeyDown)=="function" and IsShiftKeyDown() and true or false)
+  end
+  W.SetScript(a.region.frame,"OnMouseDown",shiftDrag)
   W.SetScript(a.region.frame,"OnMouseUp",finish)
-  W.SetScript(grip.frame,"OnMouseDown",function(_,key)
-    begin(key,type(IsShiftKeyDown)=="function" and IsShiftKeyDown()) -- Shift-drag still scales too
-  end)
+  if not grip then return end
+  W.SetScript(grip.frame,"OnMouseDown",shiftDrag)
   W.SetScript(grip.frame,"OnMouseUp",finish)
   W.SetScript(grip.scaleFrame,"OnMouseDown",function(_,key) begin(key,true,true) end)
   W.SetScript(grip.scaleFrame,"OnMouseUp",finish)

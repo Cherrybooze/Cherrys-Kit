@@ -656,4 +656,966 @@
 			<OnLeave>RWA_Script("RWA_Region64", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
+	<!-- Placement grips (move arrows and scale corner, two per aura). Declared here because
+	     CreateUIComponent ignores templates after loading, so runtime frames get no scripts. -->
+	<Frame name="RWA_PlaceGrip1" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip1", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip1", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip1", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip1", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip2" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip2", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip2", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip2", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip2", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip3" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip3", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip3", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip3", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip3", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip4" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip4", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip4", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip4", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip4", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip5" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip5", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip5", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip5", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip5", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip6" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip6", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip6", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip6", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip6", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip7" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip7", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip7", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip7", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip7", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip8" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip8", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip8", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip8", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip8", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip9" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip9", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip9", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip9", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip9", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip10" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip10", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip10", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip10", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip10", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip11" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip11", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip11", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip11", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip11", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip12" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip12", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip12", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip12", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip12", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip13" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip13", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip13", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip13", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip13", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip14" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip14", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip14", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip14", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip14", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip15" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip15", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip15", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip15", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip15", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip16" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip16", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip16", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip16", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip16", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip17" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip17", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip17", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip17", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip17", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip18" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip18", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip18", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip18", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip18", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip19" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip19", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip19", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip19", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip19", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip20" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip20", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip20", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip20", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip20", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip21" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip21", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip21", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip21", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip21", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip22" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip22", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip22", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip22", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip22", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip23" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip23", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip23", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip23", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip23", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip24" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip24", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip24", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip24", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip24", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip25" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip25", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip25", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip25", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip25", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip26" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip26", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip26", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip26", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip26", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip27" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip27", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip27", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip27", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip27", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip28" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip28", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip28", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip28", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip28", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip29" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip29", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip29", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip29", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip29", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip30" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip30", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip30", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip30", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip30", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip31" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip31", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip31", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip31", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip31", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip32" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip32", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip32", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip32", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip32", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip33" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip33", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip33", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip33", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip33", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip34" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip34", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip34", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip34", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip34", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip35" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip35", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip35", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip35", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip35", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip36" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip36", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip36", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip36", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip36", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip37" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip37", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip37", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip37", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip37", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip38" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip38", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip38", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip38", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip38", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip39" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip39", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip39", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip39", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip39", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip40" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip40", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip40", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip40", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip40", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip41" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip41", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip41", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip41", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip41", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip42" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip42", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip42", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip42", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip42", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip43" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip43", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip43", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip43", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip43", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip44" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip44", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip44", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip44", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip44", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip45" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip45", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip45", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip45", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip45", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip46" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip46", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip46", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip46", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip46", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip47" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip47", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip47", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip47", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip47", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip48" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip48", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip48", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip48", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip48", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip49" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip49", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip49", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip49", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip49", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip50" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip50", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip50", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip50", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip50", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip51" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip51", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip51", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip51", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip51", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip52" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip52", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip52", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip52", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip52", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip53" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip53", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip53", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip53", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip53", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip54" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip54", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip54", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip54", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip54", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip55" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip55", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip55", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip55", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip55", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip56" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip56", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip56", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip56", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip56", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip57" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip57", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip57", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip57", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip57", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip58" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip58", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip58", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip58", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip58", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip59" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip59", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip59", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip59", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip59", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip60" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip60", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip60", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip60", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip60", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip61" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip61", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip61", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip61", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip61", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip62" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip62", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip62", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip62", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip62", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip63" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip63", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip63", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip63", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip63", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip64" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip64", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip64", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip64", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip64", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip65" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip65", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip65", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip65", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip65", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip66" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip66", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip66", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip66", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip66", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip67" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip67", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip67", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip67", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip67", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip68" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip68", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip68", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip68", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip68", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip69" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip69", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip69", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip69", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip69", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip70" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip70", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip70", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip70", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip70", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip71" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip71", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip71", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip71", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip71", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip72" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip72", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip72", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip72", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip72", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip73" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip73", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip73", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip73", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip73", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip74" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip74", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip74", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip74", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip74", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip75" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip75", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip75", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip75", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip75", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip76" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip76", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip76", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip76", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip76", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip77" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip77", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip77", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip77", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip77", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip78" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip78", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip78", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip78", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip78", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip79" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip79", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip79", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip79", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip79", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip80" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip80", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip80", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip80", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip80", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip81" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip81", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip81", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip81", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip81", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip82" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip82", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip82", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip82", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip82", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip83" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip83", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip83", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip83", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip83", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip84" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip84", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip84", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip84", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip84", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip85" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip85", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip85", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip85", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip85", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip86" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip86", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip86", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip86", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip86", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip87" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip87", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip87", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip87", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip87", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip88" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip88", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip88", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip88", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip88", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip89" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip89", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip89", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip89", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip89", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip90" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip90", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip90", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip90", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip90", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip91" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip91", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip91", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip91", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip91", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip92" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip92", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip92", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip92", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip92", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip93" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip93", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip93", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip93", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip93", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip94" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip94", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip94", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip94", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip94", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip95" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip95", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip95", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip95", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip95", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
+	<Frame name="RWA_PlaceGrip96" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="16" y="16" /></Size>
+		<Anchors><Anchor point="TOPLEFT" relativeTo="UIParent" relativePoint="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnMouseDown>RWA_Script("RWA_PlaceGrip96", "OnMouseDown", key);</OnMouseDown>
+			<OnMouseUp>RWA_Script("RWA_PlaceGrip96", "OnMouseUp", key);</OnMouseUp>
+			<OnEnter>RWA_Script("RWA_PlaceGrip96", "OnEnter");</OnEnter>
+			<OnLeave>RWA_Script("RWA_PlaceGrip96", "OnLeave");</OnLeave>
+		</Scripts>
+	</Frame>
 </Ui>

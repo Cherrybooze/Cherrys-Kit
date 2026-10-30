@@ -200,6 +200,10 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
+## Updated in 0.9.30
+
+- **The scale corner and the move arrows really work now.** In the placement view, drag the corner at an aura's bottom right to scale it and the arrows at its top left to move it. Until now the game gave these grips no mouse scripts at all, because it ignores XML templates on frames made after loading, so they could not be dragged. They now come from a pool declared in `Frames.xml`. **Shift-drag** on the aura itself also scales it.
+
 ## Updated in 0.9.29
 
 - **Much shorter share codes** (`RWA5!`), made the same way as KittyCombo's CKC3 codes: they are compressed against a codebook every player has (every built-in template and English skill names). An aura made from a template is now about 20 to 45 characters instead of 450 to 1000, so most single auras fit in a chat line and in a **Chat link**. Your own changes and buff names add only what is new.
