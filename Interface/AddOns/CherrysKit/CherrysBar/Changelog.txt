@@ -1,5 +1,10 @@
 Cherry's Bar
 
+1.1.9
+  Location has a Show coordinates on the bar tick, in its right-click menu and in /cbar when Location is
+  picked. With it on, the position is read once a second and the display redraws only if you moved.
+  With it off nothing is read. It adds to the display's text, so the text box shows it too.
+
 1.1.8
   The Clock's tooltip says where real time comes from now: the Daily Rewards Chrome extension.
 

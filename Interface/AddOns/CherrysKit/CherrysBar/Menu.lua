@@ -208,6 +208,13 @@ function M.DisplayRows(def, frame)
       rows[#rows + 1] = extra
     end
   end
+  if def.option then
+    rows[#rows + 1] = { text = def.option.text, checked = def.option.checked(cfg), keepOpen = true, click = function()
+      def.option.flip(cfg)
+      Displays.Rebuild()
+      again()
+    end }
+  end
   rows[#rows + 1] = { text = "Show icon", checked = cfg.icon, click = flip("icon"), keepOpen = true }
   rows[#rows + 1] = { text = "Show label", checked = cfg.label, click = flip("label"), keepOpen = true }
   rows[#rows + 1] = { text = "Show colours", checked = cfg.color, click = flip("color"), keepOpen = true }
