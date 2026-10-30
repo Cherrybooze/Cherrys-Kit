@@ -73,6 +73,10 @@ function TH.Short(n)
   return tostring(math.floor(n + 0.5))
 end
 
+local function byThreat(a, b)
+  return a.threat > b.threat
+end
+
 function TH.Read()
   local list, total, top = {}, 0, 0
   local me = call(rawget(_G, "UnitName"), "player")
@@ -90,9 +94,7 @@ function TH.Read()
       top = threat
     end
   end
-  table.sort(list, function(a, b)
-    return a.threat > b.threat
-  end)
+  table.sort(list, byThreat)
   for _, e in ipairs(list) do
     e.ratio = top > 0 and e.threat / top or 0
     e.share = total > 0 and e.threat / total or 0
@@ -150,15 +152,20 @@ function TH.ValueText(e, valueAs)
   return TH.Short(e.threat)
 end
 
-Triggers.evaluators.threat = function(trigger, now)
+Triggers.evaluators.threat = function(trigger, now, env, into)
   TH.wanted = now
   local count = math.min(TH.MAX_ROWS, tonumber(trigger.count) or 5)
-  local rows = {}
-  local state = { progressType = "static", value = 0, total = 1, percent = 0, rank = 0, aggro = 0 }
+  -- an engine poll refills last poll's state, rows and row tables (Triggers.Fresh)
+  local rows = into and into.threatRows or {}
+  local state = Triggers.Fresh(into)
+  state.progressType, state.value, state.total, state.percent, state.rank, state.aggro = "static", 0, 1, 0, 0, 0
   state.name = call(rawget(_G, "UnitName"), "target") or ""
+  local shown = 0
   for i, e in ipairs(TH.list) do
     if i <= count then
-      rows[i] = { name = e.name, ratio = e.ratio, me = e.me, text = TH.ValueText(e, trigger.valueAs) }
+      local row = rows[i] or {}
+      rows[i], shown = row, i
+      row.name, row.ratio, row.me, row.text = e.name, e.ratio, e.me, TH.ValueText(e, trigger.valueAs)
     end
     if e.me then
       state.value = e.threat
@@ -167,6 +174,7 @@ Triggers.evaluators.threat = function(trigger, now)
       state.aggro = (i == 1) and 1 or 0
     end
   end
+  for i = #rows, shown + 1, -1 do rows[i] = nil end
   state.total = TH.top > 0 and TH.top or 1
   state.stacks = #TH.list
   state.threatRows = rows

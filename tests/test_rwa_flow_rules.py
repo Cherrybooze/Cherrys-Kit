@@ -433,15 +433,15 @@ class RuleFlowTests(unittest.TestCase):
         self.assertEqual(g.parent.anim.kind,'main')
         self.assertEqual(g.child.region.elementPhase.kind,'main')
         self.lua.execute('state2=false; RWA.MarkDirty()')
-        self.h.tick(0.01)
+        self.h.tick(0.05)  # event bursts re-evaluate at most every 0.05 s
         self.assertEqual(g.child.region.elementPhase.kind,'finish')
         self.assertEqual(g.parent.anim.kind,'main')
         self.lua.execute('state2=true; RWA.MarkDirty()')
-        self.h.tick(0.01)
+        self.h.tick(0.05)  # event bursts re-evaluate at most every 0.05 s
         self.assertEqual(g.child.region.elementPhase.kind,'start')
         self.h.tick(0.3)
         self.lua.execute('state1=false; RWA.MarkDirty()')
-        self.h.tick(0.01)
+        self.h.tick(0.05)  # event bursts re-evaluate at most every 0.05 s
         self.assertEqual(g.parent.anim.kind,'finish')
         self.assertEqual(g.child.region.elementPhase.kind,'main')
         self.h.tick(0.3)

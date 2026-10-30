@@ -8,12 +8,14 @@ local Triggers = RWA.Triggers
 local Rules = RWA.Rules
 
 local actionEdges = {} -- stable aura/rule/action identities, retained across reloads
+local spareEdges = {} -- per aura, the emptied table the next poll's edges are written into
 local compiledActions = {}
 function RWA.ResetRuleSoundHistory(id)
-  actionEdges[id], compiledActions[id] = nil, nil
+  actionEdges[id], spareEdges[id], compiledActions[id] = nil, nil, nil
 end
 function RWA.MoveRuleSoundHistory(oldId, newId)
   actionEdges[newId], actionEdges[oldId] = actionEdges[oldId], nil
+  spareEdges[oldId] = nil
   compiledActions[newId], compiledActions[oldId] = compiledActions[oldId], nil
 end
 local loaded = {} -- [id] = { data, region, env, states, active, anim, testUntil }
@@ -212,7 +214,12 @@ RWA.PassesLoad = shouldLoad
 -- The editor's separate preview region can reuse these visuals without sounds.
 function RWA.ApplyConditionVisuals(region, effects, now)
   local data = region.data
-  effects = effects or { color = data.color, alpha = data.alpha or 1, grow = 1 }
+  if not effects then
+    -- not evaluated yet: the display's own look, in a table kept with the region
+    effects = region.plainEffects
+    if not effects then effects = {}; region.plainEffects = effects end
+    effects.color, effects.alpha, effects.grow = data.color, data.alpha or 1, 1
+  end
   if effects.color ~= region.color then region:SetColor(effects.color) end
   if not region.conditionBaseScale then
     local ok, scale = RWA.Try(region.frame, "GetScale")
@@ -264,8 +271,9 @@ end
 
 local START_TIME, FINISH_TIME = 0.25, 0.25
 
+local NO_ANIMATION = {}
 local function animate(a, now, baseAlpha)
-  local anim = a.data.animation or {}
+  local anim = a.data.animation or NO_ANIMATION
   local alpha, dy = baseAlpha, 0
   local phase = a.anim
   if phase and phase.kind == "start" then
@@ -533,7 +541,16 @@ end
 
 local function evaluateActionEffects(a, effects, now)
   local id = a.data.id
-  local old, nextEdges = actionEdges[id] or {}, {}
+  local order = effects.effectOrder
+  -- most auras have no sound or code: nothing to remember, no table to make
+  if not order or not order[1] then
+    if actionEdges[id] then spareEdges[id], actionEdges[id] = actionEdges[id], nil end
+    return
+  end
+  local old = actionEdges[id] or {}
+  -- two tables per aura take turns: last poll's edges and this poll's
+  local nextEdges = spareEdges[id] or {}
+  for key in pairs(nextEdges) do nextEdges[key] = nil end
   local cache = compiledActions[id] or {}
   compiledActions[id] = cache
   local muted = previewing(a, now)
@@ -569,13 +586,21 @@ local function evaluateActionEffects(a, effects, now)
       end
     end
   end
-  actionEdges[id] = nextEdges
+  actionEdges[id], spareEdges[id] = nextEdges, old
+end
+
+-- Each loaded aura keeps its own snapshot and result tables (for the draft, the saved
+-- aura while a draft differs, and the editor's sample), refilled on every poll.
+local function buffer(a, key)
+  local t = a[key]
+  if not t then t = {}; a[key] = t end
+  return t
 end
 
 local function evaluate(a, now)
   local data = a.data
-  local snapshot = Rules.Observe(data, now, a.env, a.prepared.usedSources)
-  local effects = Rules.Evaluate(data, snapshot, shouldLoad(data.load), a.prepared)
+  local snapshot = Rules.Observe(data, now, a.env, a.prepared.usedSources, buffer(a, "observedBuffer"))
+  local effects = Rules.Evaluate(data, snapshot, shouldLoad(data.load), a.prepared, buffer(a, "resultBuffer"))
   local liveData = RWA.GetAura(data.id) or data
   if liveData.schemaVersion ~= 3 then liveData = data end
   local livePrepared = liveData == data and a.prepared or a.livePrepared
@@ -583,15 +608,17 @@ local function evaluate(a, now)
     livePrepared = Rules.PrepareActions(liveData)
     a.livePrepared, a.livePreparedData = livePrepared, liveData
   end
-  local liveSnapshot = liveData == data and snapshot or Rules.Observe(liveData, now, a.env, livePrepared.usedSources)
-  local liveEffects = liveData == data and effects or Rules.Evaluate(liveData, liveSnapshot, shouldLoad(liveData.load), livePrepared)
+  local liveSnapshot = liveData == data and snapshot
+    or Rules.Observe(liveData, now, a.env, livePrepared.usedSources, buffer(a, "liveObservedBuffer"))
+  local liveEffects = liveData == data and effects
+    or Rules.Evaluate(liveData, liveSnapshot, shouldLoad(liveData.load), livePrepared, buffer(a, "liveResultBuffer"))
   a.realData, a.realStates, a.realActive = liveData, liveSnapshot, liveEffects.visible
   evaluateActionEffects(a, liveEffects, now)
   if not optionsPreview and previewing(a, now) and shouldLoad(data.load) then
     local phase = math.floor((now - editStart) % LOOP / (LOOP / 3))
     local mode = phase == 0 and "missing" or phase == 1 and "long" or "expiring"
     snapshot = Rules.Scenario(data, snapshot, mode, now)
-    effects = Rules.Evaluate(data, snapshot, true, a.prepared)
+    effects = Rules.Evaluate(data, snapshot, true, a.prepared, buffer(a, "sampleResultBuffer"))
     if moving() then
       for _, output in pairs(effects.outputs) do output.visible = true; output.localVisible = true; effects.visible = true end
     end
@@ -638,6 +665,19 @@ local function placementUIScale()
   return ok and type(value)=="number" and value>0 and value<math.huge and value or 1
 end
 
+-- Bars, timers and fades are drawn 20 times a second, and a burst of game events (buffs
+-- changing in a fight) re-evaluates auras at most that often. Only while you drag an aura
+-- into place does it follow every frame.
+local DRAW_EVERY = 0.05
+local nextDraw, nextDirty = 0, 0
+local function dragging()
+  if not moving() then return false end
+  for _, a in pairs(loaded) do
+    if a.placementDrag then return true end
+  end
+  return false
+end
+
 local function frame(now)
   -- The window can close without our button (Escape, another addon), so edit mode follows it.
   if optionsPreview and RWA.IsOptionsOpen and not RWA.IsOptionsOpen() then
@@ -650,8 +690,10 @@ local function frame(now)
     nextPoll = now + ((RWA_DB and RWA_DB.settings.pollRate) or 0.1)
     Triggers.Tick(now)
   end
-  local reevaluate = poll or dirty
-  dirty = false
+  local reevaluate = poll or dirty and now >= nextDirty
+  if reevaluate then dirty, nextDirty = false, now + DRAW_EVERY end
+  if not (reevaluate or now >= nextDraw or dragging()) then return end
+  nextDraw = now + DRAW_EVERY
   local viewportRead,viewportWidth,viewportHeight=false
   local gripScale
   if moving() then

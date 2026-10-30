@@ -97,10 +97,10 @@ class DefaultPositionTests(unittest.TestCase):
           pbInfo={MobDB={Mobs={Mob={[100]={Warrior={healthpoints=4000}}}}}}
           state=RWA.Rules.Observe(d,101,{})
           assert(state.s1.value==75 and state.s1.total==100)
-          assert(RWA.Regions.FormatText("%v / %t",state.s1,101)=="~3000 / 4000 (75%)")
+          assert(RWA.Regions.FormatText("%v / %t",state.s1,101)=="3,000 / 4,000 (75%)")
           UnitIsPlayer=function() return true end;UnitHealth=function() return 3000 end;UnitMaxHealth=function() return 4000 end
           state=RWA.Rules.Observe(d,102,{})
-          assert(RWA.Regions.FormatText("%v / %t",state.s1,102)=="3000 / 4000 (75%)")
+          assert(RWA.Regions.FormatText("%v / %t",state.s1,102)=="3,000 / 4,000 (75%)")
         ''')
 
     def test_saved_positions_edits_and_deleted_defaults_survive_reloads_and_reset_restores_factories(self):

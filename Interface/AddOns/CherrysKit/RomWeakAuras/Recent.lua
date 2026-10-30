@@ -363,7 +363,7 @@ end)
 
 local peaks = setmetatable({}, { __mode = "k" })
 
-Triggers.evaluators.recent = function(trigger)
+Triggers.evaluators.recent = function(trigger, now, env, into)
   local measure = trigger.measure or "hits"
   local window = tonumber(trigger.window) or 1
   if measure == "event" then
@@ -380,16 +380,11 @@ Triggers.evaluators.recent = function(trigger)
     peak.value = value
   end
   local count, seconds, per = R.Fight(measure)
-  local state = {
-    name = R.MEASURE_LABELS[measure] or measure,
-    progressType = "static",
-    value = value,
-    total = math.max(1, peak.value),
-    perSecond = sum and (value / window) or smoothRate(kind, window, filter),
-    fightCount = count,
-    fightTime = seconds,
-    fightRate = per,
-  }
+  local state = Triggers.Fresh(into)
+  state.name = R.MEASURE_LABELS[measure] or measure
+  state.progressType, state.value, state.total = "static", value, math.max(1, peak.value)
+  state.perSecond = sum and (value / window) or smoothRate(kind, window, filter)
+  state.fightCount, state.fightTime, state.fightRate = count, seconds, per
   state.percent = value / state.total * 100
   local showOn = trigger.showOn or "combat"
   if showOn == "always" then
@@ -413,35 +408,27 @@ local function fmt1(x)
   return string.format("%.1f", x or 0)
 end
 
+-- Only Past second states (they carry fightCount) fill these codes.
 local CODES = {
   rate = function(s)
-    return s.perSecond and string.format("%.2f", s.perSecond)
+    return s.fightCount and s.perSecond and string.format("%.2f", s.perSecond)
   end,
   fight = function(s)
     return s.fightCount and tostring(s.fightCount)
   end,
   ft = function(s)
-    return s.fightTime and (fmt1(s.fightTime) .. "s")
+    return s.fightCount and s.fightTime and (fmt1(s.fightTime) .. "s")
   end,
   avg = function(s)
-    return s.fightRate and string.format("%.2f", s.fightRate)
+    return s.fightCount and s.fightRate and string.format("%.2f", s.fightRate)
   end,
 }
 R.CODES = CODES
 
--- Regions.lua is re-run on Reload UI before this file, so wrapping its fresh FormatText is safe.
-local baseFormat = Regions.FormatText
-function Regions.FormatText(template, state, t)
-  if template and state and state.fightCount and string.find(template, "%%") then
-    template = string.gsub(template, "%%(%a+)", function(word)
-      local code = CODES[word]
-      local value = code and code(state)
-      if value then
-        return value
-      end
-    end)
-  end
-  return baseFormat(template, state, t)
+-- Regions.lua is re-run on Reload UI before this file, so its fresh code list gets them again.
+-- (They used to be swapped in with string.gsub and a new function on every draw.)
+for word, code in pairs(CODES) do
+  Regions.CODES[word] = code
 end
 
 ---------------------------------------------------------------------------

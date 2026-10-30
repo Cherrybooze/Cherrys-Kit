@@ -80,5 +80,28 @@ class TextFormatTests(unittest.TestCase):
         self.assertLess(used.new * 10, used.old)
 
 
+    def test_past_second_codes_format_without_new_garbage(self):
+        self.h.load("Recent.lua")
+        self.lua.execute("""
+          past={fightCount=12,fightTime=8,fightRate=1.5,perSecond=2.25,value=3,total=4}
+          other={name="Rage",value=40,total=100}
+          F=RWA.Regions.FormatText
+        """)
+        g = self.lua.globals()
+        self.assertEqual(self.lua.eval('F("%rate hits/s",past,fixtureNow)'), "2.25 hits/s")
+        self.assertEqual(self.lua.eval('F("%fight hits in %ft = %avg/s",past,fixtureNow)'), "12 hits in 8.0s = 1.50/s")
+        self.assertEqual(self.lua.eval('F("%rate hits/s",other,fixtureNow)'), "%rate hits/s")
+        self.assertEqual(self.lua.eval('F("%v of %t",past,fixtureNow)'), "3 of 4")
+        self.lua.execute("""
+          for i=1,50 do F("%fight hits in %ft = %avg/s",past,fixtureNow) end
+          collectgarbage("collect"); collectgarbage("stop")
+          local before=collectgarbage("count")
+          for i=1,500 do F("%fight hits in %ft = %avg/s",past,fixtureNow); F("%rate hits/s",past,fixtureNow) end
+          garbageKB=collectgarbage("count")-before
+          collectgarbage("restart")
+        """)
+        self.assertLess(g.garbageKB, 1, "formatting the same text again made new tables or functions")
+
+
 if __name__ == "__main__":
     unittest.main()

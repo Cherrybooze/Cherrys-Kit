@@ -136,13 +136,17 @@ end
 local EXAMPLE_DESC = {
   ["High durability repair"] = "Warns when an equipped item with maximum durability of at least 101 drops below 101",
   ["Player health"] = "Your health as a bar with your class icon; red under 30%",
-  ["Target health"] = "Your target's health as HP and percentage; ~ marks learned estimates, ? unknown HP. Hides when you have no target",
+  ["Target health"] = "Your target's health: percentage above the bar, HP inside it (a monster's HP is learned like pbInfo, ? until known). Hides when you have no target",
   ["Class icon"] = "Your class combo; changes when you switch class",
   ["KittyCombo mode"] = "The KittyCombo mode that is on (mode button), as text and picture; in combat only",
   ["In combat"] = "Pulsing text and how long you have been fighting",
   ["Example: buff on me"] = "Choose a buff; show its icon when it is missing on you",
   ["Example: debuff on target"] = "Edit: type a debuff you put on enemies",
   ["Example: missing buff reminder"] = "Shows when a buff is missing",
+}
+-- Example descriptions older versions saved word for word; they get the current text.
+local OLD_EXAMPLE_DESC = {
+  ["Your target's health as HP and percentage; ~ marks learned estimates, ? unknown HP. Hides when you have no target"] = "Target health",
 }
 
 -- A mode belongs to KittyCombo's own state; it is not a game buff.
@@ -447,7 +451,7 @@ function RWA.InitDB()
       table.insert(RWA_DB.order, id)
     end
     RWA.ApplyAuraDefaults(data)
-    if data.desc == nil and EXAMPLE_DESC[id] then
+    if (data.desc == nil or OLD_EXAMPLE_DESC[data.desc] == id) and EXAMPLE_DESC[id] then
       data.desc = EXAMPLE_DESC[id]
     end
   end

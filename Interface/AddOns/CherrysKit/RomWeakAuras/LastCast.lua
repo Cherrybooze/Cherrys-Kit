@@ -2,7 +2,7 @@
 -- cast, and shows the newest with the time since it started. Forgotten when a new fight starts.
 --
 -- Two sources, so instant spells count too:
---   * UnitCastingTime(unit) -> name, total, elapsed, checked every frame (cast bars)
+--   * UnitCastingTime(unit) -> name, total, elapsed, checked ten times a second (cast bars)
 --   * COMBATMETER_DAMAGE with _source == the unit's name and a skill other than "ATTACK"
 -- Works on its own; Cherry's KittyCombo can read RWA.LastCast.Get("target") (and RWA reads
 -- Kitty.lastTargetCast when KittyCombo saw a cast first).
@@ -142,7 +142,11 @@ local function checkKitty(now)
 end
 
 local wasInCombat = false
+-- Ten looks a second are enough: the game's own elapsed time dates each cast.
+local CHECK_EVERY, nextCheck = 0.1, 0
 RWA.SetUpdater("lastcast", function(now)
+  if now < nextCheck then return end
+  nextCheck = now + CHECK_EVERY
   local fighting = inCombat()
   if fighting and not wasInCombat then
     LC.Reset(now - 2) -- a new fight: forget the last one's casts (keep the one that pulled)
@@ -176,7 +180,7 @@ end)
 
 local sets = setmetatable({}, { __mode = "k" })
 
-Triggers.evaluators.lastcast = function(trigger, now)
+Triggers.evaluators.lastcast = function(trigger, now, env, into)
   local unit = trigger.unit or "target"
   local set = sets[trigger]
   if set == nil then
@@ -184,7 +188,8 @@ Triggers.evaluators.lastcast = function(trigger, now)
     sets[trigger] = set
   end
   local name, ago, castTime, t = LC.Get(unit, set or nil)
-  local state = { unit = unit, progressType = "static", value = 0, total = 1 }
+  local state = Triggers.Fresh(into)
+  state.unit, state.progressType, state.value, state.total = unit, "static", 0, 1
   if name then
     state.name = name
     state.startTime = t

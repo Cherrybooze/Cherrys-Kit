@@ -40,7 +40,9 @@ end
 -- UnitBuff/UnitDebuff(unit, i) -> name, icon, stacks, buffId
 -- UnitBuffLeftTime/UnitDebuffLeftTime(unit, i) -> seconds left, or nil when the effect has no timer.
 -- The LeftTime index matches UnitBuff, not UnitBuffInfo (which also lists hidden buffs).
-local cache = {} -- ["unit|filter"] = list, cleared every poll and on UNIT_BUFF_CHANGED
+-- [unit][filter] = list of the unit's auras. Every poll and UNIT_BUFF_CHANGED make the
+-- lists stale; the next scan refills the same list and aura tables instead of new ones.
+local cache, cacheRead, invalidation = {}, {}, 0
 local durations = {} -- ["unitKey|filter|id|name"] = { duration, expires, seen }
 local scanSerial = 0
 local knownAuras = {}
@@ -73,10 +75,17 @@ local function rememberAura(aura)
   if not aura.icon then
     return
   end
+  local nameKey = "name:" .. string.lower(aura.name)
+  local known = knownAuras[nameKey]
+  if known and known.name == aura.name and known.icon == aura.icon and known.id == aura.id then
+    -- seen before exactly like this: keep the remembered entry, make no new one
+    local key = aura.id and tostring(aura.id)
+    local store = key and buffStore()
+    if not key or knownAuras[key] == known and (not store or store[key] == known) then return end
+  end
   local info = { name = aura.name, icon = aura.icon, id = aura.id }
   -- Leave room for both the name and ID indices of the latest observation.
   if knownCount > 7998 then knownCount = trimInfo(knownAuras, knownCount, 6000) end
-  local nameKey = "name:" .. string.lower(aura.name)
   if knownAuras[nameKey] == nil then knownCount = knownCount + 1 end
   knownAuras[nameKey] = info
   if aura.id then
@@ -95,24 +104,30 @@ local function rememberAura(aura)
 end
 
 function T.InvalidateAuras()
-  cache = {}
+  invalidation = invalidation + 1
 end
 
 local function scan(unit, filter, observedNow)
-  local cacheKey = unit .. "|" .. filter
-  local list = cache[cacheKey]
-  if list then
+  local lists, reads = cache[unit], cacheRead[unit]
+  if not lists then
+    lists, reads = {}, {}
+    cache[unit], cacheRead[unit] = lists, reads
+  end
+  local list = lists[filter]
+  if list and reads[filter] == invalidation then
     return list
   end
-  list = {}
-  cache[cacheKey] = list
-  if not unitExists(unit) then
-    return list
+  if not list then
+    list = {}
+    lists[filter] = list
   end
+  reads[filter] = invalidation
+  local count = 0
   local helpful = filter ~= "HARMFUL"
   local getAura = helpful and UnitBuff or UnitDebuff
   local getLeft = helpful and UnitBuffLeftTime or UnitDebuffLeftTime
-  if not getAura then
+  if not getAura or not unitExists(unit) then
+    for i = #list, 1, -1 do list[i] = nil end
     return list
   end
   local now = observedNow or RWA.Now()
@@ -124,7 +139,14 @@ local function scan(unit, filter, observedNow)
       break
     end
     local left = getLeft and getLeft(unit, i)
-    local aura = { name = name, icon = icon, stacks = tonumber(stacks) or 0, id = id, index = i, unit = unit }
+    count = count + 1
+    local aura = list[count]
+    if not aura then
+      aura = {}
+      list[count] = aura
+    end
+    aura.name, aura.icon, aura.stacks, aura.id, aura.index, aura.unit = name, icon, tonumber(stacks) or 0, id, i, unit
+    aura.duration, aura.expirationTime = nil, nil
     rememberAura(aura)
     if left and left > 0 then
       local key = who .. "|" .. filter .. "|" .. tostring(id) .. "|" .. name
@@ -143,8 +165,8 @@ local function scan(unit, filter, observedNow)
       aura.duration = rec.duration
       aura.expirationTime = rec.expires
     end
-    list[#list + 1] = aura
   end
+  for i = #list, count + 1, -1 do list[i] = nil end
   return list
 end
 
@@ -205,6 +227,18 @@ local function rt(trigger)
   return r
 end
 
+-- The engine polls every aura ten times a second. It hands each source its previous
+-- observation back (into) to be emptied and refilled, so a running aura makes no new
+-- table per poll. Every other caller passes nothing and gets a new table.
+local function fresh(into)
+  if into then
+    for key in pairs(into) do into[key] = nil end
+    return into
+  end
+  return {}
+end
+T.Fresh = fresh
+
 -- Editor shortcuts keep the existing aura schema, including shared/imported codes.
 function T.GetOptionType(trigger)
   local kind = trigger.type or "aura"
@@ -228,14 +262,9 @@ end
 
 -- An absent buff still needs a name and picture. Prefer the actual buff observed
 -- by ID, then the skill book when its localized name matches that buff.
-function T.AuraInfo(trigger)
-  local id = trigger.ids and trigger.ids[1]
-  local key = id and tostring(id)
-  local store = buffStore()
-  local info = key and (knownAuras[key] or (store and store[key]))
-  if info then
-    return info
-  end
+-- The name and icon of an aura not seen this session, from its ID, name or the skill book.
+local function lookUpAura(trigger, id, key)
+  local info
   local name = trigger.names and trigger.names[1]
   if id and TEXT then
     local ok, value = pcall(TEXT, "Sys" .. tostring(id) .. "_name")
@@ -259,7 +288,25 @@ function T.AuraInfo(trigger)
   return { name = name or (id and ("#" .. tostring(id))) or "?", id = id }
 end
 
-evaluators.aura = function(trigger, now)
+function T.AuraInfo(trigger)
+  local id = trigger.ids and trigger.ids[1]
+  local key = id and tostring(id)
+  local store = buffStore()
+  local info = key and (knownAuras[key] or (store and store[key]))
+  if info then
+    return info
+  end
+  -- Not seen yet: the slower lookups below run once a second per trigger, not every poll.
+  local r = rt(trigger)
+  local now = RWA.Now()
+  if r.auraInfo and now >= r.auraInfoAt and now - r.auraInfoAt < 1 then
+    return r.auraInfo
+  end
+  r.auraInfo, r.auraInfoAt = lookUpAura(trigger, id, key), now
+  return r.auraInfo
+end
+
+evaluators.aura = function(trigger, now, env, into)
   now = now or RWA.Now()
   local unit = trigger.unit or "player"
   local filter = trigger.filter == "HARMFUL" and "HARMFUL" or "HELPFUL"
@@ -279,7 +326,8 @@ evaluators.aura = function(trigger, now)
     found = nil
   end
   local showOn = trigger.showOn or "active"
-  local state = { unit = unit, matchCount = count }
+  local state = fresh(into)
+  state.unit, state.matchCount = unit, count
   if found then
     state.name = found.name
     state.icon = found.icon
@@ -319,12 +367,19 @@ evaluators.aura = function(trigger, now)
 end
 
 -- Unfiltered observations for version 2 rules. Buff presence is read before
--- any legacy showOn, remaining or stacks filters are applied.
-function T.Observe(source, now, env)
+-- any legacy showOn, remaining or stacks filters are applied. recycle: the engine's
+-- own poll, which may refill this source's previous observation (see fresh).
+function T.Observe(source, now, env, recycle)
   local kind = source.type or "aura"
+  local into
+  if recycle and kind ~= "resource" then
+    local r = rt(source)
+    into = r.observed
+    if not into then into = {}; r.observed = into end
+  end
   if kind ~= "aura" then
     if not evaluators[kind] then return nil end
-    local state = T.Evaluate(source, now, env)
+    local state = T.Evaluate(source, now, env, into)
     if type(state) ~= "table" then return nil end
     -- Typed resources are already normalized, shared observations. Keep their
     -- availability (including active zero) and immutable cache intact.
@@ -339,7 +394,8 @@ function T.Observe(source, now, env)
   end
   local unit = source.unit or "player"
   local available = unitExists(unit) and true or false
-  local state = { available = available, unitAvailable = available, present = false, timed = false, unit = unit }
+  local state = fresh(into)
+  state.available, state.unitAvailable, state.present, state.timed, state.unit = available, available, false, false, unit
   if not available then return state end
   local r = rt(source)
   r.names, r.ids = r.names or lowerSet(source.names), r.ids or lowerSet(source.ids)
@@ -426,9 +482,10 @@ local function resourceNumber(value)
   if value and value==value and value>=0 and value<math.huge then return value end
 end
 
-local function resource(trigger, getValue, getMax)
+local function resource(trigger, getValue, getMax, into)
   local unit = trigger.unit or "player"
-  local state = { unit = unit, progressType = "static" }
+  local state = fresh(into)
+  state.unit, state.progressType = unit, "static"
   if not unitExists(unit) then
     state.show = false
     return state
@@ -446,19 +503,29 @@ local function resource(trigger, getValue, getMax)
   return state
 end
 
--- Unowned NPCs expose rounded percentages; players/owned pets expose HP.
--- UnitChangeHealth is a DELTA, not max HP. Like pbInfo, only full-health
--- positive observations can seed an estimate; smaller heals must not shrink it.
-local targetHealthKey,targetHealthName,targetHealthLevel,targetHealthClass,targetHealthMax
+-- Monsters and NPCs nobody owns expose only a whole percentage (their maximum reads
+-- 100); players and owned pets expose HP. The HP number follows pbInfo: UnitChangeHealth
+-- is the last HP change, and for a monster first seen at full health that change is its
+-- whole HP (from 0 to full). So only full-health observations teach a maximum, and a
+-- smaller one (a heal back to full) never lowers it. Maxima are kept for the session by
+-- name, level and class like pbInfo's MobDB, which is read too when pbInfo is on.
+local learnedMax,learnedCount={},0
+local LEARNED_LIMIT=300
 -- What the target is (player, pet, level, class) only changes with the target,
 -- so it is read once per target instead of on every poll. UnitGUID plus the name
 -- identify the target; a target change or one second clears the facts, so a
 -- reused identity cannot keep stale ones. Without a GUID they are read each time.
 local targetFacts={}
-local function resetTargetHealth()
-  targetHealthKey,targetHealthName,targetHealthLevel,targetHealthClass,targetHealthMax=nil,nil,nil,nil,nil
-end
 RWA.On("PLAYER_TARGET_CHANGED",function() targetFacts.at=nil end)
+-- true or false, or nil when the game cannot tell. For anything but a player the game
+-- answers nil, which therefore means "not a player" once the call itself worked.
+local function unitIsPlayer(unit)
+  local fn=rawget(_G,"UnitIsPlayer")
+  if type(fn)~="function" then return nil end
+  local ok,value=pcall(fn,unit)
+  if not ok then return nil end
+  return value~=nil and value~=false and value~=0
+end
 local function readTargetFacts(name,now)
   local guid=call(rawget(_G,"UnitGUID"),"target")
   if type(guid)~="string" and type(guid)~="number" or guid==""
@@ -466,51 +533,86 @@ local function readTargetFacts(name,now)
   local f=targetFacts
   now=tonumber(now) or RWA.Now()
   if guid and f.at and f.guid==guid and f.name==name and now>=f.at and now-f.at<1 then return f end
-  f.guid,f.name,f.at=guid,name,guid and now or nil
-  f.isPlayer=call(rawget(_G,"UnitIsPlayer"),"target")
+  f.guid,f.name,f.at,f.key=guid,name,guid and now or nil,nil
+  f.isPlayer=unitIsPlayer("target")
   f.master=call(rawget(_G,"UnitMaster"),"target")
   f.level=call(rawget(_G,"UnitLevel"),"target")
   f.class=call(rawget(_G,"UnitClass"),"target")
   return f
 end
-local function targetHealthText(state,now)
-  if state.value==nil then resetTargetHealth();targetFacts.at=nil;return end
-  local percent=state.valueKnown and state.totalKnown and tostring(math.floor(state.percent+.5)) or "?"
-  local suffix=" ("..percent.."%)"
-  local facts=readTargetFacts(state.name,now)
-  local isPlayer,master=facts.isPlayer,facts.master
-  local absolute=isPlayer==true or (type(isPlayer)=="number" and isPlayer~=0)
-    or type(master)=="string" and master~="" or state.totalKnown and state.total~=100
-  if absolute then
-    resetTargetHealth()
-    state.healthText=(state.valueKnown and string.format("%.0f",state.value) or "?").." / "
-      ..(state.totalKnown and string.format("%.0f",state.total) or "?")..suffix
-    return
+local function learnedMaximum(facts,value)
+  local key=facts.key
+  if not key then
+    key=tostring(facts.name).."\t"..tostring(facts.level).."\t"..tostring(facts.class)
+    facts.key=key
   end
-  state.healthText="? / ?"..suffix
-  if not state.valueKnown or not state.totalKnown or state.total~=100 or state.value>100 then resetTargetHealth();return end
-  -- Unknown unit classification must not turn an ambiguous 100 into HP.
-  if isPlayer~=false and isPlayer~=0 then resetTargetHealth();return end
-  local guid,name,level,class=facts.guid,state.name,facts.level,facts.class
-  if not guid or guid~=targetHealthKey or name~=targetHealthName or level~=targetHealthLevel or class~=targetHealthClass then
-    targetHealthMax=nil
-  end
-  targetHealthKey,targetHealthName,targetHealthLevel,targetHealthClass=guid,name,level,class
-  local max=targetHealthMax
+  local max=learnedMax[key]
   local mobdb=type(pbInfo)=="table" and pbInfo.MobDB
   if type(mobdb)=="table" then
-    local byName=type(mobdb.Mobs)=="table" and mobdb.Mobs[name]
-    local byLevel=type(byName)=="table" and byName[level]
-    local byClass=type(byLevel)=="table" and byLevel[class]
+    local byName=type(mobdb.Mobs)=="table" and mobdb.Mobs[facts.name]
+    local byLevel=type(byName)=="table" and byName[facts.level]
+    local byClass=type(byLevel)=="table" and byLevel[facts.class]
     local known=type(byClass)=="table" and resourceNumber(byClass.healthpoints)
     if known and known>=1 then max=math.max(max or 0,math.floor(known)) end
   end
-  if state.value==100 then
+  if value==100 then
     local changed=resourceNumber(call(rawget(_G,"UnitChangeHealth"),"target"))
-    if changed and changed>=1 then max=math.max(max or 0,math.floor(changed)) end
+    if changed and changed>=1 then
+      changed=math.floor(changed)
+      local before=learnedMax[key]
+      if not before then
+        if learnedCount>=LEARNED_LIMIT then learnedMax,learnedCount={},0 end
+        learnedCount=learnedCount+1
+      end
+      if not before or changed>before then learnedMax[key]=changed end
+      max=math.max(max or 0,changed)
+    end
   end
-  if guid then targetHealthMax=max end
-  if max then state.healthText=string.format("~%.0f / %.0f",math.ceil(max*state.value/100),max)..suffix end
+  return max
+end
+-- The texts are only rebuilt when a number changes, never on every poll.
+local function groupDigits(n) -- 1234567 -> "1,234,567", as the game groups gold
+  local digits=string.format("%.0f",n)
+  local head=string.len(digits)%3
+  if head==0 then head=3 end
+  local text=string.sub(digits,1,head)
+  for i=head+1,string.len(digits),3 do text=text..","..string.sub(digits,i,i+2) end
+  return text
+end
+local percentTexts={}
+local hpShown,hpText,maxShown,maxText,lineHp,lineMax,linePercent,lineText
+-- The game rounds a monster's percentage down but never to 0 while it lives.
+local function wholePercent(value,total)
+  if value<=0 then return 0 end
+  return math.max(1,math.min(100,math.floor(value*100/total)))
+end
+local function targetHealthText(state,now)
+  if state.value==nil then targetFacts.at=nil;return end
+  local percent="?%"
+  if state.valueKnown and state.totalKnown then
+    local whole=wholePercent(state.value,state.total)
+    percent=percentTexts[whole]
+    if not percent then percent=whole.."%";percentTexts[whole]=percent end
+  end
+  local facts=readTargetFacts(state.name,now)
+  local isPlayer,master=facts.isPlayer,facts.master
+  local current,max
+  if isPlayer==true or type(master)=="string" and master~="" or state.totalKnown and state.total~=100 then
+    current=state.valueKnown and state.value or nil
+    max=state.totalKnown and state.total or nil
+  elseif isPlayer==false and state.valueKnown and state.totalKnown and state.value<=100 then
+    -- an unknown kind of unit must not turn an ambiguous 100 into HP
+    max=learnedMaximum(facts,state.value)
+    current=max and math.ceil(max*state.value/100)
+  end
+  if current and current~=hpShown then hpShown,hpText=current,groupDigits(current) end
+  if max and max~=maxShown then maxShown,maxText=max,groupDigits(max) end
+  local hp,top=current and hpText or "?",max and maxText or "?"
+  if hp~=lineHp or top~=lineMax or percent~=linePercent then
+    lineHp,lineMax,linePercent=hp,top,percent
+    lineText=hp.." / "..top.." ("..percent..")"
+  end
+  state.healthNumber,state.healthPercent,state.healthText=hp,percent,lineText
 end
 local status = {}
 -- Read equipped durability at most once per second, shared by all durability
@@ -532,31 +634,34 @@ local function equippedDurability(now)
   end
   return durabilityItems
 end
-status.durability = function(trigger,now)
+status.durability = function(trigger,now,into)
   local minimum=tonumber(trigger.minimumMax) or 101
   local lowest
   for _,item in ipairs(equippedDurability(now)) do
     if item.total>=minimum and (not lowest or item.value<lowest.value) then lowest=item end
   end
-  if not lowest then return {show=false,available=false,unit="player",progressType="static"} end
-  return {show=true,available=true,unit="player",progressType="static",name=lowest.name,
-    value=lowest.value,total=lowest.total,percent=lowest.value/lowest.total*100,slot=lowest.slot}
+  local state=fresh(into)
+  state.unit,state.progressType="player","static"
+  if not lowest then state.show,state.available=false,false;return state end
+  state.show,state.available,state.name,state.slot=true,true,lowest.name,lowest.slot
+  state.value,state.total,state.percent=lowest.value,lowest.total,lowest.value/lowest.total*100
+  return state
 end
-status.health = function(trigger, now)
-  local state=resource(trigger, UnitHealth, UnitMaxHealth)
+status.health = function(trigger, now, into)
+  local state=resource(trigger, UnitHealth, UnitMaxHealth, into)
   if state.unit=="target" then targetHealthText(state, now) end
   return state
 end
-status.mana = function(trigger)
-  return resource(trigger, UnitMana, UnitMaxMana)
+status.mana = function(trigger, now, into)
+  return resource(trigger, UnitMana, UnitMaxMana, into)
 end
 -- RoM's second resource bar (rage, energy, focus) is "skill" in the API.
-status.skill = function(trigger)
-  return resource(trigger, UnitSkill, UnitMaxSkill)
+status.skill = function(trigger, now, into)
+  return resource(trigger, UnitSkill, UnitMaxSkill, into)
 end
 -- When the current fight started, for %e (time in combat); nil out of combat.
 local combatSince
-status.combat = function(trigger, now)
+status.combat = function(trigger, now, into)
   local inCombat = call(GetPlayerCombatState)
   inCombat = inCombat ~= nil and inCombat ~= false and inCombat ~= 0
   if inCombat then
@@ -568,43 +673,38 @@ status.combat = function(trigger, now)
   if trigger.invert then
     show = not show
   end
-  return {
-    show = show,
-    name = show and "In combat" or "Out of combat",
-    progressType = "static",
-    value = 1,
-    total = 1,
-    startTime = combatSince,
-  }
+  local state = fresh(into)
+  state.show, state.name, state.startTime = show, show and "In combat" or "Out of combat", combatSince
+  state.progressType, state.value, state.total = "static", 1, 1
+  return state
 end
 -- Class: always shows, with the unit's primary/secondary class as name and its class-combo
 -- icon (RWA.ClassIcon, see ClassIcons.lua). Polled, so it follows a class change at once.
-status.class = function(trigger)
+local function sameToken(value) return value end
+status.class = function(trigger, now, into)
   local unit = trigger.unit or "player"
+  local state = fresh(into)
   if not unitExists(unit) then
-    return { show = false, available = false }
+    state.show, state.available = false, false
+    return state
   end
   local main, sub = call(UnitClass, unit)
   main, sub = main or "", sub or ""
   local name = (sub ~= "" and sub ~= main) and (main .. " / " .. sub) or main
   local mainToken,subToken=call(UnitClassToken,unit)
-  local normalize=RWA.ClassToken or function(value) return value end
-  return {
-    show = main ~= "",
-    available = main ~= "",
-    class1 = normalize(mainToken or main), class2 = normalize(subToken or sub),
-    unit = unit,
-    name = name,
-    icon = RWA.ClassIcon and RWA.ClassIcon(main, sub) or nil,
-    progressType = "static",
-    value = 1,
-    total = 1,
-  }
+  local normalize=RWA.ClassToken or sameToken
+  state.show, state.available = main ~= "", main ~= ""
+  state.class1, state.class2 = normalize(mainToken or main), normalize(subToken or sub)
+  state.unit, state.name = unit, name
+  state.icon = RWA.ClassIcon and RWA.ClassIcon(main, sub) or nil
+  state.progressType, state.value, state.total = "static", 1, 1
+  return state
 end
-status.target = function(trigger)
+status.target = function(trigger, now, into)
   local unit = trigger.unit or "target"
   local exists = unitExists(unit)
-  local state = { unit = unit, progressType = "static", value = 1, total = 1 }
+  local state = fresh(into)
+  state.unit, state.progressType, state.value, state.total = unit, "static", 1, 1
   state.name = exists and call(UnitName, unit) or ""
   state.show = exists
   if exists and trigger.enemy ~= nil then
@@ -614,9 +714,10 @@ status.target = function(trigger)
   return state
 end
 -- UnitCastingTime(unit) -> spell name, total cast time, time already cast.
-status.cast = function(trigger, now)
+status.cast = function(trigger, now, into)
   local unit = trigger.unit or "player"
-  local state = { unit = unit, show = false, casting = 0 }
+  local state = fresh(into)
+  state.unit, state.show, state.casting = unit, false, 0
   if not unitExists(unit) then
     return state
   end
@@ -631,8 +732,9 @@ status.cast = function(trigger, now)
   return state
 end
 -- GetSkillCooldown(page, slot) -> total cooldown, seconds remaining.
-status.cooldown = function(trigger, now)
-  local state = { name = trigger.skill or "?", show = false }
+status.cooldown = function(trigger, now, into)
+  local state = fresh(into)
+  state.name, state.show = trigger.skill or "?", false
   local page, slot = T.FindSkill(trigger.skill)
   if not page then
     state.available = false
@@ -664,24 +766,28 @@ status.cooldown = function(trigger, now)
   return state
 end
 
-local function auraCount(trigger,now,filter)
+local function auraCount(trigger,now,filter,into)
   local unit=trigger.unit or "player"
   local available=unitExists(unit) and true or false
   -- The same unit/filter cache is shared with named-buff checks in this poll.
   -- Count aura entries, not stacks. An absent target is unavailable, not zero.
-  return {show=available,available=available,unit=unit,progressType="static",
-    value=available and #scan(unit,filter,now) or nil,total=100,
-    name=filter=="HELPFUL" and "Buff count" or "Debuff count"}
+  local state=fresh(into)
+  state.show,state.available,state.unit,state.progressType=available,available,unit,"static"
+  state.value,state.total=available and #scan(unit,filter,now) or nil,100
+  state.name=filter=="HELPFUL" and "Buff count" or "Debuff count"
+  return state
 end
-status.buffcount=function(trigger,now) return auraCount(trigger,now,"HELPFUL") end
-status.debuffcount=function(trigger,now) return auraCount(trigger,now,"HARMFUL") end
+status.buffcount=function(trigger,now,into) return auraCount(trigger,now,"HELPFUL",into) end
+status.debuffcount=function(trigger,now,into) return auraCount(trigger,now,"HARMFUL",into) end
 
-evaluators.status = function(trigger, now)
+evaluators.status = function(trigger, now, env, into)
   local fn = status[trigger.check or "health"]
   if not fn then
-    return { show = false }
+    local state = fresh(into)
+    state.show = false
+    return state
   end
-  return fn(trigger, now)
+  return fn(trigger, now, into)
 end
 
 ---------------------------------------------------------------------------
@@ -725,7 +831,7 @@ function T.CompileCustom(code, auraEnv)
   return fn
 end
 
-evaluators.custom = function(trigger, now, auraEnv)
+evaluators.custom = function(trigger, now, auraEnv, into)
   local r = rt(trigger)
   if r.fn == nil then
     local fn, err = T.CompileCustom(trigger.code, auraEnv)
@@ -734,15 +840,18 @@ evaluators.custom = function(trigger, now, auraEnv)
       RWA.Error("custom trigger: " .. tostring(err))
     end
   end
+  local state = fresh(into)
   if not r.fn then
-    return { show = false }
+    state.show = false
+    return state
   end
   local ok, show, extra = pcall(r.fn, auraEnv)
   if not ok then
     RWA.Error("custom trigger: " .. tostring(show))
-    return { show = false }
+    state.show = false
+    return state
   end
-  local state = { show = show and true or false, progressType = "static", value = 1, total = 1 }
+  state.show, state.progressType, state.value, state.total = show and true or false, "static", 1, 1
   if type(extra) == "table" then
     for k, v in pairs(extra) do
       state[k] = v
@@ -751,12 +860,14 @@ evaluators.custom = function(trigger, now, auraEnv)
   return state
 end
 
-function T.Evaluate(trigger, now, auraEnv)
+function T.Evaluate(trigger, now, auraEnv, into)
   local fn = evaluators[trigger.type or "aura"]
   if not fn then
-    return { show = false }
+    local state = fresh(into)
+    state.show = false
+    return state
   end
-  return fn(trigger, now, auraEnv)
+  return fn(trigger, now, auraEnv, into)
 end
 
 -- Drop compiled code and lookup sets after the editor changes a trigger.

@@ -206,7 +206,7 @@ Every aura now defaults to **Make clickthrough**, a tickable editor field that p
 
 **Auto scale position and size with screen size** is off by default. Enabling it captures the viewport; later resolution/UI-scale changes transform position and uniformly scale size without rewriting authored values. Unlocked placement previews have arrows at the top-left to move them and a corner at the bottom-right to scale them; the Position section shows exact X, Y and Scale. **Reset position** restores recognized factory placements or centres custom auras while retaining size, screen reference and relative offsets. Factory placements use the approved layout; existing saved coordinates are preserved.
 
-**Target health** shows HP and percentage on a readable line below the bar. Directly exposed HP is used as provided; learned NPC maxima yield `~` estimates, and unavailable HP uses `?`. Original rule values and bar progress are retained. These controls, layout and real HP observations still need in-game playtesting.
+**Target health** shows the percentage just above the bar and the HP number inside its right end. Players and pets show their real HP; a monster's HP is learned the way pbInfo does it (its maximum is noted when it is seen at full health, also from pbInfo's own records when pbInfo is on) and shows `?` until then. Original rule values and bar progress are retained. These controls, layout and real HP observations still need in-game playtesting.
 
 ## Updated in 0.9.24
 
