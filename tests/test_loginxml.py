@@ -94,6 +94,81 @@ class ArrowKeyTest(unittest.TestCase):
         self.assertEqual(lua.eval("login.server.selected"), "One")
 
 
+class GlobalBankOnLoginScreenTest(unittest.TestCase):
+    FILES = '''
+      FILES = {
+        ['interface/GlobalBankHelper/GlobalBankDatabase.lua'] = function()
+          GlobalBank_Import = {made = 'x',
+            {saved = '2026-10-28 15:07', s = 'GB1~Alpha~Rogue~1~1234567~60~0~0~`B~1~1~201843~Thing~icon'},
+            {saved = '2026-10-29 09:00', s = 'GB1~Beta~Mage~5~100~60~0~1~2026-10-30 10:00'},
+            {saved = 'x', s = 'not a snapshot'}}
+        end,
+      }
+      TICK = 5000000
+      function GetTickCount() return TICK end
+      function loadfile(path) return FILES[path] end
+    '''
+
+    def screen(self):
+        lua = login_screen()
+        lua.execute(self.FILES)
+        return lua
+
+    def test_reads_gold_and_the_saved_time(self):
+        lua = self.screen()
+        self.assertTrue(lua.eval("login.globalbank.read()"))
+        self.assertEqual(lua.eval("login.globalbank.character('ALPHA').gold"), 1234567)
+        self.assertEqual(lua.eval("login.globalbank.character('alpha').saved"), "2026-10-28 15:07")
+        self.assertEqual(lua.eval("login.globalbank.character('Beta').saved"), "2026-10-30 10:00")
+        self.assertIsNone(lua.eval("login.globalbank.character('Nobody')"))
+        self.assertEqual(lua.eval("login.globalbank.formatGold(1234567)"), "1,234,567")
+        self.assertEqual(lua.eval("login.globalbank.formatGold(999)"), "999")
+
+    def test_a_row_shows_gold_only_with_the_data(self):
+        lua = self.screen()
+        lua.execute('''
+          chars = {{"Alpha", 0, 10, "Warrior", 0, "", "Zone", nil, 0}, {"Other", 0, 10, "Mage", 0, "", "Zone", nil, 0}}
+          login.charselect.goldColumn = login.globalbank.read()
+          login.charselect.updateCharacterList()
+          rows = login.charselect.charactersCallback()
+        ''')
+        self.assertEqual(lua.eval("rows[1][3].text"), "1,234,567 gold\n2026-10-28 15:07")
+        self.assertEqual(lua.eval("rows[2][3]"), "")
+        lua.execute("FILES = {}; login.charselect.goldColumn = login.globalbank.read(); login.charselect.updateCharacterList(); rows = login.charselect.charactersCallback()")
+        self.assertIsNone(lua.eval("rows[1][3]"))
+
+    def test_says_when_the_helper_is_not_set_up(self):
+        lua = login_screen()
+        lua.execute("function loadfile() return nil end")
+        self.assertEqual(lua.eval("login.globalbank.check(5)"), "setup")
+
+    def test_helper_state_with_the_real_time(self):
+        lua = self.screen()
+        lua.execute('''
+          FILES['interface/GlobalBankHelper/CherrysClockStamp.lua'] = function() return {utc = 1000000, tick = 1000000, offset = 0} end
+          local beat = {}
+          function setBeat(value) beat.value = value end
+          setBeat(1003990)
+          FILES['interface/GlobalBankHelper/GlobalBankHelperBeat.lua'] = function() GlobalBank_HelperBeat = beat.value end
+        ''')
+        self.assertEqual(lua.eval("login.globalbank.check(5)"), "running")
+        lua.execute("setBeat(1003000)")
+        self.assertEqual(lua.eval("login.globalbank.check(5)"), "stopped")
+        # After a Windows restart the stamp says nothing, so it watches the beat
+        lua.execute("TICK = 500; setBeat(2000)")
+        self.assertEqual(lua.eval("login.globalbank.check(5)"), "checking")
+        lua.execute("setBeat(2030)")
+        self.assertEqual(lua.eval("login.globalbank.check(30)"), "running")
+        for _ in range(3):
+            state = lua.eval("login.globalbank.check(30)")
+        self.assertEqual(state, "stopped")
+
+    def test_a_broken_file_is_ignored(self):
+        lua = self.screen()
+        lua.execute("FILES['interface/GlobalBankHelper/GlobalBankDatabase.lua'] = function() error('broken') end")
+        self.assertFalse(lua.eval("login.globalbank.read()"))
+
+
 class ServerListRetryTest(unittest.TestCase):
     def wait(self, lua, seconds):
         for _ in range(int(seconds * 10)):

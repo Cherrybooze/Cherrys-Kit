@@ -454,13 +454,28 @@ function GB.ShowTip(owner, what)
   end
 end
 
+function GB.TooltipLink(it)
+  local kept = it.gear or it.stone
+  if kept and kept.link and kept.link ~= "" then
+    return "|Hitem:" .. kept.link .. "|h|h"
+  end
+  local id = tonumber(it.id)
+  return id and string.format("|Hitem:%x|h|h", id) or nil
+end
+
 function GB.OnItemEnter(owner, i)
   local it = GB.DetailItems()[GB.gridOffset * GB.COLS + i]
   if not it or not GameTooltip then
     return
   end
   GameTooltip:SetOwner(owner, "ANCHOR_RIGHT", 4, 0)
-  GameTooltip:SetText(it.name, 1, 1, 1)
+  -- The game's own tooltip. Gear keeps its link for its own durability and stats; the rest only needs an ID.
+  local link = GB.TooltipLink(it)
+  local shown = link and pcall(function() GameTooltip:SetHyperLink(link) end)
+  local title = shown and GameTooltipTextLeft1 and GameTooltipTextLeft1:GetText()
+  if not title or title == "" then
+    GameTooltip:SetText(it.name, 1, 1, 1)
+  end
   if it.count > 1 then
     GameTooltip:AddLine("Count: " .. it.count, 1, 0.82, 0)
   end

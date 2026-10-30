@@ -1,5 +1,5 @@
 ## Title: Cherry's Loginxml helper
-## Version: 1.2.0
+## Version: 1.2.1
 ## Description: Keeps the login screen's settings toggles. Part of Cherry's Loginxml. Original project by Pyrrhus, integration fixes by Cherry.
 ## Author: Pyrrhus, Cherry
 ## SavedVariables: CherrysLoginxml_Settings

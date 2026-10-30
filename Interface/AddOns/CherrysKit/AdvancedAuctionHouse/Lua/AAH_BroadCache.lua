@@ -251,8 +251,13 @@ local function pruneExpired()
     local now = trustedNow()
     if not now then return end
     for key, entry in pairs(data.entries) do
-        if type(entry.lastSeenTrustedUTC) == "number" and now - entry.lastSeenTrustedUTC >= MAX_AGE then
-            data.entries[key] = nil
+        if type(entry.lastSeenTrustedUTC) == "number" then
+            -- The game's remaining time is in minutes and rounds up, so a live auction isn't removed early.
+            local left = type(entry.data) == "table" and entry.data.leftTime
+            if now - entry.lastSeenTrustedUTC >= MAX_AGE
+                or (type(left) == "number" and now - entry.lastSeenTrustedUTC >= left * 60) then
+                data.entries[key] = nil
+            end
         end
     end
 end

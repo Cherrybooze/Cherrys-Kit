@@ -165,8 +165,10 @@ function me.initCharacterList()
       me.classes[name] = token
     end
   end
+  -- Room for gold only for players with Global Bank's data
+  me.goldColumn = login.globalbank and login.globalbank.read()
   local data = {
-    col = {45, 155}, --
+    col = me.goldColumn and {45, 155, 118} or {45, 155}, --
     fn = { --
       callback = me.charactersCallback, --
       onClick = me.charactersOnClick, --
@@ -174,7 +176,7 @@ function me.initCharacterList()
     numRow = 8, --
     rowHeight = 45, --
     noHead = true, --
-    align = {0, 2}, --
+    align = {0, 2, 1}, --
   }
   LoginCharSelectFrame_chars:init(data)
   LoginCharSelectFrame_chars_list:SetBackdropTileAlpha(.5)
@@ -225,6 +227,9 @@ function me.updateCharacterList()
     'interface/widgeticons/classicon_%s_%s.tga', --
   }
   me.charlist = {}
+  if login.globalbank then
+    login.globalbank.read()
+  end
   for i = 1, GetNumCharacters() do
     local name, sex, lv, mc, seclv, sc, zone, destroyTime, peakLevel = GetCharacterInfo(i);
     local mtag = me.classes[tostring(mc)]
@@ -281,10 +286,15 @@ function me.charactersCallback(frame)
       end
     end
     local text = string.format('%s\n%s\n%s', unpack(lines))
-    table.insert(res, {{tex = data.icon}, {text = text, color = color}})
+    local row = {{tex = data.icon}, {text = text, color = color}}
+    if me.goldColumn then
+      local known = login.globalbank.character(data.name)
+      row[3] = known and {text = string.format('%s gold\n%s', login.globalbank.formatGold(known.gold), known.saved), color = color} or ''
+    end
+    table.insert(res, row)
   end
   if #res < GetMaxCharacterCreate() then
-    table.insert(res, {{tex = {file = 'interface/buttons/minimapplusbutton_normal', size = {20, 20}}}, TEXT('CHARACTER_SELECT_CREATE')});
+    table.insert(res, {{tex = {file = 'interface/buttons/minimapplusbutton_normal', size = {20, 20}}}, TEXT('CHARACTER_SELECT_CREATE'), me.goldColumn and '' or nil});
   end
   return res, nil, selected
 end

@@ -8,7 +8,8 @@
 --   read(v, def, cfg): writes the tokens into v; called only when redrawing or hovering
 --   available(): nil unless the addon it needs is there; placed(def, shown): told after each rebuild
 --   tip(v, def), click(def, frame), wheel(def, delta), hint, tokens (for the options window),
---   extra (rows for its right-click menu)
+--   extra (rows for its right-click menu), option (a tick for its right-click menu and the options
+--   window: text, checked(cfg), flip(cfg))
 
 local G = CherrysBar
 local D = G.Displays
@@ -564,33 +565,64 @@ D.Add({
 })
 
 ---------------------------------------------------------------------------
--- Location. Coordinates are read only if the format holds them or on hover.
+-- Location. Coordinates are read only if the format holds them or on hover, and then once a second.
 ---------------------------------------------------------------------------
 
-local function coords()
+local COORD_TEXT = " ([X], [Y])"
+local ZONE_EVERY, COORD_EVERY = 3, 1
+
+local function hasCoords(fmt)
+  return (string.find(fmt, "[X]", 1, true) or string.find(fmt, "[Y]", 1, true)) and true or false
+end
+
+local function rawCoords()
   if type(GetPlayerWorldMapPos) ~= "function" then
-    return "?", "?"
+    return nil
   end
   local ok, x, y = pcall(GetPlayerWorldMapPos)
-  if not ok or not tonumber(x) or not tonumber(y) then
+  if ok and tonumber(x) and tonumber(y) then
+    return x, y
+  end
+  return nil
+end
+
+local function coords()
+  local x, y = rawCoords()
+  if not x then
     return "?", "?"
   end
   return string.format("%.1f", x * 100), string.format("%.1f", y * 100)
 end
 
 D.Add({
-  key = "Zone", label = "Zone", title = "Location", icon = Icon("Location"), fmt = "[ZONE]", every = 3,
+  key = "Zone", label = "Zone", title = "Location", icon = Icon("Location"), fmt = "[ZONE]", every = ZONE_EVERY,
   tokens = "[ZONE] where you are [X] [Y] map position",
+  option = {
+    text = "Show coordinates on the bar",
+    checked = function(cfg) return hasCoords(cfg.fmt) end,
+    flip = function(cfg)
+      if hasCoords(cfg.fmt) then
+        local fmt = string.gsub(cfg.fmt, "%s*%(%[X%], %[Y%]%)", "")
+        cfg.fmt = string.gsub(fmt, "%[[XY]%]", "")
+      else
+        cfg.fmt = cfg.fmt .. COORD_TEXT
+      end
+    end,
+  },
   setup = function(def, cfg)
-    def.wantCoords = string.find(cfg.fmt, "[X]", 1, true) or string.find(cfg.fmt, "[Y]", 1, true) or false
+    def.wantCoords = hasCoords(cfg.fmt)
+    def.every = def.wantCoords and COORD_EVERY or ZONE_EVERY
   end,
   tick = function(def)
     local zone = GetZoneName()
-    if zone == def.zone and not def.wantCoords then
-      return false
-    end
+    local changed = zone ~= def.zone
     def.zone = zone
-    return true
+    if def.wantCoords then
+      local x, y = rawCoords()
+      changed = changed or x ~= def.x or y ~= def.y
+      def.x, def.y = x, y
+    end
+    return changed
   end,
   read = function(v, def)
     v.ZONE = def.zone or GetZoneName() or ""

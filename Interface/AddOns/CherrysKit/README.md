@@ -1,14 +1,31 @@
 # Cherry's Kit
 
-Version **0.4.24** · Kit release **0.11.101** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.24** · Kit release **0.11.113** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
 
+## Kit 0.11.113 playtest
+
+- **Cherry's Bar 1.1.9:** Location can show your coordinates on the bar.
+
+- **Cherry's Chat 0.11.0**: emoji in Say go out as game-font symbols, or as text like `:carrot:` when there is none, so the bubble over your head shows them instead of empty boxes (Say bubbles setting in `/cchat`).
+
+## Kit 0.11.107 playtest
+
+- **Global Bank 1.4.14:** The extension's page has a Stats tab listing every stat, how many there are and which characters hold them, for items or for mana stones separately. The Bank tab's search can look at stats on items or on mana stones, and mana stones with different stats no longer stack. A character saves mana stone stats the next time it logs in.
+- **Global Bank 1.4.13:** The extension's page has a Gold heatmap tab, with a column per server and full caps pooled together, and a Gameforge accounts tab for copying logins and linking characters to accounts in bulk. Right-click an item or a heatmap cell to copy a character, account or password. Accounts and passwords stay in this Chrome profile, unencrypted. A character saves its server the next time it logs in.
+- **Global Bank 1.4.12:** Gear no longer stacks in the Bank tab. Each piece shows its durability, plus level, tier upgrades, runes and stats when you hover it, and the name search finds stats too. A character saves these the next time it logs in.
+- **Global Bank 1.4.11:** The extension's page has a Currencies tab with every character's currencies, totals and a sort per currency. The Bank tab can exclude items, with an option to exclude bound items that can't be equipped, and an always-keep list. Characters save their currencies and which items are bound the next time they log in.
+- **Global Bank 1.4.10:** The auction cache now removes an item when its auction ends, not only after two days, and forgets old transfer records. The page also handles a character file of any size, for players with thousands of alts.
+- **Advanced AuctionHouse 6.2.5:** The auction cache now removes an item when its auction ends, not only after two days.
+- **Global Bank 1.4.9:** The Bank tab can now run without the local helper: choose your save folder, and your game folder for icons, and it reads them straight from there. The Terminal and Auctions tabs still need the helper.
+- **Global Bank 1.4.8:** the extension's page shows everything your characters hold in one grid with filters, and runs the helper's commands, with no terminal window.
+
 ## Kit 0.11.101 playtest
 
-- **Real time for addons:** the hub now has a clock, fed by Global Bank's Daily Rewards Chrome extension 1.0.9. **Cherry's Bar 1.1.8**'s Clock and **ZShop 1.2.0-ck5** read it. See [Real time for addons](#real-time-for-addons).
+- **Real time for addons:** the hub now has a clock, fed by Global Bank's Daily Rewards Chrome extension 1.0.9. Cherry's Bar's Clock and **ZShop 1.2.0-ck5** read it. See [Real time for addons](#real-time-for-addons).
 
 - **Global Bank 1.4.7:** the daily reset follows 00:00 in Germany in any time zone, and the extension's setup takes one click plus Chrome's two.
 

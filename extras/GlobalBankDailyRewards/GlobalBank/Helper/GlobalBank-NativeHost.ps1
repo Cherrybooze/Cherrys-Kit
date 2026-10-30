@@ -84,13 +84,42 @@ try {
         }
         exit 0
     }
-    if ($message.type -eq 'bank-query' -or $message.type -eq 'auction-query') {
+    if ($message.type -eq 'helper-info' -or $message.type -eq 'helper-auto-start' -or $message.type -eq 'helper-auto-stop') {
         . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
         $data = Get-HelperDataDirectory
-        if ($message.type -eq 'bank-query') {
-            if ($message.command -isnot [string]) { throw 'Invalid bank command.' }
-            $output = Get-ControlBankQuery $data $message.command
+        $info = switch ($message.type) {
+            'helper-info' { Get-ControlHelperInfo $data }
+            'helper-auto-start' { Start-ControlHelperAuto $data }
+            default { Stop-ControlHelperAuto $data }
+        }
+        $info.ok = $true
+        Send-Response $info
+        exit 0
+    }
+    if ($message.type -eq 'gf-save' -or $message.type -eq 'gf-load' -or $message.type -eq 'gf-delete') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
+        $data = Get-HelperDataDirectory
+        if ($message.type -eq 'gf-save') { Save-ControlAccountsFile $data ([string]$message.text); Send-Response @{ok=$true} }
+        elseif ($message.type -eq 'gf-delete') { Remove-Item -LiteralPath (Join-Path $data 'GameforgeAccounts.json') -Force -ErrorAction SilentlyContinue; Send-Response @{ok=$true} }
+        else { $part = Get-ControlAccountsFile $data ([int]$message.offset); Send-Response @{ok=$true;json=$part.json;total=$part.total} }
+        exit 0
+    }
+    if ($message.type -eq 'bank-data' -or $message.type -eq 'bank-icons' -or $message.type -eq 'bank-command') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
+        $data = Get-HelperDataDirectory
+        if ($message.type -eq 'bank-data') { $part = Get-ControlBankFile $data ([int]$message.offset); Send-Response @{ok=$true;json=$part.json;total=$part.total} }
+        elseif ($message.type -eq 'bank-icons') {
+            $found = Get-ControlIcons (Split-Path -Parent $data) @($message.names)
+            Send-Response @{ok=$true;icons=$found.icons;later=@($found.later)}
         } else {
+            if ($message.command -isnot [string]) { throw 'Invalid command.' }
+            Send-Response @{ok=$true;output=(Invoke-ControlCommand $message.command)}
+        }
+        exit 0
+    }
+    if ($message.type -eq 'auction-query') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
+        $data = Get-HelperDataDirectory
             if ($message.search -isnot [string] -or $message.realm -isnot [string]) { throw 'Invalid auction search.' }
             if ($message.pageOptions) {
                 $opts = $message.pageOptions
@@ -102,7 +131,6 @@ try {
                 exit 0
             }
             $output = Get-ControlAuctionQuery $data $message.search $message.realm
-        }
         Send-Response @{ok=$true;output=$output}
         exit 0
     }

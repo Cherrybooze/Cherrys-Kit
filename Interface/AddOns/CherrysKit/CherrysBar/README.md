@@ -1,6 +1,6 @@
 # Cherry's Bar
 
-Version **1.1.8** · Kit release **0.11.101** · [All addons / hub](../README.md)
+Version **1.1.9** · Kit release **0.11.113** · [All addons / hub](../README.md)
 
 **Full-width information bars at the top of the screen, the bottom, or both. A fork of XBar III, with bars and settings in the spirit of Titan Panel.**
 
@@ -8,6 +8,7 @@ Version **1.1.8** · Kit release **0.11.101** · [All addons / hub](../README.md
 
 - **Top bar, bottom bar or both.** Only the top bar shows at first. Each bar has its own style, opacity and auto-hide. `/cbar top`, `/cbar bottom` and `/cbar both` switch quickly.
 - **Nineteen displays**, each on the top bar, the bottom bar or hidden, and on the left or right: Kitty mode (with Cherry's KittyCombo), Menu (the game's windows and settings), Experience, Bags, Gold, Currencies, Mail, Performance, Clock, Location, Friends, Guild, Ammo, Durability, Damage, Daily quests, Class, Gathering and Volume. The first few show at first; the rest are one click away.
+- **Coordinates on the bar.** Tick **Show coordinates on the bar** in Location's right-click menu, or in `/cbar` with Location picked. The position updates once a second while you move.
 - **Your own text.** Every display's text can be rewritten with tokens, such as `[FREE]` for free bag slots, `[GPH]` for gold per hour or `[TTL]` for time to level. `/cbar` lists the tokens of the display you pick.
 - **Seven styles:** Ironstone, Blacksteel, Froststeel, Darkwood, Verdant, Arcane and plain Slate, with a matching set of icons.
 - **Auto-hide** per bar: it tucks away and comes back when the mouse reaches the screen's edge.
@@ -48,7 +49,7 @@ None of this has run in the real game client yet; the tests use a simulated one.
 - The lift works by raising the bottom edge of the frame the whole interface hangs from, which has not been tried in the real client. If the client ignores it, the addon notices and moves the game's own bottom frames one by one instead, which leaves other addons' frames where they are. `/cbar probe` says which is in use. Frames anchored to the middle of the screen rise by half the bar's height.
 - Moving the game's frames relies on the client reporting where a frame is anchored. `/cbar probe` shows how many it could move.
 - Text widths use the same measuring trick as Cherry's Chat. If displays overlap or gap, send the probe's width list.
-- Several game calls come from XBar III's 2010 client. A call the client has dropped shows up as an error in the probe, and that display keeps its old text. Map coordinates (`[X]`, `[Y]`) and Volume use calls not yet seen working in this kit.
+- Several game calls come from XBar III's 2010 client. A call the client has dropped shows up as an error in the probe, and that display keeps its old text. Map coordinates use the same call as the game's minimap but have not been seen on the bar yet. Volume's call has not been seen working in every case.
 - Mail counts messages since you last opened the mailbox, as XBar did. It does not know about mail from before you logged in.
 
 If you still have XBar installed, Cherry's Bar stays off until you delete `Interface\AddOns\XBar`, because the two would draw over each other.

@@ -1,8 +1,56 @@
-# In-game checks for kit 0.11.101
+# In-game checks for kit 0.11.113
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+
+## 0.11.113 Cherry's Bar coordinates
+
+None of this has run in the game yet. The tests use a simulated client.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| C1 | Show Location, right-click it and tick **Show coordinates on the bar**. Walk around. | The bar shows the zone and `(x, y)`, matching the numbers on the minimap to within a second. The displays beside it don't shuffle back and forth as the numbers change. |
+| C2 | Type `/cbar`, pick Location and untick **Show coordinates on the bar**, then tick it again. | The text box and the bar follow the tick both ways. Other displays in `/cbar` don't show this tick. |
+| C3 | Stand in an instance with no map position. | The position shows `?` rather than an error. |
+
+## 0.11.109 emoji in Say bubbles
+
+Cherry's Chat 0.11.0. The simulated client checks what goes out on each channel; the bubble's font and other players' chat need these checks. Bubbles are drawn by the client (C++ SpeakFrame) with no Lua access, which is why emoji go out as text.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| CB1 | With Say bubbles on **Symbols (^_^)** (default), say `:heart: :star: :smile: :carrot:`. | The bubble shows ♥ ★ (^_^) :carrot:. Report any symbol that shows as a box. |
+| CB2 | Paste a real emoji with no symbol (Windows key + ., e.g. a carrot) into a Say line. | The bubble shows `:carrot:`, not two boxes. |
+| CB3 | Click **Say bubbles** until it reads **Text (:fire:)**, then say `hi :fire`. | The bubble shows `hi :fire`; your Cherry's Chat window shows the fire picture. |
+| CB4 | With ":heart: when sending" on, say `:fire` in Party. | Party chat gets the real emoji, as before (no bubble there). |
+| CB5 | Click **Say bubbles** until **Emoji (boxes)** and say `:fire`. | Sends as before (boxes in the bubble if ":heart: when sending" is on). |
+
+## 0.11.103 Global Bank without the terminal window
+
+This runs in Chrome, not the game. It has run on real Chrome 155 with a test profile and C's real saved data: icons, both tabs and Update now all worked.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| G1 | Reload the extension, then its icon, then **Open local bank and auction tools**. | The Bank tab shows one grid of everything, with real icons. About 2% of the game's icons use a packing the page can't read; those show the item's first two letters. |
+| G2 | Hover an item you have in several places. | The tooltip lists each character with its bag or bank slot and count, such as Bank 45 (page 2, slot 5). |
+| G3 | Try the name search, Type, Where, character level, the character list, Sort by, and Stack the same item. | The grid and the count follow each one, and it stays easy to scroll. Item types are a guess from IDs and icon names, so tell me where one is wrong. |
+| G7 | Turn on **Start the Global Bank helper automatically when Chrome is open**. | No window opens. Within a few seconds the top of the page says the helper is running, started automatically, and for how long. Log out of a character: the data updates by itself. |
+| G8 | Turn it off, then turn it on and close Chrome completely. | Off: the helper stops. Closing Chrome: it stops within a few seconds, and starts again the next time Chrome opens. A helper you opened in its own window isn't closed by the toggle. |
+| G9 | On the page, open **Read from folders instead of the helper** and choose your save folder and game folder. This only matters on a PC without the helper. | Chrome asks to allow each one. On a PC without the helper, the Bank tab fills from them. After a Chrome restart, **Allow access again** brings them back. |
+| G10 | Log in and out on a character with some currencies, then open the **Currencies** tab. | Its amounts match the game's own currency window, and clicking a heading sorts by it. Gold and the other currencies have an **All characters** total. |
+| G11 | On that character, have a bound item that isn't gear. In **Excluded items**, tick **Exclude bound items that can't be equipped**. | The item leaves the grid, and bound gear stays. Tick **Show excluded items, dimmed** and right-click it to keep it. |
+| G12 | Open your item depot page through ZShop, then the extension page's **Item Depot** tab. | The items appear in the grid, with counts and a read time. If they look wrong, press **Copy page layout** and send what it copies. |
+| G13 | Log in and out on a character with a few pieces of gear, then hover them in the **Bank** tab. | Gear never stacks. Durability, plus level, runes and stats match the game's own tooltip, and searching a stat name finds the piece. |
+| G14 | In game, open `/gb` and hover items on another character, both gear and other things. | The game's own item tooltip shows, plus the count and slot. Gear shows that piece's durability and stats after that character has logged in once with this version. |
+| G15 | Run the login screen's installer again, restart the game and reach the character screen with the helper's data saved. | Each character shows its gold and last save, at the right of its row. The server screen says whether the helper is running. With the helper closed it says so within about a minute, and at once if the Chrome extension is set up. |
+| G16 | With the mailbox open, press **Prev** or **Next** on LogNextChar, then open a mailbox on the next character. | The mailbox and Ultimate Mail Mod's window close before logging out, and the mailbox opens normally afterwards. |
+| G17 | Open **Gold heatmap**. | There's a column per server. A character with no gold is red, exactly 500,000,000 is orange, a full cap is bright green and pooled at the top of its column. Hovering shows the full value. A character shows under "Server unknown" until it logs in with this version. |
+| G19 | On **Gameforge accounts**, choose a password and add an account. Close and reopen the page. Press **Copy encryption key**, and keep it. | `GameforgeAccounts.json` in `Interface\\GlobalBankHelper` holds no readable names. The page opens locked, and the heatmap shows "Accounts locked" until you enter the password at the top. |
+| G18 | On **Gameforge accounts**, add an account, tick characters and press **Link ticked**, then right-click a linked character on the heatmap. | Passwords show as *** until **Reveal passwords** is ticked, and it's off again after reopening the page. The right-click menu stays open, so the account name and then the password are two clicks to copy. Linked characters group under the account. |
+| G20 | Log in and out on a character holding mana stones with stats. Open **Stats**, and switch between stats on items and on mana stones. In **Bank**, set **Search in** to each kind and search a stat. | The names and counts match the stones' tooltips in game, with a breakdown per character. Stones with different stats have their own slots. |
+| G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
+| G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 
 ## 0.11.101 real time, daily reset, extension setup and single-addon installs
 

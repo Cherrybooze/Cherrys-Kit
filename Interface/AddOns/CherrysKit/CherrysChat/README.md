@@ -1,10 +1,20 @@
 # Cherry's Chat
 
-Version **0.10.12** · Kit release **0.11.90** · [All addons / hub](../README.md)
+Version **0.11.0** · Kit release **0.11.113** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
 Cherry's Chat draws the text of every chat window itself, on top of the game's own chat. Tabs, typing box, moving and resizing stay the game's, so it works like before, with a few extras.
+
+## Updated in 0.11.0
+
+**Emoji in Say bubbles.** The bubble over your head is drawn by the game itself, and no addon can put pictures in it or change its font, so an emoji in it showed as two empty boxes. Cherry's Chat now sends emoji in **Say** as text the bubble can show. Pick how with **Say bubbles** in the `/cchat` settings:
+
+- **Symbols (^_^)**, the default: hearts, stars, suns and faces like (^_^) that the game font can draw, and text such as `:carrot:` for every emoji with no symbol. Others see the symbol instead of the picture.
+- **Text (:fire:)**: every emoji goes out as text like `:fire:`, and everyone with Cherry's Chat still sees the picture in chat.
+- **Emoji (boxes)**: sends the emoji itself, as before.
+
+Other channels have no bubbles and stay as they were. Bubbles over other players show what they sent.
 
 ## Updated in 0.10.12
 

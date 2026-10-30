@@ -3,30 +3,225 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Global Bank local tools</title>
+  <title>Global Bank</title>
   <link rel="stylesheet" href="control.css">
+  <script defer src="folders.js"></script>
+  <script defer src="icons.js"></script>
+  <script defer src="bank.js"></script>
+  <script defer src="accounts.js"></script>
   <script defer src="control.js"></script>
 </head>
 <body>
   <main>
-    <h1>Global Bank local tools</h1>
-    <p>Read your character data and auction cache on this computer. These tools do not buy items.</p>
-    <section aria-labelledby="helper-title">
-      <h2 id="helper-title">Global Bank helper</h2>
-      <p id="helper-status" role="status">Checking the local helper…</p>
-      <button id="check-helper" type="button">Check helper</button>
-      <button id="start-helper" type="button" disabled>Start helper</button>
-      <p class="hint">The helper collects your saved character data. Keep its window open while you play.</p>
-    </section>
-    <section aria-labelledby="bank-title">
-      <h2 id="bank-title">Characters, bags and bank</h2>
-      <p>Type a command, then press Enter. Try <code>list</code>, <code>list gold</code>, <code>search mana</code>, <code>show Name</code>, or <code>help</code>.</p>
-      <form id="bank-form">
-        <label for="bank-command">Bank command</label>
-        <div class="command"><span aria-hidden="true">&gt;</span><input id="bank-command" name="command" maxlength="256" autocomplete="off" value="list"><button type="submit">Run</button></div>
+    <h1>Global Bank</h1>
+    <section class="status-bar" aria-label="Status">
+      <p id="status-helper" role="status">Checking the helper…</p>
+      <p id="status-data" class="hint"></p>
+      <form id="gf-unlock" class="command" hidden autocomplete="off">
+        <label for="gf-unlock-password">Gameforge accounts are locked</label>
+        <input id="gf-unlock-password" type="password" placeholder="Password" autocomplete="off">
+        <button type="submit">Unlock</button>
+        <span id="gf-unlock-status" class="hint" role="status"></span>
       </form>
-      <pre id="bank-output" aria-live="polite">No bank command has been run yet.</pre>
+      <label class="status-toggle"><input id="auto-helper" type="checkbox"> Keep the invisible helper running automatically when Chrome is open</label>
+      <details id="folders" class="folders">
+        <summary>Read from folders instead of the helper</summary>
+        <p class="hint">On a PC without the helper, the Bank tab can read your characters and icons straight from these two folders. It only reads them, and nothing leaves this PC. The Terminal and Auctions tabs still need the helper.</p>
+        <div class="folder-row"><button id="choose-saves" type="button">Choose save folder</button><span id="saves-status" class="hint">Usually Documents\Runes of Magic.</span></div>
+        <div class="folder-row"><button id="choose-game" type="button">Choose game folder</button><span id="game-status" class="hint">The folder Runes of Magic is installed in, for item icons. Optional.</span></div>
+        <button id="folders-allow" type="button" hidden>Allow access again</button>
+        <p id="folders-status" class="hint" role="status"></p>
+      </details>
     </section>
+    <nav class="tabs" role="tablist" aria-label="Global Bank">
+      <button type="button" role="tab" data-tab="bank" aria-selected="true">Bank</button>
+      <button type="button" role="tab" data-tab="currencies" aria-selected="false">Currencies</button>
+      <button type="button" role="tab" data-tab="stats" aria-selected="false">Stats</button>
+      <button type="button" role="tab" data-tab="heatmap" aria-selected="false">Gold heatmap</button>
+      <button type="button" role="tab" data-tab="characters" aria-selected="false">Characters</button>
+      <button type="button" role="tab" data-tab="accounts" aria-selected="false">Gameforge accounts</button>
+      <button type="button" role="tab" data-tab="depot" aria-selected="false">Item Depot</button>
+      <button type="button" role="tab" data-tab="terminal" aria-selected="false">Terminal</button>
+      <button type="button" role="tab" data-tab="auctions" aria-selected="false">Auctions</button>
+    </nav>
+    <div id="tab-bank" class="tab-panel">
+      <section class="bank-filters" aria-label="Search and filters">
+        <div class="bank-filter-row">
+          <label class="bank-wide">Item or stat <input id="bank-search" maxlength="80" autocomplete="off" placeholder="A name or a stat"></label>
+          <label>Search in <select id="bank-search-in"><option value="">Names and stats</option><option value="items">Stats on items</option><option value="stones">Stats on mana stones</option></select></label>
+          <label>Type <select id="bank-type"><option value="">All types</option><option>Armour</option><option>Weapons</option><option>Jewellery</option><option>Runes</option><option>Potions</option><option>Materials</option><option>Recipes</option><option>Mounts and pets</option><option>Other</option></select></label>
+          <label>Where <select id="bank-place"><option value="">Bag and bank</option><option value="bag">Bag</option><option value="bank">Bank</option></select></label>
+          <label>Character level <span class="bank-levels"><input id="bank-min-level" type="number" min="0" placeholder="Min" aria-label="Lowest character level"><input id="bank-max-level" type="number" min="0" placeholder="Max" aria-label="Highest character level"></span></label>
+          <label>Sort by <select id="bank-sort"><option value="name">Name</option><option value="count">Count</option><option value="type">Type</option></select></label>
+          <button id="bank-update" type="button">Update now</button>
+        </div>
+        <div class="bank-filter-row">
+          <details class="bank-characters-menu">
+            <summary id="bank-character-summary">All characters</summary>
+            <div class="bank-menu-buttons"><button id="bank-all" type="button">All</button><button id="bank-none" type="button">None</button></div>
+            <div id="bank-character-list" class="bank-character-list"></div>
+          </details>
+          <details class="bank-characters-menu">
+            <summary id="bank-exclusions-summary">Excluded items</summary>
+            <p class="hint">Right-click an item in the grid to exclude it. This only changes what this page shows.</p>
+            <label class="bank-check"><input id="bank-exclude-bound" type="checkbox"> Exclude bound items that can't be equipped</label>
+            <label class="bank-check"><input id="bank-show-excluded" type="checkbox"> Show excluded items, dimmed</label>
+            <label>Item name or ID <input id="bank-exclusion-item" maxlength="80" autocomplete="off"></label>
+            <div class="bank-menu-buttons"><button id="bank-exclusion-add" type="button">Exclude</button><button id="bank-whitelist-add" type="button">Always keep</button></div>
+            <p id="bank-exclusion-note" class="hint" role="status"></p>
+            <h3>Excluded</h3>
+            <ul id="bank-excluded-list" class="bank-exclusion-list"></ul>
+            <h3>Always kept</h3>
+            <ul id="bank-whitelist" class="bank-exclusion-list"></ul>
+          </details>
+          <label class="bank-check"><input id="bank-stack" type="checkbox" checked> Stack the same item (never gear)</label>
+          <span id="bank-total" class="hint"></span>
+        </div>
+        <p id="bank-status" class="hint" role="status"></p>
+      </section>
+      <div id="bank-grid" class="bank-grid"></div>
+      <p id="bank-made" class="hint"></p>
+      <div id="bank-tooltip" class="bank-tooltip" hidden></div>
+    </div>
+    <div id="tab-currencies" class="tab-panel" hidden>
+      <section aria-labelledby="currencies-title">
+        <h2 id="currencies-title">Currencies</h2>
+        <p class="hint">Click a heading to sort by it. A character's other currencies appear once it has logged in with this version. Diamonds, Bonus and Billdin are per account, so they aren't added up.</p>
+        <div id="currency-view" class="auction-table-wrap"><table class="currency-table"><thead></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+    <div id="tab-stats" class="tab-panel" hidden>
+      <section aria-labelledby="stats-title">
+        <h2 id="stats-title">Stats</h2>
+        <div class="bank-filter-row">
+          <label class="bank-wide">Stat name <input id="stat-search" maxlength="80" autocomplete="off"></label>
+          <label>Look at <select id="stat-kind"><option value="items">Stats on items</option><option value="stones">Stats on mana stones</option></select></label>
+          <span id="stat-total" class="hint"></span>
+        </div>
+        <p class="hint">Click a heading to sort by it. Stats appear once a character has logged in with this version. Mana stones include fusion stones.</p>
+        <div class="auction-table-wrap"><table class="currency-table stat-table"><thead></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+    <div id="tab-heatmap" class="tab-panel" hidden>
+      <section aria-labelledby="heatmap-title">
+        <h2 id="heatmap-title">Gold heatmap</h2>
+        <div class="heat-legend"><span>No gold</span><span class="heat-bar"></span><span>500,000,000 is orange, a full cap of 999,999,999 is bright green</span></div>
+        <p class="hint">Hover a character for its gold. Right-click to copy its name, Gameforge account or password. Characters are grouped by the accounts you link on the Gameforge accounts tab.</p>
+        <div id="heat-view" class="heat-view"></div>
+        <div id="heat-tooltip" class="bank-tooltip" hidden></div>
+      </section>
+    </div>
+    <div id="tab-accounts" class="tab-panel" hidden>
+      <section id="gf-setup" aria-labelledby="setup-title" hidden>
+        <h2 id="setup-title">Protect your Gameforge accounts</h2>
+        <p class="hint">Choose a password. Accounts and their links are encrypted with it and a random key this page makes, and you'll enter it to open them. If you forget it, nobody can recover them. Your items, gold and characters aren't encrypted and don't need it.</p>
+        <form id="gf-create" class="command" autocomplete="off">
+          <input id="gf-create-password" type="password" placeholder="New password" autocomplete="new-password" aria-label="New password">
+          <input id="gf-create-again" type="password" placeholder="The same again" autocomplete="new-password" aria-label="The same password again">
+          <button type="submit">Create</button>
+        </form>
+        <p class="hint">Moving from another PC? Load your backup file here, then enter your encryption key: <input id="gf-restore-new" type="file" accept=".json,application/json" aria-label="Backup file"></p>
+        <p id="gf-setup-status" class="hint" role="status"></p>
+      </section>
+      <section id="gf-need-key" aria-labelledby="key-title" hidden>
+        <h2 id="key-title">Enter your encryption key</h2>
+        <p class="hint">There's an encrypted accounts file, but this Chrome doesn't have its key. Paste the key you copied on your old PC. Your password opens them after that.</p>
+        <form id="gf-key-form" class="command" autocomplete="off">
+          <input id="gf-key-input" maxlength="100" placeholder="Encryption key" autocomplete="off" aria-label="Encryption key">
+          <button type="submit">Use this key</button>
+        </form>
+        <p class="hint">A different file? <input id="gf-restore-key" type="file" accept=".json,application/json" aria-label="Backup file"></p>
+        <p id="gf-key-status" class="hint" role="status"></p>
+      </section>
+      <p id="gf-locked-note" class="hint" hidden>Enter your password at the top of this page to open your Gameforge accounts.</p>
+      <div id="gf-open" hidden>
+      <section aria-labelledby="accounts-title">
+        <h2 id="accounts-title">Gameforge accounts</h2>
+        <p class="hint">These are encrypted on this PC, and open only with your password and this Chrome's encryption key. They stay open until you lock them or close this page. Other extensions, web pages and game addons can't read them, and the helper only ever gets the encrypted file.</p>
+        <button id="gf-lock" type="button">Lock now</button>
+        <form id="gf-add" class="command" autocomplete="off">
+          <input id="gf-new-name" maxlength="120" placeholder="Account name" autocomplete="off" aria-label="Account name">
+          <input id="gf-new-password" type="password" maxlength="200" placeholder="Password (optional)" autocomplete="new-password" aria-label="Password">
+          <input id="gf-new-secondary" type="password" maxlength="200" placeholder="Secondary password (optional)" autocomplete="new-password" aria-label="Secondary password">
+          <input id="gf-new-notes" maxlength="500" placeholder="Notes (optional)" autocomplete="off" aria-label="Notes">
+          <button type="submit">Add account</button>
+        </form>
+        <label class="bank-check"><input id="gf-reveal" type="checkbox"> Reveal passwords</label>
+        <div class="auction-table-wrap"><table><thead><tr><th>Account</th><th>Password</th><th>Secondary</th><th>Notes</th><th>Characters</th><th></th></tr></thead><tbody id="gf-account-rows"></tbody></table></div>
+        <p id="gf-status" class="hint" role="status"></p>
+      </section>
+      <section aria-labelledby="links-title">
+        <h2 id="links-title">Link characters</h2>
+        <p class="hint">Nothing links by itself. Filter by part of a name, tick what you want (Shift-click ticks a whole range), pick an account and press Link. You can also paste names.</p>
+        <div class="bank-filter-row">
+          <label class="bank-wide">Name contains <input id="gf-filter" maxlength="80" autocomplete="off"></label>
+          <label class="bank-check"><input id="gf-unlinked" type="checkbox"> Only unlinked</label>
+          <button id="gf-tick-shown" type="button">Tick all shown</button>
+          <button id="gf-tick-none" type="button">Clear ticks</button>
+          <label>Account <select id="gf-link-account"></select></label>
+          <button id="gf-link" type="button">Link ticked</button>
+          <button id="gf-unlink" type="button">Unlink ticked</button>
+        </div>
+        <p id="gf-link-count" class="hint"></p>
+        <div id="gf-characters" class="gf-characters"></div>
+        <label for="gf-paste">Or paste character names, one a line</label>
+        <textarea id="gf-paste" rows="4" autocomplete="off"></textarea>
+        <button id="gf-link-pasted" type="button">Link pasted names to this account</button>
+      </section>
+      <section aria-labelledby="move-title">
+        <h2 id="move-title">Moving to another PC</h2>
+        <p class="hint"><strong>Copy your encryption key first.</strong> The file travels with the helper's folder (<code>GameforgeAccounts.json</code>), but the key stays in this Chrome. On the new PC you'll need the file, the key and your password. Without the key, nothing can open the file.</p>
+        <div class="bank-filter-row">
+          <button id="gf-copy-key" type="button">Copy encryption key</button>
+          <button id="gf-backup" type="button">Save encrypted backup</button>
+        </div>
+        <form id="gf-change" class="command" autocomplete="off">
+          <input id="gf-change-password" type="password" placeholder="New password" autocomplete="new-password" aria-label="New password">
+          <button type="submit">Change password</button>
+        </form>
+        <p id="gf-move-status" class="hint" role="status"></p>
+      </section>
+      </div>
+      <button id="gf-forgot" type="button">Forgot your password? Delete these accounts and start again</button>
+    </div>
+    <div id="tab-characters" class="tab-panel" hidden>
+      <section aria-labelledby="characters-title">
+        <h2 id="characters-title">Characters</h2>
+        <p class="hint">Click a heading to sort by it. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p>
+        <div id="roster-view" class="auction-table-wrap"><table class="currency-table"><thead></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+    <div id="tab-depot" class="tab-panel" hidden>
+      <section aria-labelledby="depot-title">
+        <h2 id="depot-title">Item Depot</h2>
+        <p class="hint">Open your item depot page through ZShop in this browser and it fills in here. The page's address is never saved.</p>
+        <div class="bank-filter-row">
+          <label class="bank-wide">Item name <input id="depot-search" maxlength="80" autocomplete="off"></label>
+          <button id="depot-copy" type="button">Copy page layout</button>
+        </div>
+        <p id="depot-status" class="hint" role="status">Nothing read yet.</p>
+        <div id="depot-grid" class="bank-grid"></div>
+      </section>
+    </div>
+    <div id="tab-terminal" class="tab-panel" hidden>
+      <section aria-labelledby="terminal-title">
+        <h2 id="terminal-title">Terminal</h2>
+        <p>The helper's commands, without its window. Try <code>list gold</code>, <code>search mana</code>, <code>show Name</code>, or <code>help</code>.</p>
+        <pre id="bank-output" class="terminal" aria-live="polite"></pre>
+        <form id="bank-form">
+          <label for="bank-command">Command</label>
+          <div class="command"><span aria-hidden="true">&gt;</span><input id="bank-command" name="command" maxlength="256" autocomplete="off"><button type="submit">Run</button></div>
+        </form>
+      </section>
+      <section aria-labelledby="helper-title">
+        <h2 id="helper-title">Helper window</h2>
+        <p id="helper-status" role="status">Checking the local helper…</p>
+        <button id="check-helper" type="button">Check helper</button>
+        <button id="start-helper" type="button" disabled>Start helper</button>
+        <p class="hint">You don't need this window if the automatic option at the top of the page is on.</p>
+      </section>
+    </div>
+    <div id="tab-auctions" class="tab-panel" hidden>
     <section aria-labelledby="auction-title">
       <h2 id="auction-title">Auction cache search</h2>
       <p>Search the last auction data collected by the helper. Results are saved observations and may no longer be available or have the same price.</p>
@@ -49,7 +244,9 @@
       <div class="auction-table-wrap"><table id="auction-table" hidden><thead><tr><th>Name</th><th>Realm</th><th>Level</th><th>Tier</th><th>Durability</th><th>Added stats</th><th>Estimated end</th><th>Seller</th><th>Buyout</th></tr></thead><tbody id="auction-rows"></tbody></table></div>
       <div class="auction-buttons"><button id="auction-prev" type="button" disabled>Previous</button><button id="auction-next" type="button" disabled>Next</button></div>
     </section>
-    <p class="hint">This page reads local helper files only when you ask it to. It never asks for your password.</p>
+    </div>
+    <p class="hint">Everything here stays on this PC. Passwords are only here if you add them on the Gameforge accounts tab.</p>
+    <div id="gf-menu" class="gf-menu" hidden></div>
   </main>
 </body>
 </html>

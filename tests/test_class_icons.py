@@ -10,7 +10,7 @@ from lupa.lua51 import LuaRuntime
 KIT = Path(__file__).resolve().parents[1] / "Interface" / "AddOns" / "CherrysKit"
 TOKENS = ("WARRIOR", "RANGER", "THIEF", "MAGE", "AUGUR", "KNIGHT", "WARDEN",
           "DRUID", "HARPSYN", "PSYRON")
-# Client IDs: https://github.com/SolarStrike-Software/rom-bot/blob/master/classes/pawn.lua
+# Client IDs, as the client numbers its classes.
 LETTERS = ("W", "S", "R", "M", "P", "K", "Wd", "D", "Ss", "Mc")
 BASE = "Interface/AddOns/CherrysKit/KittyCombo/"
 
