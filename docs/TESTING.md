@@ -1,8 +1,26 @@
-# In-game checks for kit 0.11.100
+# In-game checks for kit 0.11.101
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+
+## 0.11.101 real time, daily reset, extension setup and single-addon installs
+
+None of this has run in the game yet. Chrome's side has run on real Chrome 155 with a test profile: setup opened the extensions page and filled in the folder, loading the extension wrote the time file, a Chrome start wrote it again, and the popup's reset time was right in six time zones.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| T1 | Reload the extension (its popup has a **Reload extension** button), then Reload UI. | Cherry's Bar's Clock shows the real time, and its date in the tooltip. Allow ten seconds if the file was only just written. |
+| T2 | Log out and into another character, then restart the game. | The Clock stays right both times. |
+| T3 | Restart Windows, start the game with Chrome closed, then start Chrome. | The Clock shows the time online until Chrome starts, then the real time within ten seconds. Its tooltip says where the time comes from. |
+| T4 | `/zshop probe` with the Global Bank helper window closed. | `clock CherrysClock`. |
+| T5 | Open the extension's popup. | **Daily reset** names 00:00 in Germany in your own time: 01:00 in Finland, 00:00 in Germany. |
+| T6 | Run **Install Chrome extension.bat** with Chrome open. | Chrome opens a new tab on its extensions page, and a small window sits above it. Turn on Developer mode and click Load unpacked: the folder fills in, the extension loads, and the small window says Done and closes. Your other tabs are untouched. |
+| T7 | Extract only the hub and ZShop into an empty `Interface/AddOns`, and repeat with another addon or two. | The addon works and shows in `/ck`. The minimap's bug button stays dark. |
+| T8 | Extract the Cherry's Loginxml ZIP into `Interface/AddOns`, log in without running its file yet. | Chat says the login screen isn't in place. After **Install login screen.bat** and a restart, the login screen shows Cherry's Loginxml 1.2.0 and the chat line is gone. Your own `accounts.lua` and `password.lua` are unchanged. |
+| T9 | On the server screen, change a toggle, log in, log out, restart the game. | The toggle stayed changed. |
+| T10 | Use Up, Down, Enter and Esc on the server and character screens. | They move, join or log in, and go back. |
+| T11 | Install LogNextChar. Press Next, then Prev, on an account with several characters, and on one with a single character. | You land on the neighbouring character. With one character, both buttons are grey. In `/ck`, its Settings opens the unlock option. |
 
 ## 0.11.100 rom weakauras placement grips
 

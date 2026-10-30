@@ -1,10 +1,20 @@
 # Cherry's Kit
 
-Version **0.4.23** · Kit release **0.11.100** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.24** · Kit release **0.11.101** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.101 playtest
+
+- **Real time for addons:** the hub now has a clock, fed by Global Bank's Daily Rewards Chrome extension 1.0.9. **Cherry's Bar 1.1.8**'s Clock and **ZShop 1.2.0-ck5** read it. See [Real time for addons](#real-time-for-addons).
+
+- **Global Bank 1.4.7:** the daily reset follows 00:00 in Germany in any time zone, and the extension's setup takes one click plus Chrome's two.
+
+- **Installing only some addons:** the client's reports of files the manifest lists but you didn't install no longer light the minimap's bug button.
+
+- **Separate packages:** Cherry's Loginxml, a replacement login screen, and LogNextChar, Next and Prev character buttons.
 
 ## Kit 0.11.100 playtest
 
@@ -91,6 +101,17 @@ Each one is its own download and needs Cherry's Kit:
 - **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
 - **Cherry's Bar**: information bars at the top, bottom or both, with displays set per bar (`/cbar`)
 - **Cherry's Addon LoadTimes**: how long each addon takes to load, for troubleshooting; off until its `Switch.txt` turns it on (`/ckload`)
+
+## Real time for addons
+
+The game's Lua has no clock, so `CherrysClock` stays unknown until something outside the game tells it the time. That something is Global Bank's Daily Rewards Chrome extension: when Chrome starts, or the extension talks to its local host, the host writes Windows' time to a small file and exits. Windows' uptime counter carries the time from there, across characters and game restarts, until Windows restarts. Nothing stays running and nothing is asked of the game server. Without the extension the clock stays unknown.
+
+| Call | Returns, or nil while unknown |
+| --- | --- |
+| `CherrysClock.UTC()` | Seconds since 1970, UTC |
+| `CherrysClock.Now()` | The same, shifted to this PC's time zone |
+| `CherrysClock.Date()` | Year, month, day on this PC |
+| `CherrysClock.Time()` | Hour, minute, second on this PC |
 
 ## Chat commands
 

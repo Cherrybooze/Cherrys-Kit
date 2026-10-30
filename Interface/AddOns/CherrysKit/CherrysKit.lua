@@ -8,7 +8,7 @@
 CherrysKit = CherrysKit or {}
 local Kit = CherrysKit
 
-Kit.version = "0.4.23"
+Kit.version = "0.4.24"
 Kit.MAX_ROWS = 16
 
 if SaveVariables then
