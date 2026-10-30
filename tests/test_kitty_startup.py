@@ -179,5 +179,36 @@ class KittyStartupTests(unittest.TestCase):
         self.assertEqual(self.messages(lua), [])
 
 
+    def test_control_frame_update_and_events_are_protected_without_new_functions(self):
+        lua = self.runtime()
+        root = ET.parse(KITTY / "gui" / "KittyControl.xml").getroot()
+        frame = root.find(".//ui:Frame[@name='KittyControlFrame']", NS)
+        scripts = {child.tag.split("}")[-1]: child.text for child in frame.find("ui:Scripts", NS)}
+        lua.globals().updateScript = scripts["OnUpdate"]
+        lua.globals().eventScript = scripts["OnEvent"]
+        lua.execute("""
+            local update = assert(loadstring("local this, elapsedTime = ...\\n" .. updateScript))
+            local event = assert(loadstring("local this, event, arg1, arg2, arg3, arg4 = ...\\n" .. eventScript))
+            calls = {};
+            Kitty.onUpdate = function(this, elapsedTime) calls[#calls + 1] = elapsedTime; end;
+            Kitty.onEvent = function(this, name, a1) calls[#calls + 1] = name .. ":" .. tostring(a1); end;
+            update("frame", 0.25);
+            event("frame", "TEST_EVENT", 7);
+            Kitty.onUpdate = function() end;
+            for i = 1, 20 do update("frame", 0.016); end
+            collectgarbage("collect"); collectgarbage("stop");
+            local before = collectgarbage("count");
+            for i = 1, 1000 do update("frame", 0.016); end
+            garbageKB = collectgarbage("count") - before;
+            collectgarbage("restart");
+            Kitty.onUpdate = function() error("frame failed"); end;
+            update("frame", 0.016);
+        """)
+        self.assertEqual(list(lua.globals().calls.values()), [0.25, "TEST_EVENT:7"])
+        self.assertLess(lua.globals().garbageKB, 1)
+        self.assertEqual(len(self.messages(lua)), 1)
+        self.assertIn("frame failed", self.messages(lua)[0])
+
+
 if __name__ == "__main__":
     unittest.main()

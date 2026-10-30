@@ -28,24 +28,26 @@ Kitty.debugPrint = function(...)
 end;
 
 -- Protected mode
+local function reportFailure(context, message)
+	-- Native UI calls can fail with nil; Lua also permits other error objects.
+	-- Do not let the error reporter hide that failure with a second exception.
+	if(message == nil or message == "") then
+		message = "Client call failed without an error message.";
+	else
+		message = tostring(message);
+	end
+	if(context ~= nil) then
+		message = tostring(context) .. ": " .. message;
+	end
+	Kitty.sendMessage(message, "DEFAULT", 1, 0, 0);
+end;
 local function callProtected(context, func, ...)
 	-- Run protected (errors go to chat)
 	local resultList = {pcall(func, ...)};
 	if(resultList[1]) then
 		return unpack(resultList, 2);
 	else
-		-- Native UI calls can fail with nil; Lua also permits other error objects.
-		-- Do not let the error reporter hide that failure with a second exception.
-		local message = resultList[2];
-		if(message == nil or message == "") then
-			message = "Client call failed without an error message.";
-		else
-			message = tostring(message);
-		end
-		if(context ~= nil) then
-			message = tostring(context) .. ": " .. message;
-		end
-		Kitty.sendMessage(message, "DEFAULT", 1, 0, 0);
+		reportFailure(context, resultList[2]);
 		return nil;
 	end
 end;
@@ -56,6 +58,14 @@ Kitty.protectFunction = function(func, context)
 end;
 Kitty.pcall = function(func, ...)
 	return callProtected(nil, func, ...);
+end;
+-- Cherry's Kit: for the frame update and combat events, which run many times a second.
+-- Errors go to chat as with protectFunction, but no function or table is made per call.
+Kitty.callSafely = function(func, ...)
+	local ok, message = pcall(func, ...);
+	if(not ok) then
+		reportFailure(nil, message);
+	end
 end;
 -- Hide the instance in a closure
 Kitty.bind = function(instance, func)

@@ -9,6 +9,7 @@ F.objs = {}      -- slot -> table of the frame and its parts
 F.unitOf = {}    -- slot -> unit shown
 F.slotOf = {}    -- unit -> slot
 F.flash = {}     -- unit -> { kind = "damage" | "heal", alpha = }
+F.flashes = {}   -- unit -> its flash table, kept for the next flash instead of a new one
 F.lastHealth = {} -- unit -> health last seen (flash)
 F.hover = nil    -- slot under the mouse
 
@@ -515,10 +516,20 @@ function F.NoteHealth(unit)
   if not last or max <= 0 or G.U.IsDead(gridUnit) then
     return
   end
+  local kind
   if cur < last then
-    F.flash[gridUnit] = { kind = "damage", alpha = 0.55 }
+    kind = "damage"
   elseif cur - last > max / 100 then
-    F.flash[gridUnit] = { kind = "heal", alpha = 0.55 }
+    kind = "heal"
+  end
+  if kind then
+    local fl = F.flashes[gridUnit]
+    if not fl then
+      fl = {}
+      F.flashes[gridUnit] = fl
+    end
+    fl.kind, fl.alpha = kind, 0.55
+    F.flash[gridUnit] = fl
   end
 end
 

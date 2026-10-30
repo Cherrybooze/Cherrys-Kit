@@ -145,7 +145,19 @@ local function Sending()
 end
 UMMIsSending = Sending;
 
+-- With the mailbox closed and nothing sending or waiting, the master frame has nothing to do
+-- each frame: it then runs twice a second with the frame times added up. Any event wakes it.
+local IDLE_TIME = 0.5;
+local idleElapsed = 0;
+local idle = false;
+
+local function IsIdle()
+  return not MailFrame:IsVisible() and not UMMFrame:IsVisible() and not Sending()
+    and UMMGlobalTimeout <= 0 and UMMGlobalFailTimeout <= 0 and UMMGlobalInboxLoadTimeout <= 0;
+end
+
 function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
+  idle = false;
   if (event == "VARIABLES_LOADED") then
     if (KitDisabled()) then
       -- turned off in the Cherry's Kit hub: leave the game's own mail window alone
@@ -253,6 +265,11 @@ function UMMMasterFrame_OnUpdate(this, elapsedTime)
   if (ModEnabled ~= true) then
     return;
   end
+  idleElapsed = idleElapsed + elapsedTime;
+  if (idle and idleElapsed < IDLE_TIME) then
+    return;
+  end
+  elapsedTime, idleElapsed = idleElapsed, 0;
   UMMClock = UMMClock + elapsedTime;
   if (UMMFrame:IsVisible()) then
     layoutCheckWait = layoutCheckWait - elapsedTime;
@@ -314,6 +331,7 @@ function UMMMasterFrame_OnUpdate(this, elapsedTime)
       UMMMasterFrame_OnEvent("MAIL_INBOX_UPDATE");
     end
   end
+  idle = IsIdle();
 end
 
 -- ##### Slash command handling #####

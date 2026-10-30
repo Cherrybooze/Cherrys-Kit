@@ -387,6 +387,38 @@ class MassLayoutTests(MassSendFixture, unittest.TestCase):
         self.assertEqual(self.g.screenReads, reads + 1)
         self.assertEqual(self.g.UMMFrame.width, 805)
 
+    def test_closed_mailbox_runs_twice_a_second_and_keeps_the_clock_and_timers(self):
+        self.g.UMMMasterFrame_OnEvent("VARIABLES_LOADED")
+        self.lua.execute('''
+          MailFrame:Hide(); UMMFrame:Hide()
+          ticks=0
+          local tick=UMMMailComposer.Tick
+          UMMMailComposer.Tick=function(...) ticks=ticks+1; return tick(...) end
+          function frames(count) for i=1,count do UMMMasterFrame_OnUpdate(UMMFrame,1/60) end end
+          frames(2)
+          ticks=0; clockStart=UMMClock
+          frames(120)
+        ''')
+        self.assertIn(self.g.ticks, (3, 4), "a closed mailbox with nothing to send runs twice a second")
+        self.assertAlmostEqual(self.g.UMMClock - self.g.clockStart, 2.0, delta=0.5)
+        self.lua.execute('''
+          ticks=0
+          ShowUIPanel=function(frame) frame.visible=true end
+          MailFrame.visible=true; UMMMasterFrame_OnEvent("MAIL_SHOW")
+          frames(30)
+        ''')
+        self.assertEqual(self.g.ticks, 30, "an open mailbox runs every frame")
+        self.lua.execute('''
+          UMMFrame.visible=false; MailFrame.visible=false
+          frames(2)
+          timedOut=0
+          UMMTimeoutTester={TimeOut=function() timedOut=timedOut+1 end}
+          UMMGlobalTimeoutCallFunction="UMMTimeoutTester"; UMMGlobalTimeout=0.2
+          frames(60)
+          UMMGlobalTimeoutCallFunction=nil
+        ''')
+        self.assertEqual(self.g.timedOut, 1, "a pending timeout still fires with the mailbox closed")
+
 
 class MassRecentTests(MassSendFixture, unittest.TestCase):
     def test_box_selection_and_recent_recipient_feed_the_real_queue_and_stop_preserves_unsent_marks(self):

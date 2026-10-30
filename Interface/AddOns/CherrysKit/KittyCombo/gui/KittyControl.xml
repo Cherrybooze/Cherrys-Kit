@@ -15,22 +15,19 @@
 				end)();
 				]]>
 			</OnLoad>
+			<!-- Cherry's Kit: Kitty.callSafely protects like protectFunction without a new function per call -->
 			<OnEvent>
 				<![CDATA[
-				Kitty.protectFunction(function()
-					if(Kitty.onEvent ~= nil) then
-						Kitty.onEvent(this, event, arg1, arg2, arg3, arg4);
-					end
-				end)();
+				if(Kitty.onEvent ~= nil) then
+					Kitty.callSafely(Kitty.onEvent, this, event, arg1, arg2, arg3, arg4);
+				end
 				]]>
 			</OnEvent>
 			<OnUpdate>
 				<![CDATA[
-				Kitty.protectFunction(function()
-					if(Kitty.onUpdate ~= nil) then
-						Kitty.onUpdate(this, elapsedTime);
-					end
-				end)();
+				if(Kitty.onUpdate ~= nil) then
+					Kitty.callSafely(Kitty.onUpdate, this, elapsedTime);
+				end
 				]]>
 			</OnUpdate>
 		</Scripts>

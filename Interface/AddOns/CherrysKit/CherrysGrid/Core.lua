@@ -345,8 +345,12 @@ G.varsLoaded = false
 G.elapsed = 0
 G.slowElapsed = 0
 G.rosterElapsed = 0
+G.animElapsed = 0
 G.dirty = {}       -- unit -> true: redraw on the next update
+G.spareDirty = {}  -- the emptied list the next update's marks go into
 G.allDirty = true
+-- Damage and heal flashes fade 20 times a second; the frames redraw ten times a second.
+G.ANIMATE_EVERY = 0.05
 
 G.EVENTS = {
   "VARIABLES_LOADED", "LOADING_END", "PARTY_MEMBER_CHANGED", "PARTY_LEADER_CHANGED",
@@ -448,8 +452,10 @@ function G.OnUpdate(elapsed)
   G.elapsed = G.elapsed + elapsed
   G.slowElapsed = G.slowElapsed + elapsed
   G.rosterElapsed = G.rosterElapsed + elapsed
-  if G.Frames then
-    G.Frames.Animate(elapsed)
+  G.animElapsed = G.animElapsed + elapsed
+  if G.Frames and G.animElapsed >= G.ANIMATE_EVERY then
+    G.Frames.Animate(G.animElapsed)
+    G.animElapsed = 0
   end
   if G.Clicks then
     G.Clicks.Tick(elapsed)
@@ -478,14 +484,16 @@ function G.OnUpdate(elapsed)
   end
   if G.allDirty then
     G.allDirty = false
-    G.dirty = {}
+    for unit in pairs(G.dirty) do G.dirty[unit] = nil end
     G.Frames.UpdateAll()
   elseif next(G.dirty) then
+    -- two lists take turns, so marking units for the next update makes no new table
     local d = G.dirty
-    G.dirty = {}
+    G.dirty, G.spareDirty = G.spareDirty, d
     for unit in pairs(d) do
       G.Frames.UpdateUnit(unit)
     end
+    for unit in pairs(d) do d[unit] = nil end
   end
 end
 

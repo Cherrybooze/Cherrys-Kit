@@ -25,10 +25,16 @@ end
 end
 
 -- onupd777ate handler
-function zBagHandler_OnUpdate(this)
+-- Cherry's Kit: sorting moves an item every frame; the bag and bank windows are checked
+-- 20 times a second instead of every frame.
+local zBagHandlerWait = 0;
+function zBagHandler_OnUpdate(this, elapsed)
 	if (ZBAG_SORTSTARTED==1) then
 		zBag_OrderItems();
 	end
+	zBagHandlerWait = zBagHandlerWait - (tonumber(elapsed) or 0.05);
+	if (zBagHandlerWait > 0) then return; end
+	zBagHandlerWait = 0.05;
 	-- The bag and bank layouts are independent.
 	if (zBagKit.onebag == nil) then return; end
 	if (not zBagKit.IsOneBag()) then

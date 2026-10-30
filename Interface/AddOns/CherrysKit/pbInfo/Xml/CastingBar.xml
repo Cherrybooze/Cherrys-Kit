@@ -94,6 +94,7 @@ pbInfo - Xml/CastingBar.xml
 								pbInfoCastingBarText:SetText(arg1);
 								pbInfo.CastingBar.TimeStart = GetTime();
 								pbInfo.CastingBar.TimeNeed = arg2;
+								this.wait, this.tenths = 0, nil;
 								this:Show();
 							elseif (event == "CASTING_STOP" and this:IsVisible()) then
 								this:Hide();
@@ -104,22 +105,41 @@ pbInfo - Xml/CastingBar.xml
 							end;
 						end;
 					</OnEvent>
-					<OnUpdate>if (pbInfo.Off) then return end; 
+					<!-- Cherry's Kit: checks 20 times a second instead of every frame, and only makes new text when the tenth shown changes -->
+					<OnUpdate>if (pbInfo.Off) then return end;
+						this.wait = (this.wait or 0) - elapsedTime;
+						if (this.wait > 0) then return end;
+						this.wait = 0.05;
 						local ElapsedTime = pbInfo.CastingBar.TimeNeed - (GetTime() - pbInfo.CastingBar.TimeStart);
 						if (0 > ElapsedTime) then
 							ElapsedTime = 0;
 						end;
-						pbInfoCastingBarTime:SetText(string.format("%.1f",ElapsedTime).." sec");
+						local tenths = math.floor(ElapsedTime * 10 + 0.5);
+						if (tenths ~= this.tenths) then
+							this.tenths = tenths;
+							pbInfoCastingBarTime:SetText(string.format("%.1f", tenths / 10).." sec");
+						end;
 					</OnUpdate>
 				</Scripts>
 			</Frame>
 		</Frames>
 	</Frame>
-	<!-- Cherry's Kit: "Hide default castbar" keeps the game's cast bar hidden (rom weakauras "My cast" replaces it) -->
+	<!-- Cherry's Kit: "Hide default castbar" keeps the game's cast bar hidden (rom weakauras "My cast" replaces it).
+	     The game's bar hears each cast event first and shows itself, then this hides it again before it is drawn.
+	     A check 4 times a second catches anything else that shows it. -->
 	<Frame name="pbInfoCastingBarHider" parent="UIParent" hidden="false">
 		<Scripts>
-			<OnUpdate>if (pbInfo.Off) then return end;
+			<OnLoad>if (pbInfo.Off) then return end;
+				this:RegisterEvent("CASTING_START");
+				this:RegisterEvent("CASTING_STOP");
+				this:RegisterEvent("CASTING_FAILED");
+				this:RegisterEvent("CASTING_DELAYED");
+			</OnLoad>
+			<OnEvent>if (pbInfo.Off) then return end;
 				if (pbInfo.CastingBar.KeepHidden) then pbInfo.CastingBar.KeepHidden(); end;
+			</OnEvent>
+			<OnUpdate>if (pbInfo.Off) then return end;
+				if (pbInfo.CastingBar.KeepHiddenTick) then pbInfo.CastingBar.KeepHiddenTick(elapsedTime); end;
 			</OnUpdate>
 		</Scripts>
 	</Frame>

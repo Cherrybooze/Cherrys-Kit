@@ -117,10 +117,13 @@ pbInfo - Xml/pbInfo.xml
 			</OnUpdate>
 		</Scripts>
 	</Frame>
+	<!-- Cherry's Kit: pbInfo.Kit.TooltipTick (pbInfoKit.lua) refreshes the tooltip 10 times a second, not every frame -->
 	<Frame name="pbInfoTooltipTimer" parent="UIParent" hidden="false">
 		<Scripts>
 			<OnUpdate>if (pbInfo.Off) then return end; 
-				if (GameTooltip:IsVisible()) then
+				if (pbInfo.Kit and pbInfo.Kit.TooltipTick) then
+					pbInfo.Kit.TooltipTick(elapsedTime);
+				elseif (GameTooltip:IsVisible()) then
 					pbInfo.Tooltip.Scripts.OnUpdate();
 				end;
 			</OnUpdate>
@@ -136,7 +139,8 @@ pbInfo - Xml/pbInfo.xml
 	<Frame name="pbInfoCharDataTimer" parent="UIParent" hidden="false">
 		<Scripts>
 			<OnLoad>if (pbInfo.Off) then return end; 
-				if (not os) then
+				-- Cherry's Kit: CharData.Scripts.OnLoad only stops this timer when os.date and os.time exist
+				if (not (os and os.date and os.time)) then
 					pbInfoCharDataTimer:Hide();
 				end;
 			</OnLoad>

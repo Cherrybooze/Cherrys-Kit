@@ -69,11 +69,17 @@ local function updateOverlays(prefix, buttonPrefix, count, show, slotOf)
   end
 end
 
-local wait = 0
+local wait, watchWait = 0, 0
 
+-- Resizing follows the mouse every frame; the backpack watch runs 20 times a second
+-- and the slot numbers five times a second.
 function K.OnUpdate(elapsed)
-  K.WatchBackpack()
   K.WatchResize()
+  watchWait = watchWait - (elapsed or 0.05)
+  if watchWait <= 0 then
+    watchWait = 0.05
+    K.WatchBackpack()
+  end
   wait = wait - (elapsed or 0.03)
   if wait > 0 then
     return

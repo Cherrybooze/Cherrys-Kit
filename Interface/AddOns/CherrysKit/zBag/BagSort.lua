@@ -700,6 +700,7 @@ function BagSort.RearrangeItems(sortedData)
     
     --BagSort.DebugSortedData()
     BagSort.timer = Sol.timers.ScheduleTimer("BagSort", 0, BagSort.DoMove, 1)
+    if BagSortUpdateFrame then BagSortUpdateFrame:Show() end -- Cherry's Kit: ticks only while sorting
     
     if hookedZBag then
         zBagSortFull:Disable()
@@ -1039,6 +1040,7 @@ function BagSort.DoMove()
         Sol.io.Print("Sorting finished")
         Sol.timers.RemoveTimer("BagSort", BagSort.timer)
         BagSort.timer = nil
+        if BagSortUpdateFrame then BagSortUpdateFrame:Hide() end
         if hookedZBag then
             zBagSortFull:Enable()
         else
@@ -1050,6 +1052,7 @@ function BagSort.DoMove()
         Sol.io.Print("Could not complete bag sort")
         Sol.timers.RemoveTimer("BagSort", BagSort.timer)
         BagSort.timer = nil
+        if BagSortUpdateFrame then BagSortUpdateFrame:Hide() end
         if hookedZBag then
             zBagSortFull:Enable()
         else

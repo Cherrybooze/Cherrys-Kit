@@ -541,20 +541,20 @@ end
 -- From Core's OnUpdate: runs the 2nd actions whose delay is over.
 function C.Tick(elapsed)
   C.clock = C.clock + (tonumber(elapsed) or 0)
-  if #C.queue == 0 then
+  local queue = C.queue
+  if #queue == 0 then
     return
   end
-  local due, rest = {}, {}
-  for _, q in ipairs(C.queue) do
+  -- in queue order, without new lists each frame while a 2nd action waits
+  local i = 1
+  while i <= #queue do
+    local q = queue[i]
     if q.at <= C.clock then
-      due[#due + 1] = q
+      table.remove(queue, i)
+      C.Second(q.unit, q.b, q.keep)
     else
-      rest[#rest + 1] = q
+      i = i + 1
     end
-  end
-  C.queue = rest
-  for _, q in ipairs(due) do
-    C.Second(q.unit, q.b, q.keep)
   end
 end
 
