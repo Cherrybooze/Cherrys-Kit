@@ -114,6 +114,29 @@ function Get-ControlBankFile([string]$dataDirectory, [int]$offset = 0) {
     return @{json=$text.Substring($offset, [Math]::Min(300000, $text.Length - $offset));total=$text.Length}
 }
 
+# The encrypted Gameforge accounts file. This only ever sees what the page has already encrypted: nothing here can
+# open it, and anything else is refused, so a page bug can't leave readable logins in this folder.
+function Save-ControlAccountsFile([string]$dataDirectory, [string]$text) {
+    if ($text.Length -gt 16777216) { throw 'The accounts file is too large.' }
+    $file = ConvertFrom-GBJson $text
+    $names = @($file.PSObject.Properties.Name | Sort-Object)
+    if (($names -join ',') -cne 'data,iterations,iv,kdf,salt,saved,schema' -or $file.schema -ne 1 -or $file.kdf -cne 'PBKDF2-SHA256' -or
+        [string]$file.data -cnotmatch '^[A-Za-z0-9+/]+={0,2}$' -or [string]$file.iv -cnotmatch '^[A-Za-z0-9+/]+={0,2}$' -or [string]$file.salt -cnotmatch '^[A-Za-z0-9+/]+={0,2}$') {
+        throw 'That is not an encrypted accounts file.'
+    }
+    $path = Join-Path $dataDirectory 'GameforgeAccounts.json'
+    $tmp = "$path.tmp"
+    [IO.File]::WriteAllText($tmp, $text, (New-Object Text.UTF8Encoding($false)))
+    Move-Item -LiteralPath $tmp -Destination $path -Force
+}
+function Get-ControlAccountsFile([string]$dataDirectory, [int]$offset = 0) {
+    $path = Join-Path $dataDirectory 'GameforgeAccounts.json'
+    if (-not (Test-Path -LiteralPath $path)) { return @{json=$null;total=0} }
+    $text = [System.IO.File]::ReadAllText($path, [Text.Encoding]::UTF8)
+    if ($offset -lt 0 -or $offset -gt $text.Length) { throw 'The accounts file changed. Try again.' }
+    return @{json=$text.Substring($offset, [Math]::Min(300000, $text.Length - $offset));total=$text.Length}
+}
+
 # Item icons from the game's own interface.fdb, as base64. Only item icons can be asked for.
 # Its index has no names, so each entry's header is read until every asked-for icon has turned up.
 function Get-ControlIcons([string]$interfaceDirectory, $names) {

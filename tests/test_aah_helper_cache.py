@@ -163,16 +163,33 @@ try { if (Remove-AAHAcknowledgedOutbox $file $original $root @() 0) { throw 'Rea
         data_script = HELPER.with_name('GlobalBank-Data.ps1')
         out = self.data / 'GlobalBank.json'
         self.run_ps(". '" + str(data_script).replace("'", "''") + "'\n" + '''
-$snapshot = 'GB1~A~Mage~1~5~0~0~0~t`M~12~345~Honor`M~gone~0~x`B~1~1~5~Name~icon~1`K~2~1~6~Other~icon`K~3~1~211000~Sword~icon~~90~100~3~2~1~Genius I;Monk V~~a864a8'
+$snapshot = 'GB1~A~Mage~1~5~0~0~0~t`S~Aynara`M~12~345~Honor`M~gone~0~x`B~1~1~5~Name~icon~1`K~2~1~6~Other~icon`K~3~1~211000~Sword~icon~~90~100~3~2~1~Genius I;Monk V~~a864a8'
 $c = ConvertFrom-GBSnapshot $snapshot 'when'
 Export-GBJson @($c) (Join-Path $data 'GlobalBank.json') 'now'
 ''')
         character = json.loads(out.read_text(encoding='utf-8'))['characters'][0]
+        self.assertEqual(character['server'], 'Aynara')
         self.assertEqual(character['currencies'], [dict(key='12', amount=345, name='Honor')])
         self.assertIs(character['bag'][0]['bound'], True)
         self.assertNotIn('bound', character['bank'][0])
         self.assertNotIn('gear', character['bank'][0])
         self.assertEqual(character['bank'][1]['gear'], dict(dura=90, maxDura=100, plus=3, tier=2, freeSlots=1, stats=['Genius I', 'Monk V'], runes=[], color='a864a8'))
+
+    def test_only_an_encrypted_accounts_file_can_be_written(self):
+        control = HELPER.with_name('GlobalBank-Control.ps1')
+        good = json.dumps(dict(schema=1, kdf='PBKDF2-SHA256', iterations=600000, salt='AAAA', iv='AAAA', data='QUJD', saved=1))
+        (self.root / 'good.txt').write_text(good, encoding='utf-8')
+        bad = [dict(accounts=[dict(name='plain')]), dict(schema=1, kdf='PBKDF2-SHA256', iterations=1, salt='AAAA', iv='AAAA', data='{"plain":1}', saved=1),
+               dict(schema=1, kdf='PBKDF2-SHA256', iterations=1, salt='AAAA', iv='AAAA', data='QUJD', saved=1, notes='extra')]
+        (self.root / 'bad.txt').write_text('\n'.join(json.dumps(item) for item in bad), encoding='utf-8')
+        out = self.run_ps(". '" + str(control).replace("'", "''") + "'\n" + f'''
+foreach ($line in [IO.File]::ReadAllLines('{self.root}\\bad.txt')) {{ try {{ Save-ControlAccountsFile $data $line; 'written' }} catch {{ 'refused' }} }}
+"exists:$(Test-Path (Join-Path $data 'GameforgeAccounts.json'))"
+Save-ControlAccountsFile $data ([IO.File]::ReadAllText('{self.root}\\good.txt'))
+(Get-ControlAccountsFile $data 0).json
+''')
+        self.assertEqual(out.split()[:4], ['refused', 'refused', 'refused', 'exists:False'])
+        self.assertEqual(json.loads(out.split('exists:False')[1])['data'], 'QUJD')
 
     def test_the_bank_file_goes_to_the_page_in_parts(self):
         control = HELPER.with_name('GlobalBank-Control.ps1')

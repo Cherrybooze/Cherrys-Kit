@@ -19,11 +19,12 @@
 --   B~slot~count~id~name~icon   (bag)     K~slot~count~id~name~icon   (bank)   then ~1 if the item is bound
 --   gear then adds ~durability~maxDurability~plus~tierAdded~freeRuneSlots~stats~runes~colour~link (stats and runes joined by ;, link as the numbers of the item's link)
 --   M~key~amount~name   a currency other than gold, left out at zero
+--   S~server   the server this character was last saved on
 
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.4.12"
+GB.version = "1.4.13"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -105,6 +106,9 @@ function GB.Serialize(c)
   for _, class in ipairs(c.classes or {}) do
     parts[#parts + 1] = table.concat({ "C", clean(class.name), tostring(class.level or 0) }, "~")
   end
+  if c.server and c.server ~= "" then
+    parts[#parts + 1] = "S~" .. clean(c.server)
+  end
   for _, money in ipairs(c.currencies or {}) do
     parts[#parts + 1] = table.concat({ "M", clean(money.key), tostring(money.amount), clean(money.name) }, "~")
   end
@@ -161,6 +165,9 @@ function GB.Parse(text)
     local f = split(records[i], "~")
     if f[1] == "C" and f[2] and f[2] ~= "" and tonumber(f[3]) then
       c.classes[#c.classes + 1] = { name = f[2], level = tonumber(f[3]) }
+    end
+    if f[1] == "S" and f[2] and f[2] ~= "" then
+      c.server = f[2]
     end
     if f[1] == "M" and f[2] and f[2] ~= "" and tonumber(f[3]) then
       c.currencies[#c.currencies + 1] = { key = f[2], amount = tonumber(f[3]), name = f[4] or "" }
@@ -356,6 +363,7 @@ function GB.Snapshot(withBank, authoritative)
   end
   c.money = GB.ReadMoney()
   c.currencies = GB.ReadCurrencies()
+  c.server = call(GetServerName) or c.server
   c.bag, c.bagMax = GB.ReadBag()
   if withBank then
     local bank, max = GB.ReadBank()

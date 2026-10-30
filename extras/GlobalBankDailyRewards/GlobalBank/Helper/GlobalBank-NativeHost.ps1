@@ -96,6 +96,14 @@ try {
         Send-Response $info
         exit 0
     }
+    if ($message.type -eq 'gf-save' -or $message.type -eq 'gf-load' -or $message.type -eq 'gf-delete') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
+        $data = Get-HelperDataDirectory
+        if ($message.type -eq 'gf-save') { Save-ControlAccountsFile $data ([string]$message.text); Send-Response @{ok=$true} }
+        elseif ($message.type -eq 'gf-delete') { Remove-Item -LiteralPath (Join-Path $data 'GameforgeAccounts.json') -Force -ErrorAction SilentlyContinue; Send-Response @{ok=$true} }
+        else { $part = Get-ControlAccountsFile $data ([int]$message.offset); Send-Response @{ok=$true;json=$part.json;total=$part.total} }
+        exit 0
+    }
     if ($message.type -eq 'bank-data' -or $message.type -eq 'bank-icons' -or $message.type -eq 'bank-command') {
         . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
         $data = Get-HelperDataDirectory

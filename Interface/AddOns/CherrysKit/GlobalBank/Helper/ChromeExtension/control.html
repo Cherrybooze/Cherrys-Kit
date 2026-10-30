@@ -8,6 +8,7 @@
   <script defer src="folders.js"></script>
   <script defer src="icons.js"></script>
   <script defer src="bank.js"></script>
+  <script defer src="accounts.js"></script>
   <script defer src="control.js"></script>
 </head>
 <body>
@@ -16,6 +17,12 @@
     <section class="status-bar" aria-label="Status">
       <p id="status-helper" role="status">Checking the helper…</p>
       <p id="status-data" class="hint"></p>
+      <form id="gf-unlock" class="command" hidden autocomplete="off">
+        <label for="gf-unlock-password">Gameforge accounts are locked</label>
+        <input id="gf-unlock-password" type="password" placeholder="Password" autocomplete="off">
+        <button type="submit">Unlock</button>
+        <span id="gf-unlock-status" class="hint" role="status"></span>
+      </form>
       <label class="status-toggle"><input id="auto-helper" type="checkbox"> Keep the invisible helper running automatically when Chrome is open</label>
       <details id="folders" class="folders">
         <summary>Read from folders instead of the helper</summary>
@@ -29,7 +36,9 @@
     <nav class="tabs" role="tablist" aria-label="Global Bank">
       <button type="button" role="tab" data-tab="bank" aria-selected="true">Bank</button>
       <button type="button" role="tab" data-tab="currencies" aria-selected="false">Currencies</button>
+      <button type="button" role="tab" data-tab="heatmap" aria-selected="false">Gold heatmap</button>
       <button type="button" role="tab" data-tab="characters" aria-selected="false">Characters</button>
+      <button type="button" role="tab" data-tab="accounts" aria-selected="false">Gameforge accounts</button>
       <button type="button" role="tab" data-tab="depot" aria-selected="false">Item Depot</button>
       <button type="button" role="tab" data-tab="terminal" aria-selected="false">Terminal</button>
       <button type="button" role="tab" data-tab="auctions" aria-selected="false">Auctions</button>
@@ -78,6 +87,88 @@
         <p class="hint">Click a heading to sort by it. A character's other currencies appear once it has logged in with this version. Diamonds, Bonus and Billdin are per account, so they aren't added up.</p>
         <div id="currency-view" class="auction-table-wrap"><table class="currency-table"><thead></thead><tbody></tbody></table></div>
       </section>
+    </div>
+    <div id="tab-heatmap" class="tab-panel" hidden>
+      <section aria-labelledby="heatmap-title">
+        <h2 id="heatmap-title">Gold heatmap</h2>
+        <div class="heat-legend"><span>No gold</span><span class="heat-bar"></span><span>500,000,000 is orange, a full cap of 999,999,999 is bright green</span></div>
+        <p class="hint">Hover a character for its gold. Right-click to copy its name, Gameforge account or password. Characters are grouped by the accounts you link on the Gameforge accounts tab.</p>
+        <div id="heat-view" class="heat-view"></div>
+        <div id="heat-tooltip" class="bank-tooltip" hidden></div>
+      </section>
+    </div>
+    <div id="tab-accounts" class="tab-panel" hidden>
+      <section id="gf-setup" aria-labelledby="setup-title" hidden>
+        <h2 id="setup-title">Protect your Gameforge accounts</h2>
+        <p class="hint">Choose a password. Accounts and their links are encrypted with it and a random key this page makes, and you'll enter it to open them. If you forget it, nobody can recover them. Your items, gold and characters aren't encrypted and don't need it.</p>
+        <form id="gf-create" class="command" autocomplete="off">
+          <input id="gf-create-password" type="password" placeholder="New password" autocomplete="new-password" aria-label="New password">
+          <input id="gf-create-again" type="password" placeholder="The same again" autocomplete="new-password" aria-label="The same password again">
+          <button type="submit">Create</button>
+        </form>
+        <p class="hint">Moving from another PC? Load your backup file here, then enter your encryption key: <input id="gf-restore-new" type="file" accept=".json,application/json" aria-label="Backup file"></p>
+        <p id="gf-setup-status" class="hint" role="status"></p>
+      </section>
+      <section id="gf-need-key" aria-labelledby="key-title" hidden>
+        <h2 id="key-title">Enter your encryption key</h2>
+        <p class="hint">There's an encrypted accounts file, but this Chrome doesn't have its key. Paste the key you copied on your old PC. Your password opens them after that.</p>
+        <form id="gf-key-form" class="command" autocomplete="off">
+          <input id="gf-key-input" maxlength="100" placeholder="Encryption key" autocomplete="off" aria-label="Encryption key">
+          <button type="submit">Use this key</button>
+        </form>
+        <p class="hint">A different file? <input id="gf-restore-key" type="file" accept=".json,application/json" aria-label="Backup file"></p>
+        <p id="gf-key-status" class="hint" role="status"></p>
+      </section>
+      <p id="gf-locked-note" class="hint" hidden>Enter your password at the top of this page to open your Gameforge accounts.</p>
+      <div id="gf-open" hidden>
+      <section aria-labelledby="accounts-title">
+        <h2 id="accounts-title">Gameforge accounts</h2>
+        <p class="hint">These are encrypted on this PC, and open only with your password and this Chrome's encryption key. They stay open until you lock them or close this page. Other extensions, web pages and game addons can't read them, and the helper only ever gets the encrypted file.</p>
+        <button id="gf-lock" type="button">Lock now</button>
+        <form id="gf-add" class="command" autocomplete="off">
+          <input id="gf-new-name" maxlength="120" placeholder="Account name" autocomplete="off" aria-label="Account name">
+          <input id="gf-new-password" type="password" maxlength="200" placeholder="Password (optional)" autocomplete="new-password" aria-label="Password">
+          <input id="gf-new-secondary" type="password" maxlength="200" placeholder="Secondary password (optional)" autocomplete="new-password" aria-label="Secondary password">
+          <input id="gf-new-notes" maxlength="500" placeholder="Notes (optional)" autocomplete="off" aria-label="Notes">
+          <button type="submit">Add account</button>
+        </form>
+        <label class="bank-check"><input id="gf-reveal" type="checkbox"> Reveal passwords</label>
+        <div class="auction-table-wrap"><table><thead><tr><th>Account</th><th>Password</th><th>Secondary</th><th>Notes</th><th>Characters</th><th></th></tr></thead><tbody id="gf-account-rows"></tbody></table></div>
+        <p id="gf-status" class="hint" role="status"></p>
+      </section>
+      <section aria-labelledby="links-title">
+        <h2 id="links-title">Link characters</h2>
+        <p class="hint">Nothing links by itself. Filter by part of a name, tick what you want (Shift-click ticks a whole range), pick an account and press Link. You can also paste names.</p>
+        <div class="bank-filter-row">
+          <label class="bank-wide">Name contains <input id="gf-filter" maxlength="80" autocomplete="off"></label>
+          <label class="bank-check"><input id="gf-unlinked" type="checkbox"> Only unlinked</label>
+          <button id="gf-tick-shown" type="button">Tick all shown</button>
+          <button id="gf-tick-none" type="button">Clear ticks</button>
+          <label>Account <select id="gf-link-account"></select></label>
+          <button id="gf-link" type="button">Link ticked</button>
+          <button id="gf-unlink" type="button">Unlink ticked</button>
+        </div>
+        <p id="gf-link-count" class="hint"></p>
+        <div id="gf-characters" class="gf-characters"></div>
+        <label for="gf-paste">Or paste character names, one a line</label>
+        <textarea id="gf-paste" rows="4" autocomplete="off"></textarea>
+        <button id="gf-link-pasted" type="button">Link pasted names to this account</button>
+      </section>
+      <section aria-labelledby="move-title">
+        <h2 id="move-title">Moving to another PC</h2>
+        <p class="hint"><strong>Copy your encryption key first.</strong> The file travels with the helper's folder (<code>GameforgeAccounts.json</code>), but the key stays in this Chrome. On the new PC you'll need the file, the key and your password. Without the key, nothing can open the file.</p>
+        <div class="bank-filter-row">
+          <button id="gf-copy-key" type="button">Copy encryption key</button>
+          <button id="gf-backup" type="button">Save encrypted backup</button>
+        </div>
+        <form id="gf-change" class="command" autocomplete="off">
+          <input id="gf-change-password" type="password" placeholder="New password" autocomplete="new-password" aria-label="New password">
+          <button type="submit">Change password</button>
+        </form>
+        <p id="gf-move-status" class="hint" role="status"></p>
+      </section>
+      </div>
+      <button id="gf-forgot" type="button">Forgot your password? Delete these accounts and start again</button>
     </div>
     <div id="tab-characters" class="tab-panel" hidden>
       <section aria-labelledby="characters-title">
@@ -140,7 +231,8 @@
       <div class="auction-buttons"><button id="auction-prev" type="button" disabled>Previous</button><button id="auction-next" type="button" disabled>Next</button></div>
     </section>
     </div>
-    <p class="hint">Everything here stays on this PC. It never asks for your password.</p>
+    <p class="hint">Everything here stays on this PC. Passwords are only here if you add them on the Gameforge accounts tab.</p>
+    <div id="gf-menu" class="gf-menu" hidden></div>
   </main>
 </body>
 </html>

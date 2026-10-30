@@ -333,6 +333,128 @@ assert.equal(bank.applyFilters(held, {text: 'quick'}).length, 2);
 assert.equal(bank.applyFilters(held, {text: 'herb'}).length, 2);
 """)
 
+    def test_gold_heatmap_and_account_links(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'accounts.js'), 'utf8') + ';this.GBAccounts = GBAccounts;', context);
+const gb = context.GBAccounts;
+const rgb = gold => [...gb.heatColor(gold).rgb];
+assert.deepEqual(rgb(0), [198, 40, 40]);
+assert.deepEqual(rgb(500000000), [245, 124, 0]);
+assert.deepEqual(rgb(999999999), [0, 230, 64]);
+assert.deepEqual(rgb(5000000000), [0, 230, 64]);
+assert.deepEqual(rgb(250000000), [222, 82, 20]);
+assert.ok(rgb(750000000)[1] > 124 && rgb(750000000)[1] < 230);
+assert.equal(gb.serverOf({server: 'Aynara'}), 'Aynara');
+assert.equal(gb.serverOf({dailyLogin: {server: 'Aynara (PvE)'}}), 'Aynara');
+assert.equal(gb.serverOf({}), 'Server unknown');
+const state = gb.emptyState();
+state.accounts.push({id: 'a', name: 'First'}, {id: 'b', name: 'Second'});
+const characters = [
+  {name: 'Rich', gold: 999999999, server: 'Gaia'}, {name: 'Rich2', gold: 999999999, server: 'Gaia'},
+  {name: 'Mid', gold: 500000000, server: 'Gaia'}, {name: 'Low', gold: 5, server: 'Gaia'}, {name: 'Alone', gold: 7, server: 'Gaia'},
+  {name: 'Far', gold: 1, server: 'Aynara'}, {name: 'Lost', gold: 2},
+];
+assert.equal(gb.setLinks(state, ['MID', 'Low', 'Rich'], 'a'), 3);
+assert.equal(gb.setLinks(state, ['Mid'], 'a'), 0);
+assert.equal(gb.accountOf(state, 'mid').name, 'First');
+assert.equal(gb.accountOf(state, 'nobody'), null);
+const columns = gb.heatColumns(characters, state);
+assert.deepEqual([...columns.map(c => c.server)], ['Aynara', 'Gaia', 'Server unknown']);
+const gaia = columns[1];
+assert.equal(gaia.total, 999999999 * 2 + 500000012);
+assert.deepEqual([...gaia.fullCaps.map(c => c.name)], ['Rich', 'Rich2']);
+assert.deepEqual([...gaia.groups.map(g => g.account)], ['First', 'No account']);
+assert.deepEqual([...gaia.groups[0].characters.map(c => c.name)], ['Mid', 'Low']);
+assert.equal(gb.setLinks(state, ['Low'], null), 1);
+assert.equal(gb.accountOf(state, 'Low'), null);
+gb.removeAccount(state, 'a');
+assert.equal(gb.accountOf(state, 'Mid'), null);
+assert.equal(Object.keys(state.links).length, 0);
+const pasted = gb.matchNames('rich\r\n  LOW ,Nobody;;\nrich\n', characters);
+assert.deepEqual([...pasted.found], ['Rich', 'Low']);
+assert.deepEqual([...pasted.missing], ['Nobody']);
+// A thousand characters link at once
+const many = Array.from({length: 5000}, (_, i) => 'Alt' + i);
+assert.equal(gb.setLinks(gb.emptyState(), many, 'x'), 5000);
+""")
+
+    def test_logins_never_leave_the_page(self):
+        source = (ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension/accounts.js').read_text(encoding='utf-8')
+        for sends in ('sendNativeMessage', 'sendMessage', 'fetch(', 'XMLHttpRequest', 'console.', 'storage.sync', 'localStorage'):
+            self.assertNotIn(sends, source)
+        self.assertIn('chrome.storage.local', source)
+        # Only the encrypted file is ever sent, and the state only reaches a file through seal()
+        self.assertEqual(source.count('JSON.stringify(state)'), 0)
+        self.assertEqual(source.count("send({type: 'gf-save', text: JSON.stringify(sealedFile)})"), 2)
+        self.assertEqual(source.count("send({type: 'gf-save', text: JSON.stringify(file)})"), 1)
+        self.assertEqual(source.count('[FILE_STORE]: sealedFile'), 2)
+        background = (ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension/background.js').read_text(encoding='utf-8')
+        self.assertNotIn('gfKey', background)
+        self.assertNotIn('gfSealed', background)
+        # Reveal is off when the page opens, and the masked text shows nothing of the password's length
+        page = (ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension/control.html').read_text(encoding='utf-8')
+        self.assertIn('<input id="gf-reveal" type="checkbox">', page)
+        self.assertIn('<input id="gf-new-password" type="password"', page)
+        self.assertIn("reveal ? value : MASK", source)
+        self.assertIn('secret(account.password)', source)
+        self.assertIn('secret(account.secondary)', source)
+        self.assertIn('<input id="gf-new-secondary" type="password"', page)
+
+    def test_only_the_extension_itself_can_reach_stored_data(self):
+        folder = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension'
+        manifest = json.loads((folder / 'manifest.json').read_text(encoding='utf-8'))
+        self.assertEqual(manifest['externally_connectable'], {'ids': []})
+        self.assertNotIn('web_accessible_resources', manifest)
+        self.assertNotIn('host_permissions', manifest)
+        self.assertEqual(sorted(manifest['permissions']), ['nativeMessaging', 'storage'])
+        background = (folder / 'background.js').read_text(encoding='utf-8')
+        self.assertIn("accessLevel: 'TRUSTED_CONTEXTS'", background)
+        self.assertNotIn('onMessageExternal', background)
+        self.assertNotIn('onConnectExternal', background)
+        self.assertNotIn('storage.local.get', (folder / 'depot.js').read_text(encoding='utf-8'))
+        for script in ('content.js', 'depot.js'):
+            source = (folder / script).read_text(encoding='utf-8')
+            self.assertNotIn('storage.local', source, script)
+            self.assertNotIn('postMessage', source, script)
+            self.assertNotIn('gfKey', source, script)
+            self.assertNotIn('gfSealed', source, script)
+
+    def test_account_file_needs_the_password_and_the_key(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console, crypto: globalThis.crypto, TextEncoder, TextDecoder, btoa, atob, Uint8Array, Date, JSON});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'accounts.js'), 'utf8') + ';this.GBAccounts = GBAccounts;', context);
+const gb = context.GBAccounts;
+(async () => {
+  const key = gb.newKey(), other = gb.newKey();
+  assert.notEqual(key, other);
+  assert.match(key, /^[0-9a-f]{64}$/);
+  assert.equal(gb.cleanKey(' ' + key.toUpperCase().slice(0, 32) + '\n' + key.slice(32) + ' '), key);
+  assert.equal(gb.cleanKey('too short'), null);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  // Few rounds, to keep the test quick: the page uses 600,000
+  const rounds = 1000;
+  const right = await gb.deriveKey('words', key, salt, rounds);
+  const data = {accounts: [{id: 'a', name: 'FindMeInTheFile', notes: 'FindMeInTheNotes'}], links: {findmealsoinlinks: 'a'}};
+  const file = await gb.seal(data, right, salt, rounds);
+  assert.ok(gb.validFile(file));
+  const text = JSON.stringify(file);
+  for (const plain of ['FindMeInTheFile', 'FindMeInTheNotes', 'findmealsoinlinks', key]) assert.ok(!text.includes(plain), plain);
+  assert.equal((await gb.unseal(file, right)).accounts[0].name, 'FindMeInTheFile');
+  // A fresh start every save
+  assert.notEqual((await gb.seal(data, right, salt, rounds)).iv, file.iv);
+  await assert.rejects(gb.unseal(file, await gb.deriveKey('other words', key, salt, rounds)));
+  await assert.rejects(gb.unseal(file, await gb.deriveKey('words', other, salt, rounds)));
+  await assert.rejects(gb.unseal({...file, data: file.data.slice(4) + 'AAAA'}, right));
+  // The key can't be taken back out of the page's memory
+  await assert.rejects(crypto.subtle.exportKey('raw', right));
+  assert.equal(gb.validFile({schema: 1}), false);
+  assert.equal(gb.validFile(data), false);
+})().catch(error => { console.error(error); process.exit(1); });
+""")
+
     def test_the_depot_page_address_is_never_kept(self):
         source = (ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension/depot.js').read_text(encoding='utf-8')
         self.assertNotIn('location.href', source)

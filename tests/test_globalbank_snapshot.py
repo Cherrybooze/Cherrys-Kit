@@ -37,6 +37,7 @@ class GlobalBankSnapshotTests(unittest.TestCase):
           TEXT=function(key) return 'Name of ' .. key end
           GetPlayerMoney=function(mode) if mode == 'account' then return 12 end return 0 end
           GetMagicBoxEnergy=function() return 8 end
+          GetServerName=function() return 'Aynara' end
           GetPlayerPointInfo=function(group, row, tips)
             asked=tips
             if group == 1 and row == 2 then return 345, 0, 'tip' end
@@ -52,6 +53,7 @@ class GlobalBankSnapshotTests(unittest.TestCase):
           GlobalBank.Snapshot(false,false)
           parsed=GlobalBank.Parse(GlobalBank_Char)
         """)
+        self.assertEqual(lua.eval('parsed.server'), 'Aynara')
         self.assertEqual(lua.eval('#parsed.currencies'), 3)
         self.assertEqual(lua.eval('parsed.currencies[2].key'), 'transmutor')
         self.assertEqual(lua.eval('parsed.currencies[2].amount'), 8)
