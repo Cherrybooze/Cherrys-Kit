@@ -32,7 +32,7 @@
     {
       "folder": "zBag",
       "title": "zBag",
-      "version": "5.07-ck15",
+      "version": "5.07-ck16",
       "command": "/zb",
       "description_file": "05-zbag.md",
       "summary": "Bags, searching, sorting, quick sell and an All bags view."

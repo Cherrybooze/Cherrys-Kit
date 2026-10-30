@@ -16,7 +16,7 @@ K.onebag, K.unhooked, K.remembered, K.loadedMode, K.events = nil, nil, nil, nil,
 K.cherryOpen, K.resizing, K.dragging = nil, nil, nil
 K.storageInitialized, K.storageShared = nil, nil
 
-K.version = "5.07-ck15"
+K.version = "5.07-ck16"
 K.DEFAULT_SLOT_FONT_SIZE, K.MIN_SLOT_FONT_SIZE, K.MAX_SLOT_FONT_SIZE = 8, 6, 20
 K.path = (CherrysKit_Paths and CherrysKit_Paths.zBag) or "Interface/AddOns/zBag/"
 K.BAG_SLOTS = 180
@@ -167,6 +167,27 @@ local function offScreen(frame)
   local ok, x = pcall(function() return frame:GetPos() end)
   local okW, width = pcall(function() return (GetScreenWidth and GetScreenWidth()) or UIParent:GetWidth() end)
   return ok and okW and x and width and x >= width - 10
+end
+
+-- One bag / one bank: the game's window stays out of view while it is open. Another addon or the game
+-- itself can put it back on screen after zBag moved it, so the handler checks every time it runs.
+local function anchoredOff(frame, x)
+  if type(frame.GetAnchor) ~= "function" then
+    return offScreen(frame)
+  end
+  local ok, point, relPoint, _, ax = pcall(frame.GetAnchor, frame)
+  return ok and string.upper(tostring(point)) == "TOPLEFT" and string.upper(tostring(relPoint)) == "TOPRIGHT"
+    and tonumber(ax) ~= nil and math.abs(ax - x) < 1
+end
+
+function K.KeepOffScreen(frame, key, x, y)
+  if frame and frame:IsVisible() and not anchoredOff(frame, x) then
+    K.RememberPos(frame, key)
+    frame:ClearAllAnchors()
+    frame:SetAnchor("TOPLEFT", "TOPRIGHT", "UIParent", x, y)
+    return true
+  end
+  return false
 end
 
 -- Individual bags at load: make sure the game's windows listen and sit on screen.

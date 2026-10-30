@@ -62,6 +62,7 @@ function zBagHandler_OnUpdate(this, elapsed)
 		BagFrame:SetAnchor("TOPLEFT","TOPRIGHT","UIParent",50,50);
 		BagItemFrame:Hide(); -- to not get update events on default bag when opened (a little fps boost)
 	end
+	zBagKit.KeepOffScreen(BagFrame, "bagpos", 50, 50); -- Cherry's Kit: moved back on screen by someone else
 
 	end
 
@@ -93,6 +94,7 @@ function zBagHandler_OnUpdate(this, elapsed)
 		BankFrame:ClearAllAnchors();
 		BankFrame:SetAnchor("TOPLEFT","TOPRIGHT","UIParent",100,100);
 	end
+	zBagKit.KeepOffScreen(BankFrame, "bankpos", 100, 100); -- Cherry's Kit: moved back on screen by someone else
 end
 
 SLASH_ZBAG1 = "/zb";

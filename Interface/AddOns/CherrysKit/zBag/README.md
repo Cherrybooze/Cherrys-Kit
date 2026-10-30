@@ -1,10 +1,14 @@
 # zBag
 
-Version **5.07-ck15** · Kit release **0.11.87** · [All addons / hub](../README.md)
+Version **5.07-ck16** · Kit release **0.11.87** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
+
+## Updated in 5.07-ck16
+
+One bag and one bank keep the game's own backpack and bank window out of view. If another addon or the game puts them back on screen while zBag is open, zBag moves them away again instead of showing both windows side by side.
 
 ## Updated in 5.07-ck15
 

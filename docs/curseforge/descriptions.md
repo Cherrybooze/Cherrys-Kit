@@ -391,6 +391,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat pro
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
+## Updated in 5.07-ck16
+
+One bag and one bank keep the game's own backpack and bank window out of view. If another addon or the game puts them back on screen while zBag is open, zBag moves them away again instead of showing both windows side by side.
+
 ## Updated in 5.07-ck15
 
 Lighter while you play. Item slots no longer run an empty script on every frame (each open slot did), the bag sorter's timer runs only while a sort is in progress, and the checks that keep the bag and bank windows in step run 20 times a second instead of on every frame. Resizing a bag still follows the mouse every frame, and sorting still moves an item every frame.
