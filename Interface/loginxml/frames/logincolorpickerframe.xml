@@ -1,0 +1,250 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/
+../WorldXml/UI.xsd">
+	<Script file="LoginColorPickerFrame.lua"/>
+	<Frame name="LoginColorPickerFrame" parent="LoginFrame" hidden="true" frameStrata="TOOLTIP">
+		<Size>
+			<AbsDimension x="300" y="170"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset>
+					<AbsDimension x="0" y="-20"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Backdrop edgeFile="Interface\Common\PanelFrameBorder" bgFile="Interface\Common\PanelBlackBackgroup">
+			<BackgroundInsets>
+				<AbsInset top="64" left="64" bottom="64" right="64"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="64"/>
+			</EdgeSize>
+			<TileSize>
+				<AbsValue val="64"/>
+			</TileSize>
+		</Backdrop>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString inherits="LoginTitleFont" text="LOGIN_COLORPICKER">
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="4"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>
+				LoginColorPickerFrame_OnLoad();
+			</OnLoad>
+			<OnShow>
+				LoginColorPickerFrame_OnShow();
+			</OnShow>
+		</Scripts>
+		<Frames>
+			<Frame name="LoginColorPickerTitleFrame" enableMouse="true" frameStrata="HIGH">
+				<Size>
+					<AbsDimension x="276" y="24"/>
+				</Size>
+				<Scripts>
+					<OnMouseDown>
+						this:GetParent():StartMoving();
+					</OnMouseDown>
+					<OnMouseUp>
+						this:GetParent():StopMovingOrSizing();
+					</OnMouseUp>
+				</Scripts>
+			</Frame>
+			<Frame name="LoginColorTextureFrame" enableMouse="true">
+				<Size>
+					<AbsDimension x="128" y="128"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="20" y="30"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer>
+						<Texture file="interface\Common\ColorTexture"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnMouseDown>
+						LoginColorTextureFrame_OnMouseDown(this);
+					</OnMouseDown>
+					<OnMouseUp>
+						LoginColorTextureFrame_OnMouseUp(this);
+					</OnMouseUp>
+					<OnUpdate>
+						LoginColorTextureFrame_OnUpdate(this);
+					</OnUpdate>
+				</Scripts>
+			</Frame>
+			<Frame name="LoginSelectColorFrame" enableMouse="true" frameLevel="1">
+				<Size>
+					<AbsDimension x="1" y="1"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer>
+						<Texture name="LoginSelectColorTexture" file="interface\Common\ColorPicker1" >
+							<Size>
+								<AbsDimension x="10" y="10"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Slider name="LoginSelectValueSlider" orientation="HORIZONTAL">
+				<Size>
+					<AbsDimension x="128" y="25"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="160" y="50"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer>
+						<Texture name="LoginSelectValueSliderValueTexture" file="interface\Common\ValueTexture" alphaMode="BLEND">
+							<Size>
+								<AbsDimension x="120" y="25"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<TexCoords top="0" left="1" bottom="1" right="0" />
+						</Texture>
+					</Layer>
+					<Layer level="ARTWORK">
+						<FontString name="LoginSelectValueSliderText" inherits="LoginFontHighlight" text="LOGIN_COLORPICKER_VALUE">
+							<Anchors>
+								<Anchor point="BOTTOM" relativePoint="TOP">
+									<Offset>
+										<AbsDimension x="0" y="-4"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<ThumbTexture name="LoginSelectValueSliderThumbTexture" file="interface\Common\ColorPicker2">
+					<Size>
+						<AbsDimension x="10" y="36"/>
+					</Size>
+				</ThumbTexture>
+			</Slider>
+			<Slider name="LoginSelectAlphaSlider" orientation="HORIZONTAL">
+				<Size>
+					<AbsDimension x="128" y="10"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="160" y="105"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer>
+						<Texture file="Interface\BagFrame\BagFrame-Slider-Border"/>
+					</Layer>
+					<Layer level="ARTWORK">
+						<FontString inherits="LoginFontHighlight" text="LOGIN_COLORPICKER_ALPHA">
+							<Anchors>
+								<Anchor point="BOTTOM" relativePoint="TOP">
+									<Offset>
+										<AbsDimension x="0" y="-4"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<FontString inherits="LoginFontHighlight" text="0%">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"/>
+							</Anchors>
+						</FontString>
+						<FontString inherits="LoginFontHighlight" text="100%">
+							<Anchors>
+								<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<ThumbTexture file="Interface\BagFrame\BagFrame-Slider-Knob">
+					<Size>
+						<AbsDimension x="16" y="16"/>
+					</Size>
+				</ThumbTexture>
+			</Slider>
+			<Button name="LoginColorPickerCloseButton" inherits="UILoginPanelCloseButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-2" y="3"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="LoginColorPickerOkayButton" inherits="LoginButtonTemplate" text="LOGIN_OKAY">
+				<Size>
+					<AbsDimension x="64" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-80" y="-12"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						LoginColorPickerOkayButton_OnClick();
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="LoginColorPickerCancelButton" inherits="LoginButtonTemplate" text="LOGIN_CANCEL">
+				<Size>
+					<AbsDimension x="64" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-10" y="-12"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						LoginColorPickerCancelButton_OnClick();
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+</Ui>

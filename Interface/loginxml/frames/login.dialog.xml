@@ -1,0 +1,127 @@
+<Ui xmlns="http://www.runewaker.com/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/
+../WorldXml/UI.xsd">
+  <Frame name="LoginDialogFrame" parent="LoginFrame" enableKeyboard="true" enableMouse="true" hidden="true" frameLevel="800">
+    <Backdrop edgeFile="Interface\Tooltips\Tooltip-border" bgFile="Interface\SocialFrame\SocialFrame_Contextborder_bg">
+      <EdgeSize>
+        <AbsValue val="0"/>
+      </EdgeSize>
+      <TileSize>
+        <AbsValue val="10"/>
+      </TileSize>
+    </Backdrop>
+    <Frames>
+      <Frame name="LoginDialog">
+        <Anchors>
+          <Anchor point="CENTER">
+            <Offset>
+              <AbsDimension x="0" y="-20"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Size>
+          <AbsDimension x="400" y="100"/>
+        </Size>
+        <Backdrop edgeFile="Interface\Tooltips\Tooltip-border" bgFile="Interface\SocialFrame\SocialFrame_Contextborder_bg">
+          <EdgeSize>
+            <AbsValue val="10"/>
+          </EdgeSize>
+          <TileSize>
+            <AbsValue val="5"/>
+          </TileSize>
+        </Backdrop>
+        <Anchors>
+          <Anchor point="CENTER"/>
+        </Anchors>
+        <Layers>
+          <Layer>
+            <FontString name="$parent_text" inherits="LoginFontHighlight" justifyH="CENTER" text="test">
+              <Size>
+                <AbsDimension x="296" y="0"/>
+              </Size>
+              <Anchors>
+                <Anchor point="TOP">
+                  <Offset>
+                    <AbsDimension x="0" y="15"/>
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Frames>
+          <Button name="$parent_confirm" inherits="LoginButtonTemplate" text="b1">
+            <Anchors>
+              <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOM"/>
+            </Anchors>
+            <Scripts>
+              <OnClick>
+                  login.dialog.onAction(this:GetParent():GetParent(), true)
+              </OnClick>
+            </Scripts>
+          </Button>
+          <Button name="$parent_cancel" inherits="LoginButtonTemplate" text="b2">
+            <Anchors>
+              <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_confirm"/>
+            </Anchors>
+            <Scripts>
+              <OnClick>
+                login.dialog.onAction(this:GetParent():GetParent(), false)
+              </OnClick>
+            </Scripts>
+          </Button>
+          <EditBox name="$parent_edit1" inherits="LoginPanelEditBoxTemplate">
+            <Scripts>
+              <OnEnterPressed>
+				        this:ClearFocus();
+                login.dialog.onAction(this:GetParent():GetParent(), true)
+              </OnEnterPressed>
+              <OnTabPressed>
+                local edit = _G[this:GetParent():GetName().."_edit2"]
+                if edit:IsVisible()
+                  edit:SetFocus()
+                end
+              </OnTabPressed>
+            </Scripts>
+          </EditBox>
+          <EditBox name="$parent_edit2" inherits="LoginPanelEditBoxTemplate">
+            <Anchors>
+              <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_edit1">
+                <Offset>
+                  <AbsDimension x="2" y="0"/>
+                </Offset>
+              </Anchor>
+            </Anchors>
+            <Scripts>
+              <OnEnterPressed>
+				        this:ClearFocus();
+                login.dialog.onAction(this:GetParent():GetParent(), true)
+              </OnEnterPressed>
+              <OnTabPressed>
+                local edit = _G[this:GetParent():GetName().."_edit1"]
+                if edit:IsVisible()
+                  edit:SetFocus()
+                end
+              </OnTabPressed>
+            </Scripts>
+          </EditBox>
+        </Frames>
+      </Frame>
+    </Frames>
+    <Scripts>
+      <OnEscapePressed>
+        login.dialog.onAction(this, false)
+      </OnEscapePressed>
+      <OnLoad>
+        this:SetBackdropTileAlpha(.4)
+      </OnLoad>
+      <OnHide>
+        -- FIXME: Dirty workaround
+        if LoginAccountFrame_account:IsVisible() then
+          LoginAccountFrame_account:SetFocus()
+        end
+      </OnHide>
+    </Scripts>
+  </Frame>
+
+</Ui>

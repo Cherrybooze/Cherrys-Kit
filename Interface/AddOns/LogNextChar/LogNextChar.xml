@@ -1,0 +1,79 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+	<!-- One Next / Prev button: same tile as the Kitty mode button (gfx/button.tga, gold glow on hover) -->
+	<Button name="LogNextCharButtonTemplate" virtual="true" enableMouse="true">
+		<Size><AbsDimension x="36" y="36" /></Size>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentIcon">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="$parentLetters" inherits="GameFontNormal" justifyH="CENTER" text="">
+					<Anchors>
+						<Anchor point="CENTER" />
+					</Anchors>
+					<FontHeight><AbsValue val="11" /></FontHeight>
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture name="$parentHighlight" alphaMode="ADD" />
+		<Scripts>
+			<OnMouseDown>LogNextChar.OnMouseDown(key);</OnMouseDown>
+			<OnMouseUp>LogNextChar.OnMouseUp(this);</OnMouseUp>
+			<OnEnter>LogNextChar.OnEnter(this);</OnEnter>
+			<OnLeave>LogNextChar.OnLeave();</OnLeave>
+		</Scripts>
+	</Button>
+
+	<!-- Next on top, Prev under it, like the character list (LogNextChar.lua). Unlocked, right-drag or Shift+drag moves them. -->
+	<Frame name="LogNextCharBar" parent="UIParent" frameStrata="MEDIUM" movable="true">
+		<Size><AbsDimension x="36" y="74" /></Size>
+		<Anchors><Anchor point="TOP" relativeTo="MinimapViewFrame" relativePoint="CENTER"><Offset><AbsDimension x="3" y="89" /></Offset></Anchor></Anchors>
+		<Frames>
+			<Button name="$parentNext" inherits="LogNextCharButtonTemplate">
+				<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="TOP" /></Anchors>
+			</Button>
+			<Button name="$parentPrev" inherits="LogNextCharButtonTemplate">
+				<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>LogNextChar.OnLoad(this);</OnLoad>
+			<OnEvent>LogNextChar.OnEvent(event);</OnEvent>
+		</Scripts>
+	</Frame>
+
+	<!-- Settings, opened from the Cherry's Kit hub row or /lnc settings -->
+	<Frame name="LogNextCharFrame" parent="UIParent" frameStrata="DIALOG" enableMouse="true" movable="true" hidden="true">
+		<Size><AbsDimension x="300" y="140" /></Size>
+		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
+		<Backdrop bgFile="Interface/Tooltips/Tooltip-Background" edgeFile="Interface/Tooltips/Tooltip-border">
+			<EdgeSize><AbsValue val="16" /></EdgeSize>
+			<TileSize><AbsValue val="32" /></TileSize>
+			<BackgroundInsets><AbsInset top="4" left="4" bottom="4" right="4" /></BackgroundInsets>
+		</Backdrop>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="LogNextCharFrameTitle" inherits="GameFontNormal" justifyH="LEFT" text="LogNextChar"><Size><AbsDimension x="200" y="20" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="12" /></Offset></Anchor></Anchors></FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="LogNextCharFrameClose" inherits="UIPanelButtonTemplate" text="X"><Size><AbsDimension x="28" y="26" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="262" y="8" /></Offset></Anchor></Anchors><Scripts><OnClick>LogNextCharFrame:Hide();</OnClick></Scripts></Button>
+			<Button name="LogNextCharFrameLock" inherits="UIPanelButtonTemplate" text="Unlock login next char buttons"><Size><AbsDimension x="268" y="26" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="40" /></Offset></Anchor></Anchors><Scripts><OnClick>LogNextChar.SetLocked(not LogNextChar.Get("lock"));</OnClick></Scripts></Button>
+			<CheckButton name="LogNextCharFrameShow" inherits="UIPanelCheckButtonTemplate"><Size><AbsDimension x="27" y="27" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="70" /></Offset></Anchor></Anchors>
+				<Layers><Layer level="BACKGROUND"><FontString name="$parentLabel" inherits="GameFontHighlight" text="Show the buttons"><FontHeight><AbsValue val="13" /></FontHeight><Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="RIGHT"><Offset><AbsDimension x="5" y="0" /></Offset></Anchor></Anchors></FontString></Layer></Layers>
+				<Scripts><OnClick>LogNextChar.SetShown(this:GetChecked() and true or false);</OnClick></Scripts>
+			</CheckButton>
+			<Button name="LogNextCharFrameReset" inherits="UIPanelButtonTemplate" text="Put them back in the default spot"><Size><AbsDimension x="268" y="26" /></Size><Anchors><Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT"><Offset><AbsDimension x="16" y="102" /></Offset></Anchor></Anchors><Scripts><OnClick>LogNextChar.ResetPlace();</OnClick></Scripts></Button>
+		</Frames>
+		<Scripts>
+			<OnShow>LogNextChar.UpdateSettings();</OnShow>
+			<OnMouseDown>this:StartMoving();</OnMouseDown>
+			<OnMouseUp>this:StopMovingOrSizing();</OnMouseUp>
+		</Scripts>
+	</Frame>
+</Ui>

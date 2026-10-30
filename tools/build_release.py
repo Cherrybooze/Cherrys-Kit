@@ -16,6 +16,12 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 ROOT = Path(__file__).resolve().parents[1]
 KIT = ROOT / "Interface" / "AddOns" / "CherrysKit"
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
+LOGIN_SCREEN = ROOT / "Interface" / "loginxml"
+LOGIN_HELPER = ROOT / "Interface" / "AddOns" / "CherrysLoginxml"
+LOG_NEXT_CHAR = ROOT / "Interface" / "AddOns" / "LogNextChar"
+# A player's own files in their login screen folder. Blank templates live in its data folder.
+LOGIN_PERSONAL = ("accounts.lua", "password.lua", "config.lua", "savedpath.lua")
+LOGIN_TEMPLATE_WORDS = {"List 1"}
 
 
 def require(condition: bool, message: str) -> None:
@@ -57,8 +63,8 @@ def validate_markdown() -> int:
     return count
 
 
-def write_zip(path: Path, files: dict[str, bytes]) -> dict:
-    expected = {f"CherrysKit/{name}": data for name, data in sorted(files.items())}
+def write_zip(path: Path, files: dict[str, bytes], root: str = "CherrysKit") -> dict:
+    expected = {f"{root}/{name}": data for name, data in sorted(files.items())}
     with ZipFile(path, "w", compression=ZIP_DEFLATED, compresslevel=9) as archive:
         for name, data in expected.items():
             require(
@@ -97,6 +103,62 @@ def is_private_release_path(path: Path) -> bool:
     name = path.name.casefold()
     return (any(part.casefold() == "globalbankhelper" for part in path.parts)
             or any(name == private or name.startswith(private + ".") for private in PRIVATE_DATA_NAMES))
+
+
+def tree_files(folder: Path) -> dict[str, bytes]:
+    files = {}
+    for path in sorted(folder.rglob("*")):
+        require(not path.is_symlink(), f"Symlinks are not release inputs: {path}")
+        if path.is_file() and "__pycache__" not in path.parts:
+            require(not is_private_release_path(path.relative_to(folder)), f"Private game data must not be packaged: {path}")
+            files[path.relative_to(folder).as_posix()] = path.read_bytes()
+    require(files, f"No files in {folder}")
+    return files
+
+
+def toc_version(path: Path) -> str:
+    found = re.search(r"(?m)^## Version:\s*(\S+)\s*$", path.read_text(encoding="utf-8-sig"))
+    require(found is not None, f"No version in {path.name}")
+    return found.group(1)
+
+
+def check_login_source(version: str) -> None:
+    code = (LOGIN_SCREEN / "frames" / "login.lua").read_text(encoding="utf-8")
+    require(f'version = "{version}"' in code, "frames/login.lua and CherrysLoginxml.toc disagree on the version.")
+    require(f'me.version = "{version}"' in (LOGIN_HELPER / "CherrysLoginxml.lua").read_text(encoding="utf-8"),
+            "CherrysLoginxml.lua and CherrysLoginxml.toc disagree on the version.")
+    for name in LOGIN_PERSONAL:
+        require(not (LOGIN_SCREEN / name).exists(), f"Interface/loginxml/{name} is a personal copy: remove it.")
+    for name in ("accounts.lua", "password.lua"):
+        code = re.sub(r"--[^\n]*", "", (LOGIN_SCREEN / "data" / name).read_text(encoding="utf-8"))
+        for _, value in re.findall(r"""(['"])(.*?)\1""", code):
+            require(value in LOGIN_TEMPLATE_WORDS or re.fullmatch(r"[A-Z_/ ]*", value) is not None,
+                    f"data/{name} holds a live value: ship the blank template.")
+
+
+def write_login_packages(output: Path) -> list[dict]:
+    """Cherry's Loginxml and LogNextChar: folders of their own in Interface/AddOns, not in the full kit."""
+    version = toc_version(LOGIN_HELPER / "CherrysLoginxml.toc")
+    check_login_source(version)
+    files = tree_files(LOGIN_HELPER)
+    # The client loads every .toc it finds under Interface/AddOns, so the login screen's travels under
+    # another name. Install login screen.bat puts it back when it copies the login screen into place.
+    for name, data in tree_files(LOGIN_SCREEN).items():
+        files["LoginScreen/" + ("loginxml.toc.txt" if name == "loginxml.toc" else name)] = data
+    require([name for name in files if name.lower().endswith(".toc")] == ["CherrysLoginxml.toc"],
+            "Only the addon's own .toc may be under Interface/AddOns.")
+    guide = files["README.md"].decode("utf-8").replace("(../../loginxml/docs/", "(LoginScreen/docs/")
+    files["README.md"] = guide.encode("utf-8")
+    login = write_zip(output / f"CherrysLoginxml-{version}.zip", files, "CherrysLoginxml")
+    login.update({"package": "CherrysLoginxml", "title": "Cherry's Loginxml", "version": version, "requires_hub": True,
+                  "archive_root": "CherrysLoginxml/", "bundled_addons": []})
+    lnc_version = toc_version(LOG_NEXT_CHAR / "LogNextChar.toc")
+    require(f'me.version = "{lnc_version}"' in (LOG_NEXT_CHAR / "LogNextChar.lua").read_text(encoding="utf-8"),
+            "LogNextChar.lua and LogNextChar.toc disagree on the version.")
+    lnc = write_zip(output / f"LogNextChar-{lnc_version}.zip", tree_files(LOG_NEXT_CHAR), "LogNextChar")
+    lnc.update({"package": "LogNextChar", "title": "LogNextChar", "version": lnc_version, "requires_hub": True,
+                "requires_addon": "CherrysLoginxml", "archive_root": "LogNextChar/", "bundled_addons": []})
+    return [login, lnc]
 
 
 def build(output: Path) -> None:
@@ -206,6 +268,12 @@ def build(output: Path) -> None:
                       "version": extension_version, "requires_hub": True,
                       "requires_addon": "GlobalBank", "bundled_addons": []})
     packages.append(extension)
+    standalone = write_login_packages(output)
+    for package in standalone:
+        listed = next((item for item in metadata["standalone_packages"] if item["folder"] == package["package"]), None)
+        require(listed is not None and listed["version"] == package["version"],
+                f"{package['package']} differs from release-packages.json.")
+    packages += standalone
     revision = git_output("rev-parse", "HEAD")
     status = git_output("status", "--porcelain")
     manifest = {
@@ -214,15 +282,15 @@ def build(output: Path) -> None:
         "source_commit": revision,
         "source_dirty": bool(status),
         "extract_into": "<Runes of Magic>/Interface/AddOns/",
-        "archive_root": "CherrysKit/",
+        "archive_root": "CherrysKit/, except packages naming their own",
         "hub_bundles_loadtimes": False,
         "manifest_entries_checked": len(references),
         "markdown_files_checked": markdown_count,
         "runtime_validation": metadata["runtime_validation"],
         "optional_install_note": (
-            "The shared manifest lists all addon files. Hub-only and partial installs "
-            "omit unselected module paths; client behaviour for these selections needs "
-            "in-game verification. The full kit contains every manifest file."
+            "The shared manifest lists all addon files. Hub-only and partial installs omit unselected "
+            "module paths: the client skips missing XML, and the hub stops its reports of missing Lua. "
+            "These selections still need in-game verification. The full kit contains every manifest file."
         ),
         "packages": packages,
     }
@@ -259,6 +327,8 @@ def build(output: Path) -> None:
         f"{tick}LoadTimes/Switch.txt{tick} and then uses no memory. Individual ZIPs require the hub.", "",
         hub_note, "",
         "The optional Chrome extension is a separate ZIP; see its included installation instructions.", "",
+        f"Cherry's Loginxml and LogNextChar are separate too, and not in the Full ZIP. Extract them into {tick}Interface/AddOns/{tick} as well: each is its own folder. LogNextChar needs Cherry's Loginxml, and Cherry's Loginxml needs its "
+        f"{tick}Install login screen.bat{tick} run once.", "",
         "## Downloads", "",
         "| Package | Version | ZIP |", "| --- | --- | --- |",
     ]
@@ -273,7 +343,7 @@ def build(output: Path) -> None:
         "- Per-file and per-asset SHA-256 hashes are supplied in the release manifest and SHA256SUMS.txt.",
         "- These are offline packaging checks. No new in-game validation is claimed. "
         "The shared manifest still names absent modules in partial installations; "
-        "hub-only and hub-plus-addon installs need verification in the actual client.",
+        "tests/test_addons_alone.py runs them on a simulated client, and they need verification in the actual client.",
         f"- Runtime validation: {metadata['runtime_validation']}",
         "- Existing feature-testing notes remain in each addon's README.",
         "", "## Support and contributions", "",

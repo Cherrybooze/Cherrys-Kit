@@ -1,0 +1,268 @@
+<!-- Based on PyTemp by Pyrrhus -->
+<Ui xmlns="http://www.runewaker.com/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/ UI.xsd">
+  <Button name="LOGIN_List_HeadButton_Template" virtual="true">
+    <Layers>
+      <Layer level="BACKGROUND">
+        <Texture name="$parentLeft" file="Interface\SocialFrame\Column">
+          <Size>
+            <AbsDimension x="8" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
+          </Anchors>
+          <TexCoords left="0" right="0.5" top="0" bottom="1"/>
+        </Texture>
+        <Texture name="$parentRight" file="Interface\SocialFrame\Column">
+          <Size>
+            <AbsDimension x="8" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPRIGHT"/>
+          </Anchors>
+          <TexCoords left="0.5" right="1" top="0" bottom="1"/>
+        </Texture>
+        <Texture name="$parentMiddle" file="Interface\SocialFrame\Column">
+          <Size>
+            <AbsDimension x="1" y="16"/>
+          </Size>
+          <Anchors>
+            <Anchor point="LEFT" relativeTo="$parentLeft" relativePoint="RIGHT"/>
+            <Anchor point="RIGHT" relativeTo="$parentRight" relativePoint="LEFT"/>
+          </Anchors>
+          <TexCoords left="0.5" right="0.5" top="0" bottom="1"/>
+        </Texture>
+      </Layer>
+    </Layers>
+    <Scripts>
+      <OnLoad>
+				this:RegisterForClicks("LeftButton", "RightButton")
+        this.root = this:GetParent():GetParent():GetParent();
+        this.row = this:GetParent();
+      </OnLoad>
+      <OnClick>
+        this.root:onClick(this.row, key, this);
+      </OnClick>
+      <OnDoubleClick>
+        this.root:onClick(this.row, key, this, true);
+      </OnDoubleClick>
+      <OnEnter>
+        _G[this:GetName().."_hl"]:Show();
+        this.root:onEnter(this.row, this);
+      </OnEnter>
+      <OnLeave>
+        _G[this:GetName().."_hl"]:Hide();
+        this.root:onLeave(this.row, this);
+      </OnLeave>
+    </Scripts>
+    <NormalText inherits="LoginFontNormal">
+      <Anchors>
+        <Anchor point="TOPLEFT">
+          <Offset>
+            <AbsDimension x="10" y="0"/>
+          </Offset>
+        </Anchor>
+        <Anchor point="BOTTOMRIGHT">
+          <Offset>
+            <AbsDimension x="-10" y="0"/>
+          </Offset>
+        </Anchor>
+      </Anchors>
+    </NormalText>
+    <HighlightText inherits="LoginFontHighlight">
+      <Anchors>
+        <Anchor point="TOPLEFT">
+          <Offset>
+            <AbsDimension x="10" y="0"/>
+          </Offset>
+        </Anchor>
+        <Anchor point="BOTTOMRIGHT">
+          <Offset>
+            <AbsDimension x="-10" y="0"/>
+          </Offset>
+        </Anchor>
+      </Anchors>
+    </HighlightText>
+  </Button>
+  <Frame name="LOGIN_List_HeadRow_Template" virtual="true">
+    <Frames>
+      <Button name="$parent_1" inherits="LOGIN_List_HeadButton_Template"/>
+      <Button name="$parent_2" inherits="LOGIN_List_HeadButton_Template"/>
+      <Button name="$parent_3" inherits="LOGIN_List_HeadButton_Template"/>
+      <Button name="$parent_4" inherits="LOGIN_List_HeadButton_Template"/>
+      <Button name="$parent_5" inherits="LOGIN_List_HeadButton_Template"/>
+      <Button name="$parent_6" inherits="LOGIN_List_HeadButton_Template"/>
+      <Button name="$parent_7" inherits="LOGIN_List_HeadButton_Template"/>
+      <Button name="$parent_8" inherits="LOGIN_List_HeadButton_Template"/>
+    </Frames>
+    <Scripts>
+      <OnLoad>
+        this.head = true
+      </OnLoad>
+    </Scripts>
+  </Frame>
+
+  <Button name="LOGIN_List_Col_Template" virtual="true" enableMouse="true">
+    <Layers>
+      <Layer level="ARTWORK">
+        <Texture name="$parent_hl" hidden="true" file="Interface\AuctionFrame\AuctionFrameItem-Highlight" alphaMode="ADD" />
+        <Texture name="$parent_tex">
+          <Size>
+            <AbsDimension y="20" x="20"/>
+          </Size>
+          <Anchors>
+            <Anchor point="CENTER"/>
+          </Anchors>
+        </Texture>
+      </Layer>
+    </Layers>
+    <NormalText inherits="LoginFontHighlightSmall">
+      <Anchors>
+        <Anchor point="TOPLEFT">
+          <Offset>
+            <AbsDimension x="10" y="0"/>
+          </Offset>
+        </Anchor>
+        <Anchor point="BOTTOMRIGHT">
+          <Offset>
+            <AbsDimension x="-10" y="0"/>
+          </Offset>
+        </Anchor>
+      </Anchors>
+    </NormalText>
+    <Scripts>
+      <OnLoad>
+				this:RegisterForClicks("LeftButton", "RightButton")
+        this.root = this:GetParent():GetParent():GetParent();
+        this.row = this:GetParent();
+      </OnLoad>
+      <OnClick>
+        this.root:onClick(this.row, key, this);
+      </OnClick>
+      <OnDoubleClick>
+        this.root:onClick(this.row, key, this, true);
+      </OnDoubleClick>
+      <OnEnter>
+        local hl = _G[this:GetName().."_hl"]
+        hl:Show();
+        hl:SetAlpha(.2)
+        this.root:onEnter(this.row, this);
+      </OnEnter>
+      <OnLeave>
+        _G[this:GetName().."_hl"]:Hide();
+        this.root:onLeave(this.row, this);
+      </OnLeave>
+      <OnMouseWheel>
+        this.root:onScroll(delta);
+      </OnMouseWheel>
+    </Scripts>
+  </Button>
+  <Frame name="LOGIN_List_Row_Template" virtual="true">
+    <Layers>
+      <Layer>
+        <Texture name="$parent_hl" hidden="true" file="Interface\AuctionFrame\AuctionFrameItem-Highlight" alphaMode="ADD" />
+      </Layer>
+    </Layers>
+    <Frames>
+      <Button name="$parent_1" inherits="LOGIN_List_Col_Template"/>
+      <Button name="$parent_2" inherits="LOGIN_List_Col_Template"/>
+      <Button name="$parent_3" inherits="LOGIN_List_Col_Template"/>
+      <Button name="$parent_4" inherits="LOGIN_List_Col_Template"/>
+      <Button name="$parent_5" inherits="LOGIN_List_Col_Template"/>
+      <Button name="$parent_6" inherits="LOGIN_List_Col_Template"/>
+      <Button name="$parent_7" inherits="LOGIN_List_Col_Template"/>
+      <Button name="$parent_8" inherits="LOGIN_List_Col_Template"/>
+    </Frames>
+  </Frame>
+  <Frame name="LOGIN_List_Frame_Template" virtual="true">
+    <Size>
+      <AbsDimension y="20" x="20"/>
+    </Size>
+    <Frames>
+      <Frame name ="$parent_list" frameLevel="1" enableMouse="true">
+        <Anchors>
+          <Anchor point="TOPLEFT"/>
+          <Anchor point="BOTTOMRIGHT">
+            <Offset>
+              <AbsDimension x="-15" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Backdrop edgeFile="Interface\Tooltips\Tooltip-border" bgFile="Interface\SocialFrame\SocialFrame_Contextborder_bg">
+          <EdgeSize>
+            <AbsValue val="10"/>
+          </EdgeSize>
+          <TileSize>
+            <AbsValue val="5"/>
+          </TileSize>
+        </Backdrop>
+        <Layers>
+          <Layer level="BACKGROUND">
+            <Texture name="$parent_hl" file="Interface\Login\Common\ServerlistButton-Highlight" hidden="true"/>
+          </Layer>
+        </Layers>
+        <Frames>
+          <Frame name="$parent_0" inherits="LOGIN_List_HeadRow_Template"/>
+          <Frame name="$parent_1" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_2" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_3" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_4" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_5" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_6" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_7" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_8" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_9" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_10" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_11" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_12" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_13" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_14" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_15" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_16" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_17" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_18" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_19" inherits="LOGIN_List_Row_Template"/>
+          <Frame name="$parent_20" inherits="LOGIN_List_Row_Template"/>
+        </Frames>
+        <Scripts>
+          <OnMouseWheel>
+            local root = this:GetParent();
+						root:onScroll(delta)
+          </OnMouseWheel>
+        </Scripts>
+      </Frame>
+      <Slider name="$parent_scroll" frameLevel="2" inherits="LOGIN_ScrollbarTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="-20" y="20"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="BOTTOMRIGHT">
+            <Offset>
+              <AbsDimension x="0" y="-20"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+						this:SetValueStepMode("INT");
+          </OnLoad>
+          <OnValueChanged>
+            local root = this:GetParent();
+						root:onValueChanged()
+          </OnValueChanged>
+          <OnMouseWheel>
+            local root = this:GetParent();
+						root:onScroll(delta)
+          </OnMouseWheel>
+        </Scripts>
+      </Slider>
+    </Frames>
+    <Scripts>
+      <OnLoad>
+				LOGIN_LIST_TEMPLATE.OnLoad(this)
+      </OnLoad>
+    </Scripts>
+  </Frame>
+</Ui>

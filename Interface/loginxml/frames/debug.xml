@@ -1,0 +1,62 @@
+<Ui xmlns="http://www.runewaker.com/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/ UI.xsd">
+  <Frame name="LoginDebugFrame" parent="LoginFrame" frameLevel="999">
+    <Size>
+      <AbsDimension y="1" x="1"/>
+    </Size>
+    <Frames>
+      <Frame name="$parent_list" inherits="LOGIN_List_Frame_Template">
+        <Size>
+          <AbsDimension y="1" x="1"/>
+        </Size>
+      </Frame>
+      <EditBox name="$parent_cmd" inherits="LoginPanelEditBoxTemplate" historyLines="10">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parent_list" relativePoint="BOTTOMLEFT">
+            <Offset>
+              <AbsDimension x="0" y="3"/>
+            </Offset>
+          </Anchor>
+          <Anchor point="TOPRIGHT" relativeTo="$parent_list" relativePoint="BOTTOMRIGHT">
+            <Offset>
+              <AbsDimension x="-18" y="3"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnEnterPressed>
+            local text = this:GetText()
+            if not string.match(text, "^\s*$") then
+              this:AddHistoryLine(text)
+              local res, msg = pcall(loadstring(text))
+              if not res then
+                lprint(msg)
+              end
+            end
+            this:SetText("")
+          </OnEnterPressed>
+        </Scripts>
+      </EditBox>
+      <Button name="$parent_move" frameLevel="3">
+        <Size>
+          <AbsDimension y="15" x="15"/>
+        </Size>
+        <NormalTexture file="Interface/WorldMap/WorldMap-TitlebarSwitch-Normal"/>
+        <PushedTexture file="Interface/WorldMap/WorldMap-TitlebarSwitch-Depress"/>
+        <Scripts>
+          <OnMouseDown>
+            this:GetParent():StartMoving()
+          </OnMouseDown>
+          <OnMouseUp>
+            this:GetParent():StopMovingOrSizing()
+          </OnMouseUp>
+        </Scripts>
+      </Button>
+    </Frames>
+    <Scripts>
+      <OnLoad>
+        LoginDebug.onLoad(this)
+      </OnLoad>
+    </Scripts>
+  </Frame>
+</Ui>

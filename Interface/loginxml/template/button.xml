@@ -1,0 +1,170 @@
+<Ui xmlns="http://www.runewaker.com/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/
+../WorldXml/UI.xsd">
+  <Texture name="UILoginButtonNormalTexture" file="Interface\Login\Common\PanelButton-Normal" virtual="true">
+    <TexCoords left="0" right="0.96875" top="0" bottom="0.5625"/>
+  </Texture>
+  <Texture name="UILoginButtonDepressTexture" file="Interface\Login\Common\PanelButton-Depress" virtual="true">
+    <TexCoords left="0" right="0.96875" top="0" bottom="0.5625"/>
+  </Texture>
+  <Texture name="UILoginButtonDisabledTexture" file="Interface\Login\Common\PanelButton-Disable" virtual="true">
+    <TexCoords left="0" right="0.96875" top="0" bottom="0.5625"/>
+  </Texture>
+  <Texture name="UILoginButtonHighlightTexture" file="Interface\Buttons\PanelButton-Highlight" virtual="true">
+    <TexCoords left="0" right="0.671875" top="0" bottom="0.6875"/>
+  </Texture>
+  <Button name="LoginButtonTemplate" virtual="true">
+    <Size>
+      <AbsDimension x="124" y="28"/>
+    </Size>
+    <Scripts>
+      <OnLoad>
+                this._SetText = this.SetText;
+                this.SetText = function (this, text)
+                    this:_SetText("");
+                    this:_SetText(text);
+
+                    local width = this:GetWidth();
+                    local textWidth = this:GetTextWidth();
+                    if ( textWidth > width - 8 ) then
+                        this:GetNormalText():SetWidth(width - 8);
+                        this:GetDisabledText():SetWidth(width - 8);
+                        this:GetHighlightText():SetWidth(width - 8);
+
+                        this.tooltip = text;
+                    else
+                        this.tooltip = nil;
+                    end
+                end
+                this:SetText(this:GetText());
+      </OnLoad>
+      <OnEnter>
+				if ( this.tooltip and  LoginTooltip) then
+					LoginTooltip:ClearAllAnchors();
+					LoginTooltip:SetAnchor("TOPLEFT", "BOTTOM", this, 4, 0);
+					LoginTooltip:SetText(this.tooltip);
+				end
+      </OnEnter>
+      <OnLeave>
+				if LoginTooltip then
+					LoginTooltip:Hide();
+				end
+      </OnLeave>
+      <OnMouseDown>
+				PlaySoundByPath("sound\\interface\\ui_sysmenu_click.mp3");
+      </OnMouseDown>
+    </Scripts>
+    <NormalText inherits="LoginFontNormal">
+      <Size>
+        <AbsDimension x="0" y="16"/>
+      </Size>
+      <Anchors>
+        <Anchor point="CENTER">
+          <Offset>
+            <AbsDimension x="0" y="-1"/>
+          </Offset>
+        </Anchor>
+      </Anchors>
+    </NormalText>
+    <DisabledText inherits="LoginFontDisable">
+      <Size>
+        <AbsDimension x="0" y="16"/>
+      </Size>
+      <Anchors>
+        <Anchor point="CENTER">
+          <Offset>
+            <AbsDimension x="0" y="-1"/>
+          </Offset>
+        </Anchor>
+      </Anchors>
+    </DisabledText>
+    <HighlightText inherits="LoginFontHighlight">
+      <Size>
+        <AbsDimension x="0" y="16"/>
+      </Size>
+      <Anchors>
+        <Anchor point="CENTER">
+          <Offset>
+            <AbsDimension x="0" y="-1"/>
+          </Offset>
+        </Anchor>
+      </Anchors>
+    </HighlightText>
+    <PushedTextOffset>
+      <AbsDimension x="1" y="1"/>
+    </PushedTextOffset>
+    <NormalTexture inherits="UILoginButtonNormalTexture"/>
+    <PushedTexture inherits="UILoginButtonDepressTexture"/>
+    <DisabledTexture inherits="UILoginButtonDisabledTexture"/>
+    <HighlightTexture inherits="UILoginButtonHighlightTexture" alphaMode="ADD"/>
+  </Button>
+  <CheckButton name="LoginCheckButtonTemplate" virtual="true">
+    <Size>
+      <AbsDimension x="32" y="32"/>
+    </Size>
+    <NormalTexture file="Interface\Buttons\CheckBox-Normal"/>
+    <PushedTexture file="Interface\Buttons\CheckBox-Depress"/>
+    <HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+    <CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+    <DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+    <NormalText inherits="LoginFontNormal">
+      <Size>
+        <AbsDimension x="0" y="16"/>
+      </Size>
+      <Anchors>
+        <Anchor point="LEFT" relativePoint="RIGHT">
+          <Offset>
+            <AbsDimension x="0" y="-1"/>
+          </Offset>
+        </Anchor>
+      </Anchors>
+    </NormalText>
+    <DisabledText inherits="LoginFontDisable">
+      <Size>
+        <AbsDimension x="0" y="16"/>
+      </Size>
+      <Anchors>
+        <Anchor point="LEFT" relativePoint="RIGHT">
+          <Offset>
+            <AbsDimension x="0" y="-1"/>
+          </Offset>
+        </Anchor>
+      </Anchors>
+    </DisabledText>
+  </CheckButton>
+	<RadioButton name="UILoginRadioButtonTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="16" y="16"/>
+		</Size>
+		<NormalTexture file="Interface\Buttons\PanelRadioButton">
+			<TexCoords left="0" right="0.25" top="0" bottom="1"/>
+		</NormalTexture>
+		<DisabledTexture file="Interface\Buttons\PanelRadioButton">
+			<TexCoords left="0.25" right="0.5" top="0" bottom="1"/>
+		</DisabledTexture>
+		<HighlightTexture file="Interface\Buttons\PanelRadioButton" alphaMode="ADD">
+			<TexCoords left="0.75" right="1" top="0" bottom="1"/>
+		</HighlightTexture>
+		<CheckedTexture file="Interface\Buttons\PanelRadioButton">
+			<TexCoords left="0.5" right="0.75" top="0" bottom="1"/>
+		</CheckedTexture>
+	</RadioButton>
+	<Button name="UILoginPanelCloseButtonTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="20" y="20"/>
+		</Size>
+		<Scripts>
+			<OnClick>
+				PlaySoundByPath("sound\\interface\\ui_generic_close.mp3");
+				this:GetParent():Hide();
+			</OnClick>
+		</Scripts>
+		<NormalTexture file="Interface\Buttons\PanelCloseButton-normal">
+			<TexCoords left="0" right="0.625" top="0" bottom="0.625"/>
+		</NormalTexture>
+		<PushedTexture file="Interface\Buttons\PanelCloseButton-Depress">
+			<TexCoords left="0" right="0.625" top="0" bottom="0.625"/>
+		</PushedTexture>
+		<HighlightTexture file="Interface\Buttons\PanelCloseButton-Highlight" alphaMode="ADD"/>
+	</Button>
+</Ui>

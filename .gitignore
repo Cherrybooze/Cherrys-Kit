@@ -4,6 +4,11 @@ __pycache__/
 .DS_Store
 Thumbs.db
 # Local game state is never source.
+# A player's own logins and passwords (the templates in Interface/loginxml/data are blank).
+/Interface/loginxml/accounts.lua
+/Interface/loginxml/password.lua
+/Interface/loginxml/config.lua
+/Interface/loginxml/savedpath.lua
 SaveVariables.lua
 GlobalBankHelper/
 .env

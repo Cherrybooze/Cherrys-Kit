@@ -1,0 +1,95 @@
+<Ui xmlns="http://www.runewaker.com/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/
+../WorldXml/UI.xsd">
+  <Frame name="LoginServerFrame" parent="LoginFrame" enableKeyboard="true" hidden="true" frameLevel="200">
+    <Frames>
+      <Frame name="$parent_list" inherits="LOGIN_List_Frame_Template">
+        <Size>
+          <AbsDimension y="1" x="1"/>
+        </Size>
+        <Anchors>
+          <Anchor point="CENTER">
+            <Offset>
+              <AbsDimension x="0" y="-20"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Frame>
+      <Button name="$parent_enter" inherits="LoginButtonTemplate" text="LOGIN_OKAY">
+        <Size>
+          <AbsDimension y="20" x="100"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_list">
+            <Offset>
+              <AbsDimension x="0" y="5"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.server.login()
+          </OnClick>
+        </Scripts>
+      </Button>
+      <Button name="$parent_cancel" inherits="LoginButtonTemplate" text="LOGIN_CANCEL">
+        <Size>
+          <AbsDimension y="20" x="100"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_enter">
+            <Offset>
+              <AbsDimension x="10" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+						login.GOTO("last")
+          </OnClick>
+        </Scripts>
+      </Button>
+      <CheckButton name="$parent_settings" inherits="LoginCheckButtonTemplate" text="REALM_LAST_RECORD">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_enter">
+            <Offset>
+              <AbsDimension x="0" y="-5"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+            this:SetChecked(GetSelectedRealmState())
+          </OnLoad>
+          <OnClick>
+						SetSelectedRealmState(this:IsChecked());
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <Button name="$parent_account" inherits="LoginButtonTemplate" text="LOGIN_BACK">
+        <Anchors>
+          <Anchor point="RIGHT" relativePoint="LEFT" relativeTo="LoginFrame_quit"/>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+						login.GOTO("account")
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+    <Scripts>
+      <OnLoad>
+        login.server.onLoad(this)
+      </OnLoad>
+      <OnEscapePressed>
+        login.GOTO("last")
+      </OnEscapePressed>
+      <OnEnterPressed>
+        login.server.login()
+      </OnEnterPressed>
+      <OnKeyDown>
+        login.server.onKeyDown(key)
+      </OnKeyDown>
+    </Scripts>
+  </Frame>
+</Ui>
