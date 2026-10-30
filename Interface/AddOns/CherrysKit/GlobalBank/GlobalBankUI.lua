@@ -455,8 +455,9 @@ function GB.ShowTip(owner, what)
 end
 
 function GB.TooltipLink(it)
-  if it.gear and it.gear.link and it.gear.link ~= "" then
-    return "|Hitem:" .. it.gear.link .. "|h|h"
+  local kept = it.gear or it.stone
+  if kept and kept.link and kept.link ~= "" then
+    return "|Hitem:" .. kept.link .. "|h|h"
   end
   local id = tonumber(it.id)
   return id and string.format("|Hitem:%x|h|h", id) or nil

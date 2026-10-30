@@ -57,6 +57,7 @@ const GBFolders = (() => {
       } else if ((field[0] === 'B' || field[0] === 'K') && field.length >= 4) {
         (field[0] === 'B' ? character.bag : character.bank).push({slot: number(field[1]), count: Math.max(1, number(field[2])), id: field[3],
           name: readable(field[4]), icon: field[5] || '', ...(field[6] === '1' ? {bound: true} : {}),
+          ...(field[7] === 'ST' ? {stats: field[8] ? field[8].split(';').map(readable) : []} : {}),
           ...(field.length >= 15 ? {gear: {dura: number(field[7]), maxDura: number(field[8]), plus: number(field[9]), tier: number(field[10]), freeSlots: number(field[11]),
             stats: field[12] ? field[12].split(';').map(readable) : [], runes: field[13] ? field[13].split(';').map(readable) : [], color: field[14]}} : {})});
       }

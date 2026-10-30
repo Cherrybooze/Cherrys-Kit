@@ -55,7 +55,7 @@ const GBBank = (() => {
       for (const place of ['bag', 'bank']) {
         for (const item of character[place] || []) {
           list.push({id: item.id, name: String(item.name || 'Unknown item'), icon: item.icon, count: Number(item.count) || 1,
-            type: typeOf(item.id, item.icon), bound: !!item.bound, gear: item.gear || null, character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
+            type: typeOf(item.id, item.icon), bound: !!item.bound, gear: item.gear || null, stats: item.gear?.stats || item.stats || [], stone: !!item.stats, character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
         }
       }
     }
@@ -63,8 +63,13 @@ const GBBank = (() => {
   }
   function applyFilters(list, filters) {
     const text = (filters.text || '').toLowerCase();
-    return list.filter(entry => (!text || entry.name.toLowerCase().includes(text)
-        || (entry.gear && entry.gear.stats.concat(entry.gear.runes).some(name => name.toLowerCase().includes(text))))
+    const has = names => names.some(name => name.toLowerCase().includes(text));
+    const searched = entry => {
+      if (filters.searchIn === 'items') return !entry.stone && has(entry.stats);
+      if (filters.searchIn === 'stones') return entry.stone && has(entry.stats);
+      return entry.name.toLowerCase().includes(text) || has(entry.stats) || has(entry.gear?.runes || []);
+    };
+    return list.filter(entry => (!text || searched(entry))
       && (!filters.type || entry.type === filters.type)
       && (!filters.place || entry.place === filters.place)
       && (!filters.hidden || !filters.hidden.has(entry.character))
@@ -154,6 +159,52 @@ const GBBank = (() => {
     });
     root.querySelector('tbody').replaceChildren(total, ...rows);
   }
+  // The Stats tab: each stat on items or on mana stones, how many there are, and who holds them.
+  function statTable(characters, kind, text, sort, descending) {
+    const wanted = String(text || '').toLowerCase();
+    const found = new Map();
+    for (const entry of entries(characters)) {
+      if (kind === 'stones' ? !entry.stone : entry.stone) continue;
+      for (const stat of entry.stats) {
+        if (wanted && !stat.toLowerCase().includes(wanted)) continue;
+        if (!found.has(stat)) found.set(stat, {stat, total: 0, owners: new Map()});
+        const row = found.get(stat);
+        row.total += entry.count;
+        row.owners.set(entry.character, (row.owners.get(entry.character) || 0) + entry.count);
+      }
+    }
+    const rows = [...found.values()].map(row => ({stat: row.stat, total: row.total, characters: row.owners.size,
+      owners: [...row.owners.entries()].map(([name, count]) => ({name, count})).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))}));
+    const direction = descending ? -1 : 1;
+    const key = sort === 'breakdown' ? 'characters' : sort;
+    return rows.sort((a, b) => (key === 'stat' ? a.stat.localeCompare(b.stat) : a[key] - b[key]) * direction || a.stat.localeCompare(b.stat));
+  }
+  const STAT_COLUMNS = [
+    {key: 'stat', name: 'Stat', text: true},
+    {key: 'total', name: 'How many'},
+    {key: 'characters', name: 'Characters'},
+  ];
+  function renderStats(root, characters) {
+    root.sorting = root.sorting || {key: 'total', descending: true};
+    if (!root.listening) {
+      root.listening = true;
+      for (const id of ['stat-search', 'stat-kind']) root.querySelector('#' + id).addEventListener('input', () => renderStats(root, root.characters));
+    }
+    root.characters = characters;
+    const table = root.querySelector('table');
+    const rows = statTable(characters, root.querySelector('#stat-kind').value, root.querySelector('#stat-search').value.trim(), root.sorting.key, root.sorting.descending);
+    const heads = {sorting: root.sorting, querySelector: selector => table.querySelector(selector)};
+    sortableHeadings(heads, STAT_COLUMNS.concat({key: 'breakdown', name: 'Who has them', text: true}), () => renderStats(root, characters));
+    table.querySelector('tbody').replaceChildren(...rows.map(row => {
+      const line = document.createElement('tr');
+      line.append(tableCell('td', row.stat), tableCell('td', formatNumber(row.total)), tableCell('td', formatNumber(row.characters)));
+      const who = tableCell('td', row.owners.map(owner => `${owner.name} ${formatNumber(owner.count)}`).join(', '));
+      who.className = 'stat-owners';
+      line.append(who);
+      return line;
+    }));
+    root.querySelector('#stat-total').textContent = `${formatNumber(rows.length)} different stats`;
+  }
   // The Characters tab: one row for each, with the last daily reward taken.
   const ROSTER_COLUMNS = [
     {key: 'name', name: 'Character', text: true},
@@ -189,7 +240,7 @@ const GBBank = (() => {
   }
   // Gear is one of a kind, with its own durability and stats. Older saves have no details, so its type decides.
   function stackable(entry) {
-    return !entry.gear && !EQUIPPABLE.has(entry.type);
+    return !entry.gear && !EQUIPPABLE.has(entry.type) && !entry.stats.length;
   }
   // A piece of gear's details, one line each, for the tooltip
   function gearLines(gear) {
@@ -208,7 +259,7 @@ const GBBank = (() => {
     const found = new Map();
     list.forEach((entry, index) => {
       const key = stack && stackable(entry) ? String(entry.id || entry.name) : index;
-      if (!found.has(key)) found.set(key, {id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, gear: entry.gear, total: 0, places: []});
+      if (!found.has(key)) found.set(key, {id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, gear: entry.gear, stats: entry.stats, total: 0, places: []});
       const cell = found.get(key);
       cell.total += entry.count;
       cell.places.push(entry);
@@ -243,6 +294,7 @@ const GBBank = (() => {
       if (/^[0-9a-f]{6}$/i.test(cell.gear?.color || '')) title.style.color = `#${cell.gear.color}`;
       tooltip.replaceChildren(title, make('span', 'bank-tip-type', `${cell.type} · ${formatNumber(cell.total)} in all`));
       if (cell.gear) for (const line of gearLines(cell.gear)) tooltip.append(make('span', 'bank-tip-row', line));
+      else if (cell.stats.length) tooltip.append(make('span', 'bank-tip-row', `Stats: ${cell.stats.join(', ')}`));
       const rows = [...cell.places].sort((a, b) => a.character.localeCompare(b.character) || a.place.localeCompare(b.place) || a.slot - b.slot);
       for (const entry of rows.slice(0, MAX_TOOLTIP_ROWS)) {
         const row = make('span', 'bank-tip-row');
@@ -258,6 +310,7 @@ const GBBank = (() => {
     function filters() {
       return {
         text: el('bank-search').value.trim(),
+        searchIn: el('bank-search-in').value,
         type: el('bank-type').value,
         place: el('bank-place').value,
         hidden: state.hidden,
@@ -416,7 +469,7 @@ const GBBank = (() => {
     }
 
     for (const id of ['bank-search', 'bank-min-level', 'bank-max-level']) el(id).addEventListener('input', renderGrid);
-    for (const id of ['bank-type', 'bank-place', 'bank-stack']) el(id).addEventListener('change', renderGrid);
+    for (const id of ['bank-type', 'bank-place', 'bank-stack', 'bank-search-in']) el(id).addEventListener('change', renderGrid);
     el('bank-sort').addEventListener('change', event => { state.sort = event.target.value; renderGrid(); });
     el('bank-all').addEventListener('click', () => setAll(true));
     el('bank-none').addEventListener('click', () => setAll(false));
@@ -437,5 +490,5 @@ const GBBank = (() => {
     }
     return {reload, update};
   }
-  return {create, typeOf, locationLabel, entries, applyFilters, cells, formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, currencyTable, renderCurrencies, rosterRows, renderRoster};
+  return {create, typeOf, locationLabel, entries, applyFilters, cells, formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, currencyTable, renderCurrencies, rosterRows, renderRoster, statTable, renderStats};
 })();

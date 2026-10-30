@@ -102,6 +102,34 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         self.assertEqual(lua.eval('parsed.bag[1].gear.link'), '34182 3 74000a5f cfa0cc40 0 0 7ef8a 0 0 0 251c 967d')
         self.assertEqual(lua.eval('GlobalBank.Serialize(parsed)'), lua.eval('GlobalBank_Char'))
 
+    def test_mana_stone_stats_come_from_the_link_and_round_trip(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          UnitName=function() return 'Example' end
+          UnitClass=function() return 'Warrior' end
+          UnitLevel=function() return 60 end
+          NAMES={Sys515088_name='Cold of the Dreamer', Sys510400_name='Energy I', Sys510564_name='Spirit I', Sys514722_name='Dark I', Sys510700_name='Annihilation'}
+          TEXT=function(key) return NAMES[key] or key end
+          -- Real links from the auction cache: one stat, four stats, and a stone with none
+          LINKS={'|Hitem:3185d 1 6ade63d3 3af0 0 0 0 0 0 0 0 fc7e|h|cffffffff[Mana Stone Tier 6]|r|h',
+                 '|Hitem:3185d 1 6ade63d3 286428a0 38a2292c 0 0 0 0 0 0 9e7d|h|cffffffff[Mana Stone Tier 6]|r|h',
+                 '|Hitem:3185d 1 6ade63d3 0 0 0 0 0 0 0 0 1234|h|cffffffff[Mana Stone Tier 6]|r|h',
+                 '|Hitem:30d40 1 6ade63d3 3af0 0 0|h|cffffffff[Not a stone]|r|h'}
+          GetBagItemInfo=function(i) if LINKS[i] then return i, 'icon', 'Item' .. i, 1 end end
+          GetBagItemLink=function(i) return LINKS[i] end
+          GetBagCount=function() return 4, 30, 180 end
+          GlobalBank.ReadMoney=function() return 7 end
+          GlobalBank.Snapshot(false,false)
+          parsed=GlobalBank.Parse(GlobalBank_Char)
+        """)
+        self.assertEqual(lua.eval('table.concat(parsed.bag[1].stone.stats, ",")'), 'Cold of the Dreamer')
+        self.assertEqual(lua.eval('#parsed.bag[2].stone.stats'), 4)
+        self.assertEqual(lua.eval('parsed.bag[3].stone'), None)
+        self.assertEqual(lua.eval('parsed.bag[4].stone'), None)
+        self.assertEqual(lua.eval('parsed.bag[1].stone.link'), '3185d 1 6ade63d3 3af0 0 0 0 0 0 0 0 fc7e')
+        self.assertEqual(lua.eval('GlobalBank.Serialize(parsed)'), lua.eval('GlobalBank_Char'))
+
     def test_hovering_an_item_uses_the_game_tooltip(self):
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute(SOURCE.read_text(encoding='utf-8'))

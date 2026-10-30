@@ -198,6 +198,10 @@ assert.equal(worn.bound, undefined);
 assert.equal(worn.gear.maxDura, 100);
 assert.equal(worn.gear.color, 'a864a8');
 assert.equal(worn.gear.runes.length, 0);
+const stone = folders.snapshot('GB1~A~Mage~1~0~0~0~0~t`B~1~2~202845~Stone~icon~1~ST~Monk V;Dark I~3185d 1', 'when').bag[0];
+assert.deepEqual([...stone.stats], ['Monk V', 'Dark I']);
+assert.equal(stone.bound, true);
+assert.equal(stone.gear, undefined);
 const character = folders.snapshot(snapshot, 'when');
 assert.equal(character.name, 'Jöhn');
 assert.deepEqual([character.level, character.gold, character.bagSlots, character.bankSlots, character.bankSeen], [50, 1200, 60, 80, true]);
@@ -327,6 +331,28 @@ assert.equal(stackedCells.find(cell => cell.name === 'Herb').total, 5);
 assert.equal(stackedCells.filter(cell => cell.name === 'Sword').length, 2);
 assert.deepEqual([...bank.gearLines(gear)], ['Durability 90 / 100', '+3 · Tier +2', 'Stats: Genius I, Monk V', 'Runes: Quick II', 'Free rune slots: 1']);
 assert.deepEqual([...bank.gearLines({dura: 1, maxDura: 2, plus: 0, tier: 0, freeSlots: 0, stats: [], runes: [], color: ''})], ['Durability 1 / 2']);
+// Mana stones with stats don't stack, and the search can tell them from stats on items
+const withStones = bank.entries([
+  {name: 'Ann', level: 1, bag: [{slot: 1, count: 2, id: '202845', name: 'Stone', stats: ['Monk V', 'Dark I']}, {slot: 2, count: 1, id: '202845', name: 'Stone', stats: ['Dark I']}, {slot: 3, count: 1, id: '211000', name: 'Sword', gear}]},
+  {name: 'Bob', level: 1, bag: [{slot: 1, count: 4, id: '202845', name: 'Stone', stats: ['Monk V']}, {slot: 2, count: 1, id: '200000', name: 'Monk Robe'}]},
+]);
+assert.equal(bank.cells(withStones, true).length, 5);
+const found = (searchIn, text) => [...bank.applyFilters(withStones, {searchIn, text}).map(entry => entry.character + entry.slot)].join();
+assert.equal(found('', 'monk'), 'Ann1,Ann3,Bob1,Bob2');
+assert.equal(found('items', 'monk'), 'Ann3');
+assert.equal(found('stones', 'monk'), 'Ann1,Bob1');
+assert.equal(found('stones', 'sword'), '');
+assert.equal(found('items', 'robe'), '');
+const owners = [{name: 'Ann', level: 1, bag: [{slot: 1, count: 2, id: '202845', name: 'Stone', stats: ['Monk V', 'Dark I']}, {slot: 2, count: 1, id: '202845', name: 'Stone', stats: ['Dark I']}, {slot: 3, count: 1, id: '211000', name: 'Sword', gear}]},
+  {name: 'Bob', level: 1, bag: [{slot: 1, count: 4, id: '202845', name: 'Stone', stats: ['Monk V']}]}];
+const stones = bank.statTable(owners, 'stones', '', 'total', true);
+assert.deepEqual(JSON.parse(JSON.stringify(stones)), [
+  {stat: 'Monk V', total: 6, characters: 2, owners: [{name: 'Bob', count: 4}, {name: 'Ann', count: 2}]},
+  {stat: 'Dark I', total: 3, characters: 1, owners: [{name: 'Ann', count: 3}]},
+]);
+assert.deepEqual([...bank.statTable(owners, 'items', '', 'stat', false).map(row => row.stat)], ['Genius I', 'Monk V']);
+assert.deepEqual([...bank.statTable(owners, 'stones', 'dark', 'total', true).map(row => row.stat)], ['Dark I']);
+assert.deepEqual([...bank.statTable(owners, 'stones', '', 'stat', true).map(row => row.stat)], ['Monk V', 'Dark I']);
 // The search finds stats and runes too
 assert.equal(bank.applyFilters(held, {text: 'monk'}).length, 2);
 assert.equal(bank.applyFilters(held, {text: 'quick'}).length, 2);
