@@ -5964,6 +5964,7 @@
 	<Button name="GlobalBankZBagButton" parent="zBag" inherits="UIPanelButtonTemplate" text="Global Bank" frameStrata="MEDIUM">
 		<Size><AbsDimension x="84" y="20" /></Size><Anchors><Anchor point="BOTTOMRIGHT" relativeTo="zBagBackgroundCloseButton" relativePoint="TOPRIGHT"><Offset><AbsDimension x="0" y="-2" /></Offset></Anchor></Anchors>
 		<Scripts>
+			<OnLoad>if not zBag then this:Hide(); end</OnLoad>
 			<OnClick>GlobalBank.Toggle();</OnClick>
 			<OnEnter>GlobalBank.ShowTip(this, "button");</OnEnter>
 			<OnLeave>GameTooltip:Hide();</OnLeave>

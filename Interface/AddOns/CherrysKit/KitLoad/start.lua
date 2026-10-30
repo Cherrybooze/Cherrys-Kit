@@ -11,3 +11,16 @@ function CherrysKit_Load.Update(frame)
     frame:Hide()
   end
 end
+
+-- Whoever installs only some of the addons is missing files the manifest lists. The client reports each
+-- Lua one as a script error, which lights the minimap's bug button on every login, so those reports stop
+-- here and every other error gets through. Reload UI keeps globals, so the stock function is kept once.
+CherrysKit_StockBugEvent = CherrysKit_StockBugEvent or BugMessageFrame_OnEvent
+if type(CherrysKit_StockBugEvent) == "function" then
+  function BugMessageFrame_OnEvent(this, event)
+    if type(arg1) == "string" and string.find(string.lower(arg1), "^cannot open .*cherryskit") then
+      return
+    end
+    return CherrysKit_StockBugEvent(this, event)
+  end
+end
