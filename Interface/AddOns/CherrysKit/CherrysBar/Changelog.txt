@@ -1,5 +1,8 @@
 Cherry's Bar
 
+1.1.8
+  The Clock's tooltip says where real time comes from now: the Daily Rewards Chrome extension.
+
 1.1.7
   The frame-by-frame fallback for the bottom bar no longer moves the game's backpack, which zBag keeps
   off screen. Eight icon files had the wrong letter case in the repository, which only matters on

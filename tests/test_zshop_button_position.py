@@ -4,6 +4,27 @@ from lupa.lua51 import LuaRuntime
 
 SOURCE = Path(__file__).resolve().parents[1] / 'Interface/AddOns/CherrysKit/ZShop/ZShopButton.lua'
 
+class ZShopClockTest(unittest.TestCase):
+    def button(self, clock):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        # Like the live client: no os library
+        lua.execute('ZShop = { BASE_PATH = "" }; os = nil; ' + clock)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        return lua
+
+    def test_uses_cherrys_clock_when_the_client_has_none(self):
+        lua = self.button('CherrysClock = { UTC = function() return 1800000000.5 end }')
+        self.assertEqual(lua.eval('ZShop.Button.Now()'), 1800000000.5)
+        self.assertEqual(lua.eval('ZShop.Button.clockSource'), "CherrysClock")
+
+    def test_unknown_or_failing_clock_counts_as_no_clock(self):
+        for clock in ('CherrysClock = { UTC = function() return nil end }',
+                      'CherrysClock = { UTC = function() error("broken") end }', ''):
+            lua = self.button(clock)
+            self.assertIsNone(lua.eval('ZShop.Button.Now()'))
+            self.assertEqual(lua.eval('ZShop.Button.clockSource'), 'unavailable')
+
+
 class ZShopPositionTest(unittest.TestCase):
     def setUp(self):
         self.lua = LuaRuntime(unpack_returned_tuples=True)

@@ -1,6 +1,6 @@
 # Cherry's Bar
 
-Version **1.1.7** · Kit release **0.11.100** · [All addons / hub](../README.md)
+Version **1.1.8** · Kit release **0.11.101** · [All addons / hub](../README.md)
 
 **Full-width information bars at the top of the screen, the bottom, or both. A fork of XBar III, with bars and settings in the spirit of Titan Panel.**
 
@@ -40,7 +40,7 @@ There are three ways, and they all do the same thing:
 
 ## Limits
 
-The game gives addons no real time. The Clock shows your time online until Cherry's Loginxml's clock knows the time.
+The game gives addons no real time. The Clock shows your time online until the hub's clock knows the time, which takes Global Bank's Daily Rewards Chrome extension: start Chrome or open the daily reward page once, and it lasts until Windows restarts.
 
 None of this has run in the real game client yet; the tests use a simulated one. These may need changes after the [in-game checks](../../../../docs/TESTING.md):
 

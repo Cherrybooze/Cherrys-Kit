@@ -504,7 +504,7 @@ D.Add({
 
 ---------------------------------------------------------------------------
 -- Clock: looks at the time once a second and redraws once a minute. The game's Lua has no os library
--- and no real-time call. CherrysClock (Cherry's Loginxml) gives the time once it is known; until then
+-- and no real-time call. CherrysClock (in the hub) gives the time once it is known; until then
 -- the time tokens show the time online, and the tooltip says so.
 ---------------------------------------------------------------------------
 
@@ -555,8 +555,8 @@ D.Add({
       tipPair("Time", v.TIME24)
     else
       GameTooltip:AddLine("The game gives addons no clock, so this is your time online for now.")
-      GameTooltip:AddLine("With Cherry's Loginxml, open the item shop or daily reward once: its one screenshot")
-      GameTooltip:AddLine("sets the real time, which lasts until Windows restarts.")
+      GameTooltip:AddLine("For real time, set up Global Bank's Daily Rewards Chrome extension, then start")
+      GameTooltip:AddLine("Chrome or open the daily reward page. It lasts until Windows restarts.")
     end
     tipPair("Online this session", v.ONLINE)
     tipPair("Online in total", v.TOTAL)

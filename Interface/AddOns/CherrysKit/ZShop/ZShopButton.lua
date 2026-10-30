@@ -116,6 +116,13 @@ function B.Now()
       return now
     end
   end
+  if type(CherrysClock) == "table" and type(CherrysClock.UTC) == "function" then
+    local ok, now = pcall(CherrysClock.UTC)
+    if ok and type(now) == "number" then
+      B.clockSource = "CherrysClock"
+      return now
+    end
+  end
   local now = helperNow()
   B.clockSource = now and "Global Bank helper" or "unavailable"
   return now
