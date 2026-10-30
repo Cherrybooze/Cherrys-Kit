@@ -175,6 +175,73 @@ assert.equal(context.GBIcons.decode(picture(4, 5000, 4, [0])), null);
 assert.equal(context.GBIcons.decode(new Uint8Array(3)), null);
 """)
 
+    def test_folders_read_saves_and_icons_like_the_helper(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path'), zlib = require('node:zlib');
+const context = vm.createContext({DataView, Uint8Array, TextDecoder, DecompressionStream, console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'folders.js'), 'utf8') + ';this.GBFolders = GBFolders;', context);
+const folders = context.GBFolders;
+const raw = text => Buffer.from(text, 'utf8').toString('latin1');
+const snapshot = 'GB1~' + raw('Jöhn') + '~Mage~50~1200~60~80~1~t`C~Mage~50`C~Priest~20`B~3~2~200001~' + raw('Pötion') + '~interface/icons/potion`K~45~1~200002~Stone~`Z~odd`B~bad';
+const line = (name, value) => name + ' = "' + value + '"\r\n';
+// A line must start with the name, and escapes must not end the string
+assert.equal(folders.savedString('x = 1\r\n' + line('GlobalBank_Char', 'a\\"b'), 'GlobalBank_Char'), 'a\\"b');
+assert.equal(folders.savedString('MyGlobalBank_Char = "no"\r\n', 'GlobalBank_Char'), null);
+assert.equal(folders.savedString('GlobalBank_Char = "not closed\r\n', 'GlobalBank_Char'), null);
+assert.equal(folders.snapshot('nope', 'now'), null);
+const character = folders.snapshot(snapshot, 'when');
+assert.equal(character.name, 'Jöhn');
+assert.deepEqual([character.level, character.gold, character.bagSlots, character.bankSlots, character.bankSeen], [50, 1200, 60, 80, true]);
+assert.equal(character.classes.length, 2);
+assert.deepEqual(JSON.parse(JSON.stringify(character.bag)), [{slot:3, count:2, id:'200001', name:'Pötion', icon:'interface/icons/potion'}]);
+assert.equal(character.bank[0].slot, 45);
+// Notes: the highest version wins, then the newer file. A removed snapshot stays out unless saved again since.
+const time = text => new Date(text).getTime();
+const other = 'GB1~Gone~Mage~1~0~0~0~0~t';
+const saves = [
+  {folder:'Jöhn', time:time('2026-10-01T10:00'), text:line('GlobalBank_Char', snapshot) + line('GlobalBank_Notes', raw('Jöhn') + '~2~first`x') + line('GlobalBank_Removed', 'Gone~2026-10-02 00:00')},
+  {folder:'Gone', time:time('2026-10-01T10:00'), text:line('GlobalBank_Char', other) + line('GlobalBank_Notes', raw('Jöhn') + '~1~older')},
+  {folder:'Kept', time:time('2026-10-03T10:00'), text:line('GlobalBank_Char', 'GB1~Kept~Mage~1~0~0~0~0~t') + line('GlobalBank_Notes', raw('Jöhn') + '~2~newer')},
+  {folder:'Hidden', time:time('2026-10-03T10:00'), text:line('GlobalBank_Char', 'GB1~Hidden~Mage~1~0~0~0~0~t')},
+  {folder:'Empty', time:time('2026-10-03T10:00'), text:'nothing = 1'},
+];
+const list = folders.charactersFrom(saves, new Set(['Hidden']));
+assert.deepEqual([...list.map(c => c.name)], ['Jöhn', 'Kept']);
+assert.equal(list[0].note, 'newer');
+assert.equal(list[0].saved, '2026-10-01 10:00');
+// Only item icons can be asked for
+assert.equal(folders.iconKey('Interface/Icons/Potion'), 'interface\\icons\\potion.dds');
+assert.equal(folders.iconKey('interface/icons/../secret'), null);
+assert.equal(folders.iconKey('interface/worldxml/map'), null);
+// A small interface.fdb: magic, count, table, then entries
+const u32 = value => { const b = Buffer.alloc(4); b.writeUInt32LE(value); return b; };
+const picture = Buffer.concat([u32(4), u32(1), u32(1), u32(1)]);
+const entry = (name, body, method) => {
+  const nameBytes = Buffer.from(name + '\0', 'latin1');
+  const head = Buffer.alloc(32);
+  head.writeInt32LE(method, 8);
+  head.writeInt32LE(body.length, 16);
+  head.writeInt32LE(nameBytes.length, 28);
+  return Buffer.concat([head, nameBytes, picture, body]);
+};
+const pixels = Buffer.from([10, 20, 30, 40]);
+const entries = [entry('Interface\\Icons\\A.dds', zlib.deflateSync(Buffer.concat([pixels, Buffer.alloc(64)])), 3), entry('interface\\icons\\b.dds', pixels, 0), entry('interface\\other\\c.dds', pixels, 0), entry('interface\\icons\\d.dds', pixels, 4)];
+const start = 8 + entries.length * 16;
+let offset = start;
+const table = entries.map(item => { const row = Buffer.alloc(16); row.writeUInt32LE(offset, 12); offset += item.length; return row; });
+const file = new Blob([Buffer.from('FDB0'), u32(entries.length), ...table, ...entries]);
+(async () => {
+  const index = await folders.iconIndex(file);
+  assert.deepEqual(Object.keys(index).sort(), ['interface\\icons\\a.dds', 'interface\\icons\\b.dds', 'interface\\icons\\d.dds']);
+  for (const name of ['a', 'b']) {
+    const bytes = await folders.readIcon(file, index['interface\\icons\\' + name + '.dds']);
+    assert.deepEqual([...bytes.slice(16)], [10, 20, 30, 40]);
+    assert.equal(bytes.length, 20);
+  }
+  assert.equal(await folders.readIcon(file, index['interface\\icons\\d.dds']), null);
+})().catch(error => { console.error(error); process.exit(1); });
+""")
+
     def test_bank_grid_filters_stacks_and_says_where_things_are(self):
         self.run_js(r"""
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');

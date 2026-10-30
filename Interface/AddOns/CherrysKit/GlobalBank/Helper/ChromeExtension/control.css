@@ -30,6 +30,8 @@ main { max-width: 1180px; }
 .tabs button { color: #dbe3ea; background: #192533; border-color: #405468; border-bottom: 0; border-radius: 6px 6px 0 0; }
 .tabs button[aria-selected="true"] { color: #101820; background: #f1c85e; border-color: #e7c061; }
 .terminal { min-height: 320px; max-height: 60vh; white-space: pre-wrap; }
+.folders { margin-top: 8px; }
+.folder-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
 .bank-filters { position: sticky; top: 0; z-index: 5; margin: 12px 0; padding: 10px 14px; }
 .bank-filter-row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; margin-bottom: 8px; }
 .bank-filter-row label { margin: 0; font-size: .85rem; }

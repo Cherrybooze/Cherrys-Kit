@@ -51,7 +51,20 @@
 
   // The Bank tab
   const bankStatus = text => { byId('bank-status').textContent = text; };
-  const bank = GBBank.create(byId('tab-bank'), send, bankStatus, (totals, made) => {
+  // The local host if there is one, otherwise the folders the player chose
+  let usingFolders = false;
+  async function bankSend(message) {
+    try {
+      const response = await send(message);
+      usingFolders = false;
+      return response;
+    } catch (error) {
+      if (!await GBFolders.usable('saves')) throw error;
+      usingFolders = true;
+      return GBFolders.answer(message);
+    }
+  }
+  const bank = GBBank.create(byId('tab-bank'), bankSend, bankStatus, (totals, made) => {
     const number = value => value.toLocaleString('en-US');
     byId('status-data').textContent = `${number(totals.characters)} characters · ${number(totals.items)} items in ${number(totals.stacks)} stacks`
       + (made ? ` · data from ${made}` : ' · no data saved yet');
@@ -69,7 +82,9 @@
         statusHelper.textContent = `Helper: running${ran}, ${info.auto ? 'started automatically' : 'in its own window'}.`;
       }
     } catch (error) {
-      statusHelper.textContent = 'Helper: cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder.';
+      statusHelper.textContent = await GBFolders.usable('saves').catch(() => null)
+        ? 'Helper: not installed on this PC. The Bank tab is reading your chosen folders.'
+        : 'Helper: cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder, or choose your folders below.';
     }
   }
   chrome.storage.local.get('autoHelper').then(({autoHelper: on}) => { autoHelper.checked = !!on; });
@@ -91,7 +106,46 @@
   });
   refreshStatus();
   setInterval(refreshStatus, 30000);
-  bank.reload().catch(error => bankStatus('Cannot read your saved data. Run Install Chrome extension.bat in the installed GlobalBank Helper folder. ' + String(error.message || error)));
+  // The folders
+  const foldersStatus = byId('folders-status');
+  const allow = byId('folders-allow');
+  const tryReload = () => bank.reload().then(() => bankStatus(''), error => {
+    byId('folders').open = true;
+    bankStatus('Cannot read your saved data. Choose your folders above, or run Install Chrome extension.bat in the installed GlobalBank Helper folder. ' + String(error.message || error));
+  });
+  async function showFolders() {
+    const state = await GBFolders.state();
+    for (const kind of ['saves', 'game']) {
+      if (state[kind]) byId(kind + '-status').textContent = `Using ${state[kind].name}.`;
+    }
+    const needsClick = Object.values(state).some(folder => folder && folder.access !== 'granted');
+    allow.hidden = !needsClick;
+    if (needsClick) {
+      byId('folders').open = true;
+      foldersStatus.textContent = 'Chrome needs your OK to read these folders again.';
+    } else foldersStatus.textContent = '';
+  }
+  for (const kind of ['saves', 'game']) {
+    byId('choose-' + kind).addEventListener('click', async () => {
+      try {
+        if (await GBFolders.choose(kind) === null) return;
+      } catch (error) {
+        foldersStatus.textContent = String(error.message || error);
+        return;
+      }
+      await showFolders();
+      await tryReload();
+      refreshStatus();
+    });
+  }
+  allow.addEventListener('click', async () => {
+    await GBFolders.allowAgain().catch(error => { foldersStatus.textContent = String(error.message || error); });
+    await showFolders();
+    await tryReload();
+    refreshStatus();
+  });
+  showFolders().catch(() => {});
+  tryReload();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) bank.reload().catch(() => {}); });
 
   // The Terminal tab: the helper's own commands, run one at a time without its window
