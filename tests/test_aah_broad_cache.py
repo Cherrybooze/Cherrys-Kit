@@ -192,12 +192,24 @@ class BroadCacheTests(unittest.TestCase):
         self.lua.execute('now=220+3*86400')
         self.assertEqual(len(self.lua.globals().C.List()), 2)
 
+    def test_an_auction_leaves_when_its_time_is_up(self):
+        self.lua.execute('''
+          beat=1800000000;now=110;C.RefreshClock()
+          now=140;beat=beat+30;C.RefreshClock()
+          r=C.Begin({});a=C.Observe(r,listing());seen=a.lastSeenTrustedUTC
+          now=170;beat=seen+119*60;C.RefreshClock()
+        ''')
+        self.assertEqual(len(self.lua.globals().C.List()), 1)
+        self.lua.execute('now=200;beat=seen+120*60;C.RefreshClock()')
+        self.assertEqual(len(self.lua.globals().C.List()), 0)
+
     def test_advancing_heartbeat_trusts_utc_and_expires_only_at_two_days(self):
         self.lua.execute('''
           beat=1800000000;now=110;C.RefreshClock()
           r=C.Begin({});untrusted=C.Observe(r,listing(nil,"Unknown"))
           now=140;beat=beat+30;C.RefreshClock()
           a=C.Observe(r,listing());utc=a.lastSeenTrustedUTC
+          a.data.leftTime=3000
           now=200
         ''')
         self.assertIsNone(self.lua.eval('untrusted.lastSeenTrustedUTC'))

@@ -99,7 +99,7 @@ try {
     if ($message.type -eq 'bank-data' -or $message.type -eq 'bank-icons' -or $message.type -eq 'bank-command') {
         . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
         $data = Get-HelperDataDirectory
-        if ($message.type -eq 'bank-data') { Send-Response @{ok=$true;json=(Get-ControlBankFile $data)} }
+        if ($message.type -eq 'bank-data') { $part = Get-ControlBankFile $data ([int]$message.offset); Send-Response @{ok=$true;json=$part.json;total=$part.total} }
         elseif ($message.type -eq 'bank-icons') {
             $found = Get-ControlIcons (Split-Path -Parent $data) @($message.names)
             Send-Response @{ok=$true;icons=$found.icons;later=@($found.later)}

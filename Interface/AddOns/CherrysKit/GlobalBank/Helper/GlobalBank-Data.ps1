@@ -223,6 +223,10 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
         if ($linkData.schemaVersion -ne 1 -or $null -eq $linkData.characters) { throw 'Unsupported CharacterLinks.json format' }
         $links = @($linkData.characters)
     }
+    # Looked up by name once, so thousands of characters don't each search every list.
+    $rewardsByName = @{}; foreach ($reward in $rewards) { $rewardsByName[[string]$reward.name] = @($rewardsByName[[string]$reward.name]) + @($reward) }
+    $linksByName = @{}; foreach ($link in $links) { $linksByName[[string]$link.name] = @($linksByName[[string]$link.name]) + @($link) }
+    $charCount = @{}; foreach ($c in $chars) { $charCount[[string]$c.Name] = 1 + [int]$charCount[[string]$c.Name] }
     $sb = New-Object System.Text.StringBuilder
     [void]$sb.Append('{"made":').Append((ConvertTo-GBJsonString $made)).Append(',"characters":[')
     $firstChar = $true
@@ -242,9 +246,9 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
         [void]$sb.Append(',"bankSeen":').Append($(if ($c.BankSeen) { 'true' } else { 'false' }))
         [void]$sb.Append(',"saved":').Append((ConvertTo-GBJsonString $c.Saved))
         [void]$sb.Append(',"note":').Append((ConvertTo-GBJsonString $c.Note))
-        $matchingRewards = @($rewards | Where-Object { $_.name -ieq $c.Name })
-        $matchingChars = @($chars | Where-Object { $_.Name -ieq $c.Name })
-        if (($c.Level -ge 100 -or @($c.Classes | Where-Object { $_.Level -ge 100 }).Count -gt 0) -and $matchingRewards.Count -eq 1 -and $matchingChars.Count -eq 1) {
+        $matchingRewards = @($rewardsByName[[string]$c.Name] | Where-Object { $_ })
+        $sameName = $charCount[[string]$c.Name]
+        if (($c.Level -ge 100 -or @($c.Classes | Where-Object { $_.Level -ge 100 }).Count -gt 0) -and $matchingRewards.Count -eq 1 -and $sameName -eq 1) {
             $reward = $matchingRewards[0]
             [void]$sb.Append(',"dailyLogin":{"collectedAt":').Append((ConvertTo-GBJsonString $reward.collectedAt))
             [void]$sb.Append(',"server":').Append((ConvertTo-GBJsonString $reward.server))
@@ -252,8 +256,8 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
         } else {
             [void]$sb.Append(',"dailyLogin":null')
         }
-        $matchingLinks = @($links | Where-Object { $_.name -ieq $c.Name })
-        if ($matchingLinks.Count -eq 1 -and $matchingChars.Count -eq 1) {
+        $matchingLinks = @($linksByName[[string]$c.Name] | Where-Object { $_ })
+        if ($matchingLinks.Count -eq 1 -and $sameName -eq 1) {
             [void]$sb.Append(',"accountId":').Append((ConvertTo-GBJsonString $matchingLinks[0].accountId))
         } else { [void]$sb.Append(',"accountId":null') }
         foreach ($part in @(@("bag", $c.Bag), @("bank", $c.Bank))) {
