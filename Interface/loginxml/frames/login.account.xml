@@ -1,0 +1,141 @@
+<Ui xmlns="http://www.runewaker.com/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/
+../WorldXml/UI.xsd">
+  <!-- launcher logins: asks for the server list again, by hand or on a countdown (login.account.lua) -->
+  <Button name="LoginAccountButton"  parent="LoginFrame" inherits="LoginButtonTemplate" text="Retry" hidden="true" frameLevel="100">
+    <Anchors>
+      <Anchor point="CENTER"/>
+    </Anchors>
+    <Scripts>
+      <OnClick>
+        login.account.retryNow()
+      </OnClick>
+      <OnUpdate>
+        login.account.retryOnUpdate(this, elapsedTime)
+      </OnUpdate>
+    </Scripts>
+  </Button>
+  <Frame name="LoginAccountFrame" parent="LoginFrame" hidden="true" frameLevel="100">
+    <Frames>
+      <EditBox name="$parent_account" inherits="LoginPanelEditBoxTemplate">
+        <Anchors>
+          <Anchor point="RIGHT" relativePoint="CENTER">
+            <Offset>
+              <AbsDimension x="-1" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+              LoginEditBox_OnLoad(this)
+              this:SetPlaceholder(LOGIN_ACCOUNT_NAME)
+              this:SetText(GetAccountName());
+          </OnLoad>
+          <OnEnterPressed>
+              login.account.login()
+				      this:ClearFocus();
+          </OnEnterPressed>
+          <OnTabPressed>
+              _G[this:GetParent():GetName().."_password"]:SetFocus();
+          </OnTabPressed>
+        </Scripts>
+      </EditBox>
+      <EditBox name="$parent_password" inherits="LoginPanelEditBoxTemplate" password="true">
+        <Anchors>
+          <Anchor point="LEFT" relativePoint="CENTER">
+            <Offset>
+              <AbsDimension x="1" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>
+              LoginEditBox_OnLoad(this)
+              this:SetPlaceholder(LOGIN_ACCOUNT_PASSWORD)
+          </OnLoad>
+          <OnEnterPressed>
+              pcall(login.account.login)
+				      this:ClearFocus();
+          </OnEnterPressed>
+          <OnTabPressed>
+              _G[this:GetParent():GetName().."_account"]:SetFocus();
+          </OnTabPressed>
+        </Scripts>
+      </EditBox>
+      <Button name="$parent_login">
+        <Size>
+          <AbsDimension x="27" y="27"/>
+        </Size>
+        <Anchors>
+          <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_password">
+            <Offset>
+              <AbsDimension x="1" y="3"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <NormalTexture file="Interface\buttons\pagerightbutton-normal"/>
+        <PushedTexture file="Interface\buttons\pagerightbutton-depress"/>
+        <HighlightTexture file="Interface\buttons\panelbutton-highlight" alphaMode="ADD"/>
+        <Scripts>
+          <OnClick>
+              pcall(login.account.login)
+          </OnClick>
+          <OnEnter>
+            LoginTooltip:ClearAllAnchors()
+            LoginTooltip:SetAnchor("TOPLEFT","BOTTOMLEFT", this, 10, 0)
+            LoginTooltip:SetText(LOGIN_ACCOUNT_LOGIN)
+          </OnEnter>
+          <OnLeave>
+            LoginTooltip:Hide()
+          </OnLeave>
+        </Scripts>
+      </Button>
+      <Frame name="$parent_1" inherits="LOGIN_List_Frame_Template"/>
+      <Frame name="$parent_2" inherits="LOGIN_List_Frame_Template"/>
+      <Frame name="$parent_3" inherits="LOGIN_List_Frame_Template"/>
+      <Frame name="$parent_4" inherits="LOGIN_List_Frame_Template"/>
+      <Frame name="$parent_5" inherits="LOGIN_List_Frame_Template"/>
+      <Frame name="$parent_6" inherits="LOGIN_List_Frame_Template"/>
+      <Frame name="$parent_7" inherits="LOGIN_List_Frame_Template"/>
+      <Frame name="$parent_8" inherits="LOGIN_List_Frame_Template"/>
+      <Frame name="$parent_9" inherits="LOGIN_List_Frame_Template"/>
+      <Frame name="$parent_10" inherits="LOGIN_List_Frame_Template"/>
+
+      <Frame name="$parent_pages" inherits="LOGIN_List_Frame_Template">
+        <Anchors>
+          <Anchor point="RIGHT">
+            <Offset>
+              <AbsDimension x="-10" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </Frame>
+      <Slider name="$parent_pages_slider" inherits="LoginSliderTemplate">
+        <Anchors>
+          <Anchor point="TOP"/>
+        </Anchors>
+        <Scripts>
+          <OnValueChanged>
+                login.account.setPage(this:GetValue())
+          </OnValueChanged>
+          <OnMouseWheel>
+              local val = delta>0 and 1 or -1
+              if IsShiftKeyDown() then
+                val = val/100*5
+              elseif IsAltKeyDown() then
+                val = val/100*10
+              elseif IsCtrlKeyDown() then
+                    val = val/100*20
+              end
+              this:SetValue(this:GetValue() - val)
+          </OnMouseWheel>
+        </Scripts>
+      </Slider>
+    </Frames>
+    <Scripts>
+      <OnLoad>
+        login.account.onLoad(this)
+      </OnLoad>
+    </Scripts>
+  </Frame>
+</Ui>

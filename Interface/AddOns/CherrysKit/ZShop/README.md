@@ -1,10 +1,14 @@
 # ZShop
 
-Version **1.2.0-ck4** · Kit release **0.11.81** · [All addons / hub](../README.md)
+Version **1.2.0-ck5** · Kit release **0.11.101** · [All addons / hub](../README.md)
 
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
+
+## Updated in 1.2.0-ck5
+
+ZShop can now read the time from the hub's clock, so the daily reminder works without the Global Bank helper window.
 
 ## Updated in 1.2.0-ck4
 
@@ -20,7 +24,7 @@ The saved field is still named `claimed` for compatibility. It means **daily pag
 - ZShop window with its settings, and a row in Cherry's Kit. No other library needed (the original needed aaa_pylib).
 - ZShop never stores your shop login link, and never opens shop pages by itself. It cannot click Collect for you: you still press it on the page.
 
-**Clock:** ZShop uses the client clock when available. Otherwise, run the bundled Global Bank helper: ZShop watches its UTC heartbeat and may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
+**Clock:** ZShop uses the client clock when available, then the hub's clock (fed by Global Bank's Daily Rewards extension). Otherwise, run the bundled Global Bank helper: ZShop watches its UTC heartbeat and may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
 
 ## Chat commands
 

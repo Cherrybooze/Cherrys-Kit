@@ -1,10 +1,27 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck7** · Kit release **0.11.83** · [All addons / hub](../README.md)
+Version **7.0.1-ck10** · Kit release **0.11.90** · [All addons / hub](../README.md)
 
 **A better mail window with mass send that no longer gets stuck after about 60 mails.**
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
+
+## Updated in 7.0.1-ck10
+
+- With the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To**. On **Mass Send Items** it fills the mass-send To field and your marked items stay marked; from the inbox or **History** it opens Compose with that name.
+- While a mail is still sending, UMM says so and To stays as it is. While the gold confirmation is open, a mass-send list is waiting for Send, or the inbox is taking mail, the click does what it normally does.
+
+## Updated in 7.0.1-ck9
+
+- The two **gold presets** in the settings put a comma every three digits while you type, like the gold in your backpack, and stop at **999,999,999**, the most gold a character can hold. Gold in UMM's confirmation boxes uses the same commas.
+- **Forget own chars** first asks "Confirm resetting own character list?" with **Yes** and **No**. **No** sits where the button was, so a double click cannot confirm by accident.
+- With the mailbox closed and nothing being sent, UMM checks twice a second instead of on every frame. Opening the mailbox wakes it at once.
+
+## Updated in 7.0.1-ck8
+
+- Clicking an item in **Mass Send Items** no longer takes the cursor out of the **To** field. Only a box you really drag takes the keyboard, so Escape can cancel it.
+- Item tooltips show the drag-a-box help only until you have dragged your first box; hovering the bag background still shows it.
+- While the mail window is open, it checks for screen size or UI scale changes twice a second instead of on every frame.
 
 ## Drag selection and mass-send recipients
 
@@ -46,6 +63,7 @@ New in the Cherry's Kit version:
 - **Send fast or Send safely**: under 40 mails there is one Send button (fast). From 40 mails you choose: *Send fast* (quick pace, stops at the first failure) or *Send safely* (paced, with a short pause every 20 mails). C.O.D. mails always go the safe way. A **Stop** button stops after the current mail; unsent items stay marked.
 - **Bound items in red**, also when several are marked; they are skipped with "(N bound, not sent)".
 - **Ctrl+click** a marked item to unmark its whole group.
+- **Names from chat**: with the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To** (Compose, or Mass Send Items while that tab is open).
 - **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, mail shortcuts and gold presets, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
 - Faster bag handling (the bag list is no longer rebuilt on every bag change) and a faster loading screen.
 
@@ -70,7 +88,7 @@ New in the Cherry's Kit version:
 
 ## Install
 
-Requires [Cherry's Kit hub **0.4.17 or later**](../README.md) to load the History files. Kit **0.11.83** includes hub **0.4.18**. Download ZIPs from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/releases).
+Requires [Cherry's Kit hub **0.4.17 or later**](../README.md) to load the History files. Kit **0.11.85** includes hub **0.4.20**. Download ZIPs from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/releases).
 
 1. Install the full kit, or install the hub ZIP and this addon's ZIP.
 2. Extract into your game's `Interface/AddOns/` folder, merging the `CherrysKit` folders. This addon must end up at `Interface/AddOns/CherrysKit/UltimateMailMod/`.

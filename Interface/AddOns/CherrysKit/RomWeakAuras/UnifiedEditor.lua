@@ -1,6 +1,7 @@
 -- Rule-flow editor with a shared contextual field panel and preview.
 local RWA, W, Rules = RWA, RWA.W, RWA.Rules
-local F = { pending = {}, dirty = {}, sectionState = {general=true,position=true}, collapsedRules = {}, viewState = {}, ruleTop = 0, scenario = "live" }
+-- Position starts open so X, Y and Scale are in view; General starts folded.
+local F = { pending = {}, dirty = {}, sectionState = {general=true,position=false}, collapsedRules = {}, viewState = {}, ruleTop = 0, scenario = "live" }
 RWA.UnifiedEditor = F
 
 local refresh, closeMenu, openMenu, visibleRows
@@ -486,7 +487,7 @@ function F.Build(context)
     RWA.ResetAuraPosition(d,seed and seed.id)
     changed()
   end,"Restore this aura's factory position, or centre a custom aura. Size, screen-scaling choice, rules and relative output offsets are kept. Save aura to keep the change.")
-  F.positionHint=label("position","Corner: drag / Shift-drag to scale",510,486,240,22,11)
+  F.positionHint=label("position","Drag arrows to move, corner to scale",510,486,240,22,11)
   F.previewMode=button("preview","Live",500,177,110,function()
     local choices={{label="Live conditions",value="live"}}
     local resource=false

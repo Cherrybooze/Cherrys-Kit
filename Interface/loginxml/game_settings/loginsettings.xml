@@ -1,0 +1,1075 @@
+<Ui xmlns="http://www.runewaker.com/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/
+../WorldXml/UI.xsd">
+	<Script file="LoginSettings.lua"/>
+	<Slider name="LSF_SliderTemp" orientation="HORIZONTAL" virtual="true">
+		<Size>
+			<AbsDimension x="182" y="15"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentNormalLeft" file="Interface\ChatFrame\ChatEditBox-Border">
+					<Size>
+						<AbsDimension x="16" y="15"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.25" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentNormalRight" file="Interface\ChatFrame\ChatEditBox-Border">
+					<Size>
+						<AbsDimension x="16" y="15"/>
+					</Size>
+					<Anchors>
+						<Anchor point="RIGHT"/>
+					</Anchors>
+					<TexCoords left="0.75" right="1" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentNormalMiddle" file="Interface\ChatFrame\ChatEditBox-Border">
+					<Size>
+						<AbsDimension x="1" y="15"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentNormalLeft"/>
+						<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentNormalRight"/>
+					</Anchors>
+					<TexCoords left="0.25" right="0.75" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentDisableLeft" file="Interface\ChatFrame\ChatEditBox-Disable-Border" hidden="true">
+					<Size>
+						<AbsDimension x="16" y="15"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.25" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentDisableRight" file="Interface\ChatFrame\ChatEditBox-Disable-Border" hidden="true">
+					<Size>
+						<AbsDimension x="16" y="15"/>
+					</Size>
+					<Anchors>
+						<Anchor point="RIGHT"/>
+					</Anchors>
+					<TexCoords left="0.75" right="1" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentDisableMiddle" file="Interface\ChatFrame\ChatEditBox-Disable-Border" hidden="true">
+					<Size>
+						<AbsDimension x="1" y="15"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentDisableLeft"/>
+						<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentDisableRight"/>
+					</Anchors>
+					<TexCoords left="0.25" right="0.75" top="0" bottom="0.6875"/>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<FontString name="$parentDesc" inherits="LoginFontNormal">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="0" y="-5"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentLow" inherits="LoginFontHighlight" text="OPTUI_COM_LOW">
+					<Anchors>
+						<Anchor point="LEFT">
+							<Offset>
+								<AbsDimension x="5" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentHigh" inherits="LoginFontHighlight" text="OPTUI_COM_HIGH">
+					<Anchors>
+						<Anchor point="RIGHT">
+							<Offset>
+								<AbsDimension x="-5" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<ThumbTexture name="$parentThumb" file="Interface\ChatFrame\ChatFrame-ScrollBar-Knob">
+			<Size>
+				<AbsDimension x="16" y="16"/>
+			</Size>
+		</ThumbTexture>
+	</Slider>
+	<Slider name="LSF_ValueSliderTemp" orientation="HORIZONTAL" virtual="true">
+		<Size>
+			<AbsDimension x="182" y="15"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentLeft" file="Interface\ChatFrame\ChatEditBox-Border">
+					<Size>
+						<AbsDimension x="16" y="15"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.25" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentRight" file="Interface\ChatFrame\ChatEditBox-Border">
+					<Size>
+						<AbsDimension x="16" y="15"/>
+					</Size>
+					<Anchors>
+						<Anchor point="RIGHT"/>
+					</Anchors>
+					<TexCoords left="0.75" right="1" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentMiddle" file="Interface\ChatFrame\ChatEditBox-Border">
+					<Size>
+						<AbsDimension x="1" y="15"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentLeft"/>
+						<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentRight"/>
+					</Anchors>
+					<TexCoords left="0.25" right="0.75" top="0" bottom="0.6875"/>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<FontString name="$parentDesc" inherits="LoginFontNormal">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="0" y="-5"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentValue" inherits="LoginFontHighlight">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT">
+							<Offset>
+								<AbsDimension x="-5" y="-5"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentLow" inherits="LoginFontHighlight" text="1">
+					<Anchors>
+						<Anchor point="LEFT">
+							<Offset>
+								<AbsDimension x="5" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentHigh" inherits="LoginFontHighlight" text="20">
+					<Anchors>
+						<Anchor point="RIGHT">
+							<Offset>
+								<AbsDimension x="-5" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnValueChanged>
+				LSF_ValueSlider_OnValueChanged(this);
+			</OnValueChanged>
+		</Scripts>
+		<ThumbTexture file="Interface\ChatFrame\ChatFrame-ScrollBar-Knob">
+			<Size>
+				<AbsDimension x="16" y="16"/>
+			</Size>
+		</ThumbTexture>
+	</Slider>
+	<Slider name="LSF_DisplaySliderTemp" inherits="LSF_SliderTemp" virtual="true">
+		<Scripts>
+			<OnValueChanged>
+				LSF_Display_WorstRadioButton:SetChecked(false);
+				LSF_Display_GeneralRadioButton:SetChecked(false);
+				LSF_Display_BestRadioButton:SetChecked(false);
+			</OnValueChanged>
+		</Scripts>
+	</Slider>
+	<Slider name="LSF_TooltipSliderTemp" inherits="LSF_DisplaySliderTemp" virtual="true">
+		<Frames>
+			<Frame name="$parentTooltip" enableMouse="true">
+				<Size>
+					<AbsDimension x="182" y="19"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT"/>
+				</Anchors>
+				<Layers>
+					<Layer>
+						<FontString name="$parentDesc" inherits="LoginFontNormal">
+							<Anchors>
+								<Anchor point="TOPLEFT"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter>
+						LoginTooltip:ClearAllAnchors();
+						LoginTooltip:SetOwner(this:GetParent(), "ANCHOR_RIGHT", 10, 0);
+						LoginTooltip:ClearLines();
+						LoginTooltip:SetText( SYS_SETTINGS_NEED_RESTART );
+					</OnEnter>
+					<OnLeave>
+						LoginTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnEnter>
+				LoginTooltip:ClearAllAnchors();
+				LoginTooltip:SetOwner(this, "ANCHOR_RIGHT", 10, 0);
+				LoginTooltip:ClearLines();
+				LoginTooltip:SetText( SYS_SETTINGS_NEED_RESTART );
+			</OnEnter>
+			<OnLeave>
+				LoginTooltip:Hide();
+			</OnLeave>
+		</Scripts>
+	</Slider>
+	<Button name="LSF_TabTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="168" y="16"/>
+		</Size>
+		<Scripts>
+			<OnClick>
+				LSF_Tab_OnClick(this);
+			</OnClick>
+		</Scripts>
+		<NormalText name="$parentText" inherits="LoginTitleFont">
+			<Anchors>
+				<Anchor point="LEFT">
+					<Offset>
+						<AbsDimension x="5" y="1"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</NormalText>
+		<HighlightTexture name="$parentHighlightTexture" file="Interface\Buttons\ListItemHighlight" alphaMode="ADD">
+			<Anchors>
+				<Anchor point="LEFT"/>
+				<Anchor point="RIGHT"/>
+			</Anchors>
+		</HighlightTexture>
+	</Button>
+	<CheckButton name="LSF_CBNoScriptTemp" virtual="true">
+		<Size>
+			<AbsDimension x="24" y="24"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString name="$parentDesc" inherits="LoginFontHighlight">
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT">
+							<Offset>
+								<AbsDimension x="5" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<NormalTexture file="Interface\Buttons\CheckBox-Normal">
+			<TexCoords left="0.15625" right="0.84375" top="0.15625" bottom="0.84375"/>
+		</NormalTexture>
+		<PushedTexture file="Interface\Buttons\CheckBox-Depress">
+			<TexCoords left="0.15625" right="0.84375" top="0.15625" bottom="0.84375"/>
+		</PushedTexture>
+		<DisabledTexture file="Interface\Buttons\CheckBox-Disable">
+			<TexCoords left="0.15625" right="0.84375" top="0.15625" bottom="0.84375"/>
+		</DisabledTexture>
+		<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD">
+			<TexCoords left="0.15625" right="0.84375" top="0.15625" bottom="0.84375"/>
+		</HighlightTexture>
+		<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+		<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+	</CheckButton>
+	<CheckButton name="LSF_CBTemp" inherits="LSF_CBNoScriptTemp" virtual="true">
+		<Scripts>
+			<OnClick>
+				LSF_Display_WorstRadioButton:SetChecked(false);
+				LSF_Display_GeneralRadioButton:SetChecked(false);
+				LSF_Display_BestRadioButton:SetChecked(false);
+			</OnClick>
+		</Scripts>
+	</CheckButton>
+	<Frame name="LSF_GroupTemplate" virtual="true">
+		<Backdrop edgeFile="Interface\Tooltips\Tooltip-Border" bgFile="Interface\Tooltips\Tooltip-Background">
+			<BackgroundInsets>
+				<AbsInset top="4" left="4" bottom="4" right="4"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+			<TileSize>
+				<AbsValue val="16"/>
+			</TileSize>
+		</Backdrop>
+	</Frame>
+	<Frame name="LoginSettingsFrame" parent="LoginFrame" enableMouse="true" enableKeyboard="true" frameLevel="900" hidden="true">
+		<Size>
+			<AbsDimension x="694" y="712"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentTopLeft" file="Interface\SYS_Settings\SYS_Settings_TopLeft">
+					<Size>
+						<AbsDimension x="512" y="512"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentTopRight" file="Interface\SYS_Settings\SYS_Settings_TopRight">
+					<Size>
+						<AbsDimension x="182" y="512"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPRIGHT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.7109375" top="0" bottom="1"/>
+				</Texture>
+				<Texture name="$parentBottomLeft" file="Interface\SYS_Settings\SYS_Settings_BottomLeft">
+					<Size>
+						<AbsDimension x="512" y="200"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="1" top="0" bottom="0.78125"/>
+				</Texture>
+				<Texture name="$parentBottomRight" file="Interface\SYS_Settings\SYS_Settings_BottomRight">
+					<Size>
+						<AbsDimension x="182" y="200"/>
+					</Size>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.7109375" top="0" bottom="0.78125"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString inherits="LoginTitleFont" text="SSF_FRAMETITLE">
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="-10" y="10"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button inherits="UILoginPanelCloseButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-3" y="5"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parentPagebut1" inherits="LSF_TabTemplate" id="1" text="SSF_TEXT_PAGE1">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset>
+							<AbsDimension x="29" y="55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parentPagebut2" inherits="LSF_TabTemplate" id="2" text="SSF_TEXT_PAGE2">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentPagebut1" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="0" y="5"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Frame name="LSF_DisplaySettingsFrame" hidden="true">
+				<Size>
+					<AbsDimension x="437" y="583"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-29" y="73"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Frame name="$parentResolutionGroup" inherits="LSF_GroupTemplate">
+						<Size>
+							<AbsDimension x="437" y="40"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<FontString inherits="LoginTitleFont" text="OPTUI_DISP_RESOLUTION">
+									<Anchors>
+										<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT">
+											<Offset>
+												<AbsDimension x="5" y="-3"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+									<Color b="0" g="1" r="0"/>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Frame name="LSF_ResolutionDropDown" inherits="LoginDropDownMenuTemplate">
+								<Anchors>
+									<Anchor point="LEFT">
+										<Offset>
+											<AbsDimension x="10" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnLoad>
+										LSF_ResolutionDropDown_OnLoad(this);
+									</OnLoad>
+								</Scripts>
+							</Frame>
+							<RadioButton name="LSF_WindowModeRadioButton" inherits="UILoginRadioButtonTemplate" groupId="1">
+								<Anchors>
+									<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="LSF_ResolutionDropDown">
+										<Offset>
+											<AbsDimension x="25" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString inherits="LoginFontHighlight" text="OPTUI_DISP_WINDOWED">
+											<Anchors>
+												<Anchor point="LEFT" relativePoint="RIGHT">
+													<Offset>
+														<AbsDimension x="5" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+							</RadioButton>
+							<RadioButton name="LSF_FullScreenRadioButton" inherits="UILoginRadioButtonTemplate" groupId="1">
+								<Anchors>
+									<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="LSF_WindowModeRadioButton">
+										<Offset>
+											<AbsDimension x="110" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString inherits="LoginFontHighlight" text="OPTUI_DISP_FULLSCREEN">
+											<Anchors>
+												<Anchor point="LEFT" relativePoint="RIGHT">
+													<Offset>
+														<AbsDimension x="5" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+							</RadioButton>
+						</Frames>
+					</Frame>
+					<Frame name="LSF_DisplayGroup" inherits="LSF_GroupTemplate">
+						<Size>
+							<AbsDimension x="437" y="522"/>
+						</Size>
+						<Anchors>
+							<Anchor point="BOTTOMLEFT"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<FontString inherits="LoginTitleFont" text="OPTUI_DISP_DISPLAY">
+									<Anchors>
+										<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT">
+											<Offset>
+												<AbsDimension x="5" y="-3"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+									<Color b="0" g="1" r="0"/>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<RadioButton name="LSF_Display_WorstRadioButton" inherits="UILoginRadioButtonTemplate" groupId="2">
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="12" y="10"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString inherits="LoginFontHighlight" text="SSF_DISPLAY_WORST">
+											<Anchors>
+												<Anchor point="LEFT" relativePoint="RIGHT">
+													<Offset>
+														<AbsDimension x="5" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Scripts>
+									<OnClick>
+										LSF_WorstRadioButton_OnClick(this);
+									</OnClick>
+								</Scripts>
+							</RadioButton>
+							<RadioButton name="LSF_Display_GeneralRadioButton" inherits="UILoginRadioButtonTemplate" groupId="2">
+								<Anchors>
+									<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="LSF_Display_WorstRadioButton">
+										<Offset>
+											<AbsDimension x="131" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString inherits="LoginFontHighlight" text="SSF_DISPLAY_GENERAL">
+											<Anchors>
+												<Anchor point="LEFT" relativePoint="RIGHT">
+													<Offset>
+														<AbsDimension x="5" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Scripts>
+									<OnClick>
+										LSF_GeneralRadioButton_OnClick(this);
+									</OnClick>
+								</Scripts>
+							</RadioButton>
+							<RadioButton name="LSF_Display_BestRadioButton" inherits="UILoginRadioButtonTemplate" groupId="2">
+								<Anchors>
+									<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="LSF_Display_GeneralRadioButton">
+										<Offset>
+											<AbsDimension x="124" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString inherits="LoginFontHighlight" text="SSF_DISPLAY_BEST">
+											<Anchors>
+												<Anchor point="LEFT" relativePoint="RIGHT">
+													<Offset>
+														<AbsDimension x="5" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Scripts>
+									<OnClick>
+										LSF_BestRadioButton_OnClick(this);
+									</OnClick>
+								</Scripts>
+							</RadioButton>
+							<Frame name="$parentLeftGroup" inherits="LSF_GroupTemplate">
+								<Size>
+									<AbsDimension x="204" y="485"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="LSF_Display_WorstRadioButton">
+										<Offset>
+											<AbsDimension x="-2" y="4"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<Texture name="$parentLine1" file="Interface\Common\PanelSeparate-HorizontalLine">
+											<Size>
+												<AbsDimension x="200" y="4"/>
+											</Size>
+											<Anchors>
+												<Anchor point="TOPLEFT">
+													<Offset>
+														<AbsDimension x="2" y="80"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+										<Texture name="$parentLine2" file="Interface\Common\PanelSeparate-HorizontalLine">
+											<Size>
+												<AbsDimension x="200" y="4"/>
+											</Size>
+											<Anchors>
+												<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentLine1">
+													<Offset>
+														<AbsDimension x="0" y="160"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+										<Texture name="$parentLine3" file="Interface\Common\PanelSeparate-HorizontalLine">
+											<Size>
+												<AbsDimension x="200" y="4"/>
+											</Size>
+											<Anchors>
+												<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentLine2">
+													<Offset>
+														<AbsDimension x="0" y="110"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Frames>
+									<CheckButton name="$parentUIScaleCheckButton" inherits="LSF_CBNoScriptTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT">
+												<Offset>
+													<AbsDimension x="10" y="10"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Scripts>
+											<OnClick>
+												LSF_UIScaleSliderUpdate();
+											</OnClick>
+										</Scripts>
+									</CheckButton>
+									<Slider name="$parentUIScaleSlider" inherits="LSF_SliderTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentUIScaleCheckButton">
+												<Offset>
+													<AbsDimension x="0" y="22"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<CheckButton name="$parentRTLightMapCheckBox" inherits="LSF_CBTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentLine1">
+												<Offset>
+													<AbsDimension x="8" y="8"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</CheckButton>
+									<Slider name="$parentTerrainShaderDetailSlider" inherits="LSF_DisplaySliderTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentRTLightMapCheckBox">
+												<Offset>
+													<AbsDimension x="0" y="25"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<Slider name="$parentLightMapResSlider" inherits="LSF_DisplaySliderTemp" hidden="true">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentTerrainShaderDetailSlider">
+												<Offset>
+													<AbsDimension x="0" y="23"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<Slider name="$parentShadowDetailSlider" inherits="LSF_DisplaySliderTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentTerrainShaderDetailSlider">
+												<Offset>
+													<AbsDimension x="0" y="23"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<CheckButton name="$parentWaterReflectionCheckButton" inherits="LSF_CBTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentLine2">
+												<Offset>
+													<AbsDimension x="8" y="8"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</CheckButton>
+									<CheckButton name="$parentWaterRefractionCheckButton" inherits="LSF_CBTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentWaterReflectionCheckButton">
+												<Offset>
+													<AbsDimension x="0" y="5"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</CheckButton>
+									<Slider name="$parentWaterQualitySlider" inherits="LSF_DisplaySliderTemp" hidden="true">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentWaterRefractionCheckButton">
+												<Offset>
+													<AbsDimension x="0" y="25"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<CheckButton name="$parentBloomCheckButton" inherits="LSF_CBTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentLine3">
+												<Offset>
+													<AbsDimension x="8" y="8"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</CheckButton>
+									<CheckButton name="$parentGlowCheckButton" inherits="LSF_CBTemp" hidden="true">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentBloomCheckButton">
+												<Offset>
+													<AbsDimension x="0" y="5"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</CheckButton>
+									<Slider name="$parentBloomQualitySlider" inherits="LSF_DisplaySliderTemp" hidden="true">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentGlowCheckButton">
+												<Offset>
+													<AbsDimension x="0" y="25"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+								</Frames>
+							</Frame>
+							<Frame name="$parentRightGroup" inherits="LSF_GroupTemplate">
+								<Size>
+									<AbsDimension x="204" y="485"/>
+								</Size>
+								<Anchors>
+									<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentLeftGroup">
+										<Offset>
+											<AbsDimension x="6" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<Texture name="$parentLine1" file="Interface\Common\PanelSeparate-HorizontalLine">
+											<Size>
+												<AbsDimension x="200" y="4"/>
+											</Size>
+											<Anchors>
+												<Anchor point="TOPLEFT">
+													<Offset>
+														<AbsDimension x="2" y="240"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Slider name="$parentPaperdollDetailSlider" inherits="LSF_TooltipSliderTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT">
+												<Offset>
+													<AbsDimension x="11" y="27"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<Slider name="$parentViewDistanceSlider" inherits="LSF_DisplaySliderTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentPaperdollDetailSlider">
+												<Offset>
+													<AbsDimension x="0" y="23"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<Slider name="$parentWorldDetailSlider" inherits="LSF_DisplaySliderTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentViewDistanceSlider">
+												<Offset>
+													<AbsDimension x="0" y="23"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<Slider name="$parentSkyDetailSlider" inherits="LSF_DisplaySliderTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentWorldDetailSlider">
+												<Offset>
+													<AbsDimension x="0" y="23"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<Slider name="$parentTextureDetailSlider" inherits="LSF_TooltipSliderTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSkyDetailSlider">
+												<Offset>
+													<AbsDimension x="0" y="23"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<Slider name="$parentTerrainTextureDetailSlider" inherits="LSF_DisplaySliderTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentTextureDetailSlider">
+												<Offset>
+													<AbsDimension x="0" y="23"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Slider>
+									<CheckButton name="$parentSpecularHighlightCheckButton" inherits="LSF_CBTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentLine1">
+												<Offset>
+													<AbsDimension x="8" y="8"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</CheckButton>
+									<CheckButton name="$parentDistortFXCheckButton" inherits="LSF_CBTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSpecularHighlightCheckButton">
+												<Offset>
+													<AbsDimension x="0" y="5"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</CheckButton>
+									<CheckButton name="$parentDebaseTextureCheckButton" inherits="LSF_CBTemp">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentDistortFXCheckButton">
+												<Offset>
+													<AbsDimension x="0" y="5"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</CheckButton>
+									<CheckButton name="$parentSmoothBlendCheckButton" inherits="LSF_CBTemp" hidden="true">
+										<Anchors>
+											<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentDebaseTextureCheckButton">
+												<Offset>
+													<AbsDimension x="0" y="5"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</CheckButton>
+								</Frames>
+							</Frame>
+						</Frames>
+					</Frame>
+				</Frames>
+			</Frame>
+			<Frame name="LSF_AudioSettingsFrame" hidden="true">
+				<Size>
+					<AbsDimension x="437" y="578"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-29" y="75"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Frame name="LSF_VolumeGroup" inherits="LSF_GroupTemplate">
+						<Size>
+							<AbsDimension x="437" y="136"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<FontString inherits="LoginTitleFont" text="OPTUI_AUDIO_VOLUME_LEVELS">
+									<Anchors>
+										<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT">
+											<Offset>
+												<AbsDimension x="5" y="-5"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+									<Color b="0" g="1" r="0"/>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Slider name="$parentMasterVolumeSlider" inherits="LSF_ValueSliderTemp">
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="20" y="32"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Slider>
+							<Slider name="$parentMusicVolumeSlider" inherits="LSF_ValueSliderTemp">
+								<Anchors>
+									<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentMasterVolumeSlider">
+										<Offset>
+											<AbsDimension x="30" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Slider>
+							<Slider name="$parentAmbienceVolumeSlider" inherits="LSF_ValueSliderTemp">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentMasterVolumeSlider">
+										<Offset>
+											<AbsDimension x="0" y="22"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Slider>
+							<Slider name="$parentSoundFXVolumeSlider" inherits="LSF_ValueSliderTemp">
+								<Anchors>
+									<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentAmbienceVolumeSlider">
+										<Offset>
+											<AbsDimension x="30" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Slider>
+							<Slider name="$parentInterfaceSFXVolumeSlider" inherits="LSF_ValueSliderTemp">
+								<Anchors>
+									<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentAmbienceVolumeSlider">
+										<Offset>
+											<AbsDimension x="0" y="22"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Slider>
+						</Frames>
+					</Frame>
+					<Frame name="LSF_OptionsGroup" inherits="LSF_GroupTemplate">
+						<Size>
+							<AbsDimension x="437" y="53"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="LSF_VolumeGroup">
+								<Offset>
+									<AbsDimension x="0" y="24"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<FontString inherits="LoginTitleFont" text="OPTUI_AUDIO_OPTIONS">
+									<Anchors>
+										<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT">
+											<Offset>
+												<AbsDimension x="5" y="-5"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+									<Color b="0" g="1" r="0"/>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Slider name="$parentMusicFrequencySlider" inherits="LSF_SliderTemp">
+								<Anchors>
+									<Anchor point="TOPLEFT">
+										<Offset>
+											<AbsDimension x="20" y="27"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Slider>
+						</Frames>
+					</Frame>
+				</Frames>
+			</Frame>
+			<Button name="$parentApplyButton" text="OPTUI_COM_APPLY" inherits="LoginButtonTemplate">
+				<Size>
+					<AbsDimension x="88" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-25" y="-15"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>						
+						LSF_OnApply();
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentCloseButton" text="OPTUI_COM_CLOSE" inherits="LoginButtonTemplate">
+				<Size>
+					<AbsDimension x="88" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentApplyButton"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						LoginDropDownList:Hide();
+						LoginSettingsFrame:Hide();
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentOKButton" text="OPTUI_COM_OK" inherits="LoginButtonTemplate">
+				<Size>
+					<AbsDimension x="88" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentCloseButton"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						LSF_OnApply();
+						LoginDropDownList:Hide();
+						LoginSettingsFrame:Hide();
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				LSF_OnLoad(this);
+			</OnLoad>
+			<OnShow>
+				LoginSettingsFrame.LSFTab = 1
+				SYS_DisplaySettings_OnShow();
+				LSF_OnShow();
+			</OnShow>
+		</Scripts>
+	</Frame>
+</Ui>

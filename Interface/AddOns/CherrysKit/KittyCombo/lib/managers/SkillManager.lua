@@ -408,8 +408,40 @@ end;
 -- Execution tolerance (seconds): a key press may dispatch a skill this far
 -- before the client shows its cooldown as finished. Dispatch used to inherit
 -- the canCast default (0.6) below; condition checks that pass their own
--- threshold are unchanged. Set this field back to 0.6 at runtime to compare.
-Kitty.SkillManager.EXECUTION_TOLERANCE = 0.2;
+-- threshold are unchanged. /kc window 0.6 compares against the old window;
+-- it is saved as basic.readyWindow and applied after the settings load.
+Kitty.SkillManager.DEFAULT_EXECUTION_TOLERANCE = 0.2;
+Kitty.SkillManager.EXECUTION_TOLERANCE = Kitty.SkillManager.DEFAULT_EXECUTION_TOLERANCE;
+Kitty.SkillManager.applyReadyWindow = function()
+	local setting = Kitty.SettingManager and Kitty.SettingManager.setting;
+	local value = setting and type(setting.basic) == "table" and tonumber(setting.basic.readyWindow);
+	if(not value or value < 0 or value > 1) then
+		value = Kitty.SkillManager.DEFAULT_EXECUTION_TOLERANCE;
+	end
+	Kitty.SkillManager.EXECUTION_TOLERANCE = value;
+	return value;
+end;
+-- /kc window [seconds | default]
+Kitty.SkillManager.readyWindowCommand = function(text)
+	text = string.lower((string.gsub(tostring(text or ""), "^%s*(.-)%s*$", "%1")));
+	local setting = Kitty.SettingManager and Kitty.SettingManager.setting;
+	local basic = setting and type(setting.basic) == "table" and setting.basic or nil;
+	if(text == "default" or text == "reset") then
+		if(basic) then basic.readyWindow = nil; end
+		Kitty.SkillManager.EXECUTION_TOLERANCE = Kitty.SkillManager.DEFAULT_EXECUTION_TOLERANCE;
+	elseif(text ~= "") then
+		local value = tonumber(text);
+		if(not value or value < 0 or value > 1) then
+			Kitty.sendMessage(Kitty.L("ReadyWindowRange", "Use seconds from 0 to 1, for example /kc window 0.6. /kc window default goes back to 0.2."), "DEFAULT", 1, 0, 0);
+			return false;
+		end
+		if(basic) then basic.readyWindow = value; end
+		Kitty.SkillManager.EXECUTION_TOLERANCE = value;
+	end
+	Kitty.sendMessage(Kitty.L("ReadyWindowNow", "KittyCombo: a key press fires a skill up to <<1>> s before its cooldown ends (default 0.2; versions before 1.7.10 used 0.6). Change it with /kc window 0.6.",
+		Kitty.SkillManager.EXECUTION_TOLERANCE));
+	return true;
+end;
 
 -- Get cooldown
 Kitty.SkillManager.canCast = function(self, skillName, threshold, observeOnly)

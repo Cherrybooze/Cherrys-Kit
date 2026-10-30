@@ -93,6 +93,29 @@ local function placeholder(token, state, now)
     local t = math.floor(math.max(0, now - state.startTime))
     return t < 60 and (t .. "s") or string.format("%d:%02d", math.floor(t / 60), t % 60)
   end
+  -- Other files add their own codes here (Recent.lua: %rate, %fight, %ft, %avg);
+  -- a code returns nil when the state has nothing for it.
+  local code = Regions.CODES[token]
+  if code then return code(state, now) end
+end
+
+Regions.CODES = {}
+
+-- Visible texts are formatted many times a second, so each template is split once
+-- into literal text and %tokens; formatting then needs no gsub or closure.
+local compiledTemplates, compiledCount, formatParts = {}, 0, {}
+local function compileTemplate(template)
+  local parts, pos = {}, 1
+  while true do
+    local first, last, word = string.find(template, "%%(%a+)", pos)
+    if not first then break end
+    if first > pos then parts[#parts + 1] = string.sub(template, pos, first - 1) end
+    -- "%ps" is "%p" followed by the letter s.
+    parts[#parts + 1] = { word, string.sub(word, 1, 1), string.sub(word, 2) }
+    pos = last + 1
+  end
+  if pos <= string.len(template) then parts[#parts + 1] = string.sub(template, pos) end
+  return parts
 end
 
 function Regions.FormatText(template, state, now)
@@ -100,19 +123,29 @@ function Regions.FormatText(template, state, now)
   if not template or template == "" then
     return ""
   end
-  return (string.gsub(template, "%%(%a+)", function(word)
-    local value = placeholder(word, state, now)
-    if value then
-      return value
+  if type(template) ~= "string" then template = tostring(template) end
+  local parts = compiledTemplates[template]
+  if not parts then
+    if compiledCount >= 200 then compiledTemplates, compiledCount = {}, 0 end
+    parts = compileTemplate(template)
+    compiledTemplates[template], compiledCount = parts, compiledCount + 1
+  end
+  local count = #parts
+  if count == 1 and type(parts[1]) == "string" then return parts[1] end
+  for i = 1, count do
+    local part = parts[i]
+    if type(part) == "string" then
+      formatParts[i] = part
+    else
+      local value = placeholder(part[1], state, now)
+      if not value then
+        value = placeholder(part[2], state, now)
+        value = value and (value .. part[3]) or ("%" .. part[1])
+      end
+      formatParts[i] = value
     end
-    -- "%ps" is "%p" followed by the letter s.
-    local first = string.sub(word, 1, 1)
-    value = placeholder(first, state, now)
-    if value then
-      return value .. string.sub(word, 2)
-    end
-    return "%" .. word
-  end))
+  end
+  return table.concat(formatParts, "", 1, count)
 end
 
 function Regions.Progress(state, now)
@@ -391,20 +424,30 @@ function Regions.ElementData(parentData, element)
   return d
 end
 
+-- Drawn many times a second, so no table is made here: a missing state is this shared
+-- empty one (only read), and a Kitty icon element refills its own copy of the state.
+local NO_STATE = {}
 function Regions.ElementState(owner, index, states)
   local e = owner.data and owner.data.elements and owner.data.elements[index]
-  if not e then return {}, false end
+  if not e then return NO_STATE, false end
   local from = tonumber(e.from) or 0
   local state
   if e.sourceId then state = states and states[e.sourceId]
   elseif from > 0 then state = states and states[from] else state = owner.state end
   local active = type(state) == "table" and state.show ~= false
-  if type(state) ~= "table" then state = {} end
+  if type(state) ~= "table" then state = NO_STATE end
   if (e.type == nil or e.type == "icon" or e.type == "aurabar") and not (e.icon and e.icon ~= "")
     and Regions.ElementIcon then
     local icon = Regions.ElementIcon(owner, index, state)
     if icon ~= nil then
-      local copy = {}
+      local copies = owner.elementStates
+      if not copies then copies = {}; owner.elementStates = copies end
+      local copy = copies[index]
+      if copy then
+        for key in pairs(copy) do copy[key] = nil end
+      else
+        copy = {}; copies[index] = copy
+      end
       for key, value in pairs(state) do copy[key] = value end
       state = copy
       state.icon, state._elementNoIcon = icon or nil, icon == false
@@ -440,8 +483,9 @@ function Base:LayoutElements(data)
   end
 end
 
+local NO_ANIMATION = {}
 local function animateElement(region, now, active, baseAlpha)
-  local d, animation = region.data, region.data.animation or {}
+  local d, animation = region.data, region.data.animation or NO_ANIMATION
   if active ~= region.elementActive then
     local wasActive = region.elementActive
     region.elementActive = active
@@ -588,14 +632,29 @@ function Bar:Build()
   self.text2 = makeText(f, 12, "RIGHT")
 end
 
+-- Target health with the stock "%v / %t" text: the HP number sits at the bar's right
+-- end and the percentage centred just above the bar (a third text, made when needed).
 local function layoutBarText(region,data,health)
   local w,h=region.barW,data.height
-  W.SetSize(region.text.obj,math.max(1,w*(health and 1 or .7)-6),h)
-  W.SetSize(region.text2.obj,math.max(1,w*(health and 1 or .3)-4),h)
+  W.SetSize(region.text.obj,math.max(1,w*(health and .62 or .7)-6),h)
+  W.SetSize(region.text2.obj,math.max(1,w*(health and .38 or .3)-4),h)
   W.SetPoint(region.text.obj,"LEFT",region.frame,"LEFT",region.barX+4,0)
-  W.SetJustify(region.text2.obj,health and "CENTER" or "RIGHT")
-  if health then W.SetPoint(region.text2.obj,"TOP",region.frame,"BOTTOM",0,2)
-  else W.SetPoint(region.text2.obj,"RIGHT",region.frame,"RIGHT",-4,0) end
+  W.SetPoint(region.text2.obj,"RIGHT",region.frame,"RIGHT",-4,0)
+  if health and not region.text3 then region.text3=makeText(region.frame,12,"CENTER") end
+  local above=region.text3
+  if above then
+    above.lastText=nil
+    if health then
+      W.SetFont(above.obj,data.fontSize,"NORMAL",data.font)
+      W.SetColor(above.obj,colorOf(data.textColor))
+      W.SetSize(above.obj,math.max(1,w),(tonumber(data.fontSize) or 12)+4)
+      W.SetPoint(above.obj,"BOTTOM",region.frame,"TOP",region.barX/2,-2)
+      RWA.Try(above.obj,"Show")
+    else
+      W.SetText(above.obj,"")
+      RWA.Try(above.obj,"Hide")
+    end
+  end
   region.healthTextLayout=health
 end
 
@@ -675,12 +734,15 @@ function Bar:Update(now)
   end
   if resource then resource.UpdateBarText(self,state,now);resource.Updated(self)
   else
-    -- Give the stock target HP/percentage pair a readable full-width line;
-    -- its original 30% text slot clips values as soon as HP is known.
-    local health=state.healthText~=nil and d.text=="%n" and d.text2=="%v / %t"
+    local health=state.healthText~=nil and d.text2=="%v / %t"
     if health~=self.healthTextLayout then layoutBarText(self,d,health) end
     setText(self.text, Regions.FormatText(d.text, state, now))
-    setText(self.text2, Regions.FormatText(d.text2, state, now))
+    if health then
+      setText(self.text2, state.healthNumber)
+      setText(self.text3, state.healthPercent)
+    else
+      setText(self.text2, Regions.FormatText(d.text2, state, now))
+    end
   end
 end
 

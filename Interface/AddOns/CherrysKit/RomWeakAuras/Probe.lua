@@ -79,6 +79,13 @@ function RWA.Probe()
     local b = result.firstPlayerBuff
     RWA.Print("probe: first buff", b.name, "id", tostring(b.id), "stacks", tostring(b.stacks), "left", tostring(b.left))
   end
+  local share = RWA.Share
+  if share then
+    local deflate = share.GetDeflate()
+    result.shareCodes = (deflate and share.GetCodebook()) and share.CODEBOOK_PREFIX
+      or (deflate and "RWA4 (data/ShareCodebook.lua missing or changed)" or "RWA4 (lib/LibDeflate.lua missing)")
+    RWA.Print("probe: share codes", result.shareCodes)
+  end
   RWA.Print("probe: saved to RWA_DB.probe; /reloadui writes it to the SavedVariables file")
 end
 

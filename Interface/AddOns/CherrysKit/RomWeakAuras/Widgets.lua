@@ -335,6 +335,14 @@ function W.RegionFrame()
   return f
 end
 
+-- Placement grips come from the RWA_PlaceGrip pool in Frames.xml: a frame made at runtime gets
+-- no mouse scripts in game. nil once the pool is used up.
+function W.PlacementGripFrame()
+  local name = "RWA_PlaceGrip" .. ((claimed.RWA_PlaceGrip or 0) + 1)
+  if not _G[name] then return nil end
+  return (claim("RWA_PlaceGrip", "Frame", "UIParent"))
+end
+
 function W.Button(parent, text, w, h, onClick)
   local b = claim("RWA_OptBtn", "Button", parent, "UIPanelButtonTemplate")
   W.SetSize(b, w or 80, h or 22)

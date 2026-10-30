@@ -3,6 +3,7 @@ const helper = document.getElementById('helper');
 const start = document.getElementById('start');
 const status = document.getElementById('status');
 const reset = document.getElementById('reset');
+const resetTime = document.getElementById('reset-time');
 let starting = false;
 let refreshTimer;
 
@@ -12,11 +13,26 @@ function collectionTime(value) {
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date : null;
 }
+// The daily reward resets at 00:00 in Germany, which is a different hour elsewhere.
+const germanClock = new Intl.DateTimeFormat('en-US', {timeZone:'Europe/Berlin', hourCycle:'h23', year:'numeric', month:'numeric', day:'numeric', hour:'numeric', minute:'numeric', second:'numeric'});
+function germanOffset(date) {
+  const part = {};
+  for (const {type, value} of germanClock.formatToParts(date)) part[type] = Number(value);
+  return Date.UTC(part.year, part.month - 1, part.day, part.hour, part.minute, part.second) - Math.floor(date.getTime() / 1000) * 1000;
+}
+// 00:00 in Germany today, or that many days later. The offset is taken again at that moment,
+// as it can differ from today's on the days the clocks change.
+function germanMidnight(now, days) {
+  const german = new Date(now.getTime() + germanOffset(now));
+  const midnight = Date.UTC(german.getUTCFullYear(), german.getUTCMonth(), german.getUTCDate() + days);
+  return new Date(midnight - germanOffset(new Date(midnight - germanOffset(now))));
+}
 function latestReset(now) {
-  const boundary = new Date(now);
-  boundary.setHours(1, 0, 0, 0);
-  if (boundary > now) boundary.setDate(boundary.getDate() - 1);
-  return boundary;
+  return germanMidnight(now, 0);
+}
+function showResetTime(now) {
+  const clock = new Intl.DateTimeFormat(undefined, {timeStyle:'short'}).format(germanMidnight(now, 1));
+  resetTime.textContent = 'Daily reset: ' + clock + ' your time (00:00 in Germany).';
 }
 function showCollection(record) {
   const collected = collectionTime(record?.collectedAt);
@@ -80,6 +96,7 @@ start.addEventListener('click', async event => {
   }
 });
 async function poll() {
+  showResetTime(new Date());
   await refresh();
   refreshTimer = setTimeout(poll, 30000);
 }

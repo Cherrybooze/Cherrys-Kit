@@ -1,10 +1,20 @@
 # pbInfo
 
-Version **0.60-ck4** · Kit release **0.11.81** · [All addons / hub](../README.md)
+Version **0.60-ck5** · Kit release **0.11.87** · [All addons / hub](../README.md)
 
 **More information everywhere: richer mob and player tooltips, a quest tracker, chat filters and timestamps, chat history, cast bar options and auto repair.**
 
 pbInfo v0.60 by p.b. a.k.a. novayuna (later odie2), updated for Cherry's Kit. Parts that other kit addons already do are left out: the threat meter is now rom weakauras' Threat meter aura, and target health numbers are PortraitHP.
+
+## Updated in 0.60-ck5
+
+Lighter while you play:
+
+- The tooltip was rebuilt on every frame while any tooltip showed, which made dozens of new texts and tables 30 to 60 times a second while you hovered a monster. It now refreshes 10 times a second, and still at once when a tooltip opens, its first line changes or the mouse moves to another unit.
+- **Hide default castbar** hides the game's cast bar as each cast starts instead of checking on every frame, with a check 4 times a second for anything else that shows it.
+- **Show cast time** changes its text only when the tenth of a second it shows changes.
+- Hovering a player pbInfo does not know yet asks the game's player search at most once a second, instead of on every tooltip refresh.
+- The character data timer now always stops once your character is known.
 
 ## Updated in 0.60-ck4
 

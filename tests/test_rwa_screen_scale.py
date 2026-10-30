@@ -95,7 +95,7 @@ class ScreenScaleTests(unittest.TestCase):
         self.rwa.ToggleOptions()
         self.rwa.ShowEditor("Fixed")
         editor = self.rwa.UnifiedEditor
-        self.h.script(editor.sections.position.collapse.name, "OnClick", key="LBUTTON")
+        self.assertTrue(editor.scale.box.IsVisible(editor.scale.box))  # Position starts open
         self.assertFalse(editor.autoScaleScreen.IsChecked(editor.autoScaleScreen))
         self.h.script(editor.autoScaleScreen.name, "OnClick", key="LBUTTON")
         draft = self.rwa.Editor.Get("Fixed")

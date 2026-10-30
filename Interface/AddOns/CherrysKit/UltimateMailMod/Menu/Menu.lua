@@ -26,9 +26,11 @@ function UMMMenuLayout(id)
   local screenW, screenH = positive(GetScreenWidth), positive(GetScreenHeight);
   if (not screenW) then local w = positive(UIParent.GetWidth, UIParent);screenW = w and w * uiScale; end
   if (not screenH) then local h = positive(UIParent.GetHeight, UIParent);screenH = h and h * uiScale; end
-  local key = table.concat({width, uiScale, screenW or 0, screenH or 0}, ":");
-  if (key == frame.ummLayoutKey) then return; end
-  frame.ummLayoutKey = key;
+  -- Compare the numbers themselves: this check also runs while the window is open.
+  if (width == frame.ummLayoutWidth and uiScale == frame.ummLayoutUIScale
+      and screenW == frame.ummLayoutScreenW and screenH == frame.ummLayoutScreenH) then return; end
+  frame.ummLayoutWidth, frame.ummLayoutUIScale = width, uiScale;
+  frame.ummLayoutScreenW, frame.ummLayoutScreenH = screenW, screenH;
   frame.ummBaseScale = frame.ummBaseScale or positive(frame.GetScale, frame) or 1;
   local ok, x, y;
   if (type(frame.GetPos) == "function") then ok, x, y = pcall(frame.GetPos, frame); end

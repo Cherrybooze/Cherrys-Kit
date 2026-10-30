@@ -1,0 +1,20 @@
+Cherry's Loginxml 1.2.0
+Original project: Rom Autologin by Pyrrhus. Integration fixes by Cherry.
+- new name: Cherry's Loginxml, shown next to the client version on the login screen
+- server screen: toggle buttons for every on/off setting, to the right of the server list; a click applies at once
+- new setting character_login_first: log in the first character once after each account login
+- settings changed on the login screen are kept by the new CherrysLoginxml addon (Interface\AddOns), which the game saves when you log out or quit; "Use config.lua" forgets them
+- new Install login screen.bat in the addon's folder: one click copies the login screen to Interface\loginxml, keeps your own files, and stores the path to SaveVariables.lua so toggles are back after a restart
+- in game, the addon says in chat when the login screen is missing or a different version
+- a row in the Cherry's Kit hub
+- added frames/compat_stock.lua: recreates the CHARACTER_SELECT global (selectedIndex) that the default login screen provides
+- server and character lists: Up/Down arrow keys move the selection, Enter joins / logs in
+- launcher logins: the Retry button counts down and asks for the server list again on its own
+  (config server_list_retry = 10 seconds, 0 = by hand only; server_list_retry_max = 3)
+- DEBUG button only shows when debug = true
+- CampNext (works with LogNextChar): "current" and "index" modes, 15s timeout, armable from the DEBUG box (campnext next|prev|current|<slot>|cancel)
+- CampNext: clicking a character or using the arrow keys cancels a queued switch; automatic logins wait for a queued switch
+- CampNext: leaves the character names in LOGCHAR_ROSTER so LogNextChar can name the next character in game
+
+v1.1.0
+- added CampNext_Login to integrate functionality with LogNextChar.lua

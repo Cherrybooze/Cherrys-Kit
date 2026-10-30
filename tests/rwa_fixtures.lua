@@ -26,7 +26,12 @@ function FixtureWidget(kind, name, parent, template)
     function obj:SetChecked(value) self.checked = value and true or false end
     function obj:IsChecked() return self.checked == true end
   end
-  if template and fixtureXmlScripts[template] then fixtureXmlScripts[name] = fixtureXmlScripts[template] end
+  -- In game the XML parser is freed after loading, so CreateUIComponent ignores the template
+  -- and a runtime frame gets none of its scripts. Tests that check this set
+  -- fixtureIgnoreTemplates; the rest keep the older, kinder double.
+  if template and fixtureXmlScripts[template] and not fixtureIgnoreTemplates then
+    fixtureXmlScripts[name] = fixtureXmlScripts[template]
+  end
   return obj
 end
 function Widget:GetName() return self.name end
@@ -43,6 +48,7 @@ function Widget:SetAnchor(point, relativePoint, relativeTo, x, y)
   self.x, self.y = x, y
 end
 function Widget:GetPos() return self.x or 0, self.y or 0 end
+function Widget:GetRealSize() return self.width * (self.scale or 1), self.height * (self.scale or 1) end
 function Widget:SetText(text)
   local changed = self.text ~= text
   self.text = text

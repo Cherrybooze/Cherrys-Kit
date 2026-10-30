@@ -360,6 +360,12 @@ function pbInfo.Tooltip.getPlayerInfo(name, mC, mL, sC, sL)
 	if (pbIsEmpty(sC) or type(pbInfo.Classes[sC]) ~= "table") then sC = -1; else sC = pbInfo.Classes[sC]["index"]; end;
 	if (pbIsEmpty(mL)) then mLm = 0; mLx = 100; else mLm = tonumber(mL); mLx = tonumber(mL); end;
 	if (pbIsEmpty(sL)) then sLm = 0; sLx = 100; else sLm = tonumber(sL); sLx = tonumber(sL); end;
+	-- Cherry's Kit: every tooltip refresh asks again until the answer arrives; one search a second is plenty.
+	local now = GetTime();
+	if (pbInfo.Tooltip.searchedAt and now >= pbInfo.Tooltip.searchedAt and now - pbInfo.Tooltip.searchedAt < 1) then
+		return false;
+	end;
+	pbInfo.Tooltip.searchedAt = now;
 	-- will be parsed in pbInfo.PlayerDB.ParseGroupSearch()
 	SearchGroupPeople(mC, mLm, mLx, sC, sLm, sLx); -- SearchGroupPeople(mC, mLmin, mLmax, sC, sLmin, sLmax);
 	return false;

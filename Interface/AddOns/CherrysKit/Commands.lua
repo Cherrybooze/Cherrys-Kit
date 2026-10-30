@@ -21,5 +21,7 @@ CherrysKit_Commands = {
   pbInfo = "/pbinfo", -- pbInfo window ("/pbinfo probe" still reaches it; /pbic and /mobinfo are its own)
   PortraitHP = "/php", -- PortraitHP on/off ("/php probe" still reaches it)
   CherrysGrid = "/grid", -- Cherry's Grid options ("/grid test", "/grid probe" still reach it)
+  CherrysQuests = "/cq", -- Cherry's Quests options ("/cq npcs", "/cq probe" still reach it)
+  CherrysBar = "/cbar", -- Cherry's Bar options ("/cbar top", "/cbar unlock", "/cbar probe" still reach it)
   ControlHub   = "/rwa /ck",    -- the Cherry's Kit window
 }

@@ -1,8 +1,36 @@
 # rom weakauras
 
+> **Requires:** Cherry's Kit (hub 0.4.14 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Cherry's KittyCombo (track its next skills and modes) and pbInfo (mob information for triggers).
+
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
+
+## Updated in 0.9.30
+
+- **The scale corner and the move arrows really work now.** In the placement view, drag the corner at an aura's bottom right to scale it and the arrows at its top left to move it. Until now the game gave these grips no mouse scripts at all, because it ignores XML templates on frames made after loading, so they could not be dragged. They now come from a pool declared in `Frames.xml`. **Shift-drag** on the aura itself also scales it.
+
+## Updated in 0.9.29
+
+- **Much shorter share codes** (`RWA5!`), made the same way as KittyCombo's CKC3 codes: they are compressed against a codebook every player has (every built-in template and English skill names). An aura made from a template is now about 20 to 45 characters instead of 450 to 1000, so most single auras fit in a chat line and in a **Chat link**. Your own changes and buff names add only what is new.
+- **Import finds the code in pasted text**: paste a whole Discord message or a .txt with words around the code, or a code broken over several lines.
+- Older `RWA1!` to `RWA4!` codes still import. If `lib/LibDeflate.lua` or the codebook is missing, Export falls back to `RWA4!` codes and `/rwa probe` says why.
+- The codebook is only read while you export or import and is let go 30 seconds later, so it costs no memory in play.
+
+## Updated in 0.9.28
+
+- **The scale corner works.** In an unlocked placement view, drag the corner at an aura's bottom right to scale it: no key needed, and the percentage shows while you drag. The arrows at its top left move it. The **Position** section (X, Y and Scale) is now open when you edit an aura.
+- **Target health** puts the percentage centred just above the bar and the target's HP as a real number inside the bar's right end, such as `75%` above and `3,000` inside. Other displays that use `%v / %t` read `3,000 / 4,000 (75%)`.
+- Monster HP is learned the way pbInfo does it: when you first see a monster at full health, the game reports its whole HP once, and rom weakauras remembers that for the session by name, level and class, so the next one of that kind already has a number when you target it hurt. With pbInfo on, its saved list is read too. Until a maximum is known the number is `?`. In 0.9.27 monsters always showed `? / ?`, because the game answers "is this a player?" with nothing for monsters. The stock aura's description is updated; a description you wrote yourself is kept. See [health source details](https://github.com/Cherrybooze/Cherrys-Kit/blob/main/docs/TARGET_HEALTH.md).
+- **Far less work while you play**: aura updates reuse their tables instead of making new ones, and auras redraw at most 20 times a second (every frame while you drag one). In a test with 15 buffs and 6 debuffs, the memory made every 10 seconds fell from about 4.6 MB to 90 KB, which means less garbage collection in a client already short of memory.
+
+## Updated in 0.9.27
+
+- Lighter while you play: display texts are no longer rebuilt with a new function on every frame, auras set to scale with the screen check its size about ten times a second instead of every frame, and the placement view no longer creates a function each frame.
+- **Target health** reads what your target is (player, pet, level, class) once per target instead of on every update.
+- Reminder from 0.9.25: **Make clickthrough** is on for every aura, so clicks pass through auras and their hover tooltips do not show in normal play. Untick it in an aura to get that aura's tooltip back.
 
 ## Updated in 0.9.26
 
@@ -12,9 +40,9 @@ The player cast bar follows native CASTING_* events for transport and other non-
 
 Every aura now defaults to **Make clickthrough**, a tickable editor field that passes gameplay clicks through and suppresses aura hover tooltips. Editing and placement remain interactive; opting out restores hover. **Position** has whole-aura Scale (10–400%, default 100%), a numeric field and five-percentage-point −/+ buttons. Scaling preserves the chosen anchor, scales relative offsets and is inherited once by linked children. Section headers use **Expand / Collapse** instead of maximizers. The new fields support draft Save/Revert and sharing; native click pass-through and geometry still need in-game checks.
 
-**Auto scale position and size with screen size** is off by default. Enabling it captures the viewport; later resolution/UI-scale changes transform position and uniformly scale size without rewriting authored values. Unlocked placement previews have a top-left grip: drag to move, Shift-drag sideways to scale. **Reset position** restores recognized factory placements or centres custom auras while retaining size, screen reference and relative offsets. Factory placements use the approved layout; existing saved coordinates are preserved.
+**Auto scale position and size with screen size** is off by default. Enabling it captures the viewport; later resolution/UI-scale changes transform position and uniformly scale size without rewriting authored values. Unlocked placement previews have arrows at the top-left to move them and a corner at the bottom-right to scale them; the Position section shows exact X, Y and Scale. **Reset position** restores recognized factory placements or centres custom auras while retaining size, screen reference and relative offsets. Factory placements use the approved layout; existing saved coordinates are preserved.
 
-**Target health** shows HP and percentage on a readable line below the bar. Directly exposed HP is used as provided; learned NPC maxima yield `~` estimates, and unavailable HP uses `?`. Original rule values and bar progress are retained. These controls, layout and real HP observations still need in-game playtesting.
+**Target health** shows the percentage just above the bar and the HP number inside its right end. Players and pets show their real HP; a monster's HP is learned the way pbInfo does it (its maximum is noted when it is seen at full health, also from pbInfo's own records when pbInfo is on) and shows `?` until then. Original rule values and bar progress are retained. These controls, layout and real HP observations still need in-game playtesting.
 
 ## Updated in 0.9.24
 
@@ -30,7 +58,7 @@ Restores native labels and fields, expands the list to fill the window, unifies 
 
 Visual New-aura templates, paired buff/debuff presets, a blank Custom starter, buff/debuff count conditions, and primary/secondary class choices. The editor uses rule cards, integrated clear buttons, consistent comparisons and a movable searchable selector.
 
-The searchable aura list opens a rule-flow editor with a shared contextual field panel, preview and position controls. Older definitions are converted to the action model; unsupported definitions remain available for recovery. RWA4 exports retain older RWA1/RWA2/RWA3 import support. The new editor still needs in-game playtesting.
+The searchable aura list opens a rule-flow editor with a shared contextual field panel, preview and position controls. Older definitions are converted to the action model; unsupported definitions remain available for recovery. RWA5 exports retain older RWA1 to RWA4 import support. The new editor still needs in-game playtesting.
 
 ## Features
 
@@ -41,7 +69,7 @@ The searchable aura list opens a rule-flow editor with a shared contextual field
 - **Rules**: combine source checks with All or Any and apply Show/Hide, sound, size, blink, colour, opacity or an icon overlay. Legacy remaining-time conditions retain their missing-or-time behaviour. **Load** only in or out of combat, or for one class.
 - **Sounds**: the 64 WeakAuras sounds, with an "All auras volume" setting that works even when your game sounds are turned down, and an Unmute button when interface sound is off.
 - **Editor and preview**: inspect live observations or labelled samples and use Move to position displays.
-- **Export / Import**: compressed `RWA4!` codes (also imports `RWA1!`, `RWA2!` and `RWA3!`), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.
+- **Export / Import**: short `RWA5!` codes (also imports `RWA1!` to `RWA4!`), an Export button on every row (copies to the clipboard), Export all. Importing never overwrites and never runs code by itself.
 - **Ready-made examples**, including Player health with class icon, In combat timer, Class icon, **Hits per second**, **Threat meter** (top 5, in combat), **My cast** and **Target's cast** (cast bars with the spell's icon, name and time left, filling up as the cast runs), **Target's last cast** and **KittyCombo mode** (the mode Cherry's KittyCombo has on).
 - **Gold and navy look** shared with Cherry's KittyCombo. Resize the window with the - and + buttons or by dragging its bottom right corner (60% to 160%). The aura list is searchable and scrolls.
 - **API for other addons**: `RWA.GetAuraIds()`, `RWA.IsAuraActive(name)`, `RWA.GetAuraValue(name, field)`. Cherry's KittyCombo uses it for its weakaura condition.
@@ -85,6 +113,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 ## Credits and licence
 
 - A rewrite of **WeakAuras** by the WeakAuras team, under the **GNU GPL v2**, which rom weakauras uses too.
+- Share codes are compressed with **LibDeflate** (Copyright (C) 2018-2021 Haoqian He, zlib License; the licence is at the top of its `lib/LibDeflate.lua`), the same copy KittyCombo uses.
 - Textures from WeakAuras and **Power Auras Classic**. Fonts **Fira Sans, Fira Mono, PT Sans Narrow** under the SIL Open Font License 1.1. Sounds under Creative Commons licences (CC BY 3.0, **CC BY-NC 3.0**, Sampling Plus 1.0, CC0), credited in the licence file.
 - The **Threat** trigger and Threat meter follow the idea and game calls of **pbInfo**'s threat meter (p.b. a.k.a. novayuna, odie2). They are a new implementation with none of its code.
 - The **Past second** trigger and Hits per second aura are based on the idea of **WhiteCount**, a small hits-per-second counter (no author named). It is a new implementation with none of its code.

@@ -13,22 +13,23 @@ python tools/build_release.py
 Outputs go to `dist/<kit version>/`, which is ignored by Git. Each version gets its own folder so old and new release files cannot be mixed:
 
 - `CherrysKit-Full-<kit version>.zip`: the complete installed tree.
-- `CherrysKit-Hub-<kit version>.zip`: shared root files, KitLoad, Media, hub reference docs, and LoadTimes.
-- One `CherrysKit-<folder>-<addon version>.zip` per addon, including LoadTimes.
+- `CherrysKit-Hub-<kit version>.zip`: shared root files, KitLoad, Media and hub reference docs.
+- One `CherrysKit-<folder>-<addon version>.zip` per addon, LoadTimes included.
 - `CherrysKit-GlobalBankDailyRewards-<extension version>.zip`: optional Chrome extension and local bridge, installed separately on top of Global Bank.
+- `CherrysLoginxml-<version>.zip` and `LogNextChar-<version>.zip`: separate packages, each its own folder in `Interface/AddOns/`, and not in the full kit.
 - `release-manifest.json`: package versions, dependency notes, file inventories and hashes.
 - `SHA256SUMS.txt`: hashes of every ZIP and the release manifest.
 - `RELEASE_NOTES.md`: notes ready for the GitHub release.
 
 The builder uses fixed ZIP timestamps and a sorted file order. With the same source and Python/zlib version, ZIP contents and checksums are reproducible. It checks ZIP integrity, compares every archived file with the source, verifies the full kit equals the union of the hub and individual addons, checks the shared manifest, and checks local Markdown links.
 
-The hub's manifest lists the optional addons in a fixed order. The hub includes LoadTimes because `KitLoad/*.lua` and `LoadTimesLast.xml` call its hooks. The individual LoadTimes ZIP is an update to files already shipped with the hub. Keep that duplicate dependency explicit until the loader is deliberately changed.
+The hub's manifest lists the optional addons in a fixed order. Its first two entries are `KitLoad/start.lua`, which gives the load marks a do-nothing default, and `LoadTimes/Load.lua`, which reads `LoadTimes/Switch.txt` and only then loads LoadTimes' timing code; the builder checks that order. Without LoadTimes, or with it switched off, the marks stay do-nothing and the probe frames in `LoadTimes/CherrysLoadTimes.xml` and `LoadTimesLast.xml` stop on their first frame. Since kit 0.11.87 the hub does not bundle LoadTimes.
 
 The hub alone and hub-plus-addon selections deliberately lack the unselected addons listed in the shared manifest. The package check distinguishes those optional paths from missing shared files; it cannot prove the client's behaviour with absent optional paths. The full kit has no missing manifest files. Test partial installations in game before claiming they have been tested.
 
 ## ZIP installation layout
 
-Every install ZIP, including the optional extension ZIP, starts with `CherrysKit/`. Extract it into `<game>/Interface/AddOns/` and merge folders:
+Every install ZIP, including the optional extension ZIP, starts with `CherrysKit/`, except `CherrysLoginxml/` and `LogNextChar/`. Extract it into `<game>/Interface/AddOns/` and merge folders:
 
 ```text
 <game>/Interface/AddOns/
@@ -52,7 +53,7 @@ Each addon includes its own README, local reference notes and the original combi
 4. Commit and push to `main`. Let the packaging check pass.
 5. Tag that commit, for example `v0.11.77`, and push the tag.
 6. Build again from the clean tagged checkout so `release-manifest.json` records the right source commit.
-7. Create a GitHub release for the tag with the generated notes. Upload all seventeen ZIPs (sixteen addon ZIPs and the optional extension ZIP), `release-manifest.json` and `SHA256SUMS.txt`.
+7. Create a GitHub release for the tag with the generated notes. Upload all twenty-one ZIPs (eighteen addon ZIPs, the optional extension ZIP, Cherry's Loginxml and LogNextChar), `release-manifest.json` and `SHA256SUMS.txt`.
 8. Compare uploaded asset sizes and SHA-256 digests with the local files before publishing.
 9. Update the direct full-kit ZIP links at the top of the project README and the repository's About website. Keep the full-kit asset labelled as the installer, and start the release notes with its direct download. Test a downloaded asset by extracting it directly into an empty `Interface/AddOns/` folder: `CherrysKit/CherrysKit.toc` must appear there, with no repository or version wrapper.
 
@@ -62,7 +63,17 @@ GitHub's green **Code → Download ZIP** button and **Source code** release link
 
 A draft release is useful while uploading and checking assets. Do not replace an already published release's files silently; make a new version for changed source.
 
+## Cherry's Loginxml and LogNextChar
+
+Cherry's Loginxml lives in `Interface/loginxml` (the login screen) and `Interface/AddOns/CherrysLoginxml` (its in-game half and installer). Original project by Pyrrhus, MIT licence unchanged, integration fixes by Cherry. LogNextChar lives in `Interface/AddOns/LogNextChar`. Neither is part of the kit's manifest or the full kit.
+
+`Interface/loginxml/data` holds blank templates only; never put real accounts or passwords in this repository. The builder stops on a personal file or a filled-in template.
+
+To release one, bump its version (`version` in `frames/login.lua`, `me.version` in `CherrysLoginxml.lua` and `CherrysLoginxml.toc`; `me.version` in `LogNextChar.lua` and `LogNextChar.toc`) and `release-packages.json`, and add the changes to the top of `Interface/loginxml/CHANGELOG`.
+
 ## CurseForge
+
+The [release plan](curseforge/README.md#release-plan) lists every project, its ZIP and its relations, and how a missing hub gets installed.
 
 Each addon project should declare the hub as a **Required** dependency before its description says CurseForge installs it automatically. Preserve the common `CherrysKit/` layout and check the install result with the actual client; do not infer client support from the ZIP validator.
 

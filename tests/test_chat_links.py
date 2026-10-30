@@ -407,6 +407,39 @@ class ChatLinkTests(unittest.TestCase):
         self.win.LinkLeftClick(1, player, "LBUTTON")
         self.assertEqual(self.lua.globals().inserted[2], "Śmiałek")
 
+    def test_modified_player_click_goes_to_a_name_taker_before_the_chat_box(self):
+        self.lua.execute("""
+            MakeFrame('ChatFrameEditBox', true);
+            function ChatFrameEditBox:InsertText(text) table.insert(inserted,text) end;
+            function ChatFrame_SendTell(name) whispered=name end;
+            function IsCtrlKeyDown() return ctrlHeld end;
+            taken, mailOpen = {}, true;
+            CherrysKit_NameTakers = {
+              Broken = function() error("a broken taker is skipped") end,
+              UltimateMailMod = function(name)
+                if not mailOpen then return false end
+                table.insert(taken, name); return true
+              end,
+            };
+        """)
+        g = self.lua.globals()
+        player = self.span("|Hplayer:Śmiałek:1|h[Śmiałek]|h")
+        for modifier in ("ctrlHeld", "shiftHeld"):
+            g[modifier] = True
+            self.win.LinkLeftClick(1, player, "LBUTTON")
+            g[modifier] = False
+        self.assertEqual(list(g.taken.values()), ["Śmiałek", "Śmiałek"])
+        self.assertEqual(len(g.inserted), 0)
+        self.win.LinkLeftClick(1, player, "LBUTTON")  # a plain click still whispers
+        self.assertEqual(g.whispered, "Śmiałek")
+        g.shiftHeld = True
+        self.win.LinkLeftClick(1, self.span(item()), "LBUTTON")  # items are not names
+        g.mailOpen = False  # a taker that declines leaves the name to the chat box
+        self.win.LinkLeftClick(1, player, "LBUTTON")
+        self.assertEqual(list(g.inserted.values())[-1], "Śmiałek")
+        self.assertEqual(len(g.taken), 2)
+        self.assertEqual(len(g.nativeCalls), 0)
+
     def test_clicking_empty_slots_or_vertical_padding_does_not_clamp_to_a_link(self):
         rows, _ = self.install_rows(item("Visible"), visible=6)
         self.lua.globals().cursorX = 100 + self.win.PAD_LEFT + 3

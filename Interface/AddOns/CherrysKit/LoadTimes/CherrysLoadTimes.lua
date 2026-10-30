@@ -1,6 +1,7 @@
 -- Cherry's Addon LoadTimes: how long each addon takes while the loading screen is up.
 --
--- It lives in Cherry's Kit (CherrysKit/LoadTimes/) and is the kit's first file. build_kit.py adds a
+-- It lives in Cherry's Kit (CherrysKit/LoadTimes/) and loads first in the kit, through Load.lua and only
+-- when Switch.txt turns it on (it is a troubleshooting tool). build_kit.py adds a
 -- Mark("<Folder>") before each kit addon, so the kit is split per addon exactly. Addon folders that
 -- load after the kit (folder names after "CherrysKit") are timed together, and until VARIABLES_LOADED
 -- it watches new global variables: the longest waits between two new globals are the slow spots, and
@@ -11,7 +12,7 @@
 -- RoM keeps Lua globals through Reload UI, so after a reload every addon's globals already exist:
 -- the watcher then sees only the few new ones.
 local reloaded = CherrysLoadTimes ~= nil
-CherrysLoadTimes = { version = "1.2.1", standalone = true, reloaded = reloaded }
+CherrysLoadTimes = { version = "1.3.0", standalone = true, reloaded = reloaded }
 CherrysKit_Load = CherrysLoadTimes
 local L = CherrysLoadTimes
 L.marks = {}     -- kit addons: { name, t, kb }, in load order

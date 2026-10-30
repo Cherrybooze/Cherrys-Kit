@@ -1,6 +1,9 @@
 -- Share.lua: auras as text codes, the same scheme as Cherry's KittyCombo (lib/KittyShare.lua).
--- Code: "RWA2!" .. base85(LZW(packed data)) .. "!" .. 4 hex checksum. Values equal to the defaults are left
--- out (they come back on import), and LZW compression makes codes about half as long.
+-- Code: "RWA5!" .. base85(deflate(packed data, codebook)) .. "!" .. 4 hex checksum, like KittyCombo's
+-- CKC3 codes: both players have the same codebook (data/ShareCodebook.lua: every built-in template
+-- and English skill names), so an aura made from a template costs only its changes.
+-- Without LibDeflate or the codebook, "RWA3!"/"RWA4!" .. base85(LZW(packed data)) are written instead.
+-- Values equal to the defaults are left out of legacy auras (they come back on import).
 -- Old "RWA1!" .. base64(data) .. "!" .. 8 hex codes are still accepted. The data is a tagged format parsed without
 -- loadstring, so pasting a code can never run Lua (custom triggers come in as text and only run
 -- like any other custom trigger once the aura is loaded).
@@ -15,6 +18,7 @@ local Share = {}
 RWA.Share = Share
 
 Share.PREFIX = "RWA3"
+Share.CODEBOOK_PREFIX = "RWA5"
 Share.ACTION_PREFIX = "RWA4"
 Share.COMPACT_PREFIX = "RWA2"
 Share.OLD_PREFIX = "RWA1"
@@ -226,7 +230,17 @@ for i, w in ipairs(Share.WORDS) do
 end
 assert(#Share.WORDS <= 96, "Share.WORDS holds at most 96 words")
 
-local function pack(value, out, depth)
+-- Keys sorted (numbers first) so the same aura always packs to the same bytes and finds its
+-- template in the codebook. Only used while exporting.
+local function keyBefore(a, b)
+  local ta, tb = type(a), type(b)
+  if ta ~= tb then
+    return ta == "number"
+  end
+  return a < b
+end
+
+local function pack(value, out, depth, sorted)
   local t = type(value)
   if t == "boolean" then
     out[#out + 1] = value and "T" or "F"
@@ -249,21 +263,26 @@ local function pack(value, out, depth)
     out[#out + 1] = "{"
     local count = #value
     for i = 1, count do
-      pack(value[i], out, depth + 1)
+      pack(value[i], out, depth + 1, sorted)
     end
-    local first = true
+    local keys = {}
     for k, v in pairs(value) do
       local kt, vt = type(k), type(v)
       local isArrayKey = kt == "number" and k >= 1 and k <= count and math.floor(k) == k
       if not isArrayKey and (kt == "string" or kt == "number")
         and (vt == "string" or vt == "number" or vt == "boolean" or vt == "table") then
-        if first then
-          out[#out + 1] = "="
-          first = false
-        end
-        pack(k, out, depth + 1)
-        pack(v, out, depth + 1)
+        keys[#keys + 1] = k
       end
+    end
+    if sorted then
+      table.sort(keys, keyBefore)
+    end
+    if #keys > 0 then
+      out[#out + 1] = "="
+    end
+    for _, k in ipairs(keys) do
+      pack(k, out, depth + 1, sorted)
+      pack(value[k], out, depth + 1, sorted)
     end
     out[#out + 1] = "}"
   else
@@ -271,9 +290,9 @@ local function pack(value, out, depth)
   end
 end
 
-function Share.Pack(value)
+function Share.Pack(value, sorted)
   local out = {}
-  pack(value, out, 0)
+  pack(value, out, 0, sorted)
   return table.concat(out)
 end
 
@@ -506,6 +525,70 @@ function Share.Decompress(packed)
 end
 
 ---------------------------------------------------------------------------
+-- Deflate with a codebook (RWA5), the KittyCombo CKC3 approach. LibDeflate (zlib licence) and the
+-- codebook are read the first time a code is made or read, so they cost no memory until then.
+-- With LibStub present the library registers there and KittyCombo shares the same copy.
+---------------------------------------------------------------------------
+
+function Share.GetDeflate()
+  if Share.deflate == nil then
+    if type(LibStub) == "table" and LibStub.GetLibrary then
+      Share.deflate = LibStub:GetLibrary("LibDeflate", true)
+    end
+    if Share.deflate == nil then
+      local ok, lib = pcall(dofile, (RWA.path or "Interface/AddOns/RomWeakAuras/") .. "lib/LibDeflate.lua")
+      Share.deflate = ok and type(lib) == "table" and lib or false
+    end
+  end
+  return Share.deflate or nil
+end
+
+-- The codebook text never changes: a different one needs a new code prefix.
+Share.CODEBOOK_LENGTH = 26170
+Share.CODEBOOK_ADLER = 563433626
+
+-- The built codebook takes about 1.5 MB of Lua memory, so it is let go 30 seconds after its
+-- last use and read again the next time it is needed.
+Share.CODEBOOK_KEEP = 30
+local codebookUse = 0
+
+local function releaseCodebookLater()
+  codebookUse = codebookUse + 1
+  local mine = codebookUse
+  if RWA.After then
+    RWA.After(Share.CODEBOOK_KEEP, function()
+      if codebookUse == mine then
+        Share.codebook = nil
+      end
+    end)
+  end
+end
+
+function Share.GetCodebook()
+  if Share.codebook ~= nil then
+    if Share.codebook then
+      releaseCodebookLater()
+    end
+    return Share.codebook or nil
+  end
+  Share.codebook = false
+  local deflate = Share.GetDeflate()
+  if not deflate then
+    return nil
+  end
+  local ok, text = pcall(dofile, (RWA.path or "Interface/AddOns/RomWeakAuras/") .. "data/ShareCodebook.lua")
+  if not ok or type(text) ~= "string" or string.len(text) ~= Share.CODEBOOK_LENGTH then
+    return nil
+  end
+  local made, dict = pcall(deflate.CreateDictionary, deflate, text, Share.CODEBOOK_LENGTH, Share.CODEBOOK_ADLER)
+  if made and dict then
+    Share.codebook = dict
+    releaseCodebookLater()
+  end
+  return Share.codebook or nil
+end
+
+---------------------------------------------------------------------------
 -- Auras
 ---------------------------------------------------------------------------
 
@@ -563,8 +646,7 @@ local function compactAura(data)
   return out
 end
 
--- Code for the given aura ids (all auras when ids is nil), in list order.
-function Share.Export(ids)
+local function exportList(ids)
   local list = {}
   for _, id in ipairs(ids or RWA_DB.order) do
     local data = RWA_DB.auras[id]
@@ -572,8 +654,30 @@ function Share.Export(ids)
       list[#list + 1] = compactAura(data)
     end
   end
+  return list
+end
+
+-- The packed RWA5 data for the given aura ids (tools/build_rwa_share_codebook.py builds the
+-- codebook from these bytes).
+function Share.CodebookData(ids)
+  return Share.Pack({ formatVersion = 5, auras = exportList(ids) }, true)
+end
+
+-- Code for the given aura ids (all auras when ids is nil), in list order.
+-- legacy: write the older RWA3/RWA4 code even when the codebook is available.
+function Share.Export(ids, legacy)
+  local list = exportList(ids)
   if #list == 0 then
     return nil, "there is no aura to export"
+  end
+  local deflate = not legacy and Share.GetDeflate()
+  local codebook = deflate and Share.GetCodebook()
+  if codebook then
+    local data = Share.Pack({ formatVersion = 5, auras = list }, true)
+    local ok, packed = pcall(deflate.CompressDeflateWithDict, deflate, data, codebook, { level = 9 })
+    if ok and type(packed) == "string" then
+      return Share.CODEBOOK_PREFIX .. "!" .. Share.Base85Encode(packed) .. "!" .. Share.ShortChecksum(data), #list
+    end
   end
   local prefix, version = Share.PREFIX, 3
   for _, aura in ipairs(list) do
@@ -583,6 +687,27 @@ function Share.Export(ids)
   return prefix .. "!" .. Share.Base85Encode(Share.Compress(data)) .. "!" .. Share.ShortChecksum(data), #list
 end
 
+-- A code pasted back with words around it (from Discord, a .txt or a forum post): keep from
+-- "RWA<digit>!" up to the last 4-digit checksum.
+function Share.FindCode(text)
+  local start = string.find(text, "RWA%d!")
+  if not start then
+    return text
+  end
+  text = string.sub(text, start)
+  if string.sub(text, 1, 5) == Share.OLD_PREFIX .. "!" then
+    return string.match(text, "^RWA1![%w%+/=]+!%x+") or text
+  end
+  if string.find(text, "!%x%x%x%x$") then
+    return text
+  end
+  local last
+  for position in string.gmatch(text, "()!%x%x%x%x") do
+    last = position
+  end
+  return last and string.sub(text, 1, last + 4) or text
+end
+
 -- Adds the auras in a code. Returns the list of new ids, or nil and a message.
 -- Names that already exist get a number added, so nothing is overwritten.
 function Share.Import(code)
@@ -590,13 +715,29 @@ function Share.Import(code)
   if code == "" then
     return nil, "paste a code into the Import box first"
   end
+  code = Share.FindCode(code)
   local prefix, body, check = string.match(code, "^(%w+)!([^!]+)!(%x+)$")
-  if prefix ~= Share.ACTION_PREFIX and prefix ~= Share.PREFIX and prefix ~= Share.COMPACT_PREFIX and prefix ~= Share.OLD_PREFIX then
-    return nil, "that is not a rom weakauras code (it should start with RWA1!, RWA2!, RWA3! or RWA4!)"
+  local codebook = prefix == Share.CODEBOOK_PREFIX
+  if not codebook and prefix ~= Share.ACTION_PREFIX and prefix ~= Share.PREFIX and prefix ~= Share.COMPACT_PREFIX and prefix ~= Share.OLD_PREFIX then
+    if string.find(code, "^RWA%d!") then
+      return nil, "this code requires a newer version of rom weakauras"
+    end
+    return nil, "that is not a rom weakauras code (it should start with RWA5!, or RWA1! to RWA4! from older versions)"
   end
-  local compact = prefix == Share.ACTION_PREFIX or prefix == Share.PREFIX or prefix == Share.COMPACT_PREFIX
+  local compact = codebook or prefix == Share.ACTION_PREFIX or prefix == Share.PREFIX or prefix == Share.COMPACT_PREFIX
   local data = compact and Share.Base85Decode(body) or Share.Base64Decode(body)
-  if data and compact then
+  if data and codebook then
+    local deflate = Share.GetDeflate()
+    if not deflate then
+      return nil, "lib/LibDeflate.lua is missing, so this RWA5 code cannot be read"
+    end
+    local dict = Share.GetCodebook()
+    if not dict then
+      return nil, "data/ShareCodebook.lua is missing or changed, so this RWA5 code cannot be read"
+    end
+    local ok, plain = pcall(deflate.DecompressDeflateWithDict, deflate, data, dict)
+    data = ok and type(plain) == "string" and plain or nil
+  elseif data and compact then
     local ok, plain = pcall(Share.Decompress, data)
     data = ok and plain or nil
   end
@@ -608,7 +749,8 @@ function Share.Import(code)
   if not ok or type(value) ~= "table" or type(value.auras) ~= "table" then
     return nil, "the code could not be read"
   end
-  if (prefix == Share.PREFIX and value.formatVersion ~= 3) or (prefix == Share.ACTION_PREFIX and value.formatVersion ~= 4) then
+  if (prefix == Share.PREFIX and value.formatVersion ~= 3) or (prefix == Share.ACTION_PREFIX and value.formatVersion ~= 4)
+    or (codebook and value.formatVersion ~= 5) then
     return nil, "this code requires a newer version of rom weakauras"
   end
   -- Validate the complete envelope before adding any aura, so a bad later entry
@@ -630,7 +772,9 @@ function Share.Import(code)
       return nil, "this aura requires a newer version of rom weakauras"
     end
     if aura.schemaVersion == 2 or aura.schemaVersion == 3 then
-      if (prefix ~= Share.PREFIX and prefix ~= Share.ACTION_PREFIX) or (aura.schemaVersion == 3 and prefix ~= Share.ACTION_PREFIX) or type(aura.sources) ~= "table" or type(aura.rules) ~= "table"
+      local ruleCode = codebook or prefix == Share.PREFIX or prefix == Share.ACTION_PREFIX
+      local actionCode = codebook or prefix == Share.ACTION_PREFIX
+      if not ruleCode or (aura.schemaVersion == 3 and not actionCode) or type(aura.sources) ~= "table" or type(aura.rules) ~= "table"
         or (aura.schemaVersion == 2 and type(aura.primarySourceId) ~= "string")
         or (aura.schemaVersion == 3 and aura.primarySourceId ~= nil and type(aura.primarySourceId) ~= "string") then
         return nil, "the code contains an invalid rule definition"

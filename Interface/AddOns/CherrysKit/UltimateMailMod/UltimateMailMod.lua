@@ -42,7 +42,7 @@ UMM_VERSION = {
   Minor     = 0,
   Revision  = 2,
   Build     = 20211118,	-- 2787
-  ummRev    = '023-ck7';	-- Cherry's Kit 2026-10-29
+  ummRev    = '023-ck10';	-- Cherry's Kit 2026-10-30
 }
 
 -- ##### Local Variables #####
@@ -145,7 +145,19 @@ local function Sending()
 end
 UMMIsSending = Sending;
 
+-- With the mailbox closed and nothing sending or waiting, the master frame has nothing to do
+-- each frame: it then runs twice a second with the frame times added up. Any event wakes it.
+local IDLE_TIME = 0.5;
+local idleElapsed = 0;
+local idle = false;
+
+local function IsIdle()
+  return not MailFrame:IsVisible() and not UMMFrame:IsVisible() and not Sending()
+    and UMMGlobalTimeout <= 0 and UMMGlobalFailTimeout <= 0 and UMMGlobalInboxLoadTimeout <= 0;
+end
+
 function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
+  idle = false;
   if (event == "VARIABLES_LOADED") then
     if (KitDisabled()) then
       -- turned off in the Cherry's Kit hub: leave the game's own mail window alone
@@ -155,6 +167,7 @@ function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
     ModEnabled = true;
     UMMBagManager:Invalidate();
     UMMSettings:Init();
+    UMMHookNameClicks();
     if (AddonManager or CherrysKit) then
       -- Skip displaying the prompt for those running AddonManager or Cherry's Kit
     else
@@ -244,13 +257,28 @@ end
 local TimeSinceLastUpdate = 0;
 UMMBagChangedTime = 0;
 local BAG_SETTLE_TIME = 0.15;  -- redraw the bag view this long after the last bag change
+-- Opening the window and changing tabs lay it out at once; while it stays open,
+-- screen size and UI scale changes are picked up within this many seconds.
+local LAYOUT_CHECK_TIME = 0.5;
+local layoutCheckWait = 0;
 
 function UMMMasterFrame_OnUpdate(this, elapsedTime)
   if (ModEnabled ~= true) then
     return;
   end
+  idleElapsed = idleElapsed + elapsedTime;
+  if (idle and idleElapsed < IDLE_TIME) then
+    return;
+  end
+  elapsedTime, idleElapsed = idleElapsed, 0;
   UMMClock = UMMClock + elapsedTime;
-  if (UMMFrame:IsVisible()) then UMMMenuLayout(); end
+  if (UMMFrame:IsVisible()) then
+    layoutCheckWait = layoutCheckWait - elapsedTime;
+    if (layoutCheckWait <= 0) then
+      layoutCheckWait = LAYOUT_CHECK_TIME;
+      UMMMenuLayout();
+    end
+  end
   if (UMMFrame:IsVisible() and not MailFrame:IsVisible()) then
     HideUIPanel(UMMFrame);
     UMMComposeConfirm:Clear();
@@ -304,6 +332,7 @@ function UMMMasterFrame_OnUpdate(this, elapsedTime)
       UMMMasterFrame_OnEvent("MAIL_INBOX_UPDATE");
     end
   end
+  idle = IsIdle();
 end
 
 -- ##### Slash command handling #####

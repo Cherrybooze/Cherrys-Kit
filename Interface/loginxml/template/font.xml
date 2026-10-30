@@ -1,0 +1,78 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/
+../WorldXml/UI.xsd">
+	<FontString name="WarningFont" font="Fonts\DFHEIMDU.TTF" virtual="true">
+		<FontHeight>
+			<AbsValue val="20"/>
+		</FontHeight>
+		<Shadow>
+			<Offset>
+				<AbsDimension x="2" y="2"/>
+			</Offset>
+			<Color b="0" g="0" r="0"/>
+		</Shadow>
+		<Color b="0.14" g="0.11" r="0.925"/>
+	</FontString>
+
+	<FontString name="MasterFont" virtual="true">
+		<Shadow>
+			<Offset>
+				<AbsDimension x="1" y="1"/>
+			</Offset>
+			<Color b="0" g="0" r="0"/>
+		</Shadow>
+	</FontString>
+	<FontString name="SystemFont" inherits="MasterFont" font="Fonts\DFHEIMDU.TTF" virtual="true">
+		<FontHeight>
+			<AbsValue val="15"/>
+		</FontHeight>
+		<Color b="0" g="1" r="1"/>
+	</FontString>
+	<FontString name="LoginTitleFont" font="Fonts\DFHEIMDU.TTF" weight="BOLD" virtual="true">
+		<FontHeight>
+			<AbsValue val="16"/>
+		</FontHeight>
+		<Color b="0" g="0.78" r="1"/>
+		<Shadow>
+			<Offset>
+				<AbsDimension x="2" y="2"/>
+			</Offset>
+			<Color b="0" g="0" r="0"/>
+		</Shadow>
+	</FontString>
+	<FontString name="LoginFontNormal" inherits="MasterFont" font="Fonts\DFHEIMDU.TTF" virtual="true">
+		<FontHeight>
+			<AbsValue val="14"/>
+		</FontHeight>
+		<Color b="0" g="0.78" r="1"/>
+	</FontString>
+	<FontString name="LoginFontHighlight" inherits="LoginFontNormal" virtual="true">
+		<Color b="1" g="1" r="1"/>
+	</FontString>
+	<FontString name="LoginFontDisable" inherits="LoginFontNormal" virtual="true">
+		<Color b="0.5" g="0.5" r="0.5"/>
+	</FontString>
+	<FontString name="LoginFontGreen" inherits="LoginFontNormal" virtual="true">
+		<Color b="0.1" g="1.0" r="0.1"/>
+	</FontString>
+	<FontString name="LoginFontRed" inherits="LoginFontNormal" virtual="true">
+		<Color b="0.1" g="0.1" r="1.0"/>
+	</FontString>
+	<FontString name="LoginFontNormalSmall" inherits="MasterFont" font="Fonts\DFHEIMDU.TTF" virtual="true">
+		<FontHeight>
+			<AbsValue val="12"/>
+		</FontHeight>
+		<Color b="0" g="0.78" r="1"/>
+	</FontString>
+	<FontString name="LoginFontHighlightSmall" inherits="LoginFontNormalSmall" virtual="true">
+		<Color b="1" g="1" r="1"/>
+	</FontString>
+	<FontString name="LoginFontDisableSmall" inherits="LoginFontNormalSmall" virtual="true">
+		<Color b="0.5" g="0.5" r="0.5"/>
+	</FontString>
+	<FontString name="LoginEditBoxFont" inherits="MasterFont" font="Fonts\DFHEIMDU.TTF" virtual="true">
+		<FontHeight>
+			<AbsValue val="18"/>
+		</FontHeight>
+		<Color r="1" g="1" b="1"/>
+	</FontString>
+</Ui>

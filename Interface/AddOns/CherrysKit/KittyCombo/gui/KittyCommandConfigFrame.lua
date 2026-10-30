@@ -260,6 +260,12 @@ Kitty.CommandConfigFrame.save = function()
 		-- Create new
 		table.insert(Kitty.CommandConfigFrame.allCommandList, 1, Kitty.CommandConfigFrame.targetCommandList);
 	end
+	-- Mode actions with no condition of their own take turns switching the mode
+	local looping = Kitty.ModeUI and Kitty.ModeUI.loopingModes(Kitty.CommandConfigFrame.targetCommandList);
+	if(looping) then
+		Kitty.sendMessage(Kitty.L("ModeLoopWarning", "KittyCombo: the mode actions <<1>> have no other condition, so they take turns switching the mode about every second. Give them a condition, such as an enemy count.",
+			table.concat(looping, ", ")), "DEFAULT", 1, 0.6, 0.2);
+	end
 
 	-- Notify settings changed
 --	Kitty.onVariablesChanged(Kitty.SettingManager.setting);
@@ -303,6 +309,7 @@ Kitty.CommandConfigFrame.openModePicker = function(row)
 	if(not command or command.commandType ~= "changemode") then return false; end
 	if(type(CloseDropDownMenus) == "function") then CloseDropDownMenus(); end
 	local anchor = getglobal(row:GetName() .. "ModeButton") or row;
+	F.modePickerStart = KittyCommandConfigFrame_ScrollBar:GetValue();	-- onShowList closes it on scroll
 	return Kitty.ModeUI.openPicker(anchor, function(name)
 		if(F.targetCommandList ~= list or list[index] ~= command or command.commandType ~= "changemode") then return end
 		if(KittyCommandConfigFrame_ScrollBar:GetValue() + row:GetID() - 1 ~= index) then return end
@@ -561,6 +568,11 @@ Kitty.CommandConfigFrame.onRedraw = function(this, start, count)
 	end
 end;
 Kitty.CommandConfigFrame.onShowList = function(this, start, count)
+	-- Scrolling puts other commands under the open mode icons: close them
+	if(Kitty.CommandConfigFrame.modePickerStart ~= nil and start ~= Kitty.CommandConfigFrame.modePickerStart) then
+		Kitty.CommandConfigFrame.modePickerStart = nil;
+		if(Kitty.ModeUI and Kitty.ModeUI.pickHandler) then Kitty.ModeUI.closeFlyout(); end
+	end
 	Kitty.CommandConfigFrame.allowUpdateData = false;
 	Kitty.debugPrint("Kitty.CommandConfigFrame.onShowList");
 

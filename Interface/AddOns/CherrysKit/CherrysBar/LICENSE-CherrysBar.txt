@@ -1,0 +1,42 @@
+Cherry's Bar (CherrysBar/)
+
+This addon is not under the GPL that covers the Cherry's Kit hub. It is a fork of XBar III and is
+offered under the same licence as XBar:
+
+  Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported
+  http://creativecommons.org/licenses/by-nc-sa/3.0/
+
+You may share and change it, with credit, under this same licence, and not for money or other
+commercial advantage. Cherry's Bar is free and must never be sold.
+
+Based on XBar III 1.72
+  Original XBar: nigr(A)ngelus (2009), released under the licence above.
+  XBar III, edit and new development: matif and Bussdee (2010).
+  Thanks recorded by XBar for ideas, help or code: aveng3r (kBar), Havorn (HaMoveableMinimap),
+  Slayblaze (XBar skin), ArcticXWolf (adPanelGuild plugin), Caelin (Keep It Simple Damage Meter),
+  Mavoc (the sold items list on the mail button).
+
+What Cherry's Bar uses from XBar III
+  - The readings, tokens, game-window menu lists and frame positions of the displays, rewritten.
+  - None of XBar's pictures.
+  - Not included: XBar's add-on manager, translations, and its bonus modules (damage log, threat
+    meter, minimap, raid save, web links, casting bar, item preview, low-detail switch).
+
+Pictures
+  The bar styles (except Slate) and every icon in Media are Cherry's Studio Panel Assets v1, generated
+  for this addon. Its notes, kept in the repository's design/cherrys-bar folder, record that Titan
+  Panel's pictures were a style and function reference only and that none of them are included. Slate
+  is a gradient drawn by tools/gen_cherrysbar_art.py. They are offered under the licence above.
+
+Changes made by Cherry (2026): two bars instead of one; displays flow along each bar and are set per
+bar; a map of the bars, dragging and right-click settings; auto-hide; new displays and figures; a new
+options window; new pictures; reading only on events or slow timers. See Changelog.txt.
+
+Titan Panel
+  The layout of the bars and the settings (top and bottom bars, displays set per bar, right-click
+  options for icon, label and colour, auto-hide, per-hour figures) follow the ideas of Titan Panel for
+  World of Warcraft, by the Titan Panel Development Team. Titan Panel's licence allows redistribution
+  only without modification, so Cherry's Bar contains none of its code, pictures or other files.
+  Titan Panel has not endorsed this addon.
+
+The disclaimers of the licence above apply: this addon is provided as is, without warranty.

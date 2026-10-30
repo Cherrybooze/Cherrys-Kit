@@ -1,0 +1,54 @@
+Cherry's Bar
+
+1.1.8
+  The Clock's tooltip says where real time comes from now: the Daily Rewards Chrome extension.
+
+1.1.7
+  The frame-by-frame fallback for the bottom bar no longer moves the game's backpack, which zBag keeps
+  off screen. Eight icon files had the wrong letter case in the repository, which only matters on
+  systems that tell the difference.
+
+1.1.6
+  Fixes Volume: it treated the game's master volume as 0 to 1, but the client's runs 0 to 100 in whole
+  numbers, so a scroll step was rounded away and clicking restored almost nothing.
+
+1.1.5
+  Fixes an error raised once a second from the update loop: the Clock asked for the os library, which
+  this client does not have, and that also stopped the displays after it from updating on time. It now
+  shows the time online until CherrysClock knows the time. A failing display timer can no longer
+  escape the loop. New /cbar perf records frame times, Lua memory and addons' per-frame cost.
+
+1.1.4
+  The bottom bar now lifts the whole interface and fits underneath: the action bars, chat, cast bar,
+  bags and other addons' frames all rise together, by raising the bottom edge of UIParent. If the client
+  ignores that, the game's own bottom frames are moved one by one instead.
+
+1.1.3
+  New Kitty mode display, first on the top bar when Cherry's KittyCombo is installed. It takes over
+  Kitty's "Mode:" plate while it is on a bar: click it to pick a mode. Needs KittyCombo 1.7.17.
+
+1.1.2
+  The top bar now leaves the game's frames alone: it is drawn under the portrait, housing controls,
+  target, buffs and minimap, and its displays stay in the clear stretch between them. Clear left and
+  Clear right are set per bar (400 and 490 on top). Move frames is now per bar, off for the top and on
+  for the bottom. When on, it takes the portrait's separate buttons and the housing frame along.
+
+1.1.1
+  Art now comes straight from Cherry's finished Studio Panel Assets pack: Ironstone, Blacksteel,
+  Froststeel, Darkwood, Verdant and Arcane, with its icons, controls and 2:1 volume speakers. Saved
+  style names carry over. Bars default to 24 high, with text and icons centred clear of the rail.
+  The options window's - and + are the pack's pictures.
+
+1.1.0
+  All of XBar's pictures are gone: six bar styles and a full icon set from Cherry's sheets, drawn as
+  seamless tiles, plus plain Slate. Moving displays is now clear: a map of both bars in /cbar where displays
+  can be dragged or moved with buttons, dragging on the bars themselves while unlocked, and a tick
+  list on right-clicking a bar. New displays: Currencies, Durability, Daily quests and Volume, split
+  out of Money, Damage and Class or following Titan Panel's ideas. New figures: gold and XP per hour,
+  time to level, free bag slots, addon memory, map position. Auto-hide per bar, and a bar height
+  setting. Settings from 1.0.0 start again from the defaults.
+
+1.0.0
+  First version, forked from XBar III 1.72 for Cherry's Kit. Top bar, bottom bar or both, top only by
+  default. Displays set per bar and side, with right-click options. Reads only on events or slow
+  timers, and redraws only when a text changes.

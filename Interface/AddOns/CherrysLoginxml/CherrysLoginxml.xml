@@ -1,0 +1,10 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+	<Frame name="CherrysLoginxmlEvents" parent="UIParent">
+		<Size><AbsDimension x="1" y="1" /></Size>
+		<Anchors><Anchor point="TOPLEFT" /></Anchors>
+		<Scripts>
+			<OnLoad>this:RegisterEvent("VARIABLES_LOADED");</OnLoad>
+			<OnEvent>CherrysLoginxml.OnEvent(event);</OnEvent>
+		</Scripts>
+	</Frame>
+</Ui>

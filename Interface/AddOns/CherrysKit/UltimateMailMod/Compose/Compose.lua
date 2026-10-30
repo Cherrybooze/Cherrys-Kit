@@ -760,3 +760,97 @@ function UMMComposeTemplate_OnHide(this)
   getglobal(this:GetName().."Composer"):ClearAllEditFocus();
   UMMComposeConfirm:Clear();
 end
+
+-- ##### Names clicked in chat #####
+-- With the mail window open, Ctrl+click or Shift+click on a player's name in chat puts it in To
+-- (asked for 2026-10-30): Mass Send's recipient while that tab is open, else Compose's To, which
+-- opens from the inbox or history tab. Other buttons, other links and a closed mail window are
+-- left to the game, and so is a click while a gold confirm or a planned mass send names its
+-- recipient, or while the inbox is busy taking mail (its tabs are locked then). Cherry's Chat
+-- asks CherrysKit_NameTakers before its own Ctrl/Shift action; the game's chat and other name
+-- links (auction sellers) reach Hyperlink_Assign or ChatFrame_OnHyperlinkClick, which
+-- UMMHookNameClicks wraps when UMM starts, so nothing is wrapped while UMM is off in the hub.
+
+local function tabLocked(id)
+  local tab = getglobal("UMMFrameTab"..id.."Button");
+  return tab ~= nil and tab.IsEnable ~= nil and not tab:IsEnable();
+end
+
+function UMMUseClickedName(name)
+  if (type(name) ~= "string" or name == "" or not UMMFrame or not UMMFrame:IsVisible()) then return false; end
+  if (UMMMailShortcutsBusy()) then UMMPrompt(UMM_ERROR_STILLSENDING);return true; end
+  if (UMMComposeConfirm:IsVisible()) then return false; end
+  if (UMMFrameTab3:IsVisible()) then
+    if (getglobal("UMMFrameTab3Status"):IsVisible()) then return false; end
+    UMMCancelMassSelection();
+    local chooser = getglobal("UMMFrameTab3Recipient");
+    if (not UMMFrameTab3Bags:IsVisible()) then chooser:ShowBody(); end
+    local field = getglobal(chooser:GetName().."Recipient");
+    field:SetText(name);
+    field:SetFocus();
+    getglobal("UMMFrameTab3Action"):CheckStatus();
+    return true;
+  end
+  if (not UMMFrameTab2:IsVisible()) then
+    if (tabLocked(2)) then return false; end
+    UMMMenuSelectTab(2);
+  end
+  UMMFrameTab2Composer:SetRecipient(name);
+  getglobal(UMMFrameTab2Composer:GetName().."HeaderSubject"):SetFocus();
+  return true;
+end
+
+CherrysKit_NameTakers = CherrysKit_NameTakers or {};
+CherrysKit_NameTakers.UltimateMailMod = function(name) return UMMUseClickedName(name); end;
+
+local function playerIn(value)
+  if (type(value) ~= "string") then return nil; end
+  return string.match(value, "|Hplayer:([^|:]+)") or string.match(value, "^player:([^|:]+)");
+end
+
+local OTHER_BUTTONS = { RBUTTON = true, MBUTTON = true, RightButton = true, MiddleButton = true };
+
+-- The player's name in a left click's link. The game passes the link and button as arguments;
+-- a handler called without any falls back to arg1 and arg2, as XML event handlers get them.
+local function clickedName(...)
+  local name, otherButton, sawText = nil, false, false;
+  for i = 1, select("#", ...) do
+    local value = select(i, ...);
+    if (type(value) == "string") then
+      sawText = true;
+      otherButton = otherButton or OTHER_BUTTONS[value] == true;
+      name = name or playerIn(value);
+    end
+  end
+  if (not sawText) then
+    name = playerIn(arg1) or playerIn(arg2);
+    otherButton = OTHER_BUTTONS[arg1] == true or OTHER_BUTTONS[arg2] == true;
+  end
+  if (otherButton) then return nil; end
+  return name;
+end
+
+local function modifierDown()
+  return (type(IsCtrlKeyDown) == "function" and IsCtrlKeyDown()) or (type(IsShiftKeyDown) == "function" and IsShiftKeyDown());
+end
+
+-- Reload UI runs this file again in the same Lua state, so a function already wrapped stays as is.
+UMMNameClickWrappers = UMMNameClickWrappers or {};
+local function wrapNameClicks(key)
+  local original = _G[key];
+  if (type(original) ~= "function" or UMMNameClickWrappers[original]) then return; end
+  local wrapper = function(...)
+    if (modifierDown() and UMMFrame and UMMFrame:IsVisible()) then
+      local name = clickedName(...);
+      if (name and UMMUseClickedName(name)) then return; end
+    end
+    return original(...);
+  end;
+  UMMNameClickWrappers[wrapper] = true;
+  _G[key] = wrapper;
+end
+
+function UMMHookNameClicks()
+  wrapNameClicks("Hyperlink_Assign");
+  wrapNameClicks("ChatFrame_OnHyperlinkClick");
+end

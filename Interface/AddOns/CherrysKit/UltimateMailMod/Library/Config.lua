@@ -9,7 +9,10 @@ UMM_GOLD_PRESET_DEFAULTS = {100000, 1000000};
 UMM_RECIPIENT_HISTORY_MAX = 20;
 
 function UMMGoldAmount(value)
-  if (type(value) == "string" and not string.match(value, "^%s*%d+%s*$")) then return nil; end
+  if (type(value) == "string") then
+    value = string.gsub(value, ",", "");   -- typed or shown as 1,234,567
+    if (not string.match(value, "^%s*%d+%s*$")) then return nil; end
+  end
   local amount = tonumber(value);
   if (amount and amount == amount and amount >= 1 and amount <= UMM_GOLD_PRESET_MAX and amount == math.floor(amount)) then
     return amount;

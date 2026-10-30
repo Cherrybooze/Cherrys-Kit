@@ -57,13 +57,14 @@ W.SetScript(core, "OnUpdate", function()
   local elapsed = now - last
   last = now
   if #timers > 0 then
-    local due = {}
+    local due -- only made when a timer is due, not on every frame while one waits
     for i = #timers, 1, -1 do
       if timers[i].at <= now then
+        due = due or {}
         table.insert(due, table.remove(timers, i))
       end
     end
-    for i = 1, #due do
+    for i = 1, due and #due or 0 do
       local ok, err = pcall(due[i].fn)
       if not ok then
         RWA.Error(err)

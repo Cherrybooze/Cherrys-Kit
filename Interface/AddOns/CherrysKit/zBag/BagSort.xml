@@ -128,7 +128,8 @@
 		</Scripts>
     </Frame>
     
-    <Frame name="BagSortUpdateFrame" hidden="false">
+    <!-- Cherry's Kit: shown only while a sort runs (BagSort.lua), so it costs nothing per frame otherwise -->
+    <Frame name="BagSortUpdateFrame" hidden="true">
         <Scripts>
             <OnUpdate>
                 BagSort_OnUpdate()

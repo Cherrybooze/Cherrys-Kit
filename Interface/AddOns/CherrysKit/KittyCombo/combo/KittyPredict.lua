@@ -169,6 +169,8 @@ Kitty.Predict.compute = function(kittyName, count)
 		if(commandType == "changemode") then
 			for name in pairs(comboManager.modeState) do comboManager.modeState[name] = false; end
 			comboManager.modeState[Kitty.ModeUI.clean(commandName)] = true;
+			-- The next presses come within the switch hold, as in play
+			rawset(comboManager, "modeHeld", true);
 		end
 		masked[maskKey(commandType, commandName)] = true;
 	end

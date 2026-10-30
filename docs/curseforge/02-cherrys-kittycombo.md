@@ -1,8 +1,27 @@
 # Cherry's KittyCombo
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** rom weakauras (use your auras as combo conditions) and Cherry's Chat (shares its copy-box size).
+
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
+
+## Updated in 1.7.17
+
+When **Cherry's Bar** is installed, the "Mode:" plate moves onto its bar, so it no longer sits at the top of the screen. Clicking the bar's Mode display opens the same mode pictures. Hide that display in `/cbar`, or turn Cherry's Bar off, and the plate comes back if "Show current mode" is ticked.
+
+## Updated in 1.7.16
+
+Kitty's control frame no longer makes two new functions and a table on every frame and every event just to catch errors. Errors are still caught and reported in chat as before.
+
+## Updated in 1.7.15
+
+- The mode pictures now open from the "Mode:" readout and from the kitty editor even while the mode button is hidden, which is the default.
+- Two **Change kitty mode** rows can no longer flip the mode back and forth on every key press: after a kitty switches the mode, its other mode rows wait 1 second, and a row never spends a key press on the mode that is already on. Saving a kitty warns you when two mode rows have no other condition.
+- In the kitty editor, the mode pictures say "Click to use this mode for the action" and close when you scroll the list.
+- `/kc window 0.6` brings back the older, wider ready window so you can compare; `/kc window default` goes back to 0.2 seconds.
 
 ## Updated in 1.7.14
 
@@ -10,13 +29,13 @@ The default mode button and its readout sit 32 UI units lower to clear housing/f
 
 ## Updated in 1.7.13
 
-Closed or natively hidden mode pickers reject delayed clicks, so cancelling an editor pick cannot change the live HUD mode.
+A late click on a mode picture that has already closed no longer changes your mode.
 
 ## Updated in 1.7.12
 
 The mode button and readout share a screen-aware mode-icon picker, with a top-down left-edge layout when it fits, viewport/UI-scale handling and pages for extra modes. The main action menu adds **changemode**: select its mode icon and get an editable **Mode is off** condition automatically. Picking while editing changes only the draft. Execution switches on that press; the next press skips the default guarded switch. Prediction simulates following mode conditions on a private snapshot without changing live modes, settings or cooldowns. Shared mode actions require 1.7.12; existing CKC1/CKC2/CKC3 imports remain supported. Native popup/row interaction still needs in-game testing.
 
-Version 1.7.11's missing range-probe guard remains, alongside the 0.2-second dispatch window, live action eligibility, missing-versus-zero mana handling, condition thresholds, anti-repeat behavior and 1.1-second prediction lookahead. `/run Kitty.SkillManager.EXECUTION_TOLERANCE = 0.6` selects the old A/B window; use `0.2` to restore the default. Successful-cast throughput gains have not been measured. 1.7.9's prediction, import, editor, proc, cooldown and action-slot fixes carry forward.
+Since 1.7.10 a key press only fires a skill within 0.2 seconds of it being ready (before, 0.6 seconds). To compare, type `/kc window 0.6`; `/kc window default` goes back. Whether this gets more casts out in a fight has not been measured yet.
 
 ## Features
 

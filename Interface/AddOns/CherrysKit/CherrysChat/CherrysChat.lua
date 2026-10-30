@@ -34,7 +34,7 @@ function C.MarkOurs(wrapper)
   return wrapper
 end
 
-C.version = "0.10.9"
+C.version = "0.10.12"
 C.MAX_WINDOWS = 10
 C.MIN_FONT, C.MAX_FONT = 6, 40
 C.MIN_W, C.MIN_H = 120, 60
@@ -316,8 +316,14 @@ function C.ColourPlayerLinks(msg)
   return table.concat(parts)
 end
 
+local chatFrameNames = {}
 function C.Chat(i)
-  return _G["ChatFrame" .. i]
+  local name = chatFrameNames[i]
+  if not name then
+    name = "ChatFrame" .. i
+    chatFrameNames[i] = name
+  end
+  return _G[name]
 end
 
 function C.WindowName(i)
@@ -574,11 +580,20 @@ function C.Log(i, msg, r, g, b)
   end
   list[#list + 1] = msg
   colours[#list] = (type(r) == "number") and { r, g or 1, b or 1 } or false
-  local over = #list - db().logLines
+  -- The log may run a little over its size and is then cut back in one pass, instead of
+  -- moving every line up by one for each new line.
+  local keep = db().logLines
+  local over = #list - keep
+  if over < math.max(10, math.floor(keep / 10)) then
+    over = 0
+  end
   if over > 0 then
-    for _ = 1, over do
-      table.remove(list, 1)
-      table.remove(colours, 1)
+    local n = #list
+    for k = 1, n - over do
+      list[k], colours[k] = list[k + over], colours[k + over]
+    end
+    for k = n - over + 1, n do
+      list[k], colours[k] = nil, nil
     end
   end
   if C.OnLogged then
@@ -669,6 +684,35 @@ local function wrapAddMessage(i)
   end
 end
 
+-- The game's chat buttons (scroll to bottom, its own scroll bar) call these on the chat frame.
+-- While Cherry's Chat draws the window they move our rows; the game's text is out of sight.
+local SCROLLS = { ScrollUp = 1, ScrollDown = -1, ScrollTop = "top", ScrollBottom = "bottom" }
+C.scrollWrapped = {}
+
+local function wrapScrolling(i)
+  local f = C.Chat(i)
+  if not f or C.scrollWrapped[f] then
+    return
+  end
+  C.scrollWrapped[f] = true
+  for method, where in pairs(SCROLLS) do
+    local ok, orig = pcall(function()
+      return f[method]
+    end)
+    orig = ok and C.Real("ChatFrame" .. i .. method, orig) -- AddMessage's original is kept under f
+    if type(orig) == "function" then
+      pcall(function()
+        f[method] = C.MarkOurs(function(self, ...)
+          if C.Win and C.Win.Owns(i) then
+            return C.Win.ScrollTo(i, where)
+          end
+          return orig(self, ...)
+        end)
+      end)
+    end
+  end
+end
+
 -- Fallback when a chat frame cannot be wrapped: catch the text in the chat event handler instead.
 local function wrapChatEvent()
   if C.eventWrapped or type(ChatFrame_OnEvent) ~= "function" then
@@ -705,6 +749,7 @@ function C.OnChatEvent(orig, ...)
   for i = 1, C.MAX_WINDOWS do
     if C.Chat(i) == frame then
       index = i
+      break
     end
   end
   if not index or not C.hookFailed[index] or type(arg1) ~= "string" then
@@ -743,6 +788,7 @@ end
 function C.InstallHooks()
   for i = 1, C.MAX_WINDOWS do
     wrapAddMessage(i)
+    wrapScrolling(i)
   end
   wrapChatEvent() -- always: also tells encrypted chat which channel a line is from
   wrapSend()
@@ -1457,12 +1503,16 @@ function C.Probe()
     globals[#globals + 1] = g .. (_G[g] ~= nil and "+" or "-")
   end
   result.globals = globals
+  -- The game's chat scroll bar parts found by name (hidden while Cherry's Chat draws window 1).
+  local bars = C.Win and C.Win.FindNativeBars and C.Win.FindNativeBars()
+  result.gameScrollBar = bars and table.concat(bars[1], " ") or "?"
   db().probe = result
 
-  print("probe 1/4: chat frame is a " .. type(f) .. ", wrapped: " .. table.concat(result.hooked, " "))
-  print("probe 2/4: has " .. table.concat(present, ", "))
-  print("probe 3/4: missing " .. table.concat(missing, ", "))
-  print("probe 4/4: " .. table.concat(globals, " ") .. (result.font and ("  font " .. tostring(result.font[2]) .. " " .. tostring(result.font[3])) or ""))
+  print("probe 1/5: chat frame is a " .. type(f) .. ", wrapped: " .. table.concat(result.hooked, " "))
+  print("probe 2/5: has " .. table.concat(present, ", "))
+  print("probe 3/5: missing " .. table.concat(missing, ", "))
+  print("probe 4/5: " .. table.concat(globals, " ") .. (result.font and ("  font " .. tostring(result.font[2]) .. " " .. tostring(result.font[3])) or ""))
+  print("probe 5/5: game scroll bar parts: " .. (result.gameScrollBar ~= "" and result.gameScrollBar or "none found"))
   print("saved in CherrysChat_DB.probe too.")
 end
 
@@ -1490,17 +1540,20 @@ function C.OnUpdate(elapsed)
   if #C.timers == 0 then
     return
   end
-  local due = {}
+  local due -- only made when a timer is due: no table every frame
   for k = #C.timers, 1, -1 do
     local t = C.timers[k]
     t.left = t.left - (elapsed or 0)
     if t.left <= 0 then
       table.remove(C.timers, k)
+      due = due or {}
       due[#due + 1] = t.fn
     end
   end
-  for _, fn in ipairs(due) do
-    pcall(fn)
+  if due then
+    for _, fn in ipairs(due) do
+      pcall(fn)
+    end
   end
 end
 

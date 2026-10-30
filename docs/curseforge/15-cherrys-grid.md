@@ -1,6 +1,14 @@
 # Cherry's Grid
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional, when you have them:** Cherry's KittyCombo (run a kitty when you click a frame).
+
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
+
+## Updated in 1.1.4
+
+Less memory churn in fights: damage and heal flashes fade 20 times a second and reuse their tables, and marking members for a redraw or waiting 2nd click actions no longer make new lists on every frame. Members still redraw ten times a second.
 
 ## Updated in 1.1.3
 

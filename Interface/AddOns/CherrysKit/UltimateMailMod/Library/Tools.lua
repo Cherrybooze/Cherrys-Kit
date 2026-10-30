@@ -43,67 +43,21 @@ function UMMPrint(strMessage)
   DEFAULT_CHAT_FRAME:AddMessage(msgColor..strMessage.."|r");
 end
 
-local function Pad3Zero(v)
-  local wrk = ""..v.."";
-  if (string.len(wrk) == 1) then
-    wrk = "00"..v.."";
-  elseif (string.len(wrk) == 2) then
-    wrk = "0"..v.."";
+-- Cherry's Kit: gold uses the game's grouping, as in the backpack: 1,234,567.
+function UMMGroupDigits(digits)
+  local head = string.len(digits) % 3;
+  if (head == 0) then head = 3; end
+  local result = string.sub(digits, 1, head);
+  for i = head + 1, string.len(digits), 3 do
+    result = result..","..string.sub(digits, i, i + 2);
   end
-  return ""..wrk.."";
+  return result;
 end
 
 function UMMFormatNumber(n)
-  local MONEY_DIVIDER = 1000;
-  local result, value, giga, mega, kilo, rest;
-  value = n;
-  mega = math.floor(value / (MONEY_DIVIDER * MONEY_DIVIDER));
-  kilo = math.floor((value - (mega * (MONEY_DIVIDER * MONEY_DIVIDER))) / MONEY_DIVIDER);
-  rest = math.mod(value, MONEY_DIVIDER);
-  if (mega > 999) then
-    value = mega;
-    local dummy = math.floor(value / (MONEY_DIVIDER * MONEY_DIVIDER));
-    giga = math.floor((value - (dummy * (MONEY_DIVIDER * MONEY_DIVIDER))) / MONEY_DIVIDER);
-    mega = math.mod(value, MONEY_DIVIDER);
-  else
-    giga = 0;
-  end
-  
-  result = "";
-  if (giga > 0) then
-    result = result .. giga .. ".";
-  end
-  if (mega > 0) then
-    if (giga > 0) then
-      result = result .. Pad3Zero(mega);
-    else
-      result = result .. mega;
-    end
-    result = result .. "."; -- release 4.0.8.2506
-  elseif (giga > 0) then
-    result = result .. "000."; -- release 4.0.8.2506
-  end
-  if (kilo > 0) then
-    if (mega > 0 or giga > 0) then
-      result = result .. Pad3Zero(kilo);
-    else
-      result = result .. kilo;
-    end
-    result = result .. "."; -- release 4.0.8.2506
-  elseif (mega > 0 or giga > 0) then
-    result = result .. "000."; -- release 4.0.8.2506
-  end
-  if (rest > 0) then
-    if (kilo > 0 or mega > 0 or giga > 0) then
-      result = result .. Pad3Zero(rest);
-    else
-      result = result .. rest;
-    end
-  elseif (kilo > 0 or mega > 0 or giga > 0) then
-    result = result .. "000";
-  end
-  
-  return result;
+  n = math.floor(tonumber(n) or 0);
+  if (n < 0) then return "-"..UMMGroupDigits(string.format("%.0f", -n)); end
+  return UMMGroupDigits(string.format("%.0f", n));
 end
 
 -- Global timing

@@ -1,0 +1,357 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/
+../WorldXml/UI.xsd">
+
+	<Script file="LoginDropDownMenu.lua"/>
+	<!-- Color Dropdown Menu -->
+	<Button name="ColorDropDownListButtonTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="16" y="16"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentChecked" file="Interface\Login\Common\ColorButton-Checked" animationSpeed="5" alphaMode="ADD" hidden="true">
+					<Size>
+						<AbsDimension x="20" y="20"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+					<TexCoords left="0" right="0.078125" top="0" bottom="0.625"/>
+					<TexCoords left="0.125" right="0.203125" top="0" bottom="0.625"/>
+					<TexCoords left="0.25" right="0.328125" top="0" bottom="0.625"/>
+					<TexCoords left="0.375" right="0.453125" top="0" bottom="0.625"/>
+					<TexCoords left="0.5" right="0.578125" top="0" bottom="0.625"/>
+					<TexCoords left="0.625" right="0.703125" top="0" bottom="0.625"/>
+					<TexCoords left="0.75" right="0.828125" top="0" bottom="0.625"/>
+					<TexCoords left="0.875" right="0.953125" top="0" bottom="0.625"/>
+					<TexCoords left="0.75" right="0.828125" top="0" bottom="0.625"/>
+					<TexCoords left="0.625" right="0.703125" top="0" bottom="0.625"/>
+					<TexCoords left="0.5" right="0.578125" top="0" bottom="0.625"/>
+					<TexCoords left="0.375" right="0.453125" top="0" bottom="0.625"/>
+					<TexCoords left="0.25" right="0.328125" top="0" bottom="0.625"/>
+					<TexCoords left="0.125" right="0.203125" top="0" bottom="0.625"/>
+					<TexCoords left="0" right="0.078125" top="0" bottom="0.625"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick>
+				ColorDropDownListButton_OnClick(this);
+			</OnClick>
+		</Scripts>
+		<NormalTexture name="$parentTexture" file="Interface\Login\Common\ColorButton-Background"/>
+		<HighlightTexture file="Interface\Login\Common\ColorButton-Highlight" alphaMode="ADD">
+			<Size>
+				<AbsDimension x="20" y="20"/>
+			</Size>
+			<Anchors>
+				<Anchor point="CENTER"/>
+			</Anchors>
+			<TexCoords left="0" right="0.625" top="0" bottom="0.625"/>
+		</HighlightTexture>
+	</Button>
+	<Button name="ColorDropDownList" toplevel="true" frameStrata="DIALOG" hidden="true">
+		<Size>
+			<AbsDimension x="240" y="120"/>
+		</Size>
+		<Backdrop edgeFile="Interface\Tooltips\Tooltip-border" bgFile="Interface\Tooltips\Tooltip-Background">
+			<BackgroundInsets>
+				<AbsInset top="3" left="3" bottom="3" right="3"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+			<TileSize>
+				<AbsValue val="16"/>
+			</TileSize>
+		</Backdrop>
+		<Frames>
+			<Button name="$parentButton1" inherits="ColorDropDownListButtonTemplate" id="1"/>
+			<Button name="$parentButton2" inherits="ColorDropDownListButtonTemplate" id="2"/>
+			<Button name="$parentButton3" inherits="ColorDropDownListButtonTemplate" id="3"/>
+			<Button name="$parentButton4" inherits="ColorDropDownListButtonTemplate" id="4"/>
+			<Button name="$parentButton5" inherits="ColorDropDownListButtonTemplate" id="5"/>
+			<Button name="$parentButton6" inherits="ColorDropDownListButtonTemplate" id="6"/>
+			<Button name="$parentButton7" inherits="ColorDropDownListButtonTemplate" id="7"/>
+			<Button name="$parentButton8" inherits="ColorDropDownListButtonTemplate" id="8"/>
+			<Button name="$parentButton9" inherits="ColorDropDownListButtonTemplate" id="9"/>
+			<Button name="$parentButton10" inherits="ColorDropDownListButtonTemplate" id="10"/>
+			<Button name="$parentButton11" inherits="ColorDropDownListButtonTemplate" id="11"/>
+			<Button name="$parentButton12" inherits="ColorDropDownListButtonTemplate" id="12"/>
+			<Button name="$parentButton13" inherits="ColorDropDownListButtonTemplate" id="13"/>
+			<Button name="$parentButton14" inherits="ColorDropDownListButtonTemplate" id="14"/>
+			<Button name="$parentButton15" inherits="ColorDropDownListButtonTemplate" id="15"/>
+			<Button name="$parentButton16" inherits="ColorDropDownListButtonTemplate" id="16"/>
+			<Button name="$parentButton17" inherits="ColorDropDownListButtonTemplate" id="17"/>
+			<Button name="$parentButton18" inherits="ColorDropDownListButtonTemplate" id="18"/>
+			<Button name="$parentButton19" inherits="ColorDropDownListButtonTemplate" id="19"/>
+			<Button name="$parentButton20" inherits="ColorDropDownListButtonTemplate" id="20"/>
+			<Button name="$parentButton21" inherits="ColorDropDownListButtonTemplate" id="21"/>
+			<Button name="$parentButton22" inherits="ColorDropDownListButtonTemplate" id="22"/>
+			<Button name="$parentButton23" inherits="ColorDropDownListButtonTemplate" id="23"/>
+			<Button name="$parentButton24" inherits="ColorDropDownListButtonTemplate" id="24"/>
+			<Button name="$parentButton25" inherits="ColorDropDownListButtonTemplate" id="25"/>
+			<Button name="$parentButton26" inherits="ColorDropDownListButtonTemplate" id="26"/>
+			<Button name="$parentButton27" inherits="ColorDropDownListButtonTemplate" id="27"/>
+			<Button name="$parentButton28" inherits="ColorDropDownListButtonTemplate" id="28"/>
+			<Button name="$parentButton29" inherits="ColorDropDownListButtonTemplate" id="29"/>
+			<Button name="$parentButton30" inherits="ColorDropDownListButtonTemplate" id="30"/>
+			<Button name="$parentButton31" inherits="ColorDropDownListButtonTemplate" id="31"/>
+			<Button name="$parentButton32" inherits="ColorDropDownListButtonTemplate" id="32"/>
+			<Button name="$parentButton33" inherits="ColorDropDownListButtonTemplate" id="33"/>
+			<Button name="$parentButton34" inherits="ColorDropDownListButtonTemplate" id="34"/>
+			<Button name="$parentButton35" inherits="ColorDropDownListButtonTemplate" id="35"/>
+			<Button name="$parentButton36" inherits="ColorDropDownListButtonTemplate" id="36"/>
+			<Button name="$parentButton37" inherits="ColorDropDownListButtonTemplate" id="37"/>
+			<Button name="$parentButton38" inherits="ColorDropDownListButtonTemplate" id="38"/>
+			<Button name="$parentButton39" inherits="ColorDropDownListButtonTemplate" id="39"/>
+			<Button name="$parentButton40" inherits="ColorDropDownListButtonTemplate" id="40"/>
+		</Frames>
+		<Scripts>
+			<OnUpdate>
+				ColorDropDownList_OnUpdate(this, elapsedTime);
+			</OnUpdate>
+		</Scripts>
+	</Button>
+	<Frame name="ColorDropDownMenuTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="136" y="22"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentTexture" file="Interface\Login\Common\ColorButton-Background">
+					<Size>
+						<AbsDimension x="110" y="14"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture name="$parentLeft" file="Interface\Login\Common\ColorSelect-Border">
+					<Size>
+						<AbsDimension x="16" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parentTexture">
+							<Offset>
+								<AbsDimension x="-1" y="0"/>
+							</Offset>
+						</Anchor>						
+					</Anchors>
+					<TexCoords left="0" right="0.25" top="0" bottom="1"/>
+				</Texture>
+				<Texture name="$parentRight" file="Interface\Login\Common\ColorSelect-Border">
+					<Size>
+						<AbsDimension x="16" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="RIGHT" relativeTo="$parentTexture">
+							<Offset>
+								<AbsDimension x="1" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0.75" right="1" top="0" bottom="1"/>
+				</Texture>
+				<Texture name="$parentMiddle" file="Interface\Login\Common\ColorSelect-Border">
+					<Size>
+						<AbsDimension x="1" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parentLeft" relativePoint="RIGHT"/>
+						<Anchor point="RIGHT" relativeTo="$parentRight" relativePoint="LEFT"/>
+					</Anchors>
+					<TexCoords left="0.25" right="0.75" top="0" bottom="1"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentButton">
+				<Size>
+					<AbsDimension x="22" y="22"/>
+				</Size>
+				<Anchors>
+					<Anchor point="RIGHT"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ToggleColorDropDownMenu(this:GetParent());
+					</OnClick>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\PanelDownButton-Normal">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875"/>
+				</NormalTexture>
+				<PushedTexture file="Interface\Buttons\PanelDownButton-Depress">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875"/>
+				</PushedTexture>
+				<DisabledTexture file="Interface\Buttons\PanelDownButton-Disable">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875"/>
+				</DisabledTexture>
+				<HighlightTexture file="Interface\Buttons\PanelUpButton-Highlight" alphaMode="ADD"/>
+			</Button>
+		</Frames>
+	</Frame>
+	<Button name="LoginDropDownListButtonTempalte" virtual="true">
+		<Size>
+			<AbsDimension x="64" y="16"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentHighlight" file="Interface\Buttons\Listbox-Highlight" alphaMode="ADD" hidden="true"/>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture name="$parentCheck" file="Interface\Buttons\CheckBox-Check">
+					<Size>
+						<AbsDimension x="24" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick>
+				LoginDropDownListButton_OnClick(this);
+			</OnClick>
+			<OnEnter>
+				getglobal(this:GetName().."Highlight"):Show();
+			</OnEnter>
+			<OnLeave>
+				getglobal(this:GetName().."Highlight"):Hide();
+			</OnLeave>
+		</Scripts>
+		<NormalText name="$parentNormalText" inherits="LoginFontHighlight">
+			<Anchors>
+				<Anchor point="LEFT"/>
+			</Anchors>
+		</NormalText>
+	</Button>
+	<Button name="LoginDropDownList" toplevel="true" frameStrata="DIALOG" hidden="true">
+		<Size>
+			<AbsDimension x="60" y="20"/>
+		</Size>
+		<Backdrop edgeFile="Interface\Tooltips\Tooltip-border" bgFile="Interface\Tooltips\Tooltip-Background">
+			<BackgroundInsets>
+				<AbsInset top="3" left="3" bottom="3" right="3"/>
+			</BackgroundInsets>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+			<TileSize>
+				<AbsValue val="16"/>
+			</TileSize>
+		</Backdrop>
+		<Frames>
+			<Button name="$parentButton1" inherits="LoginDropDownListButtonTempalte" id="1"/>
+			<Button name="$parentButton2" inherits="LoginDropDownListButtonTempalte" id="2"/>
+			<Button name="$parentButton3" inherits="LoginDropDownListButtonTempalte" id="3"/>
+			<Button name="$parentButton4" inherits="LoginDropDownListButtonTempalte" id="4"/>
+			<Button name="$parentButton5" inherits="LoginDropDownListButtonTempalte" id="5"/>
+			<Button name="$parentButton6" inherits="LoginDropDownListButtonTempalte" id="6"/>
+			<Button name="$parentButton7" inherits="LoginDropDownListButtonTempalte" id="7"/>
+			<Button name="$parentButton8" inherits="LoginDropDownListButtonTempalte" id="8"/>
+			<Button name="$parentButton9" inherits="LoginDropDownListButtonTempalte" id="9"/>
+			<Button name="$parentButton10" inherits="LoginDropDownListButtonTempalte" id="10"/>
+			<Button name="$parentButton11" inherits="LoginDropDownListButtonTempalte" id="11"/>
+			<Button name="$parentButton12" inherits="LoginDropDownListButtonTempalte" id="12"/>
+			<Button name="$parentButton13" inherits="LoginDropDownListButtonTempalte" id="13"/>
+			<Button name="$parentButton14" inherits="LoginDropDownListButtonTempalte" id="14"/>
+			<Button name="$parentButton15" inherits="LoginDropDownListButtonTempalte" id="15"/>
+			<Button name="$parentButton16" inherits="LoginDropDownListButtonTempalte" id="16"/>
+			<Button name="$parentButton17" inherits="LoginDropDownListButtonTempalte" id="17"/>
+			<Button name="$parentButton18" inherits="LoginDropDownListButtonTempalte" id="18"/>
+			<Button name="$parentButton19" inherits="LoginDropDownListButtonTempalte" id="19"/>
+			<Button name="$parentButton20" inherits="LoginDropDownListButtonTempalte" id="20"/>
+		</Frames>
+		<Scripts>
+			<OnShow>
+				for i = 1, LOGINDROPDOWN_MAXBUTTONS do
+					getglobal(this:GetName().."Button"..i):SetWidth(this.maxWidth);
+				end
+				this:SetWidth(this.maxWidth+22);
+			</OnShow>
+			<OnUpdate>
+				LoginDropDownList_OnUpdate(this, elapsedTime);
+			</OnUpdate>
+		</Scripts>
+	</Button>
+	<Frame name="LoginDropDownMenuTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="156" y="22"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentLeft" file="Interface\Login\Common\PanelItem-Border">
+					<Size>
+						<AbsDimension x="16" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.25" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentMiddle" file="Interface\Login\Common\PanelItem-Border">
+					<Size>
+						<AbsDimension x="98" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parentLeft" relativePoint="RIGHT"/>
+					</Anchors>
+					<TexCoords left="0.25" right="0.75" top="0" bottom="0.6875"/>
+				</Texture>
+				<Texture name="$parentRight" file="Interface\Login\Common\PanelItem-Border">
+					<Size>
+						<AbsDimension x="16" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parentMiddle" relativePoint="RIGHT"/>
+					</Anchors>
+					<TexCoords left="0.75" right="1" top="0" bottom="0.6875"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString name="$parentText" inherits="LoginFontHighlight" justifyH="CENTER">
+					<Size>
+						<AbsDimension x="1" y="16"/>
+					</Size>
+					<Anchors>
+						<Anchor point="LEFT" relativeTo="$parentLeft"/>
+						<Anchor point="RIGHT" relativeTo="$parentRight"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentButton">
+				<Size>
+					<AbsDimension x="22" y="22"/>
+				</Size>
+				<Anchors>
+					<Anchor point="RIGHT"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						ToggleLoginDropDownMenu(this:GetParent());
+					</OnClick>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\PanelDownButton-Normal">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875"/>
+				</NormalTexture>
+				<PushedTexture file="Interface\Buttons\PanelDownButton-Depress">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875"/>
+				</PushedTexture>
+				<DisabledTexture file="Interface\Buttons\PanelDownButton-Disable">
+					<TexCoords left="0" right="0.6875" top="0" bottom="0.6875"/>
+				</DisabledTexture>
+				<HighlightTexture file="Interface\Buttons\PanelUpButton-Highlight" alphaMode="ADD"/>
+			</Button>
+		</Frames>
+	</Frame>
+</Ui>

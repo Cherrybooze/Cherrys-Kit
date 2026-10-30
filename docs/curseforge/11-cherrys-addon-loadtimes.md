@@ -1,8 +1,27 @@
 # Cherry's Addon LoadTimes
 
+> **Requires:** Cherry's Kit (hub 0.4.22 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional:** nothing else is needed.
+
 **Find out which addons make your loading screen slow.**
 
-A small report of how long each addon took while the loading screen was up, and how much memory it added.
+A small report of how long each addon took while the loading screen was up, and how much memory it added. It is a troubleshooting tool, so it comes switched off and then uses no memory at all.
+
+## Turning it on and off
+
+Addons cannot change their own files, so the switch is a small text file you edit yourself:
+
+1. Open `Interface\AddOns\CherrysKit\LoadTimes\Switch.txt` in Notepad.
+2. Change `LoadTimes = false` to `LoadTimes = true` and save the file.
+3. Restart the game (times measured after a Reload UI are not comparable), wait for the loading screen to finish and type `/ckload`.
+4. Set it back to `false` when you are done.
+
+While it is off, nothing of it loads except the switch check, and `/ckload` tells you how to turn it on.
+
+## Updated in 1.3.0
+
+Now a troubleshooting addon that stays off until `Switch.txt` turns it on, as described above. Switched off, the kit only reads that small file and keeps nothing of LoadTimes in memory. The hub no longer bundles it: it is its own optional download, and it needs hub 0.4.22 or later.
 
 ## Updated in 1.2.1
 
@@ -20,12 +39,12 @@ Both probe frames stop after the loading screen is gone, so a tiny hidden frame 
 
 ## Chat commands
 
-- `/ckload` (also `/loadtimes`): show the report (type it after the loading screen)
+- `/ckload` (also `/loadtimes`): show the report (type it after the loading screen). While it is switched off, it says how to turn it on.
 - `/ckload probe`: what this client allows (send it with bug reports)
 
 ## Install
 
-- **Requires Cherry's Kit** (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\LoadTimes\` and loads first in the kit.
+- **Requires Cherry's Kit** 0.4.22 or later (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\LoadTimes\` and loads first in the kit. It comes switched off: see **Turning it on and off** above.
 - **Delete the old `Interface\AddOns\!CherrysLoadTimes` folder** if you have it from an older kit.
 
 ## Bug reports

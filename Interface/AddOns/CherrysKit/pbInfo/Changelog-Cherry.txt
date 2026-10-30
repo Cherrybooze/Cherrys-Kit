@@ -1,3 +1,10 @@
+pbInfo v0.60-ck5 for Cherry's Kit (2026-10-30)
+- No more work on every frame: the tooltip refreshes 10 times a second (at once when a tooltip
+  opens, its first line changes or the mouseover unit changes), "Hide default castbar" hides the
+  bar on cast events with a check 4 times a second, the cast time text changes only when its tenth
+  changes, an unknown hovered player is searched at most once a second, and the character data
+  timer always stops.
+
 pbInfo v0.60-ck4 for Cherry's Kit (2026-10-29)
 - Reuse mouseover unit facts within each tooltip update and share that snapshot with MobDB.
   The next update reads fresh facts. Other MobDB callers keep their one-argument API;

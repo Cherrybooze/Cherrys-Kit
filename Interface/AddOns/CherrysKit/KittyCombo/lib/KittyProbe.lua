@@ -228,17 +228,24 @@ Kitty.Probe.run = function()
 			"last mouse key on it: " .. tostring(Kitty.ModeUI.lastKey) .. " (right-click the mode button, then run /kc probe again); RegisterForClicks " .. tostring(KittyModeButton and KittyModeButton.RegisterForClicks ~= nil));
 	end
 
-	-- Current mode readout: its menu opens
-	if(Kitty.ModeUI and KittyModeText and KittyModeTextMenu) then
+	-- Mode icons: they open from the readout and the kitty editor while the mode
+	-- button is hidden (its default), so they must not depend on that button
+	if(Kitty.ModeUI and KittyModeFlyout) then
+		local basic = Kitty.SettingManager.setting.basic;
+		local was = basic.showModeButton;
 		local okText, textErr = pcall(function()
-			CloseDropDownMenus();
-			Kitty.ModeUI.openMenu();
-			local shown = DropDownList1 and DropDownList1.IsVisible and DropDownList1:IsVisible();
-			CloseDropDownMenus();
-			add(result, shown and true or nil, "current mode menu", "menu opens: " .. tostring(shown) .. (Kitty.ModeUI.menuShownFrame and " (needed its frame shown)" or ""));
+			basic.showModeButton = false;
+			Kitty.ModeUI.refresh();
+			Kitty.ModeUI.closeFlyout();
+			Kitty.ModeUI.openPicker(KittyModeText, nil, Kitty.ModeUI.current() or "", true);
+			local shown = KittyModeFlyout:IsVisible() and true or false;
+			add(result, shown, "mode icons", "open with the mode button hidden: " .. tostring(shown));
 		end);
+		Kitty.ModeUI.closeFlyout();
+		basic.showModeButton = was;
+		Kitty.ModeUI.refresh();
 		if(not okText) then
-			add(result, false, "current mode menu", textErr);
+			add(result, false, "mode icons", textErr);
 		end
 	end
 

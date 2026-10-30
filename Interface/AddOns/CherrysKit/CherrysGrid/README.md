@@ -1,8 +1,12 @@
 # Cherry's Grid
 
-Version **1.1.3** · Kit release **0.11.81** · [All addons / hub](../README.md)
+Version **1.1.4** · Kit release **0.11.87** · [All addons / hub](../README.md)
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
+
+## Updated in 1.1.4
+
+Less memory churn in fights: damage and heal flashes fade 20 times a second and reuse their tables, and marking members for a redraw or waiting 2nd click actions no longer make new lists on every frame. Members still redraw ten times a second.
 
 ## Updated in 1.1.3
 

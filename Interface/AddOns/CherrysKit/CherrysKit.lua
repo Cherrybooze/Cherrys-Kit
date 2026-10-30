@@ -8,7 +8,7 @@
 CherrysKit = CherrysKit or {}
 local Kit = CherrysKit
 
-Kit.version = "0.4.19"
+Kit.version = "0.4.24"
 Kit.MAX_ROWS = 16
 
 if SaveVariables then
@@ -120,7 +120,11 @@ Kit.FINGERPRINTS = {
   pbInfo = "pbInfo",
   PortraitHP = "PortraitHP",
   CherrysGrid = "-gciraid",
+  CherrysQuests = "CherrysQuests",
+  CherrysBar = "-XBARVERSION",
 }
+-- Where a kit addon's old copy lives when that folder is not named after the kit's addon.
+Kit.OLD_FOLDERS = { CherrysBar = "XBar" }
 Kit.oldCopies = {} -- folder -> "before" (found while loading)
 Kit.warnedOld = nil -- warn again after Reload UI
 -- folder -> { value, version } right after the kit loaded it. Reload UI re-runs every file in the
@@ -267,7 +271,7 @@ function Kit.Refresh()
       local version = versionOf(entry)
       local label = entry.title .. (version and ("  " .. version) or "")
       if old then
-        label = entry.title .. "  |cffff6060off: old copy in AddOns\\" .. entry.folder .. "|r"
+        label = entry.title .. "  |cffff6060off: old copy in AddOns\\" .. (Kit.OLD_FOLDERS[entry.folder] or entry.folder) .. "|r"
       elseif not enabled then
         label = label .. "  |cffff6060(off)|r"
       end
@@ -477,7 +481,7 @@ function Kit.WarnOldCopies()
         end
       end
       print((entry and entry.title or folder) .. " from the kit is off: an old copy is installed in "
-        .. "Interface\\AddOns\\" .. folder .. ". Delete that folder and Reload UI.")
+        .. "Interface\\AddOns\\" .. (Kit.OLD_FOLDERS[folder] or folder) .. ". Delete that folder and Reload UI.")
     end
   end
 end
@@ -500,8 +504,8 @@ end
 -- typed alone it opens the chosen window, with extra words it goes to its owner as before.
 ---------------------------------------------------------------------------
 
-Kit.DEFAULT_COMMANDS = { KittyCombo = "/kc /kitty", RomWeakAuras = "/wa", CherrysChat = "/cchat", zBag = "/zb", ExtendedMacroIcons = "/emi", TooltipIds = "/ti", UltimateMailMod = "/umm", GlobalBank = "/gb", AdvancedAuctionHouse = "/aah", CherrysLoadTimes = "/ckload", ZShop = "/zshop", pbInfo = "/pbinfo", PortraitHP = "/php", CherrysGrid = "/grid", ControlHub = "/rwa /ck" }
-Kit.WINDOWS = { "KittyCombo", "RomWeakAuras", "CherrysChat", "zBag", "ExtendedMacroIcons", "TooltipIds", "UltimateMailMod", "GlobalBank", "AdvancedAuctionHouse", "CherrysLoadTimes", "ZShop", "pbInfo", "PortraitHP", "CherrysGrid", "ControlHub" }
+Kit.DEFAULT_COMMANDS = { KittyCombo = "/kc /kitty", RomWeakAuras = "/wa", CherrysChat = "/cchat", zBag = "/zb", ExtendedMacroIcons = "/emi", TooltipIds = "/ti", UltimateMailMod = "/umm", GlobalBank = "/gb", AdvancedAuctionHouse = "/aah", CherrysLoadTimes = "/ckload", ZShop = "/zshop", pbInfo = "/pbinfo", PortraitHP = "/php", CherrysGrid = "/grid", CherrysQuests = "/cq", CherrysBar = "/cbar", ControlHub = "/rwa /ck" }
+Kit.WINDOWS = { "KittyCombo", "RomWeakAuras", "CherrysChat", "zBag", "ExtendedMacroIcons", "TooltipIds", "UltimateMailMod", "GlobalBank", "AdvancedAuctionHouse", "CherrysLoadTimes", "ZShop", "pbInfo", "PortraitHP", "CherrysGrid", "CherrysQuests", "CherrysBar", "ControlHub" }
 Kit.WINDOW_TITLES = {
   KittyCombo = "Cherry's KittyCombo",
   RomWeakAuras = "rom weakauras",
@@ -517,6 +521,8 @@ Kit.WINDOW_TITLES = {
   pbInfo = "pbInfo",
   PortraitHP = "PortraitHP",
   CherrysGrid = "Cherry's Grid",
+  CherrysQuests = "Cherry's Quests",
+  CherrysBar = "Cherry's Bar",
   ControlHub = "Control hub",
 }
 

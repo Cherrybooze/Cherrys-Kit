@@ -1,4 +1,5 @@
 # Chrome native messaging host. Accepts confirmed rewards and fixed, read-only local queries; never receives shop URLs.
+# Each message also writes Windows' time for the game's addons (CherrysClock), which have no clock of their own.
 $ErrorActionPreference = 'Stop'
 $inputStream = [Console]::OpenStandardInput()
 $outputStream = [Console]::OpenStandardOutput()
@@ -50,10 +51,24 @@ function Get-LastCollected {
     }
     return $latest
 }
+# The game's GetTickCount() is this same counter, so it carries the time on until Windows restarts.
+function Write-ClockStamp {
+    try {
+        $utc = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        $zone = [int][TimeZoneInfo]::Local.GetUtcOffset([DateTime]::Now).TotalSeconds
+        $text = "return {utc = $utc, tick = $([Environment]::TickCount), offset = $zone}`r`n"
+        [System.IO.File]::WriteAllText((Join-Path (Get-HelperDataDirectory) 'CherrysClockStamp.lua'), $text, [Text.Encoding]::ASCII)
+    } catch { }
+}
 try {
     $length = [BitConverter]::ToInt32((Read-Bytes 4), 0)
     if ($length -lt 2 -or $length -gt 16384) { throw 'Invalid message length' }
     $message = $utf8.GetString((Read-Bytes $length)) | ConvertFrom-Json
+    Write-ClockStamp
+    if ($message.type -eq 'clock') {
+        Send-Response @{ok=$true}
+        exit 0
+    }
     if ($message.type -eq 'helper-status' -or $message.type -eq 'helper-start') {
         $running = $false
         try { $existing = [System.Threading.Mutex]::OpenExisting('Local\CherrysKitGlobalBankHelper'); $running = $true; $existing.Dispose() } catch [System.Threading.WaitHandleCannotBeOpenedException] { }

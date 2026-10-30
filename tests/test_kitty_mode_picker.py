@@ -1,5 +1,6 @@
 """Mode icons stay reachable at screen edges, at scaled UI sizes and on later pages."""
 import unittest
+import xml.etree.ElementTree as ET
 
 import test_kitty_startup
 
@@ -91,6 +92,31 @@ class ModePickerTests(unittest.TestCase):
                     saved = self.mode.setting()
                     self.assertEqual((saved.x, saved.y, saved.tx, saved.ty), (19, 23, 25, 29))
 
+    def test_cherrys_bar_can_carry_the_readout(self):
+        self.lua.execute('''
+          hostCalls=0
+          Kitty.Skin.color=function() end
+          modeWidget("KittyModeTextText")
+          modeWidget("KittyModeText_SkinBg")
+          Kitty.ModeUI.refreshText()
+        ''')
+        g = self.lua.globals()
+        self.assertTrue(g.KittyModeText.visible)
+        self.lua.execute('Kitty.ModeUI.setTextHost(function() hostCalls=hostCalls+1 end)')
+        self.assertFalse(g.KittyModeText.visible)
+        self.assertEqual(g.hostCalls, 1)
+        self.mode.set("boss")
+        self.assertGreater(g.hostCalls, 1)
+        self.assertFalse(g.KittyModeText.visible)
+        self.lua.execute('Kitty.ModeUI.setTextHost(nil)')
+        self.assertTrue(g.KittyModeText.visible)
+        self.lua.execute('''
+          hostCalls=0
+          Kitty.ModeUI.setTextHost(function() error("a broken host must not break Kitty") end)
+          Kitty.ModeUI.refreshText()
+        ''')
+        self.assertFalse(g.KittyModeText.visible)
+
     def test_upper_left_opens_top_down_and_readout_uses_the_same_icon_picker(self):
         self.mode.toggleFlyout()
         first = self.lua.globals().KittyModeFlyout_Button1
@@ -137,6 +163,52 @@ class ModePickerTests(unittest.TestCase):
         self.mode.toggleFlyout()
         self.assertLess(self.lua.globals().KittyModeFlyout.scale, 1)
         self.assert_popup_inside_viewport()
+
+    def test_picker_is_a_top_level_frame_so_a_hidden_mode_button_cannot_hide_it(self):
+        root = ET.parse(test_kitty_startup.KITTY / "gui/KittyModeButton.xml").getroot()
+        top = [child.get("name") for child in root]
+        self.assertIn("KittyModeFlyout", top)
+        button = root.find("ui:Button[@name='KittyModeButton']", test_kitty_startup.NS)
+        self.assertIsNone(button.find(".//ui:Frame[@name='KittyModeFlyout']", test_kitty_startup.NS))
+        flyout = root.find("ui:Frame[@name='KittyModeFlyout']", test_kitty_startup.NS)
+        self.assertEqual(flyout.get("parent"), "UIParent")
+        for anchor in flyout.iter("{http://www.runewaker.com/}Anchor"):
+            self.assertNotEqual(anchor.get("relativeTo"), "KittyModeButton")
+        # The Lua no longer needs to re-parent the picker before showing it.
+        source = (test_kitty_startup.KITTY / "gui/KittyModeButton.lua").read_text(encoding="utf-8")
+        self.assertNotIn('"SetParent"', source)
+        # The readout and the editor still open it while the button is hidden.
+        self.lua.execute("Kitty.SettingManager.setting.basic.showModeButton=false; Kitty.ModeUI.refresh()")
+        self.assertFalse(self.lua.globals().KittyModeButton.visible)
+        self.mode.openMenu()
+        self.assert_popup_inside_viewport()
+        self.mode.closeFlyout()
+        self.lua.execute('Kitty.ModeUI.openPicker(KittyModeText,function(name) picked=name end,"boss",false)')
+        self.assert_popup_inside_viewport()
+
+    def test_editor_picker_tooltips_say_pick_not_switch(self):
+        self.lua.execute('''
+          tips={}; Kitty.showGameTooltip=function(owner,lines) tips[#tips+1]=lines end
+          Kitty.ModeUI.add("boss")
+          Kitty.ModeUI.openPicker(KittyModeText,function() end,"boss",false)
+          for i,name in ipairs(Kitty.ModeUI.shownList) do
+            if name=="boss" then KittyModeFlyout_Button1.id=i end
+          end
+          KittyModeFlyout_Button1.GetID=function(self) return self.id end
+          Kitty.ModeUI.onChoiceEnter(KittyModeFlyout_Button1)
+          Kitty.ModeUI.closeFlyout(); Kitty.ModeUI.set("boss",true); Kitty.ModeUI.toggleFlyout()
+          for i,name in ipairs(Kitty.ModeUI.shownList) do
+            if name=="boss" then KittyModeFlyout_Button1.id=i end
+          end
+          Kitty.ModeUI.onChoiceEnter(KittyModeFlyout_Button1)
+        ''')
+        tips = self.lua.globals().tips
+        editor, live = list(tips[1].values()), list(tips[2].values())
+        self.assertIn("(selected)", editor[0])
+        self.assertIn("use this mode for the action", editor[1])
+        self.assertNotIn("switch", editor[1])
+        self.assertIn("(now)", live[0])
+        self.assertIn("switch to this mode", live[1])
 
     def test_closed_or_natively_hidden_picker_rejects_delayed_clicks_without_switching_live_mode(self):
         for editor in (False, True):

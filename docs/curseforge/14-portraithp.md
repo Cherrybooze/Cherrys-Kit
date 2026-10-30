@@ -1,5 +1,9 @@
 # PortraitHP
 
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Optional:** nothing else is needed.
+
 **Your target's health in percent, right on its portrait.**
 
 PortraitHP v2019.07.14 by Nonante@Nuada, fixed for Cherry's Kit.

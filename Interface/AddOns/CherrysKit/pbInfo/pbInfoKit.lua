@@ -28,9 +28,9 @@ if (pbInfo.Off) then
 end;
 
 -- "Hide default castbar" (CastingBar settings, on by default): the game shows its cast bar on
--- every cast, so pbInfoCastingBarHider (Xml/CastingBar.xml) hides it again each frame. Not while
--- "Move CastingBar" is showing it, and not while pbInfo is disabled. Turning it off gives the
--- bar its alpha back.
+-- every cast, so pbInfoCastingBarHider (Xml/CastingBar.xml) hides it again on each cast event,
+-- and checks 4 times a second in case something else shows it. Not while "Move CastingBar" is
+-- showing it, and not while pbInfo is disabled. Turning it off gives the bar its alpha back.
 function pbInfo.CastingBar.KeepHidden()
 	local bar = CastingBarFrame;
 	if (not bar or type(pbInfoSettings) ~= "table") then
@@ -48,6 +48,41 @@ function pbInfo.CastingBar.KeepHidden()
 		Kit.castBarHidden = nil;
 		bar:SetAlpha(1);
 	end;
+end
+
+local HIDER_EVERY = 0.25;
+local hiderWait = 0;
+function pbInfo.CastingBar.KeepHiddenTick(elapsedTime)
+	hiderWait = hiderWait - (elapsedTime or 0);
+	if (hiderWait > 0) then
+		return;
+	end;
+	hiderWait = HIDER_EVERY;
+	pbInfo.CastingBar.KeepHidden();
+end
+
+-- pbInfoTooltipTimer (Xml/pbInfo.xml): pbInfo rebuilds the whole tooltip each time (dozens of new
+-- strings and tables), and it used to do that on every frame while any tooltip was showing, so
+-- hovering a monster in combat made garbage 30 to 60 times a second. Now: at once when a tooltip
+-- opens or its first line changes, then 10 times a second for the live numbers. A new mouseover
+-- unit is still handled at once by the UPDATE_MOUSEOVER_UNIT event in pbInfo_MainFrame.
+local TOOLTIP_EVERY = 0.1;
+local tooltipWait, tooltipOpen, tooltipTitle = 0, false, nil;
+function Kit.TooltipTick(elapsedTime)
+	if (not GameTooltip:IsVisible()) then
+		tooltipOpen, tooltipTitle = false, nil;
+		return;
+	end;
+	tooltipWait = tooltipWait - (elapsedTime or 0);
+	-- Reading the same text back makes no new string, so this check costs no memory.
+	local line = GameTooltipTextLeft1;
+	local title = line and line:GetText();
+	if (tooltipOpen and tooltipWait > 0 and title == tooltipTitle) then
+		return;
+	end;
+	tooltipOpen, tooltipWait, tooltipTitle = true, TOOLTIP_EVERY, title;
+	pbInfo.Tooltip.Scripts.OnUpdate();
+	tooltipTitle = line and line:GetText();
 end
 
 local function has(name)

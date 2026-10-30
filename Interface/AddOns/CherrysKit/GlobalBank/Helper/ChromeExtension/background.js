@@ -1,5 +1,10 @@
 'use strict';
 const HOST = 'com.cherryskit.globalbank';
+// Any message makes the local host write Windows' time for the game's addons. Once per Chrome
+// start is enough: the game carries that time on until Windows restarts.
+const stampClock = () => chrome.runtime.sendNativeMessage(HOST, {type:'clock'}, () => void chrome.runtime.lastError);
+chrome.runtime.onStartup.addListener(stampClock);
+chrome.runtime.onInstalled.addListener(stampClock);
 const validPage = url => {
   try { const u = new URL(url); return u.protocol === 'https:' && /^[a-z0-9-]+-shop-runesofmagic\.gameforge\.com$/i.test(u.hostname) && /^\/dailies\/display\/5\/?$/.test(u.pathname); }
   catch { return false; }

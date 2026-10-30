@@ -25,10 +25,16 @@ end
 end
 
 -- onupd777ate handler
-function zBagHandler_OnUpdate(this)
+-- Cherry's Kit: sorting moves an item every frame; the bag and bank windows are checked
+-- 20 times a second instead of every frame.
+local zBagHandlerWait = 0;
+function zBagHandler_OnUpdate(this, elapsed)
 	if (ZBAG_SORTSTARTED==1) then
 		zBag_OrderItems();
 	end
+	zBagHandlerWait = zBagHandlerWait - (tonumber(elapsed) or 0.05);
+	if (zBagHandlerWait > 0) then return; end
+	zBagHandlerWait = 0.05;
 	-- The bag and bank layouts are independent.
 	if (zBagKit.onebag == nil) then return; end
 	if (not zBagKit.IsOneBag()) then
@@ -56,6 +62,7 @@ function zBagHandler_OnUpdate(this)
 		BagFrame:SetAnchor("TOPLEFT","TOPRIGHT","UIParent",50,50);
 		BagItemFrame:Hide(); -- to not get update events on default bag when opened (a little fps boost)
 	end
+	zBagKit.KeepOffScreen(BagFrame, "bagpos", 50, 50); -- Cherry's Kit: moved back on screen by someone else
 
 	end
 
@@ -87,6 +94,7 @@ function zBagHandler_OnUpdate(this)
 		BankFrame:ClearAllAnchors();
 		BankFrame:SetAnchor("TOPLEFT","TOPRIGHT","UIParent",100,100);
 	end
+	zBagKit.KeepOffScreen(BankFrame, "bankpos", 100, 100); -- Cherry's Kit: moved back on screen by someone else
 end
 
 SLASH_ZBAG1 = "/zb";

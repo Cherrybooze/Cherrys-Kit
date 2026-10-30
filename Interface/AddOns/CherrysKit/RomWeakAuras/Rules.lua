@@ -480,13 +480,18 @@ local function complete(source,data)
   return true
 end
 
--- Each source is read once per evaluation, at the same supplied time.
-function Rules.Observe(data, now, env, used)
-  local snapshot = {}
+-- Each source is read once per evaluation, at the same supplied time. The engine passes
+-- last poll's snapshot as into: it is emptied and refilled, and each source may refill
+-- its own previous observation too, so polling makes no new tables. Others get new ones.
+function Rules.Observe(data, now, env, used, into)
+  local snapshot = into or {}
+  if into then
+    for id in pairs(into) do into[id] = nil end
+  end
   used = used or Rules.UsedSources(data)
   for _, source in ipairs(data.sources or {}) do
     if type(source.id) == "string" and used[source.id] and complete(source,data) then
-      local ok, state = pcall(RWA.Triggers.Observe, source, now, env)
+      local ok, state = pcall(RWA.Triggers.Observe, source, now, env, into ~= nil)
       if ok and type(state) == "table" then snapshot[source.id] = state end
     end
   end
@@ -1200,14 +1205,35 @@ function Rules.ValidAction(action, prepared)
   return false
 end
 
-local function evaluateActions(data, snapshot, gates, prepared)
+local function emptied(t)
+  if not t then return {} end
+  for key in pairs(t) do t[key] = nil end
+  return t
+end
+
+-- into: the caller's result from its previous evaluation, emptied and refilled in place.
+local function reuseResult(into, prepared)
+  into.visible = false
+  into.matches, into.valid, into.actionValid = emptied(into.matches), emptied(into.valid), emptied(into.actionValid)
+  into.effects, into.effectOrder = emptied(into.effects), emptied(into.effectOrder)
+  into.outputs = into.outputs or {}
+  for id in pairs(into.outputs) do
+    if not prepared.outputs[id] then into.outputs[id] = nil end
+  end
+  return into
+end
+
+local function evaluateActions(data, snapshot, gates, prepared, into)
   prepared = prepared or Rules.PrepareActions(data)
-  local result = { visible = false, matches = {}, valid = {}, actionValid = {}, outputs = {}, effects = {}, effectOrder = {} }
+  local result = into and reuseResult(into, prepared)
+    or { visible = false, matches = {}, valid = {}, actionValid = {}, outputs = {}, effects = {}, effectOrder = {} }
   for _, id in ipairs(prepared.order) do
     local item=prepared.outputs[id]; local def=item.definition
     local observation=snapshot[item.sourceId]
     local color=def.autoResourceColor and observation and RWA.Resources and RWA.Resources.COLORS[observation.resource] or def.color
-    result.outputs[id] = { visible = false, color = color, alpha = tonumber(def.alpha) or 1, grow = 1 }
+    local output = result.outputs[id]
+    if output then emptied(output) else output = {}; result.outputs[id] = output end
+    output.visible, output.color, output.alpha, output.grow = false, color, tonumber(def.alpha) or 1, 1
   end
   local allowed = data.enabled ~= false and gates ~= false
   for _, rule in ipairs(data.rules or {}) do
@@ -1282,12 +1308,18 @@ function Rules.OutputState(item, snapshot, result)
         and result.matches[choice.ruleId] and snapshot[choice.sourceId] then return snapshot[choice.sourceId] end
     end
   end
-  return snapshot[item.sourceId] or {}
+  local state = snapshot[item.sourceId]
+  if state then return state end
+  -- no observation: an empty state, kept with the output instead of made per poll
+  state = item.noState
+  if not state then state = {}; item.noState = state end
+  return state
 end
 
 -- This is pure resolution: it neither changes observations nor plays sounds.
-function Rules.Evaluate(data, snapshot, gates, prepared)
-  return evaluateActions(data, snapshot, gates, prepared)
+-- into: as in Rules.Observe, the caller's own previous result to refill.
+function Rules.Evaluate(data, snapshot, gates, prepared, into)
+  return evaluateActions(data, snapshot, gates, prepared, into)
 end
 
 -- One explanation source for the editor, list and rendered aura hover.

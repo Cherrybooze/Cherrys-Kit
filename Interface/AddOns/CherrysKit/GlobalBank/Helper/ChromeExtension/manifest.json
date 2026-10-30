@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Global Bank Daily Rewards",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "minimum_chrome_version": "102",
   "description": "Collect an available Runes of Magic daily loyalty reward and record confirmed collections locally.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAveIxgFGPr0pJ/ukaAwKXfxuwNBQsSG/IgWCYWOm8O0g6Ab75UqUYeF7tpb67v/jWFkdvfzZNadvPpNnyDWxFwMh9bu3oeH/ctnlbuOwjyf0MNgInnbDqz1xDt6b8myrGvA5ZBukEcWubyng5+TqRelhTQDB3lCEDMh5dx93ZCL/lJBFgpzxRXhRVHYTMnipwo6vis7PYQ5gxkTB0gjYe4NmLKSySa1PB6lte44Qp4JLPLhykAFtx+xbTKgQ73XhI+1aYQgniosw4ltX8a9z7tMV1XAp3/Ge4eQlmzHptHFLL+ERJ1ES7ztu5TmwXFbSj5BzHcp784gArvXqRExFstQIDAQAB",

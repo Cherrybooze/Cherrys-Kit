@@ -31,7 +31,7 @@
 				this:RegisterEvent("VARIABLES_LOADED");
 			</OnLoad>
 			<OnUpdate>
-				zBagHandler_OnUpdate(this);
+				zBagHandler_OnUpdate(this, elapsedTime);
 			</OnUpdate>
 			<OnEvent>
 				zBagHandler_OnEvent(this,event,arg1,arg2);

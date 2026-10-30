@@ -1,22 +1,73 @@
 # Cherry's Kit
 
-Version **0.4.19** · Kit release **0.11.84** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.24** · Kit release **0.11.101** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
 
-## Kit 0.11.84 playtest
+## Kit 0.11.101 playtest
 
-Kitty's default mode button/readout sit 32 UI units lower to clear housing/furniture controls; manually saved positions remain authoritative. This build includes the complete 0.11.83 PR work described below.
+- **Real time for addons:** the hub now has a clock, fed by Global Bank's Daily Rewards Chrome extension 1.0.9. **Cherry's Bar 1.1.8**'s Clock and **ZShop 1.2.0-ck5** read it. See [Real time for addons](#real-time-for-addons).
 
-UMM adds blue drag-box item selection and a right-side Recently sent pane sharing the 20-name history. Ctrl/Shift-drag adds, Escape/right-click cancels, and clicking a recent recipient keeps committed selections. The mass-send window expands/fits the viewport; C.O.D./sending blocks recipient changes. These native controls and their layout need an in-game playtest.
+- **Global Bank 1.4.7:** the daily reset follows 00:00 in Germany in any time zone, and the extension's setup takes one click plus Chrome's two.
 
-The same pass fixes zBag's refresh-time split-dialog dismissal and adds smaller/configurable slot numbers; RWA includes native transport/non-spell casts. AAH item parsing is isolated from the game's TP-upgrade tooltip. The reported upgrade black flash remains an in-game verification item rather than a confirmed graphics fix.
+- **Installing only some addons:** the client's reports of files the manifest lists but you didn't install no longer light the minimap's bug button.
 
-This playtest adds default-on aura clickthrough, whole-aura Scale controls and Expand/Collapse section headers to rom weakauras. Kitty's screen-aware paged mode-icon picker is shared by its HUD widgets and the new changemode action, with an editable automatic Mode is off guard and read-only mode-transition prediction. Closed/hidden pickers reject delayed selections. The earlier PR #4 fixes carry forward. Native click pass-through, scale anchoring and popup placement still need an in-game playtest. Emoji pictures above players' heads need a client-side bubble hook absent from the inspected client; overhead rendering is not implemented here.
+- **Separate packages:** Cherry's Loginxml, a replacement login screen, and LogNextChar, Next and Prev character buttons.
 
-RWA also adds opt-in screen-responsive placement/sizing (off by default), preview move/Shift-scale grips, per-aura Reset position and readable target HP/percentage. Factory positions follow the approved layout; existing saved placements are preserved. UMM adds shared Use last/gold shortcuts and a third History tab for up to 20 distinct successful recipients. UMM 7.0.1-ck7 requires hub **0.4.17 or later** to load its history files; this build includes **0.4.19**. These additions still need native-client playtesting.
+## Kit 0.11.100 playtest
+
+- **rom weakauras 0.9.30**: the scale corner and the move arrows on auras in the placement view respond to the mouse at last. Shift-drag on an aura also scales it.
+
+- **Cherry's Bar 1.1.7** (`/cbar`) is new: information bars at the top of the screen, the bottom, or both, with displays set per bar. Hub 0.4.23 lists it and keeps it off while an old XBar folder is installed.
+
+## Kit 0.11.90 playtest
+
+- **Ultimate Mail Mod 7.0.1-ck10** and **Cherry's Chat 0.10.12**: with the mail window open, Ctrl+click or Shift+click a player's name in chat to put it in To (Compose, or Mass Send Items while that tab is open).
+
+## Kit 0.11.89 playtest
+
+- **Cherry's Chat 0.10.11**: the right-click menu opens just right of the chat window's scroll bar, level with the middle of the window, instead of at the mouse, where it could hang below the bottom of the screen.
+
+## Kit 0.11.88 playtest
+
+- **rom weakauras 0.9.29**: much shorter share codes (`RWA5!`) made with a codebook, like KittyCombo's CKC3 codes. Most single auras now fit in a chat line, and Import finds a code inside pasted text.
+
+## Kit 0.11.87 playtest
+
+Fixes and speed-ups from playing 0.11.86:
+
+- **No more work on every frame.** No kit addon does its work on every frame any more unless you are moving, sizing, sorting or selecting something. rom weakauras 0.9.28 makes about 98% less garbage per second, and pbInfo, Ultimate Mail Mod, zBag, Cherry's Grid and KittyCombo check a few times a second instead.
+- **Cherry's Chat 0.10.10**: no freeze when many lines arrive at once (raising a skill to the maximum and confirming), and a working scroll bar made from the game's own scroll parts.
+- **rom weakauras 0.9.28**: the scale corner works without a key, and the Position section is open. Target health shows the percentage above the bar and the HP number inside it, learned the way pbInfo does.
+- **Ultimate Mail Mod 7.0.1-ck9**: gold presets stop at 999,999,999 and show commas while you type; **Forget own chars** asks Yes or No first.
+- **Addon LoadTimes 1.3.0** is a troubleshooting addon now: it stays off, using no memory, until you turn it on in `LoadTimes\Switch.txt`. Hub 0.4.22 no longer bundles it.
+
+Everything from 0.11.86, including Cherry's Quests 1.0.0, is included unchanged. All of this still needs testing in the game client.
+
+## Kit 0.11.86 playtest
+
+Adds **Cherry's Quests 1.0.0** (`/cq`): a prettier quest tracker with font, size and look options. Ctrl+click a quest to cycle through the NPCs it names and put one in the game's NPC tracking list. Hub 0.4.21 lists it in this window. Everything below from 0.11.85 is included unchanged.
+
+## Kit 0.11.85 playtest
+
+A test build with fixes from a review of 0.11.84:
+
+- **Cherry's KittyCombo 1.7.15**: the mode pictures open even while the mode button is hidden. Two **Change kitty mode** rows can no longer flip the mode on every key press. `/kc window` lets you try the older ready window.
+- **rom weakauras 0.9.27**: does less work on every frame. Reminder: auras let clicks pass through by default; untick **Make clickthrough** in an aura to get its tooltip back.
+- **Ultimate Mail Mod 7.0.1-ck8**: clicking an item in Mass Send keeps the cursor in the To field, and the open mail window checks the screen twice a second instead of every frame.
+
+### Also in this playtest
+
+- **KittyCombo**: a mode picker with pictures for the mode button, the "Mode:" readout and the new **Change kitty mode** action. The mode button sits a little lower to clear the housing controls.
+- **rom weakauras**: clickthrough auras, a Scale setting for whole auras, optional scaling with your screen size, move and scale grips, Reset position, target HP with percentage, and cast bars for transport books and other casts that are not spells.
+- **Ultimate Mail Mod**: drag a box to select items, a Recently sent list beside Mass Send, Use last and gold buttons, and a History tab with your last 20 recipients. It needs hub 0.4.17 or later; this build includes hub 0.4.20.
+- **zBag**: the split-stack box stays open when your bags update, and slot numbers can be smaller.
+- **Advanced AuctionHouse**: reads items with its own hidden tooltip instead of borrowing the game's upgrade tooltip.
+- Emoji pictures above players' heads are still not possible: the game gives addons no way to draw them.
+
+All of this still needs testing in the game client.
 
 ## Features
 
@@ -47,7 +98,20 @@ Each one is its own download and needs Cherry's Kit:
 - **pbInfo**: richer tooltips, quest tracker, chat filters and cast bar options (`/pbinfo`)
 - **PortraitHP**: target health percent on its portrait (`/php`)
 - **Cherry's Grid**: party and raid frames that run kitties on click (`/grid`)
-- **Cherry's Addon LoadTimes**: how long each addon takes to load (`/ckload`)
+- **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
+- **Cherry's Bar**: information bars at the top, bottom or both, with displays set per bar (`/cbar`)
+- **Cherry's Addon LoadTimes**: how long each addon takes to load, for troubleshooting; off until its `Switch.txt` turns it on (`/ckload`)
+
+## Real time for addons
+
+The game's Lua has no clock, so `CherrysClock` stays unknown until something outside the game tells it the time. That something is Global Bank's Daily Rewards Chrome extension: when Chrome starts, or the extension talks to its local host, the host writes Windows' time to a small file and exits. Windows' uptime counter carries the time from there, across characters and game restarts, until Windows restarts. Nothing stays running and nothing is asked of the game server. Without the extension the clock stays unknown.
+
+| Call | Returns, or nil while unknown |
+| --- | --- |
+| `CherrysClock.UTC()` | Seconds since 1970, UTC |
+| `CherrysClock.Now()` | The same, shifted to this PC's time zone |
+| `CherrysClock.Date()` | Year, month, day on this PC |
+| `CherrysClock.Time()` | Hour, minute, second on this PC |
 
 ## Chat commands
 
@@ -63,7 +127,7 @@ Download packages from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/rel
 3. Remove old separate copies of the same addons from `Interface/AddOns/` (the list is in the Features and addon sections above). Saved settings live separately from these addon files.
 4. Start the game or Reload UI, then type `/ck`.
 
-The hub ZIP includes shared files, the manifest, path and load markers, its media, and **LoadTimes**. The current loader uses LoadTimes' hooks even when you only want the hub. Other addon ZIPs contain their own subfolders and require this hub. Optional integrations such as Grid running a kitty also need the relevant addon.
+The hub ZIP includes shared files, the manifest, path and load markers, and its media. Every addon ZIP, LoadTimes included, contains its own subfolder and requires this hub. Optional integrations such as Grid running a kitty also need the relevant addon.
 
 ## Bug reports
 

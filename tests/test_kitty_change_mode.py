@@ -184,6 +184,136 @@ class ChangeModeTests(unittest.TestCase):
           assert(updated=="correct-row")
         ''')
 
+    def test_two_unconditional_mode_rows_cannot_flip_the_mode_on_every_press(self):
+        self.lua.execute('''
+          clock=100; Kitty.getTime=function() return clock end
+          Kitty.Modes={}; Kitty.ModeUI.setting().current=nil; Kitty.ModeUI.switchedAt=nil
+          local aoe,single={},{}
+          Kitty.ModeUI.configureCommand(aoe,"aoe"); Kitty.ModeUI.configureCommand(single,"single")
+          local commands={aoe,single,{commandType="skill",commandName="Ready"}}
+          local manager=Kitty.ComboManager(Kitty.slotManager,Kitty.cooldownManager,Kitty.macroManager)
+          manager.skillManager.cast=function() end
+          fired={}
+          for press=1,8 do
+            local kind,name=manager:check(commands)
+            manager:cast(kind,name)
+            fired[press]=kind=="changemode" and name or kind
+            clock=clock+0.3
+          end
+        ''')
+        fired = list(self.lua.globals().fired.values())
+        # Presses come every 0.3 s: a switch holds the other mode row for 1 s.
+        self.assertEqual(fired, ["aoe", "skill", "skill", "skill", "single", "skill", "skill", "skill"])
+
+    def test_mode_row_without_its_guard_does_not_use_presses_once_its_mode_is_on(self):
+        self.lua.execute('''
+          clock=100; Kitty.getTime=function() return clock end
+          local change={}; Kitty.ModeUI.configureCommand(change,"boss"); Kitty.ModeUI.clearCommandGuard(change)
+          assert(#change==0)
+          local commands={change,{commandType="skill",commandName="Ready"}}
+          local manager=Kitty.ComboManager(Kitty.slotManager,Kitty.cooldownManager,Kitty.macroManager)
+          local kind,name=manager:check(commands); manager:cast(kind,name)
+          assert(kind=="changemode" and Kitty.Modes.boss==true and Kitty.Modes.heal==false)
+          clock=clock+5
+          kind,name=manager:check(commands)
+          assert(kind=="skill" and name=="Ready","a switch to the only mode on used up a press")
+          Kitty.Modes.heal=true
+          kind,name=manager:check(commands)
+          assert(kind=="changemode","another mode is on, so the switch still has work to do")
+          clock=clock+5; Kitty.ModeUI.set("heal",true)
+          assert(manager:check(commands)=="changemode","a manual switch does not hold kitty rows")
+        ''')
+
+    def test_prediction_mirrors_the_switch_hold(self):
+        self.lua.execute('''
+          clock=100; Kitty.getTime=function() return clock end
+          Kitty.Modes={}; Kitty.ModeUI.setting().current=nil; Kitty.ModeUI.switchedAt=nil
+          local aoe,single={},{}
+          Kitty.ModeUI.configureCommand(aoe,"aoe"); Kitty.ModeUI.configureCommand(single,"single")
+          local list={info={name="Flip",class="any",target="all"},aoe,single,
+            {commandType="skill",commandName="Ready"},{commandType="skill",commandName="Other"}}
+          Kitty.SettingManager.setting.command={list}
+          local prediction=Kitty.Predict.compute("Flip",3)
+          assert(prediction[1].type=="changemode" and prediction[1].name=="aoe")
+          assert(prediction[2].name=="Ready" and prediction[3].name=="Other","prediction flipped the mode back")
+          assert(next(Kitty.Modes)==nil)
+          Kitty.ModeUI.kittySwitch("aoe")
+          prediction=Kitty.Predict.compute("Flip",1)
+          assert(prediction[1].name=="Ready","prediction ignored a live switch hold")
+          clock=clock+1
+          prediction=Kitty.Predict.compute("Flip",1)
+          assert(prediction[1].type=="changemode" and prediction[1].name=="single")
+        ''')
+
+    def test_save_warns_about_mode_rows_that_take_turns(self):
+        self.lua.execute('''
+          sent={}; Kitty.sendMessage=function(text) table.insert(sent,text) end
+          local function row(name,extra)
+            local command={}; Kitty.ModeUI.configureCommand(command,name)
+            if extra then table.insert(command,1,extra) end
+            return command
+          end
+          local enemies={conditionType="playerHealth",{threshold=50}}
+          assert(Kitty.ModeUI.loopingModes({row("aoe"),row("single")})[2]=="single")
+          assert(Kitty.ModeUI.loopingModes({row("aoe"),row("single",enemies)})==nil)
+          assert(Kitty.ModeUI.loopingModes({row("aoe"),row("aoe")})==nil)
+          local off=row("single"); off.enable=false
+          assert(Kitty.ModeUI.loopingModes({row("aoe"),off})==nil)
+          local F=Kitty.CommandConfigFrame
+          Kitty.componentToSetting=function() end
+          F.allCommandList={}; F.targetCommandListIndex=0
+          F.targetCommandList={info={name="Flip"},row("aoe"),row("single")}
+          F.save()
+          assert(#sent==1 and string.find(sent[1],"aoe, single",1,true),tostring(sent[1]))
+          F.targetCommandList={info={name="Fine"},row("aoe"),row("single",enemies)}
+          F.save()
+          assert(#sent==1)
+        ''')
+
+    def test_scrolling_the_editor_closes_its_mode_picker(self):
+        self.lua.execute("showList=Kitty.CommandConfigFrame.onShowList")
+        self.editor()
+        self.lua.execute('''
+          local F=Kitty.CommandConfigFrame
+          for i=1,10 do modeTestWidget("KittyCommandConfigFrame_Button"..i) end
+          local slider={value=1}
+          function slider:GetValue() return self.value end
+          function slider:SetMinMaxValues(a,b) self.min,self.max=a,b end
+          function slider:GetMinMaxValues() return self.min,self.max end
+          F.targetCommandList={info={name="Modes"}}
+          closed=0
+          Kitty.ModeUI.closeFlyout=function() closed=closed+1; Kitty.ModeUI.pickHandler=nil end
+          Kitty.ModeUI.openPicker=function(anchor,callback) Kitty.ModeUI.pickHandler=callback; return true end
+          F.targetCommandList[1]={commandType="changemode",commandName=""}
+          F.openModePicker(row)
+          F.targetCommandList[1]=nil
+          showList(slider,1,10)
+          assert(closed==0,"a redraw at the same scroll closed the picker")
+          slider.value=2; showList(slider,2,10)
+          assert(closed==1 and Kitty.ModeUI.pickHandler==nil)
+          slider.value=1; showList(slider,1,10)
+          assert(closed==1)
+        ''')
+
+    def test_ready_window_command_is_saved_checked_and_reset(self):
+        self.lua.execute('''
+          sent={}; Kitty.sendMessage=function(text) table.insert(sent,text) end
+          local S=Kitty.SkillManager
+          SlashCmdList["KittyCombo"](nil,"window 0.6")
+          assert(S.EXECUTION_TOLERANCE==0.6 and Kitty.SettingManager.setting.basic.readyWindow==0.6)
+          assert(string.find(sent[#sent],"0.6 s",1,true))
+          S.EXECUTION_TOLERANCE=0.2
+          assert(S.applyReadyWindow()==0.6 and S.EXECUTION_TOLERANCE==0.6)
+          assert(S.readyWindowCommand("5")==false and S.EXECUTION_TOLERANCE==0.6)
+          assert(S.readyWindowCommand("abc")==false and Kitty.SettingManager.setting.basic.readyWindow==0.6)
+          S.readyWindowCommand("default")
+          assert(S.EXECUTION_TOLERANCE==0.2 and Kitty.SettingManager.setting.basic.readyWindow==nil)
+          Kitty.SettingManager.setting.basic.readyWindow="junk"
+          assert(S.applyReadyWindow()==0.2)
+          S.readyWindowCommand("")
+          assert(string.find(sent[#sent],"0.2 s",1,true))
+        ''')
+
     def test_condition_editor_keeps_guard_ownership_when_only_on_off_changes(self):
         self.lua.execute('''
           local C=Kitty.CommandConditionFrame

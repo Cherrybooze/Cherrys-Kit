@@ -92,7 +92,6 @@
 			<OnClick>zBagItem_OnClick(this,key);</OnClick>
 			<OnDragStart>zBagItem_OnClick(this,"LBUTTON",1);</OnDragStart>
 			<OnReceiveDrag>zBagItem_OnClick(this,"LBUTTON",1);</OnReceiveDrag>
-			<OnUpdate></OnUpdate>
 			<OnEnter>
 				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
 				GameTooltip:SetBagItem(this.index);
@@ -122,7 +121,6 @@
 			<OnClick>zBagItem_OnClick(this,key);</OnClick>
 			<OnDragStart>zBagItem_OnClick(this,"LBUTTON",1);</OnDragStart>
 			<OnReceiveDrag>zBagItem_OnClick(this,"LBUTTON",1);</OnReceiveDrag>
-			<OnUpdate></OnUpdate>
 			<OnEnter>
 				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
 				GameTooltip:SetBagItem(this.index);
@@ -153,7 +151,6 @@
 			<OnClick>zEqItem_OnClick(this,key);</OnClick>
 			<OnDragStart>zEqItem_OnClick(this,"LBUTTON",1);</OnDragStart>
 			<OnReceiveDrag>zEqItem_OnClick(this,"LBUTTON",1);</OnReceiveDrag>
-			<OnUpdate></OnUpdate>
 			<OnEnter>
 				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
 				GameTooltip:SetInventoryItem("player",this:GetID());
@@ -182,7 +179,6 @@
 			<OnClick>zBankItem_OnClick(this,key);</OnClick>
 			<OnDragStart>zBankItem_OnClick(this,"LBUTTON",1);</OnDragStart>
 			<OnReceiveDrag>zBankItem_OnClick(this,"LBUTTON",1);</OnReceiveDrag>
-			<OnUpdate></OnUpdate>
 			<OnEnter>
 				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
 				GameTooltip:SetBankItem(this.index);

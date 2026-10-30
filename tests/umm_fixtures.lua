@@ -59,15 +59,22 @@ function Widget:SetValue(value) self.value=value end
 function Widget:GetValue() return self.value or 0 end
 function Widget:ClearAllAnchors() self.anchor=nil end
 function Widget:SetAnchor(...) self.anchor={...} end
+-- Like the client's EditBox: SetText puts the caret at 0 even when the text is unchanged.
 function Widget:SetText(value)
   value=tostring(value or "")
+  self.caret,self.selStart=0,0
   if value~=self.text then self.text=value;UMMFixtureDispatch(self.name,"OnTextChanged") end
+end
+function Widget:HighlightText(first,last)
+  self.selStart=first or 0
+  self.caret=(last==nil or last==-1) and #self.text or last
 end
 function Widget:GetText() return self.text end
 function Widget:SetChecked(value) self.checked=value end
 function Widget:IsChecked() return self.checked end
 function Widget:Enable() self.enabled=true end
 function Widget:Disable() self.enabled=false end
+function Widget:IsEnable() return self.enabled end
 function Widget:SetFocus() self.focus=true end
 function Widget:ClearFocus() self.focus=false end
 function Widget:RegisterForClicks(...) self.clicks={...} end

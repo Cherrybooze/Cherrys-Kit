@@ -1,0 +1,319 @@
+<Ui xmlns="http://www.runewaker.com/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/
+../WorldXml/UI.xsd">
+  <!-- Settings toggles on the server screen (login.settings.lua), kept well to the right of
+       the server list so a click meant for a server never lands on a toggle -->
+  <Frame name="LoginServerFrame_options" parent="LoginServerFrame" enableMouse="true" frameLevel="210">
+    <Size>
+      <AbsDimension x="250" y="400"/>
+    </Size>
+    <Anchors>
+      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="LoginServerFrame_list">
+        <Offset>
+          <AbsDimension x="90" y="0"/>
+        </Offset>
+      </Anchor>
+    </Anchors>
+    <Backdrop edgeFile="Interface\Tooltips\Tooltip-border" bgFile="Interface\Tooltips\Tooltip-Background">
+      <BackgroundInsets>
+        <AbsInset top="4" left="4" bottom="4" right="4"/>
+      </BackgroundInsets>
+      <EdgeSize>
+        <AbsValue val="16"/>
+      </EdgeSize>
+      <TileSize>
+        <AbsValue val="16"/>
+      </TileSize>
+    </Backdrop>
+    <Layers>
+      <Layer level="ARTWORK">
+        <FontString name="$parent_title" inherits="LoginFontHighlight" justifyH="LEFT" text="Settings">
+          <Anchors>
+            <Anchor point="TOPLEFT">
+              <Offset>
+                <AbsDimension x="14" y="10"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="$parent_hint" inherits="LoginFontNormalSmall" justifyH="LEFT" text="Applies at once. Saved when you log out or quit.">
+          <Size>
+            <AbsDimension x="226" y="34"/>
+          </Size>
+          <Anchors>
+            <Anchor point="BOTTOMLEFT">
+              <Offset>
+                <AbsDimension x="14" y="-40"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+    <Frames>
+      <CheckButton name="$parent_1" inherits="LoginCheckButtonTemplate" id="1">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="34"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_2" inherits="LoginCheckButtonTemplate" id="2">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="58"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_3" inherits="LoginCheckButtonTemplate" id="3">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="82"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_4" inherits="LoginCheckButtonTemplate" id="4">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="106"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_5" inherits="LoginCheckButtonTemplate" id="5">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="130"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_6" inherits="LoginCheckButtonTemplate" id="6">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="154"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_7" inherits="LoginCheckButtonTemplate" id="7">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="178"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_8" inherits="LoginCheckButtonTemplate" id="8">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="202"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_9" inherits="LoginCheckButtonTemplate" id="9">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="226"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_10" inherits="LoginCheckButtonTemplate" id="10">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="250"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_11" inherits="LoginCheckButtonTemplate" id="11">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="274"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_12" inherits="LoginCheckButtonTemplate" id="12">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="298"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_13" inherits="LoginCheckButtonTemplate" id="13">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="322"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton name="$parent_14" inherits="LoginCheckButtonTemplate" id="14">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="346"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
+      <Button name="$parent_reset" inherits="LoginButtonTemplate" text="Use config.lua">
+        <Size>
+          <AbsDimension x="124" y="22"/>
+        </Size>
+        <Anchors>
+          <Anchor point="BOTTOMLEFT">
+            <Offset>
+              <AbsDimension x="12" y="-10"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.reset()
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+    <Scripts>
+      <OnLoad>
+        login.settings.onLoad(this)
+      </OnLoad>
+      <OnShow>
+        login.settings.refresh()
+      </OnShow>
+    </Scripts>
+  </Frame>
+</Ui>

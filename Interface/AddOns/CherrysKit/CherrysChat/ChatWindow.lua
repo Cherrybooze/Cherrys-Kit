@@ -22,6 +22,11 @@ Wn.PAD = 4
 -- our text (in game, 2026-10-26), so lines start right of them.
 Wn.PAD_LEFT = 28
 Wn.LINE_H = 17 -- the XML font is 14
+-- Our scroll bar (CherrysChat_W<i>Bar: the game's standard track, knob and arrows) runs down the
+-- right edge. The game's own chat scroll bar moved the game's hidden text, not ours (in game,
+-- 2026-10-30), so it is hidden while Cherry's Chat draws a window (Wn.HideNativeBar).
+Wn.BAR_W = 18 -- room the bar takes from the text: 16 wide, 2 from the edge
+Wn.BAR_ARROW = 16 -- the arrow buttons above and below it
 Wn.PIC = 15 -- emoji picture size
 Wn.MAX_PICS = 60 -- pictures per window (XML CherrysChat_W<i>Pic<k>)
 Wn.FOLLOW_EVERY = 0.2
@@ -331,10 +336,29 @@ local function itemColour(target)
  return colour
 end
 
+-- Most lines have no links or pictures and fit on one row. For those the whole line is measured
+-- once; the general path below measures two growing prefixes for every word. (Tests set
+-- Wn.FAST_WRAP = false to compare both paths.)
+Wn.FAST_WRAP = true
+local function fitsOneRow(tokens, links, maxW)
+  if not Wn.FAST_WRAP or #links > 0 then
+    return false
+  end
+  local raw = {}
+  for _, t in ipairs(tokens) do
+    if t.pic or t.kind == "link_start" then
+      return false
+    end
+    raw[#raw + 1] = t.raw
+  end
+  return Wn.TextWidth((string.gsub(C.Plain(table.concat(raw)), "%s+$", ""))) <= maxW
+end
+
 function Wn.WrapMessage(msg, maxW, pics, baseColour)
   maxW = math.max(1, tonumber(maxW) or 1)
   local tokens, links = Wn.Tokens(msg, pics)
-  local list = fittingTokens(tokens, maxW)
+  local oneRow = fitsOneRow(tokens, links, maxW)
+  local list = oneRow and tokens or fittingTokens(tokens, maxW)
   local rows, parts, plain, spans, rowPics, width, colour = {}, {}, {}, {}, {}, 0, baseColour
   local colourStack, linkStack = {}, {}
   if colour then parts[1] = colour end
@@ -371,6 +395,9 @@ function Wn.WrapMessage(msg, maxW, pics, baseColour)
       colour = table.remove(colourStack) or baseColour
       parts[#parts + 1] = "|r"
       if colour then parts[#parts + 1] = colour end
+    elseif oneRow then
+      plain[#plain + 1] = t.copy or t.vis
+      parts[#parts + 1] = t.raw
     else
       local prefix = table.concat(parts)
       -- Measure the same complete visible prefix that the FontString draws. Summed word
@@ -398,7 +425,7 @@ end
 
 function Wn.TextArea(i)
   local s = st(i)
-  return (s.w or 430) - Wn.PAD_LEFT - Wn.PAD, (s.h or 180) - Wn.PAD * 2
+  return (s.w or 430) - Wn.PAD_LEFT - Wn.PAD - Wn.BAR_W, (s.h or 180) - Wn.PAD * 2
 end
 
 -- rows[i] = { { text, m = log index, links, colour }, ... }, built when first needed.
@@ -446,32 +473,45 @@ function Wn.Rewrap(i)
   Wn.Draw(i)
 end
 
+-- Windows with new lines, drawn once on the next frame (Wn.Update). The game can print many lines
+-- at once, such as one "TP decreased" line per level when a skill is raised by many levels: each
+-- line used to redraw the whole window (40 rows), which froze the game for a moment.
+Wn.dirty = {}
+
 -- Called by Cherry's Chat after every logged line (removed = old lines dropped from the log).
 local function onLogged(i, removed)
   local rows = Wn.rows[i]
   if not rows then
-    Wn.Draw(i)
+    Wn.dirty[i] = true
     return
   end
   local s = st(i)
   if removed > 0 then
-    local cut = 0
-    while rows[cut + 1] and rows[cut + 1].m <= removed do
-      cut = cut + 1
-    end
-    for _ = 1, cut do
-      table.remove(rows, 1)
-    end
+    -- One pass: drop the rows of removed lines and renumber the rest.
+    local kept = {}
     for _, r in ipairs(rows) do
-      r.m = r.m - removed
+      if r.m > removed then
+        r.m = r.m - removed
+        kept[#kept + 1] = r
+      end
     end
+    rows = kept
+    Wn.rows[i] = kept
     s.selA, s.selB = nil, nil
   end
   local added = wrapInto(rows, i, #C.log[i], (Wn.TextArea(i)))
   if s.offset > 0 then
     s.offset = s.offset + added -- reading older lines: keep them in place
   end
-  Wn.Draw(i)
+  Wn.dirty[i] = true
+end
+
+-- Draws the windows that got new lines since the last frame.
+function Wn.DrawDirty()
+  for i in pairs(Wn.dirty) do
+    Wn.dirty[i] = nil -- clearing fields while traversing is allowed
+    Wn.Draw(i)
+  end
 end
 
 function Wn.OnLogged(i, removed)
@@ -532,6 +572,7 @@ function Wn.PicX(fs, p)
 end
 
 function Wn.Draw(i)
+  Wn.dirty[i] = nil
   local o = overlay(i)
   if not (o and o:IsVisible()) then
     return
@@ -589,6 +630,7 @@ function Wn.Draw(i)
     end
   end
   try(_G["CherrysChat_W" .. i .. "More"], "SetText", s.offset > 0 and ("|cffffd100v " .. s.offset .. "|r") or "")
+  Wn.SyncBar(i, math.max(0, #rows - count), s.offset)
 end
 
 function Wn.Scroll(i, delta)
@@ -597,6 +639,145 @@ function Wn.Scroll(i, delta)
     s.offset = math.max(0, s.offset + ((tonumber(delta) or 0) > 0 and 3 or -3))
     Wn.Draw(i)
   end)
+end
+
+-- "top", "bottom" or a number of rows up (negative: down). The game's own chat buttons end here.
+function Wn.ScrollTo(i, where)
+  guarded(function()
+    local s = st(i)
+    if where == "bottom" then
+      s.offset = 0
+    elseif where == "top" then
+      s.offset = #Wn.Rows(i)
+    else
+      s.offset = math.max(0, s.offset + (tonumber(where) or 0))
+    end
+    Wn.Draw(i) -- Wn.Range keeps the offset inside the rows
+  end)
+end
+
+---------------------------------------------------------------------------
+-- Scroll bar. The slider's top is the oldest row and its bottom the newest, so the value is how
+-- far the rows on screen are from the oldest; the knob only shows when there is more to see.
+---------------------------------------------------------------------------
+
+local function bar(i)
+  return _G["CherrysChat_W" .. i .. "Bar"]
+end
+
+function Wn.SyncBar(i, maxOffset, offset)
+  local b, s = bar(i), st(i)
+  local value = maxOffset - offset
+  if not b or (s.barMax == maxOffset and s.barValue == value) then
+    return
+  end
+  s.barMax, s.barValue = maxOffset, value
+  Wn.syncingBar = true -- the slider reports our own changes as moves too
+  try(b, "SetMinMaxValues", 0, maxOffset)
+  try(b, "SetValue", value)
+  Wn.syncingBar = false
+end
+
+-- The knob dragged or the track clicked.
+function Wn.BarMoved(i, value)
+  if Wn.syncingBar then
+    return
+  end
+  guarded(function()
+    local s = st(i)
+    local maxOffset = math.max(0, #Wn.Rows(i) - Wn.VisibleCount(i))
+    local offset = maxOffset - math.floor((tonumber(value) or maxOffset) + 0.5)
+    offset = math.max(0, math.min(maxOffset, offset))
+    s.barValue = maxOffset - offset
+    if offset ~= s.offset then
+      s.offset = offset
+      Wn.Draw(i)
+    end
+  end)
+end
+
+-- The bar fills the window's height between its two arrows.
+function Wn.LayoutBar(i)
+  local s = st(i)
+  if bar(i) and s.h then
+    try(bar(i), "SetHeight", math.max(1, s.h - 2 * (Wn.PAD + Wn.BAR_ARROW)))
+  end
+end
+
+-- The game's own scroll bar and arrows have no documented names. They are found once among the
+-- chat window's named children (/cchat probe lists them), and while hidden their Show does nothing,
+-- because the game shows them again on its own.
+Wn.NATIVE_BAR_WORDS = { "scrollbar", "slider", "upbutton", "downbutton", "scrollup", "scrolldown" }
+Wn.nativeHidden = {} -- frame -> what to put back
+Wn.nativeBarHidden = {} -- window -> true while its game scroll bar is hidden
+
+local function childOf(obj, parent)
+  for _ = 1, 4 do
+    if not has(obj, "GetParent") then
+      return false
+    end
+    local ok, up = pcall(obj.GetParent, obj)
+    if not ok or up == nil then
+      return false
+    end
+    if up == parent then
+      return true
+    end
+    obj = up
+  end
+  return false
+end
+
+function Wn.FindNativeBars()
+  local found = {}
+  for i = 1, Wn.WINDOWS do
+    found[i] = {}
+  end
+  for name, obj in pairs(_G) do
+    if type(name) == "string" and type(obj) == "table" then
+      local n, rest = string.match(name, "^ChatFrame(%d+)(%a[%w_]*)$")
+      n = tonumber(n)
+      if n and found[n] and C.Chat(n) then
+        rest = string.lower(rest)
+        for _, word in ipairs(Wn.NATIVE_BAR_WORDS) do
+          if string.find(rest, word, 1, true) then
+            if childOf(obj, C.Chat(n)) then
+              found[n][#found[n] + 1] = name
+            end
+            break
+          end
+        end
+      end
+    end
+  end
+  for i = 1, Wn.WINDOWS do
+    table.sort(found[i])
+  end
+  Wn.nativeBars = found
+  return found
+end
+
+local function noShow() end
+
+function Wn.HideNativeBar(i, hide)
+  local bars = (Wn.nativeBars or Wn.FindNativeBars())[i] or {}
+  for _, name in ipairs(bars) do
+    local f = _G[name]
+    if type(f) == "table" then
+      local saved = Wn.nativeHidden[f]
+      if hide and not saved then
+        Wn.nativeHidden[f] = { show = rawget(f, "Show") or false, shown = has(f, "IsVisible") and f:IsVisible() and true or false }
+        f.Show = noShow
+        try(f, "Hide")
+      elseif not hide and saved then
+        Wn.nativeHidden[f] = nil
+        f.Show = saved.show or nil
+        if saved.shown then
+          try(f, "Show")
+        end
+      end
+    end
+  end
 end
 
 ---------------------------------------------------------------------------
@@ -625,6 +806,7 @@ local function follow()
           local widthChanged = w ~= s.w
           s.w, s.h = w, h
           try(o, "SetSize", w, h)
+          Wn.LayoutBar(i)
           if widthChanged then
             Wn.rows[i] = nil
           end
@@ -640,20 +822,35 @@ local function follow()
           Wn.HideCopy()
         end
       end
+      local owned = Wn.Owns(i) and true or false
+      if (Wn.nativeBarHidden[i] or false) ~= owned then
+        Wn.nativeBarHidden[i] = owned
+        Wn.HideNativeBar(i, owned)
+      end
     end
   end
 end
 
 Wn.followWait = 0
+-- New lines are drawn at most this often: a burst of lines (or busy chat in a fight) is drawn
+-- once per tenth of a second instead of every frame. Scrolling and selecting draw at once.
+Wn.DRAW_EVERY = 0.1
+Wn.drawWait = 0
 
 function Wn.Update(elapsed)
   if Wn.broken or not C.active then
     return
   end
+  elapsed = elapsed or 0
   if Wn.painting then
-    guarded(Wn.PaintUpdate, elapsed)
+    guarded(Wn.PaintUpdate, elapsed) -- you are dragging a selection: every frame
   end
-  Wn.followWait = Wn.followWait - (elapsed or 0)
+  Wn.drawWait = Wn.drawWait - elapsed
+  if Wn.drawWait <= 0 and next(Wn.dirty) then
+    Wn.drawWait = Wn.DRAW_EVERY
+    guarded(Wn.DrawDirty)
+  end
+  Wn.followWait = Wn.followWait - elapsed
   if Wn.followWait <= 0 then
     Wn.followWait = Wn.FOLLOW_EVERY
     guarded(follow)
@@ -1030,12 +1227,27 @@ local function nameOf(link)
   return link and string.match(link, "^player:([^:]+)")
 end
 
--- Modified player clicks insert the name into an open chat box, or inquire when closed.
--- Shift-clicking an item still inserts the complete encoded link into chat.
+-- Another kit addon can take a Ctrl/Shift-clicked name first: Ultimate Mail Mod puts it in To
+-- while the mail window is open. CherrysKit_NameTakers maps an addon to a function(name) that
+-- returns true when it used the name.
+function Wn.GiveName(name)
+  if type(CherrysKit_NameTakers) ~= "table" then return false end
+  for _, take in pairs(CherrysKit_NameTakers) do
+    if type(take) == "function" then
+      local ok, used = pcall(take, name)
+      if ok and used then return true end
+    end
+  end
+  return false
+end
+
+-- Modified player clicks go to an addon that takes names, else insert the name into an open chat
+-- box, or inquire when closed. Shift-clicking an item still inserts the complete encoded link into chat.
 function Wn.LinkLeftClick(i, span, key)
   local name = nameOf(span.link)
   local ctrl = type(IsCtrlKeyDown) == "function" and IsCtrlKeyDown()
   if name and (ctrl or shiftDown()) then
+    if Wn.GiveName(name) then return end
     local box = Wn.ChatBox()
     local visible, isOpen = try(box, "IsVisible")
     if visible and isOpen and isOpen ~= 0 then
@@ -1143,6 +1355,49 @@ end
 -- Menu entries, in order; the ones that need a player name are left out when there is none.
 Wn.MENU = { "copy", "copyname", "whisper", "friend", "ignore", "cancel" }
 Wn.MENU_BUTTON_H = 26
+Wn.MENU_W = 212
+Wn.MENU_GAP = 4
+
+local function positive(fn, ...)
+  if type(fn) ~= "function" then
+    return nil
+  end
+  local ok, n = pcall(fn, ...)
+  return (ok and type(n) == "number" and n > 0 and n < math.huge) and n or nil
+end
+
+-- The screen in UI units: GetScreenWidth/Height are pixels, UIParent's size is UI units.
+local function screenSize()
+  local w, h = positive(GetScreenWidth), positive(GetScreenHeight)
+  if w and h then
+    return w / scale(), h / scale()
+  end
+  return positive(UIParent and UIParent.GetWidth, UIParent), positive(UIParent and UIParent.GetHeight, UIParent)
+end
+
+-- Where the menu opens, in UI units from the screen's top left: just right of the window's scroll
+-- bar, centred on the window's height. At the mouse it hung below the screen under a low chat
+-- window (players asked, 2026-10-30). Without room on the right it opens left of the window, and
+-- it always stays on the screen.
+function Wn.MenuSpot(i, w, h)
+  local o, s = overlay(i), st(i)
+  -- The menu only opens over a row, and finding that row already needed the window's position.
+  local left, top = o:GetLeft() / scale(), o:GetTop() / scale()
+  local width = s.w or positive(o.GetWidth, o) or 0
+  local height = s.h or positive(o.GetHeight, o) or 0
+  local x, y = left + width + Wn.MENU_GAP, top + (height - h) / 2
+  local screenW, screenH = screenSize()
+  if screenW and x + w > screenW then
+    x = left - Wn.MENU_GAP - w
+    if x < 0 then
+      x = screenW - w
+    end
+  end
+  if screenH then
+    y = math.min(y, screenH - h)
+  end
+  return math.max(0, x), math.max(0, y)
+end
 
 function Wn.OpenMenu(i)
   local s = st(i)
@@ -1183,11 +1438,12 @@ function Wn.OpenMenu(i)
       b:Hide()
     end
   end
-  local cx, cy = GetCursorPos()
   local menu = CherrysChat_Menu
-  try(menu, "SetSize", 212, 12 + shown * Wn.MENU_BUTTON_H)
+  local h = 12 + shown * Wn.MENU_BUTTON_H
+  local x, y = Wn.MenuSpot(i, Wn.MENU_W, h)
+  try(menu, "SetSize", Wn.MENU_W, h)
   try(menu, "ClearAllAnchors")
-  try(menu, "SetAnchor", "TOPLEFT", "TOPLEFT", UIParent, cx / scale() + 4, cy / scale() + 4)
+  try(menu, "SetAnchor", "TOPLEFT", "TOPLEFT", UIParent, x, y)
   menu:Show()
 end
 
@@ -1350,6 +1606,11 @@ function Wn.HideAll()
     if o then
       o:Hide()
     end
+    -- the game's chat gets its own scroll bar back
+    if Wn.nativeBarHidden[i] then
+      Wn.nativeBarHidden[i] = false
+      pcall(Wn.HideNativeBar, i, false)
+    end
   end
   Wn.HideCopy()
   Wn.HideMenu()
@@ -1368,6 +1629,7 @@ function Wn.Apply()
         try(hi(i, k), "SetColor", 0.25, 0.45, 1)
         try(hi(i, k), "SetAlpha", 0.45)
       end
+      try(bar(i), "SetValueStepMode", "INT")
     end
   end
   Wn.press, Wn.painting, Wn.edgeWait = nil, false, nil

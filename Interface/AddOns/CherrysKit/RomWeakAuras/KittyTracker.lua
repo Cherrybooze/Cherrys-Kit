@@ -213,8 +213,11 @@ function KT.NameMatches(trigger)
   return string.lower(want) == string.lower(playerName() or "")
 end
 
-Triggers.evaluators.kitty = function(trigger)
-  local state = { show = false, progressType = "static", value = 1, total = 1, name = trigger.kitty or "" }
+Triggers.evaluators.kitty = function(trigger, now, env, into)
+  -- an engine poll refills last poll's state and its two lists (Triggers.Fresh)
+  local icons, names = into and into.kittyIcons, into and into.kittyNames
+  local state = Triggers.Fresh(into)
+  state.show, state.progressType, state.value, state.total, state.name = false, "static", 1, 1, trigger.kitty or ""
   local kittyName=trigger.kitty or ""
   local candidates
   if not KT.NameMatches(trigger) then
@@ -248,7 +251,9 @@ Triggers.evaluators.kitty = function(trigger)
     if reason=="nokitty" or reason=="off" or reason and string.find(reason,"^error:") then state.available=false end
   else picks,reason=P.next(kittyName,KT.PICKS) end
   state.reason = reason
-  local icons, names = {}, {}
+  icons, names = icons or {}, names or {}
+  for i = #icons, 1, -1 do icons[i] = nil end
+  for i = #names, 1, -1 do names[i] = nil end
   for i, pick in ipairs(picks or {}) do
     if pick.type == "break" or pick.type == "debug" then
       break
