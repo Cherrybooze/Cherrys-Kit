@@ -10,9 +10,9 @@ Cherry's Chat 0.11.0. The simulated client checks what goes out on each channel;
 
 | # | Do this | Expected |
 | --- | --- | --- |
-| CB1 | With Say bubbles on **Text (:fire:)** (default), type `hi :fire` in Say. | The bubble shows `hi :fire`; your Cherry's Chat window shows the fire picture. |
-| CB2 | Paste a real emoji (Windows key + .) into a Say line. | The bubble shows `:code:` for it, not two boxes. |
-| CB3 | Click **Say bubbles** until it reads **Symbols (^_^)**, then say `:heart: :star: :smile:`. | The bubble shows ♥ ★ (^_^). Report any symbol that shows as a box. |
+| CB1 | With Say bubbles on **Symbols (^_^)** (default), say `:heart: :star: :smile: :carrot:`. | The bubble shows ♥ ★ (^_^) :carrot:. Report any symbol that shows as a box. |
+| CB2 | Paste a real emoji with no symbol (Windows key + ., e.g. a carrot) into a Say line. | The bubble shows `:carrot:`, not two boxes. |
+| CB3 | Click **Say bubbles** until it reads **Text (:fire:)**, then say `hi :fire`. | The bubble shows `hi :fire`; your Cherry's Chat window shows the fire picture. |
 | CB4 | With ":heart: when sending" on, say `:fire` in Party. | Party chat gets the real emoji, as before (no bubble there). |
 | CB5 | Click **Say bubbles** until **Emoji (boxes)** and say `:fire`. | Sends as before (boxes in the bubble if ":heart: when sending" is on). |
 

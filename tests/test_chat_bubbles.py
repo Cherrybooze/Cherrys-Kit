@@ -39,17 +39,36 @@ class ChatBubbleTests(unittest.TestCase):
         sent = self.lua.globals().sent
         return sent[len(sent)].msg
 
-    def test_say_sends_emoji_as_codes_by_default(self):
-        self.assertEqual(self.db.sayEmoji, "code")
+    def test_say_uses_symbols_by_default(self):
+        self.assertEqual(self.db.sayEmoji, "symbols")
+        self.assertEqual(self.send(f"love {HEART} :carrot:", "SAY"), "love \u2665 :carrot:")
+
+    def test_every_emoji_without_a_symbol_goes_out_as_text(self):
+        bad = self.lua.eval("""function()
+          local bad = {}
+          for _, e in ipairs(CherrysChat_EmojiList) do
+            local out = CherrysChat.BubbleText("x" .. e[2] .. "x", "symbols")
+            local sym = CherrysChat_Symbols[e[1]]
+            local want = "x" .. (sym and sym[1] or ":" .. e[1] .. ":") .. "x"
+            if out ~= want or string.find(out, "[\\240-\\244]") then table.insert(bad, e[1]) end
+          end
+          return table.concat(bad, " ")
+        end""")()
+        self.assertEqual(bad, "")
+
+    def test_code_mode_sends_every_emoji_as_text(self):
+        self.db.sayEmoji = "code"
         self.assertEqual(self.send(f"hot {FIRE} stuff", "SAY"), "hot :fire: stuff")
         self.assertEqual(self.send(f"{THUMBS_TONE}!", "SAY"), ":thumbsup:!")
 
     def test_say_keeps_typed_codes_even_when_send_shortcodes_is_on(self):
         self.db.sendShortcodes = True
+        self.db.sayEmoji = "code"
         self.assertEqual(self.send("so :fire: here", "SAY"), "so :fire: here")
         self.assertEqual(self.send("so :fire: here", "PARTY"), f"so {FIRE} here")
 
     def test_other_channels_are_unchanged(self):
+        self.db.sendShortcodes = False
         self.assertEqual(self.send(f"guild {FIRE}", "GUILD"), f"guild {FIRE}")
         self.assertEqual(self.send(f"yell {FIRE}", "YELL"), f"yell {FIRE}")
 
@@ -71,7 +90,7 @@ class ChatBubbleTests(unittest.TestCase):
         for _ in range(3):
             self.lua.execute('CherrysChat.Settings("bubble")')
             modes.append(self.db.sayEmoji)
-        self.assertEqual(modes, ["symbols", "emoji", "code"])
+        self.assertEqual(modes, ["code", "emoji", "symbols"])
 
 
 if __name__ == "__main__":

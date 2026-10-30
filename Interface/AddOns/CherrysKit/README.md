@@ -8,7 +8,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Kit 0.11.102 playtest
 
-- **Cherry's Chat 0.11.0**: emoji in Say go out as `:fire:` text or game-font symbols, so the bubble over your head shows them instead of empty boxes (Say bubbles setting in `/cchat`).
+- **Cherry's Chat 0.11.0**: emoji in Say go out as game-font symbols, or as text like `:carrot:` when there is none, so the bubble over your head shows them instead of empty boxes (Say bubbles setting in `/cchat`).
 
 ## Kit 0.11.101 playtest
 
