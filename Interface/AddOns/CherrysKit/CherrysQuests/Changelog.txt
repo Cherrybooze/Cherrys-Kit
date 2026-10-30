@@ -1,0 +1,7 @@
+Cherry's Quests
+
+1.0.0 (2026-10-30)
+- First version for Cherry's Kit: a quest tracker with font, outline, size, scale, width,
+  background, sort and progress-bar options (/cq). Ctrl+click a quest cycles through the NPCs
+  its texts name and puts the one picked in the game's NPC tracking list; the pick is kept per
+  character and quest. Replaces the game's and pbInfo's trackers while shown.

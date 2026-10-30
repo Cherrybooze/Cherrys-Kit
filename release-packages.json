@@ -1,8 +1,8 @@
 {
-  "kit_version": "0.11.85",
-  "hub_version": "0.4.20",
-  "release_summary": "A playtest with fixes from the 0.11.84 review. KittyCombo 1.7.15: the mode pictures open while the mode button is hidden (its default), two Change kitty mode rows can no longer flip the mode on every key press, saving warns about mode rows that would take turns, and /kc window tries the older ready window. rom weakauras 0.9.27 does less work on every frame (text formatting, screen-size checks and target health); clickthrough, on by default since 0.9.25, hides aura tooltips until it is unticked. Ultimate Mail Mod 7.0.1-ck8 keeps the To field focused when you click an item in Mass Send, shows the drag help only until your first box, and checks its layout twice a second instead of every frame. Everything from the 0.11.84 playtest is included: Kitty's picture mode picker and Change kitty mode action, RWA clickthrough, scaling, grips, target HP and native transport casts, UMM drag-box selection, shared recipients, gold buttons and History, zBag's split fix and smaller slot numbers, and AAH's private item tooltip. Overhead emoji pictures remain unimplemented because the client has no hook for them.",
-  "runtime_validation": "Lua 5.1 simulated-client suite: 631 tests; 586 passed, 26 retired-editor tests skipped and 19 PowerShell-only tests skipped because the build host had no PowerShell (CI runs them). 14 new regressions cover the top-level mode picker, the mode-switch hold in play and in prediction, the save warning for mode rows that take turns, the editor picker closing on scroll, /kc window, identical display text with near-zero garbage, target facts read once per target, Mass Send focus and help text, and the twice-a-second mail layout check. Whether the mode picker really shows with the button hidden, where keyboard focus goes, and the real client's per-frame cost still need the in-game checks in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
+  "kit_version": "0.11.86",
+  "hub_version": "0.4.21",
+  "release_summary": "A playtest that adds Cherry's Quests 1.0.0 (/cq), a quest tracker with font, outline, size, scale, width, background, sort and progress-bar options. Ctrl+click a quest to cycle through the NPCs its texts name and put the one picked in the game's NPC tracking list, the list the world map's NPC search fills; the pick is remembered per character and quest. It replaces the game's and pbInfo's trackers while shown and redraws only after quest events, with a fallback check every 10 seconds. Hub 0.4.21 lists it. Everything from the 0.11.85 playtest is included unchanged.",
+  "runtime_validation": "Lua 5.1 simulated-client suite: Cherry's Quests adds 15 regressions covering drawing and sorting, row stacking, Ctrl+click order (links, bracketed ids, exact name search, turn-in NPC) and wrap-around, remembered picks across Reload UI, fixed tracking slots and the SetTarget fallback, folding, event-delayed redraws, no quest reads or allocation on idle frames, no double wrapping after Reload UI, fonts and the hub off switch. The NPC tracking calls, the format of quest texts, font restoring, text heights and hiding the other trackers have not been seen in the real client; the in-game checks are in docs/TESTING.md. Unchanged addon packages keep their versions and byte-identical files.",
   "addons": [
     {
       "folder": "KittyCombo",
@@ -117,6 +117,15 @@
       "command": "/grid",
       "description_file": "15-cherrys-grid.md",
       "summary": "Party and raid frames, with KittyCombo actions on click."
+    },
+    {
+      "folder": "CherrysQuests",
+      "title": "Cherry's Quests",
+      "version": "1.0.0",
+      "command": "/cq",
+      "description_file": "16-cherrys-quests.md",
+      "summary": "A prettier quest tracker; Ctrl+click a quest to track the NPCs it names.",
+      "minimum_hub_version": "0.4.21"
     }
   ]
 }

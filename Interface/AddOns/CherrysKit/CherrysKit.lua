@@ -8,7 +8,7 @@
 CherrysKit = CherrysKit or {}
 local Kit = CherrysKit
 
-Kit.version = "0.4.20"
+Kit.version = "0.4.21"
 Kit.MAX_ROWS = 16
 
 if SaveVariables then
@@ -120,6 +120,7 @@ Kit.FINGERPRINTS = {
   pbInfo = "pbInfo",
   PortraitHP = "PortraitHP",
   CherrysGrid = "-gciraid",
+  CherrysQuests = "CherrysQuests",
 }
 Kit.oldCopies = {} -- folder -> "before" (found while loading)
 Kit.warnedOld = nil -- warn again after Reload UI
@@ -500,8 +501,8 @@ end
 -- typed alone it opens the chosen window, with extra words it goes to its owner as before.
 ---------------------------------------------------------------------------
 
-Kit.DEFAULT_COMMANDS = { KittyCombo = "/kc /kitty", RomWeakAuras = "/wa", CherrysChat = "/cchat", zBag = "/zb", ExtendedMacroIcons = "/emi", TooltipIds = "/ti", UltimateMailMod = "/umm", GlobalBank = "/gb", AdvancedAuctionHouse = "/aah", CherrysLoadTimes = "/ckload", ZShop = "/zshop", pbInfo = "/pbinfo", PortraitHP = "/php", CherrysGrid = "/grid", ControlHub = "/rwa /ck" }
-Kit.WINDOWS = { "KittyCombo", "RomWeakAuras", "CherrysChat", "zBag", "ExtendedMacroIcons", "TooltipIds", "UltimateMailMod", "GlobalBank", "AdvancedAuctionHouse", "CherrysLoadTimes", "ZShop", "pbInfo", "PortraitHP", "CherrysGrid", "ControlHub" }
+Kit.DEFAULT_COMMANDS = { KittyCombo = "/kc /kitty", RomWeakAuras = "/wa", CherrysChat = "/cchat", zBag = "/zb", ExtendedMacroIcons = "/emi", TooltipIds = "/ti", UltimateMailMod = "/umm", GlobalBank = "/gb", AdvancedAuctionHouse = "/aah", CherrysLoadTimes = "/ckload", ZShop = "/zshop", pbInfo = "/pbinfo", PortraitHP = "/php", CherrysGrid = "/grid", CherrysQuests = "/cq", ControlHub = "/rwa /ck" }
+Kit.WINDOWS = { "KittyCombo", "RomWeakAuras", "CherrysChat", "zBag", "ExtendedMacroIcons", "TooltipIds", "UltimateMailMod", "GlobalBank", "AdvancedAuctionHouse", "CherrysLoadTimes", "ZShop", "pbInfo", "PortraitHP", "CherrysGrid", "CherrysQuests", "ControlHub" }
 Kit.WINDOW_TITLES = {
   KittyCombo = "Cherry's KittyCombo",
   RomWeakAuras = "rom weakauras",
@@ -517,6 +518,7 @@ Kit.WINDOW_TITLES = {
   pbInfo = "pbInfo",
   PortraitHP = "PortraitHP",
   CherrysGrid = "Cherry's Grid",
+  CherrysQuests = "Cherry's Quests",
   ControlHub = "Control hub",
 }
 

@@ -1,8 +1,25 @@
-# In-game checks for kit 0.11.85
+# In-game checks for kit 0.11.86
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.27 requires hub 0.4.14 or later; UMM 7.0.1-ck8 requires **0.4.17** for its History files. The Full ZIP includes hub **0.4.20**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.27 requires hub 0.4.14 or later; UMM 7.0.1-ck8 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**. The Full ZIP includes hub **0.4.21**.
+
+## 0.11.86 Cherry's Quests
+
+Cherry's Quests is new, and none of it has run in the real client yet. Track three or four quests first, at least one whose text names NPCs.
+
+| ID | Steps | Expected result |
+| --- | --- | --- |
+| Q1 | Reload UI. Run `/cq probe`. | The tracker shows at the top right. The probe lists missing functions (ideally none) and the size of the NPC tracking list. The game's own tracker and pbInfo's tracker are hidden. |
+| Q2 | Track a new quest, kill a quest mob or loot a quest item. | The tracker updates within a second. The count fades from red towards green and the bar under the quest grows. |
+| Q3 | Ctrl+click a quest that names NPCs, several times. Then Ctrl+right-click and Alt+click. Open the world map (Backspace) NPC tracking list. | Each Ctrl+click names the next NPC in chat and puts it in the tracking list, and the map or minimap points to it. Ctrl+right-click goes back. Alt+click tracks the same NPC again. The NPC shows under the quest in pink. |
+| Q4 | Reload UI, then Ctrl+click the same quest. | The pink NPC line survived the reload, and the click moves on to the next NPC. |
+| Q5 | Run `/cq npcs` and `/cq text 1`. | `/cq npcs` lists the NPCs per quest. If a quest's NPCs are missing, send the `/cq text` output: it shows how the client writes names. |
+| Q6 | In `/cq` set Tracking list slot to 2, Ctrl+click a quest, then set it back to Game. | With slot 2 the NPC replaces the second entry of the tracking list. |
+| Q7 | In `/cq` change the font (with rom weakauras installed), outline, sizes, scale, width and background. Then go back to Game font. | Every change shows at once. Long quest names and objectives wrap without overlapping the next quest. Note whether the game font comes back without Reload UI. |
+| Q8 | Drag the title bar, lock it, Reload UI. Click the quest button next to the minimap twice. | The position is kept, a locked tracker cannot be dragged, and the button hides and shows the tracker. |
+| Q9 | Click, right-click and Shift+click a quest. | A click folds it, right-click opens it in the quest book, Shift+click puts its link in chat. |
+| Q10 | Run `/ckload` after playing for a while, in and out of combat. | Cherry's Quests' memory stays small and does not keep growing. |
 
 ## 0.11.85 review fixes
 

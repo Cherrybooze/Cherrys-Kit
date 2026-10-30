@@ -187,7 +187,7 @@ def build(output: Path) -> None:
         if addon and addon.get("minimum_hub_version"):
             result["minimum_hub_version"] = addon["minimum_hub_version"]
         packages.append(result)
-    require(len(packages) == 16, "Expected a full kit, a hub, and fourteen addon ZIPs.")
+    require(len(packages) == 17, "Expected a full kit, a hub, and fifteen addon ZIPs.")
     # The optional browser extension is separate: including it in Global Bank
     # would change the bytes of that unchanged addon's published archive.
     extension_root = ROOT / "extras" / "GlobalBankDailyRewards"

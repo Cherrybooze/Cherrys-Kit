@@ -33,6 +33,7 @@ Each one is its own download and needs Cherry's Kit:
 - **pbInfo**: richer tooltips, quest tracker, chat filters and cast bar options (`/pbinfo`)
 - **PortraitHP**: target health percent on its portrait (`/php`)
 - **Cherry's Grid**: party and raid frames that run kitties on click (`/grid`)
+- **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
 - **Cherry's Addon LoadTimes**: how long each addon takes to load (`/ckload`)
 
 ## Chat commands

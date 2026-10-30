@@ -71,7 +71,7 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.20 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.21 |
 | [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.15 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.27 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.10.9 |
@@ -86,6 +86,7 @@ The current hub includes **Addon LoadTimes**, because the shared loader uses its
 | [pbInfo](Interface/AddOns/CherrysKit/pbInfo/README.md) | Richer tooltips, quest tracking, chat filters and cast-bar options. | `/pbinfo` | 0.60-ck4 |
 | [PortraitHP](Interface/AddOns/CherrysKit/PortraitHP/README.md) | Your target's health percentage on its portrait. | `/php` | 2019.07.14-ck2 |
 | [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click. | `/grid` | 1.1.3 |
+| [Cherry's Quests](Interface/AddOns/CherrysKit/CherrysQuests/README.md) | A prettier quest tracker; Ctrl+click a quest to track the NPCs it names. | `/cq` | 1.0.0 |
 
 Some integrations need both addons: for example, running a kitty from Grid needs KittyCombo. Each addon's README lists its requirements and current limits. Features still being tested are labelled there.
 
@@ -121,7 +122,7 @@ Python 3.10 or later is enough; there are no Python package dependencies:
 python tools/build_release.py
 ```
 
-This creates seventeen ZIPs in `dist/<kit version>/` (the full kit, hub, fourteen addons and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
+This creates eighteen ZIPs in `dist/<kit version>/` (the full kit, hub, fifteen addons and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
 
 The original 0.11.77 import preserved the supplied runtime code. Earlier READMEs referring to old tests or generators are kept as reference notes, but those development tools were not included in the handoff. Current tests simulate client APIs; native drawing, input, sound and event timing still need in-game checks.
 
