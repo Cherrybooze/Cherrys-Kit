@@ -1,6 +1,15 @@
 Cherry's Bar
 
+1.1.0
+  All of XBar's pictures are gone: six bar styles and a full icon set made by Cherry, drawn as seamless
+  tiles, plus plain Slate. Moving displays is now clear: a map of both bars in /cbar where displays
+  can be dragged or moved with buttons, dragging on the bars themselves while unlocked, and a tick
+  list on right-clicking a bar. New displays: Currencies, Durability, Daily quests and Volume, split
+  out of Money, Damage and Class or following Titan Panel's ideas. New figures: gold and XP per hour,
+  time to level, free bag slots, addon memory, map position. Auto-hide per bar, and a bar height
+  setting. Settings from 1.0.0 start again from the defaults.
+
 1.0.0
   First version, forked from XBar III 1.72 for Cherry's Kit. Top bar, bottom bar or both, top only by
-  default. Fourteen displays set per bar and side, with right-click options. Six bar styles. Reads
-  only on events or slow timers, and redraws only when a text changes.
+  default. Displays set per bar and side, with right-click options. Reads only on events or slow
+  timers, and redraws only when a text changes.

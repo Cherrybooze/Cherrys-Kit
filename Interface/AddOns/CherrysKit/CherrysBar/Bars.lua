@@ -1,93 +1,286 @@
--- Cherry's Bar: the two bars, and moving the game's frames out from under them.
+-- Cherry's Bar: the two bars, auto-hide, and moving the game's frames out from under the bars.
 
 local G = CherrysBar
 local B = {}
 G.Bars = B
 
--- height: the space the bar takes; art: the height its pictures are drawn at. Slate is this
--- addon's own (tools/gen_cherrysbar_art.py); the rest are XBar III's.
-B.SKINS = {
-  { key = "Slate", height = 24, art = 24 },
-  { key = "Black", height = 32, art = 32 },
-  { key = "Gloss", height = 32, art = 32 },
-  { key = "Blockz", height = 32, art = 32 },
-  { key = "AdPanel", height = 32, art = 32 },
-  { key = "Tribal", height = 26, art = 32 },
-}
+-- Cherry's art (design/cherrys-bar), cut by tools/gen_cherrysbar_art.py; Slate is a plain gradient.
+B.SKINS = { "Stone", "Steel", "Frost", "Walnut", "Moss", "Amethyst", "Slate" }
+B.TILES = 16        -- tile textures per bar, declared in CherrysBar.xml
+B.ART_RATIO = 32 / 28 -- a tile's picture is 32 rows, of which 28 are the bar and 4 its shadow
+B.HIDE_DELAY = 1    -- seconds an auto-hide bar stays after the mouse leaves
 
-local function skinOf(key)
-  for _, skin in ipairs(B.SKINS) do
-    if skin.key == key then
-      return skin
-    end
-  end
-  return B.SKINS[1]
-end
+local revealed = {} -- auto-hide bars on screen just now
+local hideIn = {}   -- bar name -> seconds left before it tucks away
 
 function B.Frame(name)
   return name == "bottom" and CBar_BarBottom or CBar_BarTop
+end
+
+local function partName(kind, name)
+  return "CBar_" .. kind .. (name == "bottom" and "Bottom" or "Top")
 end
 
 function B.IsShown(name)
   return G.S().bars[name].show and true or false
 end
 
-function B.Height(name)
-  return skinOf(G.S().bars[name].skin).height
-end
-
-local function setPart(frameName, part, file, width, height)
-  local tex = _G[frameName .. part]
-  if tex then
-    G.Try(tex, "SetTexture", file)
-    if width then
-      G.Try(tex, "SetWidth", width)
-    end
-    G.Try(tex, "SetHeight", height)
-  end
-end
-
-function B.Apply(name)
-  local frame = B.Frame(name)
-  if not frame then
-    return
-  end
+-- On screen now: an auto-hide bar counts only while it is out.
+function B.IsVisible(name)
   local cfg = G.S().bars[name]
-  if not cfg.show then
-    frame:Hide()
-    return
-  end
-  local skin = skinOf(cfg.skin)
-  local bottom = name == "bottom"
+  return cfg.show and (not cfg.autoHide or revealed[name]) and true or false
+end
+
+function B.Height()
+  return tonumber(G.S().barHeight) or 26
+end
+
+function B.SkinFile(name)
+  local skin = G.S().bars[name].skin
+  return G.MEDIA .. "Skins/" .. skin .. (name == "bottom" and "/bottom" or "/top")
+end
+
+local function placeAlongEdge(frame, name, height)
   frame:ClearAllAnchors()
-  if bottom then
+  if name == "bottom" then
     frame:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", "UIParent", 0, 0)
     frame:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", "UIParent", 0, 0)
   else
     frame:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", 0, 0)
     frame:SetAnchor("TOPRIGHT", "TOPRIGHT", "UIParent", 0, 0)
   end
-  G.Try(frame, "SetHeight", skin.height)
+  G.Try(frame, "SetHeight", height)
+end
+
+function B.Apply(name)
+  local frame = B.Frame(name)
+  local edge = _G[partName("Edge", name)]
+  if not frame then
+    return
+  end
+  local cfg = G.S().bars[name]
+  if not cfg.show then
+    frame:Hide()
+    if edge then
+      edge:Hide()
+    end
+    return
+  end
+  local height = B.Height()
+  placeAlongEdge(frame, name, height)
   G.Try(frame, "SetAlpha", tonumber(cfg.alpha) or 1)
-  local frameName = bottom and "CBar_BarBottom" or "CBar_BarTop"
-  local dir = G.MEDIA .. "Skins/" .. skin.key .. (bottom and "/barU_bgnd" or "/bar_bgnd")
-  setPart(frameName, "L", dir .. "L", 64, skin.art)
-  setPart(frameName, "M", dir .. "M", nil, skin.art)
-  setPart(frameName, "R", dir .. "R", 64, skin.art)
-  frame:Show()
+  local file = B.SkinFile(name)
+  local art = math.floor(height * B.ART_RATIO + 0.5)
+  local frameName = partName("Bar", name)
+  for i = 1, B.TILES do
+    local tile = _G[frameName .. "T" .. i]
+    if tile then
+      G.Try(tile, "SetTexture", file)
+      G.Try(tile, "SetHeight", art)
+    end
+  end
+  if edge then
+    if cfg.autoHide then
+      placeAlongEdge(edge, name, 3)
+      edge:Show()
+    else
+      edge:Hide()
+    end
+  end
+  if B.IsVisible(name) then
+    frame:Show()
+  else
+    frame:Hide()
+  end
 end
 
 function B.ApplyAll()
-  B.Apply("top")
-  B.Apply("bottom")
+  for _, name in ipairs(G.BAR_NAMES) do
+    if not G.S().bars[name].autoHide then
+      revealed[name], hideIn[name] = nil, nil
+    end
+    B.Apply(name)
+  end
   B.MakeRoom()
   B.ApplyHidden()
 end
 
 ---------------------------------------------------------------------------
+-- The pin and lock at the bar's right end, shown while displays can be dragged
+---------------------------------------------------------------------------
+
+B.HANDLE_SPACE = 44 -- room Displays.Layout leaves for them
+
+function B.ApplyHandles()
+  local S = G.S()
+  for _, name in ipairs(G.BAR_NAMES) do
+    local on = not S.locked and B.IsVisible(name)
+    local pin, lock = _G[partName("Pin", name)], _G[partName("Lock", name)]
+    local bar = partName("Bar", name)
+    if lock and pin then
+      if on then
+        lock:ClearAllAnchors()
+        lock:SetAnchor("RIGHT", "RIGHT", bar, -4, 0)
+        pin:ClearAllAnchors()
+        pin:SetAnchor("RIGHT", "RIGHT", bar, -24, 0)
+        G.Try(_G[partName("Pin", name) .. "Icon"], "SetTexture", G.Icon(S.bars[name].autoHide and "pin_out" or "pin"))
+        pin:Show()
+        lock:Show()
+      else
+        pin:Hide()
+        lock:Hide()
+      end
+    end
+  end
+end
+
+function B.HandleEnter(name, which, frame)
+  B.Hover(name, true)
+  if GameTooltip then
+    GameTooltip:SetOwner(frame, "ANCHOR_" .. (name == "bottom" and "TOPLEFT" or "BOTTOMLEFT"), 0, 0)
+    if which == "lock" then
+      GameTooltip:SetText("Lock the displays in place", 1, 1, 1)
+    else
+      GameTooltip:SetText(G.S().bars[name].autoHide and "Auto-hide is on: click to keep this bar showing"
+        or "Click to auto-hide this bar", 1, 1, 1)
+    end
+    G.Try(GameTooltip, "Show")
+  end
+end
+
+function B.HandleLeave(name)
+  B.Hover(name, false)
+  if GameTooltip then
+    GameTooltip:Hide()
+  end
+end
+
+function B.PinClick(name)
+  B.SetAutoHide(name, not G.S().bars[name].autoHide)
+end
+
+function B.SetAutoHide(name, on)
+  local cfg = G.S().bars[name]
+  cfg.autoHide = on and true or false
+  -- Turned on under the mouse: stays out until the mouse leaves.
+  revealed[name] = on and true or nil
+  hideIn[name] = on and B.HIDE_DELAY or nil
+  G.Refresh()
+  G.Options.Refresh()
+end
+
+function B.SetLocked(locked)
+  G.S().locked = locked and true or false
+  G.Displays.Rebuild()
+  B.ApplyHandles()
+  G.Options.Refresh()
+  G.Print(locked and "displays are locked." or "displays are unlocked: drag them along the bars, then click the lock at the bar's right end.")
+end
+
+---------------------------------------------------------------------------
+-- Auto-hide. A thin strip at the screen's edge brings the bar out. Nothing runs while it is out but
+-- a countdown in the addon's one tick, started when the mouse leaves.
+---------------------------------------------------------------------------
+
+function B.Reveal(name)
+  local frame = B.Frame(name)
+  if not frame or not G.S().bars[name].show then
+    return
+  end
+  hideIn[name] = nil
+  if revealed[name] then
+    return
+  end
+  revealed[name] = true
+  frame:Show()
+  G.Displays.BarShown(name, true)
+  B.ApplyHandles()
+end
+
+function B.Tuck(name)
+  revealed[name], hideIn[name] = nil, nil
+  local frame = B.Frame(name)
+  if frame then
+    frame:Hide()
+  end
+  G.Displays.BarShown(name, false)
+  B.ApplyHandles()
+end
+
+function B.Hover(name, inside)
+  local cfg = G.S().bars[name]
+  if not cfg or not cfg.autoHide then
+    return
+  end
+  hideIn[name] = (not inside) and B.HIDE_DELAY or nil
+end
+
+function B.Tick(dt)
+  for name, left in pairs(hideIn) do
+    if G.Menu.IsOpen() then
+      hideIn[name] = B.HIDE_DELAY
+    else
+      left = left - dt
+      if left <= 0 then
+        B.Tuck(name)
+      else
+        hideIn[name] = left
+      end
+    end
+  end
+  if B.recheckIn then
+    B.recheckIn = B.recheckIn - dt
+    if B.recheckIn <= 0 then
+      B.recheckIn = nil
+      B.MakeRoom()
+      B.ApplyHidden()
+    end
+  end
+end
+
+---------------------------------------------------------------------------
+-- Right-click on the bar itself: which displays it holds, like Titan Panel's bar menu
+---------------------------------------------------------------------------
+
+function B.MenuRows(name)
+  local rows = { { text = (name == "bottom") and "Bottom bar" or "Top bar" } }
+  for _, def in ipairs(G.Displays.list) do
+    local cfg = G.Displays.Config(def)
+    rows[#rows + 1] = {
+      text = def.title or def.label or def.key, checked = cfg.bar == name, keepOpen = true,
+      click = function()
+        G.Displays.SetBar(def, cfg.bar == name and "off" or name)
+        G.Options.Refresh()
+        G.Menu.Replace(B.MenuRows(name))
+      end,
+    }
+  end
+  local S = G.S()
+  rows[#rows + 1] = { text = "Auto-hide", checked = S.bars[name].autoHide, keepOpen = true, click = function()
+    B.SetAutoHide(name, not S.bars[name].autoHide)
+    G.Menu.Replace(B.MenuRows(name))
+  end }
+  rows[#rows + 1] = { text = "Lock the displays", checked = S.locked, keepOpen = true, click = function()
+    B.SetLocked(not S.locked)
+    G.Menu.Replace(B.MenuRows(name))
+  end }
+  rows[#rows + 1] = { text = "All options (/cbar)", icon = G.Icon("refresh"), click = function() G.Options.Toggle() end }
+  return rows
+end
+
+function B.BarClick(name, key)
+  if key == "RBUTTON" then
+    if GameTooltip then
+      GameTooltip:Hide()
+    end
+    G.Menu.OpenAtCursor(B.MenuRows(name), name)
+  end
+end
+
+---------------------------------------------------------------------------
 -- Making room. Top frames near the edge move down by the bar's height, and back when the bar goes.
 -- A frame moved by someone else since counts from its new place. Nothing is saved: Reload UI starts
--- again from the game's own positions.
+-- again from the game's own positions. An auto-hide bar takes no room.
 ---------------------------------------------------------------------------
 
 -- Groups move together; the first frame of a group decides. Each stays where XBar III moved it.
@@ -184,11 +377,15 @@ local function moveBottom(want)
   CherrysBar_BottomMoved = want > 0 or nil
 end
 
-function B.MakeRoom()
+local function roomFor(name)
   local S = G.S()
-  local topWant = (S.makeRoom and S.bars.top.show) and B.Height("top") or 0
-  local bottomWant = (S.makeRoom and S.bars.bottom.show) and B.Height("bottom") or 0
+  local cfg = S.bars[name]
+  return (S.makeRoom and cfg.show and not cfg.autoHide) and B.Height() or 0
+end
+
+function B.MakeRoom()
   local done, failed = 0, 0
+  local topWant = roomFor("top")
   for _, group in ipairs(B.TOP_GROUPS) do
     local ok, result = pcall(moveGroup, group, topWant)
     if ok and result then
@@ -197,7 +394,7 @@ function B.MakeRoom()
       failed = failed + 1
     end
   end
-  local ok = pcall(moveBottom, bottomWant)
+  local ok = pcall(moveBottom, roomFor("bottom"))
   B.status = "top frames moved " .. done .. ", skipped " .. failed .. ", bottom " .. (ok and "ok" or "failed")
 end
 
@@ -206,17 +403,6 @@ B.RECHECK_AFTER = 3
 
 function B.ScheduleRecheck()
   B.recheckIn = B.RECHECK_AFTER
-end
-
-function B.Tick(dt)
-  if B.recheckIn then
-    B.recheckIn = B.recheckIn - dt
-    if B.recheckIn <= 0 then
-      B.recheckIn = nil
-      B.MakeRoom()
-      B.ApplyHidden()
-    end
-  end
 end
 
 ---------------------------------------------------------------------------

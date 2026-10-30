@@ -1,6 +1,6 @@
--- Cherry's Bar: the pop-up menu, used for the game's windows, people lists and each display's
--- right-click settings. A row is { icon, text, tip, click(key), checked }; click nil means a heading.
--- Longer lists scroll with the mouse wheel.
+-- Cherry's Bar: the pop-up menu, used for the game's windows, people lists, the bars' and each
+-- display's right-click settings. A row is { icon, text, tip, click(key), checked, keepOpen }; click nil
+-- means a heading. Longer lists scroll with the mouse wheel.
 
 local G = CherrysBar
 local M = {}
@@ -9,7 +9,7 @@ G.Menu = M
 M.ROWS = 24
 M.ROW_HEIGHT = 22
 M.CLOSE_DELAY = 0.5
-M.BLANK_ICON = "Interface/MainMenuFrame/MainPopupButton-Icon-InstanceRecord"
+M.WIDTH = 230
 
 local items, first = {}, 1
 local closeIn
@@ -25,15 +25,17 @@ local function draw()
     if frame then
       if item then
         local text = item.text or ""
-        if item.checked ~= nil then
-          text = (item.checked and "[x] " or "[  ] ") .. text
-        elseif not item.click then
+        if item.checked == nil and not item.click then
           text = "|cffffd100" .. text .. "|r"
         end
         row(i, "Text"):SetText(text)
         local icon = row(i, "Icon")
-        if item.icon then
-          G.Try(icon, "SetTexture", item.icon)
+        local file = item.icon
+        if item.checked ~= nil then
+          file = G.Icon(item.checked and "check_on" or "check_off")
+        end
+        if file then
+          G.Try(icon, "SetTexture", file)
           icon:Show()
         else
           icon:Hide()
@@ -56,13 +58,8 @@ function M.Open(list, owner, def)
   items, first, closeIn = list or {}, 1, nil
   draw()
   local bottom = def and G.Displays.Config(def).bar == "bottom"
-  local x = 0
-  if owner and type(owner.GetPos) == "function" then
-    local ok, px = pcall(owner.GetPos, owner)
-    x = ok and tonumber(px) or 0
-  end
-  local screen = GetScreenWidth and GetScreenWidth() or 1024
-  local dx = (x < screen / 2) and 0 or -170
+  local x = G.FramePos(owner) or 0
+  local dx = (x < G.MiddleX()) and 0 or -170
   CBar_Menu:ClearAllAnchors()
   local relName = owner and owner.GetName and owner:GetName() or "UIParent"
   if bottom then
@@ -71,6 +68,44 @@ function M.Open(list, owner, def)
     CBar_Menu:SetAnchor("TOPLEFT", "BOTTOMLEFT", relName, dx, 0)
   end
   CBar_Menu:Show()
+end
+
+-- Opens at the mouse, for a click on the empty part of a bar.
+function M.OpenAtCursor(list, barName)
+  if not CBar_Menu then
+    return
+  end
+  items, first, closeIn = list or {}, 1, nil
+  draw()
+  local x, y = 0, 0
+  if type(GetCursorPos) == "function" then
+    local ok, cx, cy = pcall(GetCursorPos)
+    if ok and tonumber(cx) and tonumber(cy) then
+      local scale = G.UIScale()
+      x, y = tonumber(cx) / scale, tonumber(cy) / scale
+    end
+  end
+  if x * G.UIScale() > G.MiddleX() then
+    x = x - M.WIDTH
+  end
+  CBar_Menu:ClearAllAnchors()
+  if barName == "bottom" then
+    CBar_Menu:SetAnchor("BOTTOMLEFT", "TOPLEFT", "UIParent", x, y - 4)
+  else
+    CBar_Menu:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", x, y + 4)
+  end
+  CBar_Menu:Show()
+end
+
+-- Redraws in place, after a row changed what the rows should say.
+function M.Replace(list)
+  items = list or {}
+  first = math.min(first, math.max(1, #items - M.ROWS + 1))
+  draw()
+end
+
+function M.IsOpen()
+  return CBar_Menu and CBar_Menu:IsVisible() and true or false
 end
 
 function M.Close()
@@ -128,8 +163,7 @@ function M.RowClick(i, key)
   if not item or not item.click then
     return
   end
-  local keepOpen = item.keepOpen
-  if not keepOpen then
+  if not item.keepOpen then
     M.Close()
   end
   local ok, err = pcall(item.click, key)
@@ -145,30 +179,27 @@ end
 function M.DisplayRows(def, frame)
   local Displays = G.Displays
   local cfg = Displays.Config(def)
-  local function changed()
-    Displays.Rebuild()
+  local function again()
     G.Options.Refresh()
-    M.OpenDisplay(def, frame)
+    M.Replace(M.DisplayRows(def, frame))
   end
   local function flip(key)
     return function()
       cfg[key] = not cfg[key]
-      changed()
+      Displays.Rebuild()
+      again()
     end
   end
   local function moveTo(bar)
     return function()
       Displays.SetBar(def, bar)
-      G.Options.Refresh()
-      if bar ~= "off" then
-        M.OpenDisplay(def, frame)
-      end
+      again()
     end
   end
-  local function shift(step)
+  local function step(by)
     return function()
-      Displays.Move(def, step)
-      G.Options.Refresh()
+      Displays.Step(def, by)
+      again()
     end
   end
   local rows = { { text = def.title or def.label or def.key } }
@@ -180,21 +211,17 @@ function M.DisplayRows(def, frame)
   rows[#rows + 1] = { text = "Show icon", checked = cfg.icon, click = flip("icon"), keepOpen = true }
   rows[#rows + 1] = { text = "Show label", checked = cfg.label, click = flip("label"), keepOpen = true }
   rows[#rows + 1] = { text = "Show colours", checked = cfg.color, click = flip("color"), keepOpen = true }
+  rows[#rows + 1] = { text = "Move left", click = step(-1), keepOpen = true }
+  rows[#rows + 1] = { text = "Move right", click = step(1), keepOpen = true }
   if cfg.bar == "top" then
     rows[#rows + 1] = { text = "Move to the bottom bar", click = moveTo("bottom"), keepOpen = true }
   else
     rows[#rows + 1] = { text = "Move to the top bar", click = moveTo("top"), keepOpen = true }
   end
-  rows[#rows + 1] = { text = cfg.side == "left" and "Move to the right side" or "Move to the left side", keepOpen = true,
-    click = function()
-      cfg.side = cfg.side == "left" and "right" or "left"
-      cfg.order = 1000 + def.slot
-      changed()
-    end }
-  rows[#rows + 1] = { text = "Move left", click = shift(-1), keepOpen = true }
-  rows[#rows + 1] = { text = "Move right", click = shift(1), keepOpen = true }
-  rows[#rows + 1] = { text = "Hide this display", click = moveTo("off") }
-  rows[#rows + 1] = { text = "All options (/cbar)", click = function() G.Options.Toggle() end }
+  rows[#rows + 1] = { text = "Hide this display", icon = G.Icon("close"), click = moveTo("off") }
+  rows[#rows + 1] = { text = G.S().locked and "Unlock to drag displays" or "Lock the displays",
+    icon = G.Icon(G.S().locked and "unlock" or "lock"), click = function() G.Bars.SetLocked(not G.S().locked) end }
+  rows[#rows + 1] = { text = "All options (/cbar)", icon = G.Icon("refresh"), click = function() G.Options.Toggle() end }
   return rows
 end
 

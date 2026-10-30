@@ -1,30 +1,36 @@
-# In-game checks for kit 0.11.91
+# In-game checks for kit 0.11.92
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.0.0 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.29 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.0 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
 
-## 0.11.91 Cherry's Bar
+## 0.11.92 Cherry's Bar
 
 Cherry's Bar is new, and none of it has run in the real client yet. Delete any old `Interface/AddOns/XBar` folder first.
 
 | ID | Steps | Expected result |
 | --- | --- | --- |
-| B1 | Reload UI. Run `/cbar probe`. | Only the top bar shows, with Menu, XP, Bag and Gold on the left and Mail, FPS and the clock on the right. The probe lists missing functions (ideally none), says how many frames it moved and gives text widths above 0. |
-| B2 | Look at the top of the screen. | The player, target, buff and party frames and the minimap sit below the bar, not under it. |
-| B3 | Run `/cbar bottom`, then `/cbar both`, then `/cbar top`. | The bars switch at once. With a bottom bar the action bar and experience bar sit above it, and they go back afterwards. The top frames return to the edge when the top bar is off. |
-| B4 | Open `/cbar`. Send a hidden display to the Bottom bar with its first button, then click Top. Use Left/Right, `<` and `>`. | Displays join and leave each bar, flow without overlapping or big gaps, and swap places. |
-| B5 | Right-click a display. Tick icon, label and colours off and on, move it, then hide it. Move off the menu. | The menu shows that display's options and each change shows at once. The menu closes about half a second after the mouse leaves. |
-| B6 | Left-click Menu, Bag, Mail, Zone, Friends and Guild. Scroll a long list with the wheel. Right-click Bag and pick the bank. | Each opens the right window or list, and a click on a person whispers them while a right-click invites them. A window the client lacks gives a chat message, not an error box. |
-| B7 | Hover each display, in and out of combat. | The tooltip shows that display's details out of combat, and nothing in combat until Tooltips in combat is ticked. |
-| B8 | In `/cbar`, click Edit for Bags, type `[USED] of [TOTAL] ([LOAD]%)` and press Enter. Then click Default. | The text changes at once and comes back. The bar makes room for the wider text. |
-| B9 | Try each style and opacity on both bars, and Text size. | Every style draws edge to edge with no gaps, and the top and bottom art face the right way. Note any style whose art looks cut off. |
-| B10 | Tick Hide the game's menu bar, XP bar and damaged-gear figure, then untick them. Untick Move game frames clear. | They hide and come back, and the frames go back to the edge. |
-| B11 | Pick up loot, earn gold and XP, change zone, wait a minute. | Bag, Gold, XP, Zone and the clock update within a second or so. |
-| B12 | Reload UI, then log in on another character. | Settings are kept on both. Frames are not moved twice. |
-| B13 | In `/ck` turn Cherry's Bar off and Reload UI. | No bars, and no frames moved. |
-| B14 | Put XBar back in `Interface/AddOns/XBar` and Reload UI, then delete it again. | Cherry's Bar stays off and the hub says to delete `AddOns\XBar`. |
-| B15 | Run `/ckload` after playing for a while, in and out of combat. | Cherry's Bar's memory stays small and does not keep growing. |
+| B1 | Reload UI. Run `/cbar probe`. | Only the top bar shows, in the Stone style, with Menu, XP, Bag and Gold on the left and Mail, FPS and the clock on the right. The probe lists missing functions (ideally none), says how many frames it moved and gives text widths above 0. |
+| B2 | Look along the whole bar, on your full screen width. | The art runs edge to edge with no visible seams between tiles, the gold trim faces the middle of the screen, and a soft shadow falls below it. Icons are clean, with no box or halo around them. |
+| B3 | Look at the top of the screen. | The player, target, buff and party frames and the minimap sit below the bar, not under it. |
+| B4 | Run `/cbar bottom`, then `/cbar both`, then `/cbar top`. | The bars switch at once. With a bottom bar the action bar and experience bar sit above it, and they go back afterwards. The top frames return to the edge when the top bar is off. |
+| B5 | Open `/cbar`. In the map, drag a display from Not shown onto Top, then to another place, then to Bottom, then back to Not shown. | Each drop lands where you let go and the real bars change at once. Note whether dragging works inside the window at all. |
+| B6 | In the map, click a display, then use < Left, Right >, To top bar, To bottom bar and Hide. | The picked display is highlighted, and each button moves it. Stepping past the end of the left side crosses to the right side. To bottom bar turns the bottom bar on if it was off. |
+| B7 | Click Unlock to drag on the bars. Drag a display along the bar, across to the other side, and to the other bar. Click a display without moving it. Click the lock at the bar's right end. | Displays show a grip and a pin and lock appear at the bar's right end. Drops land where you let go. A plain click still does the display's job. After locking, the grips go and dragging stops. |
+| B8 | Right-click an empty part of the bar and tick displays on and off. Then right-click a display and try each row. Move off the menu. | The menu opens at the mouse, its ticks follow each change, and the bar changes at once. Long lists scroll with the wheel. The menu closes about half a second after the mouse leaves. |
+| B9 | Tick Auto-hide on a bar. Move the mouse away, then to the screen's edge, then along the bar and over displays, then away. | The bar tucks away about a second after the mouse leaves and comes back at the edge. It stays out while the mouse is on it or a menu is open. Frames do not move for an auto-hide bar. Note whether the thin strip at the edge gets in the way. |
+| B10 | Left-click Menu, Bag, Mail, Location, Friends, Guild, Daily quests and Durability. Right-click Bag and pick the bank. | Each opens the right window or list, and a click on a person whispers them while a right-click invites them. A window the client lacks gives a chat message, not an error box. |
+| B11 | Show Volume. Click it, click it again, then scroll over it. Open the game's sound settings. | It mutes and comes back, the speaker changes with the level, and the game's slider follows. |
+| B12 | Show Location with `[ZONE] [X],[Y]` as its text. | The zone and map position show and update as you walk. If `GetPlayerWorldMapPos` is missing the probe says so and the position shows `?`. |
+| B13 | Hover each display, in and out of combat. | The tooltip shows that display's details out of combat, and nothing in combat until Tooltips in combat is ticked. |
+| B14 | Pick Bags, type `[USED] of [TOTAL] ([FREE] free)` and press Enter. Then click Default. | The text changes at once and comes back. The bar makes room for the wider text. |
+| B15 | Try each style and opacity on both bars, Bar height and Text size. | Every style draws the right way up on both bars. Icons and text stay centred at every height. |
+| B16 | Tick Hide the game's menu bar, XP bar and damaged-gear figure, then untick them. Untick Move the game's frames clear. | They hide and come back, and the frames go back to the edge. |
+| B17 | Pick up loot, earn gold and XP, change zone, wait a minute. | Bag, Gold, XP, Location and the clock update within a second or so. Gold and XP per hour look right in their tooltips. |
+| B18 | Reload UI, then log in on another character. | Settings are kept on both. Frames are not moved twice. |
+| B19 | In `/ck` turn Cherry's Bar off and Reload UI. | No bars, and no frames moved. |
+| B20 | Put XBar back in `Interface/AddOns/XBar` and Reload UI, then delete it again. | Cherry's Bar stays off and the hub says to delete `AddOns\XBar`. |
+| B21 | Run `/ckload` after playing for a while, in and out of combat. | Cherry's Bar's memory stays small and does not keep growing. |
 
 ## 0.11.90 names from chat into Ultimate Mail Mod
 

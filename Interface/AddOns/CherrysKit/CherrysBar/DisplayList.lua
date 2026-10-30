@@ -1,14 +1,17 @@
 -- Cherry's Bar: the displays. Their readings and tokens come from XBar III's buttons (Mail's sold
--- items by Mavoc), rewritten to read only on events or a slow timer. Each display is:
---   key, label, title, icon, fmt: names, its picture and its default text
+-- items by Mavoc), rewritten to read only on events or a slow timer. The per-hour figures, separate
+-- Durability and Volume follow the ideas of Titan Panel's XP, Gold, Repair and Volume. Each display is:
+--   key, label, short, title, icon, fmt: names, its picture and its default text
 --   bar, side, order, showLabel: where it starts
 --   events: { "EVENT", "TOKEN", ... }: see Displays.lua
 --   every, tick: seconds between tick(def) calls; tick returns true when there is something new
---   read(v, def, cfg): writes the tokens into v; called only when redrawing
---   tip(v, def), click(def, frame), hint, tokens (for the options window), extra (right-click rows)
+--   read(v, def, cfg): writes the tokens into v; called only when redrawing or hovering
+--   tip(v, def), click(def, frame), wheel(def, delta), hint, tokens (for the options window),
+--   extra (rows for its right-click menu)
 
 local G = CherrysBar
 local D = G.Displays
+local Icon = G.Icon
 
 local GOLD_TEXT, RESET = "|cffffe855", "|r"
 
@@ -47,6 +50,38 @@ end
 local function gameText(name, fallback)
   local value = _G[name]
   return type(value) == "string" and value or fallback
+end
+
+local function now()
+  return GetTime and GetTime() or 0
+end
+
+-- Survives Reload UI, which re-runs this file in the same Lua state, so "this session" stays true.
+CherrysBar_Session = CherrysBar_Session or { start = now(), money = {}, xp = {} }
+local session = CherrysBar_Session
+
+local function perHour(amount)
+  local hours = (now() - session.start) / 3600
+  if hours < 0.02 then
+    return 0
+  end
+  return math.floor(amount / hours)
+end
+
+local function hoursMinutes(minutes)
+  return string.format("%02d:%02d", math.floor(minutes / 60), minutes % 60)
+end
+
+local function resetSessionRow()
+  return {
+    text = "Reset session figures", icon = Icon("broom"),
+    click = function()
+      session.start = now()
+      session.money.gained, session.money.spent = 0, 0
+      session.xp.xpGain, session.xp.tpGain = 0, 0
+      D.Rebuild()
+    end,
+  }
 end
 
 local CLASS_COLORS = {
@@ -127,7 +162,7 @@ end
 
 D.Add({
   key = "Menu", label = "Menu", title = "Game menu", showLabel = true, bar = "top", side = "left", order = 10,
-  icon = G.MEDIA .. "Icons/SysBtn_Normal", fmt = "",
+  icon = Icon("play"), fmt = "",
   click = function(def, frame) G.Menu.Open(gameMenu(), frame, def) end,
   hint = "Click: the game's windows",
   extra = function(def, frame)
@@ -139,31 +174,35 @@ D.Add({
 -- Experience
 ---------------------------------------------------------------------------
 
-local xpSession = { tp = nil, xp = nil, xpGain = 0, tpGain = 0 }
+local xpSession = session.xp
 
 D.Add({
-  key = "Exp", label = "XP", title = "Experience", showLabel = true, bar = "top", side = "left", order = 20,
-  icon = "Interface/Icons/Im_Ball08", fmt = "[PER]%",
+  key = "Exp", label = "XP", title = "Experience", bar = "top", side = "left", order = 20,
+  icon = Icon("star"), fmt = "[PER]%",
   events = { { "PLAYER_EXP_CHANGED" }, { "TP_EXP_UPDATE" } },
-  tokens = "[XP] [XPN] to level [XPM] max [PER] percent [PERN] percent to go [TP] [TPA] total [XPS] [TPS] this session [XPD] [TPD] debt",
+  tokens = "[XP] [XPM] max [XPN] to level [PER] percent [TP] [TPA] total [XPS] [TPS] this session [XPH] per hour [TTL] time to level [XPD] [TPD] debt",
+  extra = function() return { resetSessionRow() } end,
   read = function(v)
     local xp, max, tp = GetPlayerExp("player"), GetPlayerMaxExp("player"), GetTpExp("Tp")
     if not max or max <= 0 then
       max = 1
     end
     if xpSession.xp and xp > xpSession.xp then
-      xpSession.xpGain = xpSession.xpGain + (xp - xpSession.xp)
+      xpSession.xpGain = (xpSession.xpGain or 0) + (xp - xpSession.xp)
     end
     if xpSession.tp and tp > xpSession.tp then
-      xpSession.tpGain = xpSession.tpGain + (tp - xpSession.tp)
+      xpSession.tpGain = (xpSession.tpGain or 0) + (tp - xpSession.tp)
     end
     xpSession.xp, xpSession.tp = xp, tp
     v.XP, v.XPM, v.XPN = comma(xp), comma(max), comma(max - xp)
     v.PER = string.format("%.2f", xp / max * 100)
-    v.PERN = string.format("%.2f", (max - xp) / max * 100)
     v.TP = comma(tp)
     v.TPA = comma(GetTotalTpExp())
-    v.XPS, v.TPS = comma(xpSession.xpGain), comma(xpSession.tpGain)
+    local xpGain = xpSession.xpGain or 0
+    v.XPS, v.TPS = comma(xpGain), comma(xpSession.tpGain or 0)
+    local rate = perHour(xpGain)
+    v.XPH = comma(rate)
+    v.TTL = rate > 0 and hoursMinutes(math.floor((max - xp) / rate * 60)) or "--:--"
     local xpDebt, tpDebt = GetPlayerExpDebt()
     v.XPD, v.TPD = comma(xpDebt), comma(tpDebt)
   end,
@@ -172,6 +211,8 @@ D.Add({
     tipPair("To next level", v.XPN)
     tipPair("TP", v.TP)
     tipPair("This session", "XP " .. v.XPS .. ", TP " .. v.TPS)
+    tipPair("Per hour", v.XPH)
+    tipPair("Time to level", v.TTL)
     tipPair("Debt", "XP " .. v.XPD .. ", TP " .. v.TPD)
   end,
 })
@@ -192,10 +233,10 @@ local function countGoods(from, to)
 end
 
 D.Add({
-  key = "Bag", label = "Bag", title = "Bags", showLabel = true, bar = "top", side = "left", order = 30,
-  icon = "Interface/Icons/Story_06", fmt = "[USED]/[TOTAL]",
+  key = "Bag", label = "Bag", title = "Bags", bar = "top", side = "left", order = 30,
+  icon = Icon("bag"), fmt = "[USED]/[TOTAL]",
   events = { { "PLAYER_BAG_CHANGED" } },
-  tokens = "[USED] [TOTAL] [LOAD] percent full [SUSED] item shop bag [AUSED] magic box",
+  tokens = "[USED] [FREE] [TOTAL] [LOAD] percent full [SUSED] item shop bag [AUSED] magic box",
   setup = function(def, cfg)
     local fmt = cfg.fmt
     def.scan = string.find(fmt, "[SUSED]", 1, true) or string.find(fmt, "[AUSED]", 1, true) or false
@@ -206,6 +247,7 @@ D.Add({
     local load = math.ceil(used / total * 100)
     local color = loadColor(load)
     v.USED = color .. used .. RESET
+    v.FREE = color .. (total - used) .. RESET
     v.TOTAL = total
     v.LOAD = color .. load .. RESET
     if def.scan or def.hovering then
@@ -235,40 +277,88 @@ D.Add({
 })
 
 ---------------------------------------------------------------------------
--- Money
+-- Gold, with what this session has earned
 ---------------------------------------------------------------------------
 
-local money = { last = nil, gained = 0, spent = 0 }
+local money = session.money
 
 D.Add({
-  key = "Money", label = "Gold", title = "Money", showLabel = true, bar = "top", side = "left", order = 40,
-  icon = "Interface/Icons/Coin_03", fmt = "[GOLD]",
+  key = "Money", label = "Gold", title = "Gold", bar = "top", side = "left", order = 40,
+  icon = Icon("coins"), fmt = "[GOLD]",
   events = { { "PLAYER_MONEY" } },
-  tokens = "[GOLD] [DIAS] diamonds [RUBY] rubies [COIN] phirius tokens [GAINED] [SPENT] this session",
+  tokens = "[GOLD] [GAINED] [SPENT] [NET] this session [GPH] earned per hour",
+  extra = function() return { resetSessionRow() } end,
   read = function(v)
     local gold = GetPlayerMoney("copper")
     if money.last and gold > money.last then
-      money.gained = money.gained + (gold - money.last)
+      money.gained = (money.gained or 0) + (gold - money.last)
     elseif money.last and gold < money.last then
-      money.spent = money.spent + (money.last - gold)
+      money.spent = (money.spent or 0) + (money.last - gold)
     end
     money.last = gold
+    local gained, spent = money.gained or 0, money.spent or 0
     v.GOLD = "|cffffee80" .. comma(gold) .. RESET
-    v.DIAS = "|cffc7c7ff" .. comma(GetPlayerMoney("account")) .. RESET
-    v.RUBY = "|cffffc7c7" .. comma(GetPlayerMoney("bonus")) .. RESET
-    v.COIN = "|cffc7c7c7" .. comma(GetPlayerMoney("billdin")) .. RESET
-    v.GAINED = "|cff8de668" .. comma(money.gained) .. RESET
-    v.SPENT = "|cffe66868" .. comma(money.spent) .. RESET
+    v.GAINED = "|cff8de668" .. comma(gained) .. RESET
+    v.SPENT = "|cffe66868" .. comma(spent) .. RESET
+    v.NET = comma(gained - spent)
+    v.GPH = comma(perHour(gained))
   end,
   tip = function(v)
     tipPair("Gold", v.GOLD)
-    tipPair("Diamonds", v.DIAS)
-    tipPair("Rubies", v.RUBY)
-    tipPair("Phirius tokens", v.COIN)
     tipPair("Earned this session", v.GAINED)
     tipPair("Spent this session", v.SPENT)
+    tipPair("Balance this session", v.NET)
+    tipPair("Earned per hour", v.GPH)
   end,
   click = function() toggle("BagFrame") end,
+})
+
+---------------------------------------------------------------------------
+-- Currencies. Item counts ask three calls each, so they are read only if the format holds one, on
+-- bag changes, and when hovering.
+---------------------------------------------------------------------------
+
+local ITEM_CURRENCIES = {
+  -- token, item id, GetPlayerPointInfo's two numbers
+  { "AM", 206879, 2, 1 }, { "PS", 240181, 1, 1 }, { "EJ", 201545, 1, 2 },
+  { "PM", 241706, 2, 2 }, { "DS", 208681, 1, 3 }, { "BT", 206686, 3, 2 },
+}
+
+local function itemCurrency(entry)
+  return GetBagItemCount(entry[2]) + GetCountInBankByName(TEXT("Sys" .. entry[2] .. "_name"))
+    + GetPlayerPointInfo(entry[3], entry[4], " ")
+end
+
+D.Add({
+  key = "Wallet", label = "Wallet", title = "Currencies", icon = Icon("chest"), fmt = "[DIAS] [RUBY] [COIN]",
+  events = { { "PLAYER_MONEY" }, { "PLAYER_BAG_CHANGED", "AM", "PS", "EJ", "PM", "DS", "BT" } },
+  tokens = "[DIAS] diamonds [RUBY] rubies [COIN] tokens [AM] [PS] [EJ] [PM] [DS] [BT] the currencies the tooltip lists",
+  setup = function(def, cfg)
+    def.scan = false
+    for _, entry in ipairs(ITEM_CURRENCIES) do
+      if string.find(cfg.fmt, "[" .. entry[1] .. "]", 1, true) then
+        def.scan = true
+      end
+    end
+  end,
+  read = function(v, def)
+    v.DIAS = "|cffc7c7ff" .. comma(GetPlayerMoney("account")) .. RESET
+    v.RUBY = "|cffffc7c7" .. comma(GetPlayerMoney("bonus")) .. RESET
+    v.COIN = "|cffc7c7c7" .. comma(GetPlayerMoney("billdin")) .. RESET
+    if def.scan or def.hovering then
+      for _, entry in ipairs(ITEM_CURRENCIES) do
+        v[entry[1]] = "|cffc7ffc7" .. itemCurrency(entry) .. RESET
+      end
+    end
+  end,
+  tip = function(v)
+    tipPair("Diamonds", v.DIAS)
+    tipPair("Rubies", v.RUBY)
+    tipPair("Tokens", v.COIN)
+    for _, entry in ipairs(ITEM_CURRENCIES) do
+      tipPair(TEXT("Sys" .. entry[2] .. "_name"), v[entry[1]])
+    end
+  end,
 })
 
 ---------------------------------------------------------------------------
@@ -290,8 +380,8 @@ local function mailStrings()
 end
 
 D.Add({
-  key = "Mail", label = "Mail", showLabel = true, bar = "top", side = "right", order = 10,
-  icon = "Interface/Icons/Quest_Letter02", fmt = "[UNREAD]",
+  key = "Mail", label = "Mail", bar = "top", side = "right", order = 10,
+  icon = Icon("letter"), fmt = "[UNREAD]",
   events = { { "MAIL_SHOW" }, { "CHAT_MSG_SYSTEM" } },
   tokens = "[UNREAD] new mail since you last opened the mailbox",
   onEvent = function(def, event, message)
@@ -342,9 +432,9 @@ D.Add({
 ---------------------------------------------------------------------------
 
 D.Add({
-  key = "Perf", label = "FPS", title = "Performance", bar = "top", side = "right", order = 20,
-  icon = "Interface/Icons/Sys_Home04", fmt = "[FPS] fps [MS] ms", every = 2,
-  tokens = "[FPS] frames per second [MS] latency",
+  key = "Perf", label = "FPS", short = "Perf", title = "Performance", bar = "top", side = "right", order = 20,
+  icon = Icon("gauge"), fmt = "[FPS] fps [MS] ms", every = 2,
+  tokens = "[FPS] frames per second [MS] latency [MEM] addon memory in MB",
   tick = function(def)
     local fps, ping = math.floor(GetFramerate()), math.floor(GetPing())
     if fps == def.fps and ping == def.ping then
@@ -358,10 +448,12 @@ D.Add({
     local ping = def.ping or math.floor(GetPing())
     v.FPS = (fps < 21 and "|cffff0000" or fps < 41 and "|cffffaa00" or "|cffffffff") .. fps .. RESET
     v.MS = (ping > 150 and "|cffff0000" or ping > 100 and "|cffffaa00" or "|cffffffff") .. ping .. RESET
+    v.MEM = string.format("%.1f", collectgarbage("count") / 1024)
   end,
   tip = function(v)
     tipPair("Frames per second", v.FPS)
     tipPair("Latency", v.MS .. " ms")
+    tipPair("Addon memory", v.MEM .. " MB")
   end,
 })
 
@@ -369,15 +461,9 @@ D.Add({
 -- Clock: looks at the time once a second and redraws once a minute
 ---------------------------------------------------------------------------
 
-CherrysBar_SessionStart = CherrysBar_SessionStart or (GetTime and GetTime()) or 0
-
-local function hoursMinutes(minutes)
-  return string.format("%02d:%02d", math.floor(minutes / 60), minutes % 60)
-end
-
 D.Add({
   key = "Clock", label = "Time", title = "Clock", bar = "top", side = "right", order = 30,
-  icon = "Interface/Icons/elf_skill/Skill_ward16-1", fmt = "[TIME24]", every = 1,
+  icon = Icon("clock"), fmt = "[TIME24]", every = 1,
   tokens = "[TIME24] [TIME12] [DATE] [ONLINE] this session [TOTAL] all characters",
   tick = function(def)
     local minute = math.floor(os.time() / 60)
@@ -395,7 +481,7 @@ D.Add({
     v.TIME24 = os.date("%H:%M")
     v.TIME12 = os.date("%I:%M %p")
     v.DATE = os.date("%a %d-%m-%Y")
-    v.ONLINE = hoursMinutes(math.floor(((GetTime and GetTime() or 0) - CherrysBar_SessionStart) / 60))
+    v.ONLINE = hoursMinutes(math.floor((now() - session.start) / 60))
     local total = tonumber(G.S().playedMins) or 0
     v.TOTAL = string.format("%dd %s", math.floor(total / 1440), hoursMinutes(total % 1440))
   end,
@@ -408,15 +494,29 @@ D.Add({
 })
 
 ---------------------------------------------------------------------------
--- Zone
+-- Location. Coordinates are read only if the format holds them or on hover.
 ---------------------------------------------------------------------------
 
+local function coords()
+  if type(GetPlayerWorldMapPos) ~= "function" then
+    return "?", "?"
+  end
+  local ok, x, y = pcall(GetPlayerWorldMapPos)
+  if not ok or not tonumber(x) or not tonumber(y) then
+    return "?", "?"
+  end
+  return string.format("%.1f", x * 100), string.format("%.1f", y * 100)
+end
+
 D.Add({
-  key = "Zone", label = "Zone", icon = "Interface/Icons/Sys_Home03", fmt = "[ZONE]", every = 3,
-  tokens = "[ZONE] where you are",
+  key = "Zone", label = "Zone", title = "Location", icon = Icon("map"), fmt = "[ZONE]", every = 3,
+  tokens = "[ZONE] where you are [X] [Y] map position",
+  setup = function(def, cfg)
+    def.wantCoords = string.find(cfg.fmt, "[X]", 1, true) or string.find(cfg.fmt, "[Y]", 1, true) or false
+  end,
   tick = function(def)
     local zone = GetZoneName()
-    if zone == def.zone then
+    if zone == def.zone and not def.wantCoords then
       return false
     end
     def.zone = zone
@@ -424,6 +524,13 @@ D.Add({
   end,
   read = function(v, def)
     v.ZONE = def.zone or GetZoneName() or ""
+    if def.wantCoords or def.hovering then
+      v.X, v.Y = coords()
+    end
+  end,
+  tip = function(v)
+    tipPair("Zone", v.ZONE)
+    tipPair("Map position", v.X .. ", " .. v.Y)
   end,
   click = function() toggle("WorldMapFrame") end,
   hint = "Click: the world map",
@@ -460,7 +567,7 @@ local function peopleRow(name, icon, text)
 end
 
 D.Add({
-  key = "Friends", label = "Friends", showLabel = true, icon = "Interface/Icons/Emo_Wave", fmt = "[ONLINE]/[COUNT]",
+  key = "Friends", label = "Friends", icon = Icon("heart"), fmt = "[ONLINE]/[COUNT]",
   events = { { "RESET_FRIEND" } },
   tokens = "[ONLINE] [COUNT]",
   read = function(v)
@@ -471,7 +578,7 @@ D.Add({
     for i = 1, GetFriendCount("Friend") or 0 do
       local name, _, on = GetFriendInfo("Friend", i)
       if on and name then
-        rows[#rows + 1] = peopleRow(name, "Interface/Icons/Emo_Wave")
+        rows[#rows + 1] = peopleRow(name, Icon("heart"))
       end
     end
     if #rows == 0 then
@@ -494,7 +601,7 @@ local function guildOnline()
 end
 
 D.Add({
-  key = "Guild", label = "Guild", showLabel = true, icon = "Interface/Icons/Skill_Mag_New20-5", fmt = "[ONLINE]/[MEMBER]",
+  key = "Guild", label = "Guild", icon = Icon("banner"), fmt = "[ONLINE]/[MEMBER]",
   events = { { "UPDATE_GUILD_MEMBER" } },
   tokens = "[GNAME] [ONLINE] [MEMBER]",
   read = function(v)
@@ -506,7 +613,7 @@ D.Add({
     for i = 1, GetNumGuildMembers() or 0 do
       local name, _, class, level, _, _, _, _, _, _, on = GetGuildRosterInfo(i)
       if on and name then
-        rows[#rows + 1] = peopleRow(name, "Interface/Icons/Emo_Wave", classColor(class) .. name .. RESET .. " " .. tostring(level))
+        rows[#rows + 1] = peopleRow(name, Icon("banner"), classColor(class) .. name .. RESET .. " " .. tostring(level))
       end
     end
     if #rows == 0 then
@@ -522,7 +629,7 @@ D.Add({
 ---------------------------------------------------------------------------
 
 D.Add({
-  key = "Ammo", label = "Ammo", showLabel = true, icon = "Interface/Icons/Ammo1", fmt = "[COUNT]",
+  key = "Ammo", label = "Ammo", icon = Icon("quiver"), fmt = "[COUNT]",
   events = { { "PLAYER_BAG_CHANGED", "COUNT", "BAG" }, { "PLAYER_INVENTORY_CHANGED" } },
   tokens = "[COUNT] equipped and in bag [EQUIP] [BAG] [NAME]",
   read = function(v)
@@ -545,17 +652,162 @@ D.Add({
 })
 
 ---------------------------------------------------------------------------
--- Classes, quests and dailies
+-- Durability. The game has no event for wear, so it also looks every 30 seconds.
 ---------------------------------------------------------------------------
 
 D.Add({
-  key = "Class", label = "Class", icon = "Interface/Icons/Ft_Manikin01", fmt = "[MCLASS] [MLVL]/[SCLASS] [SLVL]", every = 30,
-  events = { { "UNIT_LEVEL", "MLVL", "SLVL" }, { "EXCHANGECLASS_SUCCESS" }, { "PLAYER_HONOR_CHANGED", "HONOR" } },
-  tokens = "[MCLASS] [MLVL] [SCLASS] [SLVL] [QUEST] done/in book [DAY] dailies [HONOR] [GOOD]",
+  key = "Repair", label = "Gear", title = "Durability", icon = Icon("anvil"), fmt = "[DURA]%", every = 30,
+  events = { { "PLAYER_INVENTORY_CHANGED" } },
+  tokens = "[DURA] average percent [DURAL] the lowest item",
+  read = function(v)
+    local total, items, lowest = 0, 0, 100
+    v.DURAL = gameText("NONE", "None")
+    for i = 0, 21 do
+      local cur, max = GetInventoryItemDurable("player", i)
+      if max and max ~= 0 and i ~= 18 and i ~= 19 and i ~= 20 and i ~= 9 then
+        local percent = math.ceil(cur / max * 1000) / 10
+        items = items + 1
+        total = total + percent
+        if percent < lowest then
+          lowest = percent
+          v.DURAL = cur .. "/" .. max
+        end
+      end
+    end
+    local average = items > 0 and math.ceil(total / items * 10) / 10 or 100
+    v.DURA = (average < 41 and "|cffff0000" or average < 86 and "|cffffaa00" or "|cffffffff") .. average .. RESET
+  end,
+  tip = function(v)
+    tipPair("Average", v.DURA .. "%")
+    tipPair("Lowest item", v.DURAL)
+  end,
+  click = function() ToggleCharacter("EquipmentFrame") end,
+  hint = "Click: your equipment",
+})
+
+---------------------------------------------------------------------------
+-- Damage. Combat events only add numbers; the display redraws at the next tick, and the running
+-- figures reset after 5 seconds without a hit.
+---------------------------------------------------------------------------
+
+local meter = {
+  damage = { total = 0, last = 0, start = nil, at = nil },
+  heal = { total = 0, last = 0, start = nil, at = nil },
+}
+
+local function addTo(m, amount, time)
+  if not m.start then
+    m.start, m.total = time - 1, 0
+  end
+  m.at, m.last = time, amount
+  m.total = m.total + amount
+end
+
+local function perSecond(m)
+  if not m.start or not m.at or m.at <= m.start then
+    return 0
+  end
+  return math.floor(m.total / (m.at - m.start))
+end
+
+D.Add({
+  key = "Dps", label = "DPS", title = "Damage", icon = Icon("dice"), fmt = "[DPS]", every = 1,
+  events = {
+    { "COMBATMETER_DAMAGE", "DPS", "DMG" }, { "COMBATMETER_HEAL", "HPS", "HEAL" }, { "UNIT_HEALTH", "KILLS" },
+  },
+  tokens = "[DPS] [DMG] last hit [HPS] [HEAL] last heal [KILLS] kills by this character",
+  onEvent = function(def, event, unit)
+    if event == "COMBATMETER_DAMAGE" or event == "COMBATMETER_HEAL" then
+      if _source ~= G.charName then
+        return false
+      end
+      if event == "COMBATMETER_DAMAGE" then
+        addTo(meter.damage, tonumber(_damage) or 0, now())
+      else
+        addTo(meter.heal, tonumber(_heal) or 0, now())
+      end
+      return true
+    elseif event == "UNIT_HEALTH" then
+      if unit ~= "target" or UnitHealth("target") ~= 0 or not UnitExists("target") then
+        return false
+      end
+      local kills = G.S().kills
+      kills[G.charName] = (tonumber(kills[G.charName]) or 0) + 1
+      return true
+    end
+    return true
+  end,
+  tick = function(def)
+    local time, changed = now(), false
+    for _, m in pairs(meter) do
+      if m.at and time - m.at > 5 then
+        m.start, m.at, m.total = nil, nil, 0
+        changed = true
+      end
+    end
+    return changed
+  end,
+  read = function(v)
+    v.DPS = comma(perSecond(meter.damage))
+    v.DMG = comma(meter.damage.last)
+    v.HPS = comma(perSecond(meter.heal))
+    v.HEAL = comma(meter.heal.last)
+    v.KILLS = comma(tonumber(G.S().kills[G.charName]) or 0)
+  end,
+  tip = function(v)
+    tipPair("Damage per second", v.DPS)
+    tipPair("Last hit", v.DMG)
+    tipPair("Healing per second", v.HPS)
+    tipPair("Last heal", v.HEAL)
+    tipPair("Kills", v.KILLS)
+  end,
+})
+
+---------------------------------------------------------------------------
+-- Dailies
+---------------------------------------------------------------------------
+
+local function questCounts()
+  local total = GetNumQuestBookButton_QuestBook() or 0
+  local finished = 0
+  for i = 1, total do
+    local _, _, _, _, _, _, _, _, _, complete = GetQuestInfo(i)
+    if complete then
+      finished = finished + 1
+    end
+  end
+  return finished, total
+end
+
+D.Add({
+  key = "Daily", label = "Daily", title = "Daily quests", icon = Icon("flag"), fmt = "[DAY]", every = 30,
+  tokens = "[DAY] dailies done today [QUEST] quests ready / in your book",
+  tick = function() return true end,
+  read = function(v)
+    local done, perDay = Daily_count()
+    v.DAY = (done == perDay and "|cffffaa00" or "") .. done .. "/" .. perDay .. (done == perDay and RESET or "")
+    local finished, total = questCounts()
+    v.QUEST = finished .. "/" .. total
+  end,
+  tip = function(v)
+    tipPair("Dailies today", v.DAY)
+    tipPair("Quests ready / in book", v.QUEST)
+  end,
+  click = function() toggle("UI_QuestBook") end,
+  hint = "Click: your quest book",
+})
+
+---------------------------------------------------------------------------
+-- Classes
+---------------------------------------------------------------------------
+
+D.Add({
+  key = "Class", label = "Class", icon = Icon("helmet"), fmt = "[MCLASS] [MLVL]/[SCLASS] [SLVL]",
+  events = { { "UNIT_LEVEL" }, { "EXCHANGECLASS_SUCCESS" }, { "PLAYER_HONOR_CHANGED" } },
+  tokens = "[MCLASS] [MLVL] [SCLASS] [SLVL] [HONOR] [GOOD] reputation",
   onEvent = function(def, event, unit)
     return event ~= "UNIT_LEVEL" or unit == "player"
   end,
-  tick = function() return true end,
   read = function(v)
     local main, sub = UnitClass("player")
     local mainLevel, subLevel = UnitLevel("player")
@@ -563,27 +815,16 @@ D.Add({
     v.MLVL = mainLevel or 0
     v.SCLASS = (sub and sub ~= "") and (classColor(sub) .. sub .. RESET) or gameText("NONE", "None")
     v.SLVL = subLevel or 0
-    local done, perDay = Daily_count()
-    v.DAY = done .. "/" .. perDay
-    local total = GetNumQuestBookButton_QuestBook() or 0
-    local finished = 0
-    for i = 1, total do
-      local _, _, _, _, _, _, _, _, _, complete = GetQuestInfo(i)
-      if complete then
-        finished = finished + 1
-      end
-    end
-    v.QUEST = finished .. "/" .. total
     v.HONOR = comma(math.floor(GetPlayerPointInfo(3, 1, " ") or 0))
     v.GOOD = string.format("%.2f", GetPlayerGoodEvil() or 0)
   end,
   tip = function(v)
     tipPair("Classes", v.MCLASS .. " " .. v.MLVL .. " / " .. v.SCLASS .. " " .. v.SLVL)
-    tipPair("Quests done / in book", v.QUEST)
-    tipPair("Daily quests", v.DAY)
     tipPair("Honor", v.HONOR)
     tipPair("Reputation", v.GOOD)
   end,
+  click = function() ToggleCharacter("EquipmentFrame") end,
+  hint = "Click: your character",
 })
 
 ---------------------------------------------------------------------------
@@ -593,7 +834,7 @@ D.Add({
 local CRAFTS = { { "MINE", "MINING", "Mining" }, { "WOOD", "LUMBERING", "Lumbering" }, { "HERB", "HERBLISM", "Herbalism" } }
 
 D.Add({
-  key = "Craft", label = "Gather", title = "Gathering", icon = "Interface/Icons/item_tr_08",
+  key = "Craft", label = "Gather", title = "Gathering", icon = Icon("potion"),
   fmt = "[MINELV] [WOODLV] [HERBLV]",
   events = { { "PLAYER_LIFESKILL_CHANGED" } },
   tokens = "[MINELV] [MINEXP] [WOODLV] [WOODXP] [HERBLV] [HERBXP] level and percent",
@@ -613,104 +854,52 @@ D.Add({
 })
 
 ---------------------------------------------------------------------------
--- Damage and durability. Combat events only add numbers; the display redraws at the next tick,
--- and the running figures reset after 5 seconds without a hit.
+-- Volume: the game's master volume, using the calls XBar's mute button used
 ---------------------------------------------------------------------------
 
-local meter = {
-  damage = { total = 0, last = 0, start = nil, at = nil },
-  heal = { total = 0, last = 0, start = nil, at = nil },
-}
-
-local function addTo(m, amount, now)
-  if not m.start then
-    m.start, m.total = now - 1, 0
-  end
-  m.at, m.last = now, amount
-  m.total = m.total + amount
+local function volumeNow()
+  return tonumber(MasterVolumeSlider_GetValue()) or 0
 end
 
-local function perSecond(m)
-  if not m.start or not m.at or m.at <= m.start then
-    return 0
-  end
-  return math.floor(m.total / (m.at - m.start))
-end
-
-local function durability(v)
-  local total, items, lowest = 0, 0, 100
-  v.DURAL = gameText("NONE", "None")
-  for i = 0, 21 do
-    local cur, max = GetInventoryItemDurable("player", i)
-    if max and max ~= 0 and i ~= 18 and i ~= 19 and i ~= 20 and i ~= 9 then
-      local percent = math.ceil(cur / max * 1000) / 10
-      items = items + 1
-      total = total + percent
-      if percent < lowest then
-        lowest = percent
-        v.DURAL = cur .. "/" .. max
-      end
-    end
-  end
-  local average = items > 0 and math.ceil(total / items * 10) / 10 or 100
-  v.DURA = (average < 41 and "|cffff0000" or average < 86 and "|cffffaa00" or "|cffffffff") .. average .. RESET
+local function volumeSet(value)
+  SYS_AudioSettings_MasterVolumeSlider:SetValue(value)
+  SSF_AudioSettings_OnApply()
 end
 
 D.Add({
-  key = "Dps", label = "DPS", title = "Damage and durability", icon = "Interface/Icons/Im_Ball03",
-  fmt = "[DPS] dps [DURA]%", every = 1,
-  events = {
-    { "COMBATMETER_DAMAGE", "DPS", "DMG" }, { "COMBATMETER_HEAL", "HPS", "HEAL" },
-    { "PLAYER_INVENTORY_CHANGED", "DURA", "DURAL" }, { "UNIT_HEALTH", "KILLS" },
-  },
-  tokens = "[DPS] [DMG] last hit [HPS] [HEAL] last heal [DURA] average durability [DURAL] lowest [KILLS]",
-  onEvent = function(def, event, unit)
-    if event == "COMBATMETER_DAMAGE" or event == "COMBATMETER_HEAL" then
-      if _source ~= G.charName then
-        return false
-      end
-      local now = GetTime()
-      if event == "COMBATMETER_DAMAGE" then
-        addTo(meter.damage, tonumber(_damage) or 0, now)
-      else
-        addTo(meter.heal, tonumber(_heal) or 0, now)
-      end
-      return true
-    elseif event == "UNIT_HEALTH" then
-      if unit ~= "target" or UnitHealth("target") ~= 0 or not UnitExists("target") then
-        return false
-      end
-      local kills = G.S().kills
-      kills[G.charName] = (tonumber(kills[G.charName]) or 0) + 1
-      return true
+  key = "Volume", label = "Vol", short = "Sound", title = "Volume", icon = Icon("vol_high"), fmt = "[VOL]%", every = 2,
+  tokens = "[VOL] master volume in percent",
+  tick = function(def)
+    local value = volumeNow()
+    if value == def.level then
+      return false
     end
+    def.level = value
     return true
   end,
-  tick = function(def)
-    local now, changed = GetTime(), false
-    for _, m in pairs(meter) do
-      if m.at and now - m.at > 5 then
-        m.start, m.at, m.total = nil, nil, 0
-        changed = true
-      end
-    end
-    return changed
-  end,
-  read = function(v)
-    v.DPS = comma(perSecond(meter.damage))
-    v.DMG = comma(meter.damage.last)
-    v.HPS = comma(perSecond(meter.heal))
-    v.HEAL = comma(meter.heal.last)
-    v.KILLS = comma(tonumber(G.S().kills[G.charName]) or 0)
-    durability(v)
+  read = function(v, def)
+    local value = volumeNow()
+    v.VOL = math.floor(value * 100 + 0.5)
+    D.SetIcon(def, Icon(value <= 0 and "vol_mute" or value < 0.34 and "vol_low" or value < 0.67 and "vol_mid" or "vol_high"))
   end,
   tip = function(v)
-    tipPair("Average durability", v.DURA .. "%")
-    tipPair("Lowest durability", v.DURAL)
-    tipPair("Damage per second", v.DPS)
-    tipPair("Healing per second", v.HPS)
-    tipPair("Kills", v.KILLS)
+    tipPair("Master volume", v.VOL .. "%")
   end,
-  click = function() ToggleCharacter("EquipmentFrame") end,
-  hint = "Click: your equipment",
+  click = function(def)
+    local S = G.S()
+    local value = volumeNow()
+    if value > 0 then
+      S.volumeBefore = value
+      volumeSet(0)
+    else
+      volumeSet(tonumber(S.volumeBefore) or 0.5)
+    end
+    def.level = nil
+    D.Update(def)
+  end,
+  wheel = function(def, delta)
+    volumeSet(math.max(0, math.min(1, volumeNow() + (delta > 0 and 0.05 or -0.05))))
+    def.level = nil
+  end,
+  hint = "Click: mute. Mouse wheel: louder or quieter.",
 })

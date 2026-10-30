@@ -4,11 +4,12 @@
 
 ## Features
 
-- **Top bar, bottom bar or both.** Only the top bar shows at first. Each bar has its own style and opacity.
-- **Displays per bar**: Menu (the game's windows and settings), Experience, Bags, Money, Mail, Performance, Clock, Zone, Friends, Guild, Ammo, Class, Gathering, and Damage and durability. Put each on either bar, on the left or right, in the order you like.
-- **Right-click any display** for its options: icon, label, colours, bar, side and order. Left-click does its job, such as opening your bag or listing friends online.
-- **Your own text**: rewrite any display with tokens such as `[USED]/[TOTAL]`.
-- **Six styles**, and an option to move the game's frames clear of the bars.
+- **Top bar, bottom bar or both.** Only the top bar shows at first. Each bar has its own style, opacity and auto-hide.
+- **Eighteen displays**: Menu (the game's windows and settings), Experience, Bags, Gold, Currencies, Mail, Performance, Clock, Location, Friends, Guild, Ammo, Durability, Damage, Daily quests, Class, Gathering and Volume.
+- **Easy to rearrange**: drag displays on a map of the bars in `/cbar`, or on the bars themselves, or use the Left, Right, top bar, bottom bar and Hide buttons. Right-click an empty part of a bar to tick displays on and off.
+- **Right-click any display** for its options: icon, label, colours and where it goes. Left-click does its job, such as opening your bag or listing friends online.
+- **Your own text**: rewrite any display with tokens such as `[FREE]`, `[GPH]` for gold per hour or `[TTL]` for time to level.
+- **Seven styles** and a set of icons made for this addon, and an option to move the game's frames clear of the bars.
 - **Light on the game**: displays read only on events or slow timers, and displays you hid do nothing.
 
 **Still being tested in game:** moving the game's frames, text widths and some of the game calls. `/cbar probe` shows what the client does.
@@ -17,6 +18,7 @@
 
 - `/cbar`: options window
 - `/cbar top`, `/cbar bottom`, `/cbar both`: which bars show
+- `/cbar unlock`, `/cbar lock`: drag displays on the bars, or stop
 - `/cbar reset`: every setting back to its default
 - `/cbar probe`: checks what this game client offers
 
@@ -34,4 +36,5 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cbar prob
 
 - Forked from **XBar III** by **matif** and **Bussdee**, based on **XBar** by **nigr(A)ngelus**, with thanks to aveng3r, Havorn, Slayblaze, ArcticXWolf, Caelin and Mavoc.
 - The bars and settings follow the ideas of **Titan Panel** for World of Warcraft by the **Titan Panel Development Team**. It contains none of Titan Panel's code or pictures, and Titan Panel has not endorsed it.
+- Bar styles and icons were made by Cherry for this addon.
 - Offered under **CC BY-NC-SA 3.0**, like XBar: see `Interface\AddOns\CherrysKit\CherrysBar\LICENSE-CherrysBar.txt`. Free, never to be sold.

@@ -12,7 +12,8 @@ P.FUNCTIONS = {
   "GetGuildRosterInfo", "GetGuildInfo", "GetInventoryItemDurable", "GetInventoryItemCount", "GetCountInBagByName",
   "GetPlayerCurrentSkillValue", "Daily_count", "GetNumQuestBookButton_QuestBook", "GetQuestInfo", "GetPlayerPointInfo",
   "GetPlayerGoodEvil", "TimeLet_GetLetTime", "OpenMail", "OpenBank", "ToggleUIFrame", "ToggleCharacter", "ToggleSocialFrame",
-  "ToggleGameMenu", "InviteByName", "ChatFrame_SendTell", "StaticPopup_Show", "TEXT",
+  "ToggleGameMenu", "InviteByName", "ChatFrame_SendTell", "StaticPopup_Show", "TEXT", "GetCursorPos", "GetUIScale",
+  "GetPlayerWorldMapPos", "GetBagItemCount", "GetCountInBankByName", "MasterVolumeSlider_GetValue", "SSF_AudioSettings_OnApply",
 }
 
 P.FRAMES = {
@@ -52,6 +53,12 @@ function P.Run()
     return
   end
   G.Print("moving frames: " .. G.Bars.status)
+  local x, y = G.FramePos(CBar_BarTop)
+  G.Print("top bar at " .. tostring(x) .. ", " .. tostring(y) .. ", middle of the screen " .. tostring(G.MiddleX())
+    .. ", UI scale " .. tostring(G.UIScale()) .. ", locked " .. tostring(G.S().locked))
+  if type(MasterVolumeSlider_GetValue) == "function" then
+    G.Print("master volume reads " .. tostring(select(2, pcall(MasterVolumeSlider_GetValue))))
+  end
   local bars = G.S().bars
   G.Print("bars: top " .. tostring(bars.top.show) .. " (" .. bars.top.skin .. "), bottom "
     .. tostring(bars.bottom.show) .. " (" .. bars.bottom.skin .. ")")

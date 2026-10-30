@@ -1,19 +1,20 @@
 -- Cherry's Bar (Cbar): full-width information bars for Runes of Magic, at the top of the screen,
 -- the bottom, or both. A fork of XBar III (nigr(A)ngelus, matif, Bussdee and contributors) under
--- CC BY-NC-SA 3.0, see LICENSE-CherrysBar.txt. The bar layout and right-click settings follow the
--- ideas of Titan Panel for World of Warcraft; none of Titan Panel's code or pictures are used.
+-- CC BY-NC-SA 3.0, see LICENSE-CherrysBar.txt. The bar layout, right-click settings and auto-hide
+-- follow the ideas of Titan Panel for World of Warcraft; none of its code or pictures are used.
 --
--- Files: Core (settings, events, the one update loop, commands), Bars (the two bars, making room for
--- them), Displays (drawing and placing displays), DisplayList (the displays themselves), Menu (the
--- pop-up menu), Options (/cbar window), Probe (/cbar probe).
+-- Files: Core (settings, events, the one update loop, commands), Bars (the two bars, auto-hide, making
+-- room for them), Displays (drawing, placing and dragging displays), DisplayList (the displays
+-- themselves), Menu (the pop-up menu), Options (/cbar window), Probe (/cbar probe).
 
 CherrysBar = {}
 local G = CherrysBar
 
-G.version = "1.0.0"
+G.version = "1.1.0"
 G.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.CherrysBar) or "Interface/AddOns/CherrysBar/"
 G.MEDIA = G.BASE_PATH .. "Media/"
 G.BAR_NAMES = { "top", "bottom" }
+G.SETTINGS_VERSION = 2 -- version 1 was the first build's skins and displays, which are gone
 
 if SaveVariables then
   SaveVariables("CherrysBar_DB")
@@ -30,12 +31,47 @@ function G.IsOn()
   return not (CherrysKit and CherrysKit.IsEnabled and not CherrysKit.IsEnabled("CherrysBar"))
 end
 
+function G.Icon(name)
+  return G.MEDIA .. "Icons/" .. name
+end
+
 -- Calls obj:method(...) only when the client has that method. Returns true when it ran.
 function G.Try(obj, method, ...)
   if obj and type(obj[method]) == "function" then
     return (pcall(obj[method], obj, ...))
   end
   return false
+end
+
+-- Measured in game for Cherry's Chat: frame positions and the cursor are screen pixels with +y down,
+-- sizes and anchor offsets are UI units, and pixels = UI units * GetUIScale().
+function G.UIScale()
+  local s = GetUIScale and tonumber(GetUIScale()) or 1
+  return (s and s > 0) and s or 1
+end
+
+function G.FramePos(frame)
+  if frame and type(frame.GetPos) == "function" then
+    local ok, x, y = pcall(frame.GetPos, frame)
+    if ok and tonumber(x) and tonumber(y) then
+      return tonumber(x), tonumber(y)
+    end
+  end
+  return nil
+end
+
+-- The middle of the screen, in the pixels FramePos uses.
+function G.MiddleX()
+  for _, name in ipairs(G.BAR_NAMES) do
+    local bar = G.Bars.Frame(name)
+    if bar and type(bar.GetWidth) == "function" and bar:IsVisible() then
+      local ok, w = pcall(bar.GetWidth, bar)
+      if ok and tonumber(w) and tonumber(w) > 200 then
+        return tonumber(w) * G.UIScale() / 2
+      end
+    end
+  end
+  return (GetScreenWidth and GetScreenWidth() or 1024) / 2
 end
 
 local function copy(t)
@@ -68,10 +104,12 @@ end
 
 G.DEFAULTS = {
   bars = {
-    top = { show = true, skin = "Slate", alpha = 0.9 },
-    bottom = { show = false, skin = "Slate", alpha = 0.9 },
+    top = { show = true, skin = "Stone", alpha = 1, autoHide = false },
+    bottom = { show = false, skin = "Stone", alpha = 1, autoHide = false },
   },
+  barHeight = 26,
   textSize = 12,
+  locked = true,        -- unlocked, displays can be dragged along the bars
   makeRoom = true,      -- move the game's frames out from under the bars
   tipsInCombat = false, -- display tooltips while fighting
   hideMenuBar = false,  -- hide the game's own main menu buttons
@@ -90,11 +128,15 @@ function G.S()
 end
 
 function G.ApplyDefaults()
+  local S = G.S()
+  if S.settingsVersion ~= G.SETTINGS_VERSION then
+    CherrysBar_DB = { settingsVersion = G.SETTINGS_VERSION, playedMins = S.playedMins, kills = S.kills }
+  end
   merge(G.S(), G.DEFAULTS)
 end
 
 function G.ResetAll()
-  CherrysBar_DB = {}
+  CherrysBar_DB = nil
   G.ApplyDefaults()
   G.Displays.ApplyDefaults()
   G.Refresh()
@@ -104,6 +146,7 @@ end
 function G.Refresh()
   G.Bars.ApplyAll()
   G.Displays.Rebuild()
+  G.Bars.ApplyHandles()
 end
 
 ---------------------------------------------------------------------------
@@ -196,6 +239,7 @@ function G.Help()
   chat("commands:")
   chat(" /cbar  opens the options window")
   chat(" /cbar top | bottom | both  chooses which bars show")
+  chat(" /cbar unlock | lock  allows or stops dragging displays along the bars")
   chat(" /cbar reset  puts every setting back to its default")
   chat(" /cbar probe  checks what this game client offers")
 end
@@ -221,6 +265,8 @@ function G.Command(msg)
     G.ShowBars(false, true)
   elseif word == "both" then
     G.ShowBars(true, true)
+  elseif word == "lock" or word == "unlock" then
+    G.Bars.SetLocked(word == "lock")
   elseif word == "reset" then
     G.ResetAll()
     G.Options.Refresh()

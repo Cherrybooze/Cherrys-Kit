@@ -1,5 +1,5 @@
--- Cherry's Bar: drawing displays and placing them on the bars. A display is one slot in
--- CherrysBar.xml: an icon and a line of text. Its text comes from a format such as "[USED]/[TOTAL]".
+-- Cherry's Bar: drawing displays, placing them on the bars and dragging them. A display is one slot
+-- in CherrysBar.xml: an icon and a line of text. Its text comes from a format such as "[USED]/[TOTAL]".
 
 local G = CherrysBar
 local D = {}
@@ -7,9 +7,10 @@ G.Displays = D
 
 D.list = {}         -- every display, in slot order (filled by DisplayList.lua)
 D.byKey = {}
-D.PADDING = 8       -- between two displays
-D.ICON = 16
+D.PADDING = 10      -- between two displays
 D.TEXT_GAP = 4
+D.GRIP = 14         -- room for the drag handle while unlocked
+D.DRAG_PIXELS = 4   -- a press that moves less than this is a click
 D.SHRINK_SLACK = 4  -- a text this much narrower does not move its neighbours (digits vary in width)
 
 local active = {}   -- the displays currently on a shown bar: all a tick ever looks at
@@ -17,6 +18,7 @@ D.active = active
 local eventMap = {} -- event -> displays that care; rebuilt when settings change
 local registered = {}
 local layoutDirty = false
+local dragging      -- { def, x, y } while a display follows the mouse
 
 function D.Add(def)
   def.slot = #D.list + 1
@@ -54,6 +56,14 @@ end
 
 local function onBar(cfg)
   return cfg.bar ~= "off" and G.Bars.IsShown(cfg.bar)
+end
+
+local function unlocked()
+  return not G.S().locked
+end
+
+local function iconSize()
+  return math.min(G.Bars.Height() - 6, 22)
 end
 
 -- A display reads only what its format asks for: { "EVENT", "TOKEN", ... } registers EVENT only
@@ -150,7 +160,7 @@ local function measure(fs, text)
     end
   end
   local letters = string.gsub(strip(text), "[\128-\191]", "")
-  return #letters * G.S().textSize * 0.55
+  return #letters * (tonumber(G.S().textSize) or 12) * 0.55
 end
 
 function D.Update(def)
@@ -179,6 +189,16 @@ function D.Update(def)
   if width > old or old - width > D.SHRINK_SLACK then
     def.textWidth = width
     layoutDirty = true
+  end
+end
+
+-- For a display whose picture follows its reading, such as Volume's speaker.
+function D.SetIcon(def, file)
+  if def.iconNow ~= file then
+    def.iconNow = file
+    if D.Config(def).icon then
+      G.Try(widget(def, "Icon"), "SetTexture", file)
+    end
   end
 end
 
@@ -213,8 +233,9 @@ end
 ---------------------------------------------------------------------------
 
 local function displayWidth(def, cfg)
-  local iconPart = (cfg.icon and def.icon) and (D.ICON + D.TEXT_GAP) or 0
-  return iconPart + (def.textWidth or 0) + 8
+  local grip = unlocked() and D.GRIP or 0
+  local iconPart = (cfg.icon and def.icon) and (iconSize() + D.TEXT_GAP) or 0
+  return grip + iconPart + (def.textWidth or 0) + 8
 end
 
 local function byOrder(a, b)
@@ -225,12 +246,12 @@ local function byOrder(a, b)
   return a.slot < b.slot
 end
 
--- The displays on one side of one bar, left to right.
+-- The displays on one side of one bar, left to right. With no side: all of them on that bar.
 function D.Row(bar, side)
   local row = {}
   for _, def in ipairs(D.list) do
     local cfg = D.Config(def)
-    if cfg.bar == bar and cfg.side == side then
+    if cfg.bar == bar and (side == nil or cfg.side == side) then
       row[#row + 1] = def
     end
   end
@@ -249,7 +270,7 @@ local function place(def, cfg, barName, side, offset)
     frame:SetAnchor("LEFT", "LEFT", relName, offset, 0)
   end
   G.Try(frame, "SetWidth", width)
-  G.Try(frame, "SetHeight", G.Bars.Height(barName))
+  G.Try(frame, "SetHeight", G.Bars.Height())
   return width
 end
 
@@ -260,7 +281,7 @@ function D.Layout()
       for _, def in ipairs(D.Row(barName, "left")) do
         offset = offset + place(def, D.Config(def), barName, "left", offset) + D.PADDING
       end
-      local right = D.PADDING
+      local right = D.PADDING + (unlocked() and G.Bars.HANDLE_SPACE or 0)
       local row = D.Row(barName, "right")
       for i = #row, 1, -1 do
         local def = row[i]
@@ -275,29 +296,44 @@ end
 ---------------------------------------------------------------------------
 
 local function styleSlot(def, cfg)
-  local icon, text = widget(def, "Icon"), widget(def, "Text")
+  local icon, text, grip = widget(def, "Icon"), widget(def, "Text"), widget(def, "Grip")
+  local left = 4
+  if grip then
+    if unlocked() then
+      grip:Show()
+      left = left + D.GRIP
+    else
+      grip:Hide()
+    end
+  end
+  local size = iconSize()
   if icon then
     if cfg.icon and def.icon then
-      G.Try(icon, "SetTexture", def.icon)
+      G.Try(icon, "SetTexture", def.iconNow or def.icon)
+      G.Try(icon, "SetWidth", size)
+      G.Try(icon, "SetHeight", size)
+      icon:ClearAllAnchors()
+      icon:SetAnchor("LEFT", "LEFT", widget(def, ""), left, 0)
       icon:Show()
+      left = left + size + D.TEXT_GAP
     else
       icon:Hide()
     end
   end
   if text then
-    local size = tonumber(G.S().textSize) or 12
+    local fontSize = tonumber(G.S().textSize) or 12
     -- The XML's size is 12: the font is left alone until the player has changed it.
-    if size ~= 12 or def.fontSet then
+    if fontSize ~= 12 or def.fontSet then
       local ok, path
       if type(text.GetFont) == "function" then
         ok, path = pcall(text.GetFont, text)
       end
       path = (ok and type(path) == "string") and path or "Fonts/DFHEIMDU.TTF"
-      G.Try(text, "SetFont", path, size, "NORMAL", "NORMAL")
+      G.Try(text, "SetFont", path, fontSize, "NORMAL", "NORMAL")
       def.fontSet = true
     end
     text:ClearAllAnchors()
-    text:SetAnchor("LEFT", "LEFT", widget(def, ""), (cfg.icon and def.icon) and (D.ICON + D.TEXT_GAP + 4) or 4, 0)
+    text:SetAnchor("LEFT", "LEFT", widget(def, ""), left, 0)
   end
 end
 
@@ -320,7 +356,11 @@ function D.Rebuild()
           pcall(def.setup, def, cfg)
         end
         styleSlot(def, cfg)
-        frame:Show()
+        if G.Bars.IsVisible(cfg.bar) then
+          frame:Show()
+        else
+          frame:Hide()
+        end
       else
         frame:Hide()
       end
@@ -334,38 +374,118 @@ function D.Rebuild()
   D.Layout()
 end
 
+-- An auto-hide bar came out or went away. Text is measured again on the way out: a hidden font
+-- string may not have reported its width.
+function D.BarShown(name, on)
+  for i = 1, #active do
+    local def = active[i]
+    if D.Config(def).bar == name then
+      local frame = widget(def, "")
+      if on then
+        frame:Show()
+        def.shownText = nil
+        def.dirty = true
+      else
+        frame:Hide()
+      end
+    end
+  end
+end
+
 ---------------------------------------------------------------------------
 -- Moving a display
 ---------------------------------------------------------------------------
 
--- Swaps with the neighbour on the same side; step is -1 (towards the left) or 1.
-function D.Move(def, step)
+-- Puts a display on a bar and side, at `index` among the others there (0 is the far left).
+function D.Place(def, bar, side, index)
+  local cfg = D.Config(def)
+  cfg.bar, cfg.side = bar, side
+  if bar ~= "off" then
+    local row = {}
+    for _, other in ipairs(D.Row(bar, side)) do
+      if other ~= def then
+        row[#row + 1] = other
+      end
+    end
+    table.insert(row, math.max(0, math.min(index, #row)) + 1, def)
+    for i, other in ipairs(row) do
+      D.Config(other).order = i * 10
+    end
+    -- A display sent to a bar that is off brings the bar with it.
+    if not G.Bars.IsShown(bar) then
+      G.S().bars[bar].show = true
+      G.Refresh()
+      return
+    end
+  end
+  D.Rebuild()
+end
+
+-- Onto a bar, at the end of the side it was on.
+function D.SetBar(def, bar)
+  local cfg = D.Config(def)
+  if bar == "off" then
+    D.Place(def, "off", cfg.side, 0)
+  else
+    D.Place(def, bar, cfg.side, #D.Row(bar, cfg.side))
+  end
+end
+
+-- One step along the bar, -1 towards the left or 1 towards the right. Stepping past the end of its
+-- side crosses the gap to the other side, so the two buttons reach every place on the bar.
+function D.Step(def, step)
   local cfg = D.Config(def)
   if cfg.bar == "off" then
     return
   end
   local row = D.Row(cfg.bar, cfg.side)
-  for i, other in ipairs(row) do
-    D.Config(other).order = i * 10
-  end
+  local at = 1
   for i, other in ipairs(row) do
     if other == def then
-      local neighbour = row[i + step]
-      if neighbour then
-        local n = D.Config(neighbour)
-        cfg.order, n.order = n.order, cfg.order
-      end
-      break
+      at = i
     end
   end
-  D.Layout()
+  local target = at + step
+  if target >= 1 and target <= #row then
+    D.Place(def, cfg.bar, cfg.side, target - 1)
+  elseif step > 0 and cfg.side == "left" then
+    D.Place(def, cfg.bar, "right", 0)
+  elseif step < 0 and cfg.side == "right" then
+    D.Place(def, cfg.bar, "left", #D.Row(cfg.bar, "left"))
+  end
 end
 
-function D.SetBar(def, bar)
+-- Dropped by the mouse: the nearest shown bar, the side of the screen it is on, and between the
+-- displays either side of it. Positions are the pixels FramePos gives.
+function D.Drop(def, x, y)
   local cfg = D.Config(def)
-  cfg.bar = bar
-  cfg.order = 1000 + def.slot -- joins the end of the row
-  D.Rebuild()
+  local bar = cfg.bar
+  local topOn, bottomOn = G.Bars.IsVisible("top"), G.Bars.IsVisible("bottom")
+  if topOn and bottomOn then
+    local _, topY = G.FramePos(CBar_BarTop)
+    local _, bottomY = G.FramePos(CBar_BarBottom)
+    if topY and bottomY then
+      bar = math.abs(y - topY) <= math.abs(y - bottomY) and "top" or "bottom"
+    end
+  elseif topOn then
+    bar = "top"
+  elseif bottomOn then
+    bar = "bottom"
+  end
+  local scale = G.UIScale()
+  local center = x + displayWidth(def, cfg) * scale / 2
+  local side = center < G.MiddleX() and "left" or "right"
+  local index = 0
+  for _, other in ipairs(D.Row(bar, side)) do
+    if other ~= def then
+      local ox = G.FramePos(widget(other, ""))
+      if ox and ox + displayWidth(other, D.Config(other)) * scale / 2 < center then
+        index = index + 1
+      end
+    end
+  end
+  D.Place(def, bar, side, index)
+  G.Options.Refresh()
 end
 
 ---------------------------------------------------------------------------
@@ -374,13 +494,8 @@ end
 
 function D.TooltipOwner(frame, def)
   local bottom = D.Config(def).bar == "bottom"
-  local x = 0
-  if type(frame.GetPos) == "function" then
-    local ok, px = pcall(frame.GetPos, frame)
-    x = ok and tonumber(px) or 0
-  end
-  local screen = GetScreenWidth and GetScreenWidth() or 1024
-  local side = (x < screen / 2) and "RIGHT" or "LEFT"
+  local x = G.FramePos(frame) or 0
+  local side = (x < G.MiddleX()) and "RIGHT" or "LEFT"
   GameTooltip:SetOwner(frame, "ANCHOR_" .. (bottom and "TOP" or "BOTTOM") .. side, 0, 0)
 end
 
@@ -390,7 +505,8 @@ function D.Enter(slot, frame)
     return
   end
   G.Try(widget(def, "Hover"), "Show")
-  if not GameTooltip or (G.InCombat() and not G.S().tipsInCombat) then
+  G.Bars.Hover(D.Config(def).bar, true)
+  if dragging or not GameTooltip or (G.InCombat() and not G.S().tipsInCombat) then
     return
   end
   D.TooltipOwner(frame, def)
@@ -409,6 +525,9 @@ function D.Enter(slot, frame)
   if def.hint then
     GameTooltip:AddLine(def.hint, 0, 0.7, 0.9)
   end
+  if unlocked() then
+    GameTooltip:AddLine("Drag: move it along the bar", 0, 0.7, 0.9)
+  end
   GameTooltip:AddLine("Right-click: options for this display", 0, 0.7, 0.9)
   G.Try(GameTooltip, "Show")
 end
@@ -417,16 +536,49 @@ function D.Leave(slot)
   local def = D.list[slot]
   if def then
     G.Try(widget(def, "Hover"), "Hide")
+    local bar = D.Config(def).bar
+    if bar ~= "off" then
+      G.Bars.Hover(bar, false)
+    end
   end
   if GameTooltip then
     GameTooltip:Hide()
   end
 end
 
-function D.Click(slot, key)
+-- The client moves the frame itself between StartMoving and StopMovingOrSizing, as XBar did, so a
+-- drag adds no update loop.
+function D.MouseDown(slot, key)
+  local def = D.list[slot]
+  if not def or key ~= "LBUTTON" or not unlocked() then
+    return
+  end
+  local frame = widget(def, "")
+  local x, y = G.FramePos(frame)
+  if x and G.Try(frame, "StartMoving") then
+    dragging = { def = def, x = x, y = y }
+    if GameTooltip then
+      GameTooltip:Hide()
+    end
+  end
+end
+
+function D.MouseUp(slot, key)
   local def = D.list[slot]
   if not def then
     return
+  end
+  if dragging and dragging.def == def then
+    local from = dragging
+    dragging = nil
+    local frame = widget(def, "")
+    G.Try(frame, "StopMovingOrSizing")
+    local x, y = G.FramePos(frame)
+    if x and math.abs(x - from.x) + math.abs(y - from.y) >= D.DRAG_PIXELS then
+      D.Drop(def, x, y)
+      return
+    end
+    D.Layout() -- back to its place: it was a click
   end
   if key == "RBUTTON" then
     if GameTooltip then
@@ -439,5 +591,16 @@ function D.Click(slot, key)
       def.err = tostring(err)
       G.Print((def.title or def.key) .. " could not do that here: " .. def.err)
     end
+  end
+end
+
+function D.Wheel(slot, delta)
+  local def = D.list[slot]
+  if def and def.wheel then
+    local ok, err = pcall(def.wheel, def, delta)
+    if not ok then
+      def.err = tostring(err)
+    end
+    D.Update(def)
   end
 end

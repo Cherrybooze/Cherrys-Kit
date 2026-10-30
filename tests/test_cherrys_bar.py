@@ -1,7 +1,8 @@
-"""Cherry's Bar: bars, displays, settings, throttling and hub links in a fake client."""
+"""Cherry's Bar: bars, displays, position controls, settings, throttling and hub links in a fake client."""
 
 from pathlib import Path
 import re
+import struct
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -13,14 +14,20 @@ KIT = ROOT / "Interface/AddOns/CherrysKit"
 SOURCE = KIT / "CherrysBar"
 FILES = ("Core.lua", "Bars.lua", "Displays.lua", "DisplayList.lua", "Menu.lua", "Options.lua", "Probe.lua")
 NS = "{http://www.runewaker.com/}"
+SKINS = ("Stone", "Steel", "Frost", "Walnut", "Moss", "Amethyst", "Slate")
 
 CLIENT = r'''
 messages = {}
 DEFAULT_CHAT_FRAME = { AddMessage = function(self, text) messages[#messages + 1] = text end }
-calls = { bag = 0, ping = 0, opened = {} }
+calls = { bag = 0, ping = 0, opened = {}, volume = {} }
 now, inCombat, zone = 100, false, "Varanas"
+uiScale = 1
+cursor = { 300, 12 }
+volume = 0.8
 state = { used = 10, total = 60, gold = 1234567, fps = 60, ping = 40, xp = 500, xpMax = 1000 }
 function GetTime() return now end
+function GetUIScale() return uiScale end
+function GetCursorPos() return cursor[1], cursor[2] end
 function GetScreenWidth() return 1024 end
 function UnitName() return "Cherry" end
 function UnitClass() return "Warrior", "Mage" end
@@ -36,10 +43,13 @@ function GetTotalTpExp() return 1000 end
 function GetPlayerExpDebt() return 0, 0 end
 function GetBagCount() calls.bag = calls.bag + 1; return state.used, state.total end
 function GetGoodsItemInfo() calls.goods = (calls.goods or 0) + 1; return "icon", "name", 0 end
+function GetBagItemCount() calls.currency = (calls.currency or 0) + 1; return 3 end
+function GetCountInBankByName() return 2 end
 function GetPlayerMoney(kind) return kind == "copper" and state.gold or 5 end
 function GetFramerate() calls.ping = calls.ping + 1; return state.fps end
 function GetPing() return state.ping end
 function GetZoneName() return zone end
+function GetPlayerWorldMapPos() return 0.123, 0.456 end
 function GetFriendCount() return 2 end
 function GetFriendInfo(_, i) return "Friend" .. i, 1, i == 1 end
 function GetNumGuildMembers() return 0 end
@@ -59,6 +69,14 @@ function OpenMail() calls.opened[#calls.opened + 1] = "mail" end
 function OpenBank() calls.opened[#calls.opened + 1] = "bank" end
 function ToggleUIFrame(frame) calls.opened[#calls.opened + 1] = frame:GetName() end
 function ToggleCharacter(name) calls.opened[#calls.opened + 1] = name end
+function ToggleSocialFrame() end
+function ToggleGameMenu() end
+function InviteByName() end
+function ChatFrame_SendTell() end
+function StaticPopup_Show() end
+function MasterVolumeSlider_GetValue() return volume end
+SYS_AudioSettings_MasterVolumeSlider = { SetValue = function(_, v) volume = v end }
+function SSF_AudioSettings_OnApply() calls.volume[#calls.volume + 1] = volume end
 
 local Widget = {}
 Widget.__index = Widget
@@ -82,14 +100,16 @@ function Widget:SetHeight(h) self.h = h end
 -- A font string with no size takes the width of its text.
 function Widget:GetWidth()
   if self.text then return #string.gsub(string.gsub(self.text, "|c%x%x%x%x%x%x%x%x", ""), "|r", "") * 6 end
-  return self.w or 0
+  return self.w or 1600
 end
 function Widget:SetAlpha(a) self.alpha = a end
 function Widget:SetTexture(t) self.texture = t end
 function Widget:SetChecked(v) self.checked = v end
 function Widget:GetFont() return "fonts/game.ttf", 12 end
 function Widget:SetFont(path, size) self.fontSize = size end
-function Widget:GetPos() return self.posX or 100, 0 end
+function Widget:GetPos() return self.posX or 100, self.posY or 0 end
+function Widget:StartMoving() self.moving = true end
+function Widget:StopMovingOrSizing() self.moving = false end
 function Widget:RegisterEvent(e) self.events = self.events or {}; self.events[e] = true end
 function Widget:UnregisterEvent(e) self.events = self.events or {}; self.events[e] = nil end
 function MakeWidget(name, shown)
@@ -112,10 +132,19 @@ GameFrame("ExperienceFrame", 0, 0, "BOTTOMLEFT")
 MakeWidget("EquipDameFrame", true)
 MakeWidget("BagFrame", false)
 MakeWidget("WorldMapFrame", false)
+MakeWidget("UI_QuestBook", false)
 GameTooltip = MakeWidget("GameTooltip", false)
 function GameTooltip:SetOwner() end
 function GameTooltip:AddLine(t) self.lines = self.lines or {}; self.lines[#self.lines + 1] = t end
 function GameTooltip:AddDoubleLine(a, b) self.lines = self.lines or {}; self.lines[#self.lines + 1] = a .. "=" .. tostring(b) end
+function frameOf(key) return _G['CBar_D' .. CherrysBar.Displays.byKey[key].slot] end
+function chipOf(key) return _G['CBar_Chip' .. CherrysBar.Displays.byKey[key].slot] end
+function row(bar, side)
+  local out = {}
+  for i, def in ipairs(CherrysBar.Displays.Row(bar, side)) do out[i] = def.key end
+  return table.concat(out, ",")
+end
+function cfg(key) return CherrysBar.Displays.Config(CherrysBar.Displays.byKey[key]) end
 '''
 
 
@@ -154,21 +183,34 @@ class BarTest(unittest.TestCase):
     def anchor_y(self, frame):
         return self.ev(f"select(5, {frame}:GetAnchor())")
 
+    def menu_rows(self):
+        return {self.ev(f"CBar_MenuRow{i}Text.text"): i for i in range(1, 25) if self.ev(f"CBar_MenuRow{i}.shown")}
+
+    # Bars
+
     def test_default_is_top_bar_only_with_its_displays(self):
         self.assertTrue(self.ev("CBar_BarTop.shown"))
         self.assertFalse(self.ev("CBar_BarBottom.shown"))
-        shown = [d for d in ("Menu", "Exp", "Bag", "Money", "Mail", "Perf", "Clock")
-                 if self.ev(f"_G['CBar_D' .. CherrysBar.Displays.byKey.{d}.slot].shown")]
-        self.assertEqual(len(shown), 7)
-        for hidden in ("Zone", "Friends", "Guild", "Ammo", "Class", "Craft", "Dps"):
-            self.assertFalse(self.ev(f"_G['CBar_D' .. CherrysBar.Displays.byKey.{hidden}.slot].shown"), hidden)
+        for key in ("Menu", "Exp", "Bag", "Money", "Mail", "Perf", "Clock"):
+            self.assertTrue(self.ev(f"frameOf('{key}').shown"), key)
+        for key in ("Wallet", "Zone", "Friends", "Guild", "Ammo", "Repair", "Dps", "Daily", "Class", "Craft", "Volume"):
+            self.assertFalse(self.ev(f"frameOf('{key}').shown"), key)
 
-    def test_bars_anchor_to_their_screen_edge(self):
+    def test_bars_draw_cherrys_art_in_tiles_on_their_own_edge(self):
         self.run_lua("CherrysBar.Command('both')")
         self.assertEqual(self.ev("CBar_BarTop.anchors[1][1]"), "TOPLEFT")
         self.assertEqual(self.ev("CBar_BarBottom.anchors[1][1]"), "BOTTOMLEFT")
-        self.assertIn("barU_bgndM", self.ev("CBar_BarBottomM.texture"))
-        self.assertIn("/bar_bgndM", self.ev("CBar_BarTopM.texture"))
+        for i in range(1, 17):
+            self.assertIn("Skins/Stone/top", self.ev(f"CBar_BarTopT{i}.texture"))
+            self.assertIn("Skins/Stone/bottom", self.ev(f"CBar_BarBottomT{i}.texture"))
+        self.assertEqual(self.ev("CBar_BarTop.h"), 26)
+        self.assertEqual(self.ev("CBar_BarTopT1.h"), 30)  # with its shadow
+
+    def test_bar_height_moves_everything_with_it(self):
+        self.run_lua("CherrysBar.S().barHeight = 34; CherrysBar.Refresh()")
+        self.assertEqual(self.ev("CBar_BarTop.h"), 34)
+        self.assertEqual(self.ev("frameOf('Bag').h"), 34)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 34)
 
     def test_commands_choose_bars(self):
         self.run_lua("CherrysBar.Command('bottom')")
@@ -178,46 +220,351 @@ class BarTest(unittest.TestCase):
         self.assertTrue(self.ev("CBar_BarTop.shown"))
         self.assertFalse(self.ev("CBar_BarBottom.shown"))
 
+    # Position controls
+
     def test_displays_are_set_per_bar_and_flow_without_overlap(self):
         self.run_lua("""
             CherrysBar.Command('both')
             local D = CherrysBar.Displays
             D.SetBar(D.byKey.Zone, 'bottom')
             D.SetBar(D.byKey.Friends, 'bottom')
-            function right_edge(key)
-              local def = D.byKey[key]
-              local frame = _G['CBar_D' .. def.slot]
-              return frame.anchors[1][4] + frame.w
-            end
-            function left_edge(key) return _G['CBar_D' .. D.byKey[key].slot].anchors[1][4] end
-            function rel(key) return _G['CBar_D' .. D.byKey[key].slot].anchors[1][3] end
+            function right_edge(key) local f = frameOf(key); return f.anchors[1][4] + f.w end
+            function left_edge(key) return frameOf(key).anchors[1][4] end
         """)
-        self.assertEqual(self.ev("rel('Zone')"), "CBar_BarBottom")
-        self.assertEqual(self.ev("rel('Bag')"), "CBar_BarTop")
+        self.assertEqual(self.ev("frameOf('Zone').anchors[1][3]"), "CBar_BarBottom")
+        self.assertEqual(self.ev("frameOf('Bag').anchors[1][3]"), "CBar_BarTop")
         self.assertGreaterEqual(self.ev("left_edge('Friends')"), self.ev("right_edge('Zone')"))
         self.assertGreaterEqual(self.ev("left_edge('Bag')"), self.ev("right_edge('Exp')"))
-        self.assertEqual(self.ev("_G['CBar_D' .. CherrysBar.Displays.byKey.Clock.slot].anchors[1][1]"), "RIGHT")
+        self.assertEqual(self.ev("frameOf('Clock').anchors[1][1]"), "RIGHT")
 
-    def test_moving_swaps_neighbours_and_survives_rebuild(self):
+    def test_stepping_reaches_every_place_and_crosses_the_gap(self):
+        step = "CherrysBar.Displays.Step(CherrysBar.Displays.byKey.Money, {})"
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Bag,Money")
+        self.run_lua(step.format(-1))
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Money,Bag")
+        self.run_lua(step.format(1))
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Bag,Money")
+        self.run_lua(step.format(1))
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Bag")
+        self.assertEqual(self.ev("row('top', 'right')"), "Money,Mail,Perf,Clock")
+        self.run_lua(step.format(-1))
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Bag,Money")
+        for _ in range(3):
+            self.run_lua(step.format(-1))
+        self.assertEqual(self.ev("row('top', 'left')"), "Money,Menu,Exp,Bag")
+        self.run_lua(step.format(-1))  # already at the far left
+        self.assertEqual(self.ev("row('top', 'left')"), "Money,Menu,Exp,Bag")
+
+    def test_order_survives_rebuild(self):
         self.run_lua("""
             local D = CherrysBar.Displays
-            D.Move(D.byKey.Bag, -1)
+            D.Step(D.byKey.Bag, -1)
             D.Rebuild()
-            order = {}
-            for i, def in ipairs(D.Row('top', 'left')) do order[i] = def.key end
         """)
-        self.assertEqual([self.ev(f"order[{i}]") for i in (1, 2, 3, 4)], ["Menu", "Bag", "Exp", "Money"])
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Bag,Exp,Money")
+
+    def test_a_display_sent_to_a_bar_that_is_off_brings_the_bar(self):
+        self.run_lua("local D = CherrysBar.Displays; D.SetBar(D.byKey.Bag, 'bottom')")
+        self.assertTrue(self.ev("CBar_BarBottom.shown"))
+        self.assertTrue(self.ev("frameOf('Bag').shown"))
+        self.assertEqual(self.ev("row('bottom', 'left')"), "Bag")
+
+    def test_locked_displays_do_not_drag(self):
+        self.run_lua("local D = CherrysBar.Displays; D.MouseDown(D.byKey.Bag.slot, 'LBUTTON')")
+        self.assertFalse(self.ev("frameOf('Bag').moving"))
+
+    def test_unlocking_shows_handles_and_grips_and_makes_room_for_them(self):
+        self.assertFalse(self.ev("CBar_PinTop.shown"))
+        self.assertFalse(self.ev("_G['CBar_D' .. CherrysBar.Displays.byKey.Bag.slot .. 'Grip'].shown"))
+        right_before = self.ev("frameOf('Clock').anchors[1][4]")
+        self.run_lua("CherrysBar.Command('unlock')")
+        self.assertTrue(self.ev("CBar_PinTop.shown"))
+        self.assertTrue(self.ev("CBar_LockTop.shown"))
+        self.assertTrue(self.ev("_G['CBar_D' .. CherrysBar.Displays.byKey.Bag.slot .. 'Grip'].shown"))
+        self.assertLess(self.ev("frameOf('Clock').anchors[1][4]"), right_before)
+        self.run_lua("CherrysBar.Bars.SetLocked(true)")
+        self.assertFalse(self.ev("CBar_LockTop.shown"))
+
+    def test_dragging_a_display_along_a_bar_and_to_the_other_side(self):
+        self.run_lua("""
+            CherrysBar.Command('unlock')
+            local D = CherrysBar.Displays
+            -- on screen: Menu at 10, Exp at 80, Bag at 160, Money at 240; the screen is 1600 wide
+            for key, x in pairs({ Menu = 10, Exp = 80, Bag = 160, Money = 240, Mail = 1300, Perf = 1400, Clock = 1500 }) do
+              frameOf(key).posX, frameOf(key).posY = x, 0
+            end
+            slot = D.byKey.Money.slot
+            D.MouseDown(slot, 'LBUTTON')
+        """)
+        self.assertTrue(self.ev("frameOf('Money').moving"))
+        self.run_lua("frameOf('Money').posX = 40; CherrysBar.Displays.MouseUp(slot, 'LBUTTON')")
+        self.assertFalse(self.ev("frameOf('Money').moving"))
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Money,Exp,Bag")
+        self.run_lua("""
+            local D = CherrysBar.Displays
+            for key, x in pairs({ Menu = 10, Money = 80, Exp = 160, Bag = 240 }) do frameOf(key).posX = x end
+            D.MouseDown(D.byKey.Bag.slot, 'LBUTTON')
+            frameOf('Bag').posX = 1450
+            D.MouseUp(D.byKey.Bag.slot, 'LBUTTON')
+        """)
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Money,Exp")
+        self.assertEqual(self.ev("row('top', 'right')"), "Mail,Perf,Bag,Clock")
+
+    def test_dragging_to_the_other_bar(self):
+        self.run_lua("""
+            CherrysBar.Command('both')
+            CherrysBar.Command('unlock')
+            CBar_BarTop.posX, CBar_BarTop.posY = 0, 0
+            CBar_BarBottom.posX, CBar_BarBottom.posY = 0, 1000
+            local D = CherrysBar.Displays
+            frameOf('Bag').posX, frameOf('Bag').posY = 160, 0
+            D.MouseDown(D.byKey.Bag.slot, 'LBUTTON')
+            frameOf('Bag').posY = 990
+            D.MouseUp(D.byKey.Bag.slot, 'LBUTTON')
+        """)
+        self.assertEqual(self.ev("cfg('Bag').bar"), "bottom")
+        self.assertEqual(self.ev("frameOf('Bag').anchors[1][3]"), "CBar_BarBottom")
+
+    def test_a_press_without_moving_is_still_a_click(self):
+        self.run_lua("""
+            CherrysBar.Command('unlock')
+            local D = CherrysBar.Displays
+            frameOf('Bag').posX = 160
+            D.MouseDown(D.byKey.Bag.slot, 'LBUTTON')
+            frameOf('Bag').posX = 161
+            D.MouseUp(D.byKey.Bag.slot, 'LBUTTON')
+        """)
+        self.assertEqual(self.ev("calls.opened[1]"), "BagFrame")
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Bag,Money")
+
+    # Options window
+
+    def test_options_buttons_move_the_picked_display(self):
+        self.run_lua("""
+            CherrysBar.Options.Toggle()
+            CherrysBar.Options.ChipUp(CherrysBar.Displays.byKey.Bag.slot, 'LBUTTON')
+            CherrysBar.Options.Move('left')
+        """)
+        self.assertEqual(self.ev("CBar_OptionsPicked.text"), "Bags")
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Bag,Exp,Money")
+        self.run_lua("CherrysBar.Options.Move('right')")
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Bag,Money")
+        self.run_lua("CherrysBar.Options.Move('bottom')")
+        self.assertEqual(self.ev("cfg('Bag').bar"), "bottom")
+        self.assertTrue(self.ev("CBar_BarBottom.shown"))
+        self.run_lua("CherrysBar.Options.Move('top')")
+        self.assertEqual(self.ev("cfg('Bag').bar"), "top")
+        self.run_lua("CherrysBar.Options.Move('off')")
+        self.assertEqual(self.ev("cfg('Bag').bar"), "off")
+        self.assertFalse(self.ev("frameOf('Bag').shown"))
+
+    def test_chips_map_the_bars(self):
+        self.run_lua("CherrysBar.Options.Toggle()")
+        menu_y, none_y = self.ev("chipOf('Menu').anchors[1][5]"), self.ev("chipOf('Zone').anchors[1][5]")
+        self.assertLess(menu_y, none_y)
+        self.assertLess(self.ev("chipOf('Menu').anchors[1][4]"), self.ev("chipOf('Exp').anchors[1][4]"))
+        self.assertLess(self.ev("chipOf('Money').anchors[1][4]"), self.ev("chipOf('Mail').anchors[1][4]"))
+        self.assertEqual(self.ev("chipOf('Bag').w"), 64)
+        self.assertEqual(self.ev("_G['CBar_Chip' .. CherrysBar.Displays.byKey.Bag.slot .. 'Text'].text"), "Bag")
+        self.assertEqual(self.ev("_G['CBar_Chip' .. CherrysBar.Displays.byKey.Menu.slot .. 'Mark'].shown"), True)
+
+    def test_a_crowded_row_shrinks_chips_to_their_icons(self):
+        self.run_lua("""
+            CherrysBar.Options.Toggle()
+            local D = CherrysBar.Displays
+            for _, def in ipairs(D.list) do D.SetBar(def, 'top') end
+            CherrysBar.Options.Refresh()
+        """)
+        self.assertLess(self.ev("chipOf('Bag').w"), 50)
+        self.assertFalse(self.ev("_G['CBar_Chip' .. CherrysBar.Displays.byKey.Bag.slot .. 'Text'].shown"))
+        lefts = sorted(self.ev(f"chipOf('{k}').anchors[1][4]") for k in self.ev("CherrysBar.Displays.byKey").keys())
+        self.assertLess(lefts[-1] + 45, 90 + 776 + 8)
+        self.assertEqual(len(set(lefts)), 18)
+
+    def test_dragging_a_chip_between_rows(self):
+        self.run_lua("""
+            CherrysBar.Options.Toggle()
+            local O = CherrysBar.Options
+            CBar_Options.posX, CBar_Options.posY = 0, 0
+            for key, x in pairs({ Menu = 94, Exp = 160, Bag = 226, Money = 292, Mail = 650, Perf = 716, Clock = 782 }) do
+              chipOf(key).posX, chipOf(key).posY = x, 151
+            end
+            local zone = CherrysBar.Displays.byKey.Zone.slot
+            chipOf('Zone').posX, chipOf('Zone').posY = 94, 219
+            O.ChipDown(zone, 'LBUTTON')
+        """)
+        self.assertTrue(self.ev("chipOf('Zone').moving"))
+        self.run_lua("""
+            chipOf('Zone').posX, chipOf('Zone').posY = 170, 151
+            CherrysBar.Options.ChipUp(CherrysBar.Displays.byKey.Zone.slot, 'LBUTTON')
+        """)
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Exp,Zone,Bag,Money")
+        self.assertTrue(self.ev("frameOf('Zone').shown"))
+        self.assertEqual(self.ev("CBar_OptionsPicked.text"), "Location")
+        self.run_lua("""
+            local zone = CherrysBar.Displays.byKey.Zone.slot
+            chipOf('Zone').posX, chipOf('Zone').posY = 226, 151
+            CherrysBar.Options.ChipDown(zone, 'LBUTTON')
+            chipOf('Zone').posY = 220
+            CherrysBar.Options.ChipUp(zone, 'LBUTTON')
+        """)
+        self.assertEqual(self.ev("cfg('Zone').bar"), "off")
+        self.assertFalse(self.ev("frameOf('Zone').shown"))
+
+    def test_bar_rows_and_general_rows(self):
+        self.run_lua("CherrysBar.Options.Toggle(); CherrysBar.Options.BarClick('bottom', 'show')")
+        self.assertTrue(self.ev("CBar_BarBottom.shown"))
+        self.run_lua("CherrysBar.Options.BarClick('top', 'skin')")
+        self.assertEqual(self.ev("CherrysBar.S().bars.top.skin"), "Steel")
+        self.assertEqual(self.ev("CBar_OptBarTopSkin.text"), "Steel")
+        self.assertIn("Steel/top", self.ev("CBar_LayoutTop.texture"))
+        self.run_lua("CherrysBar.Options.BarClick('top', 'minus')")
+        self.assertAlmostEqual(self.ev("CBar_BarTop.alpha"), 0.9)
+        self.assertEqual(self.ev("CBar_OptBarTopValue.text"), "90%")
+        self.assertEqual(self.ev("CBar_OptRow1Label.text"), "Bar height")
+        for i in range(1, 8):
+            kind = self.ev(f"CherrysBar.Options.LIST[{i}].kind")
+            for part in {"check": ["check", "check"], "num": ["plus", "minus"]}[kind]:
+                self.run_lua(f"CherrysBar.Options.RowClick({i}, '{part}')")
+        self.assertFalse(self.ev("CBar_OptRow8.shown"))
+
+    def test_picked_display_settings_and_format(self):
+        self.run_lua("""
+            CherrysBar.Options.Toggle()
+            CherrysBar.Options.ChipUp(CherrysBar.Displays.byKey.Bag.slot, 'LBUTTON')
+        """)
+        self.assertEqual(self.ev("CBar_OptionsFormat.text"), "[USED]/[TOTAL]")
+        self.assertIn("[FREE]", self.ev("CBar_OptionsTokens.text"))
+        self.run_lua("CBar_OptionsFormat:SetText('[TOTAL]'); CherrysBar.Options.ApplyFormat()")
+        self.assertIn("60", self.text_of("Bag"))
+        self.run_lua("CherrysBar.Options.ResetFormat()")
+        self.assertEqual(self.ev("CBar_OptionsFormat.text"), "[USED]/[TOTAL]")
+        self.run_lua("CherrysBar.Options.PickedFlip('icon')")
+        self.assertFalse(self.ev("cfg('Bag').icon"))
+        self.run_lua("CherrysBar.Options.ChipUp(CherrysBar.Displays.byKey.Menu.slot, 'LBUTTON')")
+        self.assertFalse(self.ev("CBar_OptionsFormat.shown"))
+
+    def test_lock_button_says_what_it_will_do(self):
+        self.run_lua("CherrysBar.Options.Toggle()")
+        self.assertEqual(self.ev("CBar_OptionsLock.text"), "Unlock to drag on the bars")
+        self.run_lua("CherrysBar.Options.ToggleLock()")
+        self.assertEqual(self.ev("CBar_OptionsLock.text"), "Lock the displays")
+
+    # Menus
+
+    def test_right_click_on_a_display_changes_it(self):
+        self.run_lua("local D = CherrysBar.Displays; D.MouseUp(D.byKey.Bag.slot, 'RBUTTON')")
+        self.assertTrue(self.ev("CBar_Menu.shown"))
+        rows = self.menu_rows()
+        self.assertIn("check_on", self.ev(f"CBar_MenuRow{rows['Show icon']}Icon.texture"))
+        self.run_lua(f"CherrysBar.Menu.RowClick({rows['Show icon']}, 'LBUTTON')")
+        self.assertFalse(self.ev("cfg('Bag').icon"))
+        self.assertIn("check_off", self.ev(f"CBar_MenuRow{rows['Show icon']}Icon.texture"))
+        self.assertTrue(self.ev("CBar_Menu.shown"))
+        self.run_lua(f"CherrysBar.Menu.RowClick({rows['Move left']}, 'LBUTTON')")
+        self.assertEqual(self.ev("row('top', 'left')"), "Menu,Bag,Exp,Money")
+        self.run_lua(f"CherrysBar.Menu.RowClick({rows['Move to the bottom bar']}, 'LBUTTON')")
+        self.assertEqual(self.ev("cfg('Bag').bar"), "bottom")
+        self.assertIn("Move to the top bar", self.menu_rows())
+
+    def test_right_click_on_a_bar_lists_every_display(self):
+        self.run_lua("CherrysBar.Bars.BarClick('top', 'RBUTTON')")
+        self.assertTrue(self.ev("CBar_Menu.shown"))
+        self.assertEqual(self.ev("CBar_Menu.anchors[1][3]"), "UIParent")
+        self.assertEqual(self.ev("CBar_Menu.anchors[1][4]"), 300)
+        rows = self.menu_rows()
+        self.assertIn("Location", rows)
+        self.assertIn("check_off", self.ev(f"CBar_MenuRow{rows['Location']}Icon.texture"))
+        self.assertIn("check_on", self.ev(f"CBar_MenuRow{rows['Bags']}Icon.texture"))
+        self.run_lua(f"CherrysBar.Menu.RowClick({rows['Location']}, 'LBUTTON')")
+        self.assertEqual(self.ev("cfg('Zone').bar"), "top")
+        self.assertTrue(self.ev("frameOf('Zone').shown"))
+        self.assertIn("check_on", self.ev(f"CBar_MenuRow{rows['Location']}Icon.texture"))
+        self.run_lua(f"CherrysBar.Menu.RowClick({rows['Location']}, 'LBUTTON')")
+        self.assertEqual(self.ev("cfg('Zone').bar"), "off")
+
+    def test_left_click_on_a_bar_does_nothing(self):
+        self.run_lua("CherrysBar.Bars.BarClick('top', 'LBUTTON')")
+        self.assertFalse(self.ev("CBar_Menu.shown"))
+
+    def test_menu_closes_after_the_mouse_leaves_and_scrolls(self):
+        self.run_lua("""
+            local list = {}
+            for i = 1, 40 do list[i] = { text = 'row' .. i, click = function() clicked = i end } end
+            CherrysBar.Menu.Open(list, nil, nil)
+            CherrysBar.Menu.Wheel(-1)
+        """)
+        self.assertEqual(self.ev("CBar_MenuRow1Text.text"), "row2")
+        self.run_lua("CherrysBar.Menu.RowClick(1, 'LBUTTON')")
+        self.assertEqual(self.ev("clicked"), 2)
+        self.run_lua("CherrysBar.Menu.Open({ { text = 'a' } }, nil, nil); CherrysBar.Menu.RowLeave(1)")
+        self.assertTrue(self.ev("CBar_Menu.shown"))
+        self.tick(1)
+        self.assertFalse(self.ev("CBar_Menu.shown"))
+
+    # Auto-hide
+
+    def test_auto_hide_tucks_away_and_comes_back(self):
+        self.run_lua("CherrysBar.Bars.SetAutoHide('top', true)")
+        self.assertTrue(self.ev("CBar_EdgeTop.shown"))
+        self.assertTrue(self.ev("CBar_BarTop.shown"))  # under the mouse just now
+        self.tick(1.5)
+        self.assertFalse(self.ev("CBar_BarTop.shown"))
+        self.assertFalse(self.ev("frameOf('Bag').shown"))
+        self.assertEqual(self.anchor_y("PlayerFrame"), 0)  # takes no room
+        self.run_lua("CherrysBar.Bars.Reveal('top')")
+        self.assertTrue(self.ev("CBar_BarTop.shown"))
+        self.assertTrue(self.ev("frameOf('Bag').shown"))
+        self.tick(3)
+        self.assertTrue(self.ev("CBar_BarTop.shown"))  # stays until the mouse has been and gone
+        self.run_lua("CherrysBar.Bars.Hover('top', true); CherrysBar.Bars.Hover('top', false)")
+        self.tick(0.5)
+        self.assertTrue(self.ev("CBar_BarTop.shown"))
+        self.tick(1)
+        self.assertFalse(self.ev("CBar_BarTop.shown"))
+
+    def test_moving_from_bar_to_display_keeps_it_out(self):
+        self.run_lua("CherrysBar.Bars.SetAutoHide('top', true); CherrysBar.Bars.Hover('top', false)")
+        self.tick(0.5)
+        self.run_lua("local D = CherrysBar.Displays; D.Enter(D.byKey.Bag.slot, frameOf('Bag'))")
+        self.tick(3)
+        self.assertTrue(self.ev("CBar_BarTop.shown"))
+
+    def test_an_open_menu_holds_an_auto_hide_bar(self):
+        self.run_lua("""
+            CherrysBar.Bars.SetAutoHide('top', true)
+            CherrysBar.Bars.BarClick('top', 'RBUTTON')
+            CherrysBar.Bars.Hover('top', false)
+        """)
+        self.tick(3)
+        self.assertTrue(self.ev("CBar_BarTop.shown"))
+
+    def test_pin_handle_toggles_auto_hide_and_its_picture(self):
+        self.run_lua("CherrysBar.Command('unlock')")
+        self.assertIn("Icons/pin", self.ev("CBar_PinTopIcon.texture"))
+        self.run_lua("CherrysBar.Bars.PinClick('top')")
+        self.assertTrue(self.ev("CherrysBar.S().bars.top.autoHide"))
+        self.assertIn("pin_out", self.ev("CBar_PinTopIcon.texture"))
+        self.run_lua("CherrysBar.Bars.PinClick('top')")
+        self.assertFalse(self.ev("CBar_EdgeTop.shown"))
+        self.assertTrue(self.ev("CBar_BarTop.shown"))
+
+    # Drawing and throttling
 
     def test_format_tokens_label_and_colour(self):
-        self.assertIn("Bag", self.text_of("Bag"))
         self.assertIn("10", self.text_of("Bag"))
+        self.assertNotIn("Bag", self.text_of("Bag"))
         self.run_lua("""
             local D = CherrysBar.Displays
-            local cfg = D.Config(D.byKey.Bag)
-            cfg.fmt, cfg.label, cfg.color = '[USED] of [TOTAL] ([LOAD]%) [NOPE]', false, false
+            local c = D.Config(D.byKey.Bag)
+            c.fmt, c.label, c.color = '[USED] of [TOTAL] ([FREE] free, [LOAD]%) [NOPE]', true, false
             D.Rebuild()
         """)
-        self.assertEqual(self.text_of("Bag"), "10 of 60 (17%) [NOPE]")
+        self.assertEqual(self.text_of("Bag"), "Bag 10 of 60 (50 free, 17%) [NOPE]")
+
+    def test_every_display_uses_cherrys_icons(self):
+        for key in self.ev("CherrysBar.Displays.byKey").keys():
+            self.assertIn("CherrysBar/Media/Icons/", self.ev(f"CherrysBar.Displays.byKey.{key}.icon"), key)
 
     def test_events_only_mark_and_a_burst_redraws_once(self):
         before = self.ev("calls.bag")
@@ -238,6 +585,13 @@ class BarTest(unittest.TestCase):
         """)
         self.assertEqual(self.ev("calls.goods"), 60)
 
+    def test_item_currencies_are_read_only_when_asked(self):
+        self.run_lua("local D = CherrysBar.Displays; D.SetBar(D.byKey.Wallet, 'top'); CherrysBar.OnEvent('PLAYER_MONEY')")
+        self.tick()
+        self.assertIsNone(self.ev("calls.currency"))
+        self.run_lua("local D = CherrysBar.Displays; D.Enter(D.byKey.Wallet.slot, frameOf('Wallet'))")
+        self.assertEqual(self.ev("calls.currency"), 6)
+
     def test_hidden_displays_register_no_events_and_are_not_read(self):
         self.assertTrue(self.ev("CBar_Events.events.PLAYER_BAG_CHANGED"))
         self.run_lua("""
@@ -251,10 +605,7 @@ class BarTest(unittest.TestCase):
         self.assertEqual(self.ev("calls.bag"), 0)
 
     def test_events_follow_the_tokens_used(self):
-        self.run_lua("""
-            local D = CherrysBar.Displays
-            D.SetBar(D.byKey.Dps, 'top')
-        """)
+        self.run_lua("local D = CherrysBar.Displays; D.SetBar(D.byKey.Dps, 'top')")
         self.assertIsNone(self.ev("CBar_Events.events.UNIT_HEALTH"))
         self.assertTrue(self.ev("CBar_Events.events.COMBATMETER_DAMAGE"))
         self.run_lua("""
@@ -265,12 +616,25 @@ class BarTest(unittest.TestCase):
         self.assertTrue(self.ev("CBar_Events.events.UNIT_HEALTH"))
         self.assertIsNone(self.ev("CBar_Events.events.COMBATMETER_DAMAGE"))
 
+    def test_damage_counts_only_this_character_and_resets(self):
+        self.run_lua("""
+            local D = CherrysBar.Displays
+            D.SetBar(D.byKey.Dps, 'top')
+            _source, _damage = 'Someone', 1000
+            CherrysBar.OnEvent('COMBATMETER_DAMAGE')
+            _source, _damage = 'Cherry', 500
+            CherrysBar.OnEvent('COMBATMETER_DAMAGE')
+        """)
+        self.tick()
+        self.assertEqual(self.text_of("Dps"), "500")
+        self.tick(7)
+        self.assertEqual(self.text_of("Dps"), "0")
+
     def test_idle_frames_make_no_garbage_and_no_text_writes(self):
         self.run_lua("""
             collectgarbage('collect')
             collectgarbage('stop')
             local before = collectgarbage('count')
-            writes = 0
             local text = _G['CBar_D' .. CherrysBar.Displays.byKey.Perf.slot .. 'Text']
             local start = text.setTexts
             for i = 1, 10000 do
@@ -315,35 +679,31 @@ class BarTest(unittest.TestCase):
         self.tick()
         self.assertIn("gone", self.ev("CherrysBar.Displays.byKey.Bag.err"))
         self.run_lua("CherrysBar.Probe.Run()")
-        self.assertTrue(any("gone" in str(m) for m in self.lua.table_from(self.ev("messages")).values()))
+        self.assertTrue(any("gone" in str(m) for m in self.ev("messages").values()))
+
+    # Game frames
 
     def test_make_room_moves_top_frames_and_restores_them(self):
-        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
-        self.assertEqual(self.anchor_y("TargetFrame"), 26)
-        self.assertEqual(self.anchor_y("MinimapFrame"), 56)
-        self.assertEqual(self.anchor_y("MinimapFrameBorder"), 23)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
+        self.assertEqual(self.anchor_y("TargetFrame"), 28)
+        self.assertEqual(self.anchor_y("MinimapFrame"), 58)
+        self.assertEqual(self.anchor_y("MinimapFrameBorder"), 25)
         self.assertEqual(self.anchor_y("MainMenuFrame"), 0)
         self.run_lua("CherrysBar.Command('bottom')")
         self.assertEqual(self.anchor_y("PlayerFrame"), 0)
         self.assertEqual(self.anchor_y("MinimapFrame"), 32)
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
-        self.assertEqual(self.anchor_y("ExperienceFrame"), -24)
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -26)
+        self.assertEqual(self.anchor_y("ExperienceFrame"), -26)
         self.run_lua("CherrysBar.Command('top')")
         self.assertEqual(self.anchor_y("MainMenuFrame"), 0)
-        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
 
     def test_make_room_is_not_applied_twice(self):
         self.run_lua("CherrysBar.Bars.MakeRoom(); CherrysBar.Bars.MakeRoom()")
-        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
         self.run_lua("CherrysBar.OnEvent('LOADING_END')")
         self.tick(4)
-        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
-
-    def test_make_room_follows_a_taller_skin(self):
-        self.run_lua("CherrysBar.S().bars.top.skin = 'Black'; CherrysBar.Refresh()")
-        self.assertEqual(self.anchor_y("PlayerFrame"), 32)
-        self.run_lua("CherrysBar.S().bars.top.skin = 'Slate'; CherrysBar.Refresh()")
-        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
 
     def test_make_room_leaves_a_frame_the_player_dragged_away(self):
         self.run_lua("""
@@ -366,46 +726,35 @@ class BarTest(unittest.TestCase):
         self.run_lua("CherrysBar.S().hideMenuBar = false; CherrysBar.Refresh()")
         self.assertTrue(self.ev("MainMenuFrame.shown"))
 
-    def test_right_click_menu_changes_a_display(self):
+    def test_reload_does_not_move_frames_twice(self):
+        # Frames that kept their place through Reload UI...
+        self.load_addon()
+        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
+        self.assertEqual(self.anchor_y("MinimapFrame"), 58)
+        self.run_lua("CherrysBar.Command('bottom')")
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -26)
+        self.load_addon()
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -26)
+        # ...and frames the reload rebuilt at the game's own positions.
         self.run_lua("""
-            local D = CherrysBar.Displays
-            slot = D.byKey.Bag.slot
-            D.Click(slot, 'RBUTTON')
+            MainMenuFrame:ClearAllAnchors()
+            MainMenuFrame:SetAnchor('BOTTOM', 'BOTTOM', 'UIParent', 0, 0)
+            CherrysBar.S().bars.top.show = true
+            PlayerFrame:ClearAllAnchors()
+            PlayerFrame:SetAnchor('TOPLEFT', 'TOPLEFT', 'UIParent', 0, 0)
         """)
-        self.assertTrue(self.ev("CBar_Menu.shown"))
-        rows = {}
-        for i in range(1, 25):
-            if self.ev(f"CBar_MenuRow{i}.shown"):
-                rows[self.ev(f"CBar_MenuRow{i}Text.text")] = i
-        self.assertIn("[x] Show icon", rows)
-        self.run_lua(f"CherrysBar.Menu.RowClick({rows['[x] Show icon']}, 'LBUTTON')")
-        self.assertFalse(self.ev("CherrysBar.Displays.Config(CherrysBar.Displays.byKey.Bag).icon"))
-        self.assertTrue(self.ev("CBar_Menu.shown"))
-        rows = {self.ev(f"CBar_MenuRow{i}Text.text"): i for i in range(1, 25) if self.ev(f"CBar_MenuRow{i}.shown")}
-        self.run_lua(f"CherrysBar.Menu.RowClick({rows['Move to the bottom bar']}, 'LBUTTON')")
-        self.assertEqual(self.ev("CherrysBar.Displays.Config(CherrysBar.Displays.byKey.Bag).bar"), "bottom")
+        self.load_addon()
+        self.assertEqual(self.anchor_y("MainMenuFrame"), -26)
+        self.assertEqual(self.anchor_y("PlayerFrame"), 26)
 
-    def test_menu_closes_after_the_mouse_leaves_and_scrolls(self):
-        self.run_lua("""
-            local list = {}
-            for i = 1, 40 do list[i] = { text = 'row' .. i, click = function() clicked = i end } end
-            CherrysBar.Menu.Open(list, nil, nil)
-            CherrysBar.Menu.Wheel(-1)
-        """)
-        self.assertEqual(self.ev("CBar_MenuRow1Text.text"), "row2")
-        self.run_lua("CherrysBar.Menu.RowClick(1, 'LBUTTON')")
-        self.assertEqual(self.ev("clicked"), 2)
-        self.run_lua("CherrysBar.Menu.Open({ { text = 'a' } }, nil, nil); CherrysBar.Menu.RowLeave(1)")
-        self.assertTrue(self.ev("CBar_Menu.shown"))
-        self.tick(1)
-        self.assertFalse(self.ev("CBar_Menu.shown"))
+    # Displays
 
     def test_left_click_does_the_display_job(self):
-        self.run_lua("CherrysBar.Displays.Click(CherrysBar.Displays.byKey.Bag.slot, 'LBUTTON')")
+        self.run_lua("CherrysBar.Displays.MouseUp(CherrysBar.Displays.byKey.Bag.slot, 'LBUTTON')")
         self.assertEqual(self.ev("calls.opened[1]"), "BagFrame")
 
     def test_a_click_on_a_missing_game_call_gives_a_message(self):
-        self.run_lua("OpenMail = nil; CherrysBar.Displays.Click(CherrysBar.Displays.byKey.Mail.slot, 'LBUTTON')")
+        self.run_lua("OpenMail = nil; CherrysBar.Displays.MouseUp(CherrysBar.Displays.byKey.Mail.slot, 'LBUTTON')")
         self.assertIn("could not", self.ev("messages[#messages]"))
 
     def test_mail_counts_system_messages(self):
@@ -416,30 +765,94 @@ class BarTest(unittest.TestCase):
         self.tick()
         self.assertIn("0", self.text_of("Mail"))
 
-    def test_options_rows_and_format_editor(self):
-        self.run_lua("CherrysBar.Options.Toggle()")
-        self.assertTrue(self.ev("CBar_Options.shown"))
-        self.assertEqual(self.ev("CBar_OptRow1Label.text"), "Show the top bar")
-        self.run_lua("CherrysBar.Options.RowClick(4, 'check')")
-        self.assertTrue(self.ev("CBar_BarBottom.shown"))
-        self.run_lua("CherrysBar.Options.RowClick(2, 'choice')")
-        self.assertEqual(self.ev("CherrysBar.S().bars.top.skin"), "Black")
-        self.assertEqual(self.ev("CBar_BarTop.h"), 32)
-        slot = self.ev("CherrysBar.Displays.byKey.Bag.slot")
-        self.run_lua(f"CherrysBar.Options.DisplayClick({slot}, 'pick')")
-        self.assertEqual(self.ev("CBar_OptionsFormat.text"), "[USED]/[TOTAL]")
-        self.run_lua("CBar_OptionsFormat:SetText('[TOTAL]'); CherrysBar.Options.ApplyFormat()")
-        self.assertIn("60", self.text_of("Bag"))
-        self.run_lua("CherrysBar.Options.ResetFormat()")
-        self.assertEqual(self.ev("CBar_OptionsFormat.text"), "[USED]/[TOTAL]")
-        self.run_lua(f"CherrysBar.Options.DisplayClick({slot}, 'bar')")
-        self.assertEqual(self.ev("CherrysBar.Displays.Config(CherrysBar.Displays.byKey.Bag).bar"), "bottom")
+    def test_session_figures_per_hour_and_time_to_level(self):
+        self.run_lua("""
+            local D = CherrysBar.Displays
+            D.Config(D.byKey.Exp).fmt = '[XPS] [XPH] [TTL]'
+            D.Config(D.byKey.Money).fmt = '[GAINED] [SPENT] [NET] [GPH]'
+            D.Config(D.byKey.Money).color = false
+            D.Rebuild()
+            now = now + 3600
+            state.xp = 600
+            state.gold = state.gold + 2000
+            CherrysBar.OnEvent('PLAYER_EXP_CHANGED')
+            CherrysBar.OnEvent('PLAYER_MONEY')
+        """)
+        self.tick()
+        self.assertEqual(self.text_of("Exp"), "100 99 04:02")
+        self.run_lua("state.gold = state.gold - 500; CherrysBar.OnEvent('PLAYER_MONEY')")
+        self.tick()
+        self.assertEqual(self.text_of("Money"), "2,000 500 1,500 1,999")
 
-    def test_every_option_row_click_works(self):
-        for i in range(1, 13):
-            kind = self.ev(f"CherrysBar.Options.LIST[{i}].kind")
-            for part in {"check": ["check"], "num": ["minus", "plus"], "choice": ["choice"]}[kind]:
-                self.run_lua(f"CherrysBar.Options.RowClick({i}, '{part}')")
+    def test_reset_session_row_clears_the_figures(self):
+        self.run_lua("""
+            local D = CherrysBar.Displays
+            D.Config(D.byKey.Money).fmt = '[GAINED]'
+            D.Config(D.byKey.Money).color = false
+            D.Rebuild()
+            state.gold = state.gold + 2000
+            CherrysBar.OnEvent('PLAYER_MONEY')
+        """)
+        self.tick()
+        self.assertEqual(self.text_of("Money"), "2,000")
+        self.run_lua("local D = CherrysBar.Displays; D.MouseUp(D.byKey.Money.slot, 'RBUTTON')")
+        rows = self.menu_rows()
+        self.run_lua(f"CherrysBar.Menu.RowClick({rows['Reset session figures']}, 'LBUTTON')")
+        self.assertEqual(self.text_of("Money"), "0")
+
+    def test_location_reads_coordinates_only_when_asked(self):
+        self.run_lua("local D = CherrysBar.Displays; D.SetBar(D.byKey.Zone, 'top')")
+        self.assertEqual(self.text_of("Zone"), "Varanas")
+        self.assertIsNone(self.ev("CherrysBar.Displays.byKey.Zone.v.X"))
+        self.run_lua("""
+            local D = CherrysBar.Displays
+            D.Config(D.byKey.Zone).fmt = '[ZONE] [X],[Y]'
+            D.Rebuild()
+        """)
+        self.assertEqual(self.text_of("Zone"), "Varanas 12.3,45.6")
+        self.run_lua("zone = 'Howling'")
+        self.tick(4)
+        self.assertIn("Howling", self.text_of("Zone"))
+
+    def test_volume_mutes_restores_scrolls_and_changes_its_speaker(self):
+        self.run_lua("local D = CherrysBar.Displays; D.SetBar(D.byKey.Volume, 'top')")
+        self.assertEqual(self.text_of("Volume"), "80%")
+        icon = "_G['CBar_D' .. CherrysBar.Displays.byKey.Volume.slot .. 'Icon'].texture"
+        self.assertIn("vol_high", self.ev(icon))
+        slot = self.ev("CherrysBar.Displays.byKey.Volume.slot")
+        self.run_lua(f"CherrysBar.Displays.MouseUp({slot}, 'LBUTTON')")
+        self.assertEqual(self.ev("volume"), 0)
+        self.assertIn("vol_mute", self.ev(icon))
+        self.assertEqual(self.text_of("Volume"), "0%")
+        self.run_lua(f"CherrysBar.Displays.MouseUp({slot}, 'LBUTTON')")
+        self.assertEqual(self.ev("volume"), 0.8)
+        self.run_lua(f"for i = 1, 4 do CherrysBar.Displays.Wheel({slot}, -1) end")
+        self.assertAlmostEqual(self.ev("volume"), 0.6)
+        self.assertIn("vol_mid", self.ev(icon))
+        self.assertEqual(self.text_of("Volume"), "60%")
+        self.run_lua(f"for i = 1, 20 do CherrysBar.Displays.Wheel({slot}, 1) end")
+        self.assertEqual(self.ev("volume"), 1)
+
+    def test_every_display_reads_and_tips_without_error(self):
+        for key in self.ev("CherrysBar.Displays.byKey").keys():
+            self.run_lua(f"""
+                local D = CherrysBar.Displays
+                local def = D.byKey.{key}
+                D.SetBar(def, 'top')
+                D.Enter(def.slot, frameOf('{key}'))
+            """)
+            self.assertFalse(self.ev(f"CherrysBar.Displays.byKey.{key}.err"), key)
+
+    def test_tooltip_is_built_on_hover_and_quiet_in_combat(self):
+        slot = self.ev("CherrysBar.Displays.byKey.Money.slot")
+        self.run_lua(f"CherrysBar.Displays.Enter({slot}, _G['CBar_D{slot}'])")
+        self.assertTrue(any("Gold" in str(v) for v in self.ev("GameTooltip.lines").values()))
+        self.run_lua(f"GameTooltip.lines = nil; inCombat = true; CherrysBar.Displays.Enter({slot}, _G['CBar_D{slot}'])")
+        self.assertIsNone(self.ev("GameTooltip.lines"))
+        self.run_lua(f"CherrysBar.S().tipsInCombat = true; CherrysBar.Displays.Enter({slot}, _G['CBar_D{slot}'])")
+        self.assertIsNotNone(self.ev("GameTooltip.lines"))
+
+    # Settings and the hub
 
     def test_settings_survive_reload_in_the_same_lua_state(self):
         self.run_lua("""
@@ -449,33 +862,30 @@ class BarTest(unittest.TestCase):
         """)
         self.load_addon()
         self.assertTrue(self.ev("CBar_BarBottom.shown"))
-        self.assertEqual(self.ev("CherrysBar.Displays.Config(CherrysBar.Displays.byKey.Zone).bar"), "bottom")
+        self.assertEqual(self.ev("cfg('Zone').bar"), "bottom")
 
-    def test_reload_does_not_move_frames_twice(self):
-        # Frames that kept their place through Reload UI...
-        self.load_addon()
-        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
-        self.assertEqual(self.anchor_y("MinimapFrame"), 56)
-        self.run_lua("CherrysBar.Command('bottom')")
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
-        self.load_addon()
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
-        # ...and frames the reload rebuilt at the game's own positions.
+    def test_settings_of_the_first_build_are_replaced_but_counts_kept(self):
         self.run_lua("""
-            MainMenuFrame:ClearAllAnchors()
-            MainMenuFrame:SetAnchor('BOTTOM', 'BOTTOM', 'UIParent', 0, 0)
-            CherrysBar.S().bars.top.show = true
-            PlayerFrame:ClearAllAnchors()
-            PlayerFrame:SetAnchor('TOPLEFT', 'TOPLEFT', 'UIParent', 0, 0)
+            CherrysBar_DB = { bars = { top = { show = true, skin = 'Tribal', alpha = 1 }, bottom = { show = false, skin = 'Black', alpha = 1 } },
+                              displays = { Dps = { fmt = '[DURA]', bar = 'top' } }, playedMins = 77, kills = { Cherry = 3 } }
         """)
         self.load_addon()
-        self.assertEqual(self.anchor_y("MainMenuFrame"), -24)
-        self.assertEqual(self.anchor_y("PlayerFrame"), 24)
+        self.assertEqual(self.ev("CherrysBar.S().bars.top.skin"), "Stone")
+        self.assertEqual(self.ev("cfg('Dps').bar"), "off")
+        self.assertEqual(self.ev("CherrysBar.S().playedMins"), 77)
+        self.assertEqual(self.ev("CherrysBar.S().kills.Cherry"), 3)
 
-    def test_text_size_changes_only_after_the_player_asks(self):
-        self.assertIsNone(self.ev("CBar_D2Text.fontSize"))
-        self.run_lua("CherrysBar.S().textSize = 14; CherrysBar.Refresh()")
-        self.assertEqual(self.ev("CBar_D2Text.fontSize"), 14)
+    def test_reset_everything(self):
+        self.run_lua("""
+            CherrysBar.Command('both')
+            local D = CherrysBar.Displays
+            D.SetBar(D.byKey.Zone, 'bottom')
+            CherrysBar.Command('reset')
+        """)
+        self.assertFalse(self.ev("CBar_BarBottom.shown"))
+        self.assertEqual(self.ev("cfg('Zone').bar"), "off")
+        self.assertFalse(self.ev("frameOf('Zone').shown"))
+        self.assertEqual(self.ev("CherrysBar.S().locked"), True)
 
     def test_hub_off_stays_idle(self):
         self.run_lua("""
@@ -487,37 +897,18 @@ class BarTest(unittest.TestCase):
         self.assertFalse(self.ev("CherrysBar.ready"))
         self.assertTrue(self.ev("CherrysBar.off"))
         self.assertFalse(self.ev("CBar_BarTop.shown"))
-        self.assertEqual(self.ev("PlayerFrame.anchors[1][5]"), 24)  # from the first load, not moved again
+        self.assertEqual(self.ev("PlayerFrame.anchors[1][5]"), 26)  # from the first load, not moved again
 
     def test_slash_command_and_probe(self):
         self.run_lua("SlashCmdList['CHERRYSBAR'](nil, 'probe')")
         text = " ".join(str(v) for v in self.ev("messages").values())
-        self.assertIn("missing functions", text)
+        self.assertIn("missing functions: none", text.replace("|cffff7fa8Cherry's Bar:|r ", ""))
         self.assertIn("displays shown", text)
-
-    def test_tooltip_is_built_on_hover_and_quiet_in_combat(self):
-        slot = self.ev("CherrysBar.Displays.byKey.Money.slot")
-        self.run_lua(f"CherrysBar.Displays.Enter({slot}, _G['CBar_D{slot}'])")
-        self.assertTrue(any("Gold" in str(v) for v in self.ev("GameTooltip.lines").values()))
-        self.run_lua(f"GameTooltip.lines = nil; inCombat = true; CherrysBar.Displays.Enter({slot}, _G['CBar_D{slot}'])")
-        self.assertIsNone(self.ev("GameTooltip.lines"))
-        self.run_lua(f"CherrysBar.S().tipsInCombat = true; CherrysBar.Displays.Enter({slot}, _G['CBar_D{slot}'])")
-        self.assertIsNotNone(self.ev("GameTooltip.lines"))
-
-    def test_every_display_reads_and_tips_without_error(self):
-        for key in self.ev("CherrysBar.Displays.byKey").keys():
-            self.run_lua(f"""
-                local D = CherrysBar.Displays
-                local def = D.byKey.{key}
-                D.SetBar(def, 'top')
-                D.Enter(def.slot, _G['CBar_D' .. def.slot])
-                assert(not def.err, def.err)
-            """)
-            self.assertFalse(self.ev(f"CherrysBar.Displays.byKey.{key}.err"), key)
+        self.assertIn("master volume reads 0.8", text)
 
 
 class PackageTest(unittest.TestCase):
-    def test_xml_handlers_call_functions_that_exist(self):
+    def fresh(self):
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute(CLIENT)
         make = lua.globals().MakeWidget
@@ -525,6 +916,10 @@ class PackageTest(unittest.TestCase):
             make(name, False)
         for name in FILES:
             lua.execute((SOURCE / name).read_text(encoding="utf-8"))
+        return lua
+
+    def test_xml_handlers_call_functions_that_exist(self):
+        lua = self.fresh()
         text = (SOURCE / "CherrysBar.xml").read_text(encoding="utf-8")
         calls = set(re.findall(r"CherrysBar\.[A-Za-z.]+(?=\()", text))
         self.assertTrue(calls)
@@ -534,28 +929,57 @@ class PackageTest(unittest.TestCase):
     def test_xml_parses_and_slots_match_the_list(self):
         tree = ET.parse(SOURCE / "CherrysBar.xml")
         names = {el.get("name") for el in tree.iter(NS + "Frame")}
-        lua = LuaRuntime(unpack_returned_tuples=True)
-        lua.execute(CLIENT)
-        for name in FILES:
-            lua.execute((SOURCE / name).read_text(encoding="utf-8"))
+        lua = self.fresh()
         count = lua.eval("#CherrysBar.Displays.list")
+        self.assertEqual(count, 18)
         for i in range(1, count + 1):
             self.assertIn(f"CBar_D{i}", names)
-            self.assertIn(f"CBar_OptD{i}", names)
+            self.assertIn(f"CBar_Chip{i}", names)
         self.assertNotIn(f"CBar_D{count + 1}", names)
+
+    def test_generators_match_the_committed_layout(self):
+        # Options.lua and the XML generator must agree on where the layout rows are.
+        options = (SOURCE / "Options.lua").read_text(encoding="utf-8")
+        gen = (ROOT / "tools/gen_cherrysbar_xml.py").read_text(encoding="utf-8")
+        for y in re.findall(r'"(?:Top|Bottom|None)": (\d+)', gen):
+            self.assertIn(f"y = {y} }}", options)
+        self.assertIn("ROW_X, ROW_W, ROW_H = 90, 776, 30", gen)
+        self.assertIn("O.ROW_X, O.ROW_W, O.ROW_H = 90, 776, 30", options)
 
     def test_toc_lists_lua_and_every_file_exists(self):
         toc = (KIT / "CherrysKit.toc").read_text(encoding="utf-8-sig")
         self.assertIn("CherrysBar_DB", toc)
         for name in FILES + ("CherrysBar.xml",):
             self.assertIn("CherrysBar/" + name, toc)
+            self.assertTrue((SOURCE / name).is_file())
         self.assertIn("KitLoad/CherrysBar.lua", toc)
 
-    def test_every_skin_has_top_and_bottom_art(self):
-        for skin in ("Slate", "Black", "Gloss", "Blockz", "AdPanel", "Tribal"):
-            for name in ("bar_bgndL", "bar_bgndM", "bar_bgndR", "barU_bgndL", "barU_bgndM", "barU_bgndR"):
-                self.assertTrue((SOURCE / "Media/Skins" / skin / (name + ".tga")).is_file(), (skin, name))
-        self.assertTrue((SOURCE / "Media/Icons/SysBtn_Normal.tga").is_file())
+    def tga_size(self, path):
+        data = path.read_bytes()
+        width, height, depth = struct.unpack("<HHB", data[12:17])
+        self.assertEqual(len(data), 18 + width * height * 4, path)
+        self.assertEqual(depth, 32, path)
+        return width, height
+
+    def test_every_skin_is_a_tile_with_top_and_bottom_art(self):
+        found = {p.name for p in (SOURCE / "Media/Skins").iterdir()}
+        self.assertEqual(found, set(SKINS))
+        for skin in SKINS:
+            for name in ("top", "bottom"):
+                self.assertEqual(self.tga_size(SOURCE / "Media/Skins" / skin / f"{name}.tga"), (256, 32))
+        lua = self.fresh()
+        self.assertEqual(tuple(lua.eval("CherrysBar.Bars.SKINS").values()), SKINS)
+
+    def test_every_icon_named_in_the_code_exists_and_none_is_spare(self):
+        used = set()
+        for name in FILES:
+            used |= set(re.findall(r'Icon\("([a-z_]+)"\)', (SOURCE / name).read_text(encoding="utf-8")))
+        used |= set(re.findall(r'Icons\\([a-z_]+)"', (SOURCE / "CherrysBar.xml").read_text(encoding="utf-8")))
+        dynamic = {"vol_low", "vol_mid", "vol_high", "vol_mute", "check_on", "check_off", "pin", "pin_out", "unlock", "lock"}
+        files = {p.stem for p in (SOURCE / "Media/Icons").glob("*.tga")}
+        self.assertEqual(used | dynamic, files)
+        for path in (SOURCE / "Media/Icons").glob("*.tga"):
+            self.assertEqual(self.tga_size(path), (32, 32))
 
     def test_credits_and_licence_stay_with_the_addon(self):
         notice = (SOURCE / "LICENSE-CherrysBar.txt").read_text(encoding="utf-8")
@@ -572,6 +996,12 @@ class PackageTest(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             self.assertNotIn("TitanPanel", text, path)
             self.assertNotIn("LibStub", text, path)
+
+    def test_no_xbar_art_is_left(self):
+        for path in SOURCE.rglob("*"):
+            self.assertNotIn(path.name.lower(), ("bar_bgndm.tga", "baru_bgndm.tga", "sysbtn_normal.tga", "logo.tga"), path)
+        for skin in ("Black", "Gloss", "Blockz", "AdPanel", "Tribal"):
+            self.assertFalse((SOURCE / "Media/Skins" / skin).exists(), skin)
 
     def test_hub_knows_the_addon(self):
         hub = (KIT / "CherrysKit.lua").read_text(encoding="utf-8")
