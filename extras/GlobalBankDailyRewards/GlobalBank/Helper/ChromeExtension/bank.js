@@ -5,8 +5,6 @@ const GBBank = (() => {
   const PER_PAGE = {bag: 30, bank: 40};
   const PLACE = {bag: 'Bag', bank: 'Bank'};
   const MAX_TOOLTIP_ROWS = 12;
-  // A save older than this may be out of date: the character could have been played on another PC since.
-  const STALE_DAYS = 7;
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString('en-US');
@@ -44,15 +42,6 @@ const GBBank = (() => {
     const page = Math.floor((slot - 1) / perPage) + 1;
     return `${PLACE[place]} ${slot} (page ${page}, slot ${slot - (page - 1) * perPage})`;
   }
-  // Whole days since a saved time such as 2026-10-30 18:17, or null if it can't be read
-  function savedDaysAgo(saved, now) {
-    const time = Date.parse(String(saved || '').replace(' ', 'T'));
-    return Number.isNaN(time) ? null : Math.max(0, Math.floor((now - time) / 86400000));
-  }
-  function staleNote(saved, now) {
-    const days = savedDaysAgo(saved, now);
-    return days !== null && days >= STALE_DAYS ? `saved ${days} days ago, may be out of date` : '';
-  }
   // One row for each stack on each character
   function entries(characters) {
     const list = [];
@@ -60,7 +49,7 @@ const GBBank = (() => {
       for (const place of ['bag', 'bank']) {
         for (const item of character[place] || []) {
           list.push({id: item.id, name: String(item.name || 'Unknown item'), icon: item.icon, count: Number(item.count) || 1,
-            type: typeOf(item.id, item.icon), character: character.name, level: Number(character.level) || 0, saved: character.saved, place, slot: Number(item.slot) || 0});
+            type: typeOf(item.id, item.icon), character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
         }
       }
     }
@@ -116,8 +105,6 @@ const GBBank = (() => {
         const row = make('span', 'bank-tip-row');
         row.append(make('b', '', entry.character), ` ${locationLabel(entry.place, entry.slot)}`);
         if (entry.count > 1) row.append(` × ${formatNumber(entry.count)}`);
-        const stale = staleNote(entry.saved, Date.now());
-        if (stale) row.append(make('span', 'bank-stale', ` (${stale})`));
         tooltip.append(row);
       }
       if (rows.length > MAX_TOOLTIP_ROWS) tooltip.append(make('span', 'bank-tip-type', `and ${rows.length - MAX_TOOLTIP_ROWS} more`));
@@ -189,8 +176,6 @@ const GBBank = (() => {
         });
         const detail = `${character.class || 'Level'} ${character.level || '?'} · ${formatNumber(character.gold)} gold`;
         label.append(box, make('span', 'bank-name', character.name), make('span', 'bank-detail', character.note ? `${detail} · ${character.note}` : detail));
-        const stale = staleNote(character.saved, Date.now());
-        if (stale) label.append(make('span', 'bank-detail bank-stale', stale));
         list.append(label);
       }
       renderSummary();
@@ -232,5 +217,5 @@ const GBBank = (() => {
     el('bank-update').addEventListener('click', update);
     return {reload, update};
   }
-  return {create, typeOf, locationLabel, entries, applyFilters, cells, staleNote, formatDuration, totals};
+  return {create, typeOf, locationLabel, entries, applyFilters, cells, formatDuration, totals};
 })();
