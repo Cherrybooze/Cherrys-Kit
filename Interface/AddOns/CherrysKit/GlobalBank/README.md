@@ -8,7 +8,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Updated in 1.4.8
 
-The extension's page is now a full view of your bank, with no terminal window. Its **Bank** tab shows every character's bag and bank laid out as in game, with the game's own icons, and **Update now** reads your save files. Its **Terminal** tab runs the helper's commands. You only need the helper window for collecting auction data and for automatic updates each time you log out.
+The extension's page is now a full view of your bank, with no terminal window. Its **Bank** tab shows everything every character holds in one scrolling grid, with the game's own icons, a search and filters. Hover an item to see who has it and in which slot. **Update now** reads your save files. Its **Terminal** tab runs the helper's commands. You only need the helper window for collecting auction data and for automatic updates each time you log out.
 
 ## Updated in 1.4.7
 

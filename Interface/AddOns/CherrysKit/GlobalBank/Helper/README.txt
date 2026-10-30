@@ -77,7 +77,8 @@ Chrome daily reward extension (Windows)
 
 Local bank and auction tools in Chrome
 1. Click the Global Bank Daily Rewards extension icon, then click "Open local bank and auction tools".
-2. Bank tab: every character's bag and bank as in game. Update now reads your save files.
+2. Bank tab: everything your characters hold in one grid, with a search and filters. Hover an item to
+   see who has it and in which slot. Update now reads your save files.
 3. Terminal tab: the helper's commands, including note and erase, without its window.
 4. Auctions tab: search the auction cache. Prices are saved observations and may have changed.
 You only need the helper window for collecting auction data and for automatic updates each time you
