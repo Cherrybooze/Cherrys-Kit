@@ -9,6 +9,7 @@ LOGIN_FILES = [
     "loginxml/frames/login.lua",
     "loginxml/frames/login.account.lua",
     "loginxml/frames/login.server.lua",
+    "loginxml/frames/login.globalbank.lua",
     "loginxml/frames/login.charselect.lua",
     "loginxml/frames/login.settings.lua",
     "loginxml/frames/CampNext_Login.lua",

@@ -4,7 +4,7 @@
 CherrysLoginxml = CherrysLoginxml or {}
 local me = CherrysLoginxml
 
-me.version = "1.2.0"
+me.version = "1.2.1"
 me.FOLDER = "CherrysLoginxml"
 
 if SaveVariables then

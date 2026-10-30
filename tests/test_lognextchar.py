@@ -73,6 +73,34 @@ class ButtonTest(unittest.TestCase):
         lua = in_game('CherrysKit_Paths = {LogNextChar = "Interface/AddOns/CherrysKit/LogNextChar/"}')
         self.assertEqual(lua.eval("LogNextCharBarNextIcon.path"), "Interface/AddOns/CherrysKit/LogNextChar/gfx/button.tga")
 
+    def test_switching_closes_the_mailbox_first(self):
+        lua = in_game()
+        lua.execute('''
+          order = {}
+          function makeWindow(name) return {IsVisible=function(self) return self.open end, open=true, name=name} end
+          UMMFrame, MailFrame = makeWindow("umm"), makeWindow("mail")
+          function HideUIPanel(window) table.insert(order, window.name); window.open = false end
+          function CloseMail() table.insert(order, "server") end
+          local logout = CampOutStart or Logout
+          if CampOutStart then CampOutStart = function() table.insert(order, "logout"); logout() end
+          else Logout = function() table.insert(order, "logout"); logout() end end
+        ''')
+        press(lua, "LogNextCharBarPrev")
+        self.assertEqual(lua.eval('table.concat(order, ",")'), "umm,mail,server,logout")
+        self.assertEqual(lua.eval("LOGCHAR_MODE"), "prev")
+
+    def test_switching_leaves_a_closed_mailbox_alone(self):
+        lua = in_game()
+        lua.execute('''
+          closed = 0
+          UMMFrame = {IsVisible=function() return false end}
+          function CloseMail() closed = closed + 1 end
+          function HideUIPanel() closed = closed + 1 end
+        ''')
+        press(lua, "LogNextCharBarNext")
+        self.assertEqual(lua.eval("closed"), 0)
+        self.assertEqual(lua.eval("LOGCHAR_MODE"), "next")
+
     def test_click_switches(self):
         lua = in_game()
         press(lua, "LogNextCharBarNext")

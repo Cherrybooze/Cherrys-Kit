@@ -7,7 +7,7 @@ local ADDON = "LogNextChar"
 LogNextChar = LogNextChar or {}
 local me = LogNextChar
 
-me.version = "1.2.0"
+me.version = "1.2.1"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.LogNextChar) or "Interface/AddOns/LogNextChar/"
 
 -- Saved: LogNextChar_Settings = { show, lock, position = { x, y } }
@@ -89,6 +89,25 @@ local function SingleCharacter()
     return type(roster) == "table" and #roster == 1
 end
 
+-- Logging out with the mailbox open leaves it unable to open again on the next character, so it's closed
+-- first, the same way as pressing its X. Ultimate Mail Mod's window takes the game's mail window with it.
+local function CloseMailbox()
+    local function visible(frame)
+        local ok, shown = pcall(function() return frame and frame:IsVisible() end)
+        return ok and shown
+    end
+    local open = false
+    for _, frame in ipairs({_G.UMMFrame or false, _G.MailFrame or false}) do
+        if frame and visible(frame) then
+            open = true
+            pcall(HideUIPanel or function(window) window:Hide() end, frame)
+        end
+    end
+    if open and CloseMail then
+        pcall(CloseMail)
+    end
+end
+
 -- The flags are read by loginxml's CampNext_Login.lua on the character select screen.
 local function ArmAndLogout(mode, target)
     if not me.IsOn() then
@@ -113,6 +132,8 @@ local function ArmAndLogout(mode, target)
         Print("Unknown mode: " .. tostring(mode))
         return
     end
+
+    CloseMailbox()
 
     _G.LOGCHAR_FLAG = 1
     _G.LOGCHAR_MODE = mode

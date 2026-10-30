@@ -1,10 +1,10 @@
-# In-game checks for kit 0.11.110
+# In-game checks for kit 0.11.111
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**. The Full ZIP includes hub **0.4.23**.
 
-## 0.11.110 Cherry's Bar coordinates
+## 0.11.111 Cherry's Bar coordinates
 
 None of this has run in the game yet. The tests use a simulated client.
 
@@ -43,6 +43,8 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G12 | Open your item depot page through ZShop, then the extension page's **Item Depot** tab. | The items appear in the grid, with counts and a read time. If they look wrong, press **Copy page layout** and send what it copies. |
 | G13 | Log in and out on a character with a few pieces of gear, then hover them in the **Bank** tab. | Gear never stacks. Durability, plus level, runes and stats match the game's own tooltip, and searching a stat name finds the piece. |
 | G14 | In game, open `/gb` and hover items on another character, both gear and other things. | The game's own item tooltip shows, plus the count and slot. Gear shows that piece's durability and stats after that character has logged in once with this version. |
+| G15 | Run the login screen's installer again, restart the game and reach the character screen with the helper's data saved. | Each character shows its gold and last save, at the right of its row. The server screen says whether the helper is running. With the helper closed it says so within about a minute, and at once if the Chrome extension is set up. |
+| G16 | With the mailbox open, press **Prev** or **Next** on LogNextChar, then open a mailbox on the next character. | The mailbox and Ultimate Mail Mod's window close before logging out, and the mailbox opens normally afterwards. |
 | G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
 | G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 

@@ -147,7 +147,7 @@ function me.onLoad(frame)
       box:Hide()
     end
   end
-  frame:SetHeight(#me.toggles * 24 + 116)
+  frame:SetHeight(#me.toggles * 24 + 160)
   local hint = _G['LoginServerFrame_options_hint']
   if hint then
     hint:SetText(me.hasSetup and 'Applies at once. Saved once you enter the game, then log out or quit.'

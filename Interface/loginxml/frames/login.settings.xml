@@ -36,6 +36,18 @@
             </Anchor>
           </Anchors>
         </FontString>
+        <FontString name="$parent_globalbank" inherits="LoginFontNormalSmall" justifyH="LEFT" text="">
+          <Size>
+            <AbsDimension x="226" y="44"/>
+          </Size>
+          <Anchors>
+            <Anchor point="BOTTOMLEFT">
+              <Offset>
+                <AbsDimension x="14" y="-76"/>
+              </Offset>
+            </Anchor>
+          </Anchors>
+        </FontString>
         <FontString name="$parent_hint" inherits="LoginFontNormalSmall" justifyH="LEFT" text="Applies at once. Saved when you log out or quit.">
           <Size>
             <AbsDimension x="226" y="34"/>
@@ -314,6 +326,9 @@
       <OnShow>
         login.settings.refresh()
       </OnShow>
+      <OnUpdate>
+        if login.globalbank then login.globalbank.onUpdate(elapsedTime) end
+      </OnUpdate>
     </Scripts>
   </Frame>
 </Ui>

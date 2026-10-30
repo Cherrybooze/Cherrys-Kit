@@ -15,6 +15,7 @@ frames/debug.lua
 frames/login.dialog.lua
 frames/login.account.lua
 frames/login.server.lua
+frames/login.globalbank.lua
 frames/login.charselect.lua
 frames/login.settings.lua
 frames/login.charcreate.lua
