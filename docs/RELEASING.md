@@ -29,7 +29,7 @@ The hub alone and hub-plus-addon selections deliberately lack the unselected add
 
 ## ZIP installation layout
 
-Every install ZIP, including the optional extension ZIP, starts with `CherrysKit/`. Extract it into `<game>/Interface/AddOns/` and merge folders:
+Every install ZIP, including the optional extension ZIP, starts with `CherrysKit/`. Extract it into `<game>/Interface/AddOns/` and merge folders. The Full and Hub ZIPs also carry `!setup_cherryskit.bat` at the ZIP root, next to `CherrysKit/`; it starts the guided setup (`CherrysKit/Setup/Setup-CherrysKit.ps1`), which also serves as the update route:
 
 ```text
 <game>/Interface/AddOns/
@@ -55,7 +55,7 @@ Each addon includes its own README, local reference notes and the original combi
 6. Build again from the clean tagged checkout so `release-manifest.json` records the right source commit.
 7. Create a GitHub release for the tag with the generated notes. Upload all twenty-one ZIPs (eighteen addon ZIPs, the optional extension ZIP, Cherry's Loginxml and LogNextChar), `release-manifest.json` and `SHA256SUMS.txt`.
 8. Compare uploaded asset sizes and SHA-256 digests with the local files before publishing.
-9. Update the direct full-kit ZIP links at the top of the project README and the repository's About website. Keep the full-kit asset labelled as the installer, and start the release notes with its direct download. Test a downloaded asset by extracting it directly into an empty `Interface/AddOns/` folder: `CherrysKit/CherrysKit.toc` must appear there, with no repository or version wrapper.
+9. Update the direct full-kit ZIP links at the top of the project README and the repository's About website. Keep the full-kit asset labelled as the installer, and start the release notes with its direct download. Test a downloaded asset by extracting it directly into an empty `Interface/AddOns/` folder: `CherrysKit/CherrysKit.toc` must appear there, with no repository or version wrapper, and the Full and Hub ZIPs must put `!setup_cherryskit.bat` at the root.
 
 Keep the clickable download graphic as the first item in the project README. When releasing a new kit version, update its filename/version text and the image's link to the full-kit ZIP; the graphic lives in [images/download-full-kit.svg](images/download-full-kit.svg).
 
