@@ -180,6 +180,8 @@ CherrysGrid/Statuses.lua
 CherrysGrid/Frames.lua
 CherrysGrid/Layout.lua
 CherrysGrid/Clicks.lua
+CherrysGrid/MouseActions.lua
+CherrysGrid/Mouse.lua
 CherrysGrid/Tooltip.lua
 CherrysGrid/Menu.lua
 CherrysGrid/Options.lua

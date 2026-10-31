@@ -418,6 +418,29 @@ local function editBinding(key, fn)
   t[key] = b
 end
 
+-- Mouse 4 outside Grid. Across the account, not per profile, as the game's key bindings are.
+local function mouseRows()
+  local M = G.Mouse
+  local rows = {
+    header("Mouse 4 outside Grid"),
+    {
+      type = "check", label = "Use Mouse 4 as a game keybind", get = M.IsOn, set = M.SetOn, rebuild = true,
+      desc = "Off: nothing changes outside Grid. On: Mouse 4 shows in the game's Key Bindings and works over windows and buttons.",
+    },
+  }
+  if M.IsOn() then
+    rows[#rows + 1] = info(M.Status)
+    rows[#rows + 1] = button("Open the game's Key Bindings", M.OpenKeyBindings, "Click a slot, press Mouse 4, then Okay. Over Grid's own frames, Mouse 4 follows the bindings above.")
+    for i, key in ipairs(M.KEYS) do
+      rows[#rows + 1] = textRow(M.KEY_TITLES[i], function() return M.Describe(key) end, function(v) M.SetCommand(key, v) end,
+        "A game action from Key Bindings, or type a slash command. Enter saves, empty clears.")
+    end
+    rows[#rows + 1] = info("Works with the cursor over a window or button, not the 3D world, as one press.")
+  end
+  rows[#rows + 1] = info("Mouse 5 never reaches the game: map it to a key in your mouse's software.")
+  return rows
+end
+
 function BUILD.clicks()
   local C = G.Clicks
   local scopeList = { { "class", "This class (" .. G.ClassKey() .. ")" }, { "all", "All classes" } }
@@ -556,6 +579,9 @@ function BUILD.clicks()
     check("Act when the button is released", "clickOnUp", "Off: on press (faster)."),
   }
   for _, r in ipairs(more) do
+    rows[#rows + 1] = r
+  end
+  for _, r in ipairs(mouseRows()) do
     rows[#rows + 1] = r
   end
   return rows

@@ -5,7 +5,7 @@
 --
 -- Bindings are saved per class pair (main/sub, because kitties are made per class) in
 -- CherrysGrid_DB.bindings["AUGUR/DRUID"], with "*" for all classes. Keys look like
--- "LBUTTON", "shift-RBUTTON", "ctrl-alt-MBUTTON", "WHEELUP". A binding:
+-- "LBUTTON", "shift-RBUTTON", "ctrl-alt-MBUTTON", "WHEELUP" (the client calls Mouse 4 "XBUTTON"). A binding:
 --   { type = "target", delay = 0, act = "kitty", kitty = "ds_01" }
 --   act "macro": macro = macro name, slot = macro slot;  act "spell": spell = skill name
 -- Bindings from 1.0.0 ({ type = "kitty", kitty = }) still work: no 1st action, kitty 2nd.
@@ -18,6 +18,7 @@ C.BUTTONS = {
   { key = "LBUTTON", title = "Left button" },
   { key = "RBUTTON", title = "Right button" },
   { key = "MBUTTON", title = "Middle button" },
+  { key = "XBUTTON", title = "Mouse 4" },
   { key = "WHEELUP", title = "Wheel up" },
   { key = "WHEELDOWN", title = "Wheel down" },
 }

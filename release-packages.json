@@ -425,7 +425,7 @@
     {
       "folder": "CherrysGrid",
       "title": "Cherry's Grid",
-      "version": "1.1.4",
+      "version": "1.1.5",
       "command": "/grid",
       "description_file": "15-cherrys-grid.md",
       "summary": "Party and raid frames, with KittyCombo actions on click.",
