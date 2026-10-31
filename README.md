@@ -134,7 +134,7 @@ Remove old separate copies of the same addons from `Interface/AddOns/` first; th
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.30 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.11.0 |
 | [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck16 |
-| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold. | `/gb` | 1.4.14 |
+| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold. | `/gb` | 1.4.15 |
 | [Extended Macro Icons](Interface/AddOns/CherrysKit/ExtendedMacroIcons/README.md) | A larger, categorised macro icon picker. | `/emi` | 3.0.4 |
 | [TooltipIds](Interface/AddOns/CherrysKit/TooltipIds/README.md) | ID numbers for items, buffs, skills and other game data. | `/ti` | 1.0b3-ck3 |
 | [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck10 |
@@ -162,7 +162,7 @@ Download them from this build: [CherrysLoginxml-1.2.1.zip](https://github.com/Ch
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome 1.0.16](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysKit-GlobalBankDailyRewards-1.0.16.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
+[Download Global Bank Daily Rewards for Chrome 1.0.17](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysKit-GlobalBankDailyRewards-1.0.17.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
 
 Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step. Automatic page processing is limited to the Gameforge daily shop page; the extension does not send your local data to the developer.
 

@@ -63,7 +63,7 @@ If an addon's original, or an older separate copy, is in its own folder in `Inte
 - **Advanced AuctionHouse:** its searches fill the helper's auction cache
 - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
 - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
-- **Cherry's Loginxml:** the character screen shows each character's gold and last save, and the server screen shows the helper's status
+- **Cherry's Loginxml:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
 
 ### Extended Macro Icons
 
@@ -128,7 +128,7 @@ If an addon's original, or an older separate copy, is in its own folder in `Inte
 ### Cherry's Loginxml
 
 - **LogNextChar:** Next and Prev character buttons in game
-- **Global Bank:** shows each character's gold and last save on the character screen, and the helper's status on the server screen
+- **Global Bank:** shows each character's gold and last save on the character screen and the helper's status on the server screen, and gives it your account's character list, which boxes them together on its page and fills in their servers
 - **Note:** Install login screen.bat removes that folder for you. The login screen itself is Rom Autologin by Pyrrhus with fixes, and has to live in `Interface\loginxml`, the only place the game reads one: the same installer replaces whatever is there and keeps your saved logins.
 
 ### LogNextChar

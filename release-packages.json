@@ -1,7 +1,7 @@
 {
   "kit_version": "0.11.113",
   "hub_version": "0.4.25",
-  "release_summary": "Everything since the 0.11.101 playtest. Global Bank (1.4.14) and its Chrome extension (1.0.16) turn the page into a full bank viewer: one scrolling grid with the game's own icons, search, filters and a slot tooltip, plus Currencies, Characters, Item Depot and Stats tabs, a gold heatmap and Gameforge accounts. Gear never stacks, auctions leave the cache when they end, and the Bank tab can read your folders without the local helper. Cherry's Loginxml 1.2.1 and LogNextChar 1.2.1 show gold and last save on the login screens and close the mailbox before switching characters. Cherry's Chat 0.11.0 sends emoji in Say as symbols the game font can draw, or as :code: text when there is no symbol. Cherry's Bar 1.1.9 can show your coordinates in Location, the hub is at 0.4.24, and Global Bank's in-game window shows the game's own item tooltip. The rest of the 0.11.100 and 0.11.101 work is included unchanged.",
+  "release_summary": "Everything since the 0.11.101 playtest. Global Bank (1.4.15) and its Chrome extension (1.0.17) turn the page into a full bank viewer: one scrolling grid with the game's own icons, search, filters and a slot tooltip, plus Currencies, Characters, Item Depot and Stats tabs, a gold heatmap and Gameforge accounts. Gear never stacks, auctions leave the cache when they end, and the Bank tab can read your folders without the local helper. Cherry's Loginxml 1.2.1 and LogNextChar 1.2.1 show gold and last save on the login screens and close the mailbox before switching characters. Cherry's Chat 0.11.0 sends emoji in Say as symbols the game font can draw, or as :code: text when there is no symbol. Cherry's Bar 1.1.9 can show your coordinates in Location, the hub is at 0.4.24, and Global Bank's in-game window shows the game's own item tooltip. The rest of the 0.11.100 and 0.11.101 work is included unchanged.",
   "runtime_validation": "Lua 5.1 simulated-client suite: 969 tests; 942 passed and 26 retired-editor tests skipped. One test failed only because a Global Bank helper process was running on the test machine; it checks a machine-wide mutex and passes when nothing else is running. The release build verifies all 21 install packages, 200 manifest entries and 53 Markdown files. The extension's page also ran on real Chrome 155 with a test profile: the tabs, encryption and locking with made-up data, and setup with real saved data. No character names, shop token, email or user folder appear in any release ZIP or in git history. Nothing has been confirmed in the game client yet; docs/TESTING.md lists the checks (G1 to G20). Unchanged addon packages keep their versions and byte-identical files.",
   "addons": [
     {
@@ -151,7 +151,7 @@
     {
       "folder": "GlobalBank",
       "title": "Global Bank",
-      "version": "1.4.14",
+      "version": "1.4.15",
       "command": "/gb",
       "description_file": "06-global-bank.md",
       "summary": "A searchable view of your characters' bags, banks and gold.",
@@ -174,7 +174,7 @@
         },
         {
           "package": "CherrysLoginxml",
-          "for": "the character screen shows each character's gold and last save, and the server screen shows the helper's status"
+          "for": "the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers"
         }
       ],
       "kit_file": "GlobalBank/GlobalBankUI.lua",
@@ -526,7 +526,7 @@
         },
         {
           "package": "GlobalBank",
-          "for": "shows each character's gold and last save on the character screen, and the helper's status on the server screen"
+          "for": "shows each character's gold and last save on the character screen and the helper's status on the server screen, and gives it your account's character list, which boxes them together on its page and fills in their servers"
         }
       ],
       "after_install": "close the game and double-click `Interface\\AddOns\\CherrysKit\\CherrysLoginxmlHook\\Install login screen.bat`. The game only reads a login screen from `Interface\\loginxml`, so this copies it there.",

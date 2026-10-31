@@ -105,6 +105,7 @@ Data for external tools (all files are in Interface\GlobalBankHelper):
   and accountId, or null when unavailable/ambiguous. collectedAt is UTC in ISO 8601.
 - DailyRewards.json: schemaVersion 1 and records [{name,server,day,collectedAt}].
   Written atomically by the extension bridge, then reflected in GlobalBank.json by the helper.
+- GlobalBankTips.txt: the game's own tooltips for gear and mana stones, for the extension's page. The game never loads it.
 - GameforgeAccounts.json: your Gameforge accounts, encrypted by the extension's page. Nothing here can open it.
   It needs your password and the encryption key in Chrome, so copy that key (Gameforge accounts tab) before moving to another PC.
 - CharacterLinks.json: editable schemaVersion 1, accounts and characters arrays. Example:

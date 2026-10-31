@@ -51,6 +51,8 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G20 | Log in and out on a character holding mana stones with stats. Open **Stats**, and switch between stats on items and on mana stones. In **Bank**, set **Search in** to each kind and search a stat. | The names and counts match the stones' tooltips in game, with a breakdown per character. Stones with different stats have their own slots. |
 | G21 | Put an addon's original in its own folder (for example `Interface\AddOns\zBag`), and start the game. | Chat has one line saying the kit's version is off because that folder takes precedence, and the hub's row says the same. The original runs and has its own commands. Delete the folder and Reload UI: the kit's version is back. |
 | G22 | Try one addon with only the hub (the hub's ZIP plus that addon's ZIP). | It works, with only the features that need another addon missing. Its description lists them. |
+| G23 | Log in and out on a character with gear and mana stones, then hover them in the **Bank** tab. | The tooltip matches the game's, line for line, with the same colours. |
+| G24 | Log in one character through Cherry's Loginxml, and out again. Open **Gameforge accounts** and **Gold heatmap**. | Its whole account is boxed together under Link characters, with even tickboxes and names in class colours, and the others on it have a server, even if they haven't logged in. Nothing is linked until you link it. |
 | G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
 | G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 

@@ -19,7 +19,7 @@ A replacement login screen for Runes of Magic. Original project: Rom Autologin b
 >
 > **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
 > - **LogNextChar:** Next and Prev character buttons in game
-> - **Global Bank:** shows each character's gold and last save on the character screen, and the helper's status on the server screen
+> - **Global Bank:** shows each character's gold and last save on the character screen and the helper's status on the server screen, and gives it your account's character list, which boxes them together on its page and fills in their servers
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysLoginxml` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one. Install login screen.bat removes that folder for you. The login screen itself is Rom Autologin by Pyrrhus with fixes, and has to live in `Interface\loginxml`, the only place the game reads one: the same installer replaces whatever is there and keeps your saved logins.
 >

@@ -93,7 +93,7 @@ def write_zip(path: Path, files: dict[str, bytes], root: str = "CherrysKit") -> 
 
 
 PRIVATE_DATA_NAMES = frozenset(name.casefold() for name in (
-    "SaveVariables.lua", "GlobalBankDatabase.lua", "GlobalBank.json", "ExcludedCharacters.json",
+    "SaveVariables.lua", "GlobalBankDatabase.lua", "GlobalBank.json", "GlobalBankTips.txt", "GameforgeAccounts.json", "ExcludedCharacters.json",
     "DailyRewards.json", "CharacterLinks.json", "GlobalBankHelperBeat.lua",
     "GlobalBankHelper.log", "GlobalBankHelper-errors.log", "AAHBroadCache.json", "AAHBroadCache.lua",
 ))
