@@ -1,11 +1,27 @@
 'use strict';
 const helper = document.getElementById('helper');
 const start = document.getElementById('start');
+const stop = document.getElementById('stop');
 const status = document.getElementById('status');
 const reset = document.getElementById('reset');
 const resetTime = document.getElementById('reset-time');
 let starting = false;
 let refreshTimer;
+
+// The same shape as the page's duration text, for the running helper's uptime.
+function formatDuration(seconds) {
+  const minutes = Math.max(0, Math.floor(seconds / 60));
+  if (minutes < 60) return minutes + ' min';
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + ' h ' + (minutes % 60) + ' min';
+  return Math.floor(hours / 24) + ' days ' + (hours % 24) + ' h';
+}
+function helperRunText(response) {
+  const since = Date.parse(response.since || '');
+  return Number.isFinite(since)
+    ? 'Helper is running \u2014 for ' + formatDuration((Date.now() - since) / 1000) + '.'
+    : 'Helper is running.';
+}
 
 function collectionTime(value) {
   // Only a real, timezone-qualified confirmation can establish a collection.
@@ -58,10 +74,11 @@ async function refresh() {
     }
     showCollection(response.lastCollected);
     if (response.rewardError) status.textContent = 'Could not read the last confirmed collection: ' + response.rewardError;
-    helper.textContent = response.running ? 'Helper is running.' : starting ? 'Starting the helper…' : 'Helper is not running.';
+    helper.textContent = response.running ? helperRunText(response) : starting ? 'Starting the helper…' : 'Helper is not running.';
     start.hidden = false;
     start.disabled = response.running || starting;
     start.textContent = response.running ? 'Helper is running' : starting ? 'Starting helper…' : 'Start Global Bank helper';
+    stop.hidden = !response.running;
     return response.running;
   } catch (error) {
     helper.textContent = 'Native Messaging unavailable: ' + String(error.message || error);
@@ -109,7 +126,7 @@ autoHelper.addEventListener('change', async () => {
   helper.textContent = on ? 'Starting the helper…' : 'Stopping the helper…';
   try {
     await chrome.storage.local.set({autoHelper: on});
-    const response = await chrome.runtime.sendMessage({type: on ? 'helper-auto-start' : 'helper-auto-stop'});
+    const response = await chrome.runtime.sendMessage({type: on ? 'helper-auto-start' : 'helper-auto-stop', showWindow: showTerminal.checked});
     if (!response?.ok) throw new Error(response?.error || 'No response from the local bridge.');
     // A helper takes a moment to start
     if (on) await new Promise(resolve => setTimeout(resolve, 3000));
@@ -118,6 +135,42 @@ autoHelper.addEventListener('change', async () => {
     helper.textContent = 'The helper could not be changed: ' + String(error.message || error);
   } finally {
     autoHelper.disabled = false;
+  }
+});
+stop.addEventListener('click', async event => {
+  if (!event.isTrusted || stop.disabled) return;
+  stop.disabled = true;
+  helper.textContent = 'Stopping the helper\u2026';
+  try {
+    const response = await send('helper-stop');
+    if (!response?.ok) throw new Error(response?.error || 'No response from the local bridge.');
+    await refresh();
+  } catch (error) {
+    helper.textContent = 'Could not stop the helper: ' + String(error.message || error);
+  } finally {
+    stop.disabled = false;
+  }
+});
+const showTerminal = document.getElementById('show-terminal');
+chrome.storage.local.get('showTerminal').then(({showTerminal: on}) => { showTerminal.checked = !!on; }).catch(() => {});
+showTerminal.addEventListener('change', async () => {
+  const on = showTerminal.checked;
+  showTerminal.disabled = true;
+  helper.textContent = on ? 'Showing the helper\u2019s window\u2026' : 'Hiding the helper\u2019s window\u2026';
+  try {
+    await chrome.storage.local.set({showTerminal: on});
+    // A running automatic helper keeps the look it started with; restart it with the new one.
+    if (autoHelper.checked) {
+      await chrome.runtime.sendMessage({type:'helper-auto-stop'});
+      const response = await chrome.runtime.sendMessage({type:'helper-auto-start', showWindow: on});
+      if (!response?.ok) throw new Error(response?.error || 'No response from the local bridge.');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+    await refresh();
+  } catch (error) {
+    helper.textContent = 'The terminal setting could not be applied: ' + String(error.message || error);
+  } finally {
+    showTerminal.disabled = false;
   }
 });
 document.getElementById('open-tools').addEventListener('click', event => {

@@ -498,6 +498,10 @@ Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, add
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
 
+## Updated in 1.4.15
+
+The helper now lives with Chrome: the extension pings it while Chrome is open, and it ends on its own when Chrome or the extension goes away. The extension's button shows whether it is running and for how long, stops it directly, and a new tick shows its terminal window.
+
 ## Updated in 1.4.14
 
 The extension's page has a Stats tab listing every stat, how many there are and which characters hold them, for items or for mana stones separately. The Bank tab's search can look at stats on items or on mana stones, and mana stones with different stats no longer stack. A character saves mana stone stats the next time it logs in.

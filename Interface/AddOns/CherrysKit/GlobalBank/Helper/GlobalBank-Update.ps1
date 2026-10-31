@@ -19,6 +19,9 @@ param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "", [Validate
 
 $ErrorActionPreference = "Stop"
 
+# A clear name for Task Manager and the taskbar when this run has its own console window.
+try { [Console]::Title = "Cherrys Global Bank Helper" } catch { }
+
 # Keep diagnostics available even when loading a dependency or starting the watcher fails.
 # Never include source text or expanded command arguments: those can contain private payloads.
 function Protect-HelperErrorText([string]$text, [int]$MaxLength = 240) {
@@ -85,6 +88,7 @@ if (-not (Test-Path -LiteralPath $data)) {
 }
 $out = Join-Path $data "GlobalBankDatabase.lua"
 $beat = Join-Path $data "GlobalBankHelperBeat.lua"
+$extensionBeat = Join-Path $data "GlobalBankExtensionBeat.txt"
 $log = Join-Path $data "GlobalBankHelper.log"
 $errorLog = Join-Path $data "GlobalBankHelper-errors.log"
 $json = Join-Path $data "GlobalBank.json"
@@ -822,6 +826,17 @@ try {
     }
 } catch { }
 
+# The pre-kit helper used to live in this data folder; nothing here runs it. Clear the leftovers,
+# and the worker inbox files of helpers that were force-stopped long ago.
+foreach ($legacy in 'GlobalBank-Update.ps1', 'GlobalBank-Update.bat', 'Start Global Bank helper.bat',
+    'Turn on automatic updates.bat', 'Turn off automatic updates.bat', 'README.txt') {
+    $leftover = Join-Path $data $legacy
+    if (Test-Path -LiteralPath $leftover -PathType Leaf) { Remove-Item -LiteralPath $leftover -Force -ErrorAction SilentlyContinue }
+}
+Get-ChildItem -LiteralPath $data -Filter '.AAH-worker-*.json' -File -ErrorAction SilentlyContinue |
+    Where-Object { (Get-Date) - $_.LastWriteTime -gt [TimeSpan]::FromDays(1) } |
+    Remove-Item -Force -ErrorAction SilentlyContinue
+
 # One helper window per Windows user.
 $mutex = New-Object System.Threading.Mutex($false, "Local\CherrysKitGlobalBankHelper")
 $owned = $false
@@ -853,7 +868,8 @@ Write-Json
 $rewardStamp = if (Test-Path -LiteralPath $rewards) { (Get-Item -LiteralPath $rewards).LastWriteTimeUtc.Ticks } else { 0 }
 $linkStamp = (Get-Item -LiteralPath $links).LastWriteTimeUtc.Ticks
 $nextRewardCheck = (Get-Date).AddSeconds(1)
-$nextAutoCheck = (Get-Date).AddSeconds(2)
+$nextStopCheck = (Get-Date).AddSeconds(2)
+$nextAutoCheck = (Get-Date).AddSeconds(15)
 $autoStop = Join-Path $data 'GlobalBankHelperAuto.stop'
 
 $watcher = New-Object System.IO.FileSystemWatcher($SaveFolder, "SaveVariables.lua")
@@ -908,13 +924,21 @@ while ($true) {
             $script:PromptShown = $false
         }
     }
-    # Started by the extension's toggle: it ends when the toggle goes off or Chrome closes.
-    if ($Auto -and (Get-Date) -ge $nextAutoCheck) {
-        $nextAutoCheck = (Get-Date).AddSeconds(2)
-        if ((Test-Path -LiteralPath $autoStop) -or -not (Get-Process -Name chrome -ErrorAction SilentlyContinue)) {
+    # A Stop from Chrome lands within two seconds; the liveness pair runs every fifteen.
+    if ((Get-Date) -ge $nextStopCheck) {
+        $nextStopCheck = (Get-Date).AddSeconds(2)
+        if (Test-Path -LiteralPath $autoStop) {
             Remove-Item -LiteralPath $autoStop -Force -ErrorAction SilentlyContinue
+            Write-Host 'Stopped from Chrome.' -ForegroundColor Yellow
             exit 0
         }
+    }
+    # Started by the extension: it ends when Chrome, or the extension's heartbeat, goes away.
+    if ($Auto -and (Get-Date) -ge $nextAutoCheck) {
+        $nextAutoCheck = (Get-Date).AddSeconds(15)
+        if (-not (Get-Process -Name chrome -ErrorAction SilentlyContinue)) { exit 0 }
+        $mark = Get-Item -LiteralPath $extensionBeat -ErrorAction SilentlyContinue
+        if (-not $mark -or ((Get-Date).ToUniversalTime() - $mark.LastWriteTimeUtc).TotalSeconds -gt 180) { exit 0 }
     }
     foreach ($e in @(Get-Event -ErrorAction SilentlyContinue)) {
         $path = $e.SourceEventArgs.FullPath

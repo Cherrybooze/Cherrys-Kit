@@ -1,10 +1,14 @@
 # Global Bank
 
-Version **1.4.14** · Kit release **0.11.113** · [All addons / hub](../README.md)
+Version **1.4.15** · Kit release **0.11.114** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
 Built for players with many characters and bank alts. Each character saves a small snapshot of its own bags, bank and gold; a little helper window collects them so every character can see all the others.
+
+## Updated in 1.4.15
+
+The helper now lives with Chrome: the extension pings it while Chrome is open, and it ends on its own when Chrome or the extension goes away — a stop-flag look every 2 seconds, one heartbeat read every 15. The extension's button shows whether the helper is running and for how long, and can stop it directly; **Show its terminal window** runs the background helper in a real PowerShell window instead of invisibly. It also clears leftover files from the pre-kit helper in its data folder.
 
 ## Updated in 1.4.14
 

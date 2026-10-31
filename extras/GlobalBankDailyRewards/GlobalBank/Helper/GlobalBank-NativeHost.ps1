@@ -60,11 +60,20 @@ function Write-ClockStamp {
         [System.IO.File]::WriteAllText((Join-Path (Get-HelperDataDirectory) 'CherrysClockStamp.lua'), $text, [Text.Encoding]::ASCII)
     } catch { }
 }
+# The helper watches this file: while the extension keeps talking, it keeps running.
+function Write-ExtensionBeat {
+    try {
+        $path = Join-Path (Get-HelperDataDirectory) 'GlobalBankExtensionBeat.txt'
+        if (Test-Path -LiteralPath $path) { [IO.File]::SetLastWriteTimeUtc($path, [DateTime]::UtcNow) }
+        else { [System.IO.File]::WriteAllText($path, ([DateTime]::UtcNow.ToString('o')), [Text.Encoding]::ASCII) }
+    } catch { }
+}
 try {
     $length = [BitConverter]::ToInt32((Read-Bytes 4), 0)
     if ($length -lt 2 -or $length -gt 16384) { throw 'Invalid message length' }
     $message = $utf8.GetString((Read-Bytes $length)) | ConvertFrom-Json
     Write-ClockStamp
+    Write-ExtensionBeat
     if ($message.type -eq 'clock') {
         Send-Response @{ok=$true}
         exit 0
@@ -78,18 +87,27 @@ try {
             Start-Process -FilePath 'powershell.exe' -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Watch' -f $helper) -WindowStyle Normal
             Send-Response @{ok=$true;running=$false;starting=$true}
         } else {
-            $response = @{ok=$true;running=$running;starting=$false;lastCollected=$null}
+            $response = @{ok=$true;running=$running;starting=$false;lastCollected=$null;since=$null;auto=$false}
+            if ($running) {
+                $process = Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe' OR Name = 'pwsh.exe'" |
+                    Where-Object { $_.CommandLine -like '*GlobalBank-Update.ps1*-Watch*' } | Select-Object -First 1
+                if ($process) {
+                    $response.since = $process.CreationDate.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
+                    $response.auto = $process.CommandLine -like '*-Auto*'
+                }
+            }
             try { $response.lastCollected = Get-LastCollected } catch { $response.rewardError = $_.Exception.Message }
             Send-Response $response
         }
         exit 0
     }
-    if ($message.type -eq 'helper-info' -or $message.type -eq 'helper-auto-start' -or $message.type -eq 'helper-auto-stop') {
+    if ($message.type -eq 'helper-info' -or $message.type -eq 'helper-auto-start' -or $message.type -eq 'helper-auto-stop' -or $message.type -eq 'helper-stop') {
         . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
         $data = Get-HelperDataDirectory
         $info = switch ($message.type) {
             'helper-info' { Get-ControlHelperInfo $data }
-            'helper-auto-start' { Start-ControlHelperAuto $data }
+            'helper-auto-start' { Start-ControlHelperAuto $data ([bool]$message.showWindow) }
+            'helper-stop' { Stop-ControlHelper $data }
             default { Stop-ControlHelperAuto $data }
         }
         $info.ok = $true

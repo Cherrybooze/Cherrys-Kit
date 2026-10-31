@@ -2,15 +2,19 @@
 const HOST = 'com.cherryskit.globalbank';
 // Only this extension's own pages can read what it stores locally, not its scripts running on web pages.
 chrome.storage?.local?.setAccessLevel?.({accessLevel: 'TRUSTED_CONTEXTS'})?.catch?.(() => {});
-// Any message makes the local host write Windows' time for the game's addons. Once per Chrome
-// start is enough: the game carries that time on until Windows restarts.
+// Any message makes the local host write Windows' time for the game's addons and refresh the
+// heartbeat the helper watches: while this extension is alive, the helper keeps running.
 const stampClock = () => chrome.runtime.sendNativeMessage(HOST, {type:'clock'}, () => void chrome.runtime.lastError);
-// The page's toggle: run the helper, hidden, whenever Chrome is open.
+// Once a minute is cheap and keeps the helper's 15-second check honest.
+const ensureHeartbeat = () => chrome.alarms?.create?.('globalbank-heartbeat', {periodInMinutes: 1});
+chrome.alarms?.onAlarm?.addListener(alarm => { if (alarm.name === 'globalbank-heartbeat') stampClock(); });
+// The page's toggle: run the helper whenever Chrome is open, in a window if the player asked for one.
 const startHelperIfWanted = async () => {
-  const {autoHelper} = await chrome.storage.local.get('autoHelper');
-  if (autoHelper) chrome.runtime.sendNativeMessage(HOST, {type:'helper-auto-start'}, () => void chrome.runtime.lastError);
+  const {autoHelper, showTerminal} = await chrome.storage.local.get(['autoHelper', 'showTerminal']);
+  if (autoHelper) chrome.runtime.sendNativeMessage(HOST, {type:'helper-auto-start', showWindow: !!showTerminal}, () => void chrome.runtime.lastError);
 };
-const chromeStarted = () => { stampClock(); startHelperIfWanted().catch(() => {}); };
+const chromeStarted = () => { ensureHeartbeat(); stampClock(); startHelperIfWanted().catch(() => {}); };
+ensureHeartbeat();
 chrome.runtime.onStartup.addListener(chromeStarted);
 chrome.runtime.onInstalled.addListener(chromeStarted);
 const validPage = url => {
@@ -79,8 +83,10 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     });
     return true;
   }
-  if ((control && message?.type === 'helper-info') || ((control || popup) && (message?.type === 'helper-auto-start' || message?.type === 'helper-auto-stop'))) {
-    chrome.runtime.sendNativeMessage(HOST, {type:message.type}, response => {
+  if ((control && message?.type === 'helper-info') || ((control || popup) && (message?.type === 'helper-auto-start' || message?.type === 'helper-auto-stop' || message?.type === 'helper-stop'))) {
+    const request = {type: message.type};
+    if (message.type === 'helper-auto-start') request.showWindow = message.showWindow === true;
+    chrome.runtime.sendNativeMessage(HOST, request, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);
     });

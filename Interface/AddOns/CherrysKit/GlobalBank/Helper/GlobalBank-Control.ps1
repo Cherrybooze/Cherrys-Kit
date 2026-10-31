@@ -230,17 +230,19 @@ function Get-ControlHelperInfo([string]$dataDirectory) {
     if ($process) {
         $info.since = $process.CreationDate.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
         $info.auto = $process.CommandLine -like '*-Auto*'
+        $info.hidden = $process.CommandLine -like '*-WindowStyle Hidden*'
     }
     return $info
 }
 
-function Start-ControlHelperAuto([string]$dataDirectory) {
+function Start-ControlHelperAuto([string]$dataDirectory, [bool]$showWindow) {
     $info = Get-ControlHelperInfo $dataDirectory
     if ($info.running) { return $info }
     Remove-Item -LiteralPath (Join-Path $dataDirectory 'GlobalBankHelperAuto.stop') -Force -ErrorAction SilentlyContinue
     $helper = Join-Path $PSScriptRoot 'GlobalBank-Update.ps1'
     if (-not (Test-Path -LiteralPath $helper)) { throw 'Global Bank helper was not found' }
-    Start-Process -FilePath 'powershell.exe' -WindowStyle Hidden -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Watch -Auto' -f $helper)
+    $style = if ($showWindow) { 'Normal' } else { 'Hidden' }
+    Start-Process -FilePath 'powershell.exe' -WindowStyle $style -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Watch -Auto' -f $helper)
     return @{running=$false;since=$null;auto=$true;starting=$true}
 }
 
@@ -251,6 +253,21 @@ function Stop-ControlHelperAuto([string]$dataDirectory) {
     $flag = Join-Path $dataDirectory 'GlobalBankHelperAuto.stop'
     [IO.File]::WriteAllText($flag, 'stop')
     $deadline = (Get-Date).AddSeconds(10)
+    while ((Get-Date) -lt $deadline -and (Get-ControlHelperInfo $dataDirectory).running) { Start-Sleep -Milliseconds 300 }
+    $after = Get-ControlHelperInfo $dataDirectory
+    if ($after.running) { throw 'The helper did not stop. Close it from Task Manager, or restart Chrome.' }
+    Remove-Item -LiteralPath $flag -Force -ErrorAction SilentlyContinue
+    return $after
+}
+
+# Whatever is running, from the extension's own Stop button. The helper honours the flag in
+# any mode and lands within a couple of seconds.
+function Stop-ControlHelper([string]$dataDirectory) {
+    $info = Get-ControlHelperInfo $dataDirectory
+    if (-not $info.running) { return $info }
+    $flag = Join-Path $dataDirectory 'GlobalBankHelperAuto.stop'
+    [IO.File]::WriteAllText($flag, 'stop')
+    $deadline = (Get-Date).AddSeconds(20)
     while ((Get-Date) -lt $deadline -and (Get-ControlHelperInfo $dataDirectory).running) { Start-Sleep -Milliseconds 300 }
     $after = Get-ControlHelperInfo $dataDirectory
     if ($after.running) { throw 'The helper did not stop. Close it from Task Manager, or restart Chrome.' }

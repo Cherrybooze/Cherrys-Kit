@@ -129,7 +129,8 @@
         statusHelper.textContent = 'Helper: not running.';
       } else {
         const ran = info.since ? ` for ${GBBank.formatDuration((Date.now() - Date.parse(info.since)) / 1000)}` : '';
-        statusHelper.textContent = `Helper: running${ran}, ${info.auto ? 'started automatically' : 'in its own window'}.`;
+        const how = info.auto ? (info.hidden === false ? 'started automatically with its window' : 'started automatically') : 'in its own window';
+        statusHelper.textContent = `Helper: running${ran}, ${how}.`;
       }
     } catch (error) {
       statusHelper.textContent = await GBFolders.usable('saves').catch(() => null)
@@ -137,20 +138,41 @@
         : 'Helper: cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder, or choose your folders below.';
     }
   }
+  const showTerminal = byId('show-terminal');
   chrome.storage.local.get('autoHelper').then(({autoHelper: on}) => { autoHelper.checked = !!on; });
+  chrome.storage.local.get('showTerminal').then(({showTerminal: on}) => { showTerminal.checked = !!on; });
   autoHelper.addEventListener('change', async () => {
     const on = autoHelper.checked;
     autoHelper.disabled = true;
-    statusHelper.textContent = on ? 'Helper: starting…' : 'Helper: stopping…';
+    statusHelper.textContent = on ? 'Helper: starting.' : 'Helper: stopping.';
     try {
       await chrome.storage.local.set({autoHelper: on});
-      await send({type: on ? 'helper-auto-start' : 'helper-auto-stop'});
+      await send({type: on ? 'helper-auto-start' : 'helper-auto-stop', showWindow: showTerminal.checked});
       // A helper takes a moment to start
       if (on) await new Promise(resolve => setTimeout(resolve, 3000));
     } catch (error) {
       bankStatus('The helper could not be changed: ' + String(error.message || error));
     } finally {
       autoHelper.disabled = false;
+      refreshStatus();
+    }
+  });
+  showTerminal.addEventListener('change', async () => {
+    const on = showTerminal.checked;
+    showTerminal.disabled = true;
+    statusHelper.textContent = on ? 'Helper: showing its window.' : 'Helper: hiding its window.';
+    try {
+      await chrome.storage.local.set({showTerminal: on});
+      // A running automatic helper keeps the look it started with; restart it with the new one.
+      if (autoHelper.checked) {
+        await send({type:'helper-auto-stop'});
+        await send({type:'helper-auto-start', showWindow: on});
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    } catch (error) {
+      bankStatus('The terminal setting could not be applied: ' + String(error.message || error));
+    } finally {
+      showTerminal.disabled = false;
       refreshStatus();
     }
   });
