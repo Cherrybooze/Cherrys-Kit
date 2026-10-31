@@ -5970,4 +5970,5 @@
 			<OnLeave>GameTooltip:Hide();</OnLeave>
 		</Scripts>
 	</Button>
+	<GameTooltip name="GlobalBankTipReader" hidden="true" alpha="0" enableMouse="false" inherits="GameTooltipTemplate" parent="UIParent" />
 </Ui>

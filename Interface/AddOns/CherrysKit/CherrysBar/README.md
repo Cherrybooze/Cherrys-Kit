@@ -4,6 +4,22 @@ Version **1.1.9** · Kit release **0.11.113** · [All addons / hub](../README.md
 
 **Full-width information bars at the top of the screen, the bottom, or both. A fork of XBar III, with bars and settings in the spirit of Titan Panel.**
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit (hub 0.4.23 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\CherrysBar`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Cherry's KittyCombo:** the Kitty mode display
+> - **Global Bank:** its Chrome extension gives the Clock the real time
+>
+> **Original addon:** XBar III by matif and Bussdee. If `Interface\AddOns\XBar` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+>
+> **Other addons:** Its Performance display times the update loops of other addons it finds, kit or not, including Lootomatic. It only reads their names, so none of them are needed.
+
+<!-- end of requirements -->
+
 ## Features
 
 - **Top bar, bottom bar or both.** Only the top bar shows at first. Each bar has its own style, opacity and auto-hide. `/cbar top`, `/cbar bottom` and `/cbar both` switch quickly.

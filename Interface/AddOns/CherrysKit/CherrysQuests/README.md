@@ -4,6 +4,20 @@ Version **1.0.0** · Kit release **0.11.86** · [All addons / hub](../README.md)
 
 **A prettier quest tracker for Runes of Magic with font, size and look options. Ctrl+click a quest to cycle through the NPCs it names and put one in the game's NPC tracking list.**
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit (hub 0.4.21 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\CherrysQuests`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **rom weakauras:** more fonts to choose from
+> - **pbInfo:** keeps its quest tracker out of the way
+>
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysQuests` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+
+<!-- end of requirements -->
+
 ## Features
 
 - **A cleaner tracker**: a dark panel with a title bar, quests coloured by level, a coloured stripe and a thin progress bar for each quest, finished objectives in green and counts that fade from red to green. Daily quests are blue and the title shows how many dailies you have left.

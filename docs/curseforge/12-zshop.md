@@ -2,7 +2,12 @@
 
 > **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Optional, when you have them:** Global Bank (its Chrome extension or helper tells ZShop the time, for the daily reminder).
+> **Where it goes:** `Interface\AddOns\CherrysKit\ZShop`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Global Bank:** its Chrome extension or helper tells ZShop the time, for the daily reminder
+>
+> **Original addon:** ZShop by Pyrr. If `Interface\AddOns\ZShop` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
 
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 

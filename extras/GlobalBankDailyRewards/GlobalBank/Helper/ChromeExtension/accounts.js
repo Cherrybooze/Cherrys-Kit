@@ -60,12 +60,61 @@ const GBAccounts = (() => {
     const light = rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 110;
     return {rgb, css: `rgb(${rgb.join(',')})`, text: light ? '#101820' : '#ffffff'};
   }
-  // "Aynara (PvE)", as the shop writes it, and "Aynara", as the game does, are the same server.
-  function serverOf(character) {
-    const name = String(character.server || character.dailyLogin?.server || '').replace(/\s*\(.*\)\s*$/, '').trim();
-    return name || NO_SERVER;
-  }
   const linkKey = name => String(name).toLowerCase();
+  // "Aynara (PvE)", as the shop writes it, and "Aynara", as the game does, are the same server.
+  function ownServer(character) {
+    return String(character.server || character.dailyLogin?.server || '').replace(/\s*\(.*\)\s*$/, '').trim();
+  }
+  // A character that hasn't saved its own can still be known from others on its account.
+  function serverOf(character, known) {
+    return ownServer(character) || known?.of(character.name)?.server || NO_SERVER;
+  }
+  // Characters one login screen listed together are on one account and one server. This only says who belongs
+  // together: it never links anyone to a Gameforge account.
+  function accountGroups(characters) {
+    const parent = new Map();
+    const shown = new Map();
+    const add = name => {
+      const key = linkKey(name);
+      if (!parent.has(key)) {
+        parent.set(key, key);
+        shown.set(key, String(name));
+      }
+      return key;
+    };
+    const find = key => {
+      let at = key;
+      while (parent.get(at) !== at) at = parent.get(at);
+      return at;
+    };
+    for (const character of characters) {
+      const own = add(character.name);
+      for (const other of character.roster || []) parent.set(find(add(other)), find(own));
+    }
+    const groups = new Map();
+    for (const key of parent.keys()) {
+      const root = find(key);
+      if (!groups.has(root)) groups.set(root, {names: [], server: ''});
+      groups.get(root).names.push(shown.get(key));
+    }
+    for (const character of characters) {
+      const group = groups.get(find(linkKey(character.name)));
+      group.server = group.server || ownServer(character);
+    }
+    for (const group of groups.values()) group.names.sort((a, b) => a.localeCompare(b));
+    return {
+      of: name => (parent.has(linkKey(name)) ? groups.get(find(linkKey(name))) : null),
+      groups: [...groups.values()].sort((a, b) => a.names[0].localeCompare(b.names[0])),
+    };
+  }
+  // By last class: the token where a character has saved one, otherwise the English name
+  const CLASS_COLORS = {WARRIOR: '#f24514', RANGER: '#9ed61f', THIEF: '#0dd1c2', MAGE: '#fa781a', AUGUR: '#5aa5ff', KNIGHT: '#e0e052',
+    WARDEN: '#cc55cc', DRUID: '#3cc03c', PSYRON: '#8080ff', HARPSYN: '#a070ff', BARD: '#f280bf'};
+  const CLASS_TOKENS = {warrior: 'WARRIOR', scout: 'RANGER', rogue: 'THIEF', mage: 'MAGE', priest: 'AUGUR', knight: 'KNIGHT',
+    warden: 'WARDEN', druid: 'DRUID', warlock: 'HARPSYN', champion: 'PSYRON', bard: 'BARD'};
+  function classColor(character) {
+    return CLASS_COLORS[character.classToken || CLASS_TOKENS[String(character.class || '').toLowerCase()]] || null;
+  }
   function emptyState() {
     return {accounts: [], links: {}};
   }
@@ -104,12 +153,14 @@ const GBAccounts = (() => {
   // A column for each server: its full caps pooled together, then the rest by account, richest first.
   function heatColumns(characters, state, noAccount = NO_ACCOUNT) {
     const servers = new Map();
+    const known = accountGroups(characters);
     for (const character of characters) {
-      const server = serverOf(character);
+      const server = serverOf(character, known);
       if (!servers.has(server)) servers.set(server, {server, total: 0, fullCaps: [], groups: new Map()});
       const column = servers.get(server);
       const gold = Number(character.gold) || 0;
-      const account = accountOf(state, character.name)?.name || noAccount;
+      const group = known.of(character.name);
+      const account = accountOf(state, character.name)?.name || (group.names.length > 1 ? `${group.names[0]}'s account, not linked` : noAccount);
       const cell = {name: String(character.name), gold, account, server};
       column.total += gold;
       if (gold >= FULL_CAP) column.fullCaps.push(cell);
@@ -328,14 +379,23 @@ const GBAccounts = (() => {
       if (state.accounts.some(account => account.id === chosen)) select.value = chosen;
     }
 
+    // Everyone on a login screen's list can be linked, whether or not they've saved anything here yet.
+    function linkable(known) {
+      const byName = new Map(characters.map(character => [linkKey(character.name), character]));
+      return known.groups.flatMap(group => group.names.map(name => ({...(byName.get(linkKey(name)) || {name, notSaved: true}), group})));
+    }
     function shownCharacters() {
       const text = byId('gf-filter').value.trim().toLowerCase();
       const unlinked = byId('gf-unlinked').checked;
-      return characters.filter(character => (!text || String(character.name).toLowerCase().includes(text)) && (!unlinked || !accountOf(state, character.name)));
+      const known = accountGroups(characters);
+      const wanted = linkable(known).filter(character => (!text || String(character.name).toLowerCase().includes(text)) && (!unlinked || !accountOf(state, character.name)));
+      // Accounts first, in their boxes, then everyone not known to share one
+      return [...wanted.filter(character => character.group.names.length > 1), ...wanted.filter(character => character.group.names.length < 2)];
     }
     function renderLinks() {
       const shown = shownCharacters();
-      byId('gf-characters').replaceChildren(...shown.map((character, index) => {
+      const known = accountGroups(characters);
+      const rowFor = (character, index) => {
         const row = make('label', 'gf-character');
         const box = make('input');
         box.type = 'checkbox';
@@ -353,9 +413,41 @@ const GBAccounts = (() => {
           if (from !== to) renderLinks();
           else showTicked();
         });
-        row.append(box, make('span', 'bank-name', character.name), make('span', 'bank-detail', `${serverOf(character)} · ${accountOf(state, character.name)?.name || NO_ACCOUNT}`));
+        const name = make('span', 'bank-name', character.name);
+        const color = classColor(character);
+        if (color) name.style.color = color;
+        const where = character.notSaved ? 'nothing saved yet' : serverOf(character, known);
+        row.append(box, name, make('span', 'bank-detail', `${where} · ${accountOf(state, character.name)?.name || NO_ACCOUNT}`));
         return row;
-      }));
+      };
+      const boxes = [];
+      let at = 0;
+      while (at < shown.length) {
+        const group = shown[at].group;
+        const together = group.names.length > 1;
+        const members = [];
+        while (at < shown.length && (together ? shown[at].group === group : shown[at].group.names.length < 2)) {
+          members.push(rowFor(shown[at], at));
+          at++;
+        }
+        const box = make('div', together ? 'gf-group' : 'gf-group gf-loose');
+        const head = make('div', 'gf-group-head');
+        head.append(make('span', '', together
+          ? `Same account: ${group.names.length} characters${group.server ? `, ${group.server}` : ''}`
+          : 'Not known to share an account yet. Logging in any character through Cherry\'s Loginxml groups its account.'));
+        if (together) {
+          const names = shown.filter(character => character.group === group).map(character => character.name);
+          head.append(button('Tick these', () => {
+            for (const member of names) ticked.add(member);
+            renderLinks();
+          }));
+        }
+        const rows = make('div', 'gf-group-rows');
+        rows.append(...members);
+        box.append(head, rows);
+        boxes.push(box);
+      }
+      byId('gf-characters').replaceChildren(...boxes);
       showTicked();
     }
     function showTicked() {
@@ -540,5 +632,5 @@ const GBAccounts = (() => {
     };
   }
   return {create, heatColor, serverOf, accountOf, setLinks, removeAccount, matchNames, heatColumns, emptyState,
-    newKey, cleanKey, deriveKey, seal, unseal, validFile};
+    newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor};
 })();

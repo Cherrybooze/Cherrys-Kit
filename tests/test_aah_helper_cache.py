@@ -162,13 +162,18 @@ try { if (Remove-AAHAcknowledgedOutbox $file $original $root @() 0) { throw 'Rea
     def test_helper_json_carries_currencies_and_bound_items(self):
         data_script = HELPER.with_name('GlobalBank-Data.ps1')
         out = self.data / 'GlobalBank.json'
+        (self.data / 'GlobalBankTips.txt').write_bytes('A\tB1~a864a8=Name^ffffff=Left=c0c0c0=Right`K9~ffffff=Elsewhere\r\nGone\tB1~ffffff=Old\r\n'.encode('latin1'))
         self.run_ps(". '" + str(data_script).replace("'", "''") + "'\n" + '''
-$snapshot = 'GB1~A~Mage~1~5~0~0~0~t`S~Aynara`M~12~345~Honor`M~gone~0~x`B~1~1~5~Name~icon~1`K~2~1~6~Other~icon`K~3~1~211000~Sword~icon~~90~100~3~2~1~Genius I;Monk V~~a864a8`K~4~2~202845~Stone~icon~~ST~Monk V;Dark I~3185d 1'
+$snapshot = 'GB1~A~Mage~1~5~0~0~0~t`S~Aynara`T~MAGE`R~A;Second`M~12~345~Honor`M~gone~0~x`B~1~1~5~Name~icon~1`K~2~1~6~Other~icon`K~3~1~211000~Sword~icon~~90~100~3~2~1~Genius I;Monk V~~a864a8`K~4~2~202845~Stone~icon~~ST~Monk V;Dark I~3185d 1'
 $c = ConvertFrom-GBSnapshot $snapshot 'when'
 Export-GBJson @($c) (Join-Path $data 'GlobalBank.json') 'now'
 ''')
         character = json.loads(out.read_text(encoding='utf-8'))['characters'][0]
         self.assertEqual(character['server'], 'Aynara')
+        self.assertEqual(character['classToken'], 'MAGE')
+        self.assertEqual(character['roster'], ['A', 'Second'])
+        self.assertEqual(character['bag'][0]['tip'], [['a864a8', 'Name'], ['ffffff', 'Left', 'c0c0c0', 'Right']])
+        self.assertNotIn('tip', character['bank'][0])
         self.assertEqual(character['currencies'], [dict(key='12', amount=345, name='Honor')])
         self.assertIs(character['bag'][0]['bound'], True)
         self.assertNotIn('bound', character['bank'][0])

@@ -6,6 +6,19 @@ Version **1.2.0-ck5** · Kit release **0.11.113** · [All addons / hub](../READM
 
 ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\ZShop`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Global Bank:** its Chrome extension or helper tells ZShop the time, for the daily reminder
+>
+> **Original addon:** ZShop by Pyrr. If `Interface\AddOns\ZShop` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+
+<!-- end of requirements -->
+
 ## Updated in 1.2.0-ck5
 
 ZShop can now read the time from the hub's clock, so the daily reminder works without the Global Bank helper window.

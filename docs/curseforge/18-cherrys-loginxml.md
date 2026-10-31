@@ -1,10 +1,16 @@
 # Cherry's Loginxml
 
-> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first.
+> **Requires:** Cherry's Kit (hub 0.4.25 or later). The CurseForge app installs it for you; if you install by hand, install it first.
 >
-> **Optional, when you have them:** LogNextChar (Next and Prev character buttons in game).
+> **Where it goes:** `Interface\AddOns\CherrysKit\CherrysLoginxmlHook`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **After installing:** close the game and double-click `Interface\AddOns\CherrysLoginxml\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there.
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **LogNextChar:** Next and Prev character buttons in game
+> - **Global Bank:** shows each character's gold and last save on the character screen and the helper's status on the server screen, and gives it your account's character list, which boxes them together on its page and fills in their servers
+>
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysLoginxml` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one. Install login screen.bat removes that folder for you. The login screen itself is Rom Autologin by Pyrrhus with fixes, and has to live in `Interface\loginxml`, the only place the game reads one: the same installer replaces whatever is there and keeps your saved logins.
+>
+> **After installing:** close the game and double-click `Interface\AddOns\CherrysKit\CherrysLoginxmlHook\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there.
 
 **A better login screen: gets past a stuck "obtaining server list", remembers your logins and works from the keyboard.**
 
@@ -25,7 +31,7 @@ A replacement for the game's login screen. Original project: Rom Autologin by Py
 
 1. Remove any other login addon first. Only one can replace the login screen.
 2. Install this addon, or extract the zip into `Interface\AddOns`.
-3. Close the game and double-click `Interface\AddOns\CherrysLoginxml\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there. It leaves nothing running.
+3. Close the game and double-click `Interface\AddOns\CherrysKit\CherrysLoginxmlHook\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there. It leaves nothing running.
 4. Start the game. The login screen shows `(Cherry's Loginxml)` and its version next to the client version in the top right corner.
 
 Run the same file again after updating. It never touches your own accounts, passwords or settings, and the addon tells you in chat if you forget.
@@ -41,4 +47,4 @@ Write to **cherry** on the Runes of Magic Discord.
 ## Credits and licence
 
 - Original project: **Rom Autologin by Pyrrhus**, MIT licence. Integration fixes by **Cherry**.
-- Full licence text: `Interface\AddOns\CherrysLoginxml\LICENSE.txt`.
+- Full licence text: `Interface\AddOns\CherrysKit\CherrysLoginxmlHook\LICENSE.txt`.

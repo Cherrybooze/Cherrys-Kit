@@ -101,6 +101,17 @@ class ButtonTest(unittest.TestCase):
         self.assertEqual(lua.eval("closed"), 0)
         self.assertEqual(lua.eval("LOGCHAR_MODE"), "next")
 
+    def test_without_the_login_screen_it_says_it_only_logs_out(self):
+        lua = in_game()
+        lua.execute('''
+          said = {}
+          LOGCHAR_ROSTER = nil
+          DEFAULT_CHAT_FRAME = {AddMessage = function(_, text) said[#said + 1] = text end}
+        ''')
+        press(lua, "LogNextCharBarNext")
+        self.assertEqual(lua.eval("logouts"), 1)
+        self.assertIn("only logs you out", " ".join(str(v) for v in lua.eval("said").values()))
+
     def test_click_switches(self):
         lua = in_game()
         press(lua, "LogNextCharBarNext")
@@ -139,9 +150,9 @@ class ButtonTest(unittest.TestCase):
     def test_tooltip_says_when_loginxml_is_missing(self):
         lua = in_game()
         lua.execute("LogNextChar.OnEnter(LogNextCharBarNext)")
-        self.assertTrue(any("Needs Cherry's Loginxml" in line for line in lua_list(lua.eval("tip"))))
+        self.assertTrue(any("Without Cherry's Loginxml" in line for line in lua_list(lua.eval("tip"))))
         lua.execute('LOGCHAR_ROSTER = {"Aa", "Bb"}; LogNextChar.OnEnter(LogNextCharBarNext)')
-        self.assertFalse(any("Needs Cherry's Loginxml" in line for line in lua_list(lua.eval("tip"))))
+        self.assertFalse(any("Without Cherry's Loginxml" in line for line in lua_list(lua.eval("tip"))))
 
 
 class SingleCharacterTest(unittest.TestCase):

@@ -31,9 +31,11 @@ class DescriptionsTest(unittest.TestCase):
                 continue
             self.assertIn("Cherry's Kit", (pages.PAGES / package["description_file"]).read_text(encoding="utf-8").splitlines()[2])
 
-    def test_lognextchar_needs_the_login_screen(self):
-        line = (pages.PAGES / "19-lognextchar.md").read_text(encoding="utf-8").splitlines()[2]
-        self.assertIn("Cherry's Kit and Cherry's Loginxml", line)
+    def test_lognextchar_only_needs_the_hub(self):
+        text = (pages.PAGES / "19-lognextchar.md").read_text(encoding="utf-8")
+        self.assertIn("**Requires:** Cherry's Kit (hub", text.splitlines()[2])
+        self.assertNotIn("Cherry's Loginxml", text.splitlines()[2])
+        self.assertIn("**Cherry's Loginxml:** picks the next or previous character", text)
 
     def test_a_hub_version_is_named_when_an_addon_needs_one(self):
         for package in self.packages:

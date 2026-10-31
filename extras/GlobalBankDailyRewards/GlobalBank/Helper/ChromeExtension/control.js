@@ -117,7 +117,10 @@
   });
   chrome.storage.local.get('depot').then(result => { depot = result.depot || null; renderDepot(); }).catch(() => {});
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.depot) { depot = changes.depot.newValue || null; renderDepot(); }
+    if (area !== 'local') return;
+    if (changes.depot) { depot = changes.depot.newValue || null; renderDepot(); }
+    if (changes.autoHelper) { autoHelper.checked = !!changes.autoHelper.newValue; refreshStatus(); }
+    if (changes.showTerminal) { showTerminal.checked = !!changes.showTerminal.newValue; refreshStatus(); }
   });
   // The status line and the toggle
   const statusHelper = byId('status-helper');

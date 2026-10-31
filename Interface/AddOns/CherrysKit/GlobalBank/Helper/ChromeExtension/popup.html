@@ -1,1 +1,301 @@
-<!doctype html><html><head><meta charset="utf-8"><style>body{font:13px system-ui;width:330px;padding:10px;line-height:1.4}small{color:#555}button{padding:5px 9px}#reset{font-weight:600;color:#286128}</style></head><body><strong>Global Bank daily rewards</strong><p id="status" role="status">Last confirmed collection: unknown.</p><p id="reset" hidden>Daily gifts have reset!</p><p id="helper" role="status">Checking helper…</p><button id="start" hidden>Start Global Bank helper</button><button id="stop" hidden>Stop Global Bank helper</button><p><label><input id="auto-helper" type="checkbox"> Keep the helper running automatically when Chrome is open</label></p><p><label><input id="show-terminal" type="checkbox"> Show its terminal window</label></p><p><button id="open-tools" type="button">Open local bank and auction tools</button></p><p><button id="reload-extension" type="button">Reload extension</button></p><p><small>After installing updated files, reload the extension here and reopen this popup.</small></p><p><small><span id="reset-time">Daily reset: 00:00 in Germany.</span> Open the daily loyalty page through ZShop to collect. A matching level 100 character snapshot is required.</small></p><script src="popup.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Global Bank Daily Rewards</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font: 13px/1.45 system-ui, -apple-system, Segoe UI, sans-serif;
+      background: #111823;
+      color: #f0f2f5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      width: 360px;
+      margin: 0;
+      padding: 12px;
+      background: #111823;
+      color: #f0f2f5;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2b3b4e;
+    }
+    .header img {
+      width: 26px;
+      height: 26px;
+      border-radius: 5px;
+      flex: 0 0 auto;
+    }
+    .header-title {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffd15a;
+      line-height: 1.2;
+    }
+    .header-sub {
+      display: block;
+      font-size: 11px;
+      color: #9fb0c2;
+    }
+    .card {
+      border: 1px solid #405468;
+      border-radius: 8px;
+      background: #192533;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #ffdc7c;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      background: #212d3b;
+      border: 1px solid #52667a;
+      color: #bdc9d5;
+    }
+    .badge[hidden] { display: none; }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #768390;
+      flex: 0 0 auto;
+    }
+    #helper-card[data-state="running"] {
+      border-color: #2ea043;
+      background: linear-gradient(180deg, #132a22 0%, #192533 100%);
+    }
+    #helper-card[data-state="running"] #helper-badge {
+      background: #123824;
+      border-color: #2ea043;
+      color: #56f08b;
+    }
+    #helper-card[data-state="running"] .dot {
+      background: #3fb950;
+      box-shadow: 0 0 7px #3fb950;
+    }
+    #helper-card[data-state="busy"] {
+      border-color: #b5892e;
+    }
+    #helper-card[data-state="busy"] #helper-badge {
+      background: #3a2e14;
+      border-color: #d4a72c;
+      color: #ffd15a;
+    }
+    #helper-card[data-state="busy"] .dot {
+      background: #f1c85e;
+      box-shadow: 0 0 6px #f1c85e;
+    }
+    #helper-card[data-state="error"] {
+      border-color: #cf4647;
+      background: linear-gradient(180deg, #281a21 0%, #192533 100%);
+    }
+    #helper-card[data-state="error"] #helper-badge {
+      background: #3d1a20;
+      border-color: #cf4647;
+      color: #ff9492;
+    }
+    #helper-card[data-state="error"] .dot {
+      background: #f85149;
+    }
+    .status-box {
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #0d1620;
+      border: 1px solid #334657;
+      margin-bottom: 8px;
+    }
+    #helper, #status {
+      margin: 0;
+      font-weight: 600;
+      color: #f4f6f8;
+    }
+    .hint {
+      margin: 4px 0 0;
+      font-size: 11.5px;
+      font-weight: 400;
+      color: #bdc9d5;
+    }
+    .hint[hidden] { display: none; }
+    .helper-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .helper-actions:has(#stop:not([hidden])) #start {
+      display: none;
+    }
+    button {
+      font: inherit;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 7px 11px;
+      cursor: pointer;
+      color: #101820;
+      background: #f1c85e;
+      border: 1px solid #e7c061;
+      transition: background .12s ease, border-color .12s ease;
+    }
+    button:hover:not(:disabled) {
+      background: #ffd86b;
+    }
+    button:disabled {
+      cursor: default;
+      opacity: .55;
+    }
+    button[hidden] { display: none; }
+    #start, #stop, #open-tools {
+      width: 100%;
+      text-align: center;
+    }
+    #start:not(:disabled)::before {
+      content: "\25B6\00a0 ";
+      font-size: 10px;
+    }
+    #stop {
+      color: #ffffff;
+      background: #c93c37;
+      border-color: #e0524c;
+    }
+    #stop:hover:not(:disabled) {
+      background: #dc4742;
+      border-color: #f0645e;
+    }
+    #stop::before {
+      content: "\25A0\00a0 ";
+      font-size: 10px;
+    }
+    .toggles {
+      border-top: 1px solid #2b3b4e;
+      padding-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .toggle {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      color: #dbe3ea;
+      cursor: pointer;
+    }
+    .toggle input {
+      margin: 2px 0 0;
+      accent-color: #f1c85e;
+      flex: 0 0 auto;
+    }
+    #reset {
+      margin: 0;
+      background: #123824;
+      border-color: #2ea043;
+      color: #56f08b;
+    }
+    #reset::before {
+      content: "\2713 ";
+    }
+    .footer-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .reload-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 2px;
+    }
+    #reload-extension {
+      flex: 0 0 auto;
+      padding: 5px 10px;
+      font-size: 12px;
+      color: #e2e8f0;
+      background: #1e2d3d;
+      border-color: #4a6078;
+    }
+    #reload-extension:hover:not(:disabled) {
+      background: #283b50;
+    }
+    small {
+      display: block;
+      font-size: 11.5px;
+      color: #9fb0c2;
+      line-height: 1.35;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <img src="icon32.png" alt="">
+    <div>
+      <strong class="header-title">Global Bank daily rewards</strong>
+      <span class="header-sub">Runes of Magic · Local Helper &amp; Loyalty</span>
+    </div>
+  </header>
+
+  <section id="helper-card" class="card" data-state="busy" aria-label="Global Bank helper">
+    <div class="card-head">
+      <span class="card-title">Global Bank Helper</span>
+      <span class="badge"><span class="dot" aria-hidden="true"></span><span id="helper-badge">Checking…</span></span>
+    </div>
+    <div class="status-box">
+      <p id="helper" role="status">Checking helper…</p>
+      <p id="helper-hint" class="hint" hidden></p>
+    </div>
+    <div class="helper-actions">
+      <button id="start" type="button" hidden>Start Global Bank helper</button>
+      <button id="stop" type="button" hidden>Stop Global Bank helper</button>
+    </div>
+    <div class="toggles">
+      <label class="toggle"><input id="auto-helper" type="checkbox"> <span>Keep the helper running automatically when Chrome is open</span></label>
+      <label class="toggle"><input id="show-terminal" type="checkbox"> <span>Show its terminal window</span></label>
+    </div>
+  </section>
+
+  <section class="card" aria-label="Daily loyalty reward">
+    <div class="card-head">
+      <span class="card-title">Daily Loyalty Reward</span>
+      <p id="reset" class="badge" hidden>Daily gifts have reset!</p>
+    </div>
+    <div class="status-box">
+      <p id="status" role="status">Last confirmed collection: unknown.</p>
+    </div>
+    <small><span id="reset-time">Daily reset: 00:00 in Germany.</span> Open the daily loyalty page through ZShop to collect. A matching level 100 character snapshot is required.</small>
+  </section>
+
+  <div class="footer-actions">
+    <button id="open-tools" type="button">Open local bank and auction tools</button>
+    <div class="reload-row">
+      <button id="reload-extension" type="button">Reload extension</button>
+      <small>After installing updated files, reload the extension here and reopen this popup.</small>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

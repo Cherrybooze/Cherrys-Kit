@@ -1,0 +1,22 @@
+-- Written by tools/curseforge_pages.py from release-packages.json: the addon each kit addon came from,
+-- where it would be, and how to spot it. See CherrysKit.lua, "Original addons".
+CherrysKit_Origins = {
+  KittyCombo = { title = "Cherry's KittyCombo", kind = "original", name = "KittyCombo 0.973", folder = "KittyCombo", files = { "Kitty.lua", "KittyCombo.toc" }, fingerprint = "Kitty", kit_file = "KittyCombo/dofile.lua" },
+  RomWeakAuras = { title = "rom weakauras", kind = "older", folder = "RomWeakAuras", files = { "Init.lua", "RomWeakAuras.toc" }, fingerprint = "RWA", kit_file = "RomWeakAuras/Init.lua" },
+  CherrysChat = { title = "Cherry's Chat", kind = "older", folder = "CherrysChat", files = { "CherrysChat.lua", "CherrysChat.toc" }, fingerprint = "CherrysChat", kit_file = "CherrysChat/Emoji.lua" },
+  zBag = { title = "zBag", kind = "original", name = "zBag 5.07", folder = "zBag", files = { "zBag.lua", "zBag.toc" }, fingerprint = "zBag_Update", kit_file = "zBag/zBagKit.lua" },
+  GlobalBank = { title = "Global Bank", kind = "older", folder = "GlobalBank", files = { "GlobalBank.lua", "GlobalBank.toc" }, fingerprint = "GlobalBank", kit_file = "GlobalBank/GlobalBankUI.lua" },
+  ExtendedMacroIcons = { title = "Extended Macro Icons", kind = "original", name = "ExtendedMacroIcons 2.15", folder = "ExtendedMacroIcons", files = { "ExtendedMacroIcons.lua", "ExtendedMacroIcons.toc" }, fingerprint = "-ExtendedMacroIcons", kit_file = "ExtendedMacroIcons/Categories.lua" },
+  TooltipIds = { title = "TooltipIds", kind = "original", name = "TooltipIds 1.0b3", folder = "TooltipIds", files = { "TooltipIds.lua", "TooltipIds.toc" }, fingerprint = "GetIdName", kit_file = "TooltipIds/TooltipIds.lua" },
+  UltimateMailMod = { title = "Ultimate Mail Mod", kind = "original", name = "Ultimate Mail Mod", folder = "UltimateMailMod", files = { "UltimateMailMod.lua", "UltimateMailMod.toc" }, fingerprint = "UMM_VERSION", kit_file = "UltimateMailMod/UltimateMailMod.lua" },
+  AdvancedAuctionHouse = { title = "Advanced AuctionHouse", kind = "original", name = "Advanced AuctionHouse 6.0.2", folder = "AdvancedAuctionHouse", files = { "Lua/AAH_Main.lua", "AdvancedAuctionHouse.toc" }, fingerprint = "AAH", kit_file = "AdvancedAuctionHouse/Lua/AAH_Kit.lua" },
+  CherrysLoadTimes = { title = "Cherry's Addon LoadTimes", kind = "older", folder = "!CherrysLoadTimes", files = { "CherrysLoadTimes.lua", "!CherrysLoadTimes.toc" }, kit_file = "LoadTimes/Load.lua" },
+  ZShop = { title = "ZShop", kind = "original", name = "ZShop", folder = "ZShop", files = { "ZShop.lua", "ZShop.toc" }, fingerprint = "-zshop", kit_file = "ZShop/config.lua" },
+  pbInfo = { title = "pbInfo", kind = "original", name = "pbInfo v0.60", folder = "pbInfo", files = { "pbInfo.toc" }, fingerprint = "pbInfo", kit_file = "pbInfo/pbInfoKit.lua" },
+  PortraitHP = { title = "PortraitHP", kind = "original", name = "PortraitHP v2019.07.14", folder = "PortraitHP", files = { "PortraitHP.lua", "PortraitHP.toc" }, fingerprint = "PortraitHP", kit_file = "PortraitHP/PortraitHP.lua" },
+  CherrysGrid = { title = "Cherry's Grid", kind = "original", name = "GridCliqueIt", folder = "GridCliqueIt", files = { "GridCliqueIt.toc" }, fingerprint = "-gciraid", kit_file = "CherrysGrid/Core.lua" },
+  CherrysQuests = { title = "Cherry's Quests", kind = "older", folder = "CherrysQuests", files = { "CherrysQuests.lua", "CherrysQuests.toc" }, fingerprint = "CherrysQuests", kit_file = "CherrysQuests/Probe.lua" },
+  CherrysBar = { title = "Cherry's Bar", kind = "original", name = "XBar III", folder = "XBar", files = { "XBar.toc" }, fingerprint = "-XBARVERSION", kit_file = "CherrysBar/Core.lua" },
+  CherrysLoginxml = { title = "Cherry's Loginxml", kind = "older", folder = "CherrysLoginxml", files = { "CherrysLoginxml.lua", "CherrysLoginxml.toc" }, kit_file = "CherrysLoginxmlHook/CherrysLoginxmlHook.lua" },
+  LogNextChar = { title = "LogNextChar", kind = "older", folder = "LogNextChar", files = { "LogNextChar.lua", "LogNextChar.toc" }, kit_file = "LogNextChar/LogNextChar.lua" },
+}

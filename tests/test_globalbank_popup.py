@@ -109,25 +109,43 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8');
-const elements = Object.fromEntries(['helper','start','stop','status','reset','reset-time','auto-helper','show-terminal','open-tools','reload-extension'].map(id => [id, {
-  textContent:'', hidden:true, disabled:false, checked:false, addEventListener(type, callback) { this[type] = callback; }
+const elements = Object.fromEntries(['helper','helper-card','helper-badge','helper-hint','start','stop','status','reset','reset-time','auto-helper','show-terminal','open-tools','reload-extension'].map(id => [id, {
+  textContent:'', hidden:true, disabled:false, checked:false, dataset:{}, addEventListener(type, callback) { this[type] = callback; }
 }]));
 const sent = [];
+const stored = {autoHelper:true};
+let running = true;
 class Clock extends Date { constructor(...args) { super(...(args.length ? args : ['2026-10-30T12:00:00Z'])); } static now() { return new Clock().getTime(); } }
 const context = vm.createContext({document:{getElementById:id => elements[id]}, Date:Clock, Intl,
-  chrome:{storage:{local:{get:async () => ({}), set:async () => {}}},runtime:{sendMessage:async message => { sent.push(message.type); return {ok:true,running:true,since:'2026-10-30T09:00:00Z',lastCollected:null}; }}},
+  chrome:{storage:{local:{get:async key => (typeof key === 'string' ? {[key]: stored[key]} : Object.assign({}, stored)),
+    set:async values => Object.assign(stored, values)}},
+    runtime:{sendMessage:async message => {
+      sent.push(message.type);
+      if (message.type === 'helper-stop') running = false;
+      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null};
+    }}},
   setTimeout:() => 0, clearTimeout:() => {}, console});
 vm.runInContext(source, context);
 (async () => {
   const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resolve => setImmediate(resolve)); };
   await flush();
   assert.match(elements.helper.textContent, /Helper is running \u2014 for 3 h 0 min\./);
+  assert.equal(elements['helper-card'].dataset.state, 'running');
+  assert.equal(elements['helper-badge'].textContent, 'Running');
+  assert.equal(elements['helper-hint'].hidden, false);
+  assert.match(elements['helper-hint'].textContent, /Click Stop Global Bank helper below to stop it and turn off automatic mode/);
+  assert.equal(elements['auto-helper'].checked, true);
   assert.equal(elements.stop.hidden, false);
   await elements.stop.click({isTrusted:false});
   assert.equal(sent.filter(type => type === 'helper-stop').length, 0); // Only a real click stops it.
   await elements.stop.click({isTrusted:true});
   await flush();
   assert.equal(sent.filter(type => type === 'helper-stop').length, 1);
+  assert.equal(elements['auto-helper'].checked, false);
+  assert.equal(stored.autoHelper, false);
+  assert.equal(elements['helper-card'].dataset.state, 'stopped');
+  assert.equal(elements['helper-badge'].textContent, 'Stopped');
+  assert.equal(elements.stop.hidden, true);
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
@@ -545,6 +563,73 @@ const gb = context.GBAccounts;
   assert.equal(gb.validFile({schema: 1}), false);
   assert.equal(gb.validFile(data), false);
 })().catch(error => { console.error(error); process.exit(1); });
+""")
+
+    def test_accounts_are_known_from_login_screen_lists(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'accounts.js'), 'utf8') + ';this.GBAccounts = GBAccounts;', context);
+const gb = context.GBAccounts;
+const characters = [
+  {name: 'Ann', gold: 5, class: 'Mage', server: 'Gaia', roster: ['Ann', 'Bob', 'NeverSaved']},
+  {name: 'Bob', gold: 7, class: 'Scout'},
+  {name: 'Cid', gold: 1, classToken: 'KNIGHT', class: 'Ritter', roster: ['Cid', 'Dee']},
+  {name: 'Dee', gold: 2, roster: ['Dee', 'Cid'], dailyLogin: {server: 'Aynara (PvE)'}},
+  {name: 'Eve', gold: 3, class: 'Unknown class'},
+];
+const known = gb.accountGroups(characters);
+const names = name => [...known.of(name).names].join();
+assert.equal(names('Bob'), 'Ann,Bob,NeverSaved');
+assert.equal(names('cid'), 'Cid,Dee');
+assert.equal(names('Eve'), 'Eve');
+assert.equal(known.of('Nobody'), null);
+assert.equal(known.groups.length, 3);
+// One login names the server for everyone on the account
+assert.equal(gb.serverOf(characters[1], known), 'Gaia');
+assert.equal(gb.serverOf(characters[2], known), 'Aynara');
+assert.equal(gb.serverOf(characters[4], known), 'Server unknown');
+assert.equal(gb.serverOf(characters[1]), 'Server unknown');
+// Last class, by token first, in any client language
+assert.equal(gb.classColor(characters[0]), '#fa781a');
+assert.equal(gb.classColor(characters[1]), '#9ed61f');
+assert.equal(gb.classColor(characters[2]), '#e0e052');
+assert.equal(gb.classColor(characters[4]), null);
+// Grouped on the heatmap too, and never linked
+const state = gb.emptyState();
+const columns = gb.heatColumns(characters, state);
+assert.deepEqual([...columns.map(c => c.server)], ['Aynara', 'Gaia', 'Server unknown']);
+assert.deepEqual([...columns[1].groups.map(g => g.account)], ["Ann's account, not linked"]);
+assert.deepEqual([...columns[2].groups.map(g => g.account)], ['No account']);
+assert.equal(Object.keys(state.links).length, 0);
+state.accounts.push({id: 'a', name: 'Mine'});
+gb.setLinks(state, ['Ann'], 'a');
+assert.deepEqual([...gb.heatColumns(characters, state)[1].groups.map(g => g.account)], ["Ann's account, not linked", 'Mine']);
+""")
+
+    def test_the_games_tooltip_lines_are_shown_as_saved(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'folders.js'), 'utf8').replace(/DecompressionStream/g, 'Object') + ';this.GBFolders = GBFolders;', vm.createContext(Object.assign(context, {TextDecoder, Uint8Array})));
+const bank = context.GBBank, folders = context.GBFolders;
+assert.deepEqual(JSON.parse(JSON.stringify(bank.tipLines([['a864a8', 'Sword'], ['33ff33', 'Stamina', 'ffffff', 'Monk V'], ['nonsense', 'x']]))), [
+  {left: 'Sword', leftColor: '#a864a8', right: '', rightColor: null},
+  {left: 'Stamina', leftColor: '#33ff33', right: 'Monk V', rightColor: '#ffffff'},
+  {left: 'x', leftColor: null, right: '', rightColor: null},
+]);
+assert.equal(bank.tipLines(null).length, 0);
+const entry = bank.entries([{name: 'A', bag: [{slot: 1, id: '211000', name: 'Sword', tip: [['ffffff', 'Sword']]}]}])[0];
+assert.equal(entry.tip[0][1], 'Sword');
+assert.equal(bank.cells([entry], true)[0].tip[0][1], 'Sword');
+// From the save files too, without the helper
+const parsed = folders.tipsFrom('B3~a864a8=Name^ffffff=Left=c0c0c0=Right`K45~ffffff=Other');
+assert.deepEqual(JSON.parse(JSON.stringify(parsed)), {B3: [['a864a8', 'Name'], ['ffffff', 'Left', 'c0c0c0', 'Right']], K45: [['ffffff', 'Other']]});
+const list = folders.charactersFrom([{folder: 'A', time: 0, text: 'GlobalBank_Char = "GB1~A~Mage~1~0~0~0~0~t`T~MAGE`R~A;B`B~3~1~5~Name~icon"\nGlobalBank_Tips = "B3~ffffff=Name"\n'}]);
+assert.equal(list[0].bag[0].tip[0][1], 'Name');
+assert.equal(list[0].classToken, 'MAGE');
+assert.deepEqual([...list[0].roster], ['A', 'B']);
 """)
 
     def test_the_depot_page_address_is_never_kept(self):

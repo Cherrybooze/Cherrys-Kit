@@ -2,7 +2,17 @@
 
 > **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Optional, when you have them:** rom weakauras (use your auras as combo conditions) and Cherry's Chat (shares its copy-box size).
+> **Where it goes:** `Interface\AddOns\CherrysKit\KittyCombo`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **rom weakauras:** use your auras as combo conditions
+> - **Cherry's Chat:** shares its copy-box size
+> - **Cherry's Grid:** Cherry's Grid can run a kitty when you click a frame
+> - **Cherry's Bar:** Cherry's Bar shows the Kitty mode
+>
+> **Original addon:** KittyCombo 0.973 by Miranda. If `Interface\AddOns\KittyCombo` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+>
+> **Other addons:** AddonManager lists it when you have that addon.
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 

@@ -62,6 +62,8 @@ $SaveFolder=Join-Path $fixture 'Saves'
             char_dir = saves / name
             char_dir.mkdir()
             (char_dir / 'SaveVariables.lua').write_text('GlobalBank_Char = "GB1~' + name + '~Warrior~60~100~0~0~0~x' + records + '"\n', encoding='utf-8')
+        one = saves / 'Sampleone' / 'SaveVariables.lua'
+        one.write_text(one.read_text().replace('`C~Mage~100"', '`C~Mage~100`B~1~1~5~Item~icon"') + 'GlobalBank_Tips = "B1~ffffff=Item"\n')
         def command(text):
             result = subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(helper_dir / 'GlobalBank-Update.ps1'), '-SaveFolder', str(saves), '-Command', text], capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -70,6 +72,10 @@ $SaveFolder=Join-Path $fixture 'Saves'
         data = self.root / 'Interface/GlobalBankHelper'
         export = json.loads((data / 'GlobalBank.json').read_text(encoding='utf-8'))
         self.assertEqual(export['characters'][0]['classes'][0], {'name': 'Warrior', 'level': 60})
+        # The game's tooltips reach the page but stay out of what the game loads
+        self.assertEqual(export['characters'][0]['bag'][0]['tip'], [['ffffff', 'Item']])
+        self.assertNotIn('ffffff=Item', (data / 'GlobalBankDatabase.lua').read_text(encoding='latin1'))
+        self.assertIn('ffffff=Item', (data / 'GlobalBankTips.txt').read_text(encoding='latin1'))
         listing = command('list')
         self.assertIn('Warrior(60), Mage(100)', listing)
         self.assertNotIn('Level', listing.splitlines()[0])
@@ -95,6 +101,7 @@ $SaveFolder=Join-Path $fixture 'Saves'
         command('update')
         export = json.loads((data / 'GlobalBank.json').read_text(encoding='utf-8'))
         self.assertEqual([c['name'] for c in export['characters']], ['Sampletwo'])
+        self.assertNotIn('Sampleone', (data / 'GlobalBankTips.txt').read_text(encoding='latin1'))
         self.assertNotIn('Sampleone', (data / 'GlobalBankDatabase.lua').read_text(encoding='latin1'))
         command('unban Sampleone')
         self.assertEqual(len(json.loads((data / 'GlobalBank.json').read_text(encoding='utf-8'))['characters']), 2)

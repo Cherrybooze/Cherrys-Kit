@@ -1,3 +1,6 @@
+Cherry's Loginxml 1.2.2
+- the in-game addon is now Interface\AddOns\CherrysKit\CherrysLoginxmlHook. The installer removes the old Interface\AddOns\CherrysLoginxml folder.
+
 Cherry's Loginxml 1.2.1
 - The character screen shows each character's gold and when it was last saved, from Global Bank's data. The server screen says when Global Bank's helper isn't running or hasn't been set up.
 

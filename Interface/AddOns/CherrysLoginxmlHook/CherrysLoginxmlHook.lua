@@ -4,7 +4,7 @@
 CherrysLoginxml = CherrysLoginxml or {}
 local me = CherrysLoginxml
 
-me.version = "1.2.1"
+me.version = "1.2.2"
 me.FOLDER = "CherrysLoginxml"
 
 if SaveVariables then
@@ -44,7 +44,7 @@ function me.CheckLoginScreen()
     return
   end
   me.told = true
-  local run = "close the game and double-click Interface\\AddOns\\CherrysLoginxml\\Install login screen.bat."
+  local run = "close the game and double-click Interface\\AddOns\\CherrysKit\\CherrysLoginxmlHook\\Install login screen.bat."
   if screen then
     chat("the login screen is version " .. tostring(screen) .. " and this addon is " .. me.version .. ": " .. run)
   else

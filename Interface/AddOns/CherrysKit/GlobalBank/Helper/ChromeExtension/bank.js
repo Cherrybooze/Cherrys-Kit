@@ -55,7 +55,7 @@ const GBBank = (() => {
       for (const place of ['bag', 'bank']) {
         for (const item of character[place] || []) {
           list.push({id: item.id, name: String(item.name || 'Unknown item'), icon: item.icon, count: Number(item.count) || 1,
-            type: typeOf(item.id, item.icon), bound: !!item.bound, gear: item.gear || null, stats: item.gear?.stats || item.stats || [], stone: !!item.stats, character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
+            type: typeOf(item.id, item.icon), bound: !!item.bound, gear: item.gear || null, stats: item.gear?.stats || item.stats || [], stone: !!item.stats, tip: item.tip || null, character: character.name, level: Number(character.level) || 0, place, slot: Number(item.slot) || 0});
         }
       }
     }
@@ -254,12 +254,17 @@ const GBBank = (() => {
     if (gear.freeSlots > 0) lines.push(`Free rune slots: ${gear.freeSlots}`);
     return lines;
   }
+  // The game's own tooltip as it was saved, a line at a time: [colour, text, colour, text]
+  function tipLines(tip) {
+    const color = value => (/^[0-9a-f]{6}$/i.test(value || '') ? `#${value}` : null);
+    return (tip || []).map(line => ({left: String(line[1] || ''), leftColor: color(line[0]), right: String(line[3] || ''), rightColor: color(line[2])}));
+  }
   // One cell for each item, or for each stack when stacking is off, and everywhere it is
   function cells(list, stack) {
     const found = new Map();
     list.forEach((entry, index) => {
       const key = stack && stackable(entry) ? String(entry.id || entry.name) : index;
-      if (!found.has(key)) found.set(key, {id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, gear: entry.gear, stats: entry.stats, total: 0, places: []});
+      if (!found.has(key)) found.set(key, {id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, gear: entry.gear, stats: entry.stats, tip: entry.tip, total: 0, places: []});
       const cell = found.get(key);
       cell.total += entry.count;
       cell.places.push(entry);
@@ -290,11 +295,29 @@ const GBBank = (() => {
       tooltip.style.top = Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 8) + 'px';
     }
     function showTooltip(event, cell) {
-      const title = make('strong', '', cell.name);
-      if (/^[0-9a-f]{6}$/i.test(cell.gear?.color || '')) title.style.color = `#${cell.gear.color}`;
-      tooltip.replaceChildren(title, make('span', 'bank-tip-type', `${cell.type} · ${formatNumber(cell.total)} in all`));
-      if (cell.gear) for (const line of gearLines(cell.gear)) tooltip.append(make('span', 'bank-tip-row', line));
-      else if (cell.stats.length) tooltip.append(make('span', 'bank-tip-row', `Stats: ${cell.stats.join(', ')}`));
+      const lines = tipLines(cell.tip);
+      if (lines.length) {
+        const game = make('div', 'game-tip');
+        for (const line of lines) {
+          const row = make('div', 'game-tip-line');
+          const left = make('span', 'game-tip-left', line.left);
+          if (line.leftColor) left.style.color = line.leftColor;
+          row.append(left);
+          if (line.right) {
+            const right = make('span', 'game-tip-right', line.right);
+            if (line.rightColor) right.style.color = line.rightColor;
+            row.append(right);
+          }
+          game.append(row);
+        }
+        tooltip.replaceChildren(game);
+      } else {
+        const title = make('strong', '', cell.name);
+        if (/^[0-9a-f]{6}$/i.test(cell.gear?.color || '')) title.style.color = `#${cell.gear.color}`;
+        tooltip.replaceChildren(title, make('span', 'bank-tip-type', `${cell.type} · ${formatNumber(cell.total)} in all`));
+        if (cell.gear) for (const line of gearLines(cell.gear)) tooltip.append(make('span', 'bank-tip-row', line));
+        else if (cell.stats.length) tooltip.append(make('span', 'bank-tip-row', `Stats: ${cell.stats.join(', ')}`));
+      }
       const rows = [...cell.places].sort((a, b) => a.character.localeCompare(b.character) || a.place.localeCompare(b.place) || a.slot - b.slot);
       for (const entry of rows.slice(0, MAX_TOOLTIP_ROWS)) {
         const row = make('span', 'bank-tip-row');
@@ -490,5 +513,5 @@ const GBBank = (() => {
     }
     return {reload, update};
   }
-  return {create, typeOf, locationLabel, entries, applyFilters, cells, formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, currencyTable, renderCurrencies, rosterRows, renderRoster, statTable, renderStats};
+  return {create, typeOf, locationLabel, entries, applyFilters, cells, formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, currencyTable, renderCurrencies, rosterRows, renderRoster, statTable, renderStats};
 })();

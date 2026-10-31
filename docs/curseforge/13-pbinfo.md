@@ -2,7 +2,17 @@
 
 > **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Optional, when you have them:** TooltipIds (ID numbers in its tooltips), Cherry's Chat (class colours from its player list), rom weakauras (mob information for triggers) and Cherry's Quests (takes over from its quest tracker).
+> **Where it goes:** `Interface\AddOns\CherrysKit\pbInfo`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **TooltipIds:** ID numbers in its tooltips
+> - **Cherry's Chat:** class colours from its player list
+> - **rom weakauras:** mob information for triggers
+> - **Cherry's Quests:** takes over from its quest tracker
+>
+> **Original addon:** pbInfo v0.60 by p.b. a.k.a. novayuna, later odie2. If `Interface\AddOns\pbInfo` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+>
+> **Other addons:** AddonManager lists it when you have that addon.
 
 **More information everywhere: richer mob and player tooltips, a quest tracker, chat filters and timestamps, chat history, cast bar options and auto repair.**
 

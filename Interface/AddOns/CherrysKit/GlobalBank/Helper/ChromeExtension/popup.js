@@ -1,12 +1,26 @@
 'use strict';
 const helper = document.getElementById('helper');
+const helperCard = document.getElementById('helper-card');
+const helperBadge = document.getElementById('helper-badge');
+const helperHint = document.getElementById('helper-hint');
 const start = document.getElementById('start');
 const stop = document.getElementById('stop');
 const status = document.getElementById('status');
 const reset = document.getElementById('reset');
 const resetTime = document.getElementById('reset-time');
+const autoHelper = document.getElementById('auto-helper');
+const showTerminal = document.getElementById('show-terminal');
 let starting = false;
 let refreshTimer;
+
+function setHelperVisual(state, badge, hint) {
+  if (helperCard?.dataset) helperCard.dataset.state = state;
+  if (helperBadge) helperBadge.textContent = badge;
+  if (helperHint) {
+    helperHint.textContent = hint || '';
+    helperHint.hidden = !hint;
+  }
+}
 
 // The same shape as the page's duration text, for the running helper's uptime.
 function formatDuration(seconds) {
@@ -21,6 +35,14 @@ function helperRunText(response) {
   return Number.isFinite(since)
     ? 'Helper is running \u2014 for ' + formatDuration((Date.now() - since) / 1000) + '.'
     : 'Helper is running.';
+}
+function helperHintText(response) {
+  if (!response.running) return starting ? '' : 'Start the helper below, or tick automatic mode so it runs with Chrome.';
+  if (response.auto) {
+    return (showTerminal?.checked ? 'Automatic mode (terminal window shown).' : 'Automatic mode (running in the background).')
+      + ' Click Stop Global Bank helper below to stop it and turn off automatic mode.';
+  }
+  return 'Running in its own window. Click Stop Global Bank helper below to stop it.';
 }
 
 function collectionTime(value) {
@@ -70,6 +92,8 @@ async function refresh() {
     if (!response?.ok) {
       helper.textContent = response?.errorKind === 'native-error' ? 'Local helper setup error: ' + response.error : 'Native Messaging unavailable. Run Install Chrome extension.bat from the installed addon folder. ' + (response?.error || 'No response from the local bridge.');
       start.hidden = true;
+      stop.hidden = true;
+      setHelperVisual('error', 'Setup needed', '');
       return false;
     }
     showCollection(response.lastCollected);
@@ -79,10 +103,17 @@ async function refresh() {
     start.disabled = response.running || starting;
     start.textContent = response.running ? 'Helper is running' : starting ? 'Starting helper…' : 'Start Global Bank helper';
     stop.hidden = !response.running;
+    setHelperVisual(
+      response.running ? 'running' : starting ? 'busy' : 'stopped',
+      response.running ? 'Running' : starting ? 'Starting\u2026' : 'Stopped',
+      helperHintText(response)
+    );
     return response.running;
   } catch (error) {
     helper.textContent = 'Native Messaging unavailable: ' + String(error.message || error);
     start.hidden = true;
+    stop.hidden = true;
+    setHelperVisual('error', 'Unavailable', '');
     return false;
   }
 }
@@ -91,6 +122,7 @@ start.addEventListener('click', async event => {
   starting = true;
   start.disabled = true;
   start.textContent = 'Starting helper…';
+  setHelperVisual('busy', 'Starting\u2026', 'Waiting for the local helper window to report ready\u2026');
   clearTimeout(refreshTimer);
   try {
     const response = await send('helper-start');
@@ -101,8 +133,10 @@ start.addEventListener('click', async event => {
       if (attempt < 9) await new Promise(resolve => setTimeout(resolve, 500));
     }
     helper.textContent = 'Helper has not reported ready yet. Check its window, then try again.';
+    setHelperVisual('stopped', 'Not ready', '');
   } catch (error) {
     helper.textContent = 'Could not start the helper: ' + String(error.message || error);
+    setHelperVisual('error', 'Error', '');
   } finally {
     starting = false;
     if (start.textContent !== 'Helper is running') {
@@ -118,12 +152,12 @@ async function poll() {
   refreshTimer = setTimeout(poll, 30000);
 }
 // The same setting as the toggle on the extension's page.
-const autoHelper = document.getElementById('auto-helper');
 chrome.storage.local.get('autoHelper').then(({autoHelper: on}) => { autoHelper.checked = !!on; }).catch(() => {});
 autoHelper.addEventListener('change', async () => {
   const on = autoHelper.checked;
   autoHelper.disabled = true;
   helper.textContent = on ? 'Starting the helper…' : 'Stopping the helper…';
+  setHelperVisual('busy', on ? 'Starting\u2026' : 'Stopping\u2026', '');
   try {
     await chrome.storage.local.set({autoHelper: on});
     const response = await chrome.runtime.sendMessage({type: on ? 'helper-auto-start' : 'helper-auto-stop', showWindow: showTerminal.checked});
@@ -133,6 +167,7 @@ autoHelper.addEventListener('change', async () => {
     await refresh();
   } catch (error) {
     helper.textContent = 'The helper could not be changed: ' + String(error.message || error);
+    setHelperVisual('error', 'Error', '');
   } finally {
     autoHelper.disabled = false;
   }
@@ -141,22 +176,26 @@ stop.addEventListener('click', async event => {
   if (!event.isTrusted || stop.disabled) return;
   stop.disabled = true;
   helper.textContent = 'Stopping the helper\u2026';
+  setHelperVisual('busy', 'Stopping\u2026', 'Stopping the helper and turning off automatic mode\u2026');
   try {
+    autoHelper.checked = false;
+    await chrome.storage.local.set({autoHelper: false});
     const response = await send('helper-stop');
     if (!response?.ok) throw new Error(response?.error || 'No response from the local bridge.');
     await refresh();
   } catch (error) {
     helper.textContent = 'Could not stop the helper: ' + String(error.message || error);
+    setHelperVisual('error', 'Error', '');
   } finally {
     stop.disabled = false;
   }
 });
-const showTerminal = document.getElementById('show-terminal');
 chrome.storage.local.get('showTerminal').then(({showTerminal: on}) => { showTerminal.checked = !!on; }).catch(() => {});
 showTerminal.addEventListener('change', async () => {
   const on = showTerminal.checked;
   showTerminal.disabled = true;
   helper.textContent = on ? 'Showing the helper\u2019s window\u2026' : 'Hiding the helper\u2019s window\u2026';
+  setHelperVisual('busy', on ? 'Showing window\u2026' : 'Hiding window\u2026', '');
   try {
     await chrome.storage.local.set({showTerminal: on});
     // A running automatic helper keeps the look it started with; restart it with the new one.
@@ -169,6 +208,7 @@ showTerminal.addEventListener('change', async () => {
     await refresh();
   } catch (error) {
     helper.textContent = 'The terminal setting could not be applied: ' + String(error.message || error);
+    setHelperVisual('error', 'Error', '');
   } finally {
     showTerminal.disabled = false;
   }

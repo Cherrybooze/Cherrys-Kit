@@ -92,6 +92,7 @@ $extensionBeat = Join-Path $data "GlobalBankExtensionBeat.txt"
 $log = Join-Path $data "GlobalBankHelper.log"
 $errorLog = Join-Path $data "GlobalBankHelper-errors.log"
 $json = Join-Path $data "GlobalBank.json"
+$tipsFile = Join-Path $data "GlobalBankTips.txt"
 $rewards = Join-Path $data "DailyRewards.json"
 $links = Join-Path $data "CharacterLinks.json"
 $excludedPath = Join-Path $data "ExcludedCharacters.json"
@@ -105,6 +106,7 @@ $oldShortcut = if ($startupFolder) { Join-Path $startupFolder "Global Bank helpe
 $pattern = [regex]'(?m)^GlobalBank_Char = ("(?:[^"\\\r\n]|\\.)*")\s*$'
 $removedPattern = [regex]'(?m)^GlobalBank_Removed = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 $notesPattern = [regex]'(?m)^GlobalBank_Notes = "((?:[^"\\\r\n]|\\.)*)"\s*$'
+$tipsPattern = [regex]'(?m)^GlobalBank_Tips = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 
 $script:Excluded = @{}
 $script:Entries = @{}      # folder name -> @{ saved; s; line }, as in the database file
@@ -343,6 +345,8 @@ function Update-Database {
         return $null
     }
     $previous = Read-GBDatabaseEntries $out
+    # Read from each save below; a busy file keeps the tooltips it had.
+    $tips = Read-GBTips $tipsFile
     # Notes: the highest version of each name wins (versions only grow), a tie goes to the newest
     # save file. The database's own notes are the starting point, so a busy file loses nothing.
     $notes = @{}
@@ -370,6 +374,9 @@ function Update-Database {
                 $s = $m.Groups[1].Value.Substring(1, $m.Groups[1].Value.Length - 2)
                 $entry = @{ name = $folder.Name; saved = $saved; s = $s; line = "  { saved = ""$saved"", s = ""$s"" }," }
             }
+            $t = $tipsPattern.Match($text)
+            if ($t.Success -and $t.Groups[1].Value) { $tips[$folder.Name] = $t.Groups[1].Value }
+            elseif ($entry) { $tips.Remove($folder.Name) }
             $n = $notesPattern.Match($text)
             if ($n.Success) {
                 $time = (Get-Item -LiteralPath $file).LastWriteTimeUtc
@@ -411,6 +418,10 @@ function Update-Database {
         $entries.Add($e)
     }
     foreach ($key in @($notes.Keys)) { if (Is-Excluded (ConvertTo-GBText $key)) { $notes.Remove($key) } }
+    # Only characters still in the database, and never in it: the game has no use for them.
+    $keptTips = @{}
+    foreach ($e in $entries) { if ($tips.ContainsKey($e.name)) { $keptTips[$e.name] = $tips[$e.name] } }
+    try { Write-GBTips $keptTips $tipsFile } catch { Write-HelperError $_ 'Write game tooltips' }
     $made = (Get-Date).ToString("yyyy-MM-dd HH:mm")
     $lines = @(
         "-- Written by the Global Bank helper on $made. It replaces this file whenever a character logs out.",

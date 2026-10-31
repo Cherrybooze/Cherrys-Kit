@@ -5,12 +5,13 @@
 --
 -- Files: Core (settings, events, commands), Roster (who is shown where), Auras (buffs and
 -- debuffs), Statuses (what can be shown), Frames (drawing one member), Layout (placing the
--- members), Clicks (mouse buttons), Tooltip, Menu (drop-down lists), Options (/grid window), Probe.
+-- members), Clicks (mouse buttons), Mouse (Mouse 4 outside Grid), Tooltip, Menu (drop-down lists),
+-- Options (/grid window), Probe.
 
 CherrysGrid = {}
 local G = CherrysGrid
 
-G.version = "1.1.4"
+G.version = "1.1.5"
 G.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.CherrysGrid) or "Interface/AddOns/CherrysGrid/"
 G.MEDIA = G.BASE_PATH .. "Media/"
 G.MAX_UNITS = 48 -- 36 members + 12 pets; the frames are declared in CherrysGrid.xml
@@ -415,6 +416,9 @@ function G.OnEvent(event, arg1)
     end
   elseif event == "LOADING_END" then
     G.rosterElapsed = 99
+    if G.Mouse then
+      G.Mouse.Apply()
+    end
   end
 end
 
@@ -438,6 +442,9 @@ function G.TryStart()
   G.ready = true
   G.LoadProfile()
   G.Refresh(true)
+  if G.Mouse then
+    G.Mouse.Apply()
+  end
 end
 
 function G.OnUpdate(elapsed)

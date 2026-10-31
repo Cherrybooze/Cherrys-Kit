@@ -2,7 +2,16 @@
 
 > **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Optional, when you have them:** zBag (a button on the one-bag window) and Advanced AuctionHouse (its searches fill the helper's auction cache).
+> **Where it goes:** `Interface\AddOns\CherrysKit\GlobalBank`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **zBag:** a button on the one-bag window
+> - **Advanced AuctionHouse:** its searches fill the helper's auction cache
+> - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
+> - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
+> - **Cherry's Loginxml:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
+>
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
 
 Helper 1.4.5 keeps commands and heartbeat responsive during auction imports, adds coloured command help and fatal-error logs, and supports the extension popup helper status/start button and confirmed daily-collection/reset display.
 
@@ -13,6 +22,8 @@ Built for players with many characters and bank alts. Each character saves a sma
 ## Updated in 1.4.15
 
 The helper now lives with Chrome: the extension pings it while Chrome is open, and it ends on its own when Chrome or the extension goes away. The extension's button shows whether it is running and for how long, stops it directly, and a new tick shows its terminal window.
+
+On the extension's page, gear and mana stones now show the game's own tooltip, saved when a character logs out. Logging in one character through Cherry's Loginxml records its whole account's character list, which fills in their servers and boxes them together under Link characters and on the heatmap. Names there are coloured by last class.
 
 ## Updated in 1.4.14
 
