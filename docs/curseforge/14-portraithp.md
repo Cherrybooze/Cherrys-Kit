@@ -2,7 +2,7 @@
 
 > **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Where it goes:** `Interface\AddOns\CherrysKit\PortraitHP`. The hub loads it from there, and it won't load from anywhere else.
+> **Where it goes:** `Interface\AddOns\CherrysKit\PortraitHP`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
 > **On its own:** it runs with just the hub, and nothing it does needs another addon.
 >

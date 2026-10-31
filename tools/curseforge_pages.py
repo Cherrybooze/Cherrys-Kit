@@ -74,7 +74,7 @@ def front_block(package: dict, names: dict[str, str]) -> str:
     line = f"> **Requires:** {join_names(needs)}. The CurseForge app installs {it} for you; if you install by hand, install {it} first."
     if package["kind"] == "addon":
         line += " This addon can't load without the hub."
-    lines = [line, ">", f"> **Where it goes:** `{install_path(package)}`. The hub loads it from there, and it won't load from anywhere else.", ">"]
+    lines = [line, ">", f"> **Where it goes:** `{install_path(package)}`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.", ">"]
     if package.get("works_with"):
         lines.append("> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:")
         lines += [f"> - **{names[item['package']]}:** {item['for']}" for item in package["works_with"]]
@@ -142,6 +142,9 @@ def addon_map(all_packages: list[dict], names: dict[str, str]) -> str:
             "`tests/test_addons_alone.py` runs each one that way on a simulated client, and `tests/test_addon_map.py` fails if an addon reaches for another one that isn't listed here.", "",
             "If an addon's original, or an older separate copy, is in its own folder in `Interface\\AddOns`, that one takes precedence: "
             "the kit's version stays off and the hub says so, one line for each, in chat and in its window. Both still load, because the game can't skip a file in a manifest.", "",
+            "## Why everything lives under CherrysKit", "",
+            "One folder, loaded and controlled by the hub, keeps the kit simple to develop and lets the hub's switches cover every addon in it. It also keeps the kit out of the way of anyone who'd rather run their own version of an addon. Compatibility with addons managed separately can't be guaranteed, so when one is there, the kit's version stays off instead of clashing with it.", "",
+            "## The addons", "",
             "| Addon | Installed at | Works with | Takes precedence if present |", "| --- | --- | --- | --- |"]
     for package in all_packages:
         if package["kind"] == "hub":

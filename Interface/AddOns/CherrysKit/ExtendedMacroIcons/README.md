@@ -10,7 +10,7 @@ Based on ExtendedMacroIcons 2.15 by Amurilon, cleaned up for Cherry's Kit.
 
 > **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Where it goes:** `Interface\AddOns\CherrysKit\ExtendedMacroIcons`. The hub loads it from there, and it won't load from anywhere else.
+> **Where it goes:** `Interface\AddOns\CherrysKit\ExtendedMacroIcons`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
 > **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
 > - **rom weakauras:** rom weakauras' icon picker uses its categories

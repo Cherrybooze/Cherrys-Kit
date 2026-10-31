@@ -8,7 +8,7 @@ Version **1.0.0** · Kit release **0.11.86** · [All addons / hub](../README.md)
 
 > **Requires:** Cherry's Kit (hub 0.4.21 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Where it goes:** `Interface\AddOns\CherrysKit\CherrysQuests`. The hub loads it from there, and it won't load from anywhere else.
+> **Where it goes:** `Interface\AddOns\CherrysKit\CherrysQuests`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
 > **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
 > - **rom weakauras:** more fonts to choose from

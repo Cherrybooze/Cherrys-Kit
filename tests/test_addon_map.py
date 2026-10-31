@@ -116,6 +116,11 @@ class AddonMapTest(unittest.TestCase):
                 for item in data.get("works_with", []):
                     self.assertIn(item["for"], text, f"{path}: {item['package']}")
 
+    def test_the_reason_for_one_folder_is_written_down(self):
+        for path in (ROOT / "docs/ADDON_MAP.md", KIT / "README.md", ROOT / "docs/curseforge/01-cherrys-kit.md"):
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("Compatibility with addons managed separately can't be guaranteed", text, path)
+
     def test_the_row_count_fits_every_addon(self):
         hub = (KIT / "CherrysKit.lua").read_text(encoding="utf-8")
         rows = int(re.search(r"Kit\.MAX_ROWS = (\d+)", hub).group(1))

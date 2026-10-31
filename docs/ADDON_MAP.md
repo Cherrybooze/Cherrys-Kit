@@ -6,6 +6,12 @@ Every addon needs the hub and lives under `Interface\AddOns\CherrysKit`, because
 
 If an addon's original, or an older separate copy, is in its own folder in `Interface\AddOns`, that one takes precedence: the kit's version stays off and the hub says so, one line for each, in chat and in its window. Both still load, because the game can't skip a file in a manifest.
 
+## Why everything lives under CherrysKit
+
+One folder, loaded and controlled by the hub, keeps the kit simple to develop and lets the hub's switches cover every addon in it. It also keeps the kit out of the way of anyone who'd rather run their own version of an addon. Compatibility with addons managed separately can't be guaranteed, so when one is there, the kit's version stays off instead of clashing with it.
+
+## The addons
+
 | Addon | Installed at | Works with | Takes precedence if present |
 | --- | --- | --- | --- |
 | Cherry's KittyCombo | `CherrysKit\KittyCombo` | rom weakauras, Cherry's Chat, Cherry's Grid, Cherry's Bar | `AddOns\KittyCombo`, KittyCombo 0.973 by Miranda |
