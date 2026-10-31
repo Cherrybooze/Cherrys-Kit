@@ -14,11 +14,17 @@
 
 Current playtest build: **0.11.113** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.113)
 
-Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
+Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection: chat, bags and the shared bank view, an auction house, tooltips, one-key rotations, on-screen bars and displays, a quest tracker, and a replacement login screen. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
 ## What’s new in 0.11.113
 
-- **Cherry's Bar 1.1.9**: Location can show your coordinates on the bar, with a tick in its right-click menu or in `/cbar`.
+This playtest gathers everything since 0.11.101. The highlights:
+
+- **Global Bank** (up to 1.4.14) and its Chrome extension (1.0.16): the page is now a full bank viewer — one scrolling grid with the game's own icons, search, filters and a slot tooltip, plus Currencies, Characters, Item Depot and Stats tabs, a gold heatmap and Gameforge accounts. Gear never stacks, the auction cache clears itself, and the Bank tab can read your folders without the local helper.
+- **Cherry's Loginxml 1.2.1 and LogNextChar 1.2.1**: gold and last save on the login screens, and the mailbox closes before switching characters.
+- **Cherry's Chat 0.11.0**: emoji in `/say` go out as symbols the game font can draw, or as `:code:` text when there is no symbol, so the speech bubble over your head no longer shows empty boxes.
+- **Cherry's Bar 1.1.9**: Location can show your coordinates, with a tick in its right-click menu or in `/cbar`.
+- Plus the fixes in the sections below.
 
 ## In 0.11.109
 
@@ -93,7 +99,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysKit-Full-0.11.113.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysKit-Full-0.11.113.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.113)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -149,8 +155,10 @@ These aren't in the full kit. Each is its own folder in `Interface/AddOns/`, and
 
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Loginxml](Interface/AddOns/CherrysLoginxml/README.md) | A replacement login screen: gets past a stuck server list, saved logins, keyboard controls. Run its `Install login screen.bat` once. | | 1.2.0 |
-| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character. Needs Cherry's Loginxml. | `/lnc` | 1.2.0 |
+| [Cherry's Loginxml](Interface/AddOns/CherrysLoginxml/README.md) | A replacement login screen: gets past a stuck server list, saved logins, keyboard controls. Run its `Install login screen.bat` once. | | 1.2.1 |
+| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character. Needs Cherry's Loginxml. | `/lnc` | 1.2.1 |
+
+Download them from this build: [CherrysLoginxml-1.2.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysLoginxml-1.2.1.zip) · [LogNextChar-1.2.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/LogNextChar-1.2.1.zip). Each needs the hub.
 
 ## Optional Chrome extension
 
@@ -184,7 +192,7 @@ Python 3.10 or later is enough; there are no Python package dependencies:
 python tools/build_release.py
 ```
 
-This creates nineteen ZIPs in `dist/<kit version>/` (the full kit, hub, sixteen addons and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
+This creates twenty-one ZIPs in `dist/<kit version>/` (the full kit, the hub, eighteen addons and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
 
 The original 0.11.77 import preserved the supplied runtime code. Earlier READMEs referring to old tests or generators are kept as reference notes, but those development tools were not included in the handoff. Current tests simulate client APIs; native drawing, input, sound and event timing still need in-game checks.
 
