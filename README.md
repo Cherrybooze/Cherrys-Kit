@@ -1,20 +1,28 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-Full-0.11.114.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)
 
 # Cherry's Kit
 
-> Playtest build: kit **0.11.114**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
+> Playtest build: kit **0.11.115**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-Full-0.11.114.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
+
+> **After extracting, double-click `!setup_cherryskit.bat`** (it sits next to the extracted folder). The guided setup checks the install, moves older copies of the kit's addons into `Interface\offloaded_addons` so the kit's versions win, stops the Global Bank helper during updates, checks Chrome and can walk you through the optional extension. Nothing is deleted, and the same file is the update route for later versions.
 
 > **Installing the addon? Use the download above.** GitHub's green **Code → Download ZIP** button and **Source code (zip)** links download the repository, with an extra `Cherrys-Kit-main` or version folder. Those downloads are for working on the source.
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest build: **0.11.114** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.114)
+Current playtest build: **0.11.115** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection: chat, bags and the shared bank view, an auction house, tooltips, one-key rotations, on-screen bars and displays, a quest tracker, and a replacement login screen. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
+
+## What’s new in 0.11.115
+
+- **The guided setup.** After extracting the Full or Hub ZIP, double-click **!setup_cherryskit.bat** next to the CherrysKit folder: it checks the install, moves older copies of the kit's addons into `Interface\offloaded_addons` (nothing is deleted), stops the Global Bank helper during updates, checks the tools and Chrome, and can walk through the Chrome extension steps. The same file is the update route for later versions.
+- The optional Chrome extension is now **1.1.0**.
+- Everything from 0.11.114 is included unchanged: the Chrome helper controls, the popup redesign, Loginxml and LogNextChar under the kit, the addon map and Mouse 4.
 
 ## What’s new in 0.11.114
 
@@ -109,7 +117,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-Full-0.11.114.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.113)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -131,7 +139,7 @@ Interface/
 
 If you already downloaded `Cherrys-Kit-main.zip`, use the install ZIP linked above instead. If Windows offers an extraction folder named after the ZIP, change that destination to your existing `Interface/AddOns/` folder.
 
-Remove old separate copies of the same addons from `Interface/AddOns/` first; the hub keeps its copy idle if another copy is detected. Your saved settings live outside the addon folders. The [hub README](Interface/AddOns/CherrysKit/README.md) explains this in more detail.
+Remove old separate copies of the same addons from `Interface/AddOns/` first, or let **`!setup_cherryskit.bat`** do it: older copies move to `Interface\offloaded_addons` (nothing is deleted). Until an older copy is moved, the hub keeps its own copy of that addon off and says which folder takes precedence. Your saved settings live outside the addon folders. The [hub README](Interface/AddOns/CherrysKit/README.md) explains this in more detail.
 
 **Addon LoadTimes** is a troubleshooting addon with its own ZIP. It comes switched off in its `LoadTimes/Switch.txt` and then uses no memory. Every individual addon ZIP requires the hub.
 
@@ -168,11 +176,11 @@ These aren't in the full kit: extract them into `Interface/AddOns/` as usual, an
 | [Cherry's Loginxml](Interface/AddOns/CherrysLoginxmlHook/README.md) | A replacement login screen: gets past a stuck server list, saved logins, keyboard controls. Run its `Install login screen.bat` once. | | 1.2.2 |
 | [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character. With Cherry's Loginxml it picks the character. | `/lnc` | 1.2.2 |
 
-Download them from this build: [CherrysLoginxml-1.2.2.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysLoginxml-1.2.2.zip) · [LogNextChar-1.2.2.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/LogNextChar-1.2.2.zip). Each needs the hub.
+Download them from this build: [CherrysLoginxml-1.2.2.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysLoginxml-1.2.2.zip) · [LogNextChar-1.2.2.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/LogNextChar-1.2.2.zip). Each needs the hub.
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome 1.0.17](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-GlobalBankDailyRewards-1.0.17.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
+[Download Global Bank Daily Rewards for Chrome 1.1.0](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-GlobalBankDailyRewards-1.1.0.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
 
 Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step. Automatic page processing is limited to the Gameforge daily shop page; the extension does not send your local data to the developer.
 

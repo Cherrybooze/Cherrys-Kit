@@ -1,10 +1,17 @@
 # Cherry's Kit
 
-Version **0.4.25** · Kit release **0.11.113** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.25** · Kit release **0.11.115** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.115 playtest
+
+- **The guided setup:** after extracting the Full or Hub ZIP, double-click `!setup_cherryskit.bat` next to the `CherrysKit` folder. It checks the install, maps `Interface\AddOns`, moves older copies of the kit's addons into `Interface\offloaded_addons` (nothing is deleted), stops the Global Bank helper during updates, checks Chrome and can walk through the Chrome extension steps. The same file is the update route for later versions.
+- **Global Bank's helper lives with Chrome:** the extension's button shows whether the helper is running and for how long, stops it in one press, and a tick runs the background helper in a real terminal window. The helper ends on its own when Chrome or the extension goes away. (`/gb`)
+- **Cherry's Loginxml and LogNextChar 1.2.2** now live under the kit's folder and load through the hub; LogNextChar still works without the login screen (Next and Prev then just log you out).
+- **Cherry's Grid 1.1.5:** Mouse 4 joins the click buttons on your frames, and a tick on the Clicks page, off by default, also makes it a game keybind. (`/grid`)
 
 ## Kit 0.11.113 playtest
 

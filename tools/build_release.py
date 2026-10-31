@@ -19,6 +19,8 @@ ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 LOGIN_SCREEN = ROOT / "Interface" / "loginxml"
 LOGIN_HELPER = ROOT / "Interface" / "AddOns" / "CherrysLoginxmlHook"
 LOG_NEXT_CHAR = ROOT / "Interface" / "AddOns" / "LogNextChar"
+# The guided setup launcher travels at the ZIP root, next to the CherrysKit folder.
+SETUP_LAUNCHER = ROOT / "Interface" / "AddOns" / "!setup_cherryskit.bat"
 # A player's own files in their login screen folder. Blank templates live in its data folder.
 LOGIN_PERSONAL = ("accounts.lua", "password.lua", "config.lua", "savedpath.lua")
 LOGIN_TEMPLATE_WORDS = {"List 1"}
@@ -63,8 +65,12 @@ def validate_markdown() -> int:
     return count
 
 
-def write_zip(path: Path, files: dict[str, bytes], root: str = "CherrysKit") -> dict:
-    expected = {f"{root}/{name}": data for name, data in sorted(files.items())}
+def write_zip(path: Path, files: dict[str, bytes], root: str = "CherrysKit",
+              root_files: dict[str, bytes] | None = None) -> dict:
+    expected = {f"{root}/{name}": data for name, data in files.items()}
+    for name, data in (root_files or {}).items():
+        expected[name] = data
+    expected = dict(sorted(expected.items()))
     with ZipFile(path, "w", compression=ZIP_DEFLATED, compresslevel=9) as archive:
         for name, data in expected.items():
             require(
@@ -183,8 +189,10 @@ def build(output: Path) -> None:
             require(not is_private_release_path(path.relative_to(KIT)), f"Private game data must not be packaged: {path}")
             sources[path.relative_to(KIT).as_posix()] = path.read_bytes()
     require(sources, "No addon files found.")
+    require(SETUP_LAUNCHER.is_file(), "Missing !setup_cherryskit.bat for the ZIP root.")
+    setup_root = {SETUP_LAUNCHER.name: SETUP_LAUNCHER.read_bytes()}
     require(
-        {path.name for path in KIT.iterdir() if path.is_dir()} == folders | {"KitLoad", "Media", "docs"},
+        {path.name for path in KIT.iterdir() if path.is_dir()} == folders | {"KitLoad", "Media", "docs", "Setup"},
         "Addon directory list differs from release-packages.json.",
     )
     toc = sources["CherrysKit.toc"].decode("utf-8-sig")
@@ -245,7 +253,8 @@ def build(output: Path) -> None:
         *((addon["folder"], addon["title"], addon["version"], modules[addon["folder"]], [addon["folder"]])
           for addon in addons),
     ]:
-        result = write_zip(output / f"CherrysKit-{kind}-{package_version}.zip", files)
+        extra = setup_root if kind in {"Full", "Hub"} else None
+        result = write_zip(output / f"CherrysKit-{kind}-{package_version}.zip", files, root_files=extra)
         result.update({
             "package": kind, "title": title, "version": package_version,
             "requires_hub": kind not in {"Full", "Hub"},
@@ -330,6 +339,9 @@ def build(output: Path) -> None:
         f"Choose **Full** for the addons, or **Hub** plus the addon ZIPs you want. "
         f"Extract into {tick}Interface/AddOns/{tick}, merging the {tick}CherrysKit/{tick} folders. "
         f"Remove old separate copies, start the game or Reload UI, and type {tick}/ck{tick}.", "",
+        f"After extracting, double-click {tick}!setup_cherryskit.bat{tick} (Full and Hub ZIPs) for a guided "
+        f"setup: it maps {tick}Interface\\AddOns{tick}, moves older copies into {tick}Interface\\offloaded_addons{tick} "
+        f"(nothing is deleted), stops the Global Bank helper during updates and can run the Chrome extension steps.", "",
         "Addon LoadTimes is a troubleshooting addon: it is switched off in its "
         f"{tick}LoadTimes/Switch.txt{tick} and then uses no memory. Individual ZIPs require the hub.", "",
         hub_note, "",
