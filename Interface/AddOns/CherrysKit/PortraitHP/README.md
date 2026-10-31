@@ -6,6 +6,20 @@ Version **2019.07.14-ck2** · Kit release **0.11.78** · [All addons / hub](../R
 
 PortraitHP v2019.07.14 by Nonante@Nuada, fixed for Cherry's Kit.
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\PortraitHP`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
+>
+> **On its own:** it runs with just the hub, and nothing it does needs another addon.
+>
+> **Original addon:** PortraitHP v2019.07.14 by Nonante@Nuada. If `Interface\AddOns\PortraitHP` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+>
+> **Other addons:** AddonManager lists it when you have that addon.
+
+<!-- end of requirements -->
+
 ## Features
 
 - Shows the target's health percent on the target portrait, and nothing when you have no target.

@@ -15,4 +15,6 @@ CherrysKit_Paths = {
   CherrysGrid = "Interface/AddOns/CherrysKit/CherrysGrid/",
   CherrysQuests = "Interface/AddOns/CherrysKit/CherrysQuests/",
   CherrysBar = "Interface/AddOns/CherrysKit/CherrysBar/",
+  CherrysLoginxmlHook = "Interface/AddOns/CherrysKit/CherrysLoginxmlHook/",
+  LogNextChar = "Interface/AddOns/CherrysKit/LogNextChar/",
 }

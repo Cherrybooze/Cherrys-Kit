@@ -52,6 +52,10 @@ const GBFolders = (() => {
         character.classes.push({name: readable(field[1]), level: number(field[2])});
       } else if (field[0] === 'S' && field[1]) {
         character.server = readable(field[1]);
+      } else if (field[0] === 'T' && field[1]) {
+        character.classToken = field[1];
+      } else if (field[0] === 'R' && field[1]) {
+        character.roster = field[1].split(';').map(readable);
       } else if (field[0] === 'M' && field[1] && number(field[2]) > 0) {
         character.currencies.push({key: field[1], amount: number(field[2]), name: readable(field[3])});
       } else if ((field[0] === 'B' || field[0] === 'K') && field.length >= 4) {
@@ -63,6 +67,15 @@ const GBFolders = (() => {
       }
     }
     return character;
+  }
+  // <B or K><slot>~<lines> joined by backticks; lines joined by ^, and fields by =
+  function tipsFrom(text) {
+    const tips = {};
+    for (const record of String(text || '').split('`')) {
+      const at = record.indexOf('~');
+      if (at > 0) tips[record.slice(0, at)] = record.slice(at + 1).split('^').map(line => line.split('=').map(readable));
+    }
+    return tips;
   }
   function localTime(milliseconds) {
     const date = new Date(milliseconds);
@@ -79,7 +92,13 @@ const GBFolders = (() => {
       if (excluded.has(save.folder)) continue;
       const saved = localTime(save.time);
       const character = snapshot(savedString(save.text, 'GlobalBank_Char'), saved);
-      if (character && !excluded.has(character.name)) found.push({folder: save.folder, saved, character});
+      if (character && !excluded.has(character.name)) {
+        const tips = tipsFrom(savedString(save.text, 'GlobalBank_Tips'));
+        for (const [place, tag] of [['bag', 'B'], ['bank', 'K']]) {
+          for (const item of character[place]) if (tips[tag + item.slot]) item.tip = tips[tag + item.slot];
+        }
+        found.push({folder: save.folder, saved, character});
+      }
       for (const record of (savedString(save.text, 'GlobalBank_Notes') || '').split('`')) {
         const [name, version, note] = record.split('~');
         if (!name || !/^\d+$/.test(version || '')) continue;
@@ -287,5 +306,5 @@ const GBFolders = (() => {
     if (message.type === 'bank-data') return {ok: true, json: JSON.stringify({made: localTime(Date.now()), characters})};
     return {ok: true, output: `Read ${characters.length} characters from your save files.${busy ? ` ${busy} were busy, so try again in a moment.` : ''}`};
   }
-  return {choose, state, allowAgain, usable, answer, bytesToRaw, savedString, snapshot, charactersFrom, iconKey, iconIndex, readIcon};
+  return {choose, state, allowAgain, usable, answer, bytesToRaw, savedString, snapshot, charactersFrom, tipsFrom, iconKey, iconIndex, readIcon};
 })();

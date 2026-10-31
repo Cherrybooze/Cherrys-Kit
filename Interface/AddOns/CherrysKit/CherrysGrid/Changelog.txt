@@ -1,5 +1,9 @@
 Cherry's Grid
 
+1.1.5 (2026-10-31)
+- Clicks: Mouse 4 is one of the click buttons. A check box, off by default, also makes it a game
+  keybind: it shows in the game's Key Bindings and works over windows and buttons.
+
 1.1.1 (2026-10-28)
 - Separate default positions for name, health percentage and missing health, tracked buffs,
   and debuffs. Missing health uses compact k/m amounts. Customised profiles keep their layout.

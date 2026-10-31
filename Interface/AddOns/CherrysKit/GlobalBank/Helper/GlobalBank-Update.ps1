@@ -19,6 +19,9 @@ param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "", [Validate
 
 $ErrorActionPreference = "Stop"
 
+# A clear name for Task Manager and the taskbar when this run has its own console window.
+try { [Console]::Title = "Cherrys Global Bank Helper" } catch { }
+
 # Keep diagnostics available even when loading a dependency or starting the watcher fails.
 # Never include source text or expanded command arguments: those can contain private payloads.
 function Protect-HelperErrorText([string]$text, [int]$MaxLength = 240) {
@@ -85,9 +88,11 @@ if (-not (Test-Path -LiteralPath $data)) {
 }
 $out = Join-Path $data "GlobalBankDatabase.lua"
 $beat = Join-Path $data "GlobalBankHelperBeat.lua"
+$extensionBeat = Join-Path $data "GlobalBankExtensionBeat.txt"
 $log = Join-Path $data "GlobalBankHelper.log"
 $errorLog = Join-Path $data "GlobalBankHelper-errors.log"
 $json = Join-Path $data "GlobalBank.json"
+$tipsFile = Join-Path $data "GlobalBankTips.txt"
 $rewards = Join-Path $data "DailyRewards.json"
 $links = Join-Path $data "CharacterLinks.json"
 $excludedPath = Join-Path $data "ExcludedCharacters.json"
@@ -101,6 +106,7 @@ $oldShortcut = if ($startupFolder) { Join-Path $startupFolder "Global Bank helpe
 $pattern = [regex]'(?m)^GlobalBank_Char = ("(?:[^"\\\r\n]|\\.)*")\s*$'
 $removedPattern = [regex]'(?m)^GlobalBank_Removed = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 $notesPattern = [regex]'(?m)^GlobalBank_Notes = "((?:[^"\\\r\n]|\\.)*)"\s*$'
+$tipsPattern = [regex]'(?m)^GlobalBank_Tips = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 
 $script:Excluded = @{}
 $script:Entries = @{}      # folder name -> @{ saved; s; line }, as in the database file
@@ -339,6 +345,8 @@ function Update-Database {
         return $null
     }
     $previous = Read-GBDatabaseEntries $out
+    # Read from each save below; a busy file keeps the tooltips it had.
+    $tips = Read-GBTips $tipsFile
     # Notes: the highest version of each name wins (versions only grow), a tie goes to the newest
     # save file. The database's own notes are the starting point, so a busy file loses nothing.
     $notes = @{}
@@ -366,6 +374,9 @@ function Update-Database {
                 $s = $m.Groups[1].Value.Substring(1, $m.Groups[1].Value.Length - 2)
                 $entry = @{ name = $folder.Name; saved = $saved; s = $s; line = "  { saved = ""$saved"", s = ""$s"" }," }
             }
+            $t = $tipsPattern.Match($text)
+            if ($t.Success -and $t.Groups[1].Value) { $tips[$folder.Name] = $t.Groups[1].Value }
+            elseif ($entry) { $tips.Remove($folder.Name) }
             $n = $notesPattern.Match($text)
             if ($n.Success) {
                 $time = (Get-Item -LiteralPath $file).LastWriteTimeUtc
@@ -407,6 +418,10 @@ function Update-Database {
         $entries.Add($e)
     }
     foreach ($key in @($notes.Keys)) { if (Is-Excluded (ConvertTo-GBText $key)) { $notes.Remove($key) } }
+    # Only characters still in the database, and never in it: the game has no use for them.
+    $keptTips = @{}
+    foreach ($e in $entries) { if ($tips.ContainsKey($e.name)) { $keptTips[$e.name] = $tips[$e.name] } }
+    try { Write-GBTips $keptTips $tipsFile } catch { Write-HelperError $_ 'Write game tooltips' }
     $made = (Get-Date).ToString("yyyy-MM-dd HH:mm")
     $lines = @(
         "-- Written by the Global Bank helper on $made. It replaces this file whenever a character logs out.",
@@ -822,6 +837,17 @@ try {
     }
 } catch { }
 
+# The pre-kit helper used to live in this data folder; nothing here runs it. Clear the leftovers,
+# and the worker inbox files of helpers that were force-stopped long ago.
+foreach ($legacy in 'GlobalBank-Update.ps1', 'GlobalBank-Update.bat', 'Start Global Bank helper.bat',
+    'Turn on automatic updates.bat', 'Turn off automatic updates.bat', 'README.txt') {
+    $leftover = Join-Path $data $legacy
+    if (Test-Path -LiteralPath $leftover -PathType Leaf) { Remove-Item -LiteralPath $leftover -Force -ErrorAction SilentlyContinue }
+}
+Get-ChildItem -LiteralPath $data -Filter '.AAH-worker-*.json' -File -ErrorAction SilentlyContinue |
+    Where-Object { (Get-Date) - $_.LastWriteTime -gt [TimeSpan]::FromDays(1) } |
+    Remove-Item -Force -ErrorAction SilentlyContinue
+
 # One helper window per Windows user.
 $mutex = New-Object System.Threading.Mutex($false, "Local\CherrysKitGlobalBankHelper")
 $owned = $false
@@ -853,7 +879,8 @@ Write-Json
 $rewardStamp = if (Test-Path -LiteralPath $rewards) { (Get-Item -LiteralPath $rewards).LastWriteTimeUtc.Ticks } else { 0 }
 $linkStamp = (Get-Item -LiteralPath $links).LastWriteTimeUtc.Ticks
 $nextRewardCheck = (Get-Date).AddSeconds(1)
-$nextAutoCheck = (Get-Date).AddSeconds(2)
+$nextStopCheck = (Get-Date).AddSeconds(2)
+$nextAutoCheck = (Get-Date).AddSeconds(15)
 $autoStop = Join-Path $data 'GlobalBankHelperAuto.stop'
 
 $watcher = New-Object System.IO.FileSystemWatcher($SaveFolder, "SaveVariables.lua")
@@ -908,13 +935,21 @@ while ($true) {
             $script:PromptShown = $false
         }
     }
-    # Started by the extension's toggle: it ends when the toggle goes off or Chrome closes.
-    if ($Auto -and (Get-Date) -ge $nextAutoCheck) {
-        $nextAutoCheck = (Get-Date).AddSeconds(2)
-        if ((Test-Path -LiteralPath $autoStop) -or -not (Get-Process -Name chrome -ErrorAction SilentlyContinue)) {
+    # A Stop from Chrome lands within two seconds; the liveness pair runs every fifteen.
+    if ((Get-Date) -ge $nextStopCheck) {
+        $nextStopCheck = (Get-Date).AddSeconds(2)
+        if (Test-Path -LiteralPath $autoStop) {
             Remove-Item -LiteralPath $autoStop -Force -ErrorAction SilentlyContinue
+            Write-Host 'Stopped from Chrome.' -ForegroundColor Yellow
             exit 0
         }
+    }
+    # Started by the extension: it ends when Chrome, or the extension's heartbeat, goes away.
+    if ($Auto -and (Get-Date) -ge $nextAutoCheck) {
+        $nextAutoCheck = (Get-Date).AddSeconds(15)
+        if (-not (Get-Process -Name chrome -ErrorAction SilentlyContinue)) { exit 0 }
+        $mark = Get-Item -LiteralPath $extensionBeat -ErrorAction SilentlyContinue
+        if (-not $mark -or ((Get-Date).ToUniversalTime() - $mark.LastWriteTimeUtc).TotalSeconds -gt 180) { exit 0 }
     }
     foreach ($e in @(Get-Event -ErrorAction SilentlyContinue)) {
         $path = $e.SourceEventArgs.FullPath

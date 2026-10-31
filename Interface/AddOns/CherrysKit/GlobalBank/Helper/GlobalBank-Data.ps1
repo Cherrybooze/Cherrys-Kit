@@ -41,6 +41,8 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
     $classes = New-Object 'System.Collections.Generic.List[object]'
     $currencies = New-Object 'System.Collections.Generic.List[object]'
     $server = ""
+    $classToken = ""
+    $roster = @()
     $bag = New-Object 'System.Collections.Generic.List[object]'
     $bank = New-Object 'System.Collections.Generic.List[object]'
     for ($i = 1; $i -lt $records.Count; $i++) {
@@ -50,6 +52,8 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
             continue
         }
         if ($f.Count -ge 2 -and $f[0] -eq 'S' -and $f[1]) { $server = ConvertTo-GBText $f[1]; continue }
+        if ($f.Count -ge 2 -and $f[0] -ceq 'T' -and $f[1]) { $classToken = $f[1]; continue }
+        if ($f.Count -ge 2 -and $f[0] -ceq 'R' -and $f[1]) { $roster = @($f[1].Split([char]';') | ForEach-Object { ConvertTo-GBText $_ }); continue }
         if ($f.Count -ge 3 -and $f[0] -eq 'M' -and $f[1] -and (ConvertTo-GBNumber $f[2]) -gt 0) {
             $currencies.Add([pscustomobject]@{ Key = $f[1]; Amount = ConvertTo-GBNumber $f[2]; Name = $(if ($f.Count -gt 3) { ConvertTo-GBText $f[3] } else { "" }) })
             continue
@@ -88,6 +92,8 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
         Classes   = @($classes.ToArray())
         Currencies = @($currencies.ToArray())
         Server    = $server
+        ClassToken = $classToken
+        Roster    = $roster
         Level     = ConvertTo-GBNumber (& $field 3)
         Gold      = ConvertTo-GBNumber (& $field 4)
         BagSlots  = ConvertTo-GBNumber (& $field 5)
@@ -230,6 +236,40 @@ function ConvertFrom-GBJson([string]$text) {
     return $text | ConvertFrom-Json -ErrorAction Stop
 }
 
+# The game's own tooltips, one line for each character: name, a tab, then its records as the addon saved them.
+function Read-GBTips([string]$path) {
+    $tips = @{}
+    if (Test-Path -LiteralPath $path) {
+        foreach ($line in [System.IO.File]::ReadAllLines($path, $script:latin1)) {
+            $tab = $line.IndexOf([char]9)
+            if ($tab -gt 0) { $tips[$line.Substring(0, $tab)] = $line.Substring($tab + 1) }
+        }
+    }
+    return $tips
+}
+
+function Write-GBTips($tips, [string]$path) {
+    $lines = @($tips.Keys | Sort-Object | ForEach-Object { "$_`t$($tips[$_])" })
+    $tmp = "$path.tmp"
+    [System.IO.File]::WriteAllLines($tmp, [string[]]$lines, $script:latin1)
+    Move-Item -LiteralPath $tmp -Destination $path -Force
+}
+
+# One character's records as slot -> a JSON list of [colour, text, colour, text] lines
+function ConvertTo-GBTipTable([string]$records) {
+    $table = @{}
+    if (-not $records) { return $table }
+    foreach ($record in $records.Split([char]'`')) {
+        $split = $record.IndexOf([char]'~')
+        if ($split -lt 1) { continue }
+        $lines = foreach ($line in $record.Substring($split + 1).Split([char]'^')) {
+            '[' + (@($line.Split([char]'=') | ForEach-Object { ConvertTo-GBJsonString (ConvertTo-GBText $_) }) -join ',') + ']'
+        }
+        $table[$record.Substring(0, $split)] = '[' + (@($lines) -join ',') + ']'
+    }
+    return $table
+}
+
 function Export-GBJson($chars, [string]$path, [string]$made) {
     $rewardsPath = Join-Path (Split-Path -Parent $path) 'DailyRewards.json'
     $rewards = @()
@@ -245,6 +285,9 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
         if ($linkData.schemaVersion -ne 1 -or $null -eq $linkData.characters) { throw 'Unsupported CharacterLinks.json format' }
         $links = @($linkData.characters)
     }
+    $tips = @{}
+    $savedTips = Read-GBTips (Join-Path (Split-Path -Parent $path) 'GlobalBankTips.txt')
+    foreach ($key in $savedTips.Keys) { $tips[(ConvertTo-GBText $key)] = $savedTips[$key] }
     # Looked up by name once, so thousands of characters don't each search every list.
     $rewardsByName = @{}; foreach ($reward in $rewards) { $rewardsByName[[string]$reward.name] = @($rewardsByName[[string]$reward.name]) + @($reward) }
     $linksByName = @{}; foreach ($link in $links) { $linksByName[[string]$link.name] = @($linksByName[[string]$link.name]) + @($link) }
@@ -263,7 +306,10 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
             if (-not $firstClass) { [void]$sb.Append(',') }; $firstClass = $false
             [void]$sb.Append('{"name":').Append((ConvertTo-GBJsonString $class.Name)).Append(',"level":').Append($class.Level).Append('}')
         }
-        [void]$sb.Append('],"server":').Append((ConvertTo-GBJsonString $c.Server)).Append(',"currencies":[')
+        [void]$sb.Append('],"server":').Append((ConvertTo-GBJsonString $c.Server))
+        [void]$sb.Append(',"classToken":').Append((ConvertTo-GBJsonString $c.ClassToken))
+        [void]$sb.Append(',"roster":[').Append((@($c.Roster | ForEach-Object { ConvertTo-GBJsonString $_ }) -join ',')).Append(']')
+        [void]$sb.Append(',"currencies":[')
         $firstMoney = $true
         foreach ($money in $c.Currencies) {
             if (-not $firstMoney) { [void]$sb.Append(',') }; $firstMoney = $false
@@ -288,6 +334,7 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
         if ($matchingLinks.Count -eq 1 -and $sameName -eq 1) {
             [void]$sb.Append(',"accountId":').Append((ConvertTo-GBJsonString $matchingLinks[0].accountId))
         } else { [void]$sb.Append(',"accountId":null') }
+        $tipTable = ConvertTo-GBTipTable ([string]$tips[[string]$c.Name])
         foreach ($part in @(@("bag", $c.Bag), @("bank", $c.Bank))) {
             [void]$sb.Append(',"').Append($part[0]).Append('":[')
             $firstItem = $true
@@ -299,6 +346,8 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
                 [void]$sb.Append(',"name":').Append((ConvertTo-GBJsonString $it.Name))
                 [void]$sb.Append(',"icon":').Append((ConvertTo-GBJsonString $it.Icon))
                 if ($it.Bound) { [void]$sb.Append(',"bound":true') }
+                $tip = $tipTable[$(if ($part[0] -eq "bag") { "B" } else { "K" }) + $it.Slot]
+                if ($tip) { [void]$sb.Append(',"tip":').Append($tip) }
                 if ($null -ne $it.Stats) {
                     [void]$sb.Append(',"stats":[').Append(((@($it.Stats) | ForEach-Object { ConvertTo-GBJsonString $_ }) -join ',')).Append(']')
                 }

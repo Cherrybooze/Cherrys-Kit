@@ -22,6 +22,8 @@ from lupa.lua51 import LuaRuntime
 ROOT = Path(__file__).resolve().parents[1]
 KIT_PATH = "Interface/AddOns/CherrysKit"
 KIT = ROOT / KIT_PATH
+# Separate packages: their source is beside the kit, and they're installed inside it
+BESIDE = {"CherrysLoginxmlHook": ROOT / "Interface/AddOns/CherrysLoginxmlHook", "LogNextChar": ROOT / "Interface/AddOns/LogNextChar"}
 FRAME_TAGS = {"Frame", "Button", "CheckButton", "RadioButton", "EditBox", "StatusBar", "Slider", "ScrollFrame",
               "MessageFrame", "Model", "Tooltip", "FontString", "Texture"}
 EVENTS = ("VARIABLES_LOADED", "SAVE_VARIABLES", "LOADING_END", "PLAYER_ENTERING_WORLD", "PLAYER_LEVEL_UP",
@@ -29,7 +31,7 @@ EVENTS = ("VARIABLES_LOADED", "SAVE_VARIABLES", "LOADING_END", "PLAYER_ENTERING_
 # Each addon's own names. They read as nil when it isn't installed, as they would in the game.
 ADDON_PREFIXES = ("Kitty", "KC_", "RWA", "RomWeakAuras", "CherrysChat", "zBag", "GlobalBank", "GB_", "ExtendedMacroIcons",
                   "CEMI_", "TooltipIds", "UltimateMailMod", "UMM", "AAH", "AdvancedAuctionHouse", "ZShop", "pbInfo",
-                  "PortraitHP", "CherrysGrid", "CherrysQuests", "CherrysBar", "CBar_", "CherrysLoadTimes", "CherrysClock")
+                  "PortraitHP", "CherrysGrid", "CherrysQuests", "CherrysBar", "CBar_", "CherrysLoadTimes", "LogNextChar", "CherrysLoginxml", "LOGCHAR_", "CherrysClock")
 
 STAND_IN = r"""
 local real = { type = type, tostring = tostring, pairs = pairs, ipairs = ipairs, next = next }
@@ -91,15 +93,18 @@ frame_meta.methods = {
   UnregisterEvent = function(self, event) self._events[event] = nil end,
   GetName = function(self) return self._name end,
   SetScript = function(self, what, fn) self._scripts[what] = fn end,
+  SetScripts = function(self, what, code) self._cleared[what] = code == "" or nil end,
+  Hide = function(self) self._hidden = true end,
   GetScript = function(self, what) return self._scripts[what] end,
   IsVisible = function() return false end,
   IsShown = function() return false end,
   GetWidth = function() return 100 end,
   GetHeight = function() return 100 end,
 }
-function frame_wants(frame, event) return frame._events[event] == true end
+function frame_wants(frame, event) return frame._events[event] == true and not frame._cleared.OnEvent end
+function frame_updates(frame) return not frame._cleared.OnUpdate end
 function new_frame(name)
-  local frame = setmetatable({ _name = name, _events = {}, _scripts = {} }, frame_meta)
+  local frame = setmetatable({ _name = name, _events = {}, _scripts = {}, _cleared = {} }, frame_meta)
   frames[#frames + 1] = frame
   if name then rawset(_G, name, frame) end
   return frame
@@ -147,7 +152,7 @@ def manifest():
 def kit_wide_names():
     """Top-level globals and named frames in every addon's files: all read as nil until loaded."""
     names = set()
-    for path in KIT.rglob("*"):
+    for path in [*KIT.rglob("*"), *(item for folder in BESIDE.values() for item in folder.rglob("*"))]:
         if path.suffix.lower() == ".lua" and path.is_file():
             text = path.read_text(encoding="utf-8", errors="replace")
             names.update(re.findall(r"(?m)^([A-Za-z_]\w*)\s*=(?!=)", text))
@@ -161,7 +166,8 @@ def kit_wide_names():
 class Install:
     """One game folder: the hub, and the given addons, on a fresh stand-in client."""
 
-    def __init__(self, addons, folders):
+    def __init__(self, addons, folders, originals=(), before=""):
+        self.before = before
         self.addons = set(addons)
         self.folders = folders
         self.temp = tempfile.TemporaryDirectory()
@@ -175,6 +181,13 @@ class Install:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 if path.suffix.lower() in (".lua", ".xml", ".txt"):
                     shutil.copyfile(path, target)
+        for name, folder in BESIDE.items():
+            if name in self.addons:
+                shutil.copytree(folder, self.game / KIT_PATH / name)
+        for relative in originals:
+            target = self.game / "Interface/AddOns" / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("-- stands for the original\n", encoding="utf-8")
         self.lua = LuaRuntime(unpack_returned_tuples=True)
 
     def close(self):
@@ -190,6 +203,11 @@ class Install:
             mark = lua.globals().mark_kit_name
             for name in kit_wide_names():
                 mark(name)
+            lua.execute("""
+              said = {}
+              rawset(DEFAULT_CHAT_FRAME, "AddMessage", function(_, text) said[#said + 1] = tostring(text) end)
+            """)
+            lua.execute(self.before)
             lua.execute("""
               function run_file(path)
                 local fn, message = loadfile(path)
@@ -283,7 +301,7 @@ class Install:
               local e = event
               for _, frame in ipairs(frames) do
                 local fn = frame._scripts.OnEvent
-                if fn and frame._events[e] then run_fn(frame, fn) end
+                if fn and frame._events[e] and not frame._cleared.OnEvent then run_fn(frame, fn) end
               end
             """)
         g.event = None
@@ -291,7 +309,7 @@ class Install:
             g.elapsedTime = 1
             g.clock_now = g.clock_now + 1
             for frame, name, path, scripts in self.scripts:
-                if "OnUpdate" in scripts:
+                if "OnUpdate" in scripts and g.frame_updates(frame):
                     g.run_code(frame, scripts["OnUpdate"], f"{path}:{name}:OnUpdate")
         lua.execute("""
           for name, fn in pairs(SlashCmdList) do
@@ -304,7 +322,12 @@ class Install:
 
 def packages():
     metadata = json.loads((ROOT / "release-packages.json").read_text(encoding="utf-8"))
-    return [addon["folder"] for addon in metadata["addons"]]
+    return [addon["folder"] for addon in metadata["addons"]] + [package.get("install_folder", package["folder"]) for package in metadata["standalone_packages"]]
+
+
+def all_packages():
+    metadata = json.loads((ROOT / "release-packages.json").read_text(encoding="utf-8"))
+    return metadata["addons"] + metadata["standalone_packages"]
 
 
 class AddonsAloneTest(unittest.TestCase):
@@ -351,6 +374,116 @@ class AddonsAloneTest(unittest.TestCase):
             self.assertFalse(any("planted" in error for error in both.errors()))
         finally:
             both.close()
+
+
+class OriginalAddonsTest(unittest.TestCase):
+    """An original, or an older copy, in its own folder: the kit's version gives way, and the hub says so."""
+    maxDiff = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.folders = packages()
+        full = Install(cls.folders, cls.folders)
+        try:
+            cls.full_errors = set(full.run())
+            cls.full_said = [str(v) for v in full.lua.globals().said.values()]
+        finally:
+            full.close()
+
+    def run_with(self, package, originals=None, addons=None, before=""):
+        origin = package["origin"]
+        folder = package.get("install_folder", package["folder"])
+        originals = [f"{origin['folder']}/{origin['files'][0]}"] if originals is None else originals
+        install = Install([folder] if addons is None else addons, self.folders, originals, before)
+        self.addCleanup(install.close)
+        new = sorted(set(install.run()) - self.full_errors)
+        return install, new, [str(v) for v in install.lua.globals().said.values()]
+
+    def test_nothing_is_said_without_one(self):
+        self.assertEqual([line for line in self.full_said if "takes precedence" in line], [])
+
+    def test_each_gives_way_and_the_hub_says_which(self):
+        for package in all_packages():
+            origin = package["origin"]
+            with self.subTest(addon=package["folder"]):
+                install, new, said = self.run_with(package)
+                self.assertEqual(new, [])
+                key = package.get("hub_key", package["folder"])
+                g = install.lua.globals()
+                self.assertFalse(g.CherrysKit.IsEnabled(key))
+                lines = [line for line in said if "takes precedence" in line]
+                self.assertEqual(len(lines), 1, lines)
+                self.assertIn(package["title"] + " from the kit is off", lines[0])
+                self.assertIn("Interface\\AddOns\\" + origin["folder"] + " takes precedence", lines[0])
+                if origin["kind"] == "original":
+                    self.assertIn("the original " + origin["name"], lines[0])
+                else:
+                    self.assertIn("your separate copy", lines[0])
+
+    def test_any_of_its_files_is_enough(self):
+        for package in all_packages():
+            origin = package["origin"]
+            for file in origin["files"]:
+                with self.subTest(addon=package["folder"], file=file):
+                    install, _, _ = self.run_with(package, [f"{origin['folder']}/{file}"])
+                    self.assertFalse(install.lua.globals().CherrysKit.IsEnabled(package.get("hub_key", package["folder"])))
+
+    def test_a_row_says_so_in_the_hub(self):
+        package = next(item for item in all_packages() if item["folder"] == "zBag")
+        install, _, _ = self.run_with(package)
+        install.lua.execute("""
+          CherrysKit.Refresh()
+          for _, entry in ipairs(CherrysKit.visible) do if entry.folder == "zBag" then found = entry end end
+        """)
+        self.assertIsNotNone(install.lua.globals().found)
+
+    def test_hub_alone_says_nothing_about_an_original(self):
+        # No kit copy to give way: the original is just what's running
+        package = next(item for item in all_packages() if item["folder"] == "zBag")
+        _, new, said = self.run_with(package, addons=[])
+        self.assertEqual(new, [])
+        self.assertEqual([line for line in said if "takes precedence" in line], [])
+
+    def test_two_at_once_get_a_line_each(self):
+        chosen = [item for item in all_packages() if item["folder"] in ("zBag", "UltimateMailMod", "CherrysBar")]
+        originals = [f"{item['origin']['folder']}/{item['origin']['files'][0]}" for item in chosen]
+        _, _, said = self.run_with(chosen[0], originals, addons=[item["folder"] for item in chosen])
+        self.assertEqual(len([line for line in said if "takes precedence" in line]), 3)
+
+    def test_one_that_loaded_first_keeps_its_names(self):
+        # AdvancedAuctionHouse sorts before CherrysKit, so its files have already run
+        package = next(item for item in all_packages() if item["folder"] == "AdvancedAuctionHouse")
+        install, new, _ = self.run_with(package, before="AAH = { fromTheOriginal = true }; AAH_OnlyTheOriginal = 7")
+        g = install.lua.globals()
+        self.assertEqual(new, [])
+        self.assertTrue(g.AAH.fromTheOriginal)
+        self.assertEqual(g.AAH_OnlyTheOriginal, 7)
+        self.assertFalse(g.CherrysKit.IsEnabled("AdvancedAuctionHouse"))
+
+    def test_nothing_of_the_kits_copy_is_left_running(self):
+        for folder, names, command in (("zBag", ["zBagKit", "zBag_Update"], None), ("UltimateMailMod", ["UMMFrame", "UMMMailManager"], None), ("AdvancedAuctionHouse", ["AAH"], None)):
+            package = next(item for item in all_packages() if item["folder"] == folder)
+            with self.subTest(addon=folder):
+                install, new, _ = self.run_with(package)
+                g = install.lua
+                self.assertEqual(new, [])
+                for name in names:
+                    self.assertIsNone(g.eval(f"rawget(_G, {name!r})"), name)
+                wrapped = g.eval("(function() local n = 0 for key in pairs(SlashCmdList) do if key == 'CherrysKit_' .. %r then n = n + 1 end end return n end)()" % folder)
+                self.assertEqual(wrapped, 0)
+
+    def test_the_original_keeps_its_own_commands(self):
+        package = next(item for item in all_packages() if item["folder"] == "zBag")
+        install, _, _ = self.run_with(package, before='SLASH_ZBAGORIGINAL1 = "/zb"; SlashCmdList.ZBAGORIGINAL = function() usedTheOriginal = true end')
+        install.lua.execute('SlashCmdList.ZBAGORIGINAL(nil, "")')
+        self.assertTrue(install.lua.globals().usedTheOriginal)
+        self.assertEqual(install.lua.eval("rawget(_G, 'SLASH_ZBAGORIGINAL1')"), "/zb")
+
+    def test_one_in_a_renamed_folder_still_shows_by_its_global(self):
+        package = next(item for item in all_packages() if item["folder"] == "CherrysBar")
+        install, _, said = self.run_with(package, originals=[], before="XBARVERSION = 1.71")
+        self.assertFalse(install.lua.globals().CherrysKit.IsEnabled("CherrysBar"))
+        self.assertEqual(len([line for line in said if "takes precedence" in line]), 1)
 
 
 class MissingManifestFilesTest(unittest.TestCase):

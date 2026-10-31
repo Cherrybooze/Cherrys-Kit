@@ -130,6 +130,51 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         self.assertEqual(lua.eval('parsed.bag[1].stone.link'), '3185d 1 6ade63d3 3af0 0 0 0 0 0 0 0 fc7e')
         self.assertEqual(lua.eval('GlobalBank.Serialize(parsed)'), lua.eval('GlobalBank_Char'))
 
+    def test_the_account_list_class_and_game_tooltips_are_saved(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          UnitName=function() return 'Example' end
+          UnitClass=function() return 'Mage' end
+          UnitClassToken=function() return 'MAGE' end
+          UnitLevel=function() return 60 end
+          TEXT=function(key) return key end
+          LOGCHAR_ROSTER={'Other', 'Example', 'Third'}
+          reads=0
+          local function line(text, r, g, b)
+            return {IsVisible=function() return text ~= nil end, GetText=function() return text end, GetColor=function() return r, g, b end}
+          end
+          GlobalBankTipReader={SetHyperLink=function(self, link) reads=reads+1; asked=link end, Hide=function() end}
+          GlobalBankTipReaderTextLeft1=line('|cffa864a8Sword +3|r')
+          GlobalBankTipReaderTextRight1=line(nil)
+          GlobalBankTipReaderTextLeft2=line('Stamina +5', 0.2, 1, 0.2)
+          GlobalBankTipReaderTextRight2=line('Monk V=x', 1, 1, 1)
+          GlobalBankTipReaderTextLeft3=line(nil)
+          GlobalBankTipReaderTextRight3=line(nil)
+          LINKS={'|Hitem:34182 3 74000a5f cfa0cc40 0 0 0 0 0 0 251c 967d|h|cffc805f8[Staff]|r|h', '|Hitem:30d40 1 0|h|cffffffff[Plain]|r|h'}
+          GetBagItemInfo=function(i) if LINKS[i] then return i, 'icon', 'Item' .. i, 1 end end
+          GetBagItemLink=function(i) return LINKS[i] end
+          GetBagCount=function() return 2, 30, 180 end
+          GlobalBank.ReadMoney=function() return 7 end
+          GlobalBank.Snapshot(false,false)
+          parsed=GlobalBank.Parse(GlobalBank_Char)
+        """)
+        self.assertEqual(lua.eval('parsed.clsToken'), 'MAGE')
+        self.assertEqual(lua.eval('table.concat(parsed.roster, ",")'), 'Other,Example,Third')
+        self.assertEqual(lua.eval('GlobalBank.Serialize(parsed)'), lua.eval('GlobalBank_Char'))
+        self.assertEqual(lua.eval('asked'), '|Hitem:34182 3 74000a5f cfa0cc40 0 0 0 0 0 0 251c 967d|h|h')
+        self.assertEqual(lua.eval('GlobalBank_Tips'), 'B1~a864a8=Sword +3^33ff33=Stamina +5=ffffff=Monk V x')
+        self.assertNotIn('Stamina', lua.eval('GlobalBank_Char'))
+        # Each link is only read once
+        lua.execute('GlobalBank.Snapshot(false,false)')
+        self.assertEqual(lua.eval('reads'), 1)
+        # A list without this character on it isn't believed
+        lua.execute('LOGCHAR_ROSTER={"Someone"}; GlobalBank.chars={}; GlobalBank.Snapshot(false,false)')
+        self.assertIsNone(lua.eval('GlobalBank.Parse(GlobalBank_Char).roster'))
+        # Without a reader, saving still works
+        lua.execute('GlobalBank.tipCache={}; GlobalBankTipReader=nil; GlobalBank.Snapshot(false,false)')
+        self.assertEqual(lua.eval('GlobalBank_Tips'), '')
+
     def test_hovering_an_item_uses_the_game_tooltip(self):
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute(SOURCE.read_text(encoding='utf-8'))

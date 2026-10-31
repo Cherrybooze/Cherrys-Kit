@@ -8,8 +8,8 @@
 CherrysKit = CherrysKit or {}
 local Kit = CherrysKit
 
-Kit.version = "0.4.24"
-Kit.MAX_ROWS = 16
+Kit.version = "0.4.25"
+Kit.MAX_ROWS = 18
 
 if SaveVariables then
   SaveVariables("CherrysKit_DB")
@@ -98,39 +98,67 @@ function Kit.Register(entry)
 end
 
 ---------------------------------------------------------------------------
--- Old copies. A kit addon that also sits in its own folder in Interface\AddOns (an older release
--- or the original) loads twice. RoM cannot list addons, so each kit addon has a fingerprint: a
--- global the old copy defines too. The kit's version then stays off (Kit.IsEnabled is false)
--- and the hub says which folder to delete.
+-- Original addons. A kit addon whose original, or an older separate copy of it, also sits in its own
+-- folder in Interface\AddOns would load twice, so that one takes precedence: the kit's version stays
+-- off (Kit.IsEnabled is false) and the hub says so for each one, in chat and in its window.
+-- RoM cannot list addons, but loadfile can tell that a file is there without running it, whichever
+-- loads first, so this is known before any kit addon loads. KitOrigins.lua, written from
+-- release-packages.json, says what to look for. A folder under another name still shows by a global
+-- that copy defines, its fingerprint:
 --   before: the global already existed when the kit started loading that addon
 --   after:  the global changed after the kit loaded that addon (another copy loaded later)
--- A name starting with "-" is one the kit's version never defines: it exists only with the old copy.
+-- A name starting with "-" is one the kit's version never defines: it exists only with the other copy.
+-- Nothing is said about a kit addon that isn't installed: its original is simply what's running.
+--
+-- The manifest can't skip files, so the kit's copy still loads. When it's known to be giving way, whatever
+-- it adds is taken back as soon as it has loaded: its globals and commands go, and its frames are hidden
+-- with their event and update scripts cleared. So the original runs as it would without the kit, whichever
+-- of the two the game loads first.
 ---------------------------------------------------------------------------
-Kit.FINGERPRINTS = {
-  KittyCombo = "Kitty",
-  RomWeakAuras = "RWA",
-  CherrysChat = "CherrysChat",
-  zBag = "zBag_Update",
-  GlobalBank = "GlobalBank",
-  ExtendedMacroIcons = "-ExtendedMacroIcons",
-  TooltipIds = "GetIdName",
-  UltimateMailMod = "UMM_VERSION",
-  AdvancedAuctionHouse = "AAH",
-  ZShop = "-zshop",
-  pbInfo = "pbInfo",
-  PortraitHP = "PortraitHP",
-  CherrysGrid = "-gciraid",
-  CherrysQuests = "CherrysQuests",
-  CherrysBar = "-XBARVERSION",
-}
--- Where a kit addon's old copy lives when that folder is not named after the kit's addon.
-Kit.OLD_FOLDERS = { CherrysBar = "XBar" }
-Kit.oldCopies = {} -- folder -> "before" (found while loading)
+Kit.ORIGINS = CherrysKit_Origins or {}
+Kit.oldCopies = {} -- folder -> how it was found
+Kit.kitFound = {} -- folder -> is the kit's own copy installed
 Kit.warnedOld = nil -- warn again after Reload UI
 -- folder -> { value, version } right after the kit loaded it. Reload UI re-runs every file in the
 -- same Lua state, so this survives it: a global that is still the kit's own from before the
--- reload is not an old copy.
+-- reload is not another copy.
 Kit.ours = Kit.ours or {}
+
+-- A file that can't be compiled is still there; only "cannot open" means it isn't.
+local function fileThere(path)
+  if type(loadfile) ~= "function" then
+    return false
+  end
+  local ok, fn, message = pcall(loadfile, path)
+  if not ok then
+    return false
+  end
+  return fn ~= nil or (type(message) == "string" and string.find(string.lower(message), "cannot open", 1, true) == nil)
+end
+
+local function kitThere(folder)
+  local origin = Kit.ORIGINS[folder]
+  if not origin then
+    return false
+  end
+  if type(loadfile) ~= "function" then
+    return true
+  end
+  if Kit.kitFound[folder] == nil then
+    Kit.kitFound[folder] = fileThere("Interface/AddOns/CherrysKit/" .. origin.kit_file)
+  end
+  return Kit.kitFound[folder]
+end
+
+for folder, origin in pairs(Kit.ORIGINS) do
+  if kitThere(folder) then
+    for _, file in ipairs(origin.files) do
+      if fileThere("Interface/AddOns/" .. origin.folder .. "/" .. file) then
+        Kit.oldCopies[folder] = "file"
+      end
+    end
+  end
+end
 
 local function versionField(v)
   if type(v) == "table" then
@@ -139,18 +167,89 @@ local function versionField(v)
   return nil
 end
 
+local function fingerprintOf(folder)
+  local origin = Kit.ORIGINS[folder]
+  return origin and origin.fingerprint
+end
+
 local loadingFolder
+local keptGlobals, keptTables
+-- Tables every addon adds to, as well as the globals themselves
+local SHARED_TABLES = { "SlashCmdList", "StaticPopupDialogs", "UIPanelWindows" }
+
+local function copyOf(source)
+  local copy = {}
+  for key, value in pairs(source) do
+    copy[key] = value
+  end
+  return copy
+end
+
+-- A frame stays in the client, but with nothing left to run. Plain data has no such calls.
+local function silence(value)
+  if type(value) ~= "table" then
+    return
+  end
+  local ok, clear = pcall(function() return value.SetScripts end)
+  if ok and type(clear) == "function" then
+    pcall(clear, value, "OnEvent", "")
+    pcall(clear, value, "OnUpdate", "")
+    pcall(value.Hide, value)
+  end
+end
+
+local function putBack(target, kept, whenChanged)
+  for key, value in pairs(target) do
+    if kept[key] == nil then
+      if whenChanged then
+        whenChanged(value)
+      end
+      rawset(target, key, nil)
+    end
+  end
+  for key, value in pairs(kept) do
+    local now = rawget(target, key)
+    if now ~= value then
+      if whenChanged then
+        whenChanged(now)
+      end
+      rawset(target, key, value)
+    end
+  end
+end
+
 local function startAddon(folder)
-  local name = Kit.FINGERPRINTS[folder]
+  local name = fingerprintOf(folder)
   local ours = Kit.ours[folder]
-  if name and string.sub(name, 1, 1) ~= "-" and _G[name] ~= nil and not (ours and _G[name] == ours.value) then
+  if kitThere(folder) and name and string.sub(name, 1, 1) ~= "-" and rawget(_G, name) ~= nil
+    and not (ours and rawget(_G, name) == ours.value) then
     Kit.oldCopies[folder] = "before"
+  end
+  if Kit.oldCopies[folder] then
+    keptGlobals = copyOf(_G)
+    keptTables = {}
+    for _, shared in ipairs(SHARED_TABLES) do
+      local target = rawget(_G, shared)
+      if type(target) == "table" then
+        keptTables[shared] = copyOf(target)
+      end
+    end
   end
 end
 local function finishAddon(folder)
-  local name = Kit.FINGERPRINTS[folder]
+  if keptGlobals then
+    for shared, kept in pairs(keptTables) do
+      local target = rawget(_G, shared)
+      if type(target) == "table" then
+        putBack(target, kept)
+      end
+    end
+    putBack(_G, keptGlobals, silence)
+    keptGlobals, keptTables = nil, nil
+  end
+  local name = fingerprintOf(folder)
   if name and string.sub(name, 1, 1) ~= "-" then
-    Kit.ours[folder] = { value = _G[name], version = versionField(_G[name]) }
+    Kit.ours[folder] = { value = rawget(_G, name), version = versionField(rawget(_G, name)) }
   end
 end
 
@@ -160,7 +259,7 @@ function Kit.OnLoadMark(name)
   if loadingFolder then
     finishAddon(loadingFolder)
   end
-  loadingFolder = Kit.FINGERPRINTS[name] and name or nil
+  loadingFolder = Kit.ORIGINS[name] and name or nil
   if loadingFolder then
     startAddon(loadingFolder)
   end
@@ -176,30 +275,42 @@ if type(CherrysKit_Load) == "table" and type(CherrysKit_Load.Mark) == "function"
   CherrysKit_Load.Mark = Kit.markHook
 end
 
--- true when another copy of this kit addon is loaded too
-function Kit.OldCopy(folder)
+-- true when the original, or another separate copy, takes precedence over this kit addon
+function Kit.OriginTakesPrecedence(folder)
+  if not kitThere(folder) then
+    return false
+  end
   if Kit.oldCopies[folder] then
     return true
   end
-  local name = Kit.FINGERPRINTS[folder]
+  local name = fingerprintOf(folder)
   if not name then
     return false
   end
   if string.sub(name, 1, 1) == "-" then
-    return _G[string.sub(name, 2)] ~= nil
+    return rawget(_G, string.sub(name, 2)) ~= nil
   end
   local ours = Kit.ours[folder]
   if ours and loadingFolder ~= folder then
-    local now = _G[name]
+    local now = rawget(_G, name)
     return now ~= ours.value or versionField(now) ~= ours.version
   end
   return false
 end
 
--- What an addon in the kit checks at load. Addons not in the kit are always on. A kit addon with
--- an old copy installed next to the kit stays off.
+-- For chat: "the original zBag 5.07 in Interface\AddOns\zBag"
+local function originWords(origin)
+  local where = "Interface\\AddOns\\" .. origin.folder
+  if origin.kind == "older" then
+    return "your separate copy in " .. where
+  end
+  return "the original " .. origin.name .. " in " .. where
+end
+
+-- What an addon in the kit checks at load. Addons not in the kit are always on. A kit addon whose
+-- original or separate copy is installed too stays off.
 function Kit.IsEnabled(folder)
-  return not db().disabled[folder] and not Kit.OldCopy(folder)
+  return not db().disabled[folder] and not Kit.OriginTakesPrecedence(folder)
 end
 
 local pendingReload = false
@@ -255,9 +366,17 @@ function Kit.Refresh()
     return
   end
   Kit.visible = {}
+  local listed = {}
   for _, entry in ipairs(Kit.addons) do
     if installed(entry) then
       table.insert(Kit.visible, entry)
+      listed[entry.folder] = true
+    end
+  end
+  -- One that stays off may never have registered itself, and still gets its row to say why.
+  for folder, origin in pairs(Kit.ORIGINS) do
+    if not listed[folder] and Kit.OriginTakesPrecedence(folder) then
+      table.insert(Kit.visible, { folder = folder, title = origin.title })
     end
   end
   for i = 1, Kit.MAX_ROWS do
@@ -266,17 +385,17 @@ function Kit.Refresh()
     local open = _G["CherrysKit_Row" .. i .. "Open"]
     local toggle = _G["CherrysKit_Row" .. i .. "Toggle"]
     if entry then
-      local old = Kit.OldCopy(entry.folder)
+      local old = Kit.OriginTakesPrecedence(entry.folder)
       local enabled = Kit.IsEnabled(entry.folder)
       local version = versionOf(entry)
       local label = entry.title .. (version and ("  " .. version) or "")
       if old then
-        label = entry.title .. "  |cffff6060off: old copy in AddOns\\" .. (Kit.OLD_FOLDERS[entry.folder] or entry.folder) .. "|r"
+        label = entry.title .. "  |cffff6060off|r"
       elseif not enabled then
         label = label .. "  |cffff6060(off)|r"
       end
       setText(name, label)
-      setText(_G["CherrysKit_Row" .. i .. "Cmd"], old and "|cffff6060delete that folder, then Reload UI|r"
+      setText(_G["CherrysKit_Row" .. i .. "Cmd"], old and ("|cffff6060AddOns\\" .. Kit.ORIGINS[entry.folder].folder .. " takes precedence|r")
         or ("|cffaaaaaa" .. Kit.CommandText(entry.folder) .. "|r"))
       setText(open, "Settings")
       setText(toggle, enabled and "Turn off" or "Turn on")
@@ -365,7 +484,8 @@ Kit.ADDON_MINIMAP_BUTTONS = { "KittyMinimap" }
 function Kit.HideAddonMinimapButtons()
   for _, name in ipairs(Kit.ADDON_MINIMAP_BUTTONS) do
     local button = _G[name]
-    if button and button.Hide then
+    -- With its original in charge, this is the original's own button.
+    if button and button.Hide and not Kit.OriginTakesPrecedence("KittyCombo") then
       pcall(button.Hide, button)
     end
   end
@@ -466,23 +586,23 @@ function Kit.MinimapTooltip(owner)
   GameTooltip:Show()
 end
 
--- Once per session: which kit addons are off because an old copy is installed.
-function Kit.WarnOldCopies()
+-- Once per session, one line for each: which kit addons are off, and what took precedence.
+function Kit.WarnOrigins()
   if Kit.warnedOld then
     return
   end
   Kit.warnedOld = true
-  for folder in pairs(Kit.FINGERPRINTS) do
-    if Kit.OldCopy(folder) then
-      local entry
-      for _, e in ipairs(Kit.addons) do
-        if e.folder == folder then
-          entry = e
-        end
-      end
-      print((entry and entry.title or folder) .. " from the kit is off: an old copy is installed in "
-        .. "Interface\\AddOns\\" .. (Kit.OLD_FOLDERS[folder] or folder) .. ". Delete that folder and Reload UI.")
+  local folders = {}
+  for folder in pairs(Kit.ORIGINS) do
+    if Kit.OriginTakesPrecedence(folder) then
+      table.insert(folders, folder)
     end
+  end
+  table.sort(folders)
+  for _, folder in ipairs(folders) do
+    local origin = Kit.ORIGINS[folder]
+    print(origin.title .. " from the kit is off: " .. originWords(origin) .. " takes precedence. "
+      .. "To use the kit's version, delete that folder and Reload UI.")
   end
 end
 
@@ -494,7 +614,7 @@ function Kit.OnEvent(event)
     -- KittyCombo shows its button on VARIABLES_LOADED after us, so LOADING_END hides it again.
     Kit.HideAddonMinimapButtons()
     if event == "LOADING_END" then
-      Kit.WarnOldCopies()
+      Kit.WarnOrigins()
     end
   end
 end
@@ -542,6 +662,8 @@ function Kit.OpenWindow(window)
   local entry = entryFor(window)
   if not entry or not installed(entry) then
     print((Kit.WINDOW_TITLES[window] or tostring(window)) .. " is not installed")
+  elseif Kit.OriginTakesPrecedence(window) then
+    print(entry.title .. " from the kit is off: " .. originWords(Kit.ORIGINS[window]) .. " takes precedence.")
   elseif not Kit.IsEnabled(window) then
     print(entry.title .. " is turned off. Turn it on here and Reload UI.")
     Kit.Toggle()
@@ -608,7 +730,8 @@ function Kit.ApplyCommands()
   local owners = slashOwners()
   for _, window in ipairs(Kit.WINDOWS) do
     local own = {}
-    for _, cmd in ipairs(Kit.CommandsFor(window)) do
+    -- With its original in charge, the commands stay the original's.
+    for _, cmd in ipairs(Kit.OriginTakesPrecedence(window) and {} or Kit.CommandsFor(window)) do
       local owner = owners[cmd]
       if owner and string.find(owner, "^CherrysKit") == nil then
         if not wrapped[owner] then

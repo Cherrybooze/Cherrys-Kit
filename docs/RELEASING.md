@@ -16,7 +16,7 @@ Outputs go to `dist/<kit version>/`, which is ignored by Git. Each version gets 
 - `CherrysKit-Hub-<kit version>.zip`: shared root files, KitLoad, Media and hub reference docs.
 - One `CherrysKit-<folder>-<addon version>.zip` per addon, LoadTimes included.
 - `CherrysKit-GlobalBankDailyRewards-<extension version>.zip`: optional Chrome extension and local bridge, installed separately on top of Global Bank.
-- `CherrysLoginxml-<version>.zip` and `LogNextChar-<version>.zip`: separate packages, each its own folder in `Interface/AddOns/`, and not in the full kit.
+- `CherrysLoginxml-<version>.zip` and `LogNextChar-<version>.zip`: separate packages under `CherrysKit/`, and not in the full kit. The hub's manifest loads them when they're there.
 - `release-manifest.json`: package versions, dependency notes, file inventories and hashes.
 - `SHA256SUMS.txt`: hashes of every ZIP and the release manifest.
 - `RELEASE_NOTES.md`: notes ready for the GitHub release.
@@ -29,7 +29,7 @@ The hub alone and hub-plus-addon selections deliberately lack the unselected add
 
 ## ZIP installation layout
 
-Every install ZIP, including the optional extension ZIP, starts with `CherrysKit/`, except `CherrysLoginxml/` and `LogNextChar/`. Extract it into `<game>/Interface/AddOns/` and merge folders:
+Every install ZIP, including the optional extension ZIP, starts with `CherrysKit/`. Extract it into `<game>/Interface/AddOns/` and merge folders:
 
 ```text
 <game>/Interface/AddOns/
@@ -65,11 +65,11 @@ A draft release is useful while uploading and checking assets. Do not replace an
 
 ## Cherry's Loginxml and LogNextChar
 
-Cherry's Loginxml lives in `Interface/loginxml` (the login screen) and `Interface/AddOns/CherrysLoginxml` (its in-game half and installer). Original project by Pyrrhus, MIT licence unchanged, integration fixes by Cherry. LogNextChar lives in `Interface/AddOns/LogNextChar`. Neither is part of the kit's manifest or the full kit.
+Cherry's Loginxml lives in `Interface/loginxml` (the login screen) and `Interface/AddOns/CherrysLoginxmlHook` (installed as `Interface/AddOns/CherrysKit/CherrysLoginxmlHook`) (its in-game half and installer). Original project by Pyrrhus, MIT licence unchanged, integration fixes by Cherry. LogNextChar lives in `Interface/AddOns/LogNextChar`. Neither is part of the kit's manifest or the full kit.
 
 `Interface/loginxml/data` holds blank templates only; never put real accounts or passwords in this repository. The builder stops on a personal file or a filled-in template.
 
-To release one, bump its version (`version` in `frames/login.lua`, `me.version` in `CherrysLoginxml.lua` and `CherrysLoginxml.toc`; `me.version` in `LogNextChar.lua` and `LogNextChar.toc`) and `release-packages.json`, and add the changes to the top of `Interface/loginxml/CHANGELOG`.
+To release one, bump its version (`version` in `frames/login.lua`, `me.version` in `CherrysLoginxmlHook.lua`; `me.version` in `LogNextChar.lua`) and `release-packages.json`, and add the changes to the top of `Interface/loginxml/CHANGELOG`.
 
 ## CurseForge
 

@@ -294,7 +294,7 @@ class SavingHelperTest(unittest.TestCase):
         lua = LuaRuntime()
         lua.execute("registered = {}; function SaveVariables(name) registered[name] = true end")
         lua.execute(before)
-        run_file(lua, "AddOns/CherrysLoginxml/CherrysLoginxml.lua")
+        run_file(lua, "AddOns/CherrysLoginxmlHook/CherrysLoginxmlHook.lua")
         return lua
 
     def test_registers_the_settings(self):
@@ -431,7 +431,7 @@ class LoginScreenNoticeTest(unittest.TestCase):
           DEFAULT_CHAT_FRAME = {AddMessage = function(self, text) said[#said + 1] = text end}
         """)
         lua.execute(before)
-        run_file(lua, "AddOns/CherrysLoginxml/CherrysLoginxml.lua")
+        run_file(lua, "AddOns/CherrysLoginxmlHook/CherrysLoginxmlHook.lua")
         lua.execute('CherrysLoginxml.OnEvent("VARIABLES_LOADED")')
         return lua
 
@@ -439,7 +439,7 @@ class LoginScreenNoticeTest(unittest.TestCase):
         return [lua.eval(f"said[{i + 1}]") for i in range(lua.eval("#said"))]
 
     def test_quiet_with_the_matching_login_screen(self):
-        with open(os.path.join(ROOT, "AddOns/CherrysLoginxml/CherrysLoginxml.lua"), encoding="utf-8") as source:
+        with open(os.path.join(ROOT, "AddOns/CherrysLoginxmlHook/CherrysLoginxmlHook.lua"), encoding="utf-8") as source:
             version = re.search(r'me\.version = "([^"]+)"', source.read()).group(1)
         self.assertEqual(self.said(self.helper(f'login = {{version = "{version}"}}')), [])
 

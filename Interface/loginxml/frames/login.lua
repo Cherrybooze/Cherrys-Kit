@@ -1,6 +1,6 @@
 local me = {
   name = "Cherry's Loginxml",
-  version = "1.2.1",
+  version = "1.2.2",
   sub = {
     'account', --
     'server', --

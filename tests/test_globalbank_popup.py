@@ -41,7 +41,7 @@ const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8');
 function fixture(now, responses) {
-  const elements = Object.fromEntries(['helper','start','status','reset','reset-time','auto-helper','open-tools','reload-extension'].map(id => [id, {
+  const elements = Object.fromEntries(['helper','start','stop','status','reset','reset-time','auto-helper','show-terminal','open-tools','reload-extension'].map(id => [id, {
     textContent:'', hidden:true, disabled:false, addEventListener(type, callback) { this.click = callback; }
   }]));
   const sent = [], timers = [];
@@ -102,10 +102,92 @@ const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resol
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
+    def test_helper_run_time_and_stop_button(self):
+        self.run_js(r'''
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
+const source = fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8');
+const elements = Object.fromEntries(['helper','helper-card','helper-badge','helper-hint','start','stop','status','reset','reset-time','auto-helper','show-terminal','open-tools','reload-extension'].map(id => [id, {
+  textContent:'', hidden:true, disabled:false, checked:false, dataset:{}, addEventListener(type, callback) { this[type] = callback; }
+}]));
+const sent = [];
+const stored = {autoHelper:true};
+let running = true;
+class Clock extends Date { constructor(...args) { super(...(args.length ? args : ['2026-10-30T12:00:00Z'])); } static now() { return new Clock().getTime(); } }
+const context = vm.createContext({document:{getElementById:id => elements[id]}, Date:Clock, Intl,
+  chrome:{storage:{local:{get:async key => (typeof key === 'string' ? {[key]: stored[key]} : Object.assign({}, stored)),
+    set:async values => Object.assign(stored, values)}},
+    runtime:{sendMessage:async message => {
+      sent.push(message.type);
+      if (message.type === 'helper-stop') running = false;
+      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null};
+    }}},
+  setTimeout:() => 0, clearTimeout:() => {}, console});
+vm.runInContext(source, context);
+(async () => {
+  const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resolve => setImmediate(resolve)); };
+  await flush();
+  assert.match(elements.helper.textContent, /Helper is running \u2014 for 3 h 0 min\./);
+  assert.equal(elements['helper-card'].dataset.state, 'running');
+  assert.equal(elements['helper-badge'].textContent, 'Running');
+  assert.equal(elements['helper-hint'].hidden, false);
+  assert.match(elements['helper-hint'].textContent, /Click Stop Global Bank helper below to stop it and turn off automatic mode/);
+  assert.equal(elements['auto-helper'].checked, true);
+  assert.equal(elements.stop.hidden, false);
+  await elements.stop.click({isTrusted:false});
+  assert.equal(sent.filter(type => type === 'helper-stop').length, 0); // Only a real click stops it.
+  await elements.stop.click({isTrusted:true});
+  await flush();
+  assert.equal(sent.filter(type => type === 'helper-stop').length, 1);
+  assert.equal(elements['auto-helper'].checked, false);
+  assert.equal(stored.autoHelper, false);
+  assert.equal(elements['helper-card'].dataset.state, 'stopped');
+  assert.equal(elements['helper-badge'].textContent, 'Stopped');
+  assert.equal(elements.stop.hidden, true);
+})().catch(error => { console.error(error); process.exitCode = 1; });
+''')
+
+    def test_terminal_setting_restarts_a_running_helper(self):
+        self.run_js(r'''
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
+const source = fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8');
+const elements = Object.fromEntries(['helper','start','stop','status','reset','reset-time','auto-helper','show-terminal','open-tools','reload-extension'].map(id => [id, {
+  textContent:'', hidden:true, disabled:false, checked:false, addEventListener(type, callback) { this[type] = callback; }
+}]));
+const sent = [];
+const stored = {autoHelper:true, showTerminal:false};
+class Clock extends Date { constructor(...args) { super(...(args.length ? args : ['2026-10-30T12:00:00Z'])); } }
+const context = vm.createContext({document:{getElementById:id => elements[id]}, Date:Clock, Intl,
+  chrome:{storage:{local:{get:async key => (typeof key === 'string' ? {[key]: stored[key]} : Object.assign({}, stored)),
+    set:async values => Object.assign(stored, values)}},
+    runtime:{sendMessage:async message => { sent.push(message); return {ok:true,running:true,lastCollected:null}; }}},
+  setTimeout:() => 0, clearTimeout:() => {}, console});
+vm.runInContext(source, context);
+(async () => {
+  const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resolve => setImmediate(resolve)); };
+  await flush();
+  assert.equal(elements['auto-helper'].checked, true);   // Restored from storage.
+  assert.equal(elements['show-terminal'].checked, false);
+  elements['show-terminal'].checked = true;
+  await elements['show-terminal'].change();
+  await flush();
+  assert.equal(stored.showTerminal, true);
+  const starts = sent.filter(message => message.type === 'helper-auto-start');
+  assert.equal(starts.length, 1);
+  assert.equal(starts[0].showWindow, true);
+  assert.equal(sent.filter(message => message.type === 'helper-auto-stop').length, 1);
+})().catch(error => { console.error(error); process.exitCode = 1; });
+''')
+
     def popup_in_context(self, body, zone='Europe/Helsinki'):
         self.run_js(r'''
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
-const elements = Object.fromEntries(['helper','start','status','reset','reset-time','auto-helper','open-tools','reload-extension'].map(id => [id, {
+const elements = Object.fromEntries(['helper','start','stop','status','reset','reset-time','auto-helper','show-terminal','open-tools','reload-extension'].map(id => [id, {
   textContent:'', hidden:true, disabled:false, addEventListener() {}
 }]));
 class Clock extends Date { constructor(...args) { super(...(args.length ? args : ['2026-10-30T12:00:00Z'])); } }
@@ -431,7 +513,9 @@ assert.equal(gb.setLinks(gb.emptyState(), many, 'x'), 5000);
     def test_only_the_extension_itself_can_reach_stored_data(self):
         folder = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension'
         manifest = json.loads((folder / 'manifest.json').read_text(encoding='utf-8'))
-        self.assertEqual(manifest['externally_connectable'], {'ids': []})
+        # No external message handlers exist, and an empty externally_connectable block only
+        # makes Chrome warn; nothing may connect either way.
+        self.assertNotIn('externally_connectable', manifest)
         self.assertNotIn('web_accessible_resources', manifest)
         self.assertNotIn('host_permissions', manifest)
         self.assertEqual(sorted(manifest['permissions']), ['nativeMessaging', 'storage'])
@@ -479,6 +563,73 @@ const gb = context.GBAccounts;
   assert.equal(gb.validFile({schema: 1}), false);
   assert.equal(gb.validFile(data), false);
 })().catch(error => { console.error(error); process.exit(1); });
+""")
+
+    def test_accounts_are_known_from_login_screen_lists(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'accounts.js'), 'utf8') + ';this.GBAccounts = GBAccounts;', context);
+const gb = context.GBAccounts;
+const characters = [
+  {name: 'Ann', gold: 5, class: 'Mage', server: 'Gaia', roster: ['Ann', 'Bob', 'NeverSaved']},
+  {name: 'Bob', gold: 7, class: 'Scout'},
+  {name: 'Cid', gold: 1, classToken: 'KNIGHT', class: 'Ritter', roster: ['Cid', 'Dee']},
+  {name: 'Dee', gold: 2, roster: ['Dee', 'Cid'], dailyLogin: {server: 'Aynara (PvE)'}},
+  {name: 'Eve', gold: 3, class: 'Unknown class'},
+];
+const known = gb.accountGroups(characters);
+const names = name => [...known.of(name).names].join();
+assert.equal(names('Bob'), 'Ann,Bob,NeverSaved');
+assert.equal(names('cid'), 'Cid,Dee');
+assert.equal(names('Eve'), 'Eve');
+assert.equal(known.of('Nobody'), null);
+assert.equal(known.groups.length, 3);
+// One login names the server for everyone on the account
+assert.equal(gb.serverOf(characters[1], known), 'Gaia');
+assert.equal(gb.serverOf(characters[2], known), 'Aynara');
+assert.equal(gb.serverOf(characters[4], known), 'Server unknown');
+assert.equal(gb.serverOf(characters[1]), 'Server unknown');
+// Last class, by token first, in any client language
+assert.equal(gb.classColor(characters[0]), '#fa781a');
+assert.equal(gb.classColor(characters[1]), '#9ed61f');
+assert.equal(gb.classColor(characters[2]), '#e0e052');
+assert.equal(gb.classColor(characters[4]), null);
+// Grouped on the heatmap too, and never linked
+const state = gb.emptyState();
+const columns = gb.heatColumns(characters, state);
+assert.deepEqual([...columns.map(c => c.server)], ['Aynara', 'Gaia', 'Server unknown']);
+assert.deepEqual([...columns[1].groups.map(g => g.account)], ["Ann's account, not linked"]);
+assert.deepEqual([...columns[2].groups.map(g => g.account)], ['No account']);
+assert.equal(Object.keys(state.links).length, 0);
+state.accounts.push({id: 'a', name: 'Mine'});
+gb.setLinks(state, ['Ann'], 'a');
+assert.deepEqual([...gb.heatColumns(characters, state)[1].groups.map(g => g.account)], ["Ann's account, not linked", 'Mine']);
+""")
+
+    def test_the_games_tooltip_lines_are_shown_as_saved(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'folders.js'), 'utf8').replace(/DecompressionStream/g, 'Object') + ';this.GBFolders = GBFolders;', vm.createContext(Object.assign(context, {TextDecoder, Uint8Array})));
+const bank = context.GBBank, folders = context.GBFolders;
+assert.deepEqual(JSON.parse(JSON.stringify(bank.tipLines([['a864a8', 'Sword'], ['33ff33', 'Stamina', 'ffffff', 'Monk V'], ['nonsense', 'x']]))), [
+  {left: 'Sword', leftColor: '#a864a8', right: '', rightColor: null},
+  {left: 'Stamina', leftColor: '#33ff33', right: 'Monk V', rightColor: '#ffffff'},
+  {left: 'x', leftColor: null, right: '', rightColor: null},
+]);
+assert.equal(bank.tipLines(null).length, 0);
+const entry = bank.entries([{name: 'A', bag: [{slot: 1, id: '211000', name: 'Sword', tip: [['ffffff', 'Sword']]}]}])[0];
+assert.equal(entry.tip[0][1], 'Sword');
+assert.equal(bank.cells([entry], true)[0].tip[0][1], 'Sword');
+// From the save files too, without the helper
+const parsed = folders.tipsFrom('B3~a864a8=Name^ffffff=Left=c0c0c0=Right`K45~ffffff=Other');
+assert.deepEqual(JSON.parse(JSON.stringify(parsed)), {B3: [['a864a8', 'Name'], ['ffffff', 'Left', 'c0c0c0', 'Right']], K45: [['ffffff', 'Other']]});
+const list = folders.charactersFrom([{folder: 'A', time: 0, text: 'GlobalBank_Char = "GB1~A~Mage~1~0~0~0~0~t`T~MAGE`R~A;B`B~3~1~5~Name~icon"\nGlobalBank_Tips = "B3~ffffff=Name"\n'}]);
+assert.equal(list[0].bag[0].tip[0][1], 'Name');
+assert.equal(list[0].classToken, 'MAGE');
+assert.deepEqual([...list[0].roster], ['A', 'B']);
 """)
 
     def test_the_depot_page_address_is_never_kept(self):
@@ -602,7 +753,7 @@ const flush=async()=>{for(let i=0;i<8;i++) await new Promise(r=>setImmediate(r))
     def test_reload_button_only_reloads_after_a_user_click(self):
         self.run_js(r"""
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const elements=Object.fromEntries(['helper','start','status','reset','reset-time','auto-helper','open-tools','reload-extension'].map(id=>[id,{addEventListener(type,fn){this.click=fn}}]));
+const elements=Object.fromEntries(['helper','start','stop','status','reset','reset-time','auto-helper','show-terminal','open-tools','reload-extension'].map(id=>[id,{addEventListener(type,fn){this.click=fn}}]));
 let reloads=0;
 const chrome={storage:{local:{get:async()=>({}),set:async()=>{}}},runtime:{sendMessage:async()=>({ok:true,running:true}),reload:()=>reloads++}};
 vm.runInNewContext(fs.readFileSync(path.join(process.argv[1],'popup.js'),'utf8'),{document:{getElementById:id=>elements[id]},chrome,Date,Intl,setTimeout:()=>0,clearTimeout:()=>{}});
@@ -625,13 +776,15 @@ assert.equal(listener({type:'helper-status'}, {id:'test',url:runtime.getURL('pop
 assert.equal(result.ok, true); assert.equal(sent[0].message.type, 'helper-status');
 listener({type:'helper-start'}, {id:'test',url:runtime.getURL('popup.html')}, () => {});
 assert.equal(sent[1].message.type, 'helper-start');
+listener({type:'helper-stop'}, {id:'test',url:runtime.getURL('popup.html')}, () => {});
+assert.equal(sent[2].message.type, 'helper-stop');
 for (const sender of [{id:'other',url:runtime.getURL('popup.html')}, {id:'test',url:runtime.getURL('other.html')},
   {id:'test',tab:{id:1},url:'https://example.test/dailies/display/5'}]) {
   listener({type:'helper-start'}, sender, () => {});
   listener({type:'reward-confirmed',name:'Fake',server:'Test',day:1}, sender, () => {});
 }
 listener({type:'reward-confirmed',name:'Fake',server:'Test',day:1}, {id:'test',url:runtime.getURL('popup.html')}, () => {});
-assert.equal(sent.length, 2);
+assert.equal(sent.length, 3);
 runtime.lastError = {message:'Native host not found'};
 listener({type:'helper-status'}, {id:'test',url:runtime.getURL('popup.html')}, value => result=value);
 assert.equal(result.errorKind, 'bridge-unavailable');
@@ -655,18 +808,19 @@ assert.equal(ask({type:'bank-data'}), true);
 assert.equal(ask({type:'bank-icons',names:['interface/icons/x']}), true);
 assert.equal(ask({type:'bank-command',command:'list gold'}), true);
 assert.deepEqual(sent, ['bank-data', 'bank-icons', 'bank-command']);
-for (const type of ['helper-info', 'helper-auto-start', 'helper-auto-stop']) { assert.equal(ask({type}), true); assert.equal(sent.pop(), type); }
+for (const type of ['helper-info', 'helper-auto-start', 'helper-auto-stop', 'helper-stop']) { assert.equal(ask({type}), true); assert.equal(sent.pop(), type); }
 const others = [{id:'test',url:runtime.getURL('popup.html')}, {id:'other',url:runtime.getURL('control.html')},
   {id:'test',tab:{id:1},url:'https://eu-shop-runesofmagic.gameforge.com/dailies/display/5'}];
 // The popup has the toggle too, but nothing else here
 const popup = {id:'test',url:runtime.getURL('popup.html')};
-for (const type of ['helper-auto-start', 'helper-auto-stop']) { assert.equal(ask({type}, popup), true); assert.equal(sent.pop(), type); }
+for (const type of ['helper-auto-start', 'helper-auto-stop', 'helper-stop']) { assert.equal(ask({type}, popup), true); assert.equal(sent.pop(), type); }
 assert.equal(ask({type:'helper-info'}, popup), undefined);
 for (const sender of others) {
   ask({type:'bank-data'}, sender);
   if (sender !== others[0]) {
     ask({type:'helper-auto-stop'}, sender);
     ask({type:'helper-auto-start'}, sender);
+    ask({type:'helper-stop'}, sender);
   }
   ask({type:'bank-icons',names:['interface/icons/x']}, sender);
   ask({type:'bank-command',command:'erase Cherry'}, sender);
@@ -684,26 +838,38 @@ assert.equal(sent.length, 3);
         self.run_js(r'''
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
 (async () => {
-const listeners = {}, sent = [];
+const listeners = {}, sent = [], full = [];
 const event = name => ({addListener:fn => { listeners[name] = fn; }});
 const runtime = {id:'test',getURL:file => 'chrome-extension://test/' + file,
   onMessage:event('message'), onStartup:event('startup'), onInstalled:event('installed'),
-  sendNativeMessage:(host,message,reply) => { sent.push(host + ':' + message.type); reply({ok:true}); }};
-let autoHelper = false;
-const storage = {local:{get:async () => ({autoHelper})}};
-vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime,storage},URL});
+  sendNativeMessage:(host,message,reply) => { sent.push(host + ':' + message.type); full.push(message); reply({ok:true}); }};
+let autoHelper = false, showTerminal = false;
+const storage = {local:{get:async () => ({autoHelper, showTerminal})}};
+const alarms = {created:[], create:(name,options) => alarms.created.push(name + ':' + options.periodInMinutes), onAlarm:event('alarm')};
+vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime,storage,alarms},URL});
 const flush = () => new Promise(resolve => setImmediate(resolve));
 assert.equal(sent.length, 0); // Waking the worker alone starts no process.
+assert.deepEqual(alarms.created, ['globalbank-heartbeat:1']); // The helper's liveness ping.
+listeners.alarm({name:'globalbank-heartbeat'});
+assert.deepEqual(sent, ['com.cherryskit.globalbank:clock']);
+sent.length = 0;
 listeners.startup();
 listeners.installed({reason:'install'});
 await flush();
 assert.deepEqual(sent, ['com.cherryskit.globalbank:clock', 'com.cherryskit.globalbank:clock']);
 // With the page's toggle on, a Chrome start also starts the helper.
-sent.length = 0;
+sent.length = 0; full.length = 0;
 autoHelper = true;
 listeners.startup();
 await flush();
 assert.deepEqual(sent, ['com.cherryskit.globalbank:clock', 'com.cherryskit.globalbank:helper-auto-start']);
+assert.equal(full.pop().showWindow, false);
+full.length = 0; sent.length = 0;
+// The terminal checkbox reaches the local host too.
+showTerminal = true;
+listeners.startup();
+await flush();
+assert.equal(full.pop().showWindow, true);
 sent.length = 0;
 // A missing host stays quiet.
 runtime.lastError = {message:'Native host not found'};
@@ -721,11 +887,14 @@ class NativeStatusTests(unittest.TestCase):
         helper = self.root / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
         helper.mkdir(parents=True)
         self.host = helper / NATIVE.name
-        # No real helper mutex or player folders can be touched by this fixture.
+        # No real helper mutex or player folders can be touched by this fixture: every copied
+        # script gets a private mutex name, so a helper running on this PC cannot change results.
+        scrubbed = 'GBPopupTest' + uuid.uuid4().hex
         self.host.write_text(NATIVE.read_text(encoding='utf-8').replace(
-            'CherrysKitGlobalBankHelper', 'GBPopupTest' + uuid.uuid4().hex), encoding='utf-8-sig')
+            'CherrysKitGlobalBankHelper', scrubbed), encoding='utf-8-sig')
         for name in ('GlobalBank-Control.ps1', 'GlobalBank-Data.ps1'):
-            shutil.copy2(NATIVE.parent / name, helper / name)
+            source = (NATIVE.parent / name).read_text(encoding='utf-8-sig')
+            (helper / name).write_text(source.replace('CherrysKitGlobalBankHelper', scrubbed), encoding='utf-8-sig')
         self.data = self.root / 'Interface/GlobalBankHelper'
         self.data.mkdir()
 
@@ -806,8 +975,23 @@ class NativeStatusTests(unittest.TestCase):
         self.assertFalse(response['running'])
         self.assertIsNone(response['since'])
 
+    def test_helper_stop_reports_nothing_running(self):
+        response = self.send({'type':'helper-stop'})
+        self.assertTrue(response['ok'], response)
+        self.assertFalse(response['running'])
+
+    def test_status_reports_run_time_fields_while_idle(self):
+        response = self.send({'type':'helper-status'})
+        self.assertIn('since', response)
+        self.assertIsNone(response['since'])
+        self.assertIn('auto', response)
+        self.assertFalse(response['auto'])
+
     def clock_file(self):
         return self.data / 'CherrysClockStamp.lua'
+
+    def beat_file(self):
+        return self.data / 'GlobalBankExtensionBeat.txt'
 
     def test_clock_message_writes_only_the_time_for_addons(self):
         self.assertEqual(self.send({'type':'clock'}), {'ok':True})
@@ -815,11 +999,13 @@ class NativeStatusTests(unittest.TestCase):
         match = re.fullmatch(r'return \{utc = (\d+), tick = (-?\d+), offset = (-?\d+)\}\s*', text)
         self.assertIsNotNone(match, text)
         self.assertLess(abs(time.time() - int(match.group(1))), 60)
-        self.assertEqual([path.name for path in self.data.iterdir()], ['CherrysClockStamp.lua'])
+        self.assertEqual(sorted(path.name for path in self.data.iterdir()), ['CherrysClockStamp.lua', 'GlobalBankExtensionBeat.txt'])
+        self.assertLess(abs(time.time() - self.beat_file().stat().st_mtime), 60)
 
     def test_every_message_refreshes_the_clock(self):
         self.send({'type':'helper-status'})
         self.assertTrue(self.clock_file().is_file())
+        self.assertTrue(self.beat_file().is_file())
 
     def test_failing_to_write_the_clock_does_not_stop_the_request(self):
         self.clock_file().mkdir()

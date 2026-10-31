@@ -1,7 +1,7 @@
 -- On/off settings from config.lua as toggles, to the right of the server list.
 -- A click applies at once and is kept in CherrysLoginxml_Settings, which wins over
 -- config.lua. The game writes that table to SaveVariables.lua when you log out or quit
--- (the CherrysLoginxml addon in Interface\AddOns registers it). The game only loads that
+-- (the CherrysLoginxmlHook addon in Interface\AddOns\CherrysKit registers it). The game only loads that
 -- file on entering the world, so the first login screen after a restart reads it itself.
 -- Lua cannot find the Documents folder: "Install login screen.bat" leaves the path in
 -- savedpath.lua.

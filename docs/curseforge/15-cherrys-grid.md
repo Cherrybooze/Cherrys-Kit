@@ -2,9 +2,18 @@
 
 > **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Optional, when you have them:** Cherry's KittyCombo (run a kitty when you click a frame).
+> **Where it goes:** `Interface\AddOns\CherrysKit\CherrysGrid`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Cherry's KittyCombo:** run a kitty when you click a frame
+>
+> **Original addon:** GridCliqueIt by Skaryon, Jacobian and odie2. If `Interface\AddOns\GridCliqueIt` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one. Cherry's Grid is new code that follows its design, and the two would draw the same raid frames.
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
+
+## Updated in 1.1.5
+
+Mouse 4 is now one of the click buttons on your frames, with any mix of Shift, Ctrl and Alt. A new check box on the Clicks page, **Use Mouse 4 as a game keybind**, is off by default and changes nothing outside Grid until you tick it. Ticked, Mouse 4 shows in the game's Key Bindings window and runs what you bind there, or a slash command typed on the Clicks page, while the cursor is over a window or button. The game doesn't tell addons about it over the 3D world, and it acts as one press. Over Grid's own frames, Mouse 4 follows Grid's click bindings. Mouse 5 never reaches the game: map it to an unused key in your mouse's software and bind that key.
 
 ## Updated in 1.1.4
 

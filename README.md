@@ -1,10 +1,10 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysKit-Full-0.11.113.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-Full-0.11.114.zip)
 
 # Cherry's Kit
 
-> Playtest build: kit **0.11.113**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
+> Playtest build: kit **0.11.114**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysKit-Full-0.11.113.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-Full-0.11.114.zip)
 
 **Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
 
@@ -12,9 +12,19 @@
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest build: **0.11.113** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.113)
+Current playtest build: **0.11.114** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.114)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection: chat, bags and the shared bank view, an auction house, tooltips, one-key rotations, on-screen bars and displays, a quest tracker, and a replacement login screen. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
+
+## What’s new in 0.11.114
+
+- **The helper lives with Chrome.** The extension pings it while Chrome is open; when Chrome, or the extension itself, goes away, the helper ends on its own within a few minutes. The checks are cheap: a stop-flag look every 2 seconds, and one heartbeat read every 15.
+- **The extension's button controls it.** The popup shows whether the helper is running and for how long, and has a **Stop Global Bank helper** button that stops it however it was started.
+- **A terminal window if you want one.** A new tick, **Show its terminal window**, runs the background helper in a real PowerShell window titled "Cherrys Global Bank Helper" instead of invisibly.
+- The helper also clears leftover files from the pre-kit Global Bank helper in its data folder.
+- **The page follows your last logout.** Gear and mana stones on Global Bank's page hover with the game's own tooltip, saved when a character logs out. Logging in one character through Cherry's Loginxml records your whole account's character list: their servers filled in, boxed together under Link characters and on the heatmap, names coloured by last class.
+- **Mouse 4 for Cherry's Grid 1.1.5.** It joins the click buttons on your frames, with Shift, Ctrl and Alt mixes, and a tick on the Clicks page, off by default, also makes it a real game keybind over windows and buttons.
+- **Cherry's Loginxml and LogNextChar 1.2.2** live inside `CherrysKit\` and load through the hub; each still comes as its own download as well. LogNextChar also runs without the login screen: Next and Prev then just log you out.
 
 ## What’s new in 0.11.113
 
@@ -48,7 +58,7 @@ This playtest gathers everything since 0.11.101. The highlights:
 
 - **Global Bank 1.4.7**: the daily reset follows 00:00 in Germany in any time zone, and the extension's setup takes one click plus Chrome's two.
 
-- **New separate packages:** [Cherry's Loginxml](Interface/AddOns/CherrysLoginxml/README.md), a replacement login screen that gets past a stuck server list, and [LogNextChar](Interface/AddOns/LogNextChar/README.md), Next and Prev character buttons.
+- **New separate packages:** [Cherry's Loginxml](Interface/AddOns/CherrysLoginxmlHook/README.md), a replacement login screen that gets past a stuck server list, and [LogNextChar](Interface/AddOns/LogNextChar/README.md), Next and Prev character buttons.
 
 - **Installing only some addons** no longer lights the minimap's bug button. Each addon is tested with only the hub, on a simulated client.
 
@@ -99,7 +109,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysKit-Full-0.11.113.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.113)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-Full-0.11.114.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.113)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
 - **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
@@ -129,12 +139,12 @@ Remove old separate copies of the same addons from `Interface/AddOns/` first; th
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.24 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.25 |
 | [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.17 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.30 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.11.0 |
 | [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck16 |
-| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold. | `/gb` | 1.4.14 |
+| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold. | `/gb` | 1.4.15 |
 | [Extended Macro Icons](Interface/AddOns/CherrysKit/ExtendedMacroIcons/README.md) | A larger, categorised macro icon picker. | `/emi` | 3.0.4 |
 | [TooltipIds](Interface/AddOns/CherrysKit/TooltipIds/README.md) | ID numbers for items, buffs, skills and other game data. | `/ti` | 1.0b3-ck3 |
 | [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck10 |
@@ -143,7 +153,7 @@ Remove old separate copies of the same addons from `Interface/AddOns/` first; th
 | [ZShop](Interface/AddOns/CherrysKit/ZShop/README.md) | Item-shop access and a daily loyalty reward shortcut. | `/zshop` | 1.2.0-ck5 |
 | [pbInfo](Interface/AddOns/CherrysKit/pbInfo/README.md) | Richer tooltips, quest tracking, chat filters and cast-bar options. | `/pbinfo` | 0.60-ck5 |
 | [PortraitHP](Interface/AddOns/CherrysKit/PortraitHP/README.md) | Your target's health percentage on its portrait. | `/php` | 2019.07.14-ck2 |
-| [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click. | `/grid` | 1.1.4 |
+| [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click. | `/grid` | 1.1.5 |
 | [Cherry's Quests](Interface/AddOns/CherrysKit/CherrysQuests/README.md) | A prettier quest tracker; Ctrl+click a quest to track the NPCs it names. | `/cq` | 1.0.0 |
 | [Cherry's Bar](Interface/AddOns/CherrysKit/CherrysBar/README.md) | Information bars at the top, bottom or both, with displays set per bar. | `/cbar` | 1.1.9 |
 
@@ -151,18 +161,18 @@ Some integrations need both addons: for example, running a kitty from Grid needs
 
 ## Separate packages
 
-These aren't in the full kit. Each is its own folder in `Interface/AddOns/`, and both need the hub.
+These aren't in the full kit: extract them into `Interface/AddOns/` as usual, and both need the hub. Each goes into `CherrysKit\` and loads through it like any kit addon.
 
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Loginxml](Interface/AddOns/CherrysLoginxml/README.md) | A replacement login screen: gets past a stuck server list, saved logins, keyboard controls. Run its `Install login screen.bat` once. | | 1.2.1 |
-| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character. Needs Cherry's Loginxml. | `/lnc` | 1.2.1 |
+| [Cherry's Loginxml](Interface/AddOns/CherrysLoginxmlHook/README.md) | A replacement login screen: gets past a stuck server list, saved logins, keyboard controls. Run its `Install login screen.bat` once. | | 1.2.2 |
+| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character. With Cherry's Loginxml it picks the character. | `/lnc` | 1.2.2 |
 
-Download them from this build: [CherrysLoginxml-1.2.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysLoginxml-1.2.1.zip) · [LogNextChar-1.2.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/LogNextChar-1.2.1.zip). Each needs the hub.
+Download them from this build: [CherrysLoginxml-1.2.2.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysLoginxml-1.2.2.zip) · [LogNextChar-1.2.2.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/LogNextChar-1.2.2.zip). Each needs the hub.
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome 1.0.16](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysKit-GlobalBankDailyRewards-1.0.16.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
+[Download Global Bank Daily Rewards for Chrome 1.0.17](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-GlobalBankDailyRewards-1.0.17.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
 
 Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step. Automatic page processing is limited to the Gameforge daily shop page; the extension does not send your local data to the developer.
 

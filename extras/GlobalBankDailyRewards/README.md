@@ -2,12 +2,14 @@
 
 This optional Windows extension collects an available Daily Loyalty Bonus when you open the Gameforge Runes of Magic daily shop page. After the page confirms collection, its local bridge records the reward for a matching level 100 character in the Global Bank helper data. Install Cherry's Kit and Global Bank first.
 
+The helper now follows Chrome: the extension's button shows whether it is running and for how long, and can stop it or show its terminal window. The helper ends on its own when Chrome or the extension goes away.
+
 ## Install on Windows
 
 **You need:** Google Chrome and Cherry's Kit with Global Bank installed. You do **not** need Python for the addons, the Global Bank helper, or this extension.
 
 1. Install the [full Cherry's Kit](../../README.md#download-and-install) into your game's `Interface/AddOns/` folder. Check that `Interface/AddOns/CherrysKit/CherrysKit.toc` exists.
-2. Download the [separate Global Bank Daily Rewards installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysKit-GlobalBankDailyRewards-1.0.16.zip). Extract it into the **same** `Interface/AddOns/` folder and merge `CherrysKit/`. GitHub's automatic source ZIP is a repository snapshot, not this installer.
+2. Download the [separate Global Bank Daily Rewards installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-GlobalBankDailyRewards-1.0.17.zip). Extract it into the **same** `Interface/AddOns/` folder and merge `CherrysKit/`. GitHub's automatic source ZIP is a repository snapshot, not this installer.
 3. Open `Interface/AddOns/CherrysKit/GlobalBank/Helper/` in File Explorer and double-click **Install Chrome extension.bat**. It registers the local bridge and brings up Chrome's extensions page, with a small setup window on top.
 4. In Chrome, turn on **Developer mode** at the top right, then click **Load unpacked** at the top left. Those two clicks are all Chrome needs: the setup window fills in the folder and closes when the extension connects.
 5. If the folder window does not fill itself in, the setup window copies the path for you: press **Ctrl+V** in the folder window, then **Enter**. If the extensions page did not open, type `chrome://extensions/` into Chrome's address bar.

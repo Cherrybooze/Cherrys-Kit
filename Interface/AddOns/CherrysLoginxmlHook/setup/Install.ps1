@@ -6,8 +6,9 @@ param([string]$SaveFolder = 'Runes of Magic', [string]$Documents = [Environment]
 $ErrorActionPreference = 'Stop'
 
 $helper = Split-Path -Parent $PSScriptRoot
-$addons = Split-Path -Parent $helper
-if ((Split-Path -Leaf $addons) -ine 'AddOns') { throw 'Put the CherrysLoginxml folder in your game''s Interface\AddOns folder first.' }
+$kit = Split-Path -Parent $helper
+$addons = Split-Path -Parent $kit
+if ((Split-Path -Leaf $kit) -ine 'CherrysKit' -or (Split-Path -Leaf $addons) -ine 'AddOns') { throw 'Put the CherrysLoginxmlHook folder in your game''s Interface\AddOns\CherrysKit folder first.' }
 $source = Join-Path $helper 'LoginScreen'
 if (-not (Test-Path -LiteralPath $source)) { throw 'The LoginScreen folder is missing. Extract the whole Cherry''s Loginxml zip again.' }
 $target = Join-Path (Split-Path -Parent $addons) 'loginxml'
@@ -26,6 +27,14 @@ foreach ($file in Get-ChildItem -LiteralPath $source -Recurse -File) {
     $copied++
 }
 Write-Host "Login screen installed: $copied files in $target"
+
+# This addon used to be Interface\AddOns\CherrysLoginxml. Left there, the game would load it twice.
+$old = Join-Path $addons 'CherrysLoginxml'
+$oldToc = Join-Path $old 'CherrysLoginxml.toc'
+if ((Test-Path -LiteralPath $oldToc) -and (Get-Content -LiteralPath $oldToc -Raw) -match "## Title: Cherry's Loginxml helper") {
+    Remove-Item -LiteralPath $old -Recurse -Force
+    Write-Host 'Removed the old Interface\AddOns\CherrysLoginxml folder.'
+}
 
 $saved = Join-Path $Documents "$SaveFolder\SaveVariables.lua"
 if (-not (Test-Path -LiteralPath $saved)) {

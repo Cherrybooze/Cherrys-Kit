@@ -21,11 +21,13 @@
 --   mana and fusion stones with stats instead add ~bound~ST~stats~link
 --   M~key~amount~name   a currency other than gold, left out at zero
 --   S~server   the server this character was last saved on
+--   T~token    its main class, the same in every client language
+--   R~a;b;c    everyone the login screen listed with it: its account, on this server
 
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.4.14"
+GB.version = "1.4.15"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -41,6 +43,7 @@ if SaveVariablesPerCharacter then
   SaveVariablesPerCharacter("GlobalBank_Probe")
   SaveVariablesPerCharacter("GlobalBank_Removed")
   SaveVariablesPerCharacter("GlobalBank_Notes")
+  SaveVariablesPerCharacter("GlobalBank_Tips")
 end
 
 -- Per-session state: GlobalBank survives Reload UI, so it is reset here.
@@ -112,6 +115,16 @@ function GB.Serialize(c)
   if c.server and c.server ~= "" then
     parts[#parts + 1] = "S~" .. clean(c.server)
   end
+  if c.clsToken and c.clsToken ~= "" then
+    parts[#parts + 1] = "T~" .. clean(c.clsToken)
+  end
+  if c.roster and #c.roster > 0 then
+    local names = {}
+    for i, other in ipairs(c.roster) do
+      names[i] = clean(other)
+    end
+    parts[#parts + 1] = "R~" .. table.concat(names, ";")
+  end
   for _, money in ipairs(c.currencies or {}) do
     parts[#parts + 1] = table.concat({ "M", clean(money.key), tostring(money.amount), clean(money.name) }, "~")
   end
@@ -178,6 +191,12 @@ function GB.Parse(text)
     end
     if f[1] == "S" and f[2] and f[2] ~= "" then
       c.server = f[2]
+    end
+    if f[1] == "T" and f[2] and f[2] ~= "" then
+      c.clsToken = f[2]
+    end
+    if f[1] == "R" and f[2] and f[2] ~= "" then
+      c.roster = split(f[2], ";")
     end
     if f[1] == "M" and f[2] and f[2] ~= "" and tonumber(f[3]) then
       c.currencies[#c.currencies + 1] = { key = f[2], amount = tonumber(f[3]), name = f[4] or "" }
@@ -312,6 +331,104 @@ function GB.ReadStone(id, link)
   return { stats = stats, link = hex }
 end
 
+-- Cherry's Loginxml leaves the character select list in the Lua state the game shares with the login screen.
+-- Only one that has this character on it is believed.
+function GB.ReadRoster(name)
+  local roster = _G.LOGCHAR_ROSTER
+  if type(roster) ~= "table" then
+    return nil
+  end
+  local list, mine = {}, false
+  for _, other in ipairs(roster) do
+    if type(other) == "string" and other ~= "" then
+      list[#list + 1] = other
+      mine = mine or string.lower(other) == string.lower(name)
+    end
+  end
+  return mine and list or nil
+end
+
+---------------------------------------------------------------------------
+-- The game's own tooltip for gear and stones, for the extension's page. It's read on a hidden tooltip the
+-- first time a link is seen, and goes in a save variable of its own rather than the snapshot, so the game never
+-- has to load every character's tooltips. Records are <B or K><slot>~<lines> joined by backticks; lines are
+-- joined by ^ and each is colour=text, or colour=text=colour=text with a right-hand side.
+---------------------------------------------------------------------------
+GB.TIP_LINES = 40
+GB.TIPS_MAX = 120000
+GB.tipCache = GB.tipCache or {}
+
+local function tipPart(line)
+  if not line or not line:IsVisible() then
+    return nil
+  end
+  local text = line:GetText()
+  if type(text) ~= "string" or text == "" then
+    return nil
+  end
+  local color = string.match(text, "^|c%x%x(%x%x%x%x%x%x)")
+  if not color then
+    local r, g, b = line:GetColor()
+    color = b and string.format("%02x%02x%02x", math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5)) or "ffffff"
+  end
+  text = string.gsub(string.gsub(text, "|c%x%x%x%x%x%x%x%x", ""), "|r", "")
+  text = string.gsub(clean(text), "[%^=]", " ")
+  return string.lower(color), text
+end
+
+local function readTipLines(hex)
+  local reader = _G.GlobalBankTipReader
+  if not reader then
+    return ""
+  end
+  reader:SetHyperLink("|Hitem:" .. hex .. "|h|h")
+  reader:Hide()
+  -- The game can open its comparison tooltips beside any item tooltip
+  if GameTooltip1 then GameTooltip1:Hide() end
+  if GameTooltip2 then GameTooltip2:Hide() end
+  local lines = {}
+  for i = 1, GB.TIP_LINES do
+    local leftColor, left = tipPart(_G["GlobalBankTipReaderTextLeft" .. i])
+    local rightColor, right = tipPart(_G["GlobalBankTipReaderTextRight" .. i])
+    if not left and not right then
+      break
+    end
+    local line = (leftColor or "ffffff") .. "=" .. (left or "")
+    if right then
+      line = line .. "=" .. rightColor .. "=" .. right
+    end
+    lines[#lines + 1] = line
+  end
+  return table.concat(lines, "^")
+end
+
+function GB.ReadTip(hex)
+  if GB.tipCache[hex] == nil then
+    local ok, text = pcall(readTipLines, hex)
+    GB.tipCache[hex] = ok and text or ""
+  end
+  return GB.tipCache[hex]
+end
+
+function GB.TipsFor(c)
+  local parts, size = {}, 0
+  local function add(tag, list)
+    for _, it in ipairs(list or {}) do
+      local kept = it.gear or it.stone
+      if kept and kept.link and kept.link ~= "" then
+        local text = GB.ReadTip(kept.link)
+        if text ~= "" and size + #text <= GB.TIPS_MAX then
+          parts[#parts + 1] = tag .. it.slot .. "~" .. text
+          size = size + #text
+        end
+      end
+    end
+  end
+  add("B", c.bag)
+  add("K", c.bank)
+  return table.concat(parts, "`")
+end
+
 -- The rows of the game's own currency window: its group, its row, and the number of its name.
 GB.CURRENCY_ROWS = {
   { 1, 1, 11 }, { 1, 2, 12 }, { 1, 3, 10 }, { 1, 4, 17 }, { 1, 5, 21 },
@@ -405,6 +522,8 @@ function GB.Snapshot(withBank, authoritative)
   c.money = GB.ReadMoney()
   c.currencies = GB.ReadCurrencies()
   c.server = call(GetServerName) or c.server
+  c.clsToken = call(UnitClassToken, "player") or c.clsToken
+  c.roster = GB.ReadRoster(name) or c.roster
   c.bag, c.bagMax = GB.ReadBag()
   if withBank then
     local bank, max = GB.ReadBank()
@@ -416,6 +535,10 @@ function GB.Snapshot(withBank, authoritative)
   c.saved = nil
   GB.chars[name] = c
   GlobalBank_Char = GB.Serialize(c)
+  local ok, tips = pcall(GB.TipsFor, c)
+  if ok then
+    GlobalBank_Tips = tips
+  end
   GB.dirty = nil
   GB.Changed()
   return c

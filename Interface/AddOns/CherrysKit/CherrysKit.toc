@@ -1,8 +1,8 @@
 ## Title: Cherry's Kit
-## Version: 0.11.113
+## Version: 0.11.114
 ## Description: Hub for Cherry's addons. Type /rwa or /ck to open each addon's settings, turn addons on or off, and reload the UI.
 ## Author: Cherry
-## SavedVariables: RWA_DB, ZShop_Settings, CherrysGrid_DB, CherrysQuests_DB, CherrysBar_DB
+## SavedVariables: RWA_DB, ZShop_Settings, CherrysGrid_DB, CherrysQuests_DB, CherrysBar_DB, CherrysLoginxml_Settings, LogNextChar_Settings
 KitLoad/start.lua
 LoadTimes/Load.lua
 LoadTimes/CherrysLoadTimes.xml
@@ -11,6 +11,7 @@ KitLoad/hub.lua
 Commands.lua
 CherrysClock.lua
 CherrysClock.xml
+KitOrigins.lua
 CherrysKit.lua
 CherrysKit.xml
 KitLoad/KittyCombo.lua
@@ -179,6 +180,8 @@ CherrysGrid/Statuses.lua
 CherrysGrid/Frames.lua
 CherrysGrid/Layout.lua
 CherrysGrid/Clicks.lua
+CherrysGrid/MouseActions.lua
+CherrysGrid/Mouse.lua
 CherrysGrid/Tooltip.lua
 CherrysGrid/Menu.lua
 CherrysGrid/Options.lua
@@ -201,5 +204,11 @@ CherrysBar/Options.lua
 CherrysBar/Probe.lua
 CherrysBar/Perf.lua
 CherrysBar/CherrysBar.xml
+KitLoad/CherrysLoginxmlHook.lua
+CherrysLoginxmlHook/CherrysLoginxmlHook.lua
+CherrysLoginxmlHook/CherrysLoginxmlHook.xml
+KitLoad/LogNextChar.lua
+LogNextChar/LogNextChar.lua
+LogNextChar/LogNextChar.xml
 KitLoad/end.lua
 LoadTimesLast.xml

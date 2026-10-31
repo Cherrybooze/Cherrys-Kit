@@ -53,10 +53,22 @@ main { max-width: 1180px; }
 .gf-notes { max-width: 220px; overflow-wrap: anywhere; }
 #gf-unlock[hidden], #gf-setup[hidden], #gf-need-key[hidden], #gf-open[hidden], #gf-locked-note[hidden] { display: none; }
 .gf-actions button, .gf-actions input { margin-right: 4px; }
-.gf-characters { max-height: 420px; overflow-y: auto; columns: 3 240px; border: 1px solid #405468; padding: 6px; margin-bottom: 10px; }
-.gf-character { display: flex; gap: 6px; align-items: baseline; margin: 0; font-size: .85rem; break-inside: avoid; }
-.gf-character .bank-detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#gf-paste { width: 100%; box-sizing: border-box; }
+.gf-characters { display: flex; flex-direction: column; gap: 10px; max-height: 520px; overflow-y: auto; border: 1px solid #405468; padding: 8px; margin-bottom: 10px; }
+.gf-group { border: 1px solid #57708a; border-left: 3px solid #f1c85e; border-radius: 4px; padding: 6px 8px; }
+.gf-group.gf-loose { border-left-color: #57708a; }
+.gf-group-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-bottom: 5px; font-size: .85rem; font-weight: 600; color: #dbe3ea; border-bottom: 1px solid #57708a; }
+.gf-group-head button { padding: 2px 8px; font-size: .8rem; white-space: nowrap; }
+.gf-group-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); column-gap: 18px; }
+.gf-character { display: grid; grid-template-columns: 16px minmax(0, 1fr) minmax(0, 1.2fr); align-items: center; column-gap: 8px; margin: 0; padding: 3px 2px; font-size: .85rem; font-weight: 400; border-bottom: 1px solid #2a3b4e; cursor: pointer; }
+.gf-character input { width: 14px; height: 14px; margin: 0; padding: 0; }
+.gf-character:hover { background: #243345; }
+.gf-character .bank-name, .gf-character .bank-detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.game-tip { padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid #5a4c2c; }
+.game-tip-line { display: flex; justify-content: space-between; gap: 14px; font-size: .86rem; line-height: 1.3; }
+.game-tip-line:first-child { font-size: 1rem; font-weight: 600; }
+.bank-tooltip .game-tip-left { display: inline; }
+.bank-tooltip .game-tip-right { display: inline; text-align: right; flex: none; }
+#gf-paste { width: 100%; box-sizing: border-box; padding: 6px 8px; color: #f4f6f8; background: #0d1620; border: 1px solid #708698; border-radius: 4px; }
 .gf-menu { position: fixed; z-index: 30; display: flex; flex-direction: column; gap: 3px; width: 240px; max-height: 80vh; overflow-y: auto; padding: 8px; color: #eef2f5; background: #101820; border: 1px solid #f1c85e; border-radius: 4px; }
 .gf-menu[hidden] { display: none; }
 .gf-menu button { text-align: left; }
