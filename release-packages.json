@@ -265,7 +265,7 @@
     {
       "folder": "CherrysLoginxml",
       "title": "Cherry's Loginxml",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "description_file": "18-cherrys-loginxml.md",
       "summary": "A better login screen: gets past a stuck server list, saved logins, keyboard controls.",
       "works_with": [
@@ -274,7 +274,7 @@
           "for": "Next and Prev character buttons in game"
         }
       ],
-      "after_install": "close the game and double-click `Interface\\AddOns\\CherrysLoginxml\\Install login screen.bat`. The game only reads a login screen from `Interface\\loginxml`, so this copies it there."
+      "after_install": "close the game and double-click `Interface\\AddOns\\CherrysKit\\CherrysLoginxmlHook\\Install login screen.bat`. The game only reads a login screen from `Interface\\loginxml`, so this copies it there."
     },
     {
       "folder": "LogNextChar",

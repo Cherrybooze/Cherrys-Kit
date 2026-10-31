@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 KIT = ROOT / "Interface" / "AddOns" / "CherrysKit"
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 LOGIN_SCREEN = ROOT / "Interface" / "loginxml"
-LOGIN_HELPER = ROOT / "Interface" / "AddOns" / "CherrysLoginxml"
+LOGIN_HELPER = ROOT / "Interface" / "AddOns" / "CherrysLoginxmlHook"
 LOG_NEXT_CHAR = ROOT / "Interface" / "AddOns" / "LogNextChar"
 # A player's own files in their login screen folder. Blank templates live in its data folder.
 LOGIN_PERSONAL = ("accounts.lua", "password.lua", "config.lua", "savedpath.lua")
@@ -124,9 +124,9 @@ def toc_version(path: Path) -> str:
 
 def check_login_source(version: str) -> None:
     code = (LOGIN_SCREEN / "frames" / "login.lua").read_text(encoding="utf-8")
-    require(f'version = "{version}"' in code, "frames/login.lua and CherrysLoginxml.toc disagree on the version.")
-    require(f'me.version = "{version}"' in (LOGIN_HELPER / "CherrysLoginxml.lua").read_text(encoding="utf-8"),
-            "CherrysLoginxml.lua and CherrysLoginxml.toc disagree on the version.")
+    require(f'version = "{version}"' in code, "frames/login.lua and CherrysLoginxmlHook.toc disagree on the version.")
+    require(f'me.version = "{version}"' in (LOGIN_HELPER / "CherrysLoginxmlHook.lua").read_text(encoding="utf-8"),
+            "CherrysLoginxmlHook.lua and CherrysLoginxmlHook.toc disagree on the version.")
     for name in LOGIN_PERSONAL:
         require(not (LOGIN_SCREEN / name).exists(), f"Interface/loginxml/{name} is a personal copy: remove it.")
     for name in ("accounts.lua", "password.lua"):
@@ -138,20 +138,20 @@ def check_login_source(version: str) -> None:
 
 def write_login_packages(output: Path) -> list[dict]:
     """Cherry's Loginxml and LogNextChar: folders of their own in Interface/AddOns, not in the full kit."""
-    version = toc_version(LOGIN_HELPER / "CherrysLoginxml.toc")
+    version = toc_version(LOGIN_HELPER / "CherrysLoginxmlHook.toc")
     check_login_source(version)
     files = tree_files(LOGIN_HELPER)
     # The client loads every .toc it finds under Interface/AddOns, so the login screen's travels under
     # another name. Install login screen.bat puts it back when it copies the login screen into place.
     for name, data in tree_files(LOGIN_SCREEN).items():
         files["LoginScreen/" + ("loginxml.toc.txt" if name == "loginxml.toc" else name)] = data
-    require([name for name in files if name.lower().endswith(".toc")] == ["CherrysLoginxml.toc"],
+    require([name for name in files if name.lower().endswith(".toc")] == ["CherrysLoginxmlHook.toc"],
             "Only the addon's own .toc may be under Interface/AddOns.")
     guide = files["README.md"].decode("utf-8").replace("(../../loginxml/docs/", "(LoginScreen/docs/")
     files["README.md"] = guide.encode("utf-8")
-    login = write_zip(output / f"CherrysLoginxml-{version}.zip", files, "CherrysLoginxml")
+    login = write_zip(output / f"CherrysLoginxml-{version}.zip", files, "CherrysKit/CherrysLoginxmlHook")
     login.update({"package": "CherrysLoginxml", "title": "Cherry's Loginxml", "version": version, "requires_hub": True,
-                  "archive_root": "CherrysLoginxml/", "bundled_addons": []})
+                  "archive_root": "CherrysKit/CherrysLoginxmlHook/", "bundled_addons": []})
     lnc_version = toc_version(LOG_NEXT_CHAR / "LogNextChar.toc")
     require(f'me.version = "{lnc_version}"' in (LOG_NEXT_CHAR / "LogNextChar.lua").read_text(encoding="utf-8"),
             "LogNextChar.lua and LogNextChar.toc disagree on the version.")

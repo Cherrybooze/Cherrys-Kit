@@ -13,7 +13,7 @@ These descriptions started as an initial hand-off text and are maintained with t
 
 ## Release plan
 
-Every package is its own CurseForge project. Every ZIP goes straight into `Interface/AddOns/`, and each one starts with a single folder: `CherrysKit/`, `CherrysLoginxml/` or `LogNextChar/`.
+Every package is its own CurseForge project. Every ZIP goes straight into `Interface/AddOns/`, and each one starts with a single folder: `CherrysKit/`, `CherrysKit/CherrysLoginxmlHook/` or `LogNextChar/`.
 
 <!-- project table: tools/curseforge_pages.py writes this -->
 | Project | Description | ZIP to upload | Required relations | Optional relations |

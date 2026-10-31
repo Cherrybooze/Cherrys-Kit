@@ -48,7 +48,7 @@ This playtest gathers everything since 0.11.101. The highlights:
 
 - **Global Bank 1.4.7**: the daily reset follows 00:00 in Germany in any time zone, and the extension's setup takes one click plus Chrome's two.
 
-- **New separate packages:** [Cherry's Loginxml](Interface/AddOns/CherrysLoginxml/README.md), a replacement login screen that gets past a stuck server list, and [LogNextChar](Interface/AddOns/LogNextChar/README.md), Next and Prev character buttons.
+- **New separate packages:** [Cherry's Loginxml](Interface/AddOns/CherrysLoginxmlHook/README.md), a replacement login screen that gets past a stuck server list, and [LogNextChar](Interface/AddOns/LogNextChar/README.md), Next and Prev character buttons.
 
 - **Installing only some addons** no longer lights the minimap's bug button. Each addon is tested with only the hub, on a simulated client.
 
@@ -155,7 +155,7 @@ These aren't in the full kit. Each is its own folder in `Interface/AddOns/`, and
 
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Loginxml](Interface/AddOns/CherrysLoginxml/README.md) | A replacement login screen: gets past a stuck server list, saved logins, keyboard controls. Run its `Install login screen.bat` once. | | 1.2.1 |
+| [Cherry's Loginxml](Interface/AddOns/CherrysLoginxmlHook/README.md) | A replacement login screen: gets past a stuck server list, saved logins, keyboard controls. Run its `Install login screen.bat` once. | | 1.2.1 |
 | [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character. Needs Cherry's Loginxml. | `/lnc` | 1.2.1 |
 
 Download them from this build: [CherrysLoginxml-1.2.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysLoginxml-1.2.1.zip) · [LogNextChar-1.2.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/LogNextChar-1.2.1.zip). Each needs the hub.

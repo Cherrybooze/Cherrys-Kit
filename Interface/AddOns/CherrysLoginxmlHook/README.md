@@ -14,9 +14,9 @@ A replacement login screen for Runes of Magic. Original project: Rom Autologin b
 ## Install
 
 1. Remove any other login addon first. Only one can replace the login screen.
-2. Extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\CherrysLoginxml\CherrysLoginxml.toc`.
-3. Close the game and double-click `Interface\AddOns\CherrysLoginxml\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, and a package can only fill `Interface\AddOns`, so this copies it across. It also lets your settings toggles come back after a restart. It leaves nothing running.
-4. Start the game. The login screen shows `(Cherry's Loginxml 1.2.1)` next to the client version in the top right corner.
+2. Extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\CherrysKit\CherrysLoginxmlHook\CherrysLoginxml.toc`.
+3. Close the game and double-click `Interface\AddOns\CherrysKit\CherrysLoginxmlHook\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, and a package can only fill `Interface\AddOns`, so this copies it across. It also lets your settings toggles come back after a restart. It leaves nothing running.
+4. Start the game. The login screen shows `(Cherry's Loginxml 1.2.2)` next to the client version in the top right corner.
 
 Run the same file again after updating. It never touches your own accounts, passwords or settings. If you forget, the addon tells you in chat.
 

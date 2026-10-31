@@ -29,25 +29,25 @@ class PackagesTest(unittest.TestCase):
         return ZipFile(self.output / self.packages[package]["filename"]).namelist()
 
     def test_each_is_one_folder_for_interface_addons(self):
-        self.assertEqual({name.split("/")[0] for name in self.names("CherrysLoginxml")}, {"CherrysLoginxml"})
+        self.assertEqual({name.split("/")[0] for name in self.names("CherrysLoginxml")}, {"CherrysKit"})
         self.assertEqual({name.split("/")[0] for name in self.names("LogNextChar")}, {"LogNextChar"})
 
     def test_game_would_load_only_the_addons_own_toc(self):
         # The client loads every .toc it finds under Interface/AddOns, at any depth
         tocs = [name for name in self.names("CherrysLoginxml") if name.lower().endswith(".toc")]
-        self.assertEqual(tocs, ["CherrysLoginxml/CherrysLoginxml.toc"])
-        self.assertIn("CherrysLoginxml/LoginScreen/loginxml.toc.txt", self.names("CherrysLoginxml"))
+        self.assertEqual(tocs, ["CherrysKit/CherrysLoginxmlHook/CherrysLoginxmlHook.toc"])
+        self.assertIn("CherrysKit/CherrysLoginxmlHook/LoginScreen/loginxml.toc.txt", self.names("CherrysLoginxml"))
 
     def test_no_personal_files(self):
         for name in self.names("CherrysLoginxml"):
-            if name.startswith("CherrysLoginxml/LoginScreen/") and "/data/" not in name:
+            if name.startswith("CherrysKit/CherrysLoginxmlHook/LoginScreen/") and "/data/" not in name:
                 self.assertNotIn(name.rsplit("/", 1)[-1], build_release.LOGIN_PERSONAL)
 
     def test_guide_links_work_inside_the_zip(self):
         with ZipFile(self.output / self.packages["CherrysLoginxml"]["filename"]) as archive:
-            guide = archive.read("CherrysLoginxml/README.md").decode("utf-8")
+            guide = archive.read("CherrysKit/CherrysLoginxmlHook/README.md").decode("utf-8")
             self.assertIn("(LoginScreen/docs/Rom-Autologin-Readme.md)", guide)
-            self.assertIn("CherrysLoginxml/LoginScreen/docs/Rom-Autologin-Readme.md", archive.namelist())
+            self.assertIn("CherrysKit/CherrysLoginxmlHook/LoginScreen/docs/Rom-Autologin-Readme.md", archive.namelist())
 
     def test_requirements_are_recorded(self):
         self.assertTrue(self.packages["CherrysLoginxml"]["requires_hub"])
@@ -80,7 +80,7 @@ class InstallScreenTest(unittest.TestCase):
         self.documents.mkdir()
 
     def install(self):
-        script = self.game / "Interface/AddOns/CherrysLoginxml/setup/Install.ps1"
+        script = self.game / "Interface/AddOns/CherrysKit/CherrysLoginxmlHook/setup/Install.ps1"
         result = subprocess.run([SHELL, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script),
                                  "-Documents", str(self.documents)], capture_output=True, text=True, timeout=60)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -108,10 +108,28 @@ class InstallScreenTest(unittest.TestCase):
             self.assertEqual((self.screen / name).read_text(), text, name)
         self.assertNotEqual((self.screen / "frames/login.lua").read_text(), "old")
 
+    def test_removes_only_the_old_addon_folder(self):
+        old = self.game / "Interface/AddOns/CherrysLoginxml"
+        old.mkdir()
+        (old / "CherrysLoginxml.toc").write_text("## Title: Cherry's Loginxml helper\n")
+        other = self.game / "Interface/AddOns/LogNextChar"
+        other.mkdir()
+        (other / "LogNextChar.toc").write_text("## Title: LogNextChar\n")
+        self.install()
+        self.assertFalse(old.exists())
+        self.assertTrue(other.exists())
+
+    def test_leaves_a_folder_that_only_shares_the_old_name(self):
+        old = self.game / "Interface/AddOns/CherrysLoginxml"
+        old.mkdir()
+        (old / "CherrysLoginxml.toc").write_text("## Title: Something else\n")
+        self.install()
+        self.assertTrue(old.exists())
+
     def test_refuses_to_run_outside_addons(self):
-        moved = Path(self.temp.name) / "Elsewhere/CherrysLoginxml"
+        moved = Path(self.temp.name) / "Elsewhere/CherrysLoginxmlHook"
         moved.parent.mkdir()
-        shutil.move(str(self.game / "Interface/AddOns/CherrysLoginxml"), str(moved))
+        shutil.move(str(self.game / "Interface/AddOns/CherrysKit/CherrysLoginxmlHook"), str(moved))
         result = subprocess.run([SHELL, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
                                  str(moved / "setup/Install.ps1"), "-Documents", str(self.documents)],
                                 capture_output=True, text=True, timeout=60)

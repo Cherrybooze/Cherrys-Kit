@@ -29,7 +29,7 @@ The hub alone and hub-plus-addon selections deliberately lack the unselected add
 
 ## ZIP installation layout
 
-Every install ZIP, including the optional extension ZIP, starts with `CherrysKit/`, except `CherrysLoginxml/` and `LogNextChar/`. Extract it into `<game>/Interface/AddOns/` and merge folders:
+Every install ZIP, including the optional extension ZIP, starts with `CherrysKit/`, except `CherrysKit/CherrysLoginxmlHook/` and `LogNextChar/`. Extract it into `<game>/Interface/AddOns/` and merge folders:
 
 ```text
 <game>/Interface/AddOns/
@@ -65,11 +65,11 @@ A draft release is useful while uploading and checking assets. Do not replace an
 
 ## Cherry's Loginxml and LogNextChar
 
-Cherry's Loginxml lives in `Interface/loginxml` (the login screen) and `Interface/AddOns/CherrysLoginxml` (its in-game half and installer). Original project by Pyrrhus, MIT licence unchanged, integration fixes by Cherry. LogNextChar lives in `Interface/AddOns/LogNextChar`. Neither is part of the kit's manifest or the full kit.
+Cherry's Loginxml lives in `Interface/loginxml` (the login screen) and `Interface/AddOns/CherrysLoginxmlHook` (installed as `Interface/AddOns/CherrysKit/CherrysLoginxmlHook`) (its in-game half and installer). Original project by Pyrrhus, MIT licence unchanged, integration fixes by Cherry. LogNextChar lives in `Interface/AddOns/LogNextChar`. Neither is part of the kit's manifest or the full kit.
 
 `Interface/loginxml/data` holds blank templates only; never put real accounts or passwords in this repository. The builder stops on a personal file or a filled-in template.
 
-To release one, bump its version (`version` in `frames/login.lua`, `me.version` in `CherrysLoginxml.lua` and `CherrysLoginxml.toc`; `me.version` in `LogNextChar.lua` and `LogNextChar.toc`) and `release-packages.json`, and add the changes to the top of `Interface/loginxml/CHANGELOG`.
+To release one, bump its version (`version` in `frames/login.lua`, `me.version` in `CherrysLoginxmlHook.lua` and `CherrysLoginxml.toc`; `me.version` in `LogNextChar.lua` and `LogNextChar.toc`) and `release-packages.json`, and add the changes to the top of `Interface/loginxml/CHANGELOG`.
 
 ## CurseForge
 

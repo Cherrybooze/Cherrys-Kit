@@ -1267,7 +1267,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cbar prob
 >
 > **Optional, when you have them:** LogNextChar (Next and Prev character buttons in game).
 >
-> **After installing:** close the game and double-click `Interface\AddOns\CherrysLoginxml\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there.
+> **After installing:** close the game and double-click `Interface\AddOns\CherrysKit\CherrysLoginxmlHook\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there.
 
 **A better login screen: gets past a stuck "obtaining server list", remembers your logins and works from the keyboard.**
 
@@ -1288,7 +1288,7 @@ A replacement for the game's login screen. Original project: Rom Autologin by Py
 
 1. Remove any other login addon first. Only one can replace the login screen.
 2. Install this addon, or extract the zip into `Interface\AddOns`.
-3. Close the game and double-click `Interface\AddOns\CherrysLoginxml\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there. It leaves nothing running.
+3. Close the game and double-click `Interface\AddOns\CherrysKit\CherrysLoginxmlHook\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there. It leaves nothing running.
 4. Start the game. The login screen shows `(Cherry's Loginxml)` and its version next to the client version in the top right corner.
 
 Run the same file again after updating. It never touches your own accounts, passwords or settings, and the addon tells you in chat if you forget.
@@ -1304,7 +1304,7 @@ Write to **cherry** on the Runes of Magic Discord.
 ## Credits and licence
 
 - Original project: **Rom Autologin by Pyrrhus**, MIT licence. Integration fixes by **Cherry**.
-- Full licence text: `Interface\AddOns\CherrysLoginxml\LICENSE.txt`.
+- Full licence text: `Interface\AddOns\CherrysKit\CherrysLoginxmlHook\LICENSE.txt`.
 
 ---
 
