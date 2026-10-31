@@ -6,6 +6,22 @@ Version **0.9.30** · Kit release **0.11.100** · [All addons / hub](../README.m
 
 rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras" that appear when something happens (a buff runs out, your target is casting, a skill is ready) and look exactly how you want.
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit (hub 0.4.14 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\RomWeakAuras`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Cherry's KittyCombo:** track its next skills and modes
+> - **pbInfo:** mob information for triggers
+> - **Extended Macro Icons:** its icon picker uses the icon categories
+> - **Cherry's Quests:** Cherry's Quests can use its fonts
+>
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\RomWeakAuras` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one. It's a rewrite of WeakAuras for World of Warcraft, so there's no original for this game.
+
+<!-- end of requirements -->
+
 ## Updated in 0.9.30
 
 - **The scale corner and the move arrows really work now.** In the placement view, drag the corner at an aura's bottom right to scale it and the arrows at its top left to move it. Until now the game gave these grips no mouse scripts at all, because it ignores XML templates on frames made after loading, so they could not be dragged. They now come from a pool declared in `Frames.xml`. **Shift-drag** on the aura itself also scales it.

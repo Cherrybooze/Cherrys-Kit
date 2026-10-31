@@ -4,6 +4,19 @@ Version **1.1.4** · Kit release **0.11.87** · [All addons / hub](../README.md)
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\CherrysGrid`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Cherry's KittyCombo:** run a kitty when you click a frame
+>
+> **Original addon:** GridCliqueIt by Skaryon, Jacobian and odie2. If `Interface\AddOns\GridCliqueIt` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one. Cherry's Grid is new code that follows its design, and the two would draw the same raid frames.
+
+<!-- end of requirements -->
+
 ## Updated in 1.1.4
 
 Less memory churn in fights: damage and heal flashes fade 20 times a second and reuse their tables, and marking members for a redraw or waiting 2nd click actions no longer make new lists on every frame. Members still redraw ten times a second.

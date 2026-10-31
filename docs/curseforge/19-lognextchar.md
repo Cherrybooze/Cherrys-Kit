@@ -1,8 +1,14 @@
 # LogNextChar
 
-> **Requires:** Cherry's Kit and Cherry's Loginxml. The CurseForge app installs them for you; if you install by hand, install them first.
+> **Requires:** Cherry's Kit (hub 0.4.25 or later). The CurseForge app installs it for you; if you install by hand, install it first.
 >
-> **Optional:** nothing else is needed.
+> **Where it goes:** `Interface\AddOns\CherrysKit\LogNextChar`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Cherry's Loginxml:** picks the next or previous character on the login screen; without it Next and Prev only log you out, and you pick the character yourself
+> - **Ultimate Mail Mod:** closes its window before switching characters, as it does the game's mail window
+>
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\LogNextChar` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
 
 **Next and Prev buttons in game: log out and straight into the neighbouring character on your account.**
 
@@ -30,7 +36,7 @@ Made for alts. One click, and you are on the next character without touching the
 
 ## Install
 
-Install this addon, or extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\LogNextChar\LogNextChar.toc`.
+Install this addon, or extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\CherrysKit\LogNextChar\LogNextChar.lua`.
 
 ## Bug reports
 
@@ -39,4 +45,4 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/lnc probe
 ## Credits and licence
 
 - By **Cherry**, MIT licence.
-- Full licence text: `Interface\AddOns\LogNextChar\LICENSE.txt`.
+- Full licence text: `Interface\AddOns\CherrysKit\LogNextChar\LICENSE.txt`.

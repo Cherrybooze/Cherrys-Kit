@@ -6,6 +6,19 @@ Version **3.0.4** · Kit release **0.11.80** · [All addons / hub](../README.md)
 
 Based on ExtendedMacroIcons 2.15 by Amurilon, cleaned up for Cherry's Kit.
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\ExtendedMacroIcons`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **rom weakauras:** rom weakauras' icon picker uses its categories
+>
+> **Original addon:** ExtendedMacroIcons 2.15 by Amurilon. If `Interface\AddOns\ExtendedMacroIcons` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+
+<!-- end of requirements -->
+
 ## Updated in 3.0.4
 
 Macro icon lookups are cached between macro changes instead of scanning every macro on each action lookup. Turning the addon off in the kit now also removes its hooks from the last session.

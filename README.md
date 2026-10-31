@@ -129,7 +129,7 @@ Remove old separate copies of the same addons from `Interface/AddOns/` first; th
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.24 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.25 |
 | [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.17 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.30 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.11.0 |
@@ -156,7 +156,7 @@ These aren't in the full kit. Each is its own folder in `Interface/AddOns/`, and
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
 | [Cherry's Loginxml](Interface/AddOns/CherrysLoginxmlHook/README.md) | A replacement login screen: gets past a stuck server list, saved logins, keyboard controls. Run its `Install login screen.bat` once. | | 1.2.1 |
-| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character. Needs Cherry's Loginxml. | `/lnc` | 1.2.1 |
+| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character. With Cherry's Loginxml it picks the character. | `/lnc` | 1.2.1 |
 
 Download them from this build: [CherrysLoginxml-1.2.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/CherrysLoginxml-1.2.1.zip) · [LogNextChar-1.2.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.113/LogNextChar-1.2.1.zip). Each needs the hub.
 

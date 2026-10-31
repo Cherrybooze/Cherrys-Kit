@@ -2,7 +2,25 @@
 
 **Next** and **Prev** buttons in game, plus `/lnc`, log you out and straight into the neighbouring character on the account.
 
-**Requires Cherry's Kit and Cherry's Loginxml.** Cherry's Loginxml picks the character on the login screen; without it you are only logged out. In the hub, LogNextChar gets a row (`/ck`): **Settings** opens the options below, and **Turn off** switches it off.
+Cherry's Loginxml picks the character on the login screen; without it you are only logged out, and you pick the character yourself. In the hub, LogNextChar gets a row (`/ck`): **Settings** opens the options below, and **Turn off** switches it off.
+
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit (hub 0.4.25 or later). The CurseForge app installs it for you; if you install by hand, install it first.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\LogNextChar`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Cherry's Loginxml:** picks the next or previous character on the login screen; without it Next and Prev only log you out, and you pick the character yourself
+> - **Ultimate Mail Mod:** closes its window before switching characters, as it does the game's mail window
+>
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\LogNextChar` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+
+<!-- end of requirements -->
+
+## Updated in 1.2.2
+
+It now lives under `Interface\AddOns\CherrysKit`, and runs without Cherry's Loginxml: Next and Prev then only log you out.
 
 ## Updated in 1.2.1
 
@@ -10,7 +28,7 @@ Next, Prev and the other switches now close the mailbox and Ultimate Mail Mod's 
 
 ## Install
 
-Extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\LogNextChar\LogNextChar.toc`.
+Extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\CherrysKit\LogNextChar\LogNextChar.lua`. If you have an older `Interface\AddOns\LogNextChar` folder, delete it.
 
 ## The buttons
 
@@ -38,4 +56,4 @@ For macros, `ChangeChar(slot)` does the same as `/lnc <slot>`.
 
 ## Credits and licence
 
-By Cherry. Needs Cherry's Loginxml, which has its own credits. MIT licence, see `LICENSE.txt`.
+By Cherry. Cherry's Loginxml has its own credits. MIT licence, see `LICENSE.txt`.

@@ -124,9 +124,7 @@ def toc_version(path: Path) -> str:
 
 def check_login_source(version: str) -> None:
     code = (LOGIN_SCREEN / "frames" / "login.lua").read_text(encoding="utf-8")
-    require(f'version = "{version}"' in code, "frames/login.lua and CherrysLoginxmlHook.toc disagree on the version.")
-    require(f'me.version = "{version}"' in (LOGIN_HELPER / "CherrysLoginxmlHook.lua").read_text(encoding="utf-8"),
-            "CherrysLoginxmlHook.lua and CherrysLoginxmlHook.toc disagree on the version.")
+    require(f'version = "{version}"' in code, "frames/login.lua and CherrysLoginxmlHook.lua disagree on the version.")
     for name in LOGIN_PERSONAL:
         require(not (LOGIN_SCREEN / name).exists(), f"Interface/loginxml/{name} is a personal copy: remove it.")
     for name in ("accounts.lua", "password.lua"):
@@ -136,28 +134,35 @@ def check_login_source(version: str) -> None:
                     f"data/{name} holds a live value: ship the blank template.")
 
 
+def lua_version(path: Path) -> str:
+    match = re.search(r'(?m)^me\.version = "([^"]+)"', path.read_text(encoding="utf-8"))
+    require(match is not None, f"No version in {path.name}.")
+    return match.group(1)
+
+
 def write_login_packages(output: Path) -> list[dict]:
     """Cherry's Loginxml and LogNextChar: folders of their own in Interface/AddOns, not in the full kit."""
-    version = toc_version(LOGIN_HELPER / "CherrysLoginxmlHook.toc")
+    version = lua_version(LOGIN_HELPER / "CherrysLoginxmlHook.lua")
     check_login_source(version)
     files = tree_files(LOGIN_HELPER)
     # The client loads every .toc it finds under Interface/AddOns, so the login screen's travels under
     # another name. Install login screen.bat puts it back when it copies the login screen into place.
     for name, data in tree_files(LOGIN_SCREEN).items():
         files["LoginScreen/" + ("loginxml.toc.txt" if name == "loginxml.toc" else name)] = data
-    require([name for name in files if name.lower().endswith(".toc")] == ["CherrysLoginxmlHook.toc"],
-            "Only the addon's own .toc may be under Interface/AddOns.")
+    require(not [name for name in files if name.lower().endswith(".toc")],
+            "The hub's manifest loads this addon, so no .toc may be under Interface/AddOns.")
     guide = files["README.md"].decode("utf-8").replace("(../../loginxml/docs/", "(LoginScreen/docs/")
     files["README.md"] = guide.encode("utf-8")
     login = write_zip(output / f"CherrysLoginxml-{version}.zip", files, "CherrysKit/CherrysLoginxmlHook")
     login.update({"package": "CherrysLoginxml", "title": "Cherry's Loginxml", "version": version, "requires_hub": True,
                   "archive_root": "CherrysKit/CherrysLoginxmlHook/", "bundled_addons": []})
-    lnc_version = toc_version(LOG_NEXT_CHAR / "LogNextChar.toc")
-    require(f'me.version = "{lnc_version}"' in (LOG_NEXT_CHAR / "LogNextChar.lua").read_text(encoding="utf-8"),
-            "LogNextChar.lua and LogNextChar.toc disagree on the version.")
-    lnc = write_zip(output / f"LogNextChar-{lnc_version}.zip", tree_files(LOG_NEXT_CHAR), "LogNextChar")
+    lnc_version = lua_version(LOG_NEXT_CHAR / "LogNextChar.lua")
+    lnc_files = tree_files(LOG_NEXT_CHAR)
+    require(not [name for name in lnc_files if name.lower().endswith(".toc")],
+            "The hub's manifest loads this addon, so no .toc may be under Interface/AddOns.")
+    lnc = write_zip(output / f"LogNextChar-{lnc_version}.zip", lnc_files, "CherrysKit/LogNextChar")
     lnc.update({"package": "LogNextChar", "title": "LogNextChar", "version": lnc_version, "requires_hub": True,
-                "requires_addon": "CherrysLoginxml", "archive_root": "LogNextChar/", "bundled_addons": []})
+                "archive_root": "CherrysKit/LogNextChar/", "bundled_addons": []})
     return [login, lnc]
 
 
@@ -192,7 +197,9 @@ def build(output: Path) -> None:
         for line in toc.splitlines()
         if line.strip() and not line.lstrip().startswith("#")
     ]
-    require(all(ref in sources for ref in references), "The full kit has missing manifest files.")
+    # Two addons are separate packages that aren't in the full kit, and still load through its manifest.
+    standalone = {package.get("install_folder", package["folder"]) for package in metadata["standalone_packages"]}
+    require(all(ref in sources or ref.split("/")[0] in standalone for ref in references), "The full kit has missing manifest files.")
     require(sources["LICENSE.txt"] == (ROOT / "LICENSE.txt").read_bytes(), "Root licence copy differs.")
     for addon in addons:
         prefix = addon["folder"] + "/"
@@ -221,11 +228,11 @@ def build(output: Path) -> None:
         selection = hub | files
         missing = [ref for ref in references if ref not in selection]
         require(
-            all(ref.split("/")[0] in folders - {folder} for ref in missing),
+            all(ref.split("/")[0] in (folders - {folder}) | standalone for ref in missing),
             f"Missing shared files in hub + {folder}.",
         )
     require(combined == sources, "Hub and addon packages do not reconstruct the complete kit.")
-    require(all(ref.split("/")[0] in folders for ref in references if ref not in hub),
+    require(all(ref.split("/")[0] in folders | standalone for ref in references if ref not in hub),
             "Hub is missing required shared files.")
     require(references[:2] == ["KitLoad/start.lua", "LoadTimes/Load.lua"],
             "The loader marks and the LoadTimes switch must be the first manifest entries.")
@@ -282,7 +289,7 @@ def build(output: Path) -> None:
         "source_commit": revision,
         "source_dirty": bool(status),
         "extract_into": "<Runes of Magic>/Interface/AddOns/",
-        "archive_root": "CherrysKit/, except packages naming their own",
+        "archive_root": "CherrysKit/",
         "hub_bundles_loadtimes": False,
         "manifest_entries_checked": len(references),
         "markdown_files_checked": markdown_count,

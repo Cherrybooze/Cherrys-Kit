@@ -6,6 +6,24 @@ Version **1.7.17** · Kit release **0.11.100** · [All addons / hub](../README.m
 
 A "kitty" is a list of commands (skills, items, macros) in priority order. Each key press checks them top to bottom and uses the first one that is ready and whose conditions are met. Your old KittyCombo kitties, `/kc` commands and settings carry over.
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\KittyCombo`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **rom weakauras:** use your auras as combo conditions
+> - **Cherry's Chat:** shares its copy-box size
+> - **Cherry's Grid:** Cherry's Grid can run a kitty when you click a frame
+> - **Cherry's Bar:** Cherry's Bar shows the Kitty mode
+>
+> **Original addon:** KittyCombo 0.973 by Miranda. If `Interface\AddOns\KittyCombo` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+>
+> **Other addons:** AddonManager lists it when you have that addon.
+
+<!-- end of requirements -->
+
 ## Updated in 1.7.17
 
 When **Cherry's Bar** is installed, the "Mode:" plate moves onto its bar, so it no longer sits at the top of the screen. Clicking the bar's Mode display opens the same mode pictures. Hide that display in `/cbar`, or turn Cherry's Bar off, and the plate comes back if "Show current mode" is ticked.

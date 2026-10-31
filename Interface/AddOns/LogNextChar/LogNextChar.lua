@@ -7,7 +7,7 @@ local ADDON = "LogNextChar"
 LogNextChar = LogNextChar or {}
 local me = LogNextChar
 
-me.version = "1.2.1"
+me.version = "1.2.2"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.LogNextChar) or "Interface/AddOns/LogNextChar/"
 
 -- Saved: LogNextChar_Settings = { show, lock, position = { x, y } }
@@ -131,6 +131,11 @@ local function ArmAndLogout(mode, target)
     else
         Print("Unknown mode: " .. tostring(mode))
         return
+    end
+
+    -- On its own it can still log out. Picking the next character takes Cherry's Loginxml's login screen.
+    if type(_G.LOGCHAR_ROSTER) ~= "table" then
+        Print("Cherry's Loginxml isn't installed, so this only logs you out. Pick the character yourself.")
     end
 
     CloseMailbox()
@@ -347,7 +352,7 @@ function me.OnEnter(button)
         GameTooltip:AddLine("|cff9ea8baClick: log out, then log in this character|r")
     end
     if type(_G.LOGCHAR_ROSTER) ~= "table" then
-        GameTooltip:AddLine("|cffff6060Needs Cherry's Loginxml to pick the character|r")
+        GameTooltip:AddLine("|cffff6060Without Cherry's Loginxml this only logs you out|r")
     end
     if me.Get("lock") then
         GameTooltip:AddLine("|cff9ea8baLocked. Unlock in the settings to move: /lnc settings|r")

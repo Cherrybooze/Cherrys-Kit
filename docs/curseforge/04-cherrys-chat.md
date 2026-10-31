@@ -2,7 +2,14 @@
 
 > **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Optional, when you have them:** pbInfo (class colours from its player list) and Ultimate Mail Mod (Ctrl+click a name in chat to fill the mail's To).
+> **Where it goes:** `Interface\AddOns\CherrysKit\CherrysChat`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **pbInfo:** class colours from its player list
+> - **Ultimate Mail Mod:** Ctrl+click a name in chat to fill the mail's To
+> - **Cherry's KittyCombo:** KittyCombo shares its copy-box size
+>
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysChat` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 

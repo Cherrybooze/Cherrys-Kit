@@ -30,12 +30,14 @@ class PackagesTest(unittest.TestCase):
 
     def test_each_is_one_folder_for_interface_addons(self):
         self.assertEqual({name.split("/")[0] for name in self.names("CherrysLoginxml")}, {"CherrysKit"})
-        self.assertEqual({name.split("/")[0] for name in self.names("LogNextChar")}, {"LogNextChar"})
+        self.assertEqual({name.split("/")[0] for name in self.names("LogNextChar")}, {"CherrysKit"})
+        self.assertIn("CherrysKit/LogNextChar/LogNextChar.lua", self.names("LogNextChar"))
 
-    def test_game_would_load_only_the_addons_own_toc(self):
-        # The client loads every .toc it finds under Interface/AddOns, at any depth
-        tocs = [name for name in self.names("CherrysLoginxml") if name.lower().endswith(".toc")]
-        self.assertEqual(tocs, ["CherrysKit/CherrysLoginxmlHook/CherrysLoginxmlHook.toc"])
+    def test_the_hubs_manifest_is_what_loads_them(self):
+        # The client loads every .toc it finds under Interface/AddOns, at any depth, so these have none: placed
+        # anywhere but under CherrysKit they don't load at all.
+        for package in ("CherrysLoginxml", "LogNextChar"):
+            self.assertEqual([name for name in self.names(package) if name.lower().endswith(".toc")], [])
         self.assertIn("CherrysKit/CherrysLoginxmlHook/LoginScreen/loginxml.toc.txt", self.names("CherrysLoginxml"))
 
     def test_no_personal_files(self):
@@ -51,7 +53,7 @@ class PackagesTest(unittest.TestCase):
 
     def test_requirements_are_recorded(self):
         self.assertTrue(self.packages["CherrysLoginxml"]["requires_hub"])
-        self.assertEqual(self.packages["LogNextChar"]["requires_addon"], "CherrysLoginxml")
+        self.assertNotIn("requires_addon", self.packages["LogNextChar"])
 
 
 @unittest.skipUnless(SHELL, "Windows PowerShell required")

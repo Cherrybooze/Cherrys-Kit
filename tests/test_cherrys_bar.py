@@ -1410,8 +1410,9 @@ class PackageTest(unittest.TestCase):
 
     def test_hub_knows_the_addon(self):
         hub = (KIT / "CherrysKit.lua").read_text(encoding="utf-8")
-        self.assertIn('CherrysBar = "-XBARVERSION"', hub)
-        self.assertIn('Kit.OLD_FOLDERS = { CherrysBar = "XBar" }', hub)
+        origins = (KIT / "KitOrigins.lua").read_text(encoding="utf-8")
+        self.assertIn('fingerprint = "-XBARVERSION"', origins)
+        self.assertIn('folder = "XBar"', origins)
         self.assertIn('"CherrysBar", "ControlHub"', hub)
         self.assertIn('CherrysBar = "Interface/AddOns/CherrysKit/CherrysBar/"', (KIT / "KitPaths.lua").read_text(encoding="utf-8"))
         self.assertIn('CherrysBar = "/cbar"', (KIT / "Commands.lua").read_text(encoding="utf-8"))
@@ -1423,12 +1424,14 @@ class PackageTest(unittest.TestCase):
             DEFAULT_CHAT_FRAME = { AddMessage = function(_, msg) messages[#messages + 1] = msg end }
             function SaveVariables() end
         """)
+        lua.execute((KIT / "KitOrigins.lua").read_text(encoding="utf-8"))
+        lua.execute("loadfile = nil")
         lua.execute((KIT / "CherrysKit.lua").read_text(encoding="utf-8"))
         self.assertTrue(lua.eval("CherrysKit.IsEnabled('CherrysBar')"))
-        lua.execute("XBARVERSION = 1.71; CherrysKit.WarnOldCopies()")
+        lua.execute("XBARVERSION = 1.71; CherrysKit.WarnOrigins()")
         self.assertFalse(lua.eval("CherrysKit.IsEnabled('CherrysBar')"))
         text = " ".join(str(v) for v in lua.eval("messages").values())
-        self.assertIn("AddOns\\XBar.", text)
+        self.assertIn("AddOns\\XBar takes precedence", text)
 
 
 if __name__ == "__main__":

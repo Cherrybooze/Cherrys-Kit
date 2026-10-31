@@ -6,6 +6,22 @@ Version **6.2.5** · Kit release **0.11.83** · [All addons / hub](../README.md)
 
 Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.4 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\AdvancedAuctionHouse`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Global Bank:** its helper keeps a searchable auction cache
+> - **zBag:** clicks in the bag work in the auction window
+>
+> **Original addon:** Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves. If `Interface\AddOns\AdvancedAuctionHouse` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one. Its saved searches, price history and settings carry over to this version.
+>
+> **Other addons:** AddonManager lists it when you have that addon.
+
+<!-- end of requirements -->
+
 ## Updated in 6.2.5
 
 The auction cache now removes an item when its auction ends, not only after two days.

@@ -6,6 +6,21 @@ Version **1.0b3-ck3** · Kit release **0.11.80** · [All addons / hub](../README
 
 TooltipIds 1.0b3 by Rock5, updated for Cherry's Kit. Handy for rom weakauras (track a buff by its ID) and for macros.
 
+<!-- requirements: tools/curseforge_pages.py writes this -->
+
+> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+>
+> **Where it goes:** `Interface\AddOns\CherrysKit\TooltipIds`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **pbInfo:** ID numbers in its tooltips too
+>
+> **Original addon:** TooltipIds 1.0b3 by Rock5. If `Interface\AddOns\TooltipIds` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+>
+> **Other addons:** AddonManager lists it when you have that addon.
+
+<!-- end of requirements -->
+
 ## Updated in 1.0b3-ck3
 
 Hovering a buff or debuff no longer prints an ID line to chat. Turning the addon off in the kit now also removes its hooks from the last session.

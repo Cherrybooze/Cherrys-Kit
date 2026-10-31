@@ -2,7 +2,15 @@
 
 > **Requires:** Cherry's Kit (hub 0.4.23 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
-> **Optional, when you have them:** Cherry's KittyCombo (the Kitty mode display) and Global Bank (its Chrome extension gives the Clock the real time).
+> **Where it goes:** `Interface\AddOns\CherrysKit\CherrysBar`. The hub loads it from there, and it won't load from anywhere else.
+>
+> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> - **Cherry's KittyCombo:** the Kitty mode display
+> - **Global Bank:** its Chrome extension gives the Clock the real time
+>
+> **Original addon:** XBar III by matif and Bussdee. If `Interface\AddOns\XBar` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+>
+> **Other addons:** Its Performance display times the update loops of other addons it finds, kit or not, including Lootomatic. It only reads their names, so none of them are needed.
 
 **Full-width information bars for Runes of Magic: at the top of the screen, the bottom, or both, with your choice of displays on each.**
 
