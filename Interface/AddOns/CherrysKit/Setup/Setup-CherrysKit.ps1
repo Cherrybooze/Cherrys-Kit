@@ -131,6 +131,8 @@ function Get-PythonInfo {
 }
 
 function Get-ChromePath {
+    # Chrome and its registry entries are Windows-only; other systems just skip the check.
+    if ($env:OS -ne 'Windows_NT') { return $null }
     $candidates = @()
     foreach ($key in @(
         'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe',
@@ -141,10 +143,12 @@ function Get-ChromePath {
             if ($value) { $candidates += $value }
         } catch { }
     }
+    $programFiles = $env:ProgramFiles
     $programFilesX86 = ${env:ProgramFiles(x86)}
-    $candidates += (Join-Path $env:ProgramFiles 'Google\Chrome\Application\chrome.exe')
+    $localAppData = $env:LOCALAPPDATA
+    if ($programFiles) { $candidates += (Join-Path $programFiles 'Google\Chrome\Application\chrome.exe') }
     if ($programFilesX86) { $candidates += (Join-Path $programFilesX86 'Google\Chrome\Application\chrome.exe') }
-    $candidates += (Join-Path $env:LOCALAPPDATA 'Google\Chrome\Application\chrome.exe')
+    if ($localAppData) { $candidates += (Join-Path $localAppData 'Google\Chrome\Application\chrome.exe') }
     foreach ($candidate in $candidates) {
         if ($candidate -and (Test-Path -LiteralPath $candidate)) { return $candidate }
     }
