@@ -53,7 +53,7 @@ The full kit stays on GitHub rather than becoming a project: it would overlap ev
 
 - **Manifest lines for addons that aren't installed:** the client skips a missing XML file silently. A missing Lua file is reported as a script error, which would light the minimap's bug button on every login, so `KitLoad/start.lua` stops those reports and lets every other error through.
 - **Global Bank's button on zBag's window** hides itself when zBag isn't installed.
-- **Cherry's Loginxml** needs one step more, because the game only reads a login screen from `Interface/loginxml` and a package can only fill `Interface/AddOns`. Its ZIP carries the login screen in `CherrysLoginxml/LoginScreen/`, and `Install login screen.bat` copies it across. The login screen's `.toc` travels as `loginxml.toc.txt`, because the client loads every `.toc` it finds under `Interface/AddOns`, at any depth. The addon says so in chat while the login screen is missing or a different version.
+- **Cherry's Loginxml** needs one step more, because the game only reads a login screen from `Interface/loginxml` and a package can only fill `Interface/AddOns`. Its ZIP carries the login screen in `CherrysKit/CherrysLoginxmlHook/LoginScreen/`, and `Install login screen.bat` copies it across. The login screen's `.toc` travels as `loginxml.toc.txt`, because the client loads every `.toc` it finds under `Interface/AddOns`, at any depth. The addon says so in chat while the login screen is missing or a different version.
 
 ### First publish
 
