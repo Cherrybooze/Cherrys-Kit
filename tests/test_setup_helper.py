@@ -104,6 +104,32 @@ class GuidedSetupTests(unittest.TestCase):
         self.assertIn('moved 4', log)
         self.assertIn('kit ', log)
 
+    def test_fallback_conflict_list_when_the_addon_map_is_missing(self):
+        # A damaged install without KitOrigins.lua still recognises older copies, including the
+        # five addons that now ship as Cherry's Info and Cherry's Loginxml inside LogNextChar.
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        game = Path(temp.name) / 'Game'
+        addons = game / 'Interface/AddOns'
+        setup = addons / 'CherrysKit/Setup'
+        setup.mkdir(parents=True)
+        shutil.copy2(SCRIPT, setup / SCRIPT.name)
+        (addons / 'CherrysKit/CherrysKit.toc').write_text('## Version: 9.9.9\n', encoding='utf-8')
+        for name in ('pbInfo', 'CherrysInfo', 'CherrysLoginxml', 'LogNextChar', 'KeepMe'):
+            (addons / name).mkdir()
+            (addons / name / 'marker.toc').write_text('fixture\n', encoding='utf-8')
+        result = subprocess.run(
+            [SHELL, '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+             '-File', str(setup / SCRIPT.name), '-Landing', str(addons), '-NonInteractive'],
+            capture_output=True, text=True, errors='replace', timeout=300)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('built-in list', result.stdout)
+        moved = {path.name for path in (game / 'Interface/offloaded_addons').iterdir()}
+        for expected in ('pbInfo', 'CherrysInfo', 'CherrysLoginxml', 'LogNextChar'):
+            self.assertIn(expected, moved)
+        self.assertTrue((addons / 'KeepMe/marker.toc').is_file())
+        self.assertFalse((game / 'Interface/offloaded_addons/KeepMe').exists())
+
     def test_headless_run_refuses_a_folder_that_is_not_the_game(self):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)

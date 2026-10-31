@@ -189,13 +189,17 @@ function Get-ConflictSet([string]$kitFolder) {
     } catch { }
     if ($conflicts.Count -lt 5) {
         Write-Warn 'The addon map (KitOrigins.lua) could not be read; using the built-in list.'
+        # Mirrors the installed KitOrigins.lua; the five tooltip and tracker addons now ship as Cherry's
+        # Info, and Cherry's Loginxml became part of LogNextChar.
         $fallback = @{
             'KittyCombo' = "Cherry's KittyCombo"; 'RomWeakAuras' = 'rom weakauras'; 'CherrysChat' = "Cherry's Chat"
-            'zBag' = 'zBag'; 'GlobalBank' = 'Global Bank'; 'ExtendedMacroIcons' = 'Extended Macro Icons'
-            'TooltipIds' = 'TooltipIds'; 'UltimateMailMod' = 'Ultimate Mail Mod'; 'AdvancedAuctionHouse' = 'Advanced Auction House'
-            '!CherrysLoadTimes' = "Cherry's Addon LoadTimes"; 'ZShop' = 'ZShop'; 'pbInfo' = 'pbInfo'
-            'PortraitHP' = 'PortraitHP'; 'GridCliqueIt' = "Cherry's Grid"; 'CherrysQuests' = "Cherry's Quests"
-            'XBar' = "Cherry's Bar"; 'CherrysLoginxml' = "Cherry's Loginxml"; 'LogNextChar' = 'LogNextChar'
+            'zBag' = 'zBag'; 'GlobalBank' = 'Global Bank'; 'CherrysInfo' = "Cherry's Info"
+            'pbInfo' = "Cherry's Info (was pbInfo)"; 'PortraitHP' = "Cherry's Info (was PortraitHP)"
+            'CherrysQuests' = "Cherry's Info (was Cherry's Quests)"; 'ExtendedMacroIcons' = "Cherry's Info (was Extended Macro Icons)"
+            'TooltipIds' = "Cherry's Info (was TooltipIds)"; 'UltimateMailMod' = 'Ultimate Mail Mod'
+            'AdvancedAuctionHouse' = 'Advanced Auction House'; '!CherrysLoadTimes' = "Cherry's Addon LoadTimes"
+            'ZShop' = 'ZShop'; 'GridCliqueIt' = "Cherry's Grid"; 'XBar' = "Cherry's Bar"
+            'CherrysLoginxml' = "LogNextChar (was Cherry's Loginxml)"; 'LogNextChar' = 'LogNextChar'
         }
         foreach ($name in $fallback.Keys) { $conflicts[$name] = $fallback[$name] }
     }
