@@ -518,8 +518,15 @@ assert.equal(gb.setLinks(gb.emptyState(), many, 'x'), 5000);
         self.assertNotIn('externally_connectable', manifest)
         self.assertNotIn('web_accessible_resources', manifest)
         self.assertNotIn('host_permissions', manifest)
-        self.assertEqual(sorted(manifest['permissions']), ['nativeMessaging', 'storage'])
+        self.assertEqual(sorted(manifest['permissions']), ['alarms', 'nativeMessaging', 'storage'])
         background = (folder / 'background.js').read_text(encoding='utf-8')
+        # Without a permission its chrome.* namespace is undefined, and the optional calls do nothing.
+        for api in ('alarms', 'storage', 'nativeMessaging'):
+            used = ('chrome.runtime.sendNativeMessage' if api == 'nativeMessaging' else 'chrome.' + api) in background
+            self.assertTrue(used, api)
+            self.assertIn(api, manifest['permissions'])
+        extra = json.loads((ROOT / 'extras/GlobalBankDailyRewards/GlobalBank/Helper/ChromeExtension/manifest.json').read_text(encoding='utf-8'))
+        self.assertEqual(extra, manifest)
         self.assertIn("accessLevel: 'TRUSTED_CONTEXTS'", background)
         self.assertNotIn('onMessageExternal', background)
         self.assertNotIn('onConnectExternal', background)
