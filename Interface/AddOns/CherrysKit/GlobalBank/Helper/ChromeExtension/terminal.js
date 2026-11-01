@@ -489,7 +489,17 @@ const GBTerminal = (() => {
         await navigator.clipboard.writeText(text);
         return true;
       } catch {
-        return false;
+        // A typed copy comes back from the helper too late for the clipboard call: the older way still works then
+        const box = make('textarea');
+        box.value = text;
+        box.style.position = 'fixed';
+        box.style.opacity = '0';
+        document.body.append(box);
+        box.select();
+        const done = document.execCommand('copy');
+        box.remove();
+        input.focus({preventScroll: true});
+        return done;
       }
     }
     function clearView() {
