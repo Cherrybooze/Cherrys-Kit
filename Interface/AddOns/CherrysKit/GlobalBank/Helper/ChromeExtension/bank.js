@@ -40,7 +40,7 @@ const GBBank = (() => {
     return formatNumber(amount);
   }
   const escapeHtml = text => String(text ?? '').replace(/[&<>"']/g, letter => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[letter]));
-  // A bank opened once in game is known; before that its items are simply missing, which isn't the same as none.
+  // A bank read once in game is known; before that its items are simply missing, which isn't the same as none.
   const bankKnown = character => !!character.bankSeen || (character.bank || []).length > 0;
   function transferStones(character) {
     let count = 0;
@@ -886,14 +886,14 @@ const GBBank = (() => {
       el('bank-total').textContent = `${formatNumber(state.cells.reduce((sum, cell) => sum + cell.total, 0))} items in these`;
       el('bank-reset-filters').hidden = !filtersActive();
       renderScope(shown.length);
-      // Separate warnings for separate jobs in game: one doesn't do the other, and Update now does neither.
+      // Separate warnings, which can overlap. Both take a login in game, which Update now can't do.
       const stale = shown.filter(character => character.stale).length;
       const unseen = shown.filter(character => !bankKnown(character)).length;
       el('coverage-login').hidden = !stale;
       el('coverage-bank').hidden = !unseen;
       el('bank-coverage').hidden = !stale && !unseen;
       el('coverage-login-text').textContent = stale === 1 ? '1 character needs a login on the current version' : `${formatNumber(stale)} characters need a login on the current version`;
-      el('coverage-bank-text').textContent = unseen === 1 ? '1 bank not recorded: open it once in game' : `${formatNumber(unseen)} banks not recorded: open each once in game`;
+      el('coverage-bank-text').textContent = unseen === 1 ? '1 bank not recorded: log in once with that character' : `${formatNumber(unseen)} banks not recorded: log in once with each`;
     }
     // Every filter that narrows what's listed, apart from the characters, which have their own reset
     function filtersActive() {
