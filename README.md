@@ -1,16 +1,27 @@
 [![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)
 
+### Install or update in four steps
+
+1. **Download.** The whole kit: the button above. Only some addons: the **Hub** ZIP and the addon ZIPs you want from the [release page](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115). Every addon needs the hub.
+2. **Extract into your game's `Interface\AddOns\` folder**, for example `C:\RunesOfMagic\Interface\AddOns\`. Several ZIPs all hold a `CherrysKit` folder: let Windows merge them. You now have `Interface\AddOns\CherrysKit\` and, from the Full or Hub ZIP, **`Interface\AddOns\!setup_cherryskit.bat`**.
+3. **Double-click `!setup_cherryskit.bat`.** It checks your folders, then asks at most five yes/no questions, such as:
+   - *Update these now?* when GitHub's latest release has newer versions of your addons. Old versions are kept in `Interface\offloaded_addons`.
+   - *Install them?* for what your addons can use that's missing, such as another kit addon or Chrome for Global Bank's page. Pick them by number, or none; a no is remembered.
+   - *Move these folders into offloaded_addons?* for old separate copies of the kit's addons, which would otherwise keep the kit's versions off. Nothing is deleted.
+   - *Install or update the login screen?* for LogNextChar, and *Run the Chrome extension installer?* for Global Bank's optional Chrome page.
+
+   Press Enter for the suggested answer. Anything you say no to is left alone.
+4. **Start the game, or Reload UI, and type `/ck`.** Every installed addon has a row there, with its settings and an on/off switch.
+
+**To update later,** close the game and run `!setup_cherryskit.bat` again. **On CurseForge,** pick the addons you want: the app installs the hub with them. Run `!setup_cherryskit.bat` once afterwards if you had old separate copies.
+
+**Single addons or the whole kit?** Every addon works on its own with just the hub. A few features link two addons, for example running a kitty by clicking a raid frame needs both Cherry's Grid and Cherry's KittyCombo; those are missing until you have both. Each addon's guide lists them under **Alone or in the full kit**, and the [addon map](docs/ADDON_MAP.md) has them all.
+
+> **Use the button above, not GitHub's green Code → Download ZIP.** That downloads the source, inside an extra `Cherrys-Kit-main` folder, and the game won't load it from there.
+
 # Cherry's Kit
 
 > Playtest build: kit **0.11.115**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
-
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)
-
-**Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Then double-click **`!setup_cherryskit.bat`**, which lands next to the `CherrysKit` folder, start the game or Reload UI, and type `/ck`.
-
-> **What the setup does:** it says which addons are out of date against the latest release here on GitHub and can update them, checks what your addons can use and asks before installing what's missing, moves older copies of the kit's addons to `Interface\offloaded_addons` so the kit's versions win (nothing is deleted), stops the Global Bank helper during updates, puts LogNextChar's login screen in place, and walks you through the optional Chrome extension. It asks at most five questions. Run the same file whenever you want to update.
-
-> **Installing the addon? Use the download above.** GitHub's green **Code → Download ZIP** button and **Source code (zip)** links download the repository, with an extra `Cherrys-Kit-main` or version folder. Those downloads are for working on the source.
 
 **Runes of Magic addons that work together, with one small control hub.**
 

@@ -18,15 +18,15 @@
         },
         {
           "package": "CherrysChat",
-          "for": "shares its copy-box size"
+          "for": "its code boxes use Cherry's Chat's copy-box size"
         },
         {
           "package": "CherrysGrid",
-          "for": "Cherry's Grid can run a kitty when you click a frame"
+          "for": "click a party or raid frame to run a kitty"
         },
         {
           "package": "CherrysBar",
-          "for": "Cherry's Bar shows the Kitty mode"
+          "for": "the Kitty mode shows on Cherry's Bar instead of its own plate"
         }
       ],
       "kit_file": "KittyCombo/dofile.lua",
@@ -56,7 +56,7 @@
       "works_with": [
         {
           "package": "KittyCombo",
-          "for": "track its next skills and modes"
+          "for": "triggers for KittyCombo's next skills and modes"
         },
         {
           "package": "CherrysInfo",
@@ -85,7 +85,7 @@
       "works_with": [
         {
           "package": "CherrysInfo",
-          "for": "class colours from its player list"
+          "for": "class colours for names, from Cherry's Info's player list"
         },
         {
           "package": "UltimateMailMod",
@@ -93,7 +93,7 @@
         },
         {
           "package": "KittyCombo",
-          "for": "KittyCombo shares its copy-box size"
+          "for": "KittyCombo's code boxes use the same copy-box size"
         }
       ],
       "kit_file": "CherrysChat/Emoji.lua",
@@ -151,7 +151,7 @@
       "works_with": [
         {
           "package": "zBag",
-          "for": "a button on the one-bag window"
+          "for": "a Global Bank button on zBag's one-bag window"
         },
         {
           "package": "AdvancedAuctionHouse",
@@ -159,11 +159,11 @@
         },
         {
           "package": "ZShop",
-          "for": "its Chrome extension or helper tells ZShop the time, for the daily reminder"
+          "for": "ZShop's daily reminder gets the real time from the Chrome extension or helper"
         },
         {
           "package": "CherrysBar",
-          "for": "its Chrome extension gives Cherry's Bar's Clock the real time"
+          "for": "Cherry's Bar's Clock gets the real time from the Chrome extension"
         },
         {
           "package": "LogNextChar",
@@ -200,7 +200,7 @@
         },
         {
           "package": "LogNextChar",
-          "for": "LogNextChar closes its window before switching characters"
+          "for": "LogNextChar closes the mail window before switching characters"
         }
       ],
       "kit_file": "UltimateMailMod/UltimateMailMod.lua",
@@ -229,7 +229,7 @@
       "works_with": [
         {
           "package": "GlobalBank",
-          "for": "its helper keeps a searchable auction cache"
+          "for": "Global Bank's helper keeps a searchable cache of your auction searches"
         },
         {
           "package": "zBag",
@@ -285,7 +285,7 @@
       "works_with": [
         {
           "package": "GlobalBank",
-          "for": "its Chrome extension or helper tells ZShop the time, for the daily reminder"
+          "for": "the daily reminder uses the real time, from Global Bank's Chrome extension or helper"
         }
       ],
       "kit_file": "ZShop/config.lua",
@@ -420,7 +420,7 @@
         },
         {
           "package": "GlobalBank",
-          "for": "its Chrome extension gives the Clock the real time"
+          "for": "the Clock shows the real time, from Global Bank's Chrome extension"
         }
       ],
       "kit_file": "CherrysBar/Core.lua",
