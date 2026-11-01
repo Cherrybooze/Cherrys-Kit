@@ -90,7 +90,7 @@ function Show-SetupWindow([string]$extensionPath, [string]$clockFile, [bool]$pag
     $script:closeIn = 0
 
     $form = New-Object Windows.Forms.Form
-    $form.Text = 'Global Bank Daily Rewards setup'
+    $form.Text = 'Global Bank for RoM setup'
     $form.FormBorderStyle = 'FixedToolWindow'
     $form.TopMost = $true
     $form.ClientSize = New-Object Drawing.Size(390, 176)

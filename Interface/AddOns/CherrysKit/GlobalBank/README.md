@@ -228,7 +228,7 @@ This is a personal hobby project. Support and PR reviews are best effort, with n
 
 ## Search your data in Chrome
 
-Open the **Global Bank Daily Rewards** extension and choose **Open Global Bank**. The page opens on your computer. The top of the page says whether the helper is running, and **Connection** can start it for you.
+Open the **Global Bank for RoM** extension and choose **Open Global Bank**. The page opens on your computer. The top of the page says whether the helper is running, and **Connection** can start it for you.
 
 - On **Terminal**, try `list`, `list gold`, `search mana`, or `show Name`. Type `help` for more commands.
 - On **Auctions**, enter an item name or ID. Add a realm to narrow the results.
