@@ -525,6 +525,14 @@ assert.deepEqual([...gb.heatColor(999999999, own).rgb], [255, 255, 255]);
 assert.deepEqual([...gb.heatColor(250000000, own).rgb], [64, 64, 64]);
 assert.equal(gb.heatColor(0, own).text, '#ffffff');
 assert.equal(gb.heatColor(999999999, own).text, '#101820');
+// How many letters a tile shows
+assert.equal(gb.heatName('Aldermoor', 0), 'Aldermoor');
+assert.equal(gb.heatName('Aldermoor', 3), 'Ald');
+assert.equal(gb.heatName('Sämple', 2), 'Sä');
+assert.equal(gb.heatName('Al', 8), 'Al');
+assert.equal(gb.heatShowsGold(0), true);
+assert.equal(gb.heatShowsGold(5), true);
+assert.equal(gb.heatShowsGold(4), false);
 assert.equal(gb.validHeatColors(own), true);
 assert.equal(gb.validHeatColors(['#000000', '#808080']), false);
 assert.equal(gb.validHeatColors(['#000000', '#808080', 'red']), false);
@@ -703,7 +711,7 @@ const boxes = gb.heatBoxes(characters, state);
 assert.deepEqual([...boxes.map(b => b.account)], ['Not linked']);
 assert.deepEqual([...boxes[0].servers.map(s => s.server)], ['Aynara', 'Gaia', 'Unknown server']);
 assert.deepEqual([...boxes[0].servers[1].roms.map(r => r.rom)], ["Ann's account"]);
-assert.deepEqual([...boxes[0].servers[2].roms.map(r => r.rom)], ['RoM account not known']);
+assert.deepEqual([...boxes[0].servers[2].roms.map(r => r.rom)], ['Account not known']);
 assert.equal(Object.keys(state.links).length, 0);
 state.accounts.push({id: 'a', name: 'Mine'});
 gb.setLinks(state, ['Ann'], 'a');
@@ -1295,7 +1303,7 @@ const prepare = () => { gb.prepare(characters, accounts.accountGroups, roster.as
   assert.deepEqual(plain(heat.map(box => box.account)), ['Not linked']);
   assert.deepEqual(plain(heat[0].servers.map(s => s.server)), ['Aynara', 'Unknown server']);
   assert.deepEqual(plain(heat[0].servers[0].roms.map(r => r.rom)), ['Mains']);
-  assert.deepEqual(plain(heat[0].servers[1].roms.map(r => r.rom)), ['Bank alts', 'RoM account not known']);
+  assert.deepEqual(plain(heat[0].servers[1].roms.map(r => r.rom)), ['Bank alts', 'Account not known']);
 })().catch(error => { console.error(error); process.exit(1); });
 """)
 

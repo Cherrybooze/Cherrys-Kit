@@ -14,9 +14,15 @@ const GBAccounts = (() => {
   // Red at no gold, orange at half a cap, bright green at a full cap, until you pick your own
   const HEAT_STORE = 'gbHeatColors';
   const HEAT_COLORS = ['#c62828', '#f57c00', '#00e640'];
+  // How many letters of a name a tile shows: 0 is the whole name, and a tile is as wide as the longest one needs.
+  // Below this many, a tile leaves out its gold too, and hovering still says it.
+  const HEAT_LETTERS = 'gbHeatLetters';
+  const HEAT_GOLD_FROM = 5;
+  // An account's column is at least this wide, for its name, with as many tiles on a line as that takes
+  const HEAT_MIN_COLUMN = 64;
   const NO_SERVER = 'Unknown server';
   const NOT_LINKED = 'Not linked';
-  const NO_ROM = 'RoM account not known';
+  const NO_ROM = 'Account not known';
   const MASK = '***';
   // Names one right-click menu lists (the rest are counted), and how long the pointer rests on another name
   // before its logins replace the open ones
@@ -69,6 +75,8 @@ const GBAccounts = (() => {
     const light = rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 110;
     return {rgb, kind, css: `rgb(${rgb.join(',')})`, text: light ? '#101820' : '#ffffff'};
   }
+  const heatName = (name, letters) => (letters > 0 ? [...name].slice(0, letters).join('') : name);
+  const heatShowsGold = letters => !(letters > 0) || letters >= HEAT_GOLD_FROM;
   const validHeatColors = colors => Array.isArray(colors) && colors.length === 3 && colors.every(color => /^#[0-9a-f]{6}$/i.test(color));
   const linkKey = name => String(name).toLowerCase();
   // "Aynara (PvE)", as the shop writes it, and "Aynara", as the game does, are the same server.
@@ -430,6 +438,7 @@ const GBAccounts = (() => {
     let heatColors = HEAT_COLORS;
     let heatFrame = 0;
     const heatInputs = ['heat-color-none', 'heat-color-half', 'heat-color-full'].map(byId);
+    let heatLetters = 0;
     function showHeatColors() {
       heatInputs.forEach((input, at) => {
         input.value = heatColors[at];
@@ -454,21 +463,64 @@ const GBAccounts = (() => {
       chrome.storage.local.remove(HEAT_STORE).catch(() => {});
     });
 
+    byId('heat-letters').addEventListener('change', event => {
+      heatLetters = Number(event.target.value) || 0;
+      renderHeat();
+      chrome.storage.local.set({[HEAT_LETTERS]: heatLetters}).catch(() => {});
+    });
+    // The widest tile the names need at this many letters. Tiles are measured, so a whole name is never cut.
+    let heatMeasure = null;
+    function heatTileWidth(names) {
+      heatMeasure = heatMeasure || document.createElement('canvas').getContext('2d');
+      heatMeasure.font = `11px ${getComputedStyle(document.body).fontFamily}`;
+      let widest = 0;
+      for (const name of names) widest = Math.max(widest, heatMeasure.measureText(heatName(name, heatLetters)).width);
+      return Math.ceil(widest) + 8 + (heatShowsGold(heatLetters) ? 30 : 0);
+    }
+
+    // Boxes share the width by how many lines they take, so they come out about the same height. How much width a box
+    // asks for first decides which fit side by side, so this tries a few and keeps whichever leaves the least to scroll.
+    let heatFit = null;
+    function fitHeat() {
+      const view = byId('heat-view');
+      if (!heatFit || !view.offsetParent) return;
+      const {column, boxes} = heatFit;
+      const share = linesInColumn => {
+        for (const {node, lines} of boxes) node.style.flex = `${lines} 1 ${Math.max(column + 16, Math.round(lines * column / linesInColumn))}px`;
+      };
+      let best = 21, lowest = Infinity;
+      // Thousands of tiles take too long to lay out again and again
+      for (const linesInColumn of heatFit.tiles > 1500 ? [] : [1000, 30, 25, 21, 16, 12]) {
+        share(linesInColumn);
+        if (view.offsetHeight < lowest) {
+          lowest = view.offsetHeight;
+          best = linesInColumn;
+        }
+      }
+      share(best);
+    }
+    let heatResize = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(heatResize);
+      heatResize = setTimeout(fitHeat, 200);
+    });
+
     function renderHeat() {
       heatDirty = false;
       // The page's hover card, click and right-click work from data-char, for every cell at once
       const cellFor = (cell, server) => {
         const color = heatColor(cell.gold, heatColors);
-        // Under its own server a name needs no "(Server)" after it
-        const name = cell.name.endsWith(` (${server})`) ? cell.name.slice(0, -server.length - 3) : cell.name;
         const node = make('div', 'heat-cell');
-        node.append(make('span', 'heat-name', name), make('b', '', color.kind === 'full' ? 'MAX' : tinyGold(cell.gold)));
+        node.append(make('span', 'heat-name', heatName(ownName(cell, server), heatLetters)));
+        if (heatShowsGold(heatLetters)) node.append(make('b', '', color.kind === 'full' ? 'MAX' : tinyGold(cell.gold)));
         node.style.background = color.css;
         node.style.color = color.text;
         node.setAttribute('aria-label', `${cell.name}, ${number(cell.gold)} gold`);
         if (cell.key) node.dataset.char = cell.key;
         return node;
       };
+      // Under its own server a name needs no "(Server)" after it
+      const ownName = (cell, server) => (cell.name.endsWith(` (${server})`) ? cell.name.slice(0, -server.length - 3) : cell.name);
       // An account stays in one piece unless it's longer than a login screen's list
       const block = (title, cells, server) => {
         const box = make('div', 'heat-group' + (cells.length > 8 ? ' is-long' : ''));
@@ -478,17 +530,23 @@ const GBAccounts = (() => {
         return box;
       };
       const boxes = heatBoxes(characters.filter(shows), state, !fileKey && sealedFile ? 'Accounts locked' : NOT_LINKED, options.romTitle || null);
+      const tile = heatTileWidth(boxes.flatMap(box => box.servers.flatMap(server => server.roms.flatMap(rom => rom.characters.map(cell => ownName(cell, server.server))))));
+      const perLine = Math.ceil(HEAT_MIN_COLUMN / (tile + 1));
+      const column = perLine * (tile + 1) - 1;
+      byId('heat-view').style.setProperty('--heat-tile', `${tile}px`);
+      byId('heat-view').style.setProperty('--heat-column', `${column}px`);
+      byId('heat-view').classList.toggle('is-narrow', column < 96);
       const allGold = boxes.reduce((sum, box) => sum + box.total, 0);
       const allCaps = boxes.reduce((sum, box) => sum + box.fullCaps, 0);
       const total = byId('heat-total');
       total.textContent = `${shortGold(allGold)} gold`;
       total.title = `${number(allGold)} gold`;
       total.append(make('span', 'soft-count', `${number(allCaps)} full ${allCaps === 1 ? 'cap' : 'caps'}`));
+      const fit = [];
       byId('heat-view').replaceChildren(...boxes.map(box => {
         const node = make('section', 'heat-column');
-        // Boxes share the width by how many lines they take, so they come out about the same height
-        const lines = box.count + box.servers.reduce((sum, server) => sum + 1 + server.roms.length, 1);
-        node.style.flex = `${lines} 1 ${Math.max(116, lines * 5)}px`;
+        fit.push({node, lines: box.servers.reduce((sum, server) => sum + 1 + server.roms.reduce((rows, rom) => rows + 1 + Math.ceil(rom.characters.length / perLine), 0), 1)});
+        node.style.flex = `${fit.at(-1).lines} 1 ${Math.max(column + 16, Math.round(fit.at(-1).lines * column / 21))}px`;
         const head = make('div', 'heat-column-head');
         head.append(make('h2', '', box.account), make('span', 'heat-column-sub', `${number(box.count)} ${box.count === 1 ? 'character' : 'characters'}`));
         const balance = make('span', 'heat-balance', shortGold(box.total));
@@ -497,15 +555,16 @@ const GBAccounts = (() => {
         const flow = make('div', 'heat-flow');
         for (const server of box.servers) {
           const title = make('h3', 'heat-server');
-          const worth = make('span', '', shortGold(server.total));
-          worth.title = `${number(server.total)} gold`;
-          title.append(make('span', '', server.server), worth);
+          title.title = `${server.server}: ${number(server.total)} gold`;
+          title.append(make('span', '', server.server), make('span', '', shortGold(server.total)));
           flow.append(title);
           for (const rom of server.roms) flow.append(block(rom.rom, rom.characters, server.server));
         }
         node.append(head, flow);
         return node;
       }));
+      heatFit = {column, boxes: fit, tiles: boxes.reduce((sum, box) => sum + box.count, 0)};
+      fitHeat();
       if (!boxes.length) byId('heat-view').append(make('p', 'hint', characters.length ? 'No characters on the servers ticked at the top.' : 'No characters saved yet.'));
     }
 
@@ -854,9 +913,15 @@ const GBAccounts = (() => {
 
     // Whichever copy was saved last, and a copy left in the helper's folder is what a new PC starts from.
     (async () => {
-      const stored = await chrome.storage.local.get([KEY_STORE, FILE_STORE, HEAT_STORE]);
+      const stored = await chrome.storage.local.get([KEY_STORE, FILE_STORE, HEAT_STORE, HEAT_LETTERS]);
       key = stored[KEY_STORE] || null;
       if (validHeatColors(stored[HEAT_STORE])) heatColors = stored[HEAT_STORE];
+      const letters = Math.floor(Number(stored[HEAT_LETTERS]));
+      const choice = [...byId('heat-letters').options].find(option => Number(option.value) === letters);
+      if (choice) {
+        heatLetters = letters;
+        byId('heat-letters').value = choice.value;
+      }
       const local = validFile(stored[FILE_STORE]) ? stored[FILE_STORE] : null;
       const inFolder = await readFile().catch(() => null);
       sealedFile = !inFolder || (local && local.saved >= inFolder.saved) ? local : inFolder;
@@ -906,6 +971,6 @@ const GBAccounts = (() => {
       openMenu,
     };
   }
-  return {create, heatColor, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
+  return {create, heatColor, heatName, heatShowsGold, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
     newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor};
 })();
