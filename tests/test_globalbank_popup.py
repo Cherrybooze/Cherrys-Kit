@@ -531,13 +531,17 @@ assert.equal(gb.setLinks(state, ['MID', 'Low', 'Rich'], 'a'), 3);
 assert.equal(gb.setLinks(state, ['Mid'], 'a'), 0);
 assert.equal(gb.accountOf(state, 'mid').name, 'First');
 assert.equal(gb.accountOf(state, 'nobody'), null);
-const columns = gb.heatColumns(characters, state);
-assert.deepEqual([...columns.map(c => c.server)], ['Aynara', 'Gaia', 'Unknown server']);
-const gaia = columns[1];
-assert.equal(gaia.total, 999999999 * 2 + 500000012);
-assert.deepEqual([...gaia.fullCaps.map(c => c.name)], ['Rich', 'Rich2']);
-assert.deepEqual([...gaia.groups.map(g => g.account)], ['First', 'No account']);
-assert.deepEqual([...gaia.groups[0].characters.map(c => c.name)], ['Mid', 'Low']);
+// Gameforge account, then server, then RoM account, then the characters, richest first and full caps among them
+const boxes = gb.heatBoxes(characters, state);
+assert.deepEqual([...boxes.map(b => b.account)], ['First', 'Not linked']);
+assert.equal(boxes[0].total, 999999999 + 500000005);
+assert.equal(boxes[0].count, 3);
+assert.equal(boxes[0].fullCaps, 1);
+assert.deepEqual([...boxes[0].servers.map(s => s.server)], ['Gaia']);
+assert.deepEqual([...boxes[0].servers[0].roms[0].characters.map(c => c.name)], ['Rich', 'Mid', 'Low']);
+assert.deepEqual([...boxes[1].servers.map(s => s.server)], ['Aynara', 'Gaia', 'Unknown server']);
+assert.equal(boxes[1].servers[1].total, 999999999 + 7);
+assert.deepEqual([...boxes[1].servers[1].roms[0].characters.map(c => c.name)], ['Rich2', 'Alone']);
 assert.equal(gb.setLinks(state, ['Low'], null), 1);
 assert.equal(gb.accountOf(state, 'Low'), null);
 gb.removeAccount(state, 'a');
@@ -684,14 +688,17 @@ assert.equal(gb.classColor(characters[2]), '#e0e052');
 assert.equal(gb.classColor(characters[4]), null);
 // Grouped on the heatmap too, and never linked
 const state = gb.emptyState();
-const columns = gb.heatColumns(characters, state);
-assert.deepEqual([...columns.map(c => c.server)], ['Aynara', 'Gaia', 'Unknown server']);
-assert.deepEqual([...columns[1].groups.map(g => g.account)], ["Ann's account, not linked"]);
-assert.deepEqual([...columns[2].groups.map(g => g.account)], ['No account']);
+const boxes = gb.heatBoxes(characters, state);
+assert.deepEqual([...boxes.map(b => b.account)], ['Not linked']);
+assert.deepEqual([...boxes[0].servers.map(s => s.server)], ['Aynara', 'Gaia', 'Unknown server']);
+assert.deepEqual([...boxes[0].servers[1].roms.map(r => r.rom)], ["Ann's account"]);
+assert.deepEqual([...boxes[0].servers[2].roms.map(r => r.rom)], ['RoM account not known']);
 assert.equal(Object.keys(state.links).length, 0);
 state.accounts.push({id: 'a', name: 'Mine'});
 gb.setLinks(state, ['Ann'], 'a');
-assert.deepEqual([...gb.heatColumns(characters, state)[1].groups.map(g => g.account)], ["Ann's account, not linked", 'Mine']);
+const linked = gb.heatBoxes(characters, state);
+assert.deepEqual([...linked.map(b => b.account)], ['Mine', 'Not linked']);
+assert.deepEqual([...linked[0].servers[0].roms.map(r => r.rom)], ["Ann's account"]);
 """)
 
     def test_the_games_tooltip_lines_are_shown_as_saved(self):
@@ -1262,7 +1269,7 @@ const prepare = () => { gb.prepare(characters, accounts.accountGroups, roster.as
   const again = gb.create({get: async () => ({gbView: view, gbRomNames: {'aynara|ann': 'Mains', constructor: 'x'}}), set: async () => {}});
   await again.load();
   assert.deepEqual(plain([again.view.romFirst, again.view.hideGameforge, again.view.region]), [true, true, 'na']);
-  // Gameforge accounts: renamed when the name is free, and the heatmap names RoM accounts not linked yet
+  // Gameforge accounts: renamed when the name is free, and the Gold overview names RoM accounts
   const state = accounts.emptyState();
   state.accounts.push({id: 'a', name: 'First'}, {id: 'b', name: 'Second'});
   assert.equal(accounts.renameAccount(state, 'a', ' second '), 'second is already on the list.');
@@ -1273,10 +1280,11 @@ const prepare = () => { gb.prepare(characters, accounts.accountGroups, roster.as
   assert.equal(state.accounts[0].name, 'Main@example');
   accounts.setLinks(state, [accounts.linkKeysOf(neve)[0]], 'b');
   assert.equal(accounts.accountFor(state, neve).name, 'Second');
-  const heat = accounts.heatColumns(characters, state, 'No account', c => roster.romName(c));
-  assert.deepEqual(plain(heat.map(c => c.server)), ['Aynara', 'Unknown server']);
-  assert.deepEqual(plain(heat[0].groups.map(g => g.account)), ['Mains, not linked']);
-  assert.deepEqual(plain(heat[1].groups.map(g => g.account)), ['Bank alts, not linked', 'No account']);
+  const heat = accounts.heatBoxes(characters, state, 'Not linked', c => roster.romName(c));
+  assert.deepEqual(plain(heat.map(box => box.account)), ['Not linked']);
+  assert.deepEqual(plain(heat[0].servers.map(s => s.server)), ['Aynara', 'Unknown server']);
+  assert.deepEqual(plain(heat[0].servers[0].roms.map(r => r.rom)), ['Mains']);
+  assert.deepEqual(plain(heat[0].servers[1].roms.map(r => r.rom)), ['Bank alts', 'RoM account not known']);
 })().catch(error => { console.error(error); process.exit(1); });
 """)
 
@@ -1301,9 +1309,9 @@ assert.equal(gb.accountFor(state, bob).name, 'First');
 gb.setLinks(state, ['aynara|bob'], 'b');
 assert.equal(gb.accountFor(state, bob).name, 'Second');
 // The heatmap's cells say who they are, for the page's hover card and clicks
-const columns = gb.heatColumns([bob, old], state);
-assert.deepEqual(plain([...columns.flatMap(c => c.groups.flatMap(g => g.characters.map(cell => cell.key)))]), ['aynara|bob', '|old']);
-assert.equal(columns[0].groups[0].account, 'Second');
+const boxes = gb.heatBoxes([bob, old], state);
+assert.deepEqual(plain(boxes.flatMap(box => box.servers.flatMap(server => server.roms.flatMap(rom => rom.characters.map(cell => cell.key))))), ['aynara|bob', '|old']);
+assert.equal(boxes[0].account, 'Second');
 """)
 
     def test_stacking_rules_quality_and_favourites(self):
@@ -1497,8 +1505,8 @@ assert.equal(diamonds.loose, 1);
 assert.equal(diamonds.recorded, true);
 // Nobody on a known account means not recorded, not zero
 assert.equal(bank.accountCurrencies([{name: 'Lone', currencies: money(1000)}])[0].recorded, false);
-// Named as the game's Item Shop names them. Phirius Tokens are each character's own, so all of them count.
-assert.deepEqual(plain(totals.map(item => item.name)), ['Diamonds', 'Rubies', 'Phirius Tokens']);
+// Daily Tokens are each character's own, so all of them count
+assert.deepEqual(plain(totals.map(item => item.name)), ['Diamonds', 'Rubies', 'Daily Tokens']);
 const tokens = bank.accountCurrencies([
   {name: 'Ann', romAccount: one, saved: '2026-10-01 10:00', currencies: money(30, 'billdin')},
   {name: 'Bob', romAccount: one, saved: '2026-10-02 10:00', currencies: money(10, 'billdin')},
