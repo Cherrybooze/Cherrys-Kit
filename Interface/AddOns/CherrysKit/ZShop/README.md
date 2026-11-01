@@ -41,7 +41,7 @@ The saved field is still named `claimed` for compatibility. It means **daily pag
 - ZShop window with its settings, and a row in Cherry's Kit. No other library needed (the original needed aaa_pylib).
 - ZShop never stores your shop login link, and never opens shop pages by itself. It cannot click Collect for you: you still press it on the page.
 
-**Clock:** ZShop uses the client clock when available, then the hub's clock (fed by Global Bank's Daily Rewards extension). Otherwise, run the bundled Global Bank helper: ZShop watches its UTC heartbeat and may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
+**Clock:** ZShop uses the client clock when available, then the hub's clock (fed by the Global Bank for RoM extension). Otherwise, run the bundled Global Bank helper: ZShop watches its UTC heartbeat and may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
 
 ## Chat commands
 

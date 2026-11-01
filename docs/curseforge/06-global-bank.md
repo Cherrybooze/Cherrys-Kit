@@ -43,7 +43,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## The Global Bank page in Chrome (optional, Windows)
 
-The **Global Bank Daily Rewards** extension comes in this download. Its page shows everything on your own PC:
+The **Global Bank for RoM** extension comes in this download. Its page shows everything on your own PC:
 
 - **Region and servers**: pick Europe or North America once and tick the servers you want. Every page follows, and characters with the same name on different servers stay apart. The **Servers** page edits the lists by hand: move a server, add one the page doesn't know yet, or restore the game's lists, and set the server of characters whose server isn't known yet.
 - **Select characters** by clicking them on any page, or Shift-click for a range, and hover one for a short card of its details, with its Gameforge account / RoM account (two settings hide either one). **Use in Bank** shows only their items, with a button back to everyone. Right-click a character to see its details, select its whole RoM account (the characters one login screen lists), rename its RoM or Gameforge account, set its server, or stop tracking it.

@@ -26,7 +26,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Updated in 1.6.0
 
-**A new Global Bank page and popup** (extension 1.3.0). The pages are grouped down the side, and the search and filters sit at the top of the Bank. A line at the top always says whether the helper is running, how old your saved data is and whether your Gameforge accounts are locked. Starting the helper, unlocking your accounts and reading from folders moved to a **Connection** panel. Click an item for a panel saying who holds it, on which server and where; hovering still shows the game's tooltip. Slots come large, small or as a list. The extension has a new logo. Press **Reload extension** in the popup after updating.
+**A new Global Bank page and popup** (extension 1.3.0). The pages are grouped down the side, and the search and filters sit at the top of the Bank. A line at the top always says whether the helper is running, how old your saved data is and whether your Gameforge accounts are locked. Starting the helper, unlocking your accounts and reading from folders moved to a **Connection** panel. Click an item for a panel saying who holds it, on which server and where; hovering still shows the game's tooltip. Slots come large, small or as a list. The extension has a new logo, and Chrome lists it as **Global Bank for RoM**. Press **Reload extension** in the popup after updating.
 
 **Selecting characters doesn't change the Bank by itself any more.** Select them on any page and press **Use in Bank**. The Bank then says whose items it lists, with a button back to everyone. Its own character list still applies at once.
 
@@ -228,7 +228,7 @@ This is a personal hobby project. Support and PR reviews are best effort, with n
 
 ## Search your data in Chrome
 
-Open the **Global Bank Daily Rewards** extension and choose **Open Global Bank**. The page opens on your computer. The top of the page says whether the helper is running, and **Connection** can start it for you.
+Open the **Global Bank for RoM** extension and choose **Open Global Bank**. The page opens on your computer. The top of the page says whether the helper is running, and **Connection** can start it for you.
 
 - On **Terminal**, try `list`, `list gold`, `search mana`, or `show Name`. Type `help` for more commands.
 - On **Auctions**, enter an item name or ID. Add a realm to narrow the results.

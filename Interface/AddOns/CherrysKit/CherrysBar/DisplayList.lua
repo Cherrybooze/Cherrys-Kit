@@ -556,7 +556,7 @@ D.Add({
       tipPair("Time", v.TIME24)
     else
       GameTooltip:AddLine("The game gives addons no clock, so this is your time online for now.")
-      GameTooltip:AddLine("For real time, set up Global Bank's Daily Rewards Chrome extension, then start")
+      GameTooltip:AddLine("For real time, set up the Global Bank for RoM Chrome extension, then start")
       GameTooltip:AddLine("Chrome or open the daily reward page. It lasts until Windows restarts.")
     end
     tipPair("Online this session", v.ONLINE)

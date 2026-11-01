@@ -1,5 +1,8 @@
 Cherry's Bar
 
+1.1.10
+  The Clock's tooltip names the Chrome extension by its new name, Global Bank for RoM.
+
 1.1.9
   Location has a Show coordinates on the bar tick, in its right-click menu and in /cbar when Location is
   picked. With it on, the position is read once a second and the display redraws only if you moved.
