@@ -13,7 +13,9 @@ local function buffTemplate(unit,filter,missing)
   local r=Rules.Add(d); r.name=missing and "Show when missing" or "Show when present"
   Rules.AddCheck(d,r,{sourceId=source,field=missing and "missing" or "present"})
   Rules.AddAction(d,r,{type="show",sourceId=source,output={regionType="icon",width=56,height=56,
-    text=missing and "MISSING" or "%p",text2="",fontSize=14,animation={start="none",main="none",finish="none"}}})
+    -- A present buff or debuff shows its stack count in the bottom-right corner, like the
+    -- game's own buff icons (blank at zero or one stack). A missing one has no stacks.
+    text=missing and "MISSING" or "%p",text2=missing and "" or "%s",fontSize=14,animation={start="none",main="none",finish="none"}}})
   d.desc="Show an icon when a "..string.lower(noun).." is "..(missing and "missing" or "present").." on "..(unit=="player" and "you." or "your target.")
   return d
 end
