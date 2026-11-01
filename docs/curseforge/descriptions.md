@@ -259,7 +259,7 @@ In Cherry's Kit, `/wa` opens rom weakauras (`/rwa` alone opens the kit hub; `/rw
 
 - **Requires Cherry's Kit** 0.4.14 or later (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\RomWeakAuras\`.
 - Optional: **Cherry's KittyCombo** for the Kitty trigger, Kitty tracker, KittyCombo mode aura and class icons. **Cherry's Info** hides the game's own cast bar so My cast takes its place, and shares what it knows about monsters.
-- **Move the old `Interface\AddOns\RomWeakAuras` folder out of AddOns** (`!setup_cherryskit.bat` offers to) (and `WhiteCount`, which is now built in as Past second) if you have them. While an old copy is there, Cherry's Kit keeps this version turned off.
+- **Move the old `Interface\AddOns\RomWeakAuras` folder out of AddOns** if you have one (`!setup_cherryskit.bat` offers to), and `WhiteCount` too, which is now built in as Past second. While an old copy is there, Cherry's Kit keeps this version turned off.
 - Turn it on or off in the Cherry's Kit window (`/ck`).
 
 ## Known limits of the game
@@ -277,7 +277,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 - A rewrite of **WeakAuras** by the WeakAuras team, under the **GNU GPL v2**, which rom weakauras uses too.
 - Share codes are compressed with **LibDeflate** (Copyright (C) 2018-2021 Haoqian He, zlib License; the licence is at the top of its `lib/LibDeflate.lua`), the same copy KittyCombo uses.
 - Textures from WeakAuras and **Power Auras Classic**. Fonts **Fira Sans, Fira Mono, PT Sans Narrow** under the SIL Open Font License 1.1. Sounds under Creative Commons licences (CC BY 3.0, **CC BY-NC 3.0**, Sampling Plus 1.0, CC0), credited in the licence file.
-- The **Threat** trigger and Threat meter follow the idea and game calls of **Cherry's Info**'s threat meter (p.b. a.k.a. novayuna, odie2). They are a new implementation with none of its code.
+- The **Threat** trigger and Threat meter follow the idea and game calls of **pbInfo**'s threat meter (p.b. a.k.a. novayuna, odie2). They are a new implementation with none of its code.
 - The **Past second** trigger and Hits per second aura are based on the idea of **WhiteCount**, a small hits-per-second counter (no author named). It is a new implementation with none of its code.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Because some sounds are NonCommercial, rom weakauras must never be sold.
 
@@ -420,7 +420,7 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 ## Install
 
 - **Requires Cherry's Kit** (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\zBag\`.
-- **Move the old `Interface\AddOns\zBag` folder out of AddOns** (`!setup_cherryskit.bat` offers to) (and any separate `BagSearch` or `BagSort` folders). While an old copy is there, Cherry's Kit keeps this version turned off.
+- **Move the old `Interface\AddOns\zBag` folder out of AddOns** if you have one (`!setup_cherryskit.bat` offers to), and any separate `BagSearch` or `BagSort` folders too. While an old copy is there, Cherry's Kit keeps this version turned off.
 - Turn it on or off in the Cherry's Kit window (`/ck`).
 
 ## Bug reports
