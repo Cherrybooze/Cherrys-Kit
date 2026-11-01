@@ -34,7 +34,7 @@ function C.MarkOurs(wrapper)
   return wrapper
 end
 
-C.version = "0.11.2"
+C.version = "0.11.3"
 C.MAX_WINDOWS = 10
 C.MIN_FONT, C.MAX_FONT = 6, 40
 C.MIN_W, C.MIN_H = 120, 60
@@ -165,6 +165,21 @@ function C.ReadLink(msg, first)
   if not string.match(target, "^[%a_][%w_]*:") or string.find(target, "[\r\n]") then return nil end
   return { target = target, text = string.sub(msg, middle + 2, last - 1),
     full = string.sub(msg, first, last + 1), first = first, last = last + 1 }
+end
+
+-- Codes that draw nothing and do nothing when clicked. Players' macros and addons wrap text in an
+-- empty link to colour it (|H|h|cFF40FF40text|h, thousands of lines in the game's Chat.Log), and
+-- some colour codes are not hex (|cffffffrr). Returns the code's length, or nil.
+function C.EmptyCode(msg, i)
+  local pair = string.sub(msg, i, i + 1)
+  if pair == "|h" then
+    return 2
+  elseif pair == "|H" and string.sub(msg, i + 2, i + 3) == "|h" then
+    return 4
+  elseif pair == "|c" and string.match(msg, "^|c%w%w%w%w%w%w%w%w", i)
+      and not string.match(msg, "^|c%x%x%x%x%x%x%x%x", i) then
+    return 10
+  end
 end
 
 -- Match Cherry's Grid's default RoM palette, including when Grid is disabled.
@@ -693,6 +708,8 @@ function C.Plain(msg)
       i = i + 2
     elseif token == "|T" and controlEnd(s, "|t", i + 2) then
       i = controlEnd(s, "|t", i + 2) + 2
+    elseif C.EmptyCode(s, i) then
+      i = i + C.EmptyCode(s, i)
     else
       local nextPipe = string.find(s, "|", i + 1, true) or (#s + 1)
       parts[#parts + 1], i = string.sub(s, i, nextPipe - 1), nextPipe
