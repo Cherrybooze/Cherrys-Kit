@@ -102,6 +102,52 @@ const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resol
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
+    def test_popup_asks_for_newer_helper_files_and_links_the_kit(self):
+        folder = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
+        host = (folder / 'GlobalBank-NativeHost.ps1').read_text(encoding='utf-8')
+        version = int(re.search(r'\$BridgeVersion = (\d+)', host).group(1))
+        self.assertIn('if ($value -is [hashtable]) { $value.bridge = $BridgeVersion }', host)
+        self.assertIn(f'const BRIDGE_VERSION = {version};', (folder / 'ChromeExtension/popup.js').read_text(encoding='utf-8'))
+        self.assertIn(f'(Number(info.bridge) || 0) < {version}', (folder / 'ChromeExtension/control.js').read_text(encoding='utf-8-sig'))
+        self.assertIn('id="get-kit"', (folder / 'ChromeExtension/popup.html').read_text(encoding='utf-8'))
+        self.run_js(r'''
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const source = fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8');
+const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resolve => setImmediate(resolve)); };
+async function popup(response) {
+  const elements = Object.fromEntries(['helper','helper-card','helper-badge','helper-hint','get-kit','start','stop','status','reset','reset-time','auto-helper','show-terminal','auto-collect','open-tools','reload-extension'].map(id => [id, {
+    textContent:'', hidden:true, disabled:false, checked:false, dataset:{}, addEventListener(type, callback) { this[type] = callback; }
+  }]));
+  vm.runInNewContext(source, {document:{getElementById:id => elements[id]}, Date, Intl,
+    chrome:{storage:{local:{get:async () => ({}), set:async () => {}}}, runtime:{getManifest:() => ({version:'1.2.3'}), sendMessage:async () => response}},
+    setTimeout:() => 0, clearTimeout:() => {}, console});
+  await flush();
+  return elements;
+}
+(async () => {
+  let page = await popup({ok:true,running:false,lastCollected:null});
+  assert.match(page['helper-hint'].textContent, /older than this extension\. Update Cherry’s Kit, then run Install Chrome extension\.bat again/);
+  page = await popup({ok:true,running:false,lastCollected:null,bridge:2});
+  assert.match(page['helper-hint'].textContent, /Start the helper below/);
+  assert.equal(page['get-kit'].hidden, true);
+  page = await popup({ok:false,error:'Specified native messaging host not found.',errorKind:'bridge-unavailable'});
+  assert.match(page.helper.textContent, /not set up on this PC/);
+  assert.match(page['helper-hint'].textContent, /needs Cherry’s Kit with Global Bank on Windows/);
+  assert.equal(page['get-kit'].hidden, false);
+  page = await popup({ok:false,error:'Bad data folder',errorKind:'native-error'});
+  assert.match(page.helper.textContent, /Local helper setup error: Bad data folder/);
+  assert.equal(page['get-kit'].hidden, true);
+})().catch(error => { console.error(error); process.exitCode = 1; });
+''')
+
+    def test_installer_allows_every_listed_extension_id(self):
+        folder = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
+        ids = (folder / 'extension-id.txt').read_text(encoding='ascii').split()
+        self.assertTrue(ids and all(re.fullmatch('[a-p]{32}', value) for value in ids))
+        installer = (folder / 'Install Chrome extension.ps1').read_text(encoding='utf-8')
+        self.assertIn('allowed_origins=@($extensionIds | ForEach-Object { "chrome-extension://$_/" })', installer)
+        self.assertNotIn('$extensionId ', installer)
+
     def test_helper_run_time_and_stop_button(self):
         self.run_js(r'''
 const assert = require('node:assert/strict');
@@ -122,7 +168,7 @@ const context = vm.createContext({document:{getElementById:id => elements[id]}, 
     runtime:{sendMessage:async message => {
       sent.push(message.type);
       if (message.type === 'helper-stop') running = false;
-      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null};
+      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null,bridge:2};
     }}},
   setTimeout:() => 0, clearTimeout:() => {}, console});
 vm.runInContext(source, context);

@@ -45,6 +45,15 @@ The frames in these four XML files now come from shared templates. Tests expand 
 | O8 | Type `/gb`. Click the server tabs, fold an account, press **Accounts**, and search for an item you own. | A tab for each server and one for all of them. Accounts fold and unfold. The search lights up the matching slots, dims the rest, scrolls to the first one and opens the bag or bank that has it. Item tooltips draw above the window. |
 | O9 | Type `/cinfo` and look at the tabs. | The labels read **Tooltips & IDs**, **Target & World** and **Chat & Macros**, and every tab opens. |
 
+## 0.11.115 Chrome Web Store readiness (extension 1.2.3)
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| W1 | Run **Install Chrome extension.bat** again, press **Reload** on the extension, and open its popup. | The header says v1.2.3 and the helper card shows no "older than this extension" line. |
+| W2 | Open the page. | The status line under the header has no "older than this extension" note. |
+| W3 | Rename `Interface\GlobalBankHelper\GlobalBank-NativeHost.json` for a moment and reopen the popup. | It says the helper isn't set up, explains what the extension needs, and shows **Get Cherry's Kit**. Rename the file back. |
+| W4 | Tick **Collect the daily reward automatically** off, open the daily page through ZShop and collect by hand. | The popup's last confirmed collection updates. |
+
 ## 0.11.115 Global Bank page in Chrome (extension 1.2.2)
 
 Tested on made-up data, up to 3,000 characters, and not yet in your Chrome. Until a character logs in and out once on this build, the page has no server, stats, game tooltip or currencies for it, and marks it "needs a login".

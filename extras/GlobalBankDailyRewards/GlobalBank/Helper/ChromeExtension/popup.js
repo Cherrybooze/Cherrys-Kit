@@ -10,8 +10,12 @@ const reset = document.getElementById('reset');
 const resetTime = document.getElementById('reset-time');
 const autoHelper = document.getElementById('auto-helper');
 const showTerminal = document.getElementById('show-terminal');
+const getKit = document.getElementById('get-kit');
 let starting = false;
 let refreshTimer;
+// The bridge says which version it is; older helper files lack what this extension asks for.
+const BRIDGE_VERSION = 2;
+const OLD_BRIDGE = 'Your Global Bank helper files are older than this extension. Update Cherry\u2019s Kit, then run Install Chrome extension.bat again.';
 
 // The version Chrome is running now, so you can see that Reload took.
 const versionLabel = document.getElementById('version');
@@ -94,10 +98,12 @@ async function refresh() {
   try {
     const response = await send('helper-status');
     if (!response?.ok) {
-      helper.textContent = response?.errorKind === 'native-error' ? 'Local helper setup error: ' + response.error : 'Native Messaging unavailable. Run Install Chrome extension.bat from the installed addon folder. ' + (response?.error || 'No response from the local bridge.');
+      const missing = response?.errorKind !== 'native-error';
+      helper.textContent = missing ? 'Native Messaging unavailable: the Global Bank helper is not set up on this PC. ' + (response?.error || 'No response from the local bridge.') : 'Local helper setup error: ' + response.error;
       start.hidden = true;
       stop.hidden = true;
-      setHelperVisual('error', 'Setup needed', '');
+      setHelperVisual('error', 'Setup needed', missing ? 'This extension needs Cherry\u2019s Kit with Global Bank on Windows. Install it, then run Install Chrome extension.bat in Interface\\AddOns\\CherrysKit\\GlobalBank\\Helper (again after each kit update).' : '');
+      if (getKit) getKit.hidden = !missing;
       return false;
     }
     showCollection(response.lastCollected);
@@ -107,10 +113,11 @@ async function refresh() {
     start.disabled = response.running || starting;
     start.textContent = response.running ? 'Helper is running' : starting ? 'Starting helper…' : 'Start Global Bank helper';
     stop.hidden = !response.running;
+    if (getKit) getKit.hidden = true;
     setHelperVisual(
       response.running ? 'running' : starting ? 'busy' : 'stopped',
       response.running ? 'Running' : starting ? 'Starting\u2026' : 'Stopped',
-      helperHintText(response)
+      (Number(response.bridge) || 0) < BRIDGE_VERSION ? OLD_BRIDGE : helperHintText(response)
     );
     return response.running;
   } catch (error) {

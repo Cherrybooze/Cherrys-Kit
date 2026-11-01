@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.5.4** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.5.5** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -22,6 +22,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.5.5
+
+**Ready for the Chrome Web Store** (extension 1.2.3). The helper's bridge now tells the extension its version, and the popup and the page say so when the helper files are older than the extension: update Cherry's Kit and run **Install Chrome extension.bat** again. When the helper isn't set up on the PC at all, the popup explains what the extension needs and links to Cherry's Kit. **Install Chrome extension.bat** accepts more than one extension ID, so the copy from this folder and a Chrome Web Store copy can both talk to the helper. The extension's privacy policy is in `docs/privacy.md`. After updating, press **Reload** on the extension.
 
 ## Updated in 1.5.4
 
