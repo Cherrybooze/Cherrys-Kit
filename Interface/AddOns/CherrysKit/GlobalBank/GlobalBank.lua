@@ -25,11 +25,12 @@
 --   S~server   the server this character was last saved on
 --   T~token    its main class, the same in every client language
 --   R~a;b;c    everyone the login screen listed with it: its account, on this server
+--   L~steam    it was last saved from Steam
 
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.5.7"
+GB.version = "1.5.8"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -128,6 +129,9 @@ function GB.Serialize(c)
     end
     parts[#parts + 1] = "R~" .. table.concat(names, ";")
   end
+  if c.steam then
+    parts[#parts + 1] = "L~steam"
+  end
   for _, money in ipairs(c.currencies or {}) do
     parts[#parts + 1] = table.concat({ "M", clean(money.key), tostring(money.amount), clean(money.name) }, "~")
   end
@@ -200,6 +204,9 @@ function GB.Parse(text)
     end
     if f[1] == "R" and f[2] and f[2] ~= "" then
       c.roster = split(f[2], ";")
+    end
+    if f[1] == "L" and f[2] == "steam" then
+      c.steam = true
     end
     if f[1] == "M" and f[2] and f[2] ~= "" and tonumber(f[3]) then
       c.currencies[#c.currencies + 1] = { key = f[2], amount = tonumber(f[3]), name = f[4] or "" }
@@ -574,6 +581,7 @@ function GB.Snapshot(withBank, authoritative)
   c.server = GB.ServerNow() or c.server
   c.clsToken = call(UnitClassToken, "player") or c.clsToken
   c.roster = GB.ReadRoster(name) or c.roster
+  c.steam = CherrysKit and CherrysKit.IsSteam and CherrysKit.IsSteam() or nil
   c.bag, c.bagMax = GB.ReadBag()
   if withBank then
     local bank, max = GB.ReadBank()
@@ -864,8 +872,10 @@ end
 -- Servers and accounts, as the extension's page shows them: a server is the S~ name without any " (PvE)" after
 -- it, and characters one login screen listed together (R~) are one account on one server, named after its first
 -- name A to Z. Anyone not known to share an account is under "No account". No Gameforge account data is used.
+-- Steam logs in to one account, so its characters are one account on each server, called that.
 GB.NO_SERVER = "Server unknown"
 GB.NO_ACCOUNT = "No account"
+GB.STEAM_ACCOUNT = "Steam account"
 GB.groupBy = "account" -- or "none"
 GB.server = nil        -- the server tab: nil until first drawn, "" for all servers
 GB.collapsed = {}      -- account id -> true while folded away
@@ -910,6 +920,12 @@ function GB.Accounts()
       end
     end
   end
+  local steam = {}
+  for key, c in pairs(GB.chars) do
+    if c.steam then
+      steam[find(keyOf[key])] = true
+    end
+  end
   local first, size = {}, {}
   for id in pairs(parent) do
     local root = find(id)
@@ -921,7 +937,9 @@ function GB.Accounts()
   local out = {}
   for key, c in pairs(GB.chars) do
     local root = find(keyOf[key])
-    if size[root] > 1 then
+    if steam[root] then
+      out[key] = { id = GB.ServerOf(c) .. "\nsteam", label = GB.STEAM_ACCOUNT }
+    elseif size[root] > 1 then
       out[key] = { id = root, label = first[root] .. "'s account" }
     else
       out[key] = { id = GB.ServerOf(c) .. "\n*", label = GB.NO_ACCOUNT }

@@ -52,6 +52,7 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
     $server = ""
     $classToken = ""
     $roster = @()
+    $steam = $false
     $bag = New-Object 'System.Collections.Generic.List[object]'
     $bank = New-Object 'System.Collections.Generic.List[object]'
     for ($i = 1; $i -lt $records.Count; $i++) {
@@ -63,6 +64,7 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
         if ($f.Count -ge 2 -and $f[0] -eq 'S' -and $f[1]) { $server = ConvertTo-GBText $f[1]; continue }
         if ($f.Count -ge 2 -and $f[0] -ceq 'T' -and $f[1]) { $classToken = $f[1]; continue }
         if ($f.Count -ge 2 -and $f[0] -ceq 'R' -and $f[1]) { $roster = @($f[1].Split([char]';') | ForEach-Object { ConvertTo-GBText $_ }); continue }
+        if ($f.Count -ge 2 -and $f[0] -ceq 'L' -and $f[1] -ceq 'steam') { $steam = $true; continue }
         if ($f.Count -ge 3 -and $f[0] -eq 'M' -and $f[1] -and (ConvertTo-GBNumber $f[2]) -gt 0) {
             $currencies.Add([pscustomobject]@{ Key = $f[1]; Amount = ConvertTo-GBNumber $f[2]; Name = $(if ($f.Count -gt 3) { ConvertTo-GBText $f[3] } else { "" }) })
             continue
@@ -105,6 +107,7 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
         Server    = $server
         ClassToken = $classToken
         Roster    = $roster
+        Steam     = $steam
         Level     = ConvertTo-GBNumber (& $field 3)
         Gold      = ConvertTo-GBNumber (& $field 4)
         BagSlots  = ConvertTo-GBNumber (& $field 5)
@@ -326,6 +329,7 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
         [void]$sb.Append('],"server":').Append((ConvertTo-GBJsonString $c.Server))
         [void]$sb.Append(',"classToken":').Append((ConvertTo-GBJsonString $c.ClassToken))
         [void]$sb.Append(',"roster":[').Append((@($c.Roster | ForEach-Object { ConvertTo-GBJsonString $_ }) -join ',')).Append(']')
+        if ($c.Steam) { [void]$sb.Append(',"steam":true') }
         [void]$sb.Append(',"currencies":[')
         $firstMoney = $true
         foreach ($money in $c.Currencies) {
