@@ -53,7 +53,7 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 ## Install
 
 - **Requires Cherry's Kit** (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\zBag\`.
-- **Move the old `Interface\AddOns\zBag` folder out of AddOns** (`!setup_cherryskit.bat` offers to) (and any separate `BagSearch` or `BagSort` folders). While an old copy is there, Cherry's Kit keeps this version turned off.
+- **Move the old `Interface\AddOns\zBag` folder out of AddOns** if you have one (`!setup_cherryskit.bat` offers to), and any separate `BagSearch` or `BagSort` folders too. While an old copy is there, Cherry's Kit keeps this version turned off.
 - Turn it on or off in the Cherry's Kit window (`/ck`).
 
 ## Bug reports
