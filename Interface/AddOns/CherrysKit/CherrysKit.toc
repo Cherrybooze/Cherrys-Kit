@@ -89,6 +89,7 @@ zBag/zBagHandler.xml
 zBag/PocketMaid.lua
 zBag/PocketMaid.xml
 zBag/zBagKitUI.lua
+zBag/zBagKitStats.lua
 zBag/zBagKit.xml
 KitLoad/GlobalBank.lua
 GlobalBank/GlobalBank.lua

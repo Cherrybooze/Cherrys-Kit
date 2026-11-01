@@ -276,4 +276,28 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         lua.execute('tipTitle=nil; failLink=true; GlobalBank.OnItemEnter({}, 1)')
         self.assertEqual(lua.eval('tipTitle'), 'Sword')
 
+    def test_a_closed_bank_read_at_login_counts_when_the_bank_is_known(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          UnitName=function() return 'Example' end
+          UnitClass=function() return 'Warrior' end
+          UnitLevel=function() return 60 end
+          GlobalBank.ReadBag=function() return {}, 0 end
+          GlobalBank.ReadMoney=function() return 0 end
+          bankSize=0
+          GetBankNumItems=function() return bankSize end
+          GetBankItemInfo=function() return nil end
+          GlobalBank.Snapshot(true,false)
+          before=GlobalBank.Parse(GlobalBank_Char)
+          bankSize=80
+          GlobalBank.Snapshot(true,false)
+          after=GlobalBank.Parse(GlobalBank_Char)
+        """)
+        # no bank data at all: the bank stays "not seen yet"
+        self.assertIsNone(lua.eval('before.bank'))
+        # the game knows the bank's size: an empty bank is saved as empty
+        self.assertEqual(lua.eval('#after.bank'), 0)
+        self.assertEqual(lua.eval('after.bankMax'), 80)
+
 if __name__ == '__main__': unittest.main()

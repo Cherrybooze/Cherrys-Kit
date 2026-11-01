@@ -1,6 +1,6 @@
 # rom weakauras
 
-Version **0.9.31** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **0.9.33** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
@@ -12,13 +12,21 @@ rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\RomWeakAuras`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Cherry's KittyCombo:** track its next skills and modes
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Cherry's KittyCombo:** triggers for KittyCombo's next skills and modes
 > - **Cherry's Info:** mob information for triggers and the macro icon categories in its icon picker, and its quest tracker can use rom weakauras' fonts
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\RomWeakAuras` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one. It's a rewrite of WeakAuras for World of Warcraft, so there's no original for this game.
 
 <!-- end of requirements -->
+
+## Updated in 0.9.33
+
+**Under your windows.** Auras now draw beneath the backpack, the bank, zBag and every other window instead of on top of them. The **Layer** button next to **Vol** in the `/rwa` window switches between under and over, and `/rwa layer under` or `over` does the same in chat.
+
+## Updated in 0.9.32
+
+**Stack counts on template icons.** Icons made from the gallery's Present buff and Present debuff templates show the stack count in their bottom-right corner, like the game's own buff icons. Icon displays get a **Stack count** On/Off choice, so an aura you already made can turn it on with one click.
 
 ## Updated in 0.9.31
 
@@ -142,6 +150,7 @@ In Cherry's Kit, `/wa` opens rom weakauras (`/rwa` alone opens the kit hub; `/rw
 - `/rwa size 60-160`: window size in percent (also the - and + buttons)
 - `/rwa volume 0-100`, `/rwa loud`: aura sound volume
 - `/rwa soundtest`, `/rwa soundext wav|mp3|ogg`, `/rwa channeltest`, `/rwa channel interface|effects|both`: sound checks
+- `/rwa layer under|over`: draw auras under (default) or over your bags, bank and other windows
 - `/rwa hits`, `/rwa hits reset`: what the Past second trigger has counted
 - `/rwa kitty [name]`: what the Kitty tracker sees for a kitty
 - `/rwa threat`: what the Threat trigger reads from your target's hate list

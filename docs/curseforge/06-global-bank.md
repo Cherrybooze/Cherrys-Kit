@@ -4,12 +4,13 @@
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\GlobalBank`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **zBag:** a button on the one-bag window
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **zBag:** a Global Bank button on zBag's one-bag window
 > - **Advanced AuctionHouse:** its searches fill the helper's auction cache
-> - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
-> - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
+> - **ZShop:** ZShop's daily reminder gets the real time from the Chrome extension or helper
+> - **Cherry's Bar:** Cherry's Bar's Clock gets the real time from the Chrome extension
 > - **LogNextChar:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
+> - **Cherry's Info:** the macro window's Import button brings in macros from the page's library, and the page shows its extra macro icons
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
@@ -19,9 +20,11 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
-- **1.5.4**: when several characters hold an item, its right-click menu on the Global Bank page stacks their names, and hovering one opens its copy buttons in a side menu. More than ten names scroll.
-- **1.5.3**: a Servers tab edits the region lists by hand on the Global Bank page, right-click renames a character's RoM or Gameforge account, tooltips show both, and the Gameforge accounts tab is more compact. Collecting the daily reward automatically is now a tick in the extension's popup, off by default.
-- **1.5.2**: the Global Bank page in Chrome is built for thousands of characters: a Region button and server checkmarks, Ayvenas included, one selection on every tab, the game's tooltips with item and mana stone stats, stacking checkmarks for each item type, Always stack, and a Favourites tab. Characters with the same name on different servers stay apart everywhere.
+- **1.6.0**: a new Global Bank page and popup, with its pages grouped down the side, an item panel, Transfer stones and an Excluded list on Characters, and a Terminal that runs in the helper itself. Selecting characters only changes the Bank when you press Use in Bank.
+- **1.5.9**: logging in is enough to record a character's bank, also when it is empty. No bank visit needed.
+- **1.5.8**: Steam shows as one more account: characters saved from Steam group together on each server, in the window and on the page.
+- **1.5.7**: the game's own macro icons show on the Global Bank page, with no need to log in first.
+- **1.5.6**: the page has a Macros tab, with every character's macros in one library you can group and search, and a macro window like the game's, and an Addon settings tab. It keeps the newest copy of your save files and one from about a day earlier, to compare and restore from.
 
 ## In game
 
@@ -40,24 +43,24 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## The Global Bank page in Chrome (optional, Windows)
 
-The **Global Bank Daily Rewards** extension comes in this download. Its page shows everything on your own PC:
+The **Global Bank for RoM** extension comes in this download. Its page shows everything on your own PC:
 
-- **Region and servers**: pick Europe or North America once and tick the servers you want. Every tab follows, and characters with the same name on different servers stay apart. The **Servers** tab edits the lists by hand: move a server, add one the page doesn't know yet, or restore the game's lists, and set the server of characters whose server isn't known yet.
-- **Select characters** by clicking them on any tab, or Shift-click for a range, and hover one for a short card of its details, with its Gameforge account / RoM account (two checkmarks hide either one). The Bank tab can show only the selected characters' items. Right-click a character to select its whole RoM account (the characters one login screen lists), rename its RoM or Gameforge account, or set its server.
+- **Region and servers**: pick Europe or North America once and tick the servers you want. Every page follows, and characters with the same name on different servers stay apart. The **Servers** page edits the lists by hand: move a server, add one the page doesn't know yet, or restore the game's lists, and set the server of characters whose server isn't known yet.
+- **Select characters** by clicking them on any page, or Shift-click for a range, and hover one for a short card of its details, with its Gameforge account / RoM account (two settings hide either one). **Use in Bank** shows only their items, with a button back to everyone. Right-click a character to see its details, select its whole RoM account (the characters one login screen lists), rename its RoM or Gameforge account, set its server, or stop tracking it.
 - **Bank**: everything every character holds in one scrolling grid, with the game's own icons, and quick with thousands of characters. Search names and stats, or stats on items or on mana stones only, filter by type, bag, bank or item shop tab, character level, binding and quality, and sort. Hovering shows the game's own tooltip with its stats or mana stone stats, and who has it in which slot. **Stacking** has a checkmark for each item type: gear stays apart like in the game unless you tick it, and right-click **Always stack every copy of this item** does it for one item.
-- **Favourites**: right-click an item to add it, and the Favourites tab shows how many there are on each server and who holds them.
+- **Favourites**: right-click an item to add it, and the Favourites page shows how many there are on each server and who holds them.
 - **Exclusions**: right-click an item to hide it, hide bound items that can't be equipped, and keep an always-keep list. This only changes what the page shows.
-- **Currencies**: a column for every currency and a row for every character, grouped by server or account, with totals, sorted by any currency.
+- **Currencies**: a column for every currency and a row for every character, grouped by server or account, with totals, sorted by any currency. Diamonds, Rubies and Daily Tokens are added up at the top.
 - **Stats**: every stat, how many there are and which characters hold them, for items or for mana stones.
-- **Gold heatmap**: a column per server and full caps pooled at the top. 500,000,000 is orange, a full cap of 999,999,999 bright green. Characters from the same account are boxed together.
-- **Characters**: server, Gameforge account, RoM account, class, level, gold, bag and bank space, last save and the last daily reward taken, grouped by server or account and sorted as you like.
-- **Gameforge accounts**: your logins, encrypted with a password you choose and a random key kept in Chrome. Right-click an item or a heatmap cell to copy a character, account or password (for an item many characters hold, hover a name in its menu), link characters to accounts in bulk, lock it, or save an encrypted backup. Each box shows its account and server once, and each character as name / RoM account (or RoM account first); select characters, or a whole box, to link or unlink them in one go. Forget the password and nobody can recover them. Your items, gold and characters aren't encrypted and don't need it, and the names you give RoM accounts are plain labels.
+- **Gold overview**: every character as one small tile, red at no gold, orange at half a cap and bright green at a full cap of 999,999,999, nested by Gameforge account, server and RoM account. Full accounts show as blocks of green, the colours in between are what's left to collect, and 200+ characters fit on one screen. You can pick your own three colours, and show fewer letters of each name for smaller tiles.
+- **Characters**: one tight line for each character, grouped by Gameforge and RoM account, or by server: class, level, server, Transfer stones, Gameforge account, RoM account, gold, bag and bank space, last save and the last daily reward taken, grouped by server or account and sorted as you like. Filters list who needs a login, whose bank isn't recorded, and who the helper is told not to track, with **Track again**.
+- **Gameforge accounts**: your logins, encrypted with a password you choose and a random key kept in Chrome. Right-click an item or a Gold overview tile to copy a character, account or password (for an item many characters hold, hover a name in its menu), link characters to accounts in bulk, lock it, or save an encrypted backup. Each box shows its account and server once, and each character as name / RoM account (or RoM account first); select characters, or a whole box, to link or unlink them in one go. Forget the password and nobody can recover them. Your items, gold and characters aren't encrypted and don't need it, and the names you give RoM accounts are plain labels.
 - **Item Depot**: open your item depot page through ZShop in this browser and it fills in here. The page's address is never saved.
-- **Terminal** and **Auctions**: the helper's commands, and the auction cache that Advanced AuctionHouse's searches fill.
+- **Terminal** and **Auctions**: the running helper's commands, with the same wording as its window, and the auction cache that Advanced AuctionHouse's searches fill.
 - **Daily loyalty reward**: open the daily page through ZShop, collect the reward, and the extension records it once the page confirms it. A tick in its popup, off by default, has it click the reward for you; automated use may be against Gameforge's terms of service. Its button shows the last confirmed collection and the next reset (00:00 in Germany, in your time zone).
 - **Real time for the kit**: when Chrome starts, the extension tells Cherry's Kit the time, for Cherry's Bar's Clock and ZShop's reminder.
 
-**Set it up:** double-click **Install Chrome extension.bat** in `Interface\AddOns\CherrysKit\GlobalBank\Helper\`. Chrome's extensions page opens with a small setup window: turn on **Developer mode**, click **Load unpacked**, and the setup window fills in the folder. The extension isn't on the Chrome Web Store. The Bank tab can read your save folder without the helper (choose it on the page, and your game folder for icons); the Terminal and Auctions tabs need the helper.
+**Set it up:** double-click **Install Chrome extension.bat** in `Interface\AddOns\CherrysKit\GlobalBank\Helper\`. Chrome's extensions page opens with a small setup window: turn on **Developer mode**, click **Load unpacked**, and the setup window fills in the folder. The extension isn't on the Chrome Web Store. The Bank page can read your save folder without the helper (choose it under Connection, and your game folder for icons); the Terminal and Auctions pages need the helper.
 
 **Privacy:** the extension only works on the Gameforge Runes of Magic daily loyalty page and your item depot page. It sends nothing to Cherry or any analytics service; collecting a reward talks to Gameforge, as the page always does.
 
@@ -65,10 +68,10 @@ The **Global Bank Daily Rewards** extension comes in this download. Its page sho
 
 The game only writes a character's save file when it logs out, and addons can't read other characters' files. The helper does that part. Run it one of two ways:
 
-- **With Chrome** (easiest): tick **Keep the helper running automatically when Chrome is open** on the extension's button or page. It runs hidden, or in a window if you tick **Show its terminal window**, and ends on its own when Chrome or the extension goes away. The button shows whether it is running and for how long, and **Stop Global Bank helper** stops it however it was started.
+- **With Chrome** (easiest): turn on **Run automatically** on the extension's button or under **Connection** on the page. It runs hidden, or in a window if you turn on **Show its terminal window**, and ends on its own when Chrome or the extension goes away. The button shows whether it is running and for how long, and **Stop helper** stops it however it was started.
 - **By hand**: double-click **Start Global Bank helper.bat** in `Interface\AddOns\CherrysKit\GlobalBank\Helper\` and keep its window open while you play. Close it to stop.
 
-Its window, and the page's Terminal tab, take typed commands:
+Its window, and the page's Terminal, take typed commands:
 
 - `get goldtotal`: gold of all characters together
 - `get gold <name>`: one character's gold
@@ -85,7 +88,7 @@ It reads `Documents\Runes of Magic\<Name>\SaveVariables.lua` and writes the resu
 
 **Sharing:** the CherrysKit folder is safe to share; it never contains your characters. **Don't share `Interface\GlobalBankHelper`**: it shows what all your characters own, and holds your encrypted accounts file.
 
-**Note:** whether the bank can be read while it is closed isn't confirmed yet, so open the bank once on each character to be sure it's saved. The refreshed window (server tabs, account groups, search highlights, tooltips on top) and what characters save for the newer tabs (currencies, stats, tooltips, servers) haven't been confirmed in the game client yet; please report anything odd.
+**Note:** the refreshed window (server tabs, account groups, search highlights, tooltips on top) and what characters save for the newer pages (currencies, stats, tooltips, servers) haven't been confirmed in the game client yet; please report anything odd.
 
 ## Chat commands
 

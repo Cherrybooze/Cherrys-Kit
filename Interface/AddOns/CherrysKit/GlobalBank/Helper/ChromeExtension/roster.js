@@ -1,10 +1,12 @@
 'use strict';
-// Who is who, on every tab. A character is its name and its server: names repeat between servers, so a name
+// Who is who, on every page. A character is its name and its server: names repeat between servers, so a name
 // only carries "(Server)" where it does. The region decides which servers the page shows, the server ticks at the
-// top narrow that down, and one selection, shared by every tab, is what a click on a character changes. Nothing
-// here leaves this PC: the choices are kept in this extension's own storage.
+// top narrow that down, and one selection, shared by every page, is what a click on a character changes. The Bank
+// shows everyone until you give it a scope: Use in Bank copies the selection there, and its own character list
+// ticks them directly, so selecting never narrows the Bank by itself. Nothing here leaves this PC: the choices are
+// kept in this extension's own storage.
 const GBRoster = (() => {
-  const NO_SERVER = 'Server unknown';
+  const NO_SERVER = 'Unknown server';
   const FULL_CAP = 999999999;
   // The servers each region's game lists. Europe and North America are separate games: nobody moves between them.
   // A server missing here still shows, and Region settings can add it to a region.
@@ -15,6 +17,7 @@ const GBRoster = (() => {
   };
   const VIEW_STORE = 'gbView';
   const SELECTION_STORE = 'gbSelection';
+  const SCOPE_STORE = 'gbScope';
   // The names you gave RoM accounts, by character. Only labels for this page: logins live with the Gameforge accounts.
   const NAMES_STORE = 'gbRomNames';
   // The newest snapshots name their server. One without was saved by an older Global Bank, before it kept servers,
@@ -82,7 +85,7 @@ const GBRoster = (() => {
       const group = groups?.of(character.name) || null;
       character.group = group && group.names.length > 1 ? group : null;
       // Its RoM account: the characters one login screen lists, known once a list names it
-      character.romAccount = group && (group.names.length > 1 || (Array.isArray(character.roster) && character.roster.length > 0)) ? group : null;
+      character.romAccount = group && (group.names.length > 1 || group.steam || (Array.isArray(character.roster) && character.roster.length > 0)) ? group : null;
       const known = character.server || cleanServer(group?.server);
       const manual = known ? '' : cleanServer(pick(assigned, character.base.toLowerCase()));
       character.manualServer = !!manual;
@@ -293,8 +296,10 @@ const GBRoster = (() => {
     if (account) lines.push(account);
     const bag = (character.bag || []).length, bank = (character.bank || []).length;
     const bagText = character.bagSlots ? `Bag ${number(bag)} of ${number(character.bagSlots)}` : `Bag ${number(bag)}`;
-    const bankText = !character.bankSeen ? 'bank not seen yet' : character.bankSlots ? `bank ${number(bank)} of ${number(character.bankSlots)}` : `bank ${number(bank)}`;
+    const bankText = !character.bankSeen ? 'bank not recorded' : character.bankSlots ? `bank ${number(bank)} of ${number(character.bankSlots)}` : `bank ${number(bank)}`;
     lines.push({kind: 'row', text: `${bagText} · ${bankText}`});
+    const stones = extra.stones ? extra.stones(character) : '';
+    if (stones) lines.push({kind: 'row', text: stones});
     const money = (character.currencies || []).filter(item => Number(item.amount) > 0);
     if (money.length) {
       const named = money.slice(0, 3).map(item => `${extra.currencyName ? extra.currencyName(item) : item.name || item.key} ${number(item.amount)}`);
@@ -313,12 +318,14 @@ const GBRoster = (() => {
   }
 
   // The view and the selection, and who wants to know when they change. Kept in this browser only.
-  // Changes it tells about: 'view' (region, ticks, the regions' lists), 'selection', 'assigned' (a server set by
-  // hand: the page prepares its characters again), 'names' (a RoM account renamed), 'order' and 'card'.
+  // Changes it tells about: 'view' (region, ticks, the regions' lists), 'selection', 'scope' (who the Bank shows),
+  // 'assigned' (a server set by hand: the page prepares its characters again), 'names' (a RoM account renamed),
+  // 'order' and 'card'.
   function create(storage) {
-    const view = {region: '', serversOff: new Set(), extra: {}, dropped: new Set(), assigned: Object.create(null), onlySelected: true,
+    const view = {region: '', serversOff: new Set(), extra: {}, dropped: new Set(), assigned: Object.create(null),
       hideGameforge: false, hideRom: false, romFirst: false, regionCache: new Map()};
     const selection = new Set();
+    const scope = new Set();
     const listeners = new Set();
     let romNames = Object.create(null);
     let characters = [];
@@ -329,16 +336,17 @@ const GBRoster = (() => {
     let members = new Map();
     const nameCache = new Map();
     let lastClicked = null;
+    let lastScoped = null;
     let saveTimer = 0;
     const changed = what => { for (const listener of listeners) listener(what); };
     const keep = data => { if (storage) Promise.resolve(storage.set(data)).catch(() => {}); };
     const stored = () => ({region: view.region, serversOff: [...view.serversOff], extra: view.extra, dropped: [...view.dropped], assigned: {...view.assigned},
-      onlySelected: view.onlySelected, hideGameforge: view.hideGameforge, hideRom: view.hideRom, romFirst: view.romFirst});
+      hideGameforge: view.hideGameforge, hideRom: view.hideRom, romFirst: view.romFirst});
     function save() {
       if (!storage) return;
       clearTimeout(saveTimer);
       // A shift-click can pick thousands; one write is plenty.
-      saveTimer = setTimeout(() => keep({[VIEW_STORE]: stored(), [SELECTION_STORE]: [...selection]}), 200);
+      saveTimer = setTimeout(() => keep({[VIEW_STORE]: stored(), [SELECTION_STORE]: [...selection], [SCOPE_STORE]: [...scope]}), 200);
     }
     const listsChanged = () => {
       view.regionCache.clear();
@@ -370,11 +378,11 @@ const GBRoster = (() => {
       if (REGIONS[region] && region !== builtIn) view.extra[region].push(cleanServer(name));
     }
     const api = {
-      view, selection,
+      view, selection, scope,
       onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); },
       async load() {
         if (!storage) return;
-        const saved = await storage.get([VIEW_STORE, SELECTION_STORE, NAMES_STORE]).catch(() => ({}));
+        const saved = await storage.get([VIEW_STORE, SELECTION_STORE, SCOPE_STORE, NAMES_STORE]).catch(() => ({}));
         const kept = saved[VIEW_STORE] || {};
         view.region = typeof kept.region === 'string' ? kept.region : '';
         view.serversOff = new Set(Array.isArray(kept.serversOff) ? kept.serversOff : []);
@@ -382,7 +390,6 @@ const GBRoster = (() => {
         for (const id of Object.keys(REGIONS)) view.extra[id] = Array.isArray(kept.extra?.[id]) ? kept.extra[id].filter(name => typeof name === 'string' && cleanServer(name)) : [];
         view.dropped = new Set(Array.isArray(kept.dropped) ? kept.dropped.filter(key => typeof key === 'string') : []);
         view.assigned = textMap(kept.assigned);
-        view.onlySelected = kept.onlySelected !== false;
         view.hideGameforge = !!kept.hideGameforge;
         view.hideRom = !!kept.hideRom;
         view.romFirst = !!kept.romFirst;
@@ -390,6 +397,7 @@ const GBRoster = (() => {
         romNames = textMap(saved[NAMES_STORE]);
         nameCache.clear();
         for (const key of Array.isArray(saved[SELECTION_STORE]) ? saved[SELECTION_STORE] : []) selection.add(key);
+        for (const key of Array.isArray(saved[SCOPE_STORE]) ? saved[SCOPE_STORE] : []) scope.add(key);
       },
       setCharacters(list) {
         characters = list;
@@ -421,12 +429,40 @@ const GBRoster = (() => {
       servers: () => serverList(characters, view),
       lists: () => regionLists(view),
       serverTable: () => serverTable(characters.concat(listedList), view),
-      // Whether the Bank tab shows only the selected characters' items: while that's on and any of them are shown
-      onlySelected: () => view.onlySelected !== false && selection.size > 0 && characters.some(character => selection.has(character.key) && shows(character, view)),
-      setOnlySelected(on) {
-        view.onlySelected = !!on;
+      // Whether the Bank shows only the characters in its scope. A scope wholly on servers not shown doesn't empty it.
+      scoped: () => scope.size > 0 && characters.some(character => scope.has(character.key) && shows(character, view)),
+      inScope: key => scope.has(key),
+      // The characters in the scope that the page shows
+      inScopeShown: () => characters.filter(character => scope.has(character.key) && shows(character, view)),
+      setScope(keys) {
+        scope.clear();
+        for (const key of keys) scope.add(key);
+        lastScoped = null;
         save();
-        changed('selection');
+        changed('scope');
+      },
+      clearScope: () => api.setScope([]),
+      // Use in Bank: the selected characters that hold anything, which a name only a login screen listed doesn't
+      useSelection: () => api.setScope(api.selected().map(character => character.key)),
+      toggleScope(key) {
+        if (scope.has(key)) scope.delete(key);
+        else scope.add(key);
+        lastScoped = key;
+        save();
+        changed('scope');
+      },
+      // Shift-click in the Bank's own list: everything between the last tick and this one
+      scopeRange(keys, key) {
+        const from = keys.indexOf(lastScoped), to = keys.indexOf(key);
+        if (from < 0 || to < 0) return api.toggleScope(key);
+        const on = !scope.has(key) || scope.has(lastScoped);
+        for (let i = Math.min(from, to); i <= Math.max(from, to); i++) {
+          if (on) scope.add(keys[i]);
+          else scope.delete(keys[i]);
+        }
+        lastScoped = key;
+        save();
+        changed('scope');
       },
       setRegion(region) {
         view.region = region;
@@ -481,14 +517,18 @@ const GBRoster = (() => {
       // Run what prepares the characters again, keeping the selection on the same characters when their keys change
       rekey(run) {
         const saved = characters.filter(character => selection.has(character.key));
+        const scoped = characters.filter(character => scope.has(character.key));
         const names = new Set(listedList.filter(character => selection.has(character.key)).map(character => character.name.toLowerCase()));
         for (const character of saved) selection.delete(character.key);
+        for (const character of scoped) scope.delete(character.key);
         for (const character of listedList) if (names.has(character.name.toLowerCase())) selection.delete(character.key);
         run();
         for (const character of saved) selection.add(character.key);
+        for (const character of scoped) scope.add(character.key);
         for (const character of listedList) if (names.has(character.name.toLowerCase())) selection.add(character.key);
         save();
         changed('selection');
+        changed('scope');
       },
       // A character's RoM account: the login screen's group, its characters, and the name you gave it ('' for none)
       romAccount(character) {
@@ -497,10 +537,12 @@ const GBRoster = (() => {
       },
       // The name you gave its RoM account, or ''
       romName: character => romNameOf(character?.romAccount),
-      // The name to show: yours, or the first name on its login screen's list; '' while no list names it
+      // The name to show: yours, or the first name on its login screen's list; '' while no list names it. Steam's says so.
       romTitle(character) {
         const group = character?.romAccount;
-        return group ? romNameOf(group) || `${group.names[0]}'s account` : '';
+        if (!group) return '';
+        if (group.steam) return romNameOf(group) ? `${romNameOf(group)} (Steam)` : 'Steam account';
+        return romNameOf(group) || `${group.names[0]}'s account`;
       },
       setRomName(character, name) {
         const group = character?.romAccount;
@@ -627,7 +669,7 @@ const GBRoster = (() => {
     document.addEventListener('scroll', () => { tooltip.hidden = true; shownKey = null; }, {passive: true, capture: true});
     document.addEventListener('click', event => {
       const node = event.target?.closest?.('[data-char]');
-      if (!node || event.button !== 0 || event.target.closest('a, input, select, textarea, button:not([data-char])')) return;
+      if (!node || event.button !== 0 || event.target.closest('a, input:not(.char-check), select, textarea, button:not([data-char])')) return;
       const key = node.dataset.char;
       if (event.shiftKey) {
         const scope = node.closest('[data-select-scope]') || document;

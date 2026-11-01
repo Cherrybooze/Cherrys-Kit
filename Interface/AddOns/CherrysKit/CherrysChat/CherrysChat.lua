@@ -16,7 +16,7 @@ local C = CherrysChat
 -- we wrapped last time are still there. So every load starts over (flags below), and a function
 -- that is our own old wrapper is never taken as the game's original (C.Real).
 C.started, C.active, C.eventWrapped, C.sendWrapped, C.gripOn, C.drag = nil, nil, nil, nil, nil, nil
-C.dropDownsReady = nil
+C.dropDownsReady, C.lastSend = nil, nil
 C.ours = C.ours or setmetatable({}, { __mode = "k" }) -- our wrappers, from any load
 C.real = C.real or {} -- key -> the game's own function
 
@@ -34,7 +34,7 @@ function C.MarkOurs(wrapper)
   return wrapper
 end
 
-C.version = "0.11.1"
+C.version = "0.11.3"
 C.MAX_WINDOWS = 10
 C.MIN_FONT, C.MAX_FONT = 6, 40
 C.MIN_W, C.MIN_H = 120, 60
@@ -165,6 +165,21 @@ function C.ReadLink(msg, first)
   if not string.match(target, "^[%a_][%w_]*:") or string.find(target, "[\r\n]") then return nil end
   return { target = target, text = string.sub(msg, middle + 2, last - 1),
     full = string.sub(msg, first, last + 1), first = first, last = last + 1 }
+end
+
+-- Codes that draw nothing and do nothing when clicked. Players' macros and addons wrap text in an
+-- empty link to colour it (|H|h|cFF40FF40text|h, thousands of lines in the game's Chat.Log), and
+-- some colour codes are not hex (|cffffffrr). Returns the code's length, or nil.
+function C.EmptyCode(msg, i)
+  local pair = string.sub(msg, i, i + 1)
+  if pair == "|h" then
+    return 2
+  elseif pair == "|H" and string.sub(msg, i + 2, i + 3) == "|h" then
+    return 4
+  elseif pair == "|c" and string.match(msg, "^|c%w%w%w%w%w%w%w%w", i)
+      and not string.match(msg, "^|c%x%x%x%x%x%x%x%x", i) then
+    return 10
+  end
 end
 
 -- Match Cherry's Grid's default RoM palette, including when Grid is disabled.
@@ -583,11 +598,54 @@ function C.BubbleText(msg, mode)
   if type(msg) ~= "string" or (mode ~= "code" and mode ~= "symbols") then
     return msg
   end
-  msg = swapEmoji(msg, bubbleWord, mode)
+  msg = swapEmoji(C.JoinSurrogates(msg), bubbleWord, mode)
   if mode == "symbols" then
     msg = C.ReplaceShortcodes(msg, bubbleSymbol)
   end
+  -- Emoji we have no name for would still be boxes in the bubble.
+  if string.find(msg, "[\237\240-\244]") then
+    msg = string.gsub(msg, "[\240-\244][\128-\191][\128-\191][\128-\191]", "?")
+    msg = string.gsub(msg, "\237[\160-\191][\128-\191]", "?")
+  end
   return msg
+end
+
+local function joinPair(b1, b2, b3, b4)
+  local cp = 65536 + ((string.byte(b1) - 160) * 64 + string.byte(b2) - 128) * 1024
+    + (string.byte(b3) - 176) * 64 + string.byte(b4) - 128
+  return string.char(240 + math.floor(cp / 262144), 128 + math.floor(cp / 4096) % 64,
+    128 + math.floor(cp / 64) % 64, 128 + cp % 64)
+end
+
+-- Text typed with the Windows emoji panel may arrive as two 3-byte halves (a UTF-16 surrogate
+-- pair written as UTF-8) instead of one 4-byte emoji; join them so the emoji is recognised.
+function C.JoinSurrogates(msg)
+  if not string.find(msg, "\237", 1, true) then
+    return msg
+  end
+  return (string.gsub(msg, "\237([\160-\175])([\128-\191])\237([\176-\191])([\128-\191])", joinPair))
+end
+
+-- What the last message sent through Cherry's Chat looked like, for /cchat bubbletest.
+local function showBytes(msg)
+  local text = string.gsub(tostring(msg), "|", "||")
+  return (string.gsub(text, "[\128-\255]", function(c)
+    return "\\" .. string.byte(c)
+  end))
+end
+
+function C.BubbleTest()
+  local last = C.lastSend
+  if not last then
+    C.Print("Say bubbles: |cffff6060no message has gone through Cherry's Chat since loading.|r "
+      .. "Say something with an emoji, then run /cchat bubbletest again. If this stays, the game "
+      .. "sends chat without SendChatMessage and the bubble setting cannot work.")
+    return
+  end
+  C.Print("Say bubbles: setting " .. tostring(db().sayEmoji) .. ", chat type " .. tostring(last.kind)
+    .. " (" .. (last.say and "Say" or "not Say") .. ")")
+  C.Print("typed: " .. showBytes(last.typed))
+  C.Print("sent: " .. showBytes(last.sent))
 end
 
 function C.IsSay(kind)
@@ -650,6 +708,8 @@ function C.Plain(msg)
       i = i + 2
     elseif token == "|T" and controlEnd(s, "|t", i + 2) then
       i = controlEnd(s, "|t", i + 2) + 2
+    elseif C.EmptyCode(s, i) then
+      i = i + C.EmptyCode(s, i)
     else
       local nextPipe = string.find(s, "|", i + 1, true) or (#s + 1)
       parts[#parts + 1], i = string.sub(s, i, nextPipe - 1), nextPipe
@@ -808,12 +868,17 @@ local function wrapSend()
   local orig = C.Real("SendChatMessage", SendChatMessage)
   SendChatMessage = C.MarkOurs(function(msg, ...)
     local d = db()
-    local bubble = d.sayEmoji ~= "emoji" and C.IsSay((...))
-    if bubble then
+    local kind = ...
+    local say = C.IsSay(kind)
+    local typed = msg
+    if say and d.sayEmoji ~= "emoji" then
       msg = C.BubbleText(msg, d.sayEmoji)
     elseif d.sendShortcodes then
       msg = C.ExpandShortcodes(msg)
     end
+    -- Sending is rare (a person pressing Enter), so keeping a note costs nothing that matters.
+    local last = C.lastSend or {}
+    C.lastSend, last.kind, last.say, last.typed, last.sent = last, kind, say, typed, msg
     if C.Crypt and C.Crypt.Outgoing(orig, msg, ...) then
       return
     end
@@ -1694,6 +1759,8 @@ function C.Slash(msg)
     C.TestSymbols()
   elseif cmd == "emoji" then
     C.TestEmoji()
+  elseif cmd == "bubbletest" then
+    C.BubbleTest()
   elseif cmd == "emojis" then
     C.ListEmoji()
   elseif cmd == "probe" then

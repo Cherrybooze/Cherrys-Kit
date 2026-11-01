@@ -1,6 +1,6 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck11** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **7.0.1-ck12** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **A better mail window with mass send that no longer gets stuck after about 60 mails.**
 
@@ -12,15 +12,20 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\UltimateMailMod`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **Cherry's Chat:** Ctrl+click a name in chat to fill the mail's To
-> - **LogNextChar:** LogNextChar closes its window before switching characters
+> - **LogNextChar:** LogNextChar closes the mail window before switching characters
 >
 > **Original addon:** Ultimate Mail Mod by Shardea of Siochain, later Maxeem of Muinin, mvoigt, Jagodragon and Raihir. If `Interface\AddOns\UltimateMailMod` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
 <!-- end of requirements -->
+
+## Updated in 7.0.1-ck12
+
+- Mass send no longer stops with "no longer in that bag slot" on an item that never moved, such as a ring you just bought. It used to compare the item's whole link, and parts of a link can change, or be missing at first, while the item stays in its slot. It now checks the item itself and reads your bags fresh when you press Send. An item that really was swapped out is still skipped.
+- `/umm trace` now shows the old and the new link of every skipped mail, so a stop like this can be traced.
 
 ## Updated in 7.0.1-ck11
 

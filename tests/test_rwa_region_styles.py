@@ -48,6 +48,11 @@ class RegionStylesTests(unittest.TestCase):
                 function obj:Hide() self.shown = false end
                 function obj:SetScale(scale) self.scale = scale end
                 function obj:GetScale() return self.scale end
+                function obj:SetFrameStrata(strata)
+                    assert(strata == "BACKGROUND" or strata == "LOW" or strata == "MEDIUM" or strata == "HIGH"
+                        or strata == "DIALOG" or strata == "TOOLTIP", "the client errors on other strata")
+                    self.strata = strata
+                end
                 _G[name] = obj
                 return obj
             end
@@ -82,6 +87,32 @@ class RegionStylesTests(unittest.TestCase):
             'state = {show = true, name = "Main", icon = "Interface/Icons/main.tga", value = 50, total = 100}\n'
             "region:SetState(state); region:Update(0); region:Show(); region:UpdateElements(0, {})"
         )
+
+    def test_auras_draw_under_bag_and_bank_windows_by_default_and_can_be_changed(self):
+        self.lua.execute("RWA.MergeDefaults(RWA_DB.settings, RWA.SETTING_DEFAULTS)")
+        self.acquire('{ regionType = "aurabar" }')
+        self.assertEqual(self.lua.eval("region.frame.strata"), "BACKGROUND")
+        self.lua.execute("d2 = { regionType = 'icon' }; RWA.ApplyAuraDefaults(d2); second = RWA.Regions.Acquire(d2)")
+        self.assertTrue(self.lua.eval("second.frame == RWA_Region2"))
+        self.assertEqual(self.lua.eval("RWA.SetAuraStrata('over')"), "MEDIUM")
+        self.assertEqual(self.lua.eval("RWA_DB.settings.auraStrata"), "MEDIUM")
+        self.assertEqual(self.lua.eval("region.frame.strata"), "MEDIUM")
+        self.assertEqual(self.lua.eval("RWA_Region2.strata"), "MEDIUM")
+        self.assertEqual(self.lua.eval("RWA.SetAuraStrata('under')"), "BACKGROUND")
+        self.assertEqual(self.lua.eval("region.frame.strata"), "BACKGROUND")
+        self.assertIsNone(self.lua.eval("RWA.SetAuraStrata('sideways')"))
+        self.assertEqual(self.lua.eval("RWA_DB.settings.auraStrata"), "BACKGROUND")
+        # A bad saved value falls back to under.
+        self.lua.execute("RWA_DB.settings.auraStrata = 'FULLSCREEN'")
+        self.assertEqual(self.lua.eval("RWA.ApplyAuraStrata()"), "BACKGROUND")
+
+    def test_region_pool_xml_starts_under_windows(self):
+        xml = (RWA_DIR / "Frames.xml").read_text(encoding="utf-8-sig")
+        import re
+        regions = re.findall(r'<Frame name="RWA_Region\d+"[^>]*>', xml)
+        self.assertTrue(regions)
+        for tag in regions:
+            self.assertIn('frameStrata="BACKGROUND"', tag)
 
     def test_all_four_extra_types_use_independent_child_regions_without_xml_pool(self):
         self.acquire(

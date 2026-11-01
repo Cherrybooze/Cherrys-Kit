@@ -4,9 +4,10 @@
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\CherrysInfo`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **rom weakauras:** rom weakauras' fonts for the quest tracker; its triggers and icon picker can use the mob information and macro icon categories from here
 > - **Cherry's Chat:** class colours in chat from its player list
+> - **Global Bank:** the macro window's Import button lists its macro library
 >
 > **Original addons:** pbInfo v0.60 by p.b. a.k.a. novayuna, later odie2, PortraitHP v2019.07.14 by Nonante@Nuada, TooltipIds 1.0b3 by Rock5 and ExtendedMacroIcons 2.15 by Amurilon. If any of `Interface\AddOns\pbInfo`, `Interface\AddOns\PortraitHP`, `Interface\AddOns\TooltipIds`, `Interface\AddOns\ExtendedMacroIcons`, `Interface\AddOns\CherrysQuests` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
@@ -16,6 +17,8 @@ Cherry's Info brings together five addons that used to be separate downloads: Ch
 
 ## Recent changes
 
+- **1.0.3**: it no longer saves the names of the game's macro icons, because the Global Bank page works them out itself.
+- **1.0.2**: the macro window has an Import button, which lists Global Bank's macro library with a search bar for names and groups.
 - **1.0.1**: the overhead health bars option no longer builds about 100 frame names on every pass, and three tab labels are written the way the game's file format requires.
 - **1.0**: the first version, made from those five. `/cinfo` opens one window with four tabs, and `/cq` opens it on Quests. If you had turned one of the five off in `/ck`, it's on again, because they share one switch now: turn that part off on its tab instead.
 
@@ -56,6 +59,7 @@ Want the threat meter? Install **rom weakauras** and turn on its "Threat meter" 
 - `/cq text 1`: the raw texts of the first tracked quest (for bug reports)
 - `/cq forget`: forget this character's NPC picks
 - `/emi`: open or close the macro window (the game's own macro button and key open it too)
+- `/emi import`: open the macro window with its Import list
 - `/pbinfo`, `/pbic`, `/ti`: the Tooltips & IDs tab
 - `/php`: target health on or off
 - `/mobinfo [party|guild|name]`: print or send your target's health and class

@@ -32,16 +32,31 @@ read that character's saved data again. Class levels appear after logging in wit
 Daily status is based on the local reward confirmation and the reset at 00:00 in Germany, converted
 to your time zone. Unknown means
 there is no unambiguous confirmation; it does not prove whether a reward was collected.
-    status               character count, uptime and heartbeat setting
+    status               helper state, character count, uptime and heartbeat setting
     heartbeat on|off     enable/disable the text heartbeat (also: heartbeat 1|0)
-    help                 all commands
+    help [command]       all commands, or one
+    clear                clear the view; nothing saved changes
+    copy                 copy the output in the view
+    follow [on|off]      keep to the latest output, or hold your place
+    exit                 stop the helper
 
-The colored startup guide groups character commands and helper controls. With the heartbeat on,
-one compact "alive" line is added about every 30 seconds; scroll history is kept and any partially
-typed command is restored. Use heartbeat off for a quiet idle prompt. The setting is binary and
-lasts for this helper session; to start quietly use GlobalBank-Update.ps1 -Watch -Heartbeat 0
-(the default is -Heartbeat 1). File liveness for the addon continues with either setting, including
-during long auction-cache imports. The heartbeat never clears or redraws the whole terminal.
+These are the same commands, with the same answers, in the helper window and on the extension's
+Terminal page. While the helper runs, both talk to that one helper, so status, heartbeat and exit mean
+it. With no helper running, the Terminal page uses saved data and says so, and heartbeat and exit report
+that there is nothing to change. Exit doesn't change Chrome's automatic-start choice: if that's on, the
+helper starts again the next time Chrome starts.
+
+Typing: Left, Right, Home, End, Delete and Backspace edit anywhere in the line. Up and Down recall
+earlier commands and come back to what you were typing. Tab completes commands and character names;
+press it again for the next suggestion, Shift+Tab for the one before. Esc closes the suggestions, then
+clears the line. New saves arrive above your line without disturbing it. If you scroll up to read, new
+lines wait until you come back down, and the window title says how many.
+
+With the heartbeat on, one "alive" line is kept up to date about every 30 seconds rather than adding a
+new one each time. Use heartbeat off for a quiet idle prompt. The choice is remembered for next time;
+GlobalBank-Update.ps1 -Watch -Heartbeat 0 or 1 sets it for one run without changing what's remembered.
+File liveness for the addon continues with either setting, including during long auction-cache
+imports. The heartbeat never clears or redraws the whole terminal.
 Auction imports and their cleanup retries run in one background worker, so commands remain
 available while a large import is processing. A named lock prevents simultaneous cache writers;
 the queue contains character file paths only. Closing the helper also stops its worker.
@@ -76,13 +91,13 @@ Chrome daily reward extension (Windows)
    Rerun the installer after moving the addon. Chrome and the user must approve installation.
 
 Local bank and auction tools in Chrome
-1. Click the Global Bank Daily Rewards extension icon, then click "Open local bank and auction tools".
-2. Bank tab: everything your characters hold in one grid, with a search and filters. Hover an item to
-   see who has it and in which slot. Update now reads your save files.
-3. Terminal tab: the helper's commands, including note and erase, without its window.
-4. Auctions tab: search the auction cache. Prices are saved observations and may have changed.
+1. Click the Global Bank for RoM extension icon, then click "Open Global Bank".
+2. Bank: everything your characters hold in one grid, with a search and filters. Hover an item to
+   see who has it and in which slot, or click it for a panel. Update now reads your save files.
+3. Terminal: the helper's commands, the same as in its window, and it reaches the running helper.
+4. Auctions: search the auction cache. Prices are saved observations and may have changed.
 To collect auction data and update each time you log out, either keep the helper window open or turn
-on "Start the Global Bank helper automatically when Chrome is open" at the top of the page: it runs
+on "Run automatically" under Connection on the page: it runs
 hidden, stops when Chrome closes, and turning it off closes it. Nothing on the page can buy items. Keep Interface\GlobalBankHelper private.
 
 The bank results come from your saved character snapshots. Auction results are the last prices
@@ -107,7 +122,7 @@ Data for external tools (all files are in Interface\GlobalBankHelper):
   Written atomically by the extension bridge, then reflected in GlobalBank.json by the helper.
 - GlobalBankTips.txt: the game's own tooltips for gear and mana stones, for the extension's page. The game never loads it.
 - GameforgeAccounts.json: your Gameforge accounts, encrypted by the extension's page. Nothing here can open it.
-  It needs your password and the encryption key in Chrome, so copy that key (Gameforge accounts tab) before moving to another PC.
+  It needs your password and the encryption key in Chrome, so copy that key (Gameforge accounts page) before moving to another PC.
 - CharacterLinks.json: editable schemaVersion 1, accounts and characters arrays. Example:
   {"schemaVersion":1,"accounts":[{"id":"account-1","label":"Main account"}],
    "characters":[{"name":"Example","accountId":"account-1"}]}
@@ -131,4 +146,4 @@ cannot read unsaved game memory. Restart the helper after updating it, then Relo
 
 After installing updated extension files, open its popup and click Reload extension, then reopen
 the popup or local tools page. If your existing popup has no reload button, open chrome://extensions
-and click Reload on Global Bank Daily Rewards once. Chrome keeps the old version loaded until then.
+and click Reload on Global Bank for RoM once. Chrome keeps the old version loaded until then.

@@ -102,12 +102,17 @@ PRIVATE_DATA_NAMES = frozenset(name.casefold() for name in (
     "SaveVariables.lua", "GlobalBankDatabase.lua", "GlobalBank.json", "GlobalBankTips.txt", "GameforgeAccounts.json", "ExcludedCharacters.json",
     "DailyRewards.json", "CharacterLinks.json", "GlobalBankHelperBeat.lua",
     "GlobalBankHelper.log", "GlobalBankHelper-errors.log", "AAHBroadCache.json", "AAHBroadCache.lua",
+    "MacroLibrary.json", "GlobalBankMacros.lua", "TerminalFeed.json",
 ))
+# Global Bank's copies of a player's save files.
+PRIVATE_FOLDER_NAMES = frozenset(("globalbankhelper", "backups"))
 
 
 def is_private_release_path(path: Path) -> bool:
     name = path.name.casefold()
-    return (any(part.casefold() == "globalbankhelper" for part in path.parts)
+    # Every .bsd is the game's own per-character save: macros, action bars and chat windows.
+    return (any(part.casefold() in PRIVATE_FOLDER_NAMES for part in path.parts)
+            or name.endswith(".bsd")
             or any(name == private or name.startswith(private + ".") for private in PRIVATE_DATA_NAMES))
 
 
@@ -273,10 +278,18 @@ def build(output: Path) -> None:
             extension_files[relative.as_posix()] = path.read_bytes()
     require(extension_files, "Missing Global Bank browser extension files.")
     extension = write_zip(output / f"CherrysKit-GlobalBankDailyRewards-{extension_version}.zip", extension_files)
-    extension.update({"package": "GlobalBankDailyRewards", "title": "Global Bank Daily Rewards (Chrome)",
+    extension.update({"package": "GlobalBankDailyRewards", "title": "Global Bank for RoM (Chrome)",
                       "version": extension_version, "requires_hub": True,
                       "requires_addon": "GlobalBank", "bundled_addons": []})
     packages.append(extension)
+    # The Chrome Web Store upload: the extension folder alone, manifest.json at the top, and no "key",
+    # which pins the unpacked copy's ID (the store gives the extension its own). Not a release asset.
+    prefix = "GlobalBank/Helper/ChromeExtension/"
+    store_files = {name[len(prefix):]: data for name, data in extension_files.items() if name.startswith(prefix)}
+    store_manifest = {key: value for key, value in extension_manifest.items() if key != "key"}
+    require(store_files.get("manifest.json") and "key" in extension_manifest, "The extension's manifest is missing its key.")
+    store_files["manifest.json"] = (json.dumps(store_manifest, indent=2) + "\n").encode("utf-8")
+    store = write_zip(output / f"CherrysKit-GlobalBankDailyRewards-ChromeWebStore-{extension_version}.zip", {}, root_files=store_files)
     standalone = write_login_packages(output)
     for package in standalone:
         listed = next((item for item in metadata["standalone_packages"] if item["folder"] == package["package"]), None)
@@ -324,6 +337,7 @@ def build(output: Path) -> None:
     versions_path = output / "release-versions.json"
     versions_path.write_text(json.dumps(versions, indent=2) + "\n", encoding="utf-8", newline="\n")
     sums = [f"{package['sha256']}  {package['filename']}" for package in packages]
+    sums.append(f"{store['sha256']}  {store['filename']}")
     sums.append(f"{sha256(manifest_path.read_bytes())}  {manifest_path.name}")
     sums.append(f"{sha256(versions_path.read_bytes())}  {versions_path.name}")
     (output / "SHA256SUMS.txt").write_text("\n".join(sums) + "\n", encoding="ascii", newline="\n")

@@ -2,7 +2,7 @@
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck11 requires **0.4.17** for its History files. Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck12 requires **0.4.17** for its History files. Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
 
 ## 0.11.115 Guided setup and Cherry's Info
 
@@ -26,7 +26,7 @@ None of this has run in the game yet. The tests use a simulated client, and the 
 | I3 | Untick **Extended Macro Icons** and Reload UI, then tick it and Reload UI. | The game's macro window comes back, then the extended one. The tick stays as you left it. |
 | I4 | Type `/emi`, `/ti`, `/pbinfo` and `/php`. | The macro window, the Tooltips & IDs tab twice, and target health toggling. None says "not installed". |
 | I5 | On Target & World, press **Open pbInfo's window**, then **Move cast bar**, and **Move tooltip box**. | Each opens or moves as it says, and the tab comes back after a cast bar move. |
-| I6 | Look at `/ck`. | One Cherry's Info row and no rows for the five old addons. The window's bottom buttons sit right under the last row. |
+| I6 | Open the page's **Macros** tab and the game's macro window on the same character, with no login needed for the page. Open **Default Icons** in each icon picker. | Each macro shows the same picture in both, and icon numbers match in both pickers. |
 | I7 | Put a folder named `TooltipIds` with its old `TooltipIds.lua` in `AddOns`, and Reload UI. | Chat says Cherry's Info is off because of that folder, and its row says so too. |
 
 ## 0.11.115 Lighter addons
@@ -45,27 +45,78 @@ The frames in these four XML files now come from shared templates. Tests expand 
 | O8 | Type `/gb`. Click the server tabs, fold an account, press **Accounts**, and search for an item you own. | A tab for each server and one for all of them. Accounts fold and unfold. The search lights up the matching slots, dims the rest, scrolls to the first one and opens the bag or bank that has it. Item tooltips draw above the window. |
 | O9 | Type `/cinfo` and look at the tabs. | The labels read **Tooltips & IDs**, **Target & World** and **Chat & Macros**, and every tab opens. |
 
+## 0.11.115 Steam (hub 0.4.30, ZShop 1.2.0-ck6, Global Bank 1.5.8, extension 1.2.6)
+
+Read from Client.exe and Steam's own log, not yet seen in game. The two links the daily button relies on are the shop address and the order of the login parts.
+
+| # | Do this | Expect |
+|---|---|---|
+| S1 | Run `!setup_cherryskit.bat` in the Gameforge install. | It names your Steam install, asks once, sets it up, and older copies there move to its `offloaded_addons`. A second run says it's up to date and asks nothing about it. |
+| S2 | Look in the Steam install's `Interface`. | `CherrysKitClient.lua` is there, and `GlobalBankHelper` is a link to the Gameforge one. |
+| S3 | Log in through Steam, then type `/zshop probe`. | It says client Steam, and the shop address for your region. |
+| S4 | With a level 100 character on Steam, click the daily button. | The reward page opens in your normal browser, logged in as this character, not in Steam's browser. The extension sees it. |
+| S5 | On Steam, click the game's item shop button, then type `/zshop depot`. | Both open in Steam's browser, the second on the depot page. |
+| S6 | Log out on Steam, then look at the Global Bank page and the `/gb` window. | The character is under **Steam account**, with your Gameforge accounts as they were. |
+| S7 | Open `/gb` on Steam. | It lists every character, the Gameforge ones too, because both installs share the data folder. |
+| S8 | Log in through the Gameforge client and click the daily button. | Same as before: the shop link goes to your normal browser on the daily page. |
+
+## 0.11.115 Macros, addon settings and backups (Global Bank 1.5.7, Cherry's Info 1.0.3, extension 1.2.5)
+
+Tested on copies of real save files in Chrome, and the Import window in the simulated client. Nothing yet proves that the game draws the new window as intended, or reads a changed macro file the way it reads its own. I1 to I4, I6 and B3 are the checks that matter.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| I1 | Log in, open the macro window (`/emi`) and look at its bottom row. | **Edit**, **Delete**, **Import** and **Cancel** fit in a row, with their labels readable. |
+| I2 | Press **Import**. | A window opens beside the macro window with a search box, the group arrows, your library's macros with their icons, and the first macro's text under the list. The list scrolls by wheel and bar when it's long. |
+| I3 | Type part of a macro's name, then a group's name. Step through the groups with the arrows. | The list narrows as you type, and the arrows show only groups with macros in them. |
+| I4 | Click an empty slot on the left, pick a macro and press **Import**. Then choose a used slot and press **Import** again. | The macro is in the empty slot with its name, icon and text, and it works on a hotbar. The used slot asks first. Log out and in: both are still there. |
+| I5 | With the game open, write a new macro on the page, then press **Refresh** in the Import window. | The new macro is in the list, with no Reload UI. |
+| I6 | Log in once with this version, log out, and open the page's edit window on a macro using one of the game's own icons. | The macro shows its picture, and **Default Icons** in the icon picker lists the game's icons. Before that login they show as numbers. |
+| B1 | Press **Reload** on the extension, and open the page's **Macros** tab. | The library lists your characters' macros, and the macro window shows the first character's 56 slots. |
+| B2 | With the game open, **Edit** a slot in the macro window and save. | It refuses inside the edit window and says to close the game. Nothing changes. |
+| B3 | Close the game, **Edit** a slot on a character (name, icon and text), then log in to that character and open its macro window. | The game shows the edited macro, with the new icon, and any hotbar button using it still works. Log out and reopen the tab: it's still there. |
+| B4 | Choose **Newest** under **Compare with a backup**, click the slot marked different, press **Put this one back** and log in again. | The old macro is back, and the character's other macros didn't change. |
+| B5 | Move an aura in game and log out. With the game closed, on **Addon settings**, press **Put back** on `RWA_DB` from the backup that still has the old place, and log in. | The aura is back where it was, and other addons kept their settings. |
+| B6 | Put macros in groups, star one, and search by a word of a name and a group's name. Select two characters and press **Put on selected characters**. | The filters find them, and the macro is in each character's first empty slot when you log in. |
+| B7 | Play on for over a day with Chrome or the helper open, then open **Addon settings**. | **About a day ago** shows a time at least a day old, and the file's copies are in `Interface\GlobalBankHelper\Backups\Shared`. |
+
+## 0.11.115 Stat search and stack counts
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| Z1 | Type *stamina* in zBag's search, in each layout and in the bank. | Items with a stamina line light up a moment after you stop typing, and names still match straight away. `/zb probe` has a stat search line. |
+| W1 | Make an icon from the gallery's Present buff template, on a buff that stacks. | The count sits in its bottom-right corner, and the icon display's **Stack count** choice turns it off and on. |
+
+## 0.11.115 Chrome Web Store readiness (extension 1.2.3)
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| W1 | Run **Install Chrome extension.bat** again, press **Reload** on the extension, and open its popup. | The header says the current version and the helper card shows no "older than this extension" line. |
+| W2 | Open the page. | The status line under the header has no "older than this extension" note. |
+| W3 | Rename `Interface\GlobalBankHelper\GlobalBank-NativeHost.json` for a moment and reopen the popup. | It says the helper isn't set up, explains what the extension needs, and shows **Get Cherry's Kit**. Rename the file back. |
+| W4 | Tick **Collect the daily reward automatically** off, open the daily page through ZShop and collect by hand. | The popup's last confirmed collection updates. |
+
 ## 0.11.115 Global Bank page in Chrome (extension 1.2.2)
 
 Tested on made-up data, up to 3,000 characters, and not yet in your Chrome. Until a character logs in and out once on this build, the page has no server, stats, game tooltip or currencies for it, and marks it "needs a login".
 
 | # | Do this | Expected |
 | --- | --- | --- |
-| P1 | Press **Reload** on the extension, and open the page from its button. Its header says v1.2.2. | It opens on the region most of your characters are on, and Region settings lists your servers. |
-| P2 | Untick a server. | It's hidden on the Bank, Currencies, Characters and heatmap tabs. |
-| P3 | Click and Shift-click characters on Characters, Currencies and the heatmap. | They change the one selection, and the Bank follows it. |
+| P1 | Press **Reload** on the extension, and open the page from its button. Its header says v1.2.5. | It opens on the region most of your characters are on, and Region settings lists your servers. |
+| P2 | Untick a server. | It's hidden on the Bank, Currencies, Characters and Gold overview pages. |
+| P3 | Click and Shift-click characters on Characters, Currencies and Gold overview. | They change the one selection. The Bank waits for **Use in Bank**. |
 | P4 | Hover a slot held by a character saved on this build. | The game's own tooltip, then who holds it and where. |
-| P5 | Right-click a slot. | It offers Always stack, Add to favourites and Select who holds it, and the Favourites tab fills. |
+| P5 | Right-click a slot. | It offers Always stack, Add to favourites and Select who holds it, and the Favourites page fills. |
 | P6 | Open the page again from the button, then open a second tab by hand. | The button brings the first tab forward. The tab opened by hand warns. |
 | P7 | On Gameforge accounts, unlock, link a character and lock again, then reload the page. | The link is still there. |
 | P8 | Reload the page once more. | Item icons still show, after the first load moved their cache. |
 | P9 | Log a character in and out once on this build. | Its server, currencies and stats appear, and its "needs a login" dot goes. |
 | P10 | On the **Servers** tab, move a server to the other region, add one, restore the game's lists, and set the server of a character without one. | Each takes effect on every tab, and stays after a reload. |
 | P11 | Right-click a character on any tab. | It selects every character of its RoM account, renames its RoM or Gameforge account, or sets its server. The new name shows on every tab. |
-| P12 | Hover a character, then use the two hide checkmarks. | The card shows Gameforge account / RoM account, and each checkmark hides one. The Characters tab has a RoM account column. |
+| P12 | Hover a character, then use the two hide checkmarks. | The card shows Gameforge account / RoM account, and each checkmark hides one. The Characters page shows the RoM account, in its heading or a column. |
 | P13 | On **Gameforge accounts**, press **Show first**, select single characters, and press a box's **Select**. | Each box shows its account and server once, the names swap, and the selection links or unlinks in one go. |
 | P14 | With **Collect the daily reward automatically** unticked in the popup, open the daily page. Then tick it and open the page on the next reward. | Unticked: nothing is clicked, and collecting by hand still gets recorded. Ticked: the reward is clicked for you. |
-| P15 | On the Bank tab, right-click an item several characters hold, hover one name and then another, and copy a login. | The names are stacked, ten in view and the rest a scroll away. Each name opens its copy buttons in a side menu next to it, headed with that name, and the menu stays open after copying. An item one character holds keeps the buttons in the menu. |
+| P15 | On the Bank, right-click an item several characters hold, hover one name and then another, and copy a login. | The names are stacked, ten in view and the rest a scroll away. Each name opens its copy buttons in a side menu next to it, headed with that name, and the menu stays open after copying. An item one character holds keeps the buttons in the menu. |
 
 ## 0.11.113 Cherry's Bar coordinates
 
@@ -85,9 +136,62 @@ Cherry's Chat 0.11.0. The simulated client checks what goes out on each channel;
 | --- | --- | --- |
 | CB1 | With Say bubbles on **Symbols (^_^)** (default), say `:heart: :star: :smile: :carrot:`. | The bubble shows ♥ ★ (^_^) :carrot:. Report any symbol that shows as a box. |
 | CB2 | Paste a real emoji with no symbol (Windows key + ., e.g. a carrot) into a Say line. | The bubble shows `:carrot:`, not two boxes. |
+| CB1 | Cherry's Chat 0.11.3: watch World for coloured trade lines, then type `/cchat linkprobe` and compare with `/cchat window` (the game's own chat). | No stray `\|` or `h` in Cherry's chat, the same text and colours as the game's chat, and item links still click. |
+| CB0 | Cherry's Chat 0.11.2: say something with an emoji, then type `/cchat bubbletest`. | Three lines: setting, chat type (should say SAY / Say), and the typed and sent text. "sent" has no \\240 codes. Send a screenshot if the bubble still shows boxes. |
 | CB3 | Click **Say bubbles** until it reads **Text (:fire:)**, then say `hi :fire`. | The bubble shows `hi :fire`; your Cherry's Chat window shows the fire picture. |
 | CB4 | With ":heart: when sending" on, say `:fire` in Party. | Party chat gets the real emoji, as before (no bubble there). |
 | CB5 | Click **Say bubbles** until **Emoji (boxes)** and say `:fire`. | Sends as before (boxes in the bubble if ":heart: when sending" is on). |
+
+## 0.11.115 Global Bank page and popup (Global Bank 1.6.0, extension 1.3.0)
+
+This runs in Chrome. Checked so far: the page and popup driven in a headless Chrome with real clicks and keys on made-up characters, against the real helper and local host in a private folder, and the extension loaded for real in a throwaway Chrome against saved data, reading counts only. Nobody has looked at it on a real screen yet, and Chrome's real popup window hasn't been opened.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| R1 | Update, press **Reload extension**, and look at Chrome's toolbar and the popup. | The new vault logo in the toolbar. The popup is about 380 wide, **Open Global Bank** first, and its foot says Version 1.3.0. |
+| R2 | Press **Open Global Bank**, go back to the popup and press it again. | The first press opens the page; the second goes back to that tab instead of opening another. |
+| R3 | In the popup, with the helper stopped, turn on **Show the helper's terminal window** under **Advanced**. | Nothing starts. Then **Start helper**: it opens in its window. |
+| R4 | With the helper started by hand and running, change **Show the helper's terminal window**. | Nothing restarts. With a helper running automatically, it restarts in the new way. |
+| R5 | In the popup, with automatic start on, press **Stop helper**. | The helper stops and automatic start goes off. |
+| R6 | Look at the Daily reward card, after a day with no collection and with no collection at all. | **New reward day** shows only after an earlier confirmed collection. With none it says Unknown and doesn't claim one was missed. Times are in your local time, and the reset is 00:00 in Germany. |
+| R7 | On the page, press `/`, type part of an item name, and try Where, Type, Quality, More filters, Stacking and Excluded items. | The grid follows, **Reset filters** appears, and the summary at the top still counts the characters in view. |
+| R8 | Click an item, then another. Close the panel with its cross, then with Escape. | The panel says who holds it, their server, bag or bank and slot, and how many. The grid keeps its place. It's the game's real icon, and hovering still shows the game's tooltip. |
+| R9 | Use the three layout buttons, then reload the page. | Large slots, small slots and a list, and the page remembers which. |
+| R10 | Tab to the grid, move with the arrow keys, press Enter, then the menu key. | A slot is marked as you move, Enter opens its panel, and the menu key opens its menu. |
+| R11 | On **Characters**, click a few, Shift-click a range, and open the **Bank**. | The Bank hasn't changed. Press **Use in Bank**: it narrows, says so with a chip, and the chip's cross brings everyone back with your selection still there. |
+| R12 | Open the Bank's own character list and tick two. | The Bank narrows at once. **All characters** in that list clears it. |
+| R27 | Look at **Characters**. | One tight line for each character, under a heading for each RoM account, in order of Gameforge account and server. **Group by server** and **No groups** bring back the Gameforge and RoM columns. |
+| R13 | Look at **Transfer stones** on Characters, for a character you know has some, and one whose bank isn't recorded. | The count matches the game. An unrecorded bank shows "at least" the bag's count with a +, or a dash, never a false 0. |
+| R14 | Press **Needs login** and **Bank not recorded**, then **Review** in the Bank's bottom line. | Each lists its own characters. They can overlap. |
+| R15 | Right-click a character, choose **Stop tracking**, and answer the question. Then open **Excluded** and press **Track again**. | It asks in the helper's words, naming the character. Cancel changes nothing. Yes removes it everywhere; **Track again** brings it back. |
+| R16 | Open **Connection** from the side and from the helper line at the top. | Start and stop, automatic start, the terminal window and reading from folders are all there, and it opens by itself on a PC with no helper and no folders chosen. |
+| R17 | Lock your Gameforge accounts, then click **Accounts locked** at the top. | It goes to the password box. A wrong password says so. On Characters, accounts read Locked while locked. Copying logins and rename still work once open. |
+| R18 | Look at **Currencies**. | Diamonds and Rubies count each RoM account once, and say how many characters aren't on a known one. Daily Tokens add up every character. A dash means not recorded; 0 is a real zero. |
+| R19 | Look at **Gold overview** with the window at its usual size. | A box for each Gameforge account, with its servers and RoM accounts, and one for characters not linked. Red at no gold, orange at half a cap, bright green at a full cap, marked MAX, so a full account is a block of green. 200+ characters fit without scrolling, each tile with its short gold, and hover shows the exact amount. |
+| R28 | On **Gold overview**, click the three squares beside the colour bar and pick colours, then reload the page. | The tiles follow while you pick, and the colours are still there after reloading. Text on the tiles stays readable. **Reset colours** goes back to red, orange and green, and then hides. |
+| R29 | On **Gold overview**, try **Name letters** at 6, 3 and 1, then reload the page, and go back to **Whole name**. | A name that doesn't fit shows that many letters, the ones that tell it apart on its account, and the tiles shrink: 8, 4 or 2 to a line under each account, so a full account is a neat block. Below 5 letters the gold number goes too, and hover still shows it. The choice is still there after reloading. With **Whole name**, no name is cut off. |
+| R20 | Open **Stats**, **Servers**, **Gameforge accounts**, **Macros**, **Addon settings**, **Item Depot** and **Auctions**. | Each works as before in the new look. Icons on Macros show as before. |
+| R21 | Open the page twice. | The warning about two tabs shows. |
+| R22 | Make the window narrow. | The side folds to its icons, filters wrap, and wide tables scroll inside their own box. Nothing makes the whole page scroll sideways. |
+| R23 | On **Terminal**, try `list gold`, `search mana`, `show` then Tab, `help list`, `status`, `follow off`, `copy`, `clear`. Type half a command while logging out of a character. | The same results and wording as the helper's window. What you typed and the caret stay put while the update arrives. |
+| R24 | Scroll up in the Terminal while updates arrive. | The view stays, a count of new lines shows, and **Resume follow** goes to the latest. |
+| R25 | Leave the Terminal page and watch Task Manager for a minute. | No new PowerShell processes keep appearing; the connection to the helper closes within about 30 seconds. |
+| R26 | Type `exit` on the page. | It says it's stopping, the header goes to Stopped, and the top of the page agrees. `goldtotal` still answers from saved data and says so, and `heartbeat off` says no helper is running. |
+
+## Global Bank terminal in both places
+
+`tests/test_globalbank_terminal.py` runs Windows PowerShell 5.1 in a real console with no window, plus real native messaging frames and the mailbox, on private copies with made-up characters. It doesn't cover what only a person sees, or real Chrome.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| T1 | Open **Start Global Bank helper.bat**. | A short banner and "Loading saved characters...", then the real count and a `gb >` prompt. The gold and teal colours show, and help doesn't print by itself. |
+| T2 | Type part of a command, then log out of a character. | The update line appears above your typing, and the draft and caret stay where they were. |
+| T3 | Scroll up in the window, then log out of a character. | The window stays where you scrolled to and its title says "1 new". Scrolling back down shows the line. |
+| T4 | Drag the window narrower with a long draft, then run `list gold`. | The draft redraws without leftovers, and the table wraps with every name and note intact. |
+| T5 | With the helper running, open the extension's Terminal page and run `status`, then `heartbeat off`. | Status shows the same helper's uptime. The window prints "From the browser: heartbeat off" and its alive line stops. |
+| T6 | Run `note Name test` on the page, then `show Name` in the window. | The note is there straight away. Log that character out: the note stays. |
+| T7 | Run `exit` on the page. | The page says it's stopping, the window closes, and `status` then says it isn't running. With automatic start on, the page said it starts again with Chrome. |
+| T8 | With no helper running, run `list gold` and `exit` on the page. | The list is labelled as saved data. Exit reports that no helper is running. |
 
 ## 0.11.103 Global Bank without the terminal window
 
@@ -95,12 +199,12 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 
 | # | Do this | Expected |
 | --- | --- | --- |
-| G1 | Reload the extension, then its icon, then **Open local bank and auction tools**. | The Bank tab shows one grid of everything, with real icons. About 2% of the game's icons use a packing the page can't read; those show the item's first two letters. |
+| G1 | Reload the extension, then its icon, then **Open Global Bank**. | The Bank shows one grid of everything, with real icons. About 2% of the game's icons use a packing the page can't read; those show the item's first two letters. |
 | G2 | Hover an item you have in several places. | The tooltip lists each character with its bag or bank slot and count, such as Bank 45 (page 2, slot 5). |
 | G3 | Try the name search, Type, Where, character level, the character list, Sort by, and Stack the same item. | The grid and the count follow each one, and it stays easy to scroll. Item types are a guess from IDs and icon names, so tell me where one is wrong. |
-| G7 | Turn on **Keep the helper running automatically when Chrome is open**. | No window opens unless **Show its terminal window** is ticked. Within a few seconds the top of the page says the helper is running, started automatically, and for how long. Log out of a character: the data updates by itself. |
+| G7 | Under **Connection**, turn on **Run automatically**. | No window opens unless **Show its terminal window** is ticked. Within a few seconds the top of the page says the helper is running, started automatically, and for how long. Log out of a character: the data updates by itself. |
 | G8 | Turn it off, then turn it on and close Chrome completely. | Off: the helper stops within a couple of seconds. Closing Chrome: it stops within about fifteen seconds. Disabling or removing the extension with Chrome open: it stops after about three minutes without a heartbeat. It starts again the next time Chrome opens. |
-| G9 | On the page, open **Read from folders instead of the helper** and choose your save folder and game folder. This only matters on a PC without the helper. | Chrome asks to allow each one. On a PC without the helper, the Bank tab fills from them. After a Chrome restart, **Allow access again** brings them back. |
+| G9 | Under **Connection** on the page, open **Read from folders instead** and choose your save folder and game folder. This only matters on a PC without the helper. | Chrome asks to allow each one. On a PC without the helper, the Bank fills from them. After a Chrome restart, **Allow access again** brings them back. |
 | G10 | Log in and out on a character with some currencies, then open the **Currencies** tab. | Its amounts match the game's own currency window, and clicking a heading sorts by it. Gold and the other currencies have an **All characters** total. |
 | G11 | On that character, have a bound item that isn't gear. In **Excluded items**, tick **Exclude bound items that can't be equipped**. | The item leaves the grid, and bound gear stays. Tick **Show excluded items, dimmed** and right-click it to keep it. |
 | G12 | Open your item depot page through ZShop, then the extension page's **Item Depot** tab. | The items appear in the grid, with counts and a read time. If they look wrong, press **Copy page layout** and send what it copies. |
@@ -108,14 +212,14 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G14 | In game, open `/gb` and hover items on another character, both gear and other things. | The game's own item tooltip shows, plus the count and slot. Gear shows that piece's durability and stats after that character has logged in once with this version. |
 | G15 | Run the login screen's installer again, restart the game and reach the character screen with the helper's data saved. | Each character shows its gold and last save, at the right of its row. The server screen says whether the helper is running. With the helper closed it says so within about a minute, and at once if the Chrome extension is set up. |
 | G16 | With the mailbox open, press **Prev** or **Next** on LogNextChar, then open a mailbox on the next character. | The mailbox and Ultimate Mail Mod's window close before logging out, and the mailbox opens normally afterwards. |
-| G17 | Open **Gold heatmap**. | There's a column per server. A character with no gold is red, exactly 500,000,000 is orange, a full cap is bright green and pooled at the top of its column. Hovering shows the full value. A character shows under "Server unknown" until it logs in with this version. |
-| G19 | On **Gameforge accounts**, choose a password and add an account. Close and reopen the page. Press **Copy encryption key**, and keep it. | `GameforgeAccounts.json` in `Interface\\GlobalBankHelper` holds no readable names. The page opens locked, and the heatmap shows "Accounts locked" until you enter the password at the top. |
-| G18 | On **Gameforge accounts**, add an account, tick characters and press **Link ticked**, then right-click a linked character on the heatmap. | Passwords show as *** until **Reveal passwords** is ticked, and it's off again after reopening the page. The right-click menu stays open, so the account name and then the password are two clicks to copy. Linked characters group under the account. |
+| G17 | Open **Gold overview**. | There's a box per Gameforge account, with its servers inside. A character with no gold is red, exactly 500,000,000 is orange, and a full cap is bright green and marked MAX. Hovering shows the full value. A character shows under "Server unknown" until it logs in with this version. |
+| G19 | On **Gameforge accounts**, choose a password and add an account. Close and reopen the page. Press **Copy encryption key**, and keep it. | `GameforgeAccounts.json` in `Interface\\GlobalBankHelper` holds no readable names. The page opens locked, and Gold overview shows "Accounts locked" until you enter the password under Connection. |
+| G18 | On **Gameforge accounts**, add an account, tick characters and press **Link ticked**, then right-click a linked character on Gold overview. | Passwords show as *** until **Reveal passwords** is ticked, and it's off again after reopening the page. The right-click menu stays open, so the account name and then the password are two clicks to copy. Linked characters group under the account. |
 | G20 | Log in and out on a character holding mana stones with stats. Open **Stats**, and switch between stats on items and on mana stones. In **Bank**, set **Search in** to each kind and search a stat. | The names and counts match the stones' tooltips in game, with a breakdown per character. Stones with different stats have their own slots. |
 | G21 | Put an addon's original in its own folder (for example `Interface\AddOns\zBag`), and start the game. | Chat has one line saying the kit's version is off because that folder takes precedence, and the hub's row says the same. The original runs and has its own commands. Delete the folder and Reload UI: the kit's version is back. |
 | G22 | Try one addon with only the hub (the hub's ZIP plus that addon's ZIP). | It works, with only the features that need another addon missing. Its description lists them. |
 | G23 | Log in and out on a character with gear and mana stones, then hover them in the **Bank** tab. | The tooltip matches the game's, line for line, with the same colours. |
-| G24 | Log in one character through LogNextChar's login screen, and out again. Open **Gameforge accounts** and **Gold heatmap**. | Its whole account is boxed together under Link characters, with even tickboxes and names in class colours, and the others on it have a server, even if they haven't logged in. Nothing is linked until you link it. |
+| G24 | Log in one character through LogNextChar's login screen, and out again. Open **Gameforge accounts** and **Gold overview**. | Its whole account is boxed together under Link characters, with even tickboxes and names in class colours, and the others on it have a server, even if they haven't logged in. Nothing is linked until you link it. |
 | G25 | In `/grid`, on the **Clicks** page, pick the mouse button **Mouse 4** and give it a 1st action. Press Mouse 4 over a member, then run `/grid probe`. | The action runs on that member, and the probe lists XBUTTON. |
 | G26 | With **Use Mouse 4 as a game keybind** unticked, as it is by default, open **Key Bindings**, click a slot, press Mouse 4, then press Esc. | The slot just keeps waiting. MOUSE4 shows nowhere, and windows behave as before. |
 | G27 | Tick it, and press Mouse 4 over Grid's options. Then open **Key Bindings**, click a slot of the first action bar button, press Mouse 4, then Okay. Press Mouse 4 over a window, and over the 3D world. | The Clicks page says it was seen. The slot and the hotbar show MOUSE4, and the skill fires over the window but not over the world. Windows still drag, and hotbar and bag clicks still work. |
@@ -124,9 +228,10 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G30 | Tick **Show its terminal window** (on the extension's page or its button) with the automatic helper on. | The helper restarts in a real PowerShell window titled "Cherrys Global Bank Helper". Untick it: the helper restarts without a window. |
 | G31 | While the helper runs, open Task Manager, then the Details tab, and add the **Command line** column. | The helper is a powershell.exe row whose command line names GlobalBank-Update.ps1; a shown terminal window carries the title Cherrys Global Bank Helper. |
 | G32 | With an older or other `Interface\loginxml` in place, run LogNextChar's `Install login screen.bat`, start the game, then run it again. | `Interface\offloaded_addons\loginxml` holds the old folder and the login screen shows LogNextChar. Saved logins still work. The second run says nothing changed and adds no copy. |
-| G33 | Log out of a name on one server, then the same name on another, and restart the helper. Open `/gb`, the page's **Characters** and **Gold heatmap**, and the character screen on each server. | Two rows, `Name (Server)`, each with its own gold, items and heatmap column. Each character screen shows only its own server's gold. |
+| G33 | Log out of a name on one server, then the same name on another, and restart the helper. Open `/gb`, the page's **Characters** and **Gold overview**, and the character screen on each server. | Two rows, `Name (Server)`, each with its own gold, items and Gold overview tile. Each character screen shows only its own server's gold. |
+| G31 | Log out of a character with Arcane Transmutor charges and restart the game. Look at its row on the character screen, and at a character with none. | Under its gold it says `Charges:` and the same number as in game. The other says `Charges: 0`. A character not logged in since currencies were recorded has no such line. |
 | G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
-| G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
+| G5 | On the Terminal page, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 
 ## 0.11.101 real time, daily reset, extension setup and single-addon installs
 
@@ -333,6 +438,7 @@ The supplied client has no supported addon hook for its private native speech bu
 | M2 | Click each gold preset from Send Gold and C.O.D.; check an amount such as 1,000,001. Then use the normal Send and confirmation controls. | Only the form is filled, C.O.D. is cleared and the chosen amount is exact. Button and confirmation grouping read 1.000.001. No mail is sent merely by choosing a preset; existing subject/body/attachment behavior remains usable. |
 | M3 | Successfully send to A, fail/cancel/time out a send to B, then successfully send to C. Click **Use last**. Repeat after switching characters/relogging. | Only successful send snapshots update the remembered recipient. Use last fills C in To without changing subject/body/gold. All characters share `UMMConfig` in SaveVariables.lua. Empty/busy/disabled shortcut controls cannot overwrite To. |
 | M4 | Open the third **History** tab, successfully send to over 20 different recipients, resend an earlier name and run a mass send. Choose a name in History, then open Mass Send Items. | History has at most 20 distinct names, newest first; resending moves rather than duplicates. Clicking a name fills Compose without sending. Repeated mass mails add one recipient entry. History remains usable with shortcuts off; Mass Send Items remains the fourth tab. Native gold/mail/server timing and cross-character persistence are still to be verified. |
+| M5 | Buy an item (for example from a shop), mark it right away in **Mass Send Items** with one or two other items, and send. Then send again with only that item marked. | Every marked item goes out; no "no longer in that bag slot". If one is skipped anyway, **/umm trace** shows a `skip` line with the old and new link: send that line. |
 
 ## 0.11.81 baseline: offline coverage and limits
 

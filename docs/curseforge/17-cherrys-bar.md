@@ -4,9 +4,9 @@
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\CherrysBar`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **Cherry's KittyCombo:** the Kitty mode display
-> - **Global Bank:** its Chrome extension gives the Clock the real time
+> - **Global Bank:** the Clock shows the real time, from Global Bank's Chrome extension
 >
 > **Original addon:** XBar III by matif and Bussdee. If `Interface\AddOns\XBar` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
@@ -32,7 +32,7 @@ A fork of XBar III, with bars and settings in the spirit of Titan Panel.
 - **Seven styles** (Ironstone, Blacksteel, Froststeel, Darkwood, Verdant, Arcane and plain Slate) with a matching set of icons.
 - **Drawn under the game**: the portrait, housing controls, target, buffs and minimap stay on top and where they are, and the top bar's displays are kept clear of them.
 - **The bottom bar lifts the whole interface** by its height and fits underneath: the action bars, chat, cast bar, bags and other addons' frames along the bottom rise together.
-- **Real time**: the Clock shows the time once Cherry's Kit knows it, from Global Bank's Daily Rewards Chrome extension. Until then it shows your time online.
+- **Real time**: the Clock shows the time once Cherry's Kit knows it, from the Global Bank for RoM Chrome extension. Until then it shows your time online.
 - **Light on the game**: displays read only on events or slow timers, and displays you hid do nothing. `/cbar perf` measures frame times and what each addon costs per frame.
 
 **Still being tested in game:** the bottom bar's lift and moving the game's frames, text widths, coordinates on the bar and some of XBar's older game calls. `/cbar probe` shows what the client does.

@@ -15,12 +15,16 @@
 #                     addon can tell.
 #   -Command "<cmd>"  run one command and exit, e.g. -Command "get goldtotal" (for other tools)
 #   (no switch)       update the database once
-param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "", [ValidateSet(0, 1)][int]$Heartbeat = 1, [switch]$SkipAuctions, [switch]$Auto)
+# -ReplyFile is how the extension's local host runs a command when no helper is running: the answer goes
+# to that file as JSON instead of the screen.
+param([string]$SaveFolder = "", [switch]$Watch, [string]$Command = "", [ValidateSet(0, 1)][int]$Heartbeat = 1, [switch]$SkipAuctions, [switch]$Auto,
+    [string]$RequestId = "", [string]$ReplyFile = "", [string]$ConfirmToken = "")
 
 $ErrorActionPreference = "Stop"
 
 # A clear name for Task Manager and the taskbar when this run has its own console window.
-try { [Console]::Title = "Cherrys Global Bank Helper" } catch { }
+$originalTitle = $null
+try { $originalTitle = [Console]::Title; [Console]::Title = "Cherrys Global Bank Helper" } catch { }
 
 # Keep diagnostics available even when loading a dependency or starting the watcher fails.
 # Never include source text or expanded command arguments: those can contain private payloads.
@@ -114,8 +118,7 @@ $script:Entries = @{}      # character key -> @{ name; folder; saved; s; line },
 $script:ByKey = @{}        # character key -> character object
 $script:Notes = @{}        # name -> @{ v; t }: notes (and the window size, "*size") as in the database
 $script:Chars = @()        # character objects sorted by name
-$script:Buffer = ""        # what the player is typing
-$script:PromptShown = $false
+$script:GBLive = [bool]$Watch
 $script:ConsoleHeartbeat = ($Heartbeat -eq 1)
 $script:StartedAt = Get-Date
 $script:NextConsoleBeat = (Get-Date).AddSeconds(30)
@@ -127,27 +130,13 @@ $script:AAHWorkerInbox = Join-Path $data ('.AAH-worker-' + $PID + '.json')
 
 . (Join-Path $PSScriptRoot "GlobalBank-Data.ps1")
 . (Join-Path $PSScriptRoot "AAH-Cache.ps1")
+. (Join-Path $PSScriptRoot "GlobalBank-Backups.ps1")
+. (Join-Path $PSScriptRoot "GlobalBank-Bridge.ps1")
+. (Join-Path $PSScriptRoot "GlobalBank-Commands.ps1")
+. (Join-Path $PSScriptRoot "GlobalBank-Console.ps1")
 
 ###########################################################################
 # Output
-
-function Clear-PromptLine {
-    $width = 79
-    try { $width = [Math]::Max(1, [Console]::WindowWidth - 1) } catch { }
-    Write-Host -NoNewline ("`r" + (" " * $width) + "`r")
-}
-
-function Show-Prompt {
-    Write-Host -NoNewline ("> " + $script:Buffer)
-    $script:PromptShown = $true
-}
-
-# Prints a line without mixing it into what the player is typing.
-function Say([string]$text, [ConsoleColor]$Color = [ConsoleColor]::Gray) {
-    if ($script:PromptShown) { Clear-PromptLine }
-    Write-Host $text -ForegroundColor $Color
-    if ($script:PromptShown) { Show-Prompt }
-}
 
 # Disk liveness is independent of the optional console heartbeat. Cache work invokes this
 # callback during long operations; it must not touch the prompt or throw into that work.
@@ -171,13 +160,7 @@ if ($Watch) { $script:AAHProgressPulse = { param([string]$stage) Write-Beat } }
 function Show-Heartbeat {
     if (-not $script:ConsoleHeartbeat -or (Get-Date) -lt $script:NextConsoleBeat) { return }
     $script:NextConsoleBeat = (Get-Date).AddSeconds(30)
-    Say ("[{0}] alive | {1} characters | watching for saves" -f (Get-Date).ToString('HH:mm:ss'), $script:Chars.Count) DarkGray
-}
-
-function Show-Status {
-    $mode = if ($script:ConsoleHeartbeat) { 'on (1)' } else { 'off (0)' }
-    Say ("Status: {0} characters | running {1} min | console heartbeat {2}" -f $script:Chars.Count, [int]((Get-Date) - $script:StartedAt).TotalMinutes, $mode) Cyan
-    Say 'File liveness continues with either heartbeat setting. Type help for command groups.'
+    Write-GBHeartbeatLine ("alive | {0} | watching for saves" -f (Format-GBCount $script:Chars.Count 'character'))
 }
 
 function Invoke-HelperMaintenance([scriptblock]$Report = { param($message) Write-Log $message }) {
@@ -302,14 +285,14 @@ function Import-CharacterAAH([string]$file, [string]$text) {
     }
 }
 
-function Write-Log([string]$text) {
+function Write-Log([string]$text, [string]$kind = 'notice', [string]$tone = 'info', [string]$character = '', [bool]$dataChanged = $false) {
     $line = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss") + "  " + $text
     try {
         $keep = @()
         if (Test-Path -LiteralPath $log) { $keep = @(Get-Content -LiteralPath $log -Tail 199) }
         Set-Content -LiteralPath $log -Value ($keep + $line)
     } catch { }
-    Say ("[" + (Get-Date).ToString("HH:mm") + "] " + $text)
+    Send-GBEvent $kind $text $tone $character $dataChanged
 }
 
 ###########################################################################
@@ -368,7 +351,7 @@ function Update-Database {
         try {
             $text = [System.IO.File]::ReadAllText($file, $script:latin1)
             # A one-shot character edit must not rebuild the unrelated auction cache.
-            if (-not ($Command -match '^\s*/?(?:erase|unban|note|add\s+note)\b')) {
+            if (-not $script:GBSkipCacheImport) {
                 try { Import-CharacterAAH $file $text }
                 catch { Write-HelperError $_ 'AAH character cache import'; Write-Log "AAH cache import deferred for $($folder.Name); see GlobalBankHelper-errors.log." }
             }
@@ -475,9 +458,11 @@ function Update-Database {
 function Write-Json {
     try {
         Export-GBJson $script:Chars $json (Get-Date).ToString("yyyy-MM-dd HH:mm")
+        return $true
     } catch {
         Write-HelperError $_ 'Export character JSON'
-        Write-Log "Couldn't write $json; see GlobalBankHelper-errors.log."
+        Write-Log "Couldn't write $json; see GlobalBankHelper-errors.log." 'notice' 'error'
+        return $false
     }
 }
 
@@ -500,11 +485,13 @@ function Load-Model {
 function Describe-Character($c) {
     $text = "$($c.Name) (level $($c.Level)"
     if ($c.Class) { $text += " $($c.Class)" }
-    return $text + "): $(Format-GBGold $c.Gold) gold, $($c.Items) items"
+    return $text + "): $(Format-GBGold $c.Gold) gold, $(Format-GBCount $c.Items 'item')"
 }
 
 function Say-Tracking {
-    Say "Tracking $($script:Chars.Count) characters, $(Format-GBGold (Get-GBGoldTotal $script:Chars)) gold in total."
+    $text = "Tracking $(Format-GBCount $script:Chars.Count 'character'), $(Format-GBGold (Get-GBGoldTotal $script:Chars)) gold in total."
+    # A command that asked for it answers with it; otherwise it follows the changes it sums up.
+    if ($script:GBResult) { Add-GBMessage $text 'gold' } else { Send-GBEvent 'updated' $text 'gold' }
 }
 
 # Takes the entries Update-Database wrote, says what changed and rewrites GlobalBank.json.
@@ -514,7 +501,7 @@ function Sync-Model($entries, $loggedOut, [bool]$always) {
     $wasEmpty = ($script:Entries.Count -eq 0)
     $newEntries = @{}
     $newByKey = @{}
-    $messages = New-Object 'System.Collections.Generic.List[string]'
+    $messages = New-Object 'System.Collections.Generic.List[object]'
     $added = 0
     $changed = $false
     foreach ($e in $entries) {
@@ -524,7 +511,7 @@ function Sync-Model($entries, $loggedOut, [bool]$always) {
         if ($oldEntry -and $oldChar -and $oldEntry.s -eq $e.s) {
             $oldChar.Saved = $e.saved
             $newByKey[$e.name] = $oldChar
-            if ($loggedOut -and $loggedOut.ContainsKey($e.folder)) { $messages.Add("$($oldChar.Name) saved; nothing changed.") }
+            if ($loggedOut -and $loggedOut.ContainsKey($e.folder)) { $messages.Add(@{ text = "$($oldChar.Name) saved; nothing changed."; character = $oldChar.Name; tone = 'muted'; changed = $false }) }
             continue
         }
         $c = ConvertFrom-GBSnapshot $e.s $e.saved
@@ -533,7 +520,7 @@ function Sync-Model($entries, $loggedOut, [bool]$always) {
         $changed = $true
         if (-not $oldChar) {
             $added++
-            $messages.Add("Added " + (Describe-Character $c))
+            $messages.Add(@{ text = "Added " + (Describe-Character $c); character = $c.Name; tone = 'ok'; changed = $true })
             continue
         }
         $parts = @()
@@ -546,13 +533,14 @@ function Sync-Model($entries, $loggedOut, [bool]$always) {
         if ($oldChar.Items -ne $c.Items) { $parts += "items $($oldChar.Items) -> $($c.Items)" }
         if (-not $oldChar.BankSeen -and $c.BankSeen) { $parts += "bank added" }
         if ($parts.Count -eq 0) { $parts += "items moved or swapped" }
-        $messages.Add("Updated $($c.Name): " + ($parts -join ", "))
+        $messages.Add(@{ text = "Updated $($c.Name): " + ($parts -join ", "); character = $c.Name; tone = 'info'; changed = $true })
     }
     foreach ($key in $script:Entries.Keys) {
         if (-not $newEntries.ContainsKey($key)) {
             $changed = $true
             $name = if ($script:ByKey[$key]) { $script:ByKey[$key].Name } else { $key }
-            $messages.Add("Removed $name (removed in game)")
+            $why = if ($script:ByKey[$key] -and (Is-Excluded $script:ByKey[$key].Name)) { 'erased here' } else { 'removed in game' }
+            $messages.Add(@{ text = "Removed $name ($why)"; character = $name; tone = 'warn'; changed = $true })
         }
     }
     # Notes written on any character since the last update.
@@ -564,7 +552,7 @@ function Sync-Model($entries, $loggedOut, [bool]$always) {
         if (-not $old -and -not $newNotes[$key].t) { continue }
         $changed = $true
         $text = ConvertTo-GBText $newNotes[$key].t
-        $messages.Add($(if ($text) { "Note for $(ConvertTo-GBText $key): $text" } else { "Note for $(ConvertTo-GBText $key) cleared" }))
+        $messages.Add(@{ text = $(if ($text) { "Note for $(ConvertTo-GBText $key): $text" } else { "Note for $(ConvertTo-GBText $key) cleared" }); character = (ConvertTo-GBText $key); tone = 'info'; changed = $true })
     }
     $script:Notes = $newNotes
     $script:WrittenNotes = $null
@@ -572,154 +560,26 @@ function Sync-Model($entries, $loggedOut, [bool]$always) {
     $script:ByKey = $newByKey
     $script:Chars = @($newByKey.Values | Sort-Object Name)
     Set-GBNotes $script:Chars $script:Notes
+    if ($changed -or -not (Test-Path -LiteralPath $json)) { [void](Write-Json) }
+    Update-GBFeedModel
     if ($wasEmpty -and $added -gt 5) {
-        Write-Log "Found $added characters."
+        Write-Log "Found $added characters." 'loaded' 'ok' '' $true
     } else {
-        foreach ($m in $messages) { Write-Log $m }
+        foreach ($m in $messages) { Write-Log $m.text 'updated' $m.tone $m.character $m.changed }
     }
     if ($always -or $changed -or $messages.Count) { Say-Tracking }
-    if ($changed -or -not (Test-Path -LiteralPath $json)) { Write-Json }
 }
 
+# True when the database was read and written.
 function Invoke-Update($loggedOut, [bool]$always) {
     $entries = Update-Database
-    if ($null -ne $entries) { Sync-Model $entries $loggedOut $always }
+    if ($null -eq $entries) { return $false }
+    Sync-Model $entries $loggedOut $always
+    return $true
 }
 
 ###########################################################################
-# Commands (typed in the helper window, or passed with -Command)
-
-function Show-Help {
-    Say "CHARACTERS & ITEMS  (the / and the word get are optional)" Cyan
-    Say "  get goldtotal          gold of all characters together"
-    Say "  get gold <name>        one character's gold"
-    Say "  list [gold|level|items|name|note|saved] [text]"
-    Say "                         sort characters; add text to filter names or notes"
-    Say "  list note bank alt     show characters with bank alt in their note"
-    Say "  search <text>          which characters hold an item, and how many; notes too"
-    Say "  search warrior > 60   characters with warrior level 60 or higher"
-    Say "  show <name>            one character's note, daily reward, bag and bank"
-    Say "  add note <name> <text> set a note; use note <name> to clear it"
-    Say "  note <name> <text>     shorter form of add note"
-    Say "  daily                  level 100+ daily reward status"
-    Say "  erase <name>           remove and stop tracking a character"
-    Say "  ban list               show excluded characters"
-    Say "  unban <name>           allow tracking a character again"
-    Say "HELPER CONTROLS" Cyan
-    Say "  update                 read the save files again now"
-    Say "  export                 rewrite GlobalBank.json (for tools outside the game)"
-    Say "  status                 character count, uptime and heartbeat setting"
-    Say "  heartbeat on|off        show or hide the 30-second text heartbeat (also: 1|0)"
-    Say "  help                   show these command groups"
-    Say "  exit                   stop the helper (same as closing the window)"
-    Say "TRY: list gold | search mana stone | show <name> | heartbeat off" Yellow
-}
-
-function Get-OneCharacter([string]$name) {
-    if (-not $name) { Say "Which character? For example: show $(if ($script:Chars.Count) { $script:Chars[0].Name } else { 'Name' })"; return $null }
-    $hits = Find-GBCharacter $script:Chars $name
-    if ($hits.Count -eq 1) { return $hits[0] }
-    if ($hits.Count -eq 0) { Say "No character called $name. Type list to see them all."; return $null }
-    Say "Several characters start with ${name}: $((@($hits | Select-Object -First 15 | ForEach-Object { $_.Label })) -join ', ')$(if ($hits.Count -gt 15) { ', ...' })"
-    return $null
-}
-
-function Show-List([string]$rest) {
-    $words = @($rest -split '\s+' | Where-Object { $_ })
-    $sort = "name"
-    if ($words.Count -and @("gold", "level", "items", "name", "note", "saved") -contains $words[0].ToLower()) {
-        $sort = $words[0].ToLower()
-        $words = @($words | Select-Object -Skip 1)
-    }
-    $filter = $words -join " "
-    $list = @($script:Chars | Where-Object { -not $filter -or $_.Note.IndexOf($filter, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 -or ($sort -ne "note" -and $_.Name.IndexOf($filter, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) })
-    switch ($sort) {
-        "gold"  { $list = @($list | Sort-Object @{ Expression = "Gold"; Descending = $true }, Name) }
-        "level" { $list = @($list | Sort-Object @{ Expression = "Level"; Descending = $true }, Name) }
-        "items" { $list = @($list | Sort-Object @{ Expression = "Items"; Descending = $true }, Name) }
-        "saved" { $list = @($list | Sort-Object @{ Expression = "Saved"; Descending = $true }, Name) }
-        "note"  { $list = @($list | Sort-Object @{ Expression = { if ($_.Note) { 0 } else { 1 } } }, Note, Name) }
-    }
-    if ($list.Count -eq 0) { Say "No characters$(if ($filter) { if ($sort -eq "note") { " with $filter in the note" } else { " with $filter in the name or note" } })."; return }
-    $classTexts = @{}
-    $classWidth = 12
-    foreach ($c in $list) {
-        $text = if ($c.Classes.Count) { @($c.Classes | ForEach-Object { "$($_.Name)($($_.Level))" }) -join ', ' } else { "$($c.Class)($($c.Level))" }
-        $classTexts[$c.Key] = $text
-        $classWidth = [Math]::Max($classWidth, $text.Length)
-    }
-    $format = '{0,-22} {1,-' + $classWidth + '} {2,15} {3,6}  {4,-16}  {5}'
-    Say ($format -f 'Name', 'Classes', 'Gold', 'Items', 'Saved', 'Note')
-    foreach ($c in $list) {
-        Say ($format -f $c.Label, $classTexts[$c.Key], (Format-GBGold $c.Gold), $c.Items, $c.Saved, $c.Note)
-    }
-    Say "$($list.Count) characters, $(Format-GBGold (Get-GBGoldTotal $list)) gold."
-}
-
-function Show-Search([string]$text) {
-    if (-not $text) { Say "Search for what? For example: search mana stone or search warrior > 60"; return }
-    if ($text -match '^(.+?)\s*(>=|>|<=|<|=)\s*(\d+)\s*$') {
-        $className = $Matches[1].Trim(); $operator = $Matches[2]; $level = [int64]$Matches[3]
-        $hits = @($script:Chars | Where-Object {
-            $c = $_
-            $classes = @($c.Classes)
-            if (-not $classes.Count -and $c.Class) { $classes = @([pscustomobject]@{Name=$c.Class;Level=$c.Level}) }
-            @($classes | Where-Object {
-                $classLevel = $_.Level
-                $_.Name -ieq $className -and $(switch ($operator) {
-                    '>' { $classLevel -ge $level }; '>=' { $classLevel -ge $level }
-                    '<' { $classLevel -lt $level }; '<=' { $classLevel -le $level }; '=' { $classLevel -eq $level }
-                })
-            }).Count -gt 0
-        })
-        if (-not $hits.Count) { Say "No matching saved classes. Log in to characters to update their class data."; return }
-        foreach ($c in $hits) {
-            $classes = if ($c.Classes.Count) { @($c.Classes | ForEach-Object { "$($_.Name)($($_.Level))" }) -join ', ' } else { "$($c.Class)($($c.Level))" }
-            Say "$($c.Name): $classes"
-        }
-        Say "$($hits.Count) character(s)."
-        return
-    }
-    $noted = @($script:Chars | Where-Object { $_.Note -and $_.Note.IndexOf($text, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 })
-    if ($noted.Count) {
-        Say "Notes containing ""$text"":"
-        foreach ($c in $noted) { Say ("    {0,-22} {1}" -f $c.Name, $c.Note) }
-    }
-    $items = Search-GBItems $script:Chars $text
-    if ($items.Count -eq 0) {
-        if (-not $noted.Count) { Say "No item names or notes contain ""$text""." }
-        return
-    }
-    $maxItems = 30
-    $maxHolders = if ($items.Count -eq 1) { 100000 } else { 10 }
-    foreach ($item in @($items | Select-Object -First $maxItems)) {
-        Say "$($item.Name): $(Format-GBGold $item.Total) on $($item.Holders.Count) character(s)"
-        foreach ($h in @($item.Holders | Select-Object -First $maxHolders)) {
-            $where = @()
-            if ($h.Bag) { $where += "bag $($h.Bag)" }
-            if ($h.Bank) { $where += "bank $($h.Bank)" }
-            Say ("    {0,-22} {1,8}  ({2})" -f $h.Name, (Format-GBGold ($h.Bag + $h.Bank)), ($where -join ", "))
-        }
-        if ($item.Holders.Count -gt $maxHolders) { Say "    ... and $($item.Holders.Count - $maxHolders) more (search the full name to see all)" }
-    }
-    if ($items.Count -gt $maxItems) { Say "... and $($items.Count - $maxItems) more items; type more of the name." }
-}
-
-function Show-Character([string]$name) {
-    $c = Get-OneCharacter $name
-    if (-not $c) { return }
-    Say "$(Describe-Character $c), saved $($c.Saved)"
-    if ($c.Classes.Count) { Say ("Classes: " + (@($c.Classes | ForEach-Object { "$($_.Name)($($_.Level))" }) -join ', ')) }
-    elseif ($c.Class) { Say "Classes: $($c.Class)($($c.Level)) (other classes not saved yet)" }
-    if ($c.Note) { Say "Note: $($c.Note)" }
-    Show-DailyStatus $c
-    $sections = @(@("Bag", $c.Bag, $c.BagSlots, $true), @("Bank", $c.Bank, $c.BankSlots, $c.BankSeen))
-    foreach ($s in $sections) {
-        if (-not $s[3]) { Say "$($s[0]): not seen yet (open the bank once on this character)."; continue }
-        Say "$($s[0]) ($($s[1].Count) of $($s[2]) slots used):"
-        foreach ($g in (Group-GBItems $s[1])) { Say ("  {0,8}  {1}" -f (Format-GBGold $g.Count), $g.Name) }
-    }
-}
+# Commands live in GlobalBank-Commands.ps1
 
 # The daily reward resets at 00:00 in Germany, which is a different hour elsewhere.
 function Get-LastDailyReset {
@@ -728,106 +588,31 @@ function Get-LastDailyReset {
     return New-Object DateTimeOffset($today, $germany.GetUtcOffset($today))
 }
 
-function Show-DailyStatus($c) {
-    if ($c.Level -lt 100 -and @($c.Classes | Where-Object { $_.Level -ge 100 }).Count -eq 0) { return }
-    $rewardMatches = @()
-    try {
-        if (Test-Path -LiteralPath $rewards) {
-            $doc = ConvertFrom-GBJson ([IO.File]::ReadAllText($rewards, (New-Object System.Text.UTF8Encoding($false, $true))))
-            if ($doc.schemaVersion -ne 1 -or $null -eq $doc.records) { throw 'Invalid reward file' }
-            $rewardMatches = @($doc.records | Where-Object { $_.name -ieq $c.Name })
-        }
-        $sameName = @($script:Chars | Where-Object { $_.Name -ieq $c.Name })
-        $when = [DateTimeOffset]::MinValue
-        if ($rewardMatches.Count -ne 1 -or $sameName.Count -ne 1 -or [string]$rewardMatches[0].collectedAt -notmatch '(Z|[+-]\d\d:\d\d)$' -or -not [DateTimeOffset]::TryParse([string]$rewardMatches[0].collectedAt, [ref]$when)) {
-            Say "$($c.Name): daily login unknown (no unambiguous confirmation)" Yellow
-            return
-        }
-        if ($when -ge (Get-LastDailyReset)) { Say "$($c.Name): daily login collected ($($when.LocalDateTime.ToString('yyyy-MM-dd HH:mm')))" Green }
-        else { Say "$($c.Name): daily login not collected since reset" Red }
-    } catch { Say "$($c.Name): daily login unknown (couldn't read the local reward data)" Yellow }
+function Test-GBAutoStartChosen {
+    return (Read-GBSharedText (Join-Path $data 'GlobalBankAutoStart.txt')) -eq 'on'
 }
 
-function Set-HelperNote([string]$argsText) {
-    $parts = $argsText -split '\s+', 2
-    if (-not $parts[0]) { Say 'Use note <name> <text>; omit text to clear the note.'; return }
-    $c = Get-OneCharacter $parts[0]
-    if (-not $c) { return }
-    $text = if ($parts.Count -gt 1) { $parts[1].Trim() } else { '' }
-    if ($text -match '[\x00-\x1f"~`|\\]' -or [Text.Encoding]::UTF8.GetByteCount($text) -gt 80) { Say 'Notes must be at most 80 UTF-8 bytes and cannot contain quotes, backslashes, |, ~ or backticks.'; return }
-    if (-not (Test-Path -LiteralPath $out)) { Say 'Update the character database first.'; return }
-    $key = $script:latin1.GetString([Text.Encoding]::UTF8.GetBytes($c.Name))
-    $raw = $script:latin1.GetString([Text.Encoding]::UTF8.GetBytes($text))
-    $notes = Read-GBDatabaseNotes $out
-    $version = if ($notes.ContainsKey($key)) { [int64]$notes[$key].v + 1 } else { 1 }
-    $notes[$key] = @{v=$version; t=$raw}
-    $lines = @([IO.File]::ReadAllLines($out, $script:latin1) | Where-Object { -not $script:notesLinePattern.IsMatch($_) })
-    $line = '  notes = "' + (ConvertTo-GBNotesLine $notes) + '",'
-    $lines = @($lines[0..1]) + @($line) + @($lines[2..($lines.Count-1)])
-    $tmp = "$out.tmp"
-    [IO.File]::WriteAllText($tmp, ($lines -join "`r`n") + "`r`n", $script:latin1)
-    Move-Item -LiteralPath $tmp -Destination $out -Force -ErrorAction Stop
-    Invoke-Update $null $true
-    Say "Note updated for $($c.Name)."
+function Read-GBHeartbeatChoice {
+    switch (Read-GBSharedText (Join-Path $data 'TerminalHeartbeat.txt')) { 'on' { return $true } 'off' { return $false } }
+    return $null
 }
 
-function Set-CharacterExclusion([string]$name, [bool]$exclude) {
-    $name = $name.Trim()
-    if (-not $name -or $name.Length -gt 100 -or $name -match '[\x00-\x1f]') { Say 'Supply the exact character name.'; return }
-    $new = @{}
-    foreach ($key in $script:Excluded.Keys) { $new[$key] = $true }
-    if ($exclude) { $new[$name] = $true } else { $new.Remove($name) }
-    Save-Exclusions $new
-    $script:Excluded = $new
-    Invoke-Update $null $true
-    # The JSON must also be rewritten when Load-Model already filtered an excluded entry.
-    Write-Json
-    if ($exclude) { Say "$name is blocked from tracking. Its game save files were not changed." }
-    else { Say "$name can be tracked again when its saved data is available." }
+function Save-GBHeartbeatChoice {
+    try { Write-GBAtomicText (Join-Path $data 'TerminalHeartbeat.txt') $(if ($script:ConsoleHeartbeat) { 'on' } else { 'off' }) }
+    catch { Write-HelperError $_ 'Save heartbeat choice' }
 }
 
-# Returns "exit" when the player wants to stop; everything else is printed.
+function Update-GBFeedModel {
+    if (-not $script:GBFeed) { return }
+    Set-GBFeedState @{ characters = $script:Chars.Count; gold = (Get-GBGoldTotal $script:Chars); lastScan = (Format-GBUtc ([DateTime]::UtcNow))
+        names = @($script:Chars | ForEach-Object { [string]$_.Label } | Sort-Object -Unique); excluded = @($script:Excluded.Keys | Sort-Object | ForEach-Object { [string]$_ }) }
+}
+
+# Script callers get the same text and exit as before; "exit" comes back so the window's loop can stop.
 function Invoke-GBCommand([string]$line) {
-    $text = $line.Trim().TrimStart('/').Trim()
-    if (-not $text) { return }
-    $words = @($text -split '\s+')
-    $cmd = $words[0].ToLower()
-    $rest = (@($words | Select-Object -Skip 1)) -join " "
-    if ($cmd -eq "get" -and $words.Count -gt 1) {
-        $cmd = $words[1].ToLower()
-        $rest = (@($words | Select-Object -Skip 2)) -join " "
-    }
-    if (@("help", "?", "commands") -contains $cmd) { Show-Help }
-    elseif (@("goldtotal", "totalgold", "total") -contains $cmd -or ($cmd -eq "gold" -and ($rest -ieq "total" -or -not $rest))) {
-        Say "$(Format-GBGold (Get-GBGoldTotal $script:Chars)) gold on $($script:Chars.Count) characters."
-    }
-    elseif ($cmd -eq "gold") {
-        $c = Get-OneCharacter $rest
-        if ($c) { Say "$($c.Name): $(Format-GBGold $c.Gold) gold (saved $($c.Saved))" }
-    }
-    elseif (@("list", "chars", "characters") -contains $cmd) { Show-List $rest }
-    elseif (@("search", "find", "item", "items") -contains $cmd) { Show-Search $rest }
-    elseif (@("show", "char", "character", "view", "bank", "bag") -contains $cmd) { Show-Character $rest }
-    elseif ($cmd -eq "add" -and $rest -match '^note(?:\s+|$)(.*)$') { Set-HelperNote $Matches[1] }
-    elseif ($cmd -eq "note") { Set-HelperNote $rest }
-    elseif ($cmd -eq "daily") { foreach ($c in $script:Chars) { Show-DailyStatus $c } }
-    elseif ($cmd -eq "erase") { Set-CharacterExclusion $rest $true }
-    elseif ($cmd -eq "unban") { Set-CharacterExclusion $rest $false }
-    elseif ($cmd -eq "ban" -and $rest -ieq "list") {
-        if ($script:Excluded.Count) { Say 'Excluded characters:'; foreach ($name in @($script:Excluded.Keys | Sort-Object)) { Say "  $name" } }
-        else { Say 'No characters are excluded.' }
-    }
-    elseif (@("update", "refresh") -contains $cmd) { Invoke-Update $null $true }
-    elseif (@("export", "json") -contains $cmd) { Write-Json; Say "Wrote $json" }
-    elseif ($cmd -eq "status") { Show-Status }
-    elseif ($cmd -eq "heartbeat") {
-        if (@('on', '1') -contains $rest.ToLower()) { $script:ConsoleHeartbeat = $true; $script:NextConsoleBeat = (Get-Date).AddSeconds(30) }
-        elseif (@('off', '0') -contains $rest.ToLower()) { $script:ConsoleHeartbeat = $false }
-        elseif ($rest) { Say 'Use heartbeat on|off (or 1|0).'; return }
-        Show-Status
-    }
-    elseif (@("exit", "quit", "stop") -contains $cmd) { return "exit" }
-    else { Say "Unknown command: $cmd. Type help to see the commands." }
+    $envelope = Invoke-GBCommandLine $line '' $(if ($script:GBLive) { 'native' } else { 'script' })
+    Write-GBEnvelope $envelope
+    if ($script:GBStopRequested) { return 'exit' }
 }
 
 ###########################################################################
@@ -835,7 +620,30 @@ function Invoke-GBCommand([string]$line) {
 
 try { $script:Excluded = Read-Exclusions } catch { Write-Host "Cannot read the local exclusion list; helper stopped. $($_.Exception.Message)" -ForegroundColor Red; exit 1 }
 
+Initialize-GBConsole
+
+if ($ReplyFile) {
+    # The extension's local host, with no helper to ask. Only the answer leaves here.
+    $script:GBSkipCacheImport = $true
+    Load-Model
+    $envelope = Invoke-GBCommandLine $Command $RequestId 'web' $ConfirmToken
+    Write-GBAtomicText $ReplyFile (ConvertTo-GBEnvelopeJson $envelope)
+    exit 0
+}
+
 if ($Command) {
+    # A running helper answers for itself, so its model can't go stale and status means it.
+    $running = Get-GBHelperState $data
+    if ($running.bridged) {
+        $parsed = ConvertTo-GBParsedCommand $Command
+        if (@('help', 'surface', 'none') -notcontains $parsed.scope -and -not $parsed.error) {
+            $reply = Invoke-GBRouted $PSScriptRoot $data (New-GBRequestId) $parsed $Command '' $running 'script'
+            if ($reply -is [string]) { $reply = $reply | ConvertFrom-Json }
+            Write-GBRecords $reply.records
+            exit 0
+        }
+    }
+    $script:GBSkipCacheImport = (@('note', 'erase', 'unban') -contains (ConvertTo-GBParsedCommand $Command).id)
     Load-Model
     Invoke-GBCommand $Command | Out-Null
     exit 0
@@ -843,8 +651,8 @@ if ($Command) {
 
 if (-not $Watch) {
     Load-Model
-    Invoke-Update $null $true
-    Say "In game, open the Global Bank window (or press Refresh) to see them."
+    [void](Invoke-Update $null $true)
+    Write-GBRecords @(@{ kind = 'message'; tone = 'muted'; text = 'In game, open the Global Bank window (or press Refresh) to see them.' })
     exit 0
 }
 
@@ -885,24 +693,47 @@ if (-not $owned) {
 }
 
 try {
-Write-Host ''
-Write-Host '  ==========================================================' -ForegroundColor DarkCyan
-Write-Host "       GLOBAL BANK  |  Cherry's Kit helper" -ForegroundColor Cyan
-Write-Host '       Bags, banks, gold and auction quotes in one place' -ForegroundColor Gray
-Write-Host '  ==========================================================' -ForegroundColor DarkCyan
-Write-Host '  Keep this window open while you play. Type exit to stop.' -ForegroundColor Green
-Write-Host "  Private character data: $data" -ForegroundColor DarkGray
-Write-Host "  Don't share that folder; CherrysKit itself is safe to share." -ForegroundColor DarkGray
-Write-Host ''
-Show-Help
-Show-Status
-Write-Host ''
-Write-Log "Watching $SaveFolder"
+# Heartbeat text: a choice made for this run wins, then the last one the player made.
+if (-not $PSBoundParameters.ContainsKey('Heartbeat')) {
+    $chosen = Read-GBHeartbeatChoice
+    if ($null -ne $chosen) { $script:ConsoleHeartbeat = $chosen }
+}
+Write-GBLines @(
+    @{ spans = @(@{ t = 'GLOBAL BANK'; tone = 'gold' }, @{ t = "  Cherry's Kit helper"; tone = 'muted' }) }
+    @{ spans = @(@{ t = 'Keep this window open while you play. Type exit to stop.'; tone = 'info' }) }
+    @{ spans = @(@{ t = "Private character data: $data"; tone = 'muted' }) }
+    @{ spans = @(@{ t = "Don't share that folder; CherrysKit itself is safe to share."; tone = 'muted' }) }
+)
+$hiddenWindow = $false
+try { $hiddenWindow = ($Auto -and (Get-Process -Id $PID).MainWindowHandle -eq [IntPtr]::Zero) } catch { }
+Start-GBFeed $data ([bool]$Auto) $hiddenWindow ([bool]$script:ConsoleHeartbeat)
+Write-GBFeed
 Write-Beat
 $nextBeat = (Get-Date).AddSeconds(30)
+$nextBridgeCheck = Get-Date
+$nextBridgeTidy = (Get-Date).AddMinutes(1)
+Update-GBTitle
+Write-GBRecords @(@{ kind = 'message'; tone = 'muted'; text = "Loading saved characters$($script:GBEllipsis)" })
+Add-GBFeedEvent 'loaded' "Loading saved characters$($script:GBEllipsis)" 'muted' '' $false
+Write-GBFeed
+$watcher = New-Object System.IO.FileSystemWatcher($SaveFolder, "SaveVariables.lua")
+$watcher.IncludeSubdirectories = $true
+$watcher.NotifyFilter = [System.IO.NotifyFilters]"LastWrite, FileName, Size"
+# Events queue up while an update runs, so no logout is missed. Watching starts before the first read for the same reason.
+foreach ($kind in "Changed", "Created", "Renamed") {
+    Register-ObjectEvent -InputObject $watcher -EventName $kind -SourceIdentifier "GlobalBank$kind" | Out-Null
+}
+$watcher.EnableRaisingEvents = $true
 Load-Model
-Invoke-Update $null $true
-Write-Json
+[void](Invoke-Update $null $false)
+[void](Write-Json)
+Update-GBFeedModel
+Set-GBFeedState @{ state = 'watching' }
+$readyText = "Global Bank is ready. $(Format-GBCount $script:Chars.Count 'character') loaded, $(Format-GBGold (Get-GBGoldTotal $script:Chars)) gold. Watching for saves."
+Write-Log "Watching $SaveFolder" 'notice' 'muted'
+Write-Log $readyText 'loaded' 'gold'
+Write-GBRecords (Get-GBBannerRecords)
+Write-GBFeed
 $rewardStamp = if (Test-Path -LiteralPath $rewards) { (Get-Item -LiteralPath $rewards).LastWriteTimeUtc.Ticks } else { 0 }
 $linkStamp = (Get-Item -LiteralPath $links).LastWriteTimeUtc.Ticks
 $nextRewardCheck = (Get-Date).AddSeconds(1)
@@ -910,64 +741,49 @@ $nextStopCheck = (Get-Date).AddSeconds(2)
 $nextAutoCheck = (Get-Date).AddSeconds(15)
 $autoStop = Join-Path $data 'GlobalBankHelperAuto.stop'
 
-$watcher = New-Object System.IO.FileSystemWatcher($SaveFolder, "SaveVariables.lua")
-$watcher.IncludeSubdirectories = $true
-$watcher.NotifyFilter = [System.IO.NotifyFilters]"LastWrite, FileName, Size"
-# Events queue up while an update runs, so no logout is missed.
-foreach ($kind in "Changed", "Created", "Renamed") {
-    Register-ObjectEvent -InputObject $watcher -EventName $kind -SourceIdentifier "GlobalBank$kind" | Out-Null
-}
-$watcher.EnableRaisingEvents = $true
 $root = (Get-Item -LiteralPath $SaveFolder).FullName.TrimEnd("\")
 $due = $null
 $loggedOut = @{}
+# At the start, and a little after any save: the game writes several files for each logout.
+$backupsDue = Get-Date
 
 $canType = $true
 try { [void][Console]::KeyAvailable }
 catch { Write-HelperError $_ 'Console commands unavailable'; $canType = $false; Write-Log 'Console input is unavailable. Open Start Global Bank helper.bat in a normal terminal window to type commands.' }
 if ($canType) { Show-Prompt }
 
+# What the page sent, on this same loop: it can't overlap a save being read.
+$bridgeHandler = {
+    param($request, $id)
+    $origin = [string]$request.origin
+    $envelope = Invoke-GBCommandLine ([string]$request.command) $id $origin $(if ($request.kind -eq 'confirm') { [string]$request.token } else { '' })
+    if ($envelope.commandId -and @('mutation', 'session') -contains (Get-GBCommandEntry $envelope.commandId).scope -and $origin -eq 'web') {
+        # The page has just shown its own answer, so it skips this line; the window shows it.
+        Send-GBEvent 'notice' "From the browser: $(if ($request.kind -eq 'confirm') { 'erase confirmed' } else { [string]$request.command })" 'muted' '' $false 'browser'
+    }
+    return ConvertTo-GBEnvelopeJson $envelope
+}
+
 while ($true) {
     if ($canType) {
-        try {
-            while ([Console]::KeyAvailable) {
-                $key = [Console]::ReadKey($true)
-                if ($key.Key -eq [ConsoleKey]::Enter) {
-                    Write-Host ""
-                    $line = $script:Buffer
-                    $script:Buffer = ""
-                    $script:PromptShown = $false
-                    $result = $null
-                    try { $result = Invoke-GBCommand $line }
-                    catch { Write-HelperError $_ 'Interactive command'; Say 'Command failed; see GlobalBankHelper-errors.log.' Red }
-                    if ($result -eq "exit") { exit 0 }
-                    Show-Prompt
-                } elseif ($key.Key -eq [ConsoleKey]::Backspace) {
-                    if ($script:Buffer.Length) {
-                        $script:Buffer = $script:Buffer.Substring(0, $script:Buffer.Length - 1)
-                        Write-Host -NoNewline "`b `b"
-                    }
-                } elseif ($key.Key -eq [ConsoleKey]::Escape) {
-                    $script:Buffer = ""
-                    Clear-PromptLine
-                    Write-Host -NoNewline ("> " + $script:Buffer)
-                } elseif ([int]$key.KeyChar -ne 0 -and -not [char]::IsControl($key.KeyChar)) {
-                    $script:Buffer += $key.KeyChar
-                    Write-Host -NoNewline $key.KeyChar
-                }
-            }
-        } catch {
+        try { Read-GBConsoleKeys }
+        catch {
             Write-HelperError $_ 'Console input unavailable'
             $canType = $false
             $script:PromptShown = $false
         }
     }
+    if ((Get-Date) -ge $nextBridgeCheck) {
+        $nextBridgeCheck = (Get-Date).AddMilliseconds(150)
+        Invoke-GBBridgeInbox $bridgeHandler
+    }
+    if ($script:GBStopRequested) { exit 0 }
     # A Stop from Chrome lands within two seconds; the liveness pair runs every fifteen.
     if ((Get-Date) -ge $nextStopCheck) {
         $nextStopCheck = (Get-Date).AddSeconds(2)
         if (Test-Path -LiteralPath $autoStop) {
             Remove-Item -LiteralPath $autoStop -Force -ErrorAction SilentlyContinue
-            Write-Host 'Stopped from Chrome.' -ForegroundColor Yellow
+            Send-GBEvent 'notice' 'Stopped from Chrome.' 'warn'
             exit 0
         }
     }
@@ -983,6 +799,7 @@ while ($true) {
         Remove-Event -EventIdentifier $e.EventIdentifier -ErrorAction SilentlyContinue
         if (-not $path) { continue }
         $parent = (Split-Path -Parent $path).TrimEnd("\")
+        $backupsDue = (Get-Date).AddSeconds(5)
         # Character files only (Documents\Runes of Magic\<Name>\SaveVariables.lua), not the shared one.
         if ($parent -ne $root) {
             $loggedOut[(Split-Path -Leaf $parent)] = $true
@@ -995,27 +812,42 @@ while ($true) {
         try {
         $stamp = if (Test-Path -LiteralPath $rewards) { (Get-Item -LiteralPath $rewards).LastWriteTimeUtc.Ticks } else { 0 }
         $newLinkStamp = if (Test-Path -LiteralPath $links) { (Get-Item -LiteralPath $links).LastWriteTimeUtc.Ticks } else { 0 }
-        if ($stamp -ne $rewardStamp -or $newLinkStamp -ne $linkStamp) { Write-Json; $rewardStamp = $stamp; $linkStamp = $newLinkStamp }
+        if ($stamp -ne $rewardStamp -or $newLinkStamp -ne $linkStamp) { [void](Write-Json); $rewardStamp = $stamp; $linkStamp = $newLinkStamp }
         } catch { Write-HelperError $_ 'Daily reward sidecar refresh'; Write-Log 'Daily reward refresh deferred; see GlobalBankHelper-errors.log.' }
     }
     if ((Get-Date) -ge $nextBeat) {
         Write-Beat
         $script:AAHMaintenancePending = $true
         Show-Heartbeat
+        if ($script:GBFeed) { $script:GBFeed.dirty = $true }
         $nextBeat = (Get-Date).AddSeconds(30)
+    }
+    if ((Get-Date) -ge $nextBridgeTidy) {
+        $nextBridgeTidy = (Get-Date).AddMinutes(1)
+        Clear-GBBridgeLeftovers
     }
     if ($due -and (Get-Date) -ge $due) {
         $due = $null
         $names = $loggedOut
         $loggedOut = @{}
-        try { Invoke-Update $names $false }
-        catch { Write-HelperError $_ 'Character database update'; Write-Log 'Update failed; see GlobalBankHelper-errors.log. Watching continues.' }
+        try { [void](Invoke-Update $names $false) }
+        catch { Write-HelperError $_ 'Character database update'; Write-Log 'Update failed; see GlobalBankHelper-errors.log. Watching continues.' 'notice' 'error' }
+    }
+    if ($backupsDue -and (Get-Date) -ge $backupsDue) {
+        $backupsDue = $null
+        try { [void](Update-Backups $SaveFolder $data) }
+        catch { Write-HelperError $_ 'Save file backups'; Write-Log 'Backups deferred; see GlobalBankHelper-errors.log.' }
     }
     Update-AAHWorker
+    Update-GBConsole
+    Write-GBFeed
     Start-Sleep -Milliseconds 100
 }
 } finally {
     Stop-AAHWorker
+    Set-GBFeedState @{ state = 'stopped' }
+    Write-GBFeed
+    if ($null -ne $originalTitle) { try { [Console]::Title = $originalTitle } catch { } }
     if ($watcher) { $watcher.Dispose() }
     foreach ($kind in 'Changed', 'Created', 'Renamed') {
         Unregister-Event -SourceIdentifier "GlobalBank$kind" -ErrorAction SilentlyContinue

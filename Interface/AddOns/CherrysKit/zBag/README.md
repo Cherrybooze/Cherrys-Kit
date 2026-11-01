@@ -1,6 +1,6 @@
 # zBag
 
-Version **5.07-ck17** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **5.07-ck19** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
@@ -8,11 +8,11 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 <!-- requirements: tools/curseforge_pages.py writes this -->
 
-> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+> **Requires:** Cherry's Kit (hub 0.4.29 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\zBag`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **Global Bank:** a Global Bank button on the one-bag window
 > - **Advanced AuctionHouse:** clicks in the bag work in the auction window
 >
@@ -21,6 +21,16 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 > **Other addons:** AddonManager lists it when you have that addon. BagSearch 1.21, BagSort 1.05b, PocketMaid and Sol are built in, so delete any separate `BagSearch` or `BagSort` folder. The quick-sell filter is based on Lootomatic, which is a separate addon and can stay.
 
 <!-- end of requirements -->
+
+## Updated in 5.07-ck19
+
+**Slot numbers on mouseover.** A new tick in **/zb**, *Numbers on mouseover only*, is on by default: a bag or bank slot shows its number only while the mouse is over it. Untick it to see every number all the time, as before. It works in every bag and bank layout. With the game's own bag and bank window, the number comes and goes with the game's item tooltip, checked 20 times a second while one is showing, so a slot the game shows no tooltip for (it may be an empty one) shows no number there.
+
+**Clean and dirty mana stones.** Type *#clean* in the search box, the whole text, to light up only mana and fusion stones with no stats on them, or *#dirty* for the ones that have stats. zBag reads this from the item link, so it shows straight away.
+
+## Updated in 5.07-ck18
+
+**Search by stat.** The search box in every layout, and the bank's, also finds items by the stats on their tooltip. Type a stat name such as *stamina*, *dexterity* or *physical attack* and every item with a line like "Stamina +12" lights up; numbers aren't part of the search. Item names still match straight away. zBag reads each item's tooltip once, a few per moment after you stop typing, and remembers it, so the stat matches appear a moment later and searching again costs nothing. It counts lines with a + or - number, so a plain "Requires level 50" isn't a stat. `/zb probe` shows how many items it knows.
 
 ## Updated in 5.07-ck17
 
@@ -55,8 +65,8 @@ Sorting retains the earlier pass-level rebuild reduction, the necessary rebuilds
 - **Choose the bank separately**: tick **Use one bank (classic zBag)** for zBag's bank, or leave it unticked for the game's bank. It works with any bag layout.
 - **Share bag settings across characters** is on by default. Turn it off for separate settings per character. Your existing shared and separate settings are kept when you switch. On the first upgrade, the settings loaded on that character become the initial shared setup. The quick-sell item filter remains separate for each character.
 - **Auto bag and bank pages** (optional): rented pages show while their rent is running and hide once it runs out.
-- **Item search** in every layout (BagSearch).
-- **Slot numbers**: an optional see-through number (1 to 180) in the upper-left corner of every bag slot and bank slot.
+- **Item search** in every layout (BagSearch), by item name or by stat name (*stamina* finds every item with a stamina line), and *#clean* or *#dirty* for mana stones without or with stats.
+- **Slot numbers**: an optional see-through number (1 to 180) in the upper-left corner of the bag or bank slot under the mouse, or of every slot.
 - **All bags window**: all six bags in one window that you can drag anywhere. "Reset bag positions" puts it, the Cherry's bags and the money box back.
 - **Hide default backpack** (optional, individual bags): B opens All bags instead.
 - **Money box** (optional): gold, diamonds and rubies in a small box of its own that stays on screen and can be dragged anywhere.

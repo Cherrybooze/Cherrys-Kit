@@ -2,304 +2,160 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Global Bank Daily Rewards</title>
+  <title>Global Bank</title>
+  <link rel="stylesheet" href="ui-tokens.css">
+  <link rel="stylesheet" href="ui-components.css">
   <style>
-    :root {
-      color-scheme: dark;
-      font: 13px/1.45 system-ui, -apple-system, Segoe UI, sans-serif;
-      background: #111823;
-      color: #f0f2f5;
-    }
-    * { box-sizing: border-box; }
-    body {
-      width: 360px;
-      margin: 0;
-      padding: 12px;
-      background: #111823;
-      color: #f0f2f5;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #2b3b4e;
-    }
-    .header img {
-      width: 26px;
-      height: 26px;
-      border-radius: 5px;
-      flex: 0 0 auto;
-    }
-    .header-title {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: #ffd15a;
-      line-height: 1.2;
-    }
-    .header-sub {
-      display: block;
-      font-size: 11px;
-      color: #9fb0c2;
-    }
-    .card {
-      border: 1px solid #405468;
-      border-radius: 8px;
-      background: #192533;
-      padding: 10px 12px;
-      margin-bottom: 10px;
-    }
-    .card-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .card-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: #ffdc7c;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .02em;
-      background: #212d3b;
-      border: 1px solid #52667a;
-      color: #bdc9d5;
-    }
-    .badge[hidden] { display: none; }
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #768390;
-      flex: 0 0 auto;
-    }
-    #helper-card[data-state="running"] {
-      border-color: #2ea043;
-      background: linear-gradient(180deg, #132a22 0%, #192533 100%);
-    }
-    #helper-card[data-state="running"] #helper-badge {
-      background: #123824;
-      border-color: #2ea043;
-      color: #56f08b;
-    }
-    #helper-card[data-state="running"] .dot {
-      background: #3fb950;
-      box-shadow: 0 0 7px #3fb950;
-    }
-    #helper-card[data-state="busy"] {
-      border-color: #b5892e;
-    }
-    #helper-card[data-state="busy"] #helper-badge {
-      background: #3a2e14;
-      border-color: #d4a72c;
-      color: #ffd15a;
-    }
-    #helper-card[data-state="busy"] .dot {
-      background: #f1c85e;
-      box-shadow: 0 0 6px #f1c85e;
-    }
-    #helper-card[data-state="error"] {
-      border-color: #cf4647;
-      background: linear-gradient(180deg, #281a21 0%, #192533 100%);
-    }
-    #helper-card[data-state="error"] #helper-badge {
-      background: #3d1a20;
-      border-color: #cf4647;
-      color: #ff9492;
-    }
-    #helper-card[data-state="error"] .dot {
-      background: #f85149;
-    }
-    .status-box {
-      padding: 8px 10px;
-      border-radius: 6px;
-      background: #0d1620;
-      border: 1px solid #334657;
-      margin-bottom: 8px;
-    }
-    #helper, #status {
-      margin: 0;
-      font-weight: 600;
-      color: #f4f6f8;
-    }
-    .hint {
-      margin: 4px 0 0;
-      font-size: 11.5px;
-      font-weight: 400;
-      color: #bdc9d5;
-    }
-    .hint[hidden] { display: none; }
-    .helper-actions {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .helper-actions:has(#stop:not([hidden])) #start {
-      display: none;
-    }
-    button {
-      font: inherit;
-      font-weight: 600;
-      border-radius: 6px;
-      padding: 7px 11px;
-      cursor: pointer;
-      color: #101820;
-      background: #f1c85e;
-      border: 1px solid #e7c061;
-      transition: background .12s ease, border-color .12s ease;
-    }
-    button:hover:not(:disabled) {
-      background: #ffd86b;
-    }
-    button:disabled {
-      cursor: default;
-      opacity: .55;
-    }
-    button[hidden] { display: none; }
-    #start, #stop, #open-tools {
-      width: 100%;
-      text-align: center;
-    }
-    #start:not(:disabled)::before {
-      content: "\25B6\00a0 ";
-      font-size: 10px;
-    }
-    #stop {
-      color: #ffffff;
-      background: #c93c37;
-      border-color: #e0524c;
-    }
-    #stop:hover:not(:disabled) {
-      background: #dc4742;
-      border-color: #f0645e;
-    }
-    #stop::before {
-      content: "\25A0\00a0 ";
-      font-size: 10px;
-    }
-    .toggles {
-      border-top: 1px solid #2b3b4e;
-      padding-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .toggle {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      font-size: 12px;
-      color: #dbe3ea;
-      cursor: pointer;
-    }
-    .toggle input {
-      margin: 2px 0 0;
-      accent-color: #f1c85e;
-      flex: 0 0 auto;
-    }
-    #reset {
-      margin: 0;
-      background: #123824;
-      border-color: #2ea043;
-      color: #56f08b;
-    }
-    #reset::before {
-      content: "\2713 ";
-    }
-    .footer-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .reload-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding-top: 2px;
-    }
-    #reload-extension {
-      flex: 0 0 auto;
-      padding: 5px 10px;
-      font-size: 12px;
-      color: #e2e8f0;
-      background: #1e2d3d;
-      border-color: #4a6078;
-    }
-    #reload-extension:hover:not(:disabled) {
-      background: #283b50;
-    }
-    small {
-      display: block;
-      font-size: 11.5px;
-      color: #9fb0c2;
-      line-height: 1.35;
-    }
+    html { min-width: 280px; }
+    body { width: 380px; max-width: 100%; margin: 0; font-size: 12px; background: #101925; }
+    .popup-header { display: flex; align-items: center; gap: 11px; padding: 11px 14px; background: linear-gradient(130deg, #1c2936, #121d29 68%); border-bottom: 1px solid #ffffff0a; }
+    .brand-mark { flex: none; filter: drop-shadow(0 3px 6px #00000025); }
+    .brand-copy { min-width: 0; }
+    .brand-copy h1 { margin: 0; font-size: 18px; font-weight: 650; line-height: 1.2; letter-spacing: -.4px; }
+    .brand-copy p { margin: 1px 0 0; font-size: 11px; color: #a7b7c9; }
+    .popup-body { display: flex; flex-direction: column; gap: 9px; padding: 11px 12px; }
+    .open-bank { display: flex; justify-content: flex-start; gap: 11px; width: 100%; min-height: 50px; padding: 7px 12px; }
+    .open-bank-icon { width: 30px; height: 30px; background: #6a4b1713; border: 1px solid #6e4c1927; border-radius: 6px; }
+    .open-bank-icon svg { width: 19px; height: 19px; }
+    .open-bank-copy { display: grid; gap: 2px; text-align: left; }
+    .open-bank-copy strong { font-size: 13px; font-weight: 700; line-height: 1.15; }
+    .open-bank-copy > span { font-size: 11px; font-weight: 450; line-height: 1.15; opacity: .8; }
+    .open-bank-arrow { margin-left: auto; }
+    .card { display: flex; flex-direction: column; gap: 7px; padding: 10px 12px; background: #141f2d; border: 1px solid var(--gb-border); border-radius: 10px; }
+    .reward-card { background: linear-gradient(145deg, #1c2630, #141f2d 53%); }
+    .section-heading { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .section-heading h2 { margin: 0; font-size: 12px; font-weight: 600; line-height: 1.4; }
+    .section-heading > .ico { color: #9cafc4; }
+    .section-heading > .ico svg { width: 15px; height: 15px; }
+    .reward-card .section-heading > .ico { color: var(--gb-gold); }
+    .state-badge { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; color: #a7b4c5; }
+    .dot { flex: none; width: 6px; height: 6px; background: #8292a6; border-radius: 50%; }
+    #helper-card[data-state="running"] .state-badge { color: #9ee1d1; }
+    #helper-card[data-state="running"] .dot { background: var(--gb-teal); box-shadow: 0 0 0 3px #72cfbc18; }
+    #helper-card[data-state="busy"] .state-badge { color: var(--gb-gold); }
+    #helper-card[data-state="busy"] .dot { background: var(--gb-gold); }
+    #helper-card[data-state="error"] { border-color: #6a3d4a; }
+    #helper-card[data-state="error"] .state-badge { color: #f0a6a6; }
+    #helper-card[data-state="error"] .dot { background: var(--gb-red); }
+    p { margin: 0; }
+    #helper { font-size: 12px; color: #d3dfeb; }
+    .hint { font-size: 11px; line-height: 1.45; color: #a7b7c9; }
+    #get-kit:not([hidden]) { display: inline-block; color: var(--gb-gold); }
+    .helper-actions { display: flex; gap: 8px; }
+    .helper-actions:has(#stop:not([hidden])) #start { display: none; }
+    .helper-actions button { min-height: 28px; font-size: 12px; }
+    #start:not(:disabled)::before { content: ""; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 6px solid var(--gb-gold); }
+    .preference-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px; border-top: 1px solid #2b3b4d80; }
+    .preference-row > label:first-child { font-size: 12px; color: #c4cfdd; cursor: pointer; }
+    .last-collection { display: flex; align-items: flex-start; gap: 9px; padding: 7px 9px; background: #0d1722; border: 1px solid #2b3b4d80; border-radius: 7px; }
+    .collection-check { width: 20px; height: 20px; margin-top: 2px; color: var(--gb-teal); background: #72cfbc12; border: 1px solid #72cfbc25; border-radius: 50%; }
+    .collection-check svg { width: 12px; height: 12px; }
+    .collection-copy { display: grid; gap: 2px; min-width: 0; }
+    .eyebrow { font-size: 10px; font-weight: 550; line-height: 1.3; color: #9fb2c6; letter-spacing: .065em; }
+    #status { font-size: 12px; color: #dbe5f0; white-space: pre-line; overflow-wrap: anywhere; }
+    .reward-note { font-size: 11px; color: #a7b7c9; overflow-wrap: anywhere; }
+    .reward-note.is-warning { color: #e8b36b; }
+    #reset-time { font-size: 11px; color: #a7b7c9; }
+    #reset { margin-left: auto; }
+    summary { display: flex; align-items: center; gap: 6px; min-height: 22px; font-size: 11px; color: #a7bbd1; list-style: none; cursor: pointer; }
+    summary::-webkit-details-marker { display: none; }
+    summary:hover { color: var(--gb-gold); }
+    summary .ico svg { width: 13px; height: 13px; }
+    .disclosure-arrow { margin-left: auto; transition: transform var(--gb-fast) ease; }
+    details[open] > summary > .disclosure-arrow { transform: rotate(180deg); }
+    .collection-help { padding-top: 4px; border-top: 1px solid #2b3b4d80; }
+    .help-content { display: grid; gap: 6px; margin-top: 5px; }
+    .help-content p { font-size: 11px; line-height: 1.5; color: #a4b3c4; }
+    .help-content .terms-note { color: #c9b896; }
+    .popup-settings { padding: 0 2px; }
+    .settings-content { display: grid; gap: 5px; padding: 4px 0 2px; }
+    .settings-content .preference-row { border-top: 0; padding-top: 0; }
+    .popup-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; padding: 5px 14px; font-size: 11px; color: #9fb2c6; background: #0e1721; border-top: 1px solid #2b3b4d80; }
+    .reload-button { min-height: 22px; padding: 0; font-size: 11px; font-weight: 500; color: #a7bbd1; background: none; border: 0; box-shadow: none; }
+    .reload-button:hover { color: var(--gb-gold); filter: none; }
+    .reload-button .ico svg { width: 12px; height: 12px; }
   </style>
 </head>
 <body>
-  <header class="header">
-    <img src="icon32.png" alt="">
-    <div>
-      <strong class="header-title">Global Bank daily rewards</strong>
-      <span class="header-sub">Runes of Magic · Local Helper &amp; Loyalty<span id="version"></span></span>
+  <header class="popup-header">
+    <img class="brand-mark" src="brand/global-bank-mark.svg" alt="" width="40" height="40">
+    <div class="brand-copy">
+      <h1>Global Bank</h1>
+      <p>Runes of Magic companion</p>
     </div>
   </header>
+  <div class="popup-body">
+    <button id="open-tools" type="button" class="gb-button--primary open-bank">
+      <span class="ico open-bank-icon" data-ui-icon="bank"></span>
+      <span class="open-bank-copy"><strong>Open Global Bank</strong><span>Your items. Every character.</span></span>
+      <span class="ico open-bank-arrow" data-ui-icon="arrow-up-right"></span>
+    </button>
 
-  <section id="helper-card" class="card" data-state="busy" aria-label="Global Bank helper">
-    <div class="card-head">
-      <span class="card-title">Global Bank Helper</span>
-      <span class="badge"><span class="dot" aria-hidden="true"></span><span id="helper-badge">Checking…</span></span>
-    </div>
-    <div class="status-box">
+    <section id="helper-card" class="card" data-state="busy" aria-labelledby="helper-title">
+      <div class="section-heading">
+        <span class="ico" data-ui-icon="server"></span>
+        <h2 id="helper-title">Local helper</h2>
+        <span class="state-badge"><span class="dot" aria-hidden="true"></span><span id="helper-badge">Checking…</span></span>
+      </div>
       <p id="helper" role="status">Checking helper…</p>
       <p id="helper-hint" class="hint" hidden></p>
-    </div>
-    <div class="helper-actions">
-      <button id="start" type="button" hidden>Start Global Bank helper</button>
-      <button id="stop" type="button" hidden>Stop Global Bank helper</button>
-    </div>
-    <div class="toggles">
-      <label class="toggle"><input id="auto-helper" type="checkbox"> <span>Keep the helper running automatically when Chrome is open</span></label>
-      <label class="toggle"><input id="show-terminal" type="checkbox"> <span>Show its terminal window</span></label>
-    </div>
-  </section>
+      <a id="get-kit" class="hint" href="https://github.com/Cherrybooze/Cherrys-Kit#readme" target="_blank" rel="noopener" hidden>Get Cherry's Kit</a>
+      <div class="helper-actions">
+        <button id="start" type="button" hidden>Start helper</button>
+        <button id="stop" type="button" class="gb-button--danger" title="Stops the helper and turns off automatic start" hidden>Stop helper</button>
+      </div>
+      <div class="preference-row">
+        <label for="auto-helper">Run automatically while Chrome is open</label>
+        <label class="gb-switch"><input id="auto-helper" type="checkbox"><span aria-hidden="true"></span></label>
+      </div>
+    </section>
 
-  <section class="card" aria-label="Daily loyalty reward">
-    <div class="card-head">
-      <span class="card-title">Daily Loyalty Reward</span>
-      <p id="reset" class="badge" hidden>Daily gifts have reset!</p>
-    </div>
-    <div class="status-box">
-      <p id="status" role="status">Last confirmed collection: unknown.</p>
-    </div>
-    <div class="toggles">
-      <label class="toggle"><input id="auto-collect" type="checkbox"> <span>Collect the daily reward automatically</span></label>
-      <p class="hint">Clicks the reward for you on Gameforge's daily page. Automated use may be against Gameforge's terms of service; use it at your own risk. When this is off, click the reward yourself and it is still recorded.</p>
-    </div>
-    <small><span id="reset-time">Daily reset: 00:00 in Germany.</span> Open the daily loyalty page through ZShop to collect. A matching level 100 character snapshot is required.</small>
-  </section>
+    <section class="card reward-card" aria-labelledby="reward-title">
+      <div class="section-heading">
+        <span class="ico" data-ui-icon="gift"></span>
+        <h2 id="reward-title">Daily reward</h2>
+        <p id="reset" class="gb-badge gb-badge--warning" title="A new day has started since the last confirmed collection. That says nothing about whether a character has a reward waiting." hidden>New reward day</p>
+      </div>
+      <div class="last-collection">
+        <span id="collection-check" class="ico collection-check" data-ui-icon="check" hidden></span>
+        <div class="collection-copy">
+          <span class="eyebrow">LAST CONFIRMED</span>
+          <span id="status" role="status">Unknown: none recorded here. That doesn't mean a reward was missed.</span>
+        </div>
+      </div>
+      <p id="reward-note" class="reward-note" role="status" hidden></p>
+      <p id="reset-time">Daily reset: 00:00 in Germany.</p>
+      <div class="preference-row">
+        <label for="auto-collect">Collect automatically on the daily page</label>
+        <label class="gb-switch"><input id="auto-collect" type="checkbox"><span aria-hidden="true"></span></label>
+      </div>
+      <details class="collection-help">
+        <summary><span class="ico" data-ui-icon="info"></span>How collection works<span class="ico disclosure-arrow" data-ui-icon="chevron-down"></span></summary>
+        <div class="help-content">
+          <p>Open the daily loyalty page through ZShop in game to collect. With this on, the extension clicks an available reward on Gameforge's daily page. With it off, click the reward yourself and it is still recorded.</p>
+          <p>A collection is saved only once the page confirms it, and needs a matching character snapshot at level 100 or above. Collection can succeed on Gameforge even when saving it here fails.</p>
+          <p>New reward day comes from the calendar and the last saved confirmation, not from Gameforge. It doesn't prove a reward is waiting.</p>
+          <p class="terms-note">Automated use may be against Gameforge's terms of service; use it at your own risk.</p>
+        </div>
+      </details>
+    </section>
 
-  <div class="footer-actions">
-    <button id="open-tools" type="button">Open local bank and auction tools</button>
-    <div class="reload-row">
-      <button id="reload-extension" type="button">Reload extension</button>
-      <small>After installing updated files, reload the extension here and reopen this popup.</small>
-    </div>
+    <details class="popup-settings">
+      <summary><span class="ico" data-ui-icon="settings"></span>Advanced<span class="ico disclosure-arrow" data-ui-icon="chevron-down"></span></summary>
+      <div class="settings-content">
+        <div class="preference-row">
+          <label for="show-terminal">Show the helper's terminal window</label>
+          <label class="gb-switch"><input id="show-terminal" type="checkbox"><span aria-hidden="true"></span></label>
+        </div>
+        <p class="hint">A helper running automatically restarts to apply this. Otherwise it applies the next time one starts.</p>
+      </div>
+    </details>
   </div>
+  <footer class="popup-footer">
+    <span id="version"></span>
+    <button id="reload-extension" type="button" class="reload-button" title="After installing updated files, reload the extension here and reopen this popup."><span class="ico" data-ui-icon="sync"></span>Reload extension</button>
+  </footer>
+  <script src="ui-icons.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

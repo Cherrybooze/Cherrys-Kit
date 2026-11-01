@@ -103,9 +103,9 @@ class AddonMapTest(unittest.TestCase):
         for package, data in PACKAGES.items():
             for path in (pages / data["description_file"], source_folder(package) / "README.md"):
                 text = path.read_text(encoding="utf-8")
-                head = text[:text.index("**On its own:**") + 400] if "**On its own:**" in text else ""
+                head = text[:text.index("**Alone or in the full kit:**") + 400] if "**Alone or in the full kit:**" in text else ""
                 self.assertIn("**Where it goes:**", text, path)
-                self.assertIn("**On its own:**", text, path)
+                self.assertIn("**Alone or in the full kit:**", text, path)
                 self.assertIn(f"AddOns\\{data['origin']['folder']}", text, path)
                 self.assertIn("takes precedence", text, path)
                 for item in data.get("works_with", []):

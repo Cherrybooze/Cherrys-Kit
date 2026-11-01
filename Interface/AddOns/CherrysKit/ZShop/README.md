@@ -1,6 +1,6 @@
 # ZShop
 
-Version **1.2.0-ck5** · Kit release **0.11.113** · [All addons / hub](../README.md)
+Version **1.2.0-ck6** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 
@@ -12,12 +12,16 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\ZShop`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Global Bank:** its Chrome extension or helper tells ZShop the time, for the daily reminder
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Global Bank:** the daily reminder uses the real time, from Global Bank's Chrome extension or helper
 >
 > **Original addon:** ZShop by Pyrr. If `Interface\AddOns\ZShop` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.2.0-ck6
+
+**On Steam, the daily button skips Steam's browser.** The client sends every shop link to Steam's overlay, so the daily button opens the reward page in your normal browser instead, logged in as this character, and Global Bank's Chrome extension works on it as usual. The item shop button, the character menu's shop entry and `/zshop depot` stay in Steam's browser. If the page opens on the wrong shop, set `shop_host` in `config.lua`. The shop address is only known for certain on EU; US is a guess until someone tries it. The Steam route still needs an in-game check.
 
 ## Updated in 1.2.0-ck5
 
@@ -37,7 +41,7 @@ The saved field is still named `claimed` for compatibility. It means **daily pag
 - ZShop window with its settings, and a row in Cherry's Kit. No other library needed (the original needed aaa_pylib).
 - ZShop never stores your shop login link, and never opens shop pages by itself. It cannot click Collect for you: you still press it on the page.
 
-**Clock:** ZShop uses the client clock when available, then the hub's clock (fed by Global Bank's Daily Rewards extension). Otherwise, run the bundled Global Bank helper: ZShop watches its UTC heartbeat and may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
+**Clock:** ZShop uses the client clock when available, then the hub's clock (fed by the Global Bank for RoM extension). Otherwise, run the bundled Global Bank helper: ZShop watches its UTC heartbeat and may take about a minute to establish the time. The clock and page-open mark still need in-game testing; `/zshop probe` reports the clock source.
 
 ## Chat commands
 

@@ -1,6 +1,6 @@
 # Cherry's Chat
 
-Version **0.11.1** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **0.11.3** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
@@ -12,14 +12,22 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\CherrysChat`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Cherry's Info:** class colours from its player list
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Cherry's Info:** class colours for names, from Cherry's Info's player list
 > - **Ultimate Mail Mod:** Ctrl+click a name in chat to fill the mail's To
-> - **Cherry's KittyCombo:** KittyCombo shares its copy-box size
+> - **Cherry's KittyCombo:** KittyCombo's code boxes use the same copy-box size
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysChat` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 0.11.3
+
+The colour-wrapped chat lines (an empty link around the text, common in trade macros) no longer show stray `|` and `h` or break when they wrap, a lone `|` at the end of a line no longer shows as `|r`, and copied text leaves those codes out. This has simulated-client coverage and still needs an in-game check.
+
+## Updated in 0.11.2
+
+**Say bubbles, second try.** Emoji still reached the bubble as empty boxes in the game. Emoji typed with the Windows emoji panel (Windows key + .) can arrive in two halves that Cherry's Chat did not recognise; it now joins them, and any emoji it still has no name for goes out as `?` instead of boxes. `/cchat bubbletest` shows what your last message looked like when you typed it and when it was sent, so the next fix needs no guessing.
 
 ## Updated in 0.11.1
 

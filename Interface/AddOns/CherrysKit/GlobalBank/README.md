@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.5.4** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.6.0** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -12,16 +12,57 @@ Built for players with many characters and bank alts. Each character saves a sma
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\GlobalBank`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **zBag:** a button on the one-bag window
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **zBag:** a Global Bank button on zBag's one-bag window
 > - **Advanced AuctionHouse:** its searches fill the helper's auction cache
-> - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
-> - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
+> - **ZShop:** ZShop's daily reminder gets the real time from the Chrome extension or helper
+> - **Cherry's Bar:** Cherry's Bar's Clock gets the real time from the Chrome extension
 > - **LogNextChar:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
+> - **Cherry's Info:** the macro window's Import button brings in macros from the page's library, and the page shows its extra macro icons
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.0
+
+**A new Global Bank page and popup** (extension 1.3.0). The pages are grouped down the side, and the search and filters sit at the top of the Bank. A line at the top always says whether the helper is running, how old your saved data is and whether your Gameforge accounts are locked. Starting the helper, unlocking your accounts and reading from folders moved to a **Connection** panel. Click an item for a panel saying who holds it, on which server and where; hovering still shows the game's tooltip. Slots come large, small or as a list. The extension has a new logo, and Chrome lists it as **Global Bank for RoM**. Press **Reload extension** in the popup after updating.
+
+**Selecting characters doesn't change the Bank by itself any more.** Select them on any page and press **Use in Bank**. The Bank then says whose items it lists, with a button back to everyone. Its own character list still applies at once.
+
+**The Characters page** has one tight line for each character, grouped by Gameforge account and RoM account unless you pick otherwise, and a **Transfer stones** column, counting Server Transfer Stones in the bag and bank (and "at least" that many while the bank isn't recorded), and filters for **Needs login** and **Bank not recorded**. **Excluded** lists the characters the helper doesn't track, each with **Track again**, and right-clicking a character offers **Stop tracking**. Until now that took the terminal.
+
+**Gold overview** is the old Gold heatmap, with the same red to green colours in much smaller tiles, so 200+ characters fit on one screen. It nests by Gameforge account, server and RoM account, so a full account shows as a block of green and the colours in between are what's left to collect. Full caps stay with their account instead of being pooled, and each tile shows its gold. The three squares beside the colour bar let you pick your own colours, and **Name letters** makes tiles smaller if a couple of hundred banks need a more compact view: a name that doesn't fit shows the letters that tell it apart from the others on its account, so a series of bank alts reads A, B, C. **Currencies** adds up Diamonds, Rubies and Daily Tokens at the top, counting each RoM account once for the first two. Rubies and Daily Tokens used to read Bonus and Billdin, the game's code names.
+
+**One terminal.** The page's **Terminal** now talks to the running helper, with the same commands, results and wording as the helper's own window: `status` shows the real helper, `heartbeat` changes it, and `exit` stops it. With the helper stopped, commands that only read say they're using saved data. In both, Tab completes commands and names, Up and Down recall history, and updates arriving never disturb what you're typing. Restart the helper after updating.
+
+## Updated in 1.5.9
+
+**No bank visit needed, even for an empty bank.** The game has each character's whole bank from the moment it logs in, and Global Bank reads it a few seconds after login. Until now a character whose bank was empty showed "not seen yet" until you opened its bank once; now logging in is enough.
+
+## Updated in 1.5.8
+
+**Steam shows as one more account** (extension 1.2.6). Steam logs in to one account, so characters saved from Steam group together as **Steam account** on each server, in the window and on the page. You can rename it on the page and it keeps saying Steam. They're marked the next time each one saves, so log in once from Steam. The setup shares one data folder between a Steam and a Gameforge install, and the Chrome extension stays with the Gameforge one. After updating, press **Reload** on the extension.
+
+## Updated in 1.5.7
+
+**The game's own macro icons show on the page** (extension 1.2.5), in the library, the macro window and the icon picker's **Default Icons**, with no need to log in first. After updating, press **Reload** on the extension.
+
+## Updated in 1.5.6
+
+**Your macros and addon settings on the Global Bank page, with backups** (extension 1.2.4).
+
+A **Macros** tab gathers every macro your characters have into one library, read straight from their save folders, so no character has to log in. Put macros in groups (Favourites, Tank, DPS, Heal, Event, each class, or your own), and search by name, group or text. Write new ones, with the same icon choice as the game's macro window. A macro window beside the library shows one character's 56 slots as the game draws them: click one to create, edit or delete it, drag a library macro onto it, or compare with a backup and put one or all of them back.
+
+In game, the **Import** button in the macro window (Cherry's Info) searches this library by name and group and puts the macro you pick in the slot you chose. It needs no restart, so a macro you just wrote on the page is there when you press **Refresh**. Changes from the page to the library work with the game open. Changes to a character's own save files need it closed.
+
+An **Addon settings** tab shows what each addon saved, such as your auras in RoM WeakAuras and your rotations in KittyCombo, for the shared file or one character. It marks what differs from the backups, and puts back one addon's settings or the whole file.
+
+The helper, or the extension while Chrome is open, keeps the newest copy of `SaveVariables.lua` and of each character's files, and a copy from about a day earlier, in `Interface\GlobalBankHelper\Backups`. The day-old copy appears once a day of saves has gone by. Every change keeps the file it replaced in `Backups\Before restore` (the last 30 changes). Your macros, groups and backups stay in `Interface\\GlobalBankHelper`, outside the kit, so sharing the kit never shares them. After updating, press **Reload** on the extension.
+
+## Updated in 1.5.5
+
+**Ready for the Chrome Web Store** (extension 1.2.3). The helper's bridge now tells the extension its version, and the popup and the page say so when the helper files are older than the extension: update Cherry's Kit and run **Install Chrome extension.bat** again. When the helper isn't set up on the PC at all, the popup explains what the extension needs and links to Cherry's Kit. **Install Chrome extension.bat** accepts more than one extension ID, so the copy from this folder and a Chrome Web Store copy can both talk to the helper. The extension's privacy policy is in `docs/privacy.md`. After updating, press **Reload** on the extension.
 
 ## Updated in 1.5.4
 
@@ -144,7 +185,7 @@ The recorded time is UTC, not a prediction of the game's reset time. A character
 
 **Sharing:** the helper keeps character data and its exclusion list outside the CherrysKit folder. **Don't share `Interface\GlobalBankHelper`**: it shows what all your characters own.
 
-**Note:** whether the bank can be read while it is closed isn't confirmed yet, so open the bank once on each character to be sure it's saved. Notes and the resize corner are new; please report anything odd.
+**Note:** notes and the resize corner are new; please report anything odd.
 
 ## Chat commands
 
@@ -187,10 +228,10 @@ This is a personal hobby project. Support and PR reviews are best effort, with n
 
 ## Search your data in Chrome
 
-Open the **Global Bank Daily Rewards** extension and choose **Open local bank and auction tools**. The page opens on your computer. It shows whether the helper is running and can start it for you.
+Open the **Global Bank for RoM** extension and choose **Open Global Bank**. The page opens on your computer. The top of the page says whether the helper is running, and **Connection** can start it for you.
 
-- Under **Characters, bags and bank**, try `list`, `list gold`, `search mana`, or `show Name`. Type `help` for more commands.
-- Under **Auction cache search**, enter an item name or ID. Add a realm to narrow the results.
+- On **Terminal**, try `list`, `list gold`, `search mana`, or `show Name`. Type `help` for more commands.
+- On **Auctions**, enter an item name or ID. Add a realm to narrow the results.
 
 The results come from your own saved character snapshots and auction cache. An auction price is a past observation, so the item may have sold or the price may have changed. If the cache is empty, search in the in-game auction house, let the game save your character, and keep the helper running so it can collect the results. Old auction observations expire after two days. The page cannot buy items or change your character data.
 

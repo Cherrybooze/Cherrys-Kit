@@ -1,6 +1,6 @@
 # Cherry's Info
 
-Version **1.0.1** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.0.3** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 <!-- requirements: tools/curseforge_pages.py writes this -->
 
@@ -8,9 +8,10 @@ Version **1.0.1** · Kit release **0.11.115** · [All addons / hub](../README.md
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\CherrysInfo`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **rom weakauras:** rom weakauras' fonts for the quest tracker; its triggers and icon picker can use the mob information and macro icon categories from here
 > - **Cherry's Chat:** class colours in chat from its player list
+> - **Global Bank:** the macro window's Import button lists its macro library
 >
 > **Original addons:** pbInfo v0.60 by p.b. a.k.a. novayuna, later odie2, PortraitHP v2019.07.14 by Nonante@Nuada, TooltipIds 1.0b3 by Rock5 and ExtendedMacroIcons 2.15 by Amurilon. If any of `Interface\AddOns\pbInfo`, `Interface\AddOns\PortraitHP`, `Interface\AddOns\TooltipIds`, `Interface\AddOns\ExtendedMacroIcons`, `Interface\AddOns\CherrysQuests` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
@@ -19,6 +20,14 @@ Version **1.0.1** · Kit release **0.11.115** · [All addons / hub](../README.md
 **Quests, tooltips, ID numbers, target health and macro icons in one addon, with one settings window (`/cinfo` and `/cq`).**
 
 Cherry's Info brings together five addons that used to be separate downloads: **Cherry's Quests**, **pbInfo**, **TooltipIds**, **PortraitHP** and **Extended Macro Icons**. They now share one folder (`CherrysKit/CherrysInfo/`), one switch in `/ck` and one window.
+
+## Updated in 1.0.3
+
+**Nothing extra in your saved settings.** It no longer saves the names of the game's macro icons, because the Global Bank page now works them out itself.
+
+## Updated in 1.0.2
+
+**Import macros from Global Bank.** The macro window has an **Import** button. It opens a list of every macro in Global Bank's library, with a search bar for names and groups and arrows to step through your groups. Pick one, choose a slot on the left and press **Import**. You put macros in groups and write new ones on the Global Bank page in Chrome. The macro window's Edit, Delete and Cancel buttons are a little narrower to make room.
 
 ## Updated in 1.0.1
 
@@ -52,6 +61,7 @@ Cherry's Info brings together five addons that used to be separate downloads: **
 | `/cq text [n]` | Prints the raw summary text of tracked quest `n` (for bug reports) |
 | `/cq forget` | Forgets every NPC you picked with Ctrl+click on this character |
 | `/emi` | Opens or closes the macro window |
+| `/emi import` | Opens the macro window with its Import list |
 | `/pbinfo`, `/pbic`, `/ti` | Open the **Tooltips & IDs** tab |
 | `/php` | Turns target health on or off |
 | `/mobinfo [party\|guild\|name]` | Prints or sends your target's health and class |
@@ -61,7 +71,7 @@ Cherry's Info brings together five addons that used to be separate downloads: **
 
 Requires the [Cherry's Kit hub](../README.md) (hub **0.4.27** or later). Download ZIPs from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/releases).
 
-1. Install the full kit, or the hub ZIP and this addon's ZIP (`CherrysKit-CherrysInfo-1.0.1.zip`), by extracting into your game's `Interface/AddOns/` folder and merging the `CherrysKit` folders. This addon must end up at `Interface/AddOns/CherrysKit/CherrysInfo/`.
+1. Install the full kit, or the hub ZIP and this addon's ZIP (`CherrysKit-CherrysInfo-1.0.3.zip`), by extracting into your game's `Interface/AddOns/` folder and merging the `CherrysKit` folders. This addon must end up at `Interface/AddOns/CherrysKit/CherrysInfo/`.
 2. Double-click `!setup_cherryskit.bat`. It moves old separate copies (`pbInfo`, `PortraitHP`, `TooltipIds`, `ExtendedMacroIcons`, `CherrysQuests`) and the old folders of those names inside `CherrysKit` to `Interface/offloaded_addons`.
 3. Start the game or Reload UI, then type `/cinfo`.
 

@@ -1,8 +1,9 @@
-﻿'use strict';
+'use strict';
 (() => {
   const byId = id => document.getElementById(id);
   const status = byId('helper-status');
   const start = byId('start-helper');
+  const stopButton = byId('stop-helper');
   let starting = false;
   async function send(message) {
     const response = await chrome.runtime.sendMessage(message);
@@ -14,16 +15,19 @@
       const response = await send({type:'helper-status'});
       status.textContent = response.running ? 'Helper is running.' : 'Helper is not running.';
       start.disabled = !!response.running || starting;
+      start.hidden = !!response.running;
+      stopButton.hidden = !response.running;
       return !!response.running;
     } catch (error) {
       status.textContent = 'Cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder. ' + String(error.message || error);
       start.disabled = true;
+      stopButton.hidden = true;
       return false;
     }
   }
   byId('check-helper').addEventListener('click', checkHelper);
-  start.addEventListener('click', async event => {
-    if (!event.isTrusted || starting) return;
+  async function startHelper() {
+    if (starting) return;
     starting = true;
     start.disabled = true;
     status.textContent = 'Starting the helper…';
@@ -40,22 +44,49 @@
     } finally {
       starting = false;
       start.disabled = running;
+      refreshStatus();
+    }
+  }
+  start.addEventListener('click', event => { if (event.isTrusted) startHelper(); });
+  // The same as the popup's Stop: it stops the helper and turns off automatic start.
+  stopButton.addEventListener('click', async event => {
+    if (!event.isTrusted) return;
+    stopButton.disabled = true;
+    status.textContent = 'Stopping the helper\u2026';
+    try {
+      autoHelper.checked = false;
+      await chrome.storage.local.set({autoHelper: false});
+      await send({type:'helper-stop'});
+    } catch (error) {
+      status.textContent = 'Could not stop the helper: ' + String(error.message || error);
+    } finally {
+      stopButton.disabled = false;
+      await checkHelper();
+      refreshStatus();
     }
   });
-  // Tabs. Only the open one is drawn; one whose data changed while hidden is drawn when you open it.
+  // Pages. Only the open one is drawn; one whose data changed while hidden is drawn when you open it.
   let currentTab = 'bank';
-  // The Servers tab shows the regions' lists even before any data comes in
+  let terminal = null;
+  // The Servers page shows the regions' lists even before any data comes in
   const dirty = new Set(['servers']);
   const views = {};
   // These keep track of their own changes, and are cheap to ask
-  const selfTracking = new Set(['bank', 'favourites', 'accounts', 'heatmap']);
+  const selfTracking = new Set(['bank', 'favourites', 'accounts', 'heatmap', 'macros', 'settings']);
   function showTab(name) {
     currentTab = name;
-    document.querySelectorAll('[data-tab]').forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.tab === name)));
+    document.querySelectorAll('[data-tab]').forEach(tab => {
+      if (tab.dataset.tab === name) tab.setAttribute('aria-current', 'page');
+      else tab.removeAttribute('aria-current');
+    });
     document.querySelectorAll('.tab-panel').forEach(panel => { panel.hidden = panel.id !== 'tab-' + name; });
     byId('bank-tooltip').hidden = true;
     byId('char-tooltip').hidden = true;
+    byId('main').scrollTop = 0;
+    history.replaceState(null, '', '#' + name);
+    document.title = `${document.querySelector(`[data-tab="${name}"] .nav-text`)?.textContent || 'Bank'} · Global Bank`;
     drawOpenTab();
+    if (terminal) terminal.visible(name === 'terminal');
   }
   function drawOpenTab() {
     if ((dirty.has(currentTab) || selfTracking.has(currentTab)) && views[currentTab]) {
@@ -70,11 +101,27 @@
   }
   document.querySelectorAll('[data-tab]').forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.tab)));
 
-  // Who is who on every tab: the region, the server ticks, and one selection a click on any character changes
+  // The Gameforge accounts' lock: at the top of the page, and in the Connection panel with its password box
+  let accountState = 'none';
+  function showAccountState(state) {
+    // Locked and not linked read differently, so the tables that name accounts are drawn again
+    if (state !== accountState) changed(['characters', 'currencies', 'servers']);
+    accountState = state;
+    const words = {none: 'No accounts saved', 'needs-key': 'Accounts need their key', locked: 'Accounts locked', open: 'Accounts open'};
+    byId('status-accounts-text').textContent = words[state];
+    byId('gf-forgot').hidden = state === 'none';
+    byId('status-accounts-icon').innerHTML = window.GB_ICONS?.[state === 'open' ? 'unlock' : 'lock'] || '';
+    byId('connection-accounts').textContent = {none: 'No Gameforge accounts are saved on this PC. You can add them on the Gameforge accounts page.',
+      'needs-key': 'An encrypted accounts file is here, but this Chrome doesn\u2019t have its key. Enter it on the Gameforge accounts page.',
+      locked: 'Enter your password to open your Gameforge accounts. Your items, gold and characters don\u2019t need it.',
+      open: 'Your Gameforge accounts are open until you lock them or close this page.'}[state];
+  }
+  // Who is who on every page: the region, the server ticks, and one selection a click on any character changes
   const number = value => Number(value || 0).toLocaleString('en-US');
   const escapeHtml = GBRoster.escapeHtml;
   const roster = GBRoster.create(chrome.storage.local);
   const accounts = GBAccounts.create(send, {
+    lockChanged: state => showAccountState(state),
     shows: character => roster.shows(character),
     visible: tab => currentTab === tab,
     isSelected: key => roster.isSelected(key),
@@ -95,9 +142,22 @@
   }
   // A selection only changes colours: the open tab's characters are marked, and the rest when they're opened.
   function markSelected() {
-    byId('tab-' + currentTab)?.querySelectorAll('[data-char]').forEach(node => node.classList.toggle('is-selected', roster.isSelected(node.dataset.char)));
+    const page = byId('tab-' + currentTab);
+    page?.querySelectorAll('[data-char]').forEach(node => node.classList.toggle('is-selected', roster.isSelected(node.dataset.char)));
+    const boxes = [...(page?.querySelectorAll('.char-check') || [])];
+    for (const box of boxes) box.checked = roster.isSelected(box.closest('[data-char]')?.dataset.char);
+    page?.querySelectorAll('.select-all').forEach(box => { box.checked = boxes.length > 0 && boxes.every(item => item.checked); });
   }
   const REGION_NAMES = {eu: 'Europe', na: 'North America', '': 'Other servers', unknown: 'Not known yet'};
+  // A short note that goes away by itself
+  let toastTimer = 0;
+  function toast(text) {
+    const node = byId('toast');
+    clearTimeout(toastTimer);
+    node.textContent = text;
+    node.hidden = false;
+    toastTimer = setTimeout(() => { node.hidden = true; }, 5000);
+  }
   function renderViewBar() {
     const region = roster.view.region || 'eu';
     byId('view-region').value = region;
@@ -118,6 +178,8 @@
       parts.push(`<label class="server-check${server.count ? '' : ' is-empty'}${server.on ? '' : ' is-off'}" title="${escapeHtml(title)}"><input type="checkbox" data-server="${escapeHtml(server.key)}"${server.on ? ' checked' : ''}> ${escapeHtml(server.name)} <span class="hint">${number(server.count)}</span></label>`);
     }
     byId('view-servers').innerHTML = parts.join('');
+    const on = servers.filter(server => server.on).length;
+    byId('servers-summary').textContent = on === servers.length ? 'All servers' : `${number(on)} of ${number(servers.length)} servers`;
     const lists = roster.lists();
     byId('region-known').innerHTML = Object.entries(GBRoster.REGIONS).map(([id, item]) => `<p><b>${escapeHtml(item.name)}</b>: ${escapeHtml(lists[id].join(', ') || 'no servers')}</p>`).join('');
     const unlisted = roster.serverTable().filter(server => !server.region && server.count).map(server => server.name);
@@ -132,11 +194,13 @@
   }
   function renderSelectionBar() {
     const {shown, hidden} = roster.counts();
+    byId('selection-bar').hidden = !roster.selection.size;
     byId('selection-count').textContent = !(shown + hidden) ? 'No characters selected'
       : `${number(shown + hidden)} selected` + (hidden ? ` (${number(hidden)} on servers not shown)` : '');
     byId('selection-copy').disabled = !shown;
     byId('selection-clear').disabled = !roster.selection.size;
-    byId('selection-only').checked = roster.view.onlySelected !== false;
+    // Names only a login screen listed can be selected, but hold nothing the Bank could show
+    byId('selection-use').disabled = !roster.selected().length;
     const stale = roster.shown().filter(character => character.stale).length;
     const button = byId('select-stale');
     button.hidden = !stale;
@@ -150,12 +214,18 @@
   });
   byId('region-edit').addEventListener('click', () => {
     byId('region-settings').open = false;
+    byId('servers-menu').open = false;
     showTab('servers');
   });
   byId('card-hide-gameforge').addEventListener('change', event => roster.setCard('gameforge', event.target.checked));
   byId('card-hide-rom').addEventListener('change', event => roster.setCard('rom', event.target.checked));
   byId('gf-first').addEventListener('change', event => roster.setRomFirst(event.target.value === 'rom'));
-  byId('selection-only').addEventListener('change', event => roster.setOnlySelected(event.target.checked));
+  byId('selection-use').addEventListener('click', () => {
+    roster.useSelection();
+    showTab('bank');
+    const count = roster.inScopeShown().length;
+    toast(count === 1 ? 'The Bank now shows this character\u2019s items.' : `The Bank now shows these ${number(count)} characters\u2019 items.`);
+  });
   byId('selection-clear').addEventListener('click', () => roster.clearSelection());
   byId('select-stale').addEventListener('click', () => roster.setSelection(roster.shown().filter(character => character.stale).map(character => character.key)));
   byId('selection-copy').addEventListener('click', async () => {
@@ -170,6 +240,19 @@
 
   // The Bank tab
   const bankStatus = text => { byId('bank-status').textContent = text; };
+  // What the top of the page says about the saved data, and the counts beside the page names
+  let savedMade = null;
+  function renderSavedData() {
+    const shown = roster.shown();
+    byId('nav-count-characters').textContent = shown.length ? number(shown.length) : '';
+    byId('nav-count-bank').textContent = shown.length ? number(GBBank.totals(shown).stacks) : '';
+    const all = roster.characters();
+    const totals = GBBank.totals(all);
+    const node = byId('status-data');
+    node.textContent = !savedMade ? 'No data saved yet' : `Saved data · ${savedMade}`;
+    node.parentElement.title = `${number(totals.characters)} characters · ${number(totals.items)} items in ${number(totals.stacks)} stacks. Saved data doesn't need the helper running.`
+      + (usingFolders ? ' Read from your chosen folders.' : '');
+  }
   // The local host if there is one, otherwise the folders the player chose
   let usingFolders = false;
   async function bankSend(message) {
@@ -187,17 +270,31 @@
     accounts.setCharacters(characters);
     renderViewBar();
     renderSelectionBar();
+    savedMade = made;
+    renderSavedData();
     changed(['favourites', 'currencies', 'stats', 'heatmap', 'characters', 'accounts', 'servers']);
-    byId('status-data').textContent = `${number(totals.characters)} characters · ${number(totals.items)} items in ${number(totals.stacks)} stacks`
-      + (made ? ` · data from ${made}` : ' · no data saved yet');
   }, accounts.openMenu, {
     roster,
-    onlySelected: () => roster.onlySelected(),
     favouritesRoot: byId('tab-favourites'),
     openTab: showTab,
     visible: () => currentTab === 'bank',
     tooltip: byId('bank-tooltip'),
+    favouritesChanged: count => { byId('nav-count-favourites').textContent = count ? number(count) : ''; },
+    review: kind => setRosterFilter(kind, true),
   });
+  // Macros and addon settings come from the save folders, whose names are the characters' names.
+  // A folder the page has no character for always shows, like a character whose server isn't known.
+  const named = name => roster.characters().concat(roster.listed()).filter(character => character.name === name);
+  const backups = GBBackups.create(send, {
+    shows: (name, onlySelected) => {
+      const found = named(name);
+      if (onlySelected) return found.some(character => roster.isSelected(character.key));
+      return !found.length || found.some(character => roster.shows(character));
+    },
+    selectedNames: () => [...new Set(roster.selectedAll().map(character => character.name))],
+  });
+  views.macros = () => { backups.showMacros(); };
+  views.settings = () => { backups.showSettings(); };
   // Characters and Currencies: a search, and groups by server or account
   const tables = {characters: ['roster', 'roster-view'], currencies: ['currency', 'currency-view']};
   const tableOptions = prefix => ({
@@ -206,13 +303,164 @@
     isSelected: key => roster.isSelected(key),
     accountName: name => accounts.accountName(name),
     romTitle: character => roster.romTitle(character),
+    classColor: GBAccounts.classColor,
+    locked: () => accounts.locked(),
+    openCharacter,
+    summary: prefix === 'currency' ? byId('currency-summary') : null,
     selectKeys,
   });
+  // Which characters the Characters page lists. Needs login and Bank not recorded mean different things and can
+  // overlap. Excluded characters aren't in the saved data at all: the helper keeps that list.
+  let rosterFilter = 'all';
+  const needsLogin = character => !!character.stale;
+  const bankMissing = character => !GBBank.bankKnown(character);
+  function rosterShown() {
+    const list = roster.shown();
+    return rosterFilter === 'login' ? list.filter(needsLogin) : rosterFilter === 'bank' ? list.filter(bankMissing) : list;
+  }
+  function renderRosterCounts() {
+    const list = roster.shown();
+    byId('roster-count-all').textContent = number(list.length);
+    byId('roster-count-login').textContent = number(list.filter(needsLogin).length);
+    byId('roster-count-bank').textContent = number(list.filter(bankMissing).length);
+  }
+  function setRosterFilter(kind, open) {
+    rosterFilter = kind;
+    document.querySelectorAll('[data-roster-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.rosterFilter === kind)));
+    byId('roster-view').hidden = kind === 'excluded';
+    byId('excluded-view').hidden = kind !== 'excluded';
+    if (open) showTab('characters');
+    changed(['characters']);
+  }
+  document.querySelectorAll('[data-roster-filter]').forEach(button => button.addEventListener('click', () => setRosterFilter(button.dataset.rosterFilter)));
+  // The helper's own exclusions, changed through its own commands, so this page and its terminal can't disagree
+  async function drawExcluded() {
+    const note = byId('excluded-status');
+    const reply = await terminal.catalogue(true);
+    const list = byId('excluded-list');
+    if (!reply.ok) {
+      note.textContent = 'The list comes from the local helper, which isn\u2019t answering. ' + (reply.error || '');
+      list.replaceChildren();
+      byId('roster-count-excluded').textContent = '';
+      return;
+    }
+    const names = reply.excluded || [];
+    byId('roster-count-excluded').textContent = number(names.length);
+    note.textContent = names.length ? '' : 'Nobody is excluded.';
+    list.replaceChildren(...names.map(name => {
+      const row = document.createElement('li');
+      const label = document.createElement('b');
+      label.textContent = name;
+      const again = document.createElement('button');
+      again.type = 'button';
+      again.className = 'gb-button--sm';
+      again.textContent = 'Track again';
+      again.addEventListener('click', async () => {
+        again.disabled = true;
+        const answer = await terminal.command(`unban ${name}`);
+        note.textContent = GBTerminal.recordsText(answer.records) || answer.error || '';
+        if (answer.changed) bank.reload({ifChanged: true}).catch(() => {});
+        await drawExcluded();
+      });
+      row.append(label, again);
+      return row;
+    }));
+  }
+  // Right-click, Stop tracking: the helper names exactly who that covers, and asks.
+  async function stopTracking(character) {
+    const reply = await terminal.command(`erase ${character.base || character.name}`);
+    const question = (reply.records || []).find(record => record.kind === 'confirm');
+    if (!question) {
+      toast(GBTerminal.recordsText(reply.records) || reply.error || 'The helper didn\u2019t answer.');
+      return;
+    }
+    const yes = await ask({title: 'Stop tracking', hint: question.text, noField: true, save: question.yes, cancel: question.no});
+    const answer = await terminal.confirm(question.token, yes === null ? 'no' : 'yes');
+    toast(GBTerminal.recordsText(answer.records) || answer.error || '');
+    if (answer.changed) {
+      roster.selection.delete(character.key);
+      roster.scope.delete(character.key);
+      await bank.reload({ifChanged: true}).catch(() => {});
+    }
+    if (rosterFilter === 'excluded') drawExcluded();
+    else terminal.catalogue(true).then(fresh => { if (fresh.ok) byId('roster-count-excluded').textContent = number((fresh.excluded || []).length); });
+  }
+  // One character's details, from the arrow on its row or its right-click menu
+  function openCharacter(key) {
+    const character = roster.byKey(key);
+    if (!character) return;
+    const make = (tag, className, text) => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    };
+    const avatar = make('span', 'class-avatar', String(character.class || '?').slice(0, 1).toUpperCase());
+    const color = GBAccounts.classColor(character);
+    if (color) avatar.style.setProperty('--class-color', color);
+    const title = make('h2', '', character.name);
+    title.id = 'character-panel-title';
+    const words = make('div');
+    words.append(title, make('div', 'hint', [character.class, character.level ? `Level ${number(character.level)}` : '', character.shownServer || GBRoster.NO_SERVER].filter(Boolean).join(' · ')));
+    const hero = make('div', 'character-hero');
+    hero.append(avatar, words);
+    const metrics = make('div', 'detail-metrics');
+    const stones = GBBank.transferStones(character);
+    const known = GBBank.bankKnown(character);
+    for (const [value, label] of [[number(character.gold), Number(character.gold) >= GBRoster.FULL_CAP ? 'Gold · a full cap' : 'Gold'],
+      [known || stones ? `${number(stones)}${known ? '' : '+'}` : 'Not recorded', known ? 'Transfer stones' : 'Transfer stones · bank not recorded']]) {
+      const metric = make('div', 'detail-metric', value);
+      metric.append(make('span', '', label));
+      metrics.append(metric);
+    }
+    const details = make('dl', 'detail-list');
+    const add = (label, value) => details.append(make('dt', '', label), make('dd', '', value));
+    const bag = (character.bag || []).length, held = (character.bank || []).length;
+    add('Bag', character.notSaved ? 'Not recorded' : character.bagSlots ? `${number(bag)} of ${number(character.bagSlots)} slots used` : `${number(bag)} slots used`);
+    add('Bank', !known ? 'Bank not recorded: log in once with it' : character.bankSlots ? `${number(held)} of ${number(character.bankSlots)} slots used` : `${number(held)} slots used`);
+    add('Last saved', character.saved || 'Not recorded');
+    add('Login status', character.notSaved ? 'Nothing saved yet: log in once' : character.stale ? 'Needs a login on the current version' : 'Current');
+    if (!roster.view.hideGameforge) add('Gameforge account', accounts.accountNameOf(character) || (accounts.locked() ? 'Locked' : 'Not linked'));
+    if (!roster.view.hideRom) add('RoM account', roster.romTitle(character) || 'Not known yet');
+    const taken = Date.parse(character.dailyLogin?.collectedAt || '');
+    add('Last daily reward', Number.isFinite(taken) ? `Day ${character.dailyLogin.day || '?'}, ${new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'}).format(taken)}` : 'Not recorded');
+    if (character.note) add('Note', character.note);
+    const actions = make('div', 'detail-actions');
+    const button = (label, primary, run) => {
+      const node = make('button', primary ? 'gb-button--primary' : '', label);
+      node.type = 'button';
+      node.addEventListener('click', run);
+      actions.append(node);
+    };
+    if (!character.notSaved) {
+      button('Show this character\u2019s items', true, () => {
+        byId('character-panel').close();
+        roster.setScope([character.key]);
+        showTab('bank');
+      });
+    }
+    button(roster.isSelected(key) ? 'Unselect' : 'Select', false, () => {
+      roster.toggle(key);
+      byId('character-panel').close();
+    });
+    if (!character.notSaved) {
+      button('Stop tracking…', false, () => {
+        byId('character-panel').close();
+        stopTracking(character);
+      });
+    }
+    byId('character-panel-body').replaceChildren(hero, metrics, details, actions);
+    byId('character-panel').showModal();
+  }
   Object.assign(views, {
     bank: () => bank.show(),
     favourites: () => bank.renderFavourites(),
     currencies: () => GBBank.renderCurrencies(byId('currency-view'), roster.shown(), tableOptions('currency')),
-    characters: () => GBBank.renderRoster(byId('roster-view'), roster.shown(), tableOptions('roster')),
+    characters: () => {
+      renderRosterCounts();
+      if (rosterFilter === 'excluded') drawExcluded();
+      else GBBank.renderRoster(byId('roster-view'), rosterShown(), tableOptions('roster'));
+    },
     stats: () => GBBank.renderStats(byId('tab-stats'), roster.shown(), {data: {entries: bank.shownEntries()}}),
     heatmap: () => accounts.refresh('heatmap'),
     accounts: () => accounts.refresh('accounts'),
@@ -234,8 +482,10 @@
   roster.onChange(what => {
     if (what === 'card') return;
     renderSelectionBar();
+    if (what === 'scope') return;
     if (what === 'view') {
       renderViewBar();
+      renderSavedData();
       accounts.redraw();
       changed(['favourites', 'currencies', 'stats', 'characters', 'servers']);
     } else if (what === 'assigned') {
@@ -258,22 +508,26 @@
     locked: () => accounts.locked(),
     rom: character => roster.romTitle(character),
     currencyName: GBBank.currencyName,
+    stones: GBBank.transferStonesText,
     menu: accounts.openMenu,
     rows: character => characterRows(character),
   });
 
   // A small form for one value: a new name, or a server from a list. Resolves to the text, to '' for its Clear
-  // button, or to null when cancelled.
+  // button, or to null when cancelled. With noField it's a question, and resolves to '' for yes.
   const dialog = byId('edit-dialog');
   let answer = null, checker = null;
-  function ask({title, hint = '', label, value = '', choices = null, clear = '', check = null, placeholder = ''}) {
+  function ask({title, hint = '', label = '', value = '', choices = null, clear = '', check = null, placeholder = '', noField = false, save = 'Save', cancel = 'Cancel'}) {
     if (answer) answer(null);
     byId('edit-title').textContent = title;
     byId('edit-hint').textContent = hint;
     byId('edit-label').textContent = label;
+    byId('edit-label').hidden = noField;
     byId('edit-error').textContent = '';
+    byId('edit-save').textContent = save;
+    byId('edit-cancel').textContent = cancel;
     const input = byId('edit-value'), choice = byId('edit-choice');
-    input.hidden = !!choices;
+    input.hidden = !!choices || noField;
     choice.hidden = !choices;
     byId('edit-label').htmlFor = choices ? 'edit-choice' : 'edit-value';
     input.value = choices ? '' : value;
@@ -289,6 +543,7 @@
     checker = check;
     dialog.showModal();
     if (choices) choice.focus();
+    else if (noField) byId('edit-cancel').focus();
     else input.select();
     return new Promise(resolve => {
       answer = result => {
@@ -301,7 +556,7 @@
   byId('edit-form').addEventListener('submit', event => {
     event.preventDefault();
     if (!answer) return;
-    const text = (byId('edit-choice').hidden ? byId('edit-value').value : byId('edit-choice').value).trim();
+    const text = byId('edit-value').hidden && byId('edit-choice').hidden ? '' : (byId('edit-choice').hidden ? byId('edit-value').value : byId('edit-choice').value).trim();
     const problem = checker ? checker(text) : '';
     if (problem) {
       byId('edit-error').textContent = problem;
@@ -316,7 +571,7 @@
 
   // Right-click on a character, below its logins: its RoM account, its Gameforge account, and its server
   function characterRows(character) {
-    const rows = [];
+    const rows = [{label: 'Details…', run: () => openCharacter(character.key)}];
     const rom = roster.romAccount(character);
     if (rom) {
       const keys = rom.characters.map(member => member.key).filter(Boolean);
@@ -330,6 +585,7 @@
       const list = rom ? rom.characters.filter(member => !member.shownServer || member.manualServer) : [character];
       rows.push({label: character.manualServer ? 'Change the server you set…' : 'Set server…', run: () => setServerFor(list)});
     }
+    if (!character.notSaved) rows.push({label: 'Stop tracking…', run: () => stopTracking(character)});
     return rows;
   }
   async function renameRom(character) {
@@ -548,20 +804,31 @@
   // The status line and the toggle
   const statusHelper = byId('status-helper');
   const autoHelper = byId('auto-helper');
+  // Helper state, for the top of the page. It says nothing about the saved data, which is readable either way.
+  function showHelperState(state, text, more = '') {
+    statusHelper.textContent = text;
+    byId('status-helper-chip').dataset.state = state;
+    byId('status-helper-chip').title = more || 'Helper settings';
+    byId('connection-dot').dataset.state = state;
+    byId('connection-dot').title = text;
+  }
   async function refreshStatus() {
     try {
       const info = await send({type:'helper-info'});
-      if (!info.running) {
-        statusHelper.textContent = 'Helper: not running.';
+      if (info.stopping) {
+        showHelperState('busy', 'Helper stopping…');
+      } else if (!info.running) {
+        showHelperState('stopped', 'Helper stopped', 'The helper is stopped. Your saved data is still readable.');
       } else {
-        const ran = info.since ? ` for ${GBBank.formatDuration((Date.now() - Date.parse(info.since)) / 1000)}` : '';
-        const how = info.auto ? (info.hidden === false ? 'started automatically with its window' : 'started automatically') : 'in its own window';
-        statusHelper.textContent = `Helper: running${ran}, ${how}.`;
+        const ran = info.since ? ` · ${GBBank.formatDuration((Date.now() - Date.parse(info.since)) / 1000)}` : '';
+        const how = info.auto ? (info.hidden === false ? 'Started automatically, with its window.' : 'Started automatically, in the background.') : 'Running in its own window.';
+        showHelperState('running', `Helper running${ran}`, how);
       }
+      // Older helper files don't say their version.
+      if ((Number(info.bridge) || 0) < 4) showHelperState('error', 'Helper files out of date', 'Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.');
     } catch (error) {
-      statusHelper.textContent = await GBFolders.usable('saves').catch(() => null)
-        ? 'Helper: not installed on this PC. The Bank tab is reading your chosen folders.'
-        : 'Helper: cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder, or choose your folders below.';
+      if (await GBFolders.usable('saves').catch(() => null)) showHelperState('stopped', 'Reading your folders', 'The helper isn\u2019t installed on this PC. The Bank page is reading your chosen folders.');
+      else showHelperState('error', 'Helper not set up', 'Cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder, or choose your folders under Connection.');
     }
   }
   const showTerminal = byId('show-terminal');
@@ -570,7 +837,7 @@
   autoHelper.addEventListener('change', async () => {
     const on = autoHelper.checked;
     autoHelper.disabled = true;
-    statusHelper.textContent = on ? 'Helper: starting.' : 'Helper: stopping.';
+    showHelperState('busy', on ? 'Helper starting…' : 'Helper stopping…');
     try {
       await chrome.storage.local.set({autoHelper: on});
       await send({type: on ? 'helper-auto-start' : 'helper-auto-stop', showWindow: showTerminal.checked});
@@ -581,16 +848,19 @@
     } finally {
       autoHelper.disabled = false;
       refreshStatus();
+      checkHelper();
     }
   });
   showTerminal.addEventListener('change', async () => {
     const on = showTerminal.checked;
     showTerminal.disabled = true;
-    statusHelper.textContent = on ? 'Helper: showing its window.' : 'Helper: hiding its window.';
     try {
       await chrome.storage.local.set({showTerminal: on});
-      // A running automatic helper keeps the look it started with; restart it with the new one.
-      if (autoHelper.checked) {
+      // A running automatic helper keeps the look it started with, so it restarts with the new one. A stopped helper
+      // just starts with it next time, and one you started yourself is left alone.
+      const info = await send({type:'helper-info'});
+      if (info.running && info.auto) {
+        showHelperState('busy', on ? 'Showing the helper\u2019s window…' : 'Hiding the helper\u2019s window…');
         await send({type:'helper-auto-stop'});
         await send({type:'helper-auto-start', showWindow: on});
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -609,7 +879,10 @@
   const allow = byId('folders-allow');
   const tryReload = () => bank.reload().then(() => bankStatus(''), error => {
     byId('folders').open = true;
-    bankStatus('Cannot read your saved data. Choose your folders above, or run Install Chrome extension.bat in the installed GlobalBank Helper folder. ' + String(error.message || error));
+    byId('status-data').textContent = 'No saved data read';
+    // Nothing on the page works until one of those is done, so that's the first thing it shows
+    openConnection();
+    bankStatus('Cannot read your saved data. Choose your folders under Connection, or run Install Chrome extension.bat in the installed GlobalBank Helper folder. ' + String(error.message || error));
   });
   async function showFolders() {
     const state = await GBFolders.state();
@@ -621,6 +894,7 @@
     if (needsClick) {
       byId('folders').open = true;
       foldersStatus.textContent = 'Chrome needs your OK to read these folders again.';
+      bankStatus('Chrome needs your OK to read your folders again: press Allow access again under Connection.');
     } else foldersStatus.textContent = '';
   }
   for (const kind of ['saves', 'game']) {
@@ -658,41 +932,23 @@
     bank.reload({ifChanged: true}).catch(error => bankStatus('Could not read new data: ' + String(error.message || error)));
   });
 
-  // The Terminal tab: the helper's own commands, run one at a time without its window
-  const terminal = byId('bank-output');
-  const history = [];
-  let historyAt = 0;
-  function printLine(text) {
-    terminal.textContent += text + '\n';
-    terminal.scrollTop = terminal.scrollHeight;
-  }
-  byId('bank-form').addEventListener('submit', async event => {
-    event.preventDefault();
-    const box = byId('bank-command');
-    const command = box.value.trim();
-    if (!command) return;
-    box.value = '';
-    history.push(command);
-    historyAt = history.length;
-    printLine('> ' + command);
-    if (/^\/?(exit|quit|stop)$/i.test(command)) { printLine('Nothing to stop: each command here runs on its own.'); return; }
-    if (/^\/?heartbeat\b/i.test(command)) { printLine('The heartbeat only shows in the helper window.'); return; }
-    const button = event.currentTarget.querySelector('button[type="submit"]');
-    button.disabled = true;
-    try {
-      const response = await send({type:'bank-command',command});
-      printLine(String(response.output || '').trimEnd() || 'Done.');
-      bank.reload({ifChanged: true}).catch(error => printLine('Could not read the new data: ' + String(error.message || error)));
-    } catch (error) {
-      printLine('Could not run that: ' + String(error.message || error));
-    } finally { button.disabled = false; box.focus(); }
+  // The Terminal page: the helper's own commands and live updates, in its own words
+  let terminalReload = 0;
+  terminal = GBTerminal.create({
+    // Many updates in a row read the data once
+    onChanged() {
+      clearTimeout(terminalReload);
+      terminalReload = setTimeout(() => bank.reload({ifChanged: true}).catch(error => bankStatus('Could not read new data: ' + String(error.message || error))), 1500);
+    },
+    savedTotals() {
+      const all = roster.characters();
+      return all.length ? {characters: all.length, gold: all.reduce((sum, character) => sum + (Number(character.gold) || 0), 0)} : null;
+    },
+    onHelper: () => refreshStatus(),
+    toast,
+    startHelper,
   });
-  byId('bank-command').addEventListener('keydown', event => {
-    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-    event.preventDefault();
-    historyAt = Math.max(0, Math.min(history.length, historyAt + (event.key === 'ArrowUp' ? -1 : 1)));
-    event.currentTarget.value = history[historyAt] || '';
-  });
+  terminal.catalogue().then(reply => { if (reply.ok) byId('roster-count-excluded').textContent = number((reply.excluded || []).length); });
   const stats = {
     str:'Strength', dex:'Dexterity', sta:'Stamina', int:'Intelligence', wis:'Wisdom',
     patt:'Physical attack', matt:'Magical attack', pdam:'Physical damage', mdam:'Magical damage',
@@ -761,4 +1017,55 @@
   prev.addEventListener('click', () => { if (query && !loading) { query.pageOptions.offset = Math.max(0, query.pageOptions.offset - pageSize); showPage(); } });
   next.addEventListener('click', () => { if (query && !loading && query.pageOptions.offset + pageSize < total) { query.pageOptions.offset += pageSize; showPage(); } });
   checkHelper();
+
+  // The panels at the side, and what opens them
+  function openConnection(focus) {
+    checkHelper();
+    const panel = byId('connection-panel');
+    if (!panel.open) panel.showModal();
+    if (focus) byId(focus).focus();
+  }
+  byId('open-connection').addEventListener('click', () => openConnection());
+  byId('status-helper-chip').addEventListener('click', () => openConnection());
+  byId('open-page-settings').addEventListener('click', () => byId('page-settings').showModal());
+  byId('gf-open-unlock').addEventListener('click', () => openConnection('gf-unlock-password'));
+  document.querySelectorAll('[data-close-dialog]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
+  document.querySelectorAll('.drawer').forEach(drawer => drawer.addEventListener('click', event => { if (event.target === drawer) drawer.close(); }));
+  byId('status-accounts').addEventListener('click', () => {
+    if (accountState === 'locked') openConnection('gf-unlock-password');
+    else showTab('accounts');
+  });
+  // A menu closes when you click anywhere else, or press Escape
+  document.addEventListener('click', event => {
+    for (const menu of document.querySelectorAll('.bank-menu[open]')) if (!menu.contains(event.target)) menu.open = false;
+  });
+  // / goes to the open page's search. Escape closes what's open.
+  const SEARCHES = {bank: 'bank-search', currencies: 'currency-search', stats: 'stat-search', characters: 'roster-search', accounts: 'gf-filter', servers: 'server-search',
+    macros: 'macro-search', depot: 'depot-search', auctions: 'auction-search', terminal: 'term-input'};
+  document.addEventListener('keydown', event => {
+    if (document.querySelector('dialog[open]')) return;
+    if (event.key === 'Escape') {
+      const menu = document.querySelector('.bank-menu[open]');
+      if (menu) {
+        menu.open = false;
+        menu.querySelector('summary')?.focus();
+      } else if (currentTab === 'bank' && !byId('item-panel').hidden) bank.closePanel();
+      return;
+    }
+    if (event.key !== '/' || event.ctrlKey || event.altKey || event.metaKey || event.target.closest?.('input, textarea, select, [contenteditable]')) return;
+    const search = SEARCHES[currentTab] && byId(SEARCHES[currentTab]);
+    if (search && !search.closest('[hidden]')) {
+      event.preventDefault();
+      search.focus();
+      search.select?.();
+    }
+  });
+  byId('page-version').textContent = 'Version ' + chrome.runtime.getManifest().version;
+  // The page you were on comes back after a reload
+  const firstPage = location.hash.slice(1);
+  showTab(document.querySelector(`[data-tab="${CSS.escape(firstPage)}"]`) ? firstPage : 'bank');
+  window.addEventListener('hashchange', () => {
+    const page = location.hash.slice(1);
+    if (page !== currentTab && document.querySelector(`[data-tab="${CSS.escape(page)}"]`)) showTab(page);
+  });
 })();

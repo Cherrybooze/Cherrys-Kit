@@ -12,8 +12,8 @@ Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\AdvancedAuctionHouse`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Global Bank:** its helper keeps a searchable auction cache
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Global Bank:** Global Bank's helper keeps a searchable cache of your auction searches
 > - **zBag:** clicks in the bag work in the auction window
 >
 > **Original addon:** Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves. If `Interface\AddOns\AdvancedAuctionHouse` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one. Its saved searches, price history and settings carry over to this version.

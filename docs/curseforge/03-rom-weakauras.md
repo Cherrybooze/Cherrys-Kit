@@ -4,8 +4,8 @@
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\RomWeakAuras`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Cherry's KittyCombo:** track its next skills and modes
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Cherry's KittyCombo:** triggers for KittyCombo's next skills and modes
 > - **Cherry's Info:** mob information for triggers and the macro icon categories in its icon picker, and its quest tracker can use rom weakauras' fonts
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\RomWeakAuras` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one. It's a rewrite of WeakAuras for World of Warcraft, so there's no original for this game.
@@ -16,9 +16,10 @@ rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras
 
 ## Recent changes
 
+- **0.9.33**: auras draw beneath the backpack, the bank, zBag and every other window instead of on top of them. The **Layer** button in the `/rwa` window, or `/rwa layer over`, puts them back on top.
+- **0.9.32**: icons made from the gallery's Present buff and Present debuff templates show the stack count in their bottom-right corner, like the game's own buff icons, and icon displays get a **Stack count** On/Off choice, so an aura you already made can turn it on with one click.
 - **0.9.31**: a little lighter after a fight. The check for its end no longer makes a new table four times a second.
 - **0.9.30**: the scale corner and the move arrows in the placement view really work now. Drag the corner at an aura's bottom right to scale it and the arrows at its top left to move it, or Shift-drag the aura itself to scale it.
-- **0.9.29**: much shorter share codes (`RWA5!`). An aura made from a template is about 20 to 45 characters instead of 450 to 1000, so most single auras fit in a chat line, and Import finds the code inside pasted text.
 
 ## Features
 
@@ -50,6 +51,7 @@ In Cherry's Kit, `/wa` opens rom weakauras (`/rwa` alone opens the kit hub; `/rw
 - `/rwa size 60-160`: window size in percent (also the - and + buttons)
 - `/rwa volume 0-100`, `/rwa loud`: aura sound volume
 - `/rwa soundtest`, `/rwa soundext wav|mp3|ogg`, `/rwa channeltest`, `/rwa channel interface|effects|both`: sound checks
+- `/rwa layer under|over`: draw auras under (default) or over your bags, bank and other windows
 - `/rwa hits`, `/rwa hits reset`: what the Past second trigger has counted
 - `/rwa kitty [name]`: what the Kitty tracker sees for a kitty
 - `/rwa threat`: what the Threat trigger reads from your target's hate list

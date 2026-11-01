@@ -1,0 +1,123 @@
+GLOBAL BANK — IMPLEMENTATION HANDOFF
+
+BASELINE AND VERSION CHECK
+
+Repository: Cherrybooze/Cherrys-Kit, main.
+Reviewed commit: 71f8f117a96b267e31794c44db98f351b90800a9
+Reviewed main manifest: 1.2.2. Supplied installed-popup screenshot: 1.2.4.
+Resolve that difference against the installed build's source before applying
+changes. This pack does not claim to implement either production version.
+
+Canonical extension directory:
+Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension/
+Mirror:
+extras/GlobalBankDailyRewards/GlobalBank/Helper/ChromeExtension/
+
+The reviewed copies match. Apply the visual changes to the canonical files,
+then update the mirror through the project's existing synchronization process.
+
+FILE MAPPING
+
+Preview index.html / mockup.css / mockup.js demonstrate the structure, styling
+and interactions to adapt into control.html / control.css / control.js.
+Production also separates responsibilities into bank.js, roster.js, accounts.js,
+folders.js and depot.js; retain those boundaries and existing data contracts.
+
+Preview popup.html / popup.css / popup.js demonstrate the popup treatment.
+The reviewed production popup.html embeds its CSS and loads popup.js separately;
+choose the project's existing organization when integrating.
+
+Import tokens.css and selected components.css rules under a scoped UI namespace.
+Copy this pack's assets/icons.js under a distinct filename such as ui-icons.js.
+Its window.GB_ICONS map is for interface symbols. NEVER overwrite the existing
+icons.js, which decodes and caches authentic game-item images.
+
+Use the supplied 16/32/48/128 PNG logo files for the manifest's corresponding
+extension/action icon entries, preserving actual manifest structure. Larger
+256/512 exports are optional presentation assets. Keep version display derived
+from the extension manifest. The logo's teal dot is decorative, not live status.
+
+STAGED INTEGRATION
+
+First apply tokens, buttons, logo, navigation and spacing. Then map each existing
+view into the new layout while retaining its handlers, IDs where required,
+settings, filters and keyboard behaviour. Finally connect the compact popup.
+Use existing refresh, helper and reward operations; the visual pass requires no
+new backend or account schema. Never import demo-data.js into production.
+
+Preserve current features and saved preferences, account identity/linking,
+credential locking/encryption, privacy options, folder reads, exclusions,
+stacking, macros, auctions, depot, terminal and advanced settings. Moving a
+control into a panel must not remove its capability or reset its stored value.
+
+STATE SEMANTICS
+
+Keep helper connection state separate from saved snapshot availability and age.
+A stopped helper does not invalidate readable saved data. Account lock state is
+also independent. Show the last successful snapshot time beside its status.
+
+Keep “needs a login” and “bank not recorded” as separate warnings with separate
+actions. Their sets can overlap; do not add the counts or imply one resolves the
+other. A bank snapshot requires the relevant bank to have been opened in-game.
+
+Use null/unknown distinctly from a recorded zero. Missing currency or reward
+data should say “Not recorded”, never imply a zero balance or an unclaimed gift.
+Sum account-scoped currencies once per stable account identity, not once per
+character. Selection and filtered totals must state their scope. Character
+selection should only narrow Bank after an explicit, visible scope choice.
+
+Daily reset follows Europe/Berlin midnight, displayed in the user's local time.
+A calendar rollover indicates a new reward day; it does not prove eligibility
+or a claimable reward. Preserve the existing authenticated collection flow,
+opt-in automation default, redeemed-page confirmation, manual-collection record,
+and unambiguous matching level-100-or-higher snapshot requirement. Distinguish a
+successful collection from a failed local record. Preserve start/stop, auto-start
+and terminal restart behaviour described in popup-notes.txt.
+
+COMPONENTS AND VERIFICATION
+
+The gallery demonstrates default, hover, pressed, focus, disabled and busy
+states. Retain real buttons, visible keyboard focus, descriptive icon labels,
+native disabled state and announced completion/errors. Keep meaningful text
+alongside status and rarity colours. Check contrast on final integrated surfaces,
+respect reduced-motion preferences, and allow labels to wrap where needed.
+Verify long names, narrow screens, missing data and large inventories using real
+extension data. Demo interactions and source syntax checks do not establish
+production functionality or integration correctness.
+
+PINNED SOURCE REFERENCES
+
+Commit:
+https://github.com/Cherrybooze/Cherrys-Kit/commit/71f8f117a96b267e31794c44db98f351b90800a9
+
+Canonical files:
+https://github.com/Cherrybooze/Cherrys-Kit/tree/71f8f117a96b267e31794c44db98f351b90800a9/Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension
+
+Mirror:
+https://github.com/Cherrybooze/Cherrys-Kit/tree/71f8f117a96b267e31794c44db98f351b90800a9/extras/GlobalBankDailyRewards/GlobalBank/Helper/ChromeExtension
+
+Manifest:
+https://github.com/Cherrybooze/Cherrys-Kit/blob/71f8f117a96b267e31794c44db98f351b90800a9/Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension/manifest.json
+
+Reward documentation:
+https://github.com/Cherrybooze/Cherrys-Kit/blob/71f8f117a96b267e31794c44db98f351b90800a9/extras/GlobalBankDailyRewards/README.md
+
+
+TERMINAL ADDENDUM — REVISION 02
+
+The added terminal.html/css/js is an interactive design simulation with one
+interpreter and renderer used for both presentation modes. index.html embeds
+the same core for its Terminal destination. Do not ship this demo interpreter
+or its iframe wrapper as the production command implementation.
+
+The reviewed web command bridge launches a fresh one-shot PowerShell process;
+it does not execute within the live watcher. The native helper owns session
+state and live updates. Real parity requires shared authoritative command
+handling, live-helper dispatch and structured bounded responses in addition
+to the visual redesign. See TERMINAL-DESIGN-NOTES.txt for the source-backed
+contract and OPUS-5.5-IMPLEMENTATION-PROMPT.txt for the complete implementation
+brief. Both source directories and newer working-branch functionality matter.
+
+Native-window mode is a browser-rendered design of the intended console
+experience. Real Windows PowerShell line editing, resizing, liveness and
+shutdown need implementation and smoke testing in the actual Windows host.

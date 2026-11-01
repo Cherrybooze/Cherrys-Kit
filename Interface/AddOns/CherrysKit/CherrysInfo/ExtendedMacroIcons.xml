@@ -45,6 +45,38 @@
 		</Scripts>
 	</CheckButton>
 
+	<Button name="CEMI_MacroImportRowTemplate" virtual="true" hidden="true">
+		<Size><AbsDimension x="262" y="30"/></Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBack" hidden="true"><Color r="1" g="0.82" b="0" a="0.18"/></Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture name="$parentIcon">
+					<Size><AbsDimension x="26" y="26"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="2" y="2"/></Offset></Anchor></Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString name="$parentName" inherits="GameFontHighlight" justifyH="LEFT" text="">
+					<Size><AbsDimension x="228" y="15"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="32" y="1"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentGroups" inherits="GameFontNormal" justifyH="LEFT" text="">
+					<Size><AbsDimension x="228" y="13"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="32" y="16"/></Offset></Anchor></Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+		<Scripts>
+			<OnClick>CherrysEMI.ImportRow_OnClick(this)</OnClick>
+			<OnEnter>CherrysEMI.ImportRow_OnEnter(this)</OnEnter>
+			<OnLeave>GameTooltip:Hide()</OnLeave>
+			<OnMouseWheel>CherrysEMI.ImportWheel(delta or arg1)</OnMouseWheel>
+		</Scripts>
+	</Button>
+
 	<Frame name="CherrysEMI_EventFrame" parent="UIParent" hidden="true">
 		<Scripts>
 			<OnLoad>this:RegisterEvent("VARIABLES_LOADED")</OnLoad>
@@ -113,18 +145,31 @@
 			<CheckButton name="CEMI_MacroButton55" inherits="CEMI_MacroFrameButtonTemplate" id="55"/>
 			<CheckButton name="CEMI_MacroButton56" inherits="CEMI_MacroFrameButtonTemplate" id="56"/>
 			<Button name="CEMI_MacroEditButton" inherits="UIPanelButtonTemplate" text="MACRO_CONTENT">
-				<Size><AbsDimension x="72" y="20"/></Size>
+				<Size><AbsDimension x="64" y="20"/></Size>
 				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="36" y="-96"/></Offset></Anchor></Anchors>
 				<Scripts><OnClick>CEMI_MacroPopupFrame:Show()</OnClick></Scripts>
 			</Button>
 			<Button name="CEMI_MacroResetButton" inherits="UIPanelButtonTemplate" text="MACRO_RESET">
-				<Size><AbsDimension x="72" y="20"/></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="CEMI_MacroEditButton" relativePoint="TOPRIGHT"><Offset><AbsDimension x="16" y="0"/></Offset></Anchor></Anchors>
+				<Size><AbsDimension x="64" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="CEMI_MacroEditButton" relativePoint="TOPRIGHT"><Offset><AbsDimension x="4" y="0"/></Offset></Anchor></Anchors>
 				<Scripts><OnClick>StaticPopup_Show("CEMI_MACRO_RESET_CONFIRM")</OnClick></Scripts>
 			</Button>
+			<Button name="CEMI_MacroImportButton" inherits="UIPanelButtonTemplate" text="Import">
+				<Size><AbsDimension x="64" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="CEMI_MacroResetButton" relativePoint="TOPRIGHT"><Offset><AbsDimension x="4" y="0"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPRIGHT", 0, 0)
+						GameTooltip:SetText("Import a macro from Global Bank")
+						GameTooltip:Show()
+					</OnEnter>
+					<OnLeave>GameTooltip:Hide()</OnLeave>
+					<OnClick>CherrysEMI.ToggleImport()</OnClick>
+				</Scripts>
+			</Button>
 			<Button name="CEMI_MacroCancelButton" inherits="UIPanelButtonTemplate" text="C_CANCEL">
-				<Size><AbsDimension x="72" y="20"/></Size>
-				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="230" y="-96"/></Offset></Anchor></Anchors>
+				<Size><AbsDimension x="64" y="20"/></Size>
+				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="240" y="-96"/></Offset></Anchor></Anchors>
 				<Scripts><OnClick>HideUIPanel(CEMI_MacroFrame)</OnClick></Scripts>
 			</Button>
 		</Frames>
@@ -132,7 +177,7 @@
 			<OnLoad>CherrysEMI.MacroFrame_OnLoad(this)</OnLoad>
 			<OnEvent>if event == "MACROFRAME_UPDATE" then CherrysEMI.UpdateMacros() end</OnEvent>
 			<OnShow>CherrysEMI.UpdateMacros()</OnShow>
-			<OnHide>CEMI_MacroPopupFrame:Hide()</OnHide>
+			<OnHide>CEMI_MacroPopupFrame:Hide() CEMI_MacroImportFrame:Hide()</OnHide>
 		</Scripts>
 	</Frame>
 
@@ -279,6 +324,149 @@
 				CEMI_MacroPopupIconFrame:Hide()
 				CEMI_MacroPopupNameFrame:Hide()
 			</OnHide>
+		</Scripts>
+	</Frame>
+
+	<!-- Import window: macros from Global Bank's library, searched by name and group -->
+	<Frame name="CEMI_MacroImportFrame" inherits="UIPanelFrameTemplate" parent="CEMI_MacroFrame" hidden="true">
+		<Anchors><Anchor point="TOPLEFT" relativeTo="CEMI_MacroFrame" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-30" y="0"/></Offset></Anchor></Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parentPreview" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP" text="">
+					<Size><AbsDimension x="278" y="32"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="336"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentTarget" inherits="GameFontNormal" justifyH="LEFT" text="">
+					<Size><AbsDimension x="136" y="16"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="372"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentStatus" inherits="GameFontNormal" justifyH="RIGHT" text="">
+					<Size><AbsDimension x="142" y="16"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="162" y="372"/></Offset></Anchor></Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<EditBox name="CEMI_MacroImportSearch" inherits="UIPanelEditBoxTemplate" letters="60" historyLines="0" autoFocus="false">
+				<Size><AbsDimension x="240" y="22"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="30" y="46"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnTextChanged>CherrysEMI.ImportSearch_OnChanged(this:GetText())</OnTextChanged>
+					<OnEnterPressed>this:ClearFocus()</OnEnterPressed>
+					<OnEscapePressed>this:ClearFocus()</OnEscapePressed>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPLEFT", 0, 0)
+						GameTooltip:SetText("Search macro names and groups, or their text")
+						GameTooltip:Show()
+					</OnEnter>
+					<OnLeave>GameTooltip:Hide()</OnLeave>
+				</Scripts>
+			</EditBox>
+			<Button name="CEMI_MacroImportClear" inherits="UIPanelButtonTemplate" text="x">
+				<Size><AbsDimension x="24" y="22"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="278" y="46"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>CEMI_MacroImportSearch:SetText("")</OnClick></Scripts>
+			</Button>
+			<Frame name="CEMI_MacroImportGroup" enableMouse="true">
+				<Size><AbsDimension x="278" y="16"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="74"/></Offset></Anchor></Anchors>
+				<Frames>
+					<Button name="CEMI_MacroImportGroupButtonLeft">
+						<Size><AbsDimension x="14" y="14"/></Size>
+						<Anchors><Anchor point="LEFT"/></Anchors>
+						<Layers><Layer level="ARTWORK"><Texture name="$parentArrow"><Size><AbsDimension x="14" y="14"/></Size><Anchors><Anchor point="CENTER"/></Anchors></Texture></Layer></Layers>
+						<Scripts><OnClick>CherrysEMI.StepImportGroup(-1)</OnClick></Scripts>
+					</Button>
+					<Button name="CEMI_MacroImportGroupButtonRight">
+						<Size><AbsDimension x="14" y="14"/></Size>
+						<Anchors><Anchor point="RIGHT"/></Anchors>
+						<Layers><Layer level="ARTWORK"><Texture name="$parentArrow"><Size><AbsDimension x="14" y="14"/></Size><Anchors><Anchor point="CENTER"/></Anchors></Texture></Layer></Layers>
+						<Scripts><OnClick>CherrysEMI.StepImportGroup(1)</OnClick></Scripts>
+					</Button>
+					<Button name="CEMI_MacroImportGroupButtonDropdown">
+						<Size><AbsDimension x="246" y="16"/></Size>
+						<Anchors><Anchor point="CENTER"/></Anchors>
+						<Layers>
+							<Layer level="OVERLAY">
+								<FontString name="CEMI_MacroImportGroupButtonDropdownText" inherits="GameFontHighlight" justifyH="CENTER">
+									<Anchors>
+										<Anchor point="TOPLEFT"/>
+										<Anchor point="BOTTOMRIGHT"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnLoad>if this.RegisterForClicks then this:RegisterForClicks("LeftButton", "RightButton") end</OnLoad>
+							<OnClick>CherrysEMI.ImportGroupLabel_OnClick(key)</OnClick>
+							<OnMouseWheel>CherrysEMI.StepImportGroup((delta or arg1 or 0) &gt; 0 and -1 or 1)</OnMouseWheel>
+						</Scripts>
+					</Button>
+				</Frames>
+			</Frame>
+			<Button name="CEMI_MacroImportRow1" id="1" inherits="CEMI_MacroImportRowTemplate">
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="94"/></Offset></Anchor></Anchors>
+			</Button>
+			<Button name="CEMI_MacroImportRow2" id="2" inherits="CEMI_MacroImportRowTemplate">
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="124"/></Offset></Anchor></Anchors>
+			</Button>
+			<Button name="CEMI_MacroImportRow3" id="3" inherits="CEMI_MacroImportRowTemplate">
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="154"/></Offset></Anchor></Anchors>
+			</Button>
+			<Button name="CEMI_MacroImportRow4" id="4" inherits="CEMI_MacroImportRowTemplate">
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="184"/></Offset></Anchor></Anchors>
+			</Button>
+			<Button name="CEMI_MacroImportRow5" id="5" inherits="CEMI_MacroImportRowTemplate">
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="214"/></Offset></Anchor></Anchors>
+			</Button>
+			<Button name="CEMI_MacroImportRow6" id="6" inherits="CEMI_MacroImportRowTemplate">
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="244"/></Offset></Anchor></Anchors>
+			</Button>
+			<Button name="CEMI_MacroImportRow7" id="7" inherits="CEMI_MacroImportRowTemplate">
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="274"/></Offset></Anchor></Anchors>
+			</Button>
+			<Button name="CEMI_MacroImportRow8" id="8" inherits="CEMI_MacroImportRowTemplate">
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="26" y="304"/></Offset></Anchor></Anchors>
+			</Button>
+			<Slider name="CEMI_MacroImportScroll" inherits="UIPanelScrollBarTemplate" hidden="true">
+				<Anchors>
+					<Anchor point="TOPLEFT"><Offset><AbsDimension x="290" y="108"/></Offset></Anchor>
+					<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT"><Offset><AbsDimension x="290" y="320"/></Offset></Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>this:SetValueStepMode("INT")</OnLoad>
+					<OnValueChanged>CherrysEMI.ImportScroll_OnValueChanged(this, arg1)</OnValueChanged>
+				</Scripts>
+			</Slider>
+			<Button name="CEMI_MacroImportDoButton" inherits="UIPanelButtonTemplate" text="Import">
+				<Size><AbsDimension x="72" y="20"/></Size>
+				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="36" y="-96"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>CherrysEMI.ImportSelected()</OnClick></Scripts>
+			</Button>
+			<Button name="CEMI_MacroImportRefreshButton" inherits="UIPanelButtonTemplate" text="Refresh">
+				<Size><AbsDimension x="72" y="20"/></Size>
+				<Anchors><Anchor point="BOTTOM"><Offset><AbsDimension x="-8" y="-96"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(this, "ANCHOR_TOPRIGHT", 0, 0)
+						GameTooltip:SetText("Reads the library again, for macros you just changed on the Global Bank page")
+						GameTooltip:Show()
+					</OnEnter>
+					<OnLeave>GameTooltip:Hide()</OnLeave>
+					<OnClick>CherrysEMI.RefreshImport()</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="CEMI_MacroImportCloseButton" inherits="UIPanelButtonTemplate" text="C_CANCEL">
+				<Size><AbsDimension x="72" y="20"/></Size>
+				<Anchors><Anchor point="BOTTOMLEFT"><Offset><AbsDimension x="230" y="-96"/></Offset></Anchor></Anchors>
+				<Scripts><OnClick>CEMI_MacroImportFrame:Hide()</OnClick></Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>CherrysEMI.Import_OnLoad()</OnLoad>
+			<OnShow>CherrysEMI.Import_OnShow()</OnShow>
+			<OnHide>CherrysEMI.Import_OnHide()</OnHide>
+			<OnMouseWheel>CherrysEMI.ImportWheel(delta or arg1)</OnMouseWheel>
 		</Scripts>
 	</Frame>
 
