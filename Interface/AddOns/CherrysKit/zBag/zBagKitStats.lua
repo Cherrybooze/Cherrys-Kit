@@ -136,6 +136,11 @@ function K.StatsMatch(link, text)
   if link == nil or link == "" or text == nil or text == "" then
     return false
   end
+  if text == "#clean" then
+    return K.StoneState(link) == 1
+  elseif text == "#dirty" then
+    return K.StoneState(link) == 2
+  end
   K.statsText = text
   local names = K.statCache[link]
   if names == nil then
@@ -143,6 +148,53 @@ function K.StatsMatch(link, text)
     return false
   end
   return names ~= "" and string.find(names, text, 1, true) ~= nil
+end
+
+---------------------------------------------------------------------------
+-- "#clean" and "#dirty" (the whole search text, any case): mana and fusion stones without stats, or
+-- with stats. A stone's link holds, after its ID, mode and creation time, three numbers of two stat IDs
+-- each (the same reading as Global Bank's GB.ReadStone), so no tooltip is needed. The answer is kept
+-- per link: 0 = not a stone, 1 = clean, 2 = has stats.
+---------------------------------------------------------------------------
+
+K.stoneCache = {}
+K.stoneCount = 0
+
+local function isStone(id)
+  return id and ((id >= 202840 and id <= 202859) or (id >= 202880 and id <= 202885))
+end
+
+function K.StoneState(link)
+  local state = K.stoneCache[link]
+  if state then
+    return state
+  end
+  state = 0
+  local hex = type(link) == "string" and string.match(link, "|Hitem:([%x ]+)|h")
+  local id = hex and tonumber(string.match(hex, "^%x+") or "", 16)
+  if isStone(id) then
+    state = 1
+    local n = 0
+    for value in string.gmatch(hex, "%x+") do
+      n = n + 1
+      if n >= 4 and n <= 6 then
+        local v = tonumber(value, 16) or 0
+        if v % 65536 > 0 or math.floor(v / 65536) > 0 then
+          state = 2
+          break
+        end
+      elseif n > 6 then
+        break
+      end
+    end
+  end
+  if K.stoneCount >= K.STATS_CACHE_MAX then
+    K.stoneCache = {}
+    K.stoneCount = 0
+  end
+  K.stoneCache[link] = state
+  K.stoneCount = K.stoneCount + 1
+  return state
 end
 
 function K.BagStatsMatch(index, text)
