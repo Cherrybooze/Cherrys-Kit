@@ -23,12 +23,12 @@ Every package is its own CurseForge project. Every ZIP goes straight into `Inter
 | rom weakauras | [03-rom-weakauras.md](03-rom-weakauras.md) | `CherrysKit-RomWeakAuras-<version>.zip` | Cherry's Kit | Cherry's KittyCombo, Cherry's Info |
 | Cherry's Chat | [04-cherrys-chat.md](04-cherrys-chat.md) | `CherrysKit-CherrysChat-<version>.zip` | Cherry's Kit | Cherry's Info, Ultimate Mail Mod, Cherry's KittyCombo |
 | zBag | [05-zbag.md](05-zbag.md) | `CherrysKit-zBag-<version>.zip` | Cherry's Kit | Global Bank, Advanced AuctionHouse |
-| Global Bank | [06-global-bank.md](06-global-bank.md) | `CherrysKit-GlobalBank-<version>.zip` | Cherry's Kit | zBag, Advanced AuctionHouse, ZShop, Cherry's Bar, LogNextChar |
+| Global Bank | [06-global-bank.md](06-global-bank.md) | `CherrysKit-GlobalBank-<version>.zip` | Cherry's Kit | zBag, Advanced AuctionHouse, ZShop, Cherry's Bar, LogNextChar, Cherry's Info |
 | Ultimate Mail Mod | [09-ultimate-mail-mod.md](09-ultimate-mail-mod.md) | `CherrysKit-UltimateMailMod-<version>.zip` | Cherry's Kit | Cherry's Chat, LogNextChar |
 | Advanced AuctionHouse | [10-advanced-auctionhouse.md](10-advanced-auctionhouse.md) | `CherrysKit-AdvancedAuctionHouse-<version>.zip` | Cherry's Kit | Global Bank, zBag |
 | Cherry's Addon LoadTimes | [11-cherrys-addon-loadtimes.md](11-cherrys-addon-loadtimes.md) | `CherrysKit-LoadTimes-<version>.zip` | Cherry's Kit | none |
 | ZShop | [12-zshop.md](12-zshop.md) | `CherrysKit-ZShop-<version>.zip` | Cherry's Kit | Global Bank |
-| Cherry's Info | [16-cherrys-info.md](16-cherrys-info.md) | `CherrysKit-CherrysInfo-<version>.zip` | Cherry's Kit | rom weakauras, Cherry's Chat |
+| Cherry's Info | [16-cherrys-info.md](16-cherrys-info.md) | `CherrysKit-CherrysInfo-<version>.zip` | Cherry's Kit | rom weakauras, Cherry's Chat, Global Bank |
 | Cherry's Grid | [15-cherrys-grid.md](15-cherrys-grid.md) | `CherrysKit-CherrysGrid-<version>.zip` | Cherry's Kit | Cherry's KittyCombo |
 | Cherry's Bar | [17-cherrys-bar.md](17-cherrys-bar.md) | `CherrysKit-CherrysBar-<version>.zip` | Cherry's Kit | Cherry's KittyCombo, Global Bank |
 | LogNextChar | [19-lognextchar.md](19-lognextchar.md) | `LogNextChar-<version>.zip` | Cherry's Kit | Global Bank, Ultimate Mail Mod |

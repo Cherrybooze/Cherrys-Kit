@@ -54,7 +54,7 @@ $SaveFolder=Join-Path $fixture 'Saves'
         import json
         helper_dir = self.root / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
         helper_dir.mkdir(parents=True)
-        for name in ('GlobalBank-Update.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Control.ps1', 'AAH-Cache.ps1'):
+        for name in ('GlobalBank-Update.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Control.ps1', 'GlobalBank-Backups.ps1', 'GlobalBank-Macros.ps1', 'AAH-Cache.ps1'):
             shutil.copy2(HELPER.parent / name, helper_dir / name)
         saves = self.root / 'saves'
         saves.mkdir()
@@ -112,7 +112,7 @@ $SaveFolder=Join-Path $fixture 'Saves'
     def test_the_same_name_on_two_servers_stays_two_characters(self):
         helper_dir = self.root / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
         helper_dir.mkdir(parents=True)
-        for name in ('GlobalBank-Update.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Control.ps1', 'AAH-Cache.ps1'):
+        for name in ('GlobalBank-Update.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Control.ps1', 'GlobalBank-Backups.ps1', 'GlobalBank-Macros.ps1', 'AAH-Cache.ps1'):
             shutil.copy2(HELPER.parent / name, helper_dir / name)
         saves = self.root / 'saves'
         (saves / 'Same').mkdir(parents=True)

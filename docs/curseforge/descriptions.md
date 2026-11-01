@@ -453,6 +453,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zb probe`
 > - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
 > - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
 > - **LogNextChar:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
+> - **Cherry's Info:** the macro window's Import button brings in macros from the page's library, and the page shows its extra macro icons
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
@@ -462,6 +463,8 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.5.7**: the game's own macro icons show on the Global Bank page, with no need to log in first.
+- **1.5.6**: the page has a Macros tab, with every character's macros in one library you can group and search, and a macro window like the game's, and an Addon settings tab. It keeps the newest copy of your save files and one from about a day earlier, to compare and restore from.
 - **1.5.5**: the extension says when the helper files are older than it, or when the helper isn't set up, and the Chrome extension installer accepts a Chrome Web Store copy too.
 - **1.5.4**: when several characters hold an item, its right-click menu on the Global Bank page stacks their names, and hovering one opens its copy buttons in a side menu. More than ten names scroll.
 - **1.5.3**: a Servers tab edits the region lists by hand on the Global Bank page, right-click renames a character's RoM or Gameforge account, tooltips show both, and the Gameforge accounts tab is more compact. Collecting the daily reward automatically is now a tick in the extension's popup, off by default.
@@ -913,6 +916,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/grid prob
 > **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
 > - **rom weakauras:** rom weakauras' fonts for the quest tracker; its triggers and icon picker can use the mob information and macro icon categories from here
 > - **Cherry's Chat:** class colours in chat from its player list
+> - **Global Bank:** the macro window's Import button lists its macro library
 >
 > **Original addons:** pbInfo v0.60 by p.b. a.k.a. novayuna, later odie2, PortraitHP v2019.07.14 by Nonante@Nuada, TooltipIds 1.0b3 by Rock5 and ExtendedMacroIcons 2.15 by Amurilon. If any of `Interface\AddOns\pbInfo`, `Interface\AddOns\PortraitHP`, `Interface\AddOns\TooltipIds`, `Interface\AddOns\ExtendedMacroIcons`, `Interface\AddOns\CherrysQuests` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
@@ -922,6 +926,8 @@ Cherry's Info brings together five addons that used to be separate downloads: Ch
 
 ## Recent changes
 
+- **1.0.3**: it no longer saves the names of the game's macro icons, because the Global Bank page works them out itself.
+- **1.0.2**: the macro window has an Import button, which lists Global Bank's macro library with a search bar for names and groups.
 - **1.0.1**: the overhead health bars option no longer builds about 100 frame names on every pass, and three tab labels are written the way the game's file format requires.
 - **1.0**: the first version, made from those five. `/cinfo` opens one window with four tabs, and `/cq` opens it on Quests. If you had turned one of the five off in `/ck`, it's on again, because they share one switch now: turn that part off on its tab instead.
 

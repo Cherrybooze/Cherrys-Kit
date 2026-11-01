@@ -4,6 +4,8 @@ const HOST = 'com.cherryskit.globalbank';
 chrome.storage?.local?.setAccessLevel?.({accessLevel: 'TRUSTED_CONTEXTS'})?.catch?.(() => {});
 // Any message makes the local host write Windows' time for the game's addons and refresh the
 // heartbeat the helper watches: while this extension is alive, the helper keeps running.
+const BACKUP_REQUESTS = new Set(['backup-overview', 'backup-macros', 'backup-settings', 'backup-value', 'backup-restore-settings', 'backup-restore-macros', 'backup-macro-set',
+  'macro-save', 'macro-groups', 'macro-delete', 'macro-group-list', 'macro-icons', 'macro-icon-list']);
 const stampClock = () => chrome.runtime.sendNativeMessage(HOST, {type:'clock'}, () => void chrome.runtime.lastError);
 // Once a minute is cheap and keeps the helper's 15-second check honest.
 const ensureHeartbeat = () => chrome.alarms?.create?.('globalbank-heartbeat', {periodInMinutes: 1});
@@ -115,6 +117,14 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     const names = message.names;
     if (!Array.isArray(names) || !names.length || names.length > 25 || names.some(name => typeof name !== 'string' || name.length > 200)) return;
     chrome.runtime.sendNativeMessage(HOST, {type:'bank-icons', names}, response => {
+      const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
+      reply(error ? {ok:false,error} : response);
+    });
+    return true;
+  }
+  if (control && BACKUP_REQUESTS.has(message?.type)) {
+    const {type, offset, character, from, variable, slot, characters, firstFree, icon, name, text, follow, id, groups, apply, deleted, action, group, to, code} = message;
+    chrome.runtime.sendNativeMessage(HOST, {type, offset, character, from, variable, slot, characters, firstFree, icon, name, text, follow, id, groups, apply, deleted, action, group, to, code}, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);
     });

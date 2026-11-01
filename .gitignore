@@ -14,6 +14,12 @@ GlobalBankHelper/
 .env
 .env.*
 
+# A player's macros and action bars, and Global Bank's copies of them, must never be committed either.
+*.bsd
+MacroLibrary.json
+GlobalBankMacros.lua
+Backups/
+
 # Private helper exports must never be committed, even if copied out of their normal folder.
 GlobalBankDatabase.lua
 GlobalBank.json

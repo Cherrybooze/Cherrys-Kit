@@ -18,12 +18,12 @@ One folder, loaded and controlled by the hub, keeps the kit simple to develop an
 | rom weakauras | `CherrysKit\RomWeakAuras` | Cherry's KittyCombo, Cherry's Info | `AddOns\RomWeakAuras`, an older copy |
 | Cherry's Chat | `CherrysKit\CherrysChat` | Cherry's Info, Ultimate Mail Mod, Cherry's KittyCombo | `AddOns\CherrysChat`, an older copy |
 | zBag | `CherrysKit\zBag` | Global Bank, Advanced AuctionHouse | `AddOns\zBag`, zBag 5.07 by adisadicul |
-| Global Bank | `CherrysKit\GlobalBank` | zBag, Advanced AuctionHouse, ZShop, Cherry's Bar, LogNextChar | `AddOns\GlobalBank`, an older copy |
+| Global Bank | `CherrysKit\GlobalBank` | zBag, Advanced AuctionHouse, ZShop, Cherry's Bar, LogNextChar, Cherry's Info | `AddOns\GlobalBank`, an older copy |
 | Ultimate Mail Mod | `CherrysKit\UltimateMailMod` | Cherry's Chat, LogNextChar | `AddOns\UltimateMailMod`, Ultimate Mail Mod by Shardea of Siochain, later Maxeem of Muinin, mvoigt, Jagodragon and Raihir |
 | Advanced AuctionHouse | `CherrysKit\AdvancedAuctionHouse` | Global Bank, zBag | `AddOns\AdvancedAuctionHouse`, Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves |
 | Cherry's Addon LoadTimes | `CherrysKit\LoadTimes` | nothing | `AddOns\!CherrysLoadTimes`, an older copy |
 | ZShop | `CherrysKit\ZShop` | Global Bank | `AddOns\ZShop`, ZShop by Pyrr |
-| Cherry's Info | `CherrysKit\CherrysInfo` | rom weakauras, Cherry's Chat | `AddOns\pbInfo`, pbInfo v0.60 by p.b. a.k.a. novayuna, later odie2; `AddOns\PortraitHP`, PortraitHP v2019.07.14 by Nonante@Nuada; `AddOns\TooltipIds`, TooltipIds 1.0b3 by Rock5; `AddOns\ExtendedMacroIcons`, ExtendedMacroIcons 2.15 by Amurilon; `AddOns\CherrysQuests`, an older copy |
+| Cherry's Info | `CherrysKit\CherrysInfo` | rom weakauras, Cherry's Chat, Global Bank | `AddOns\pbInfo`, pbInfo v0.60 by p.b. a.k.a. novayuna, later odie2; `AddOns\PortraitHP`, PortraitHP v2019.07.14 by Nonante@Nuada; `AddOns\TooltipIds`, TooltipIds 1.0b3 by Rock5; `AddOns\ExtendedMacroIcons`, ExtendedMacroIcons 2.15 by Amurilon; `AddOns\CherrysQuests`, an older copy |
 | Cherry's Grid | `CherrysKit\CherrysGrid` | Cherry's KittyCombo | `AddOns\GridCliqueIt`, GridCliqueIt by Skaryon, Jacobian and odie2 |
 | Cherry's Bar | `CherrysKit\CherrysBar` | Cherry's KittyCombo, Global Bank | `AddOns\XBar`, XBar III by matif and Bussdee |
 | LogNextChar | `CherrysKit\LogNextChar` | Global Bank, Ultimate Mail Mod | `AddOns\LogNextChar`, an older copy; `AddOns\CherrysLoginxml`, an older copy |
@@ -63,6 +63,7 @@ One folder, loaded and controlled by the hub, keeps the kit simple to develop an
 - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
 - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
 - **LogNextChar:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
+- **Cherry's Info:** the macro window's Import button brings in macros from the page's library, and the page shows its extra macro icons
 
 ### Ultimate Mail Mod
 
@@ -90,6 +91,7 @@ One folder, loaded and controlled by the hub, keeps the kit simple to develop an
 
 - **rom weakauras:** rom weakauras' fonts for the quest tracker; its triggers and icon picker can use the mob information and macro icon categories from here
 - **Cherry's Chat:** class colours in chat from its player list
+- **Global Bank:** the macro window's Import button lists its macro library
 
 ### Cherry's Grid
 
