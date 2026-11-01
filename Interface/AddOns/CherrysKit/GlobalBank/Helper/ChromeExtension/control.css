@@ -99,7 +99,10 @@ button.status-chip:active { transform: none; box-shadow: none; }
 .stack-types legend { font-size: 12px; font-weight: 600; }
 .stack-types label { margin: 3px 0; }
 .help-note { font-size: 12px; }
-.help-note > summary { display: inline-flex; align-items: center; gap: 5px; color: #97abc0; cursor: pointer; }
+.help-note > summary { display: inline-flex; align-items: center; gap: 6px; color: #a7bbd1; list-style: none; cursor: pointer; }
+.help-note > summary::-webkit-details-marker { display: none; }
+.help-note > summary::before { content: ""; width: 5px; height: 5px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(-45deg); transition: transform var(--gb-fast); }
+.help-note[open] > summary::before { transform: rotate(45deg); }
 .help-note > summary:hover { color: var(--gb-gold); }
 .help-note[open] > .hint, .help-note[open] > div, .help-note[open] > button { margin-top: 6px; }
 .region-known p { margin: 0 0 4px; }
