@@ -61,7 +61,7 @@ Text only. Tones: `ok`, `info`, `warn`, `error`, `gold`, `muted`.
 {ok, session, seq, gap, more, events, helper}
 ```
 
-`events` are `{seq, time, kind, tone, text, character?, dataChanged?}`, with `time` as ISO UTC and `kind` one of `updated`, `loaded`, `heartbeat`, `notice`. `gap` is null or `{from, to}` when records you hadn't read were discarded. Pass `session:null` on first load to get the latest `max` events (default 50, at most 200) and no gap. A different `session` means the helper restarted. `more:true` means the byte limit cut the reply short, so ask again with the new `seq`.
+`events` are `{seq, time, kind, tone, text, character?, dataChanged?, origin?}`, with `time` as ISO UTC and `kind` one of `updated`, `loaded`, `heartbeat`, `notice`. `origin:'browser'` marks a line that repeats what the page just did: the window shows it and the page can skip it. `gap` is null or `{from, to}` when records you hadn't read were discarded. Pass `session:null` on first load to get the latest `max` events (default 50, at most 200) and no gap. A different `session` means the helper restarted. `more:true` means the byte limit cut the reply short, so ask again with the new `seq`.
 
 ### `{type:'terminal-catalogue'}`
 
