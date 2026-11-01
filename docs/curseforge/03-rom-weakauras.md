@@ -16,9 +16,9 @@ rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras
 
 ## Recent changes
 
+- **0.9.32**: icons made from the gallery's Present buff and Present debuff templates show the stack count in their bottom-right corner, like the game's own buff icons, and icon displays get a **Stack count** On/Off choice, so an aura you already made can turn it on with one click.
 - **0.9.31**: a little lighter after a fight. The check for its end no longer makes a new table four times a second.
 - **0.9.30**: the scale corner and the move arrows in the placement view really work now. Drag the corner at an aura's bottom right to scale it and the arrows at its top left to move it, or Shift-drag the aura itself to scale it.
-- **0.9.29**: much shorter share codes (`RWA5!`). An aura made from a template is about 20 to 45 characters instead of 450 to 1000, so most single auras fit in a chat line, and Import finds the code inside pasted text.
 
 ## Features
 

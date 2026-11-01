@@ -42,7 +42,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Recent changes
 
-- **0.4.28**: the clock asks for the time only when a look is due, not on every frame.
+- **0.4.29**: its manifest loads zBag's new stat search file.
 - **0.4.27**: knows the merged addons. Cherry's Info gives way to any of the five addons it took over, and LogNextChar to an old Cherry's Loginxml, and the hub names the folder.
 - **Guided setup**: the Hub zip carries `!setup_cherryskit.bat`. Double-click it after extracting, and any time you want to update: it says which addons are out of date against the latest release on GitHub and updates them with the old versions kept, asks before installing anything your addons can use that's missing, moves older copies out of the way, puts the login screen in place and walks you through the Chrome extension.
 
@@ -214,9 +214,9 @@ rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras
 
 ## Recent changes
 
+- **0.9.32**: icons made from the gallery's Present buff and Present debuff templates show the stack count in their bottom-right corner, like the game's own buff icons, and icon displays get a **Stack count** On/Off choice, so an aura you already made can turn it on with one click.
 - **0.9.31**: a little lighter after a fight. The check for its end no longer makes a new table four times a second.
 - **0.9.30**: the scale corner and the move arrows in the placement view really work now. Drag the corner at an aura's bottom right to scale it and the arrows at its top left to move it, or Shift-drag the aura itself to scale it.
-- **0.9.29**: much shorter share codes (`RWA5!`). An aura made from a template is about 20 to 45 characters instead of 450 to 1000, so most single auras fit in a chat line, and Import finds the code inside pasted text.
 
 ## Features
 
@@ -368,7 +368,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat pro
 
 # zBag
 
-> **Requires:** Cherry's Kit. The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+> **Requires:** Cherry's Kit (hub 0.4.29 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\zBag`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
@@ -969,6 +969,7 @@ Want the threat meter? Install **rom weakauras** and turn on its "Threat meter" 
 - `/cq text 1`: the raw texts of the first tracked quest (for bug reports)
 - `/cq forget`: forget this character's NPC picks
 - `/emi`: open or close the macro window (the game's own macro button and key open it too)
+- `/emi import`: open the macro window with its Import list
 - `/pbinfo`, `/pbic`, `/ti`: the Tooltips & IDs tab
 - `/php`: target health on or off
 - `/mobinfo [party|guild|name]`: print or send your target's health and class
