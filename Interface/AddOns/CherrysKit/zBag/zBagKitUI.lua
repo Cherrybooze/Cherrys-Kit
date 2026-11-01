@@ -80,6 +80,7 @@ function K.OnUpdate(elapsed)
     watchWait = 0.05
     K.WatchBackpack()
     if K.StatsTick then K.StatsTick(0.05) end
+    K.WatchHover()
   end
   wait = wait - (elapsed or 0.03)
   if wait > 0 then
@@ -592,6 +593,7 @@ function K.LoadConfig()
   end
   zBagKitConfigBagSlots:SetChecked(v["slotnumbers"] == 1)
   zBagKitConfigBankSlots:SetChecked(v["bankslotnumbers"] == 1)
+  if zBagKitConfigSlotHover then zBagKitConfigSlotHover:SetChecked(v["slothover"] ~= 0) end
   if zBagKitConfigSlotFontValue then zBagKitConfigSlotFontValue:SetText(tostring(K.SlotNumberFontSize())) end
   zBagKitConfigHideBackpack:SetChecked(v["hidebackpack"] == 1)
   zBagKitConfigMoney:SetChecked(v["showmoney"] == 1)
@@ -665,6 +667,11 @@ function K.OnConfigClick(what)
     v["slotnumbers"] = zBagKitConfigBagSlots:IsChecked() and 1 or 0
   elseif what == "bankslots" then
     v["bankslotnumbers"] = zBagKitConfigBankSlots:IsChecked() and 1 or 0
+  elseif what == "slothover" then
+    v["slothover"] = zBagKitConfigSlotHover:IsChecked() and 1 or 0
+    K.SetHoverOwner(nil)
+    K.UpdateAll()
+    K.UpdateCherry()
   elseif what == "hidebackpack" then
     v["hidebackpack"] = zBagKitConfigHideBackpack:IsChecked() and 1 or 0
   elseif what == "money" then
@@ -709,6 +716,7 @@ K.TOOLTIPS = {
   resetpos = { "Reset bag positions", "Put the All bags window, the Cherry's bags (and their shapes) and the money box back to their first places." },
   money = { "Gold, diamonds and rubies", "Show your money in a small box of its own that stays on screen. Drag it anywhere; the place is kept." },
   settings = { "zBag settings", "Bag layout (individual bags, one bag or Cherry's bags), slot numbers, search and more." },
+  slothover = { "Numbers on mouseover only", "Show a bag or bank slot's number only while the mouse is over that slot. Untick to see every slot's number all the time. With the game's own bag and bank window the number comes with the game's tooltip, so a slot that shows no tooltip shows no number." },
   bankslots = { "Bank slot numbers", "Show the slot number in a see-through mark on every bank slot." },
   slotfont = { "Slot number font size", "Size of bag and bank slot labels, from 6 to 20. Default 8 is about 40% smaller than the old 13-point labels. Classic bag/bank item scales also apply. Stack counts keep their normal size." },
 }
@@ -830,7 +838,7 @@ function K.Probe()
   end
   add("overlays: bag " .. count("zBagKitBag", 180) .. ", bank " .. count("zBagKitBank", 40)
     .. ", on BagItemButton1 " .. parentOk .. ", slot numbers bag/bank " .. tostring(v["slotnumbers"]) .. "/"
-    .. tostring(v["bankslotnumbers"]) .. ", first label " .. tostring(zBagKitBag1KitSlot and select(2, pcall(function() return zBagKitBag1KitSlot:GetText() end))))
+    .. tostring(v["bankslotnumbers"]) .. ", mouseover only " .. yes(K.HoverOnly()) .. ", first label " .. tostring(zBagKitBag1KitSlot and select(2, pcall(function() return zBagKitBag1KitSlot:GetText() end))))
   add("zBag windows: bag " .. shown(zBag) .. ", bank " .. shown(zBagB) .. ", zBag items " .. count("zBagItem", 180)
     .. ", zBag bank items " .. count("zBagBItem", 300))
   v["probe"] = lines

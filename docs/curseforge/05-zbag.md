@@ -18,9 +18,9 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 ## Recent changes
 
+- **5.07-ck19**: slot numbers show only on the slot under the mouse; untick *Numbers on mouseover only* in **/zb** to see every number again. Search *#clean* for mana stones without stats, or *#dirty* for mana stones with stats.
 - **5.07-ck18**: the bag and bank search also finds items by their stats. Type a stat name such as *stamina* or *dexterity* and every item with that stat lights up. Numbers aren't needed.
 - **5.07-ck17**: a smaller file to read at login. The slot numbers on the 220 bag and bank buttons share one template, so that file went from 229 KB to 123 KB with the same buttons.
-- **5.07-ck16**: one bag and one bank keep the game's own backpack and bank window out of view, even when another addon or the game puts them back on screen.
 
 ## Features
 
@@ -31,8 +31,8 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 - **Choose the bank separately**: tick **Use one bank (classic zBag)** for zBag's bank, or leave it unticked for the game's bank. It works with any bag layout.
 - **Share bag settings across characters** is on by default. Turn it off for separate settings per character; both sets are kept when you switch. The quick-sell item filter stays separate for each character.
 - **Auto bag and bank pages** (optional): rented pages show while their rent is running and hide once it runs out.
-- **Item search** in every layout (BagSearch), by item name or by stat name: *stamina* finds every item with a stamina line.
-- **Slot numbers**: an optional see-through number (1 to 180) in the upper-left corner of every bag slot and bank slot, in a size you choose (6 to 20).
+- **Item search** in every layout (BagSearch), by item name or by stat name (*stamina* finds every item with a stamina line), and *#clean* or *#dirty* for mana stones without or with stats.
+- **Slot numbers**: an optional see-through number (1 to 180) in the upper-left corner of the bag or bank slot under the mouse, or of every slot, in a size you choose (6 to 20).
 - **All bags window**: all six bags in one window that you can drag anywhere. "Reset bag positions" puts it, the Cherry's bags and the money box back.
 - **Hide default backpack** (optional, individual bags): B opens All bags instead.
 - **Money box** (optional): gold, diamonds and rubies in a small box of its own that stays on screen and can be dragged anywhere.
