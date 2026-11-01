@@ -70,6 +70,7 @@ RWA.SETTING_DEFAULTS = {
   soundChannel = "interface", -- the slider that carries addon sounds (interface, confirmed in game); or "effects"/"both"
   soundExt = ".wav", -- every sound ships as .wav, .mp3 and .ogg; /rwa soundext picks one
   yUp = false,
+  auraStrata = "BACKGROUND", -- auras draw under the bag, bank and other windows; "MEDIUM" = over them (/rwa layer)
   pollRate = 0.1,
   debug = false,
   font = nil, -- nil = the bundled Fira Sans
