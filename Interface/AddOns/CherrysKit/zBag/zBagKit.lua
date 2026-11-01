@@ -6,6 +6,8 @@
 --                             bare bags you move and resize, zBagKitCB1-6 in zBagKit.xml)
 -- zBag_VAR["slotnumbers"]     1 = numbers 1-180 over the bag slots
 -- zBag_VAR["bankslotnumbers"] 1 = numbers over the bank slots
+-- zBag_VAR["slothover"]       0 = numbers always shown; anything else (default) = only on the slot
+--                             under the mouse
 
 zBagKit = zBagKit or {}
 local K = zBagKit
@@ -15,8 +17,9 @@ local K = zBagKit
 K.onebag, K.unhooked, K.remembered, K.loadedMode, K.events = nil, nil, nil, nil, nil
 K.cherryOpen, K.resizing, K.dragging = nil, nil, nil
 K.storageInitialized, K.storageShared = nil, nil
+K.hoverOwner, K.hoverButton = nil, nil
 
-K.version = "5.07-ck18"
+K.version = "5.07-ck19"
 K.DEFAULT_SLOT_FONT_SIZE, K.MIN_SLOT_FONT_SIZE, K.MAX_SLOT_FONT_SIZE = 8, 6, 20
 K.path = (CherrysKit_Paths and CherrysKit_Paths.zBag) or "Interface/AddOns/zBag/"
 K.BAG_SLOTS = 180
@@ -327,15 +330,21 @@ function K.SlotNumberFontSize()
   return math.floor(size)
 end
 
+-- Slot numbers only on mouseover (on unless the "slothover" setting is 0).
+function K.HoverOnly()
+  return not (zBag_VAR and zBag_VAR["slothover"] == 0)
+end
+
 function K.Label(owner, slot, size, showOwner)
   if not owner then
     return
   end
   size = size or K.SlotNumberFontSize()
-  if owner.kitSlot == slot and owner.kitSize == size then
+  local shown = slot ~= nil and (owner == K.hoverOwner or not K.HoverOnly())
+  if owner.kitSlot == slot and owner.kitSize == size and owner.kitShown == shown then
     return
   end
-  owner.kitSlot, owner.kitSize = slot, size
+  owner.kitSlot, owner.kitSize, owner.kitShown, owner.kitShowOwner = slot, size, shown, showOwner
   local name = owner:GetName()
   local text, back = _G[name .. "KitSlot"], _G[name .. "KitSlotBack"]
   if not owner.kitSlotPositioned then
@@ -350,7 +359,7 @@ function K.Label(owner, slot, size, showOwner)
     owner.kitSlotPositioned = true
   end
   if back then back:SetSize(math.max(12, math.ceil(size * 2)), math.max(9, math.ceil(size + 2))) end
-  if slot then
+  if shown then
     if text then
       text:SetText(tostring(slot))
       if size then
@@ -375,6 +384,87 @@ function K.Label(owner, slot, size, showOwner)
     if showOwner then
       owner:Hide()
     end
+  end
+end
+
+-- The label owner under the mouse shows its number; the one before hides it again.
+function K.SetHoverOwner(owner)
+  local old = K.hoverOwner
+  if old == owner then
+    return
+  end
+  K.hoverOwner = owner
+  if old and old.kitSlot ~= nil then
+    K.Label(old, old.kitSlot, old.kitSize, old.kitShowOwner)
+  end
+  if owner and owner.kitSlot ~= nil then
+    K.Label(owner, owner.kitSlot, owner.kitSize, owner.kitShowOwner)
+  end
+end
+
+-- zBag's own item buttons (zTBagItem, zTBankItem in zBagTmpl.xml) call this from OnEnter/OnLeave.
+function K.HoverLabel(item, entered)
+  if entered then
+    K.SetHoverOwner(item)
+  elseif K.hoverOwner == item then
+    K.SetHoverOwner(nil)
+  end
+end
+
+-- The game's own bag and bank buttons can't get scripts from an addon, so with individual bags the
+-- slot under the mouse is the one GameTooltip belongs to. Checked 20 times a second from
+-- zBagKit.OnUpdate, only while numbers are on and a tooltip is showing; the button lists are made once.
+local hoverBag, hoverBank, overlayOf
+local function hoverLists()
+  hoverBag, hoverBank, overlayOf = {}, {}, {}
+  for n = 1, K.BAG_SLOTS do
+    local button, overlay = _G["BagItemButton" .. n], _G["zBagKitBag" .. n]
+    if button and overlay then
+      hoverBag[#hoverBag + 1] = button
+      overlayOf[button] = overlay
+    end
+  end
+  for n = 1, K.BANK_PAGE do
+    local button, overlay = _G["BankItemButton" .. n], _G["zBagKitBank" .. n]
+    if button and overlay then
+      hoverBank[#hoverBank + 1] = button
+      overlayOf[button] = overlay
+    end
+  end
+end
+
+local function ownedButton(list)
+  for i = 1, #list do
+    local button = list[i]
+    if button:IsVisible() and GameTooltip:IsOwned(button) then
+      return button
+    end
+  end
+  return nil
+end
+
+function K.WatchHover()
+  local tip = GameTooltip
+  local current = K.hoverButton
+  if current then
+    if K.HoverOnly() and tip and tip:IsVisible() and tip:IsOwned(current) and current:IsVisible() then
+      return
+    end
+    K.hoverButton = nil
+    if overlayOf and K.hoverOwner == overlayOf[current] then
+      K.SetHoverOwner(nil)
+    end
+  end
+  if not K.HoverOnly() or not tip or not tip:IsVisible() or not (K.bagNumbers or K.bankNumbers) then
+    return
+  end
+  if not overlayOf then
+    hoverLists()
+  end
+  local button = (K.bagNumbers and ownedButton(hoverBag)) or (K.bankNumbers and ownedButton(hoverBank)) or nil
+  if button then
+    K.hoverButton = button
+    K.SetHoverOwner(overlayOf[button])
   end
 end
 

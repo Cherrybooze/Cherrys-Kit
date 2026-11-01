@@ -142,6 +142,25 @@ class StatSearchTests(unittest.TestCase):
         self.assertEqual(list(bank("wisdom").values()), [5])
         self.assertEqual(list(self.g.zBagKit.FindBankItems("wisdom", 300).values()), [5])
 
+    def test_clean_and_dirty_find_mana_stones_by_their_link(self):
+        self.lua.execute("""
+          bag[4] = {104, "Mana Stone Tier 3", "|Hitem:31858 1 5f3e 0 0 0|h|cffffffff[Mana Stone Tier 3]|r|h"}
+          bag[5] = {105, "Mana Stone Tier 3", "|Hitem:31858 1 5f3e 2002a 0 0|h|cffffffff[Mana Stone Tier 3]|r|h"}
+          bag[6] = {106, "Fusion Stone", "|Hitem:31882 1 5f3e 0 0 1b0000|h|cffffffff[Fusion Stone]|r|h"}
+          bag[7] = {107, "Leather Boots", "|Hitem:33450 1 5f3e 0 0 0|h|cffffffff[Leather Boots]|r|h"}
+          GetBagCount = function() return 7, 173, 180 end
+        """)
+        self.assertEqual(self.find("#clean"), [4])
+        self.assertEqual(self.find("#CLEAN"), [4])
+        self.assertEqual(self.find("#dirty"), [5, 6])
+        # no tooltip is read for these searches
+        self.assertFalse(self.g.zBagKit.statsMissing)
+        self.assertEqual(self.g.reads, 0)
+        # only the whole text counts
+        self.assertEqual(self.find("#clean stone"), [])
+        self.lua.execute("bankItems[9] = {'Mana Stone', '|Hitem:31859 1 5f3e 0 0 0|h|h'}")
+        self.assertEqual(list(self.g.zBagKit.FindBankItems("#clean", 300).values()), [9])
+
     def test_reload_ui_starts_with_an_empty_cache(self):
         self.find("stamina")
         self.tick_until_idle()
