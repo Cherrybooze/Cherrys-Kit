@@ -508,15 +508,15 @@ const context = vm.createContext({console});
 vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'accounts.js'), 'utf8') + ';this.GBAccounts = GBAccounts;', context);
 const gb = context.GBAccounts;
 const rgb = gold => [...gb.heatColor(gold).rgb];
-// Plain at no gold, a climbing green, and gold only at a full cap, however little or much is short of it
+// Red at no gold, orange at half a cap, bright green at a full cap
+assert.deepEqual(rgb(0), [198, 40, 40]);
+assert.deepEqual(rgb(500000000), [245, 124, 0]);
+assert.deepEqual(rgb(999999999), [0, 230, 64]);
+assert.deepEqual(rgb(5000000000), [0, 230, 64]);
 assert.equal(gb.heatColor(0).kind, 'none');
 assert.equal(gb.heatColor(1).kind, 'some');
 assert.equal(gb.heatColor(999999998).kind, 'some');
 assert.equal(gb.heatColor(999999999).kind, 'full');
-assert.deepEqual(rgb(5000000000), rgb(999999999));
-assert.deepEqual(rgb(500000000), [74, 117, 96]);
-assert.ok(rgb(750000000)[1] > 117 && rgb(750000000)[1] < 168);
-assert.ok(rgb(250000000)[1] > 58 && rgb(250000000)[1] < 117);
 assert.equal(gb.serverOf({server: 'Aynara'}), 'Aynara');
 assert.equal(gb.serverOf({dailyLogin: {server: 'Aynara (PvE)'}}), 'Aynara');
 assert.equal(gb.serverOf({}), 'Unknown server');
@@ -1477,6 +1477,8 @@ assert.equal(bank.formatCompact(1383092), '1.38M');
 assert.equal(bank.formatCompact(51200), '51.2K');
 assert.equal(bank.formatCompact(100), '100');
 assert.equal(bank.formatCompact(0), '0');
+assert.deepEqual(plain([999999999, 528768654, 12345678, 1383092, 51200, 4242, 100, 0].map(bank.formatTiny)), ['999M', '528M', '12M', '1.3M', '51K', '4.2K', '100', '0']);
+assert.equal(bank.formatTiny(3731845169), '3.7B');
 // Account currencies: each account once, as of its newest save. Old saves and strangers aren't counted.
 const one = {names: ['Ann', 'Bob']}, two = {names: ['Cid']};
 const money = (amount, key = 'account') => [{key, amount}];
@@ -1495,6 +1497,17 @@ assert.equal(diamonds.loose, 1);
 assert.equal(diamonds.recorded, true);
 // Nobody on a known account means not recorded, not zero
 assert.equal(bank.accountCurrencies([{name: 'Lone', currencies: money(1000)}])[0].recorded, false);
+// Named as the game's Item Shop names them. Phirius Tokens are each character's own, so all of them count.
+assert.deepEqual(plain(totals.map(item => item.name)), ['Diamonds', 'Rubies', 'Phirius Tokens']);
+const tokens = bank.accountCurrencies([
+  {name: 'Ann', romAccount: one, saved: '2026-10-01 10:00', currencies: money(30, 'billdin')},
+  {name: 'Bob', romAccount: one, saved: '2026-10-02 10:00', currencies: money(10, 'billdin')},
+  {name: 'Lone', saved: '2026-10-01 10:00', currencies: money(5, 'billdin')},
+  {name: 'Old', romAccount: one, stale: true, currencies: money(1000, 'billdin')},
+]).find(item => item.key === 'billdin');
+assert.equal(tokens.total, 45);
+assert.equal(tokens.characters, 3);
+assert.equal(tokens.perAccount, false);
 """)
 
     def test_terminal_records_read_as_plain_text(self):

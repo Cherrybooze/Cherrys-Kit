@@ -221,7 +221,7 @@
         <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server or account</span><input id="currency-search" maxlength="80" autocomplete="off" placeholder="Find a character, server or account…"><kbd class="key-hint" aria-hidden="true">/</kbd></label>
         <label class="filter-select"><span class="ico" data-ui-icon="users"></span><span class="gb-sr-only">Group by</span><select id="currency-group"><option value="server">Group by server</option><option value="account">Group by account</option><option value="none">No groups</option></select></label>
       </div>
-      <details class="help-note"><summary>How this works</summary><p class="hint">Every currency any of your characters has gets a column. Click a heading to sort by it, and a character to select it. A dash means not recorded: that character needs one login on the current version, and a 0 is a real zero. Diamonds, Bonus and Billdin belong to an account, so the table doesn't add them up, and the cards above count each RoM account once.</p></details>
+      <details class="help-note"><summary>How this works</summary><p class="hint">Every currency any of your characters has gets a column. Click a heading to sort by it, and a character to select it. A dash means not recorded: that character needs one login on the current version, and a 0 is a real zero. Diamonds and Rubies belong to an account, so the table doesn't add them up, and the cards above count each RoM account once. Phirius Tokens are each character's own.</p></details>
       <div id="currency-view" class="table-panel table-scroll is-grow" data-select-scope><table class="currency-table"><thead></thead><tbody></tbody></table></div>
     </div>
 
@@ -236,14 +236,14 @@
       <div class="table-panel table-scroll is-grow"><table class="currency-table stat-table"><thead></thead><tbody></tbody></table></div>
     </div>
 
-    <div id="tab-heatmap" class="tab-panel" hidden>
+    <div id="tab-heatmap" class="tab-panel is-tight" hidden>
       <div class="gold-overview-intro">
         <h1 class="page-title" id="heatmap-title">Gold overview</h1>
         <div id="heat-total" class="panel-title"></div>
         <span class="push"></span>
-        <div class="heat-legend"><span>No gold</span><span class="heat-bar"></span><span>A full cap of 999,999,999</span></div>
+        <div class="heat-legend"><span>No gold</span><span class="heat-bar" title="Orange at half a cap"></span><span>A full cap of 999,999,999</span></div>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Red is no gold, orange is half a cap, and bright green is a full cap, marked MAX. Hover a character for its details, click to select it. Right-click to copy its name, Gameforge account or password. Characters are grouped by the accounts you link on the Gameforge accounts page, and full caps are pooled at the top of each server. A balance says nothing about whether the saved data is current: see the Characters page for that.</p></details>
       </div>
-      <details class="help-note"><summary>How this works</summary><p class="hint">Hover a character for its details, click to select it. Right-click to copy its name, Gameforge account or password. Characters are grouped by the accounts you link on the Gameforge accounts page. A balance says nothing about whether the saved data is current: see the Characters page for that.</p></details>
       <div id="heat-view" class="heat-view" data-select-scope></div>
     </div>
 
@@ -326,11 +326,11 @@
       <button id="gf-forgot" type="button" class="gb-button--ghost">Forgot your password? Delete these accounts and start again</button>
     </div>
 
-    <div id="tab-characters" class="tab-panel is-fill" hidden>
-      <h1 class="page-title" id="characters-title">Characters</h1>
+    <div id="tab-characters" class="tab-panel is-fill is-tight" hidden>
       <div class="filter-row">
+        <h1 class="page-title" id="characters-title">Characters</h1>
         <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server, account, class or note</span><input id="roster-search" maxlength="80" autocomplete="off" placeholder="Find a character, server, account, class or note…"><kbd class="key-hint" aria-hidden="true">/</kbd></label>
-        <label class="filter-select"><span class="ico" data-ui-icon="users"></span><span class="gb-sr-only">Group by</span><select id="roster-group"><option value="server">Group by server</option><option value="account">Group by account</option><option value="none">No groups</option></select></label>
+        <label class="filter-select"><span class="ico" data-ui-icon="users"></span><span class="gb-sr-only">Group by</span><select id="roster-group"><option value="account">Group by account</option><option value="server">Group by server</option><option value="none">No groups</option></select></label>
       </div>
       <div class="filter-row">
         <div class="section-tabs" role="group" aria-label="Which characters to show">
@@ -341,8 +341,8 @@
         </div>
         <span class="push"></span>
         <button id="select-stale" type="button" class="gb-button--ghost gb-button--sm" hidden></button>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it, a character to select it, and a group's Select to select all of it. Selecting doesn't change the Bank until you press Use in Bank. A character needing a login was saved by an older version: log in with it once. A bank not recorded also takes one login with that character. Update now only reads the saved files, so it can't do either. Transfer stones counts Server Transfer Stones in the bag and bank, and shows "at least" while the bank isn't recorded. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p></details>
       </div>
-      <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it, a character to select it, and a group's Select to select all of it. Selecting doesn't change the Bank until you press Use in Bank. A character needing a login was saved by an older version: log in with it once. A bank not recorded also takes one login with that character. Update now only reads the saved files, so it can't do either. Transfer stones counts Server Transfer Stones in the bag and bank, and shows "at least" while the bank isn't recorded. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p></details>
       <div id="roster-view" class="table-panel table-scroll is-grow" data-select-scope><table class="currency-table roster-table"><thead></thead><tbody></tbody></table></div>
       <section id="excluded-view" class="panel is-grow" aria-labelledby="excluded-title" hidden>
         <h2 id="excluded-title">Excluded characters</h2>

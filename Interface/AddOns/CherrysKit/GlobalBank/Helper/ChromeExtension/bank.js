@@ -16,7 +16,10 @@ const GBBank = (() => {
   const NO_STACK = {on: false, types: new Set(), stats: 'apart', always: new Set()};
   const QUALITY = ['Plain', 'Green', 'Blue', 'Purple', 'Orange', 'Gold'];
   // Bought with real money and shared by an account, so adding them up across characters would count them twice.
-  const SHOP_NAMES = {account: 'Diamonds', bonus: 'Bonus', billdin: 'Billdin'};
+  // What the game's code calls bonus and billdin, its Item Shop calls Rubies and Phirius Tokens
+  const SHOP_NAMES = {account: 'Diamonds', bonus: 'Rubies', billdin: 'Phirius Tokens'};
+  // Diamonds and Rubies belong to an account. Phirius Tokens come from each character's daily quests.
+  const ACCOUNT_MONEY = new Set(['account', 'bonus']);
   const FIXED_NAMES = {transmutor: 'Arcane Transmutor Charges'};
   // The order of the game's own currency window
   const CURRENCY_ORDER = ['transmutor', '11', '12', '10', '17', '21', '9', '13', '15', '16', '4', '8', '14', '18', '19', '22', '23', 'account', 'bonus', 'billdin'];
@@ -39,6 +42,18 @@ const GBBank = (() => {
     if (amount >= 1e4) return `${(Math.floor(amount / 100) / 10).toFixed(1)}K`;
     return formatNumber(amount);
   }
+  // The shortest form, for a tile: at most four characters, and rounded down too
+  function formatTiny(value) {
+    const amount = Math.max(0, Math.floor(Number(value) || 0));
+    if (amount >= 1e10) return `${Math.floor(amount / 1e9)}B`;
+    if (amount >= 1e9) return `${Math.floor(amount / 1e8) / 10}B`;
+    if (amount >= 1e7) return `${Math.floor(amount / 1e6)}M`;
+    if (amount >= 1e6) return `${Math.floor(amount / 1e5) / 10}M`;
+    if (amount >= 1e4) return `${Math.floor(amount / 1e3)}K`;
+    if (amount >= 1e3) return `${Math.floor(amount / 100) / 10}K`;
+    return String(amount);
+  }
+  const counted = (count, word) => `${formatNumber(count)} ${word}${count === 1 ? '' : 's'}`;
   const escapeHtml = text => String(text ?? '').replace(/[&<>"']/g, letter => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[letter]));
   // A bank read once in game is known; before that its items are simply missing, which isn't the same as none.
   const bankKnown = character => !!character.bankSeen || (character.bank || []).length > 0;
@@ -312,7 +327,7 @@ const GBBank = (() => {
       const amounts = {gold: Number(character.gold) || 0};
       for (const money of character.currencies || []) {
         amounts[money.key] = Number(money.amount) || 0;
-        const shop = money.key in SHOP_NAMES;
+        const shop = ACCOUNT_MONEY.has(money.key);
         if (!columns.has(money.key)) columns.set(money.key, {key: money.key, name: currencyName(money), total: 0, shop});
       }
       return {name: character.name, key: character.key, server: character.shownServer ?? character.server ?? '', stale: !!character.stale, character, amounts};
@@ -400,7 +415,7 @@ const GBBank = (() => {
     // Two values in one column each keep their own way of sorting: column.also lists the second one's
     const head = spec.columns.map(column => {
       const sorted = sorting.key === column.key ? ` aria-sort="${sorting.descending ? 'descending' : 'ascending'}"` : '';
-      const inside = column.noSort ? column.head || '' : sortButton(column.key, column.name, column.text) + (column.also || []).map(other => sortButton(other.key, other.name, other.text, true)).join('');
+      const inside = column.noSort ? column.head || '' : (column.lead || '') + sortButton(column.key, column.name, column.text) + (column.also || []).map(other => sortButton(other.key, other.name, other.text, true)).join('');
       return `<th class="${cellClass(column)}"${sorted}>${inside}</th>`;
     }).join('');
     table.querySelector('thead').innerHTML = `<tr>${head}</tr>`;
@@ -460,7 +475,11 @@ const GBBank = (() => {
       if (!groups.has(key)) groups.set(key, {key, title: titleOf(row), rows: []});
       groups.get(key).rows.push(row);
     }
-    const list = [...groups.values()].sort((a, b) => Number(a.key === '' || a.key === '~none') - Number(b.key === '' || b.key === '~none') || b.rows.length - a.rows.length || a.title.localeCompare(b.title));
+    // Accounts sit with the others on their server
+    const place = group => (how === 'account' ? group.rows.map(row => String(row.server || '\uffff')).sort()[0] : '');
+    const list = [...groups.values()].map(group => ({group, place: place(group)}))
+      .sort((a, b) => Number(a.group.key === '' || a.group.key === '~none') - Number(b.group.key === '' || b.group.key === '~none') || a.place.localeCompare(b.place)
+        || b.group.rows.length - a.group.rows.length || a.group.title.localeCompare(b.group.title)).map(item => item.group);
     if (!root.collapsedSet) {
       root.collapsedSet = true;
       if (rows.length > 400) for (const group of list) root.collapsed.add(group.key);
@@ -472,9 +491,9 @@ const GBBank = (() => {
   const groupKeyOf = (how, accountName) => row => how === 'server' ? String(row.server || '').toLowerCase()
     : (accountName && accountName(row.name)) ? 'gf:' + accountName(row.name).toLowerCase()
       : loginScreen(row) ? 'group:' + loginScreen(row).names[0].toLowerCase() + '|' + String(row.server || '').toLowerCase() : '~none';
-  const groupTitleOf = (how, accountName, romTitle) => row => how === 'server' ? row.server || NO_SERVER
+  const groupTitleOf = (how, accountName, romTitle, locked) => row => how === 'server' ? row.server || NO_SERVER
     : (accountName && accountName(row.name)) ? accountName(row.name)
-      : loginScreen(row) ? (loginScreen(row).steam ? romOf(row.character, romTitle) : `${romOf(row.character, romTitle)}, not linked`) : 'No account known yet';
+      : loginScreen(row) ? (loginScreen(row).steam ? romOf(row.character, romTitle) : `${romOf(row.character, romTitle)}, ${locked && locked() ? 'accounts locked' : 'not linked'}`) : 'No account known yet';
   function searchRows(rows, text) {
     const wanted = String(text || '').trim().toLowerCase();
     if (!wanted) return rows;
@@ -482,23 +501,28 @@ const GBBank = (() => {
       || String(row.account || '').toLowerCase().includes(wanted) || String(row.rom || '').toLowerCase().includes(wanted) || String(row.class || '').toLowerCase().includes(wanted)
       || String(row.character?.note || '').toLowerCase().includes(wanted));
   }
-  // Diamonds, Bonus and Billdin belong to an account, and every character on it saved the same balance, so each
-  // account counts once, as of the newest save on it. A character no login screen has listed could be on any account:
-  // it isn't counted, and says so. A character saved before currencies were recorded says nothing either way.
+  // Diamonds and Rubies belong to an account, and every character on it saved the same balance, so each account counts
+  // once, as of the newest save on it. A character no login screen has listed could be on any account: it isn't counted,
+  // and says so. Phirius Tokens are each character's own. A character saved before currencies were recorded says nothing
+  // either way.
   function accountCurrencies(characters) {
     const newest = new Map();
+    const recorded = [];
     let loose = 0;
     for (const character of characters) {
       if (character.stale || character.notSaved) continue;
+      recorded.push(character);
       const account = character.romAccount || character.group || null;
       if (!account) { loose++; continue; }
       const held = newest.get(account);
       if (!held || String(character.saved || '') > String(held.saved || '')) newest.set(account, character);
     }
     return Object.entries(SHOP_NAMES).map(([key, name]) => {
+      const perAccount = ACCOUNT_MONEY.has(key);
+      const holders = perAccount ? [...newest.values()] : recorded;
       let total = 0;
-      for (const character of newest.values()) total += Number((character.currencies || []).find(money => money.key === key)?.amount) || 0;
-      return {key, name, total, accounts: newest.size, loose, recorded: newest.size > 0};
+      for (const character of holders) total += Number((character.currencies || []).find(money => money.key === key)?.amount) || 0;
+      return {key, name, total, perAccount, accounts: newest.size, characters: recorded.length, loose, recorded: holders.length > 0};
     });
   }
   // The cards above the table: the gold on the characters in view, and the account currencies
@@ -513,10 +537,11 @@ const GBBank = (() => {
     const shop = accountCurrencies(characters);
     for (const money of shop) {
       parts.push(card(money.name, money.key === 'account' ? 'diamond' : 'wallet', money.recorded ? formatNumber(money.total) : 'Not recorded', !money.recorded,
-        money.recorded ? `${formatNumber(money.accounts)} RoM accounts, as last saved` : 'No character on a known RoM account has saved this yet'));
+        money.perAccount ? (money.recorded ? `${formatNumber(money.accounts)} RoM accounts, as last saved` : 'No character on a known RoM account has saved this yet')
+          : (money.recorded ? `${formatNumber(money.characters)} characters, as last saved` : 'No character has saved this yet')));
     }
     const loose = shop[0]?.loose || 0;
-    parts.push(`<p class="currency-note">Diamonds, Bonus and Billdin belong to an account, so each RoM account counts once.${loose ? ` ${formatNumber(loose)} characters aren't on a known RoM account yet, so theirs aren't counted.` : ''}</p>`);
+    parts.push(`<p class="currency-note">Diamonds and Rubies belong to an account, so each RoM account counts once. Phirius Tokens are each character's own.${loose ? ` ${formatNumber(loose)} characters aren't on a known RoM account yet, so theirs aren't counted.` : ''}</p>`);
     node.innerHTML = parts.join('');
     for (const icon of node.querySelectorAll('[data-card-icon]')) icon.innerHTML = window.GB_ICONS?.[icon.dataset.cardIcon] || '';
   }
@@ -530,11 +555,11 @@ const GBBank = (() => {
     const how = options.how || 'server';
     const table = currencyTable(characters, root.sorting.key, root.sorting.descending);
     const rows = searchRows(table.rows, options.search);
-    const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle));
+    const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
     for (const group of groups) {
       group.totals = {};
       for (const column of table.columns) group.totals[column.key] = column.shop ? null : group.rows.reduce((sum, row) => sum + (row.amounts[column.key] || 0), 0);
-      group.sub = `${formatNumber(group.rows.length)} characters`;
+      group.sub = counted(group.rows.length, 'character');
     }
     root.selectGroup = key => options.selectKeys && options.selectKeys((groups.find(group => group.key === key)?.rows || []).map(row => row.key));
     const amount = (row, column) => {
@@ -572,37 +597,46 @@ const GBBank = (() => {
     root.openCharacter = options.openCharacter;
     const how = options.how || 'server';
     const rows = searchRows(rosterRows(characters, root.sorting.key, root.sorting.descending, options.accountName, options.romTitle), options.search);
-    const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle));
+    const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
+    // A heading that names the account says it for every line under it
+    const showGameforge = how !== 'account';
+    const showRom = how !== 'account' || groups.some(group => group.key.startsWith('gf:'));
+    if ((!showGameforge && root.sorting.key === 'account') || (!showRom && root.sorting.key === 'rom')) {
+      root.sorting = {key: 'gold', descending: true};
+      root.redraw();
+      return;
+    }
     for (const group of groups) {
       const gold = group.rows.reduce((sum, row) => sum + row.gold, 0);
       const caps = group.rows.filter(row => row.gold >= FULL_CAP).length;
       const stale = group.rows.filter(row => row.stale).length;
       const stones = group.rows.reduce((sum, row) => sum + row.stones, 0);
-      group.sub = `${formatNumber(group.rows.length)} characters · ${formatNumber(gold)} gold` + (caps ? ` · ${formatNumber(caps)} full caps` : '')
-        + (stones ? ` · ${formatNumber(stones)} transfer stones` : '') + (stale ? ` · ${formatNumber(stale)} need a login` : '');
+      group.sub = `${counted(group.rows.length, 'character')} · ${formatNumber(gold)} gold` + (caps ? ` · ${counted(caps, 'full cap')}` : '')
+        + (stones ? ` · ${counted(stones, 'transfer stone')}` : '') + (stale ? ` · ${formatNumber(stale)} ${stale === 1 ? 'needs' : 'need'} a login` : '');
     }
     root.selectGroup = key => options.selectKeys && options.selectKeys((groups.find(group => group.key === key)?.rows || []).map(row => row.key));
     root.selectAll = () => options.selectKeys && options.selectKeys(rows.map(row => row.key));
     const clock = new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'});
-    const slots = (label, used, max) => `${escapeHtml(max ? `${formatNumber(used)} / ${formatNumber(max)}` : formatNumber(used))} ${label}`;
+    const shortClock = new Intl.DateTimeFormat(undefined, {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+    const slots = (used, max) => escapeHtml(max ? `${formatNumber(used)}/${formatNumber(max)}` : formatNumber(used));
     const allSelected = rows.length > 0 && !!options.isSelected && rows.every(row => options.isSelected(row.key));
     groupedTable(root, {
       columns: [
-        {key: 'select', noSort: true, className: 'check-col', head: `<input type="checkbox" class="select-all" aria-label="Select all shown"${allSelected ? ' checked' : ''}>`,
-          cell: row => `<input type="checkbox" class="char-check" aria-label="Select ${escapeHtml(row.name)}"${options.isSelected && options.isSelected(row.key) ? ' checked' : ''}>`},
-        {key: 'name', name: 'Character', text: true, also: [{key: 'class', name: 'Class', text: true}, {key: 'level', name: 'Level'}],
-          cell: row => `<span class="char-cell">${classBadge(row.class, options.classColor && options.classColor(row.character))}<span><span class="char-name">${escapeHtml(row.name)}</span><span class="sub">${escapeHtml([row.class, row.level ? `Lv. ${formatNumber(row.level)}` : ''].filter(Boolean).join(' · ') || 'Class not recorded')}</span></span></span>`},
+        {key: 'name', name: 'Character', text: true, lead: `<input type="checkbox" class="select-all head-check" aria-label="Select all shown"${allSelected ? ' checked' : ''}>`,
+          cell: row => `<span class="char-cell"><input type="checkbox" class="char-check" aria-label="Select ${escapeHtml(row.name)}"${options.isSelected && options.isSelected(row.key) ? ' checked' : ''}>${classBadge(row.class, options.classColor && options.classColor(row.character))}<span class="char-name">${escapeHtml(row.name)}</span></span>`},
+        {key: 'class', name: 'Class', text: true, cell: row => (row.class ? escapeHtml(row.class) : '<span class="not-recorded">Not recorded</span>')},
+        {key: 'level', name: 'Level', number: true, cell: row => (row.level ? escapeHtml(formatNumber(row.level)) : '<span class="not-recorded">—</span>')},
         {key: 'server', name: 'Server', text: true, cell: serverCell},
         {key: 'stones', name: 'Transfer stones', number: true, cell: stonesCell},
-        {key: 'account', name: 'Gameforge', text: true, also: [{key: 'rom', name: 'RoM', text: true}],
-          cell: row => `<span class="stacked">${escapeHtml(row.account || (options.locked && options.locked() ? 'Locked' : 'Not linked'))}<small>${escapeHtml(row.rom || 'RoM account not known')}</small></span>`},
+        ...(showGameforge ? [{key: 'account', name: 'Gameforge', text: true, cell: row => (row.account ? escapeHtml(row.account) : `<span class="not-recorded">${options.locked && options.locked() ? 'Locked' : 'Not linked'}</span>`)}] : []),
+        ...(showRom ? [{key: 'rom', name: 'RoM account', text: true, cell: row => (row.rom ? escapeHtml(row.rom) : '<span class="not-recorded">Not known</span>')}] : []),
         {key: 'gold', name: 'Gold', number: true, cell: row => `<span class="gold-cell">${escapeHtml(formatNumber(row.gold))}</span>`},
-        {key: 'bag', name: 'Bag', number: true, also: [{key: 'bank', name: 'Bank'}],
-          cell: row => `<span class="stacked">${slots('in bag', row.bag, row.character?.bagSlots)}<small>${row.bankSeen || row.bank > 0 ? slots('in bank', row.bank, row.character?.bankSlots) : 'Bank not recorded'}</small></span>`},
+        {key: 'bag', name: 'Bag', number: true, cell: row => slots(row.bag, row.character?.bagSlots)},
+        {key: 'bank', name: 'Bank', number: true, cell: row => (row.bankSeen || row.bank > 0 ? slots(row.bank, row.character?.bankSlots) : '<span class="not-recorded" title="Bank not recorded: one login with this character records it">Not recorded</span>')},
         {key: 'saved', name: 'Last saved', text: true, cell: row => escapeHtml(row.saved || 'Not recorded')},
         {key: 'day', name: 'Reward day', number: true, also: [{key: 'taken', name: 'Taken'}],
-          cell: row => (row.taken ? `<span class="stacked">Day ${escapeHtml(row.day || '?')}<small>${escapeHtml(clock.format(row.taken))}</small></span>` : '<span class="not-recorded">Not recorded</span>')},
-        {key: 'stale', name: 'Status', cell: row => (row.stale ? '<span class="status-pill" title="Saved by an older version: log in once on the current one">Needs login</span>' : '<span class="status-pill is-good">Current</span>')},
+          cell: row => (row.taken ? `<span title="${escapeHtml(clock.format(row.taken))}">Day ${escapeHtml(row.day || '?')} <span class="muted">· ${escapeHtml(shortClock.format(row.taken))}</span></span>` : '<span class="not-recorded">Not recorded</span>')},
+        {key: 'stale', name: 'Status', cell: row => (row.stale ? '<span class="status-pill" title="Saved by an older version: log in once on the current one">Needs login</span>' : '<span class="status-pill is-good" role="img" aria-label="Current" title="Current"></span>')},
         {key: 'open', noSort: true, className: 'open-col', cell: row => `<button type="button" class="row-open" data-open-char="${escapeHtml(row.key || '')}" aria-label="Details for ${escapeHtml(row.name)}" title="Details"><span class="ico" data-cell-icon="chevron-right"></span></button>`},
       ],
       groups, isSelected: options.isSelected, open: !!String(options.search || '').trim(), empty: characters.length ? 'No character matches.' : 'No characters saved yet.',
@@ -1521,5 +1555,5 @@ const GBBank = (() => {
   }
   return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, DEFAULT_RULES,
     formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
-    rosterRows, renderRoster, statTable, renderStats, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, transferStones, transferStonesText, bankKnown};
+    rosterRows, renderRoster, statTable, renderStats, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, transferStones, transferStonesText, bankKnown};
 })();

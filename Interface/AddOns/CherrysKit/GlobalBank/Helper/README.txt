@@ -41,8 +41,8 @@ there is no unambiguous confirmation; it does not prove whether a reward was col
     exit                 stop the helper
 
 These are the same commands, with the same answers, in the helper window and on the extension's
-Terminal tab. While the helper runs, both talk to that one helper, so status, heartbeat and exit mean
-it. With no helper running, the Terminal tab uses saved data and says so, and heartbeat and exit report
+Terminal page. While the helper runs, both talk to that one helper, so status, heartbeat and exit mean
+it. With no helper running, the Terminal page uses saved data and says so, and heartbeat and exit report
 that there is nothing to change. Exit doesn't change Chrome's automatic-start choice: if that's on, the
 helper starts again the next time Chrome starts.
 
