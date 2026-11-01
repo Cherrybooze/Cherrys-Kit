@@ -1,6 +1,6 @@
-# Global Bank Daily Rewards: privacy policy
+# Global Bank for RoM: privacy policy
 
-Applies to the Chrome extension **Global Bank Daily Rewards** and its local helper, part of [Cherry's Kit](https://github.com/Cherrybooze/Cherrys-Kit) for Runes of Magic. Last updated 1 November 2026.
+Applies to the Chrome extension **Global Bank for RoM** and its local helper, part of [Cherry's Kit](https://github.com/Cherrybooze/Cherrys-Kit) for Runes of Magic. Last updated 1 November 2026.
 
 It is an independent community tool, not made by or affiliated with Gameforge.
 
