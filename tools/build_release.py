@@ -102,7 +102,7 @@ PRIVATE_DATA_NAMES = frozenset(name.casefold() for name in (
     "SaveVariables.lua", "GlobalBankDatabase.lua", "GlobalBank.json", "GlobalBankTips.txt", "GameforgeAccounts.json", "ExcludedCharacters.json",
     "DailyRewards.json", "CharacterLinks.json", "GlobalBankHelperBeat.lua",
     "GlobalBankHelper.log", "GlobalBankHelper-errors.log", "AAHBroadCache.json", "AAHBroadCache.lua",
-    "MacroLibrary.json", "GlobalBankMacros.lua",
+    "MacroLibrary.json", "GlobalBankMacros.lua", "TerminalFeed.json",
 ))
 # Global Bank's copies of a player's save files.
 PRIVATE_FOLDER_NAMES = frozenset(("globalbankhelper", "backups"))

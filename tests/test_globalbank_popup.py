@@ -129,7 +129,7 @@ async function popup(response) {
 (async () => {
   let page = await popup({ok:true,running:false,lastCollected:null});
   assert.match(page['helper-hint'].textContent, /older than this extension\. Update Cherry’s Kit, then run Install Chrome extension\.bat again/);
-  page = await popup({ok:true,running:false,lastCollected:null,bridge:3});
+  page = await popup({ok:true,running:false,lastCollected:null,bridge:4});
   assert.match(page['helper-hint'].textContent, /Start the helper below/);
   assert.equal(page['get-kit'].hidden, true);
   page = await popup({ok:false,error:'Specified native messaging host not found.',errorKind:'bridge-unavailable'});
@@ -170,7 +170,7 @@ const context = vm.createContext({document:{getElementById:id => elements[id]}, 
     runtime:{sendMessage:async message => {
       sent.push(message.type);
       if (message.type === 'helper-stop') running = false;
-      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null,bridge:3};
+      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null,bridge:4};
     }}},
   setTimeout:() => 0, clearTimeout:() => {}, console});
 vm.runInContext(source, context);
@@ -939,13 +939,25 @@ let listener; const sent = [];
 const runtime = {id:'test',getURL:file => 'chrome-extension://test/' + file,
   onMessage:{addListener:fn => { listener = fn; }}, onStartup:{addListener() {}}, onInstalled:{addListener() {}},
   sendNativeMessage:(host,message,reply) => { sent.push(message.type); reply({ok:true}); }};
-vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime},URL});
+vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 'utf8'), {chrome:{runtime},URL,setTimeout:() => 0,clearTimeout() {}});
 const page = {id:'test',url:runtime.getURL('control.html')};
 const ask = (message, sender = page) => listener(message, sender, () => {});
 assert.equal(ask({type:'bank-data'}), true);
 assert.equal(ask({type:'bank-icons',names:['interface/icons/x']}), true);
 assert.equal(ask({type:'bank-command',command:'list gold'}), true);
 assert.deepEqual(sent, ['bank-data', 'bank-icons', 'bank-command']);
+// The Terminal view goes over its own port, and only from this page, with only well-formed requests.
+const posted = [];
+runtime.connectNative = host => ({postMessage:message => posted.push(message.type), disconnect() {}, onMessage:{addListener() {}}, onDisconnect:{addListener() {}}});
+assert.equal(ask({type:'terminal-feed',session:null,after:0,max:5}), true);
+assert.equal(ask({type:'terminal-catalogue'}), true);
+assert.equal(ask({type:'terminal-command',requestId:'page-0001',command:'status'}), true);
+assert.equal(ask({type:'terminal-confirm',requestId:'page-0002',token:'abc',answer:'y'}), true);
+assert.deepEqual(posted, ['terminal-feed', 'terminal-catalogue', 'terminal-command', 'terminal-confirm']);
+for (const bad of [{type:'terminal-command',requestId:'bad id!',command:'status'}, {type:'terminal-command',requestId:'page-0003',command:''},
+  {type:'terminal-command',requestId:'page-0003',command:'x'.repeat(257)}, {type:'terminal-confirm',requestId:'page-0003',token:5,answer:'y'}, {type:'terminal-other'}]) assert.equal(ask(bad), undefined);
+assert.equal(ask({type:'terminal-command',requestId:'page-0004',command:'exit'}, {id:'test',url:runtime.getURL('popup.html')}), undefined);
+assert.equal(posted.length, 4);
 for (const type of ['helper-info', 'helper-auto-start', 'helper-auto-stop', 'helper-stop']) { assert.equal(ask({type}), true); assert.equal(sent.pop(), type); }
 const others = [{id:'test',url:runtime.getURL('popup.html')}, {id:'other',url:runtime.getURL('control.html')},
   {id:'test',tab:{id:1},url:'https://eu-shop-runesofmagic.gameforge.com/dailies/display/5'}];
@@ -1402,7 +1414,7 @@ class NativeStatusTests(unittest.TestCase):
         scrubbed = 'GBPopupTest' + uuid.uuid4().hex
         self.host.write_text(NATIVE.read_text(encoding='utf-8').replace(
             'CherrysKitGlobalBankHelper', scrubbed), encoding='utf-8-sig')
-        for name in ('GlobalBank-Control.ps1', 'GlobalBank-Data.ps1'):
+        for name in ('GlobalBank-Control.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Bridge.ps1', 'GlobalBank-Commands.ps1'):
             source = (NATIVE.parent / name).read_text(encoding='utf-8-sig')
             (helper / name).write_text(source.replace('CherrysKitGlobalBankHelper', scrubbed), encoding='utf-8-sig')
         self.data = self.root / 'Interface/GlobalBankHelper'
@@ -1468,7 +1480,7 @@ class NativeStatusTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which('powershell'), 'Windows PowerShell required: the helper is only for Windows')
     def test_commands_run_the_helper_as_plain_text(self):
         for path in NATIVE.parent.iterdir():
-            if path.is_file() and path.name != NATIVE.name:
+            if path.is_file() and path.name != NATIVE.name and not (self.host.parent / path.name).exists():
                 shutil.copy2(path, self.host.parent / path.name)
         response = self.send({'type':'bank-command','command':'help'})
         self.assertTrue(response['ok'], response)
@@ -1504,7 +1516,7 @@ class NativeStatusTests(unittest.TestCase):
         return self.data / 'GlobalBankExtensionBeat.txt'
 
     def test_clock_message_writes_only_the_time_for_addons(self):
-        self.assertEqual(self.send({'type':'clock'}), {'ok':True,'bridge':3})  # every answer says the bridge's version
+        self.assertEqual(self.send({'type':'clock'}), {'ok':True,'bridge':4})  # every answer says the bridge's version
         text = self.clock_file().read_text(encoding='ascii')
         match = re.fullmatch(r'return \{utc = (\d+), tick = (-?\d+), offset = (-?\d+)\}\s*', text)
         self.assertIsNotNone(match, text)

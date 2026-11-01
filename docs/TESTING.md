@@ -126,6 +126,21 @@ Cherry's Chat 0.11.0. The simulated client checks what goes out on each channel;
 | CB4 | With ":heart: when sending" on, say `:fire` in Party. | Party chat gets the real emoji, as before (no bubble there). |
 | CB5 | Click **Say bubbles** until **Emoji (boxes)** and say `:fire`. | Sends as before (boxes in the bubble if ":heart: when sending" is on). |
 
+## Global Bank terminal in both places
+
+`tests/test_globalbank_terminal.py` runs Windows PowerShell 5.1 in a real console with no window, plus real native messaging frames and the mailbox, on private copies with made-up characters. It doesn't cover what only a person sees, or real Chrome.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| T1 | Open **Start Global Bank helper.bat**. | A short banner and "Loading saved characters...", then the real count and a `gb >` prompt. The gold and teal colours show, and help doesn't print by itself. |
+| T2 | Type part of a command, then log out of a character. | The update line appears above your typing, and the draft and caret stay where they were. |
+| T3 | Scroll up in the window, then log out of a character. | The window stays where you scrolled to and its title says "1 new". Scrolling back down shows the line. |
+| T4 | Drag the window narrower with a long draft, then run `list gold`. | The draft redraws without leftovers, and the table wraps with every name and note intact. |
+| T5 | With the helper running, open the extension's Terminal tab and run `status`, then `heartbeat off`. | Status shows the same helper's uptime. The window prints "From the browser: heartbeat off" and its alive line stops. |
+| T6 | Run `note Name test` in the tab, then `show Name` in the window. | The note is there straight away. Log that character out: the note stays. |
+| T7 | Run `exit` in the tab. | The tab says it's stopping, the window closes, and `status` then says it isn't running. With automatic start on, the tab said it starts again with Chrome. |
+| T8 | With no helper running, run `list gold` and `exit` in the tab. | The list is labelled as saved data. Exit reports that no helper is running. |
+
 ## 0.11.103 Global Bank without the terminal window
 
 This runs in Chrome, not the game. It has run on real Chrome 155 with a test profile and C's real saved data: icons, both tabs and Update now all worked.

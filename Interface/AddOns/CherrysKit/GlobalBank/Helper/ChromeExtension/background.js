@@ -6,7 +6,11 @@ chrome.storage?.local?.setAccessLevel?.({accessLevel: 'TRUSTED_CONTEXTS'})?.catc
 // heartbeat the helper watches: while this extension is alive, the helper keeps running.
 const BACKUP_REQUESTS = new Set(['backup-overview', 'backup-macros', 'backup-settings', 'backup-value', 'backup-restore-settings', 'backup-restore-macros', 'backup-macro-set',
   'macro-save', 'macro-groups', 'macro-delete', 'macro-group-list', 'macro-icons', 'macro-icon-list']);
-const stampClock = () => chrome.runtime.sendNativeMessage(HOST, {type:'clock'}, () => void chrome.runtime.lastError);
+// The clock also tells the helper's folder the automatic-start choice, which only this extension knows,
+// so the helper's exit message can say what happens next.
+let autoHelperChoice;
+chrome.storage?.local?.get?.('autoHelper')?.then?.(({autoHelper}) => { autoHelperChoice = !!autoHelper; })?.catch?.(() => {});
+const stampClock = () => chrome.runtime.sendNativeMessage(HOST, autoHelperChoice === undefined ? {type:'clock'} : {type:'clock', autoHelper: autoHelperChoice}, () => void chrome.runtime.lastError);
 // Once a minute is cheap and keeps the helper's 15-second check honest.
 const ensureHeartbeat = () => chrome.alarms?.create?.('globalbank-heartbeat', {periodInMinutes: 1});
 chrome.alarms?.onAlarm?.addListener(alarm => { if (alarm.name === 'globalbank-heartbeat') stampClock(); });
@@ -18,7 +22,65 @@ const startHelperIfWanted = async () => {
 // The daily page can't read local storage, so it gets the auto-collect choice through session storage.
 const shareAutoCollect = () => chrome.storage.local.get('autoCollect')
   .then(({autoCollect}) => chrome.storage.session.set({autoCollect: autoCollect === true})).catch(() => {});
-chrome.storage?.onChanged?.addListener((changes, area) => { if (area === 'local' && 'autoCollect' in changes) shareAutoCollect(); });
+chrome.storage?.onChanged?.addListener((changes, area) => {
+  if (area !== 'local') return;
+  if ('autoCollect' in changes) shareAutoCollect();
+  if ('autoHelper' in changes) { autoHelperChoice = !!changes.autoHelper.newValue; stampClock(); }
+});
+// The Terminal view talks over one open port, so its polling never starts a process. The host answers in
+// order. The port closes itself when the view has gone quiet, and a request on a dead port is reported, never resent.
+const TERMINAL_IDLE_MS = 30000;
+let terminalPort = null, terminalIdle = null;
+const terminalWaiting = [];
+const closeTerminalPort = () => {
+  clearTimeout(terminalIdle);
+  const port = terminalPort;
+  terminalPort = null;
+  if (port) { try { port.disconnect(); } catch {} }
+  for (const reply of terminalWaiting.splice(0)) reply({ok:false, outcome:'bridge', error:'The connection to the local helper closed before it answered.', records:[]});
+};
+const terminalSend = (request, reply) => {
+  try {
+    if (!terminalPort) {
+      const port = chrome.runtime.connectNative(HOST);
+      port.onMessage.addListener(response => { terminalWaiting.shift()?.(response); });
+      port.onDisconnect.addListener(() => {
+        const error = chrome.runtime.lastError?.message || 'The connection to the local helper closed before it answered.';
+        if (terminalPort !== port) return;
+        terminalPort = null;
+        for (const waiting of terminalWaiting.splice(0)) waiting({ok:false, outcome:'bridge', error, records:[]});
+      });
+      terminalPort = port;
+    }
+    terminalWaiting.push(reply);
+    terminalPort.postMessage(request);
+    clearTimeout(terminalIdle);
+    terminalIdle = setTimeout(() => { if (!terminalWaiting.length) closeTerminalPort(); }, TERMINAL_IDLE_MS);
+  } catch (error) {
+    terminalWaiting.pop();
+    reply({ok:false, outcome:'bridge', error:String(error?.message || error), records:[]});
+  }
+};
+const validRequestId = id => typeof id === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(id);
+const terminalRequest = message => {
+  if (message.type === 'terminal-catalogue') return {type:message.type};
+  if (message.type === 'terminal-feed') {
+    const session = typeof message.session === 'string' && /^[a-f0-9]{1,64}$/.test(message.session) ? message.session : null;
+    const after = Number.isSafeInteger(message.after) && message.after > 0 ? message.after : 0;
+    const max = Number.isSafeInteger(message.max) && message.max > 0 ? Math.min(message.max, 200) : 50;
+    return {type:message.type, session, after, max};
+  }
+  if (!validRequestId(message.requestId)) return null;
+  if (message.type === 'terminal-command') {
+    if (typeof message.command !== 'string' || !message.command.trim() || message.command.length > 256) return null;
+    return {type:message.type, requestId:message.requestId, command:message.command};
+  }
+  if (message.type === 'terminal-confirm') {
+    if (typeof message.token !== 'string' || !message.token || message.token.length > 8192 || typeof message.answer !== 'string' || message.answer.length > 256) return null;
+    return {type:message.type, requestId:message.requestId, token:message.token, answer:message.answer};
+  }
+  return null;
+};
 const chromeStarted = () => { ensureHeartbeat(); stampClock(); startHelperIfWanted().catch(() => {}); };
 ensureHeartbeat();
 chrome.runtime.onStartup.addListener(chromeStarted);
@@ -137,6 +199,12 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);
     });
+    return true;
+  }
+  if (control && typeof message?.type === 'string' && message.type.startsWith('terminal-')) {
+    const request = terminalRequest(message);
+    if (!request) return;
+    terminalSend(request, reply);
     return true;
   }
   if (!shop || message?.type !== 'reward-confirmed') return;
