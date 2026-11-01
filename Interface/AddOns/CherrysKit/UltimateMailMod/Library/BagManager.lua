@@ -10,6 +10,22 @@
 -- the master frame once the bags settle. Entries are reused, marks survive while the same item
 -- stays in its slot, and bound checks are cached per slot.
 
+-- The same item, judged by what stays put: the item id from the link (the rest of a RoM link can
+-- change while the item sits in its slot, or be missing right after the item arrives) and the name.
+function UMMItemId(link)
+  return type(link) == "string" and string.match(link, "item:(%x+)") or nil;
+end
+
+function UMMSameItem(link, name, otherLink, otherName)
+  local id, otherId = UMMItemId(link), UMMItemId(otherLink);
+  if (id and otherId) then
+    return id == otherId;
+  end
+  local linkName = type(link) == "string" and string.match(link, "%[(.-)%]") or name;
+  local otherLinkName = type(otherLink) == "string" and string.match(otherLink, "%[(.-)%]") or otherName;
+  return linkName ~= nil and linkName == otherLinkName;
+end
+
 UMMBagManager = {
 
   ItemList = {};
@@ -113,10 +129,12 @@ UMMBagManager = {
       local idx, texture, name, itemCount = GetBagItemInfo(itemIndex);
       if (texture ~= nil and texture ~= "" and idx) then
         local itemLink = GetBagItemLink(idx);
-        if (entry.Index ~= idx or entry.Link ~= itemLink) then
+        if (entry.Empty or entry.Index ~= idx or not UMMSameItem(entry.Link, entry.Name, itemLink, name)) then
           -- a different item now: forget its mark and bound state
           entry.Marked = false;
           entry.Bound = nil;
+        elseif (entry.Link == nil and itemLink ~= nil) then
+          entry.Bound = nil;  -- read before the game had the link: check again
         end
         entry.Index = idx;
         entry.Icon = texture;

@@ -600,5 +600,58 @@ class MassRecipientColumnTests(MassSendFixture, unittest.TestCase):
         self.assertEqual(names, [])
 
 
+class MassSendSlotCheckTests(MassSendFixture, unittest.TestCase):
+    """The check before each mail: has the marked item really left its bag slot?"""
+
+    def start(self, *indices):
+        self.mark(*indices)
+        self.g.UMMFrameTab3RecipientRecipient.text = "Alt"
+        self.lua.execute('''
+          ummAttempts={}
+          UMMMailComposer.Send=function(self) ummAttempts[#ummAttempts+1]=self.priv_ItemIndex or true;return 0 end
+        ''')
+        action = self.g.UMMFrameTab3Action
+        action.Send(action, "safe")
+        return self.g.UMMFrameTab3Status
+
+    def test_link_details_changing_in_place_still_sends_and_keeps_the_mark(self):
+        status = self.start(5)
+        # the game rewrites the rest of the link while the ring stays in its slot
+        self.lua.execute('ummBagSlots[5].link="|cff0072bc|Hitem:5 1 0 0 0 0 0 0 0 0 0 9f3a|h[Item5]|h"')
+        status.AutoSend(status)
+        self.assertEqual(len(self.g.ummAttempts), 1)
+        self.assertEqual(status.priv_SendCount, 1, "still on the first mail, nothing skipped")
+        self.lua.execute("UMMBagManager:Invalidate()")
+        self.assertEqual(self.marked(), {5})
+
+    def test_a_link_missing_when_listed_does_not_block_the_send(self):
+        self.lua.execute("ummBagSlots[5].link=nil;UMMBagManager:Invalidate();UMMBagManager:Ensure()")
+        self.g.UMMBagManager.ItemList[5].Bound = False
+        self.lua.execute('ummBagSlots[5].link="|Hitem:5|h[Item5]|h"')
+        status = self.start(5)
+        status.AutoSend(status)
+        self.assertEqual(len(self.g.ummAttempts), 1)
+
+    def test_a_different_item_in_the_slot_is_skipped_and_the_trace_shows_both_links(self):
+        status = self.start(5, 6)
+        self.lua.execute('ummBagSlots[5]={name="Other",link="|Hitem:99|h[Other]|h",icon="x",count=1}')
+        status.AutoSend(status)
+        self.assertEqual(len(self.g.ummAttempts), 0)
+        self.assertEqual(status.priv_SendCount, 2)
+        trace = list(self.g.UMMTrace.lines.values())
+        skip = [line for line in trace if " skip " in line][-1]
+        self.assertIn("Item5 slot 1005 had", skip)
+        self.assertIn("now |Hitem:99", skip)
+
+    def test_marks_survive_a_reload_when_only_the_link_changes_but_not_for_a_new_item(self):
+        self.mark(5, 6)
+        self.lua.execute('''
+          ummBagSlots[5].link="|Hitem:5 0 0 7|h[Item5]|h"
+          ummBagSlots[6]={name="Other",link="|Hitem:99|h[Other]|h",icon="x",count=1}
+          UMMBagManager:Invalidate();UMMBagManager:Ensure()
+        ''')
+        self.assertEqual(self.marked(), {5})
+
+
 if __name__ == "__main__":
     unittest.main()
