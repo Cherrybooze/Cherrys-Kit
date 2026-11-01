@@ -42,8 +42,8 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Recent changes
 
+- **0.4.30**: Steam and Gameforge installs side by side. The setup finds both, or asks where the other one is, and puts the kit in each. They share one Global Bank data folder, and the Chrome extension stays with the Gameforge install.
 - **0.4.29**: its manifest loads zBag's new stat search file.
-- **0.4.27**: knows the merged addons. Cherry's Info gives way to any of the five addons it took over, and LogNextChar to an old Cherry's Loginxml, and the hub names the folder.
 - **Guided setup**: the Hub zip carries `!setup_cherryskit.bat`. Double-click it after extracting, and any time you want to update: it says which addons are out of date against the latest release on GitHub and updates them with the old versions kept, asks before installing anything your addons can use that's missing, moves older copies out of the way, puts the login screen in place and walks you through the Chrome extension.
 
 ## Features
@@ -113,6 +113,8 @@ Each one is its own download and needs Cherry's Kit:
 4. Start the game or Reload UI, then type `/ck`.
 
 Updating an addon by hand? Update the hub too: some addons need a newer hub, and their pages say which.
+
+**Playing on Steam and Gameforge?** Run `!setup_cherryskit.bat` in either game folder. It finds the other install, or asks where it is, and sets up both.
 
 For addon authors: `if CherrysKit and not CherrysKit.IsEnabled("<Folder>") then ... stay idle ... end`. An addon joining the kit also has to [stay updateable through the setup](https://github.com/Cherrybooze/Cherrys-Kit#keeping-addons-updateable).
 
@@ -824,8 +826,8 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
 ## Recent changes
 
+- **1.2.0-ck6**: on Steam, the daily button opens the reward page in your normal browser, logged in as this character, instead of Steam's overlay, so Global Bank's Chrome extension works on it. The item shop button and `/zshop depot` stay in Steam's browser. Not yet tried in game.
 - **1.2.0-ck5**: ZShop reads the time from Cherry's Kit's clock, so the daily reminder works without the Global Bank helper running.
-- **1.2.0-ck4**: the daily button only marks the day once the daily page has really been handed to your browser or the game's shop window. Copy, Home and Depot don't mark it.
 
 ## Features
 

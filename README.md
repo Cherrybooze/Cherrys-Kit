@@ -13,7 +13,7 @@
    Press Enter for the suggested answer. Anything you say no to is left alone.
 4. **Start the game, or Reload UI, and type `/ck`.** Every installed addon has a row there, with its settings and an on/off switch.
 
-**To update later,** close the game and run `!setup_cherryskit.bat` again. **On CurseForge,** pick the addons you want: the app installs the hub with them. Run `!setup_cherryskit.bat` once afterwards if you had old separate copies.
+**Steam and Gameforge?** Run it in either game folder: it finds the other install, or asks where it is, and sets up both. **To update later,** close the game and run `!setup_cherryskit.bat` again. **On CurseForge,** pick the addons you want: the app installs the hub with them. Run `!setup_cherryskit.bat` once afterwards if you had old separate copies.
 
 **Single addons or the whole kit?** Every addon works on its own with just the hub. A few features link two addons, for example running a kitty by clicking a raid frame needs both Cherry's Grid and Cherry's KittyCombo; those are missing until you have both. Each addon's guide lists them under **Alone or in the full kit**, and the [addon map](docs/ADDON_MAP.md) has them all.
 
@@ -130,7 +130,7 @@ Download it from this build: [LogNextChar-1.3.1.zip](https://github.com/Cherrybo
 
 ## Optional Chrome extension
 
-[Download the Global Bank for RoM extension for Chrome, 1.3.0](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-GlobalBankDailyRewards-1.3.0.zip): an optional, separate Windows package for Chrome, for Global Bank. Its page shows every character's bank in one grid, with currencies, stats, a gold heatmap, the item depot, encrypted Gameforge accounts and the helper's terminal and auction cache. It records daily rewards when the Gameforge daily shop page confirms them, can collect them for you if you tick that in its popup, can keep the helper running while Chrome is open, and tells the kit the time.
+[Download the Global Bank for RoM extension for Chrome, 1.3.0](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-GlobalBankDailyRewards-1.3.0.zip): an optional, separate Windows package for Chrome, for Global Bank. Its page shows every character's bank in one grid, with currencies, stats, a gold overview, the item depot, encrypted Gameforge accounts and the helper's terminal and auction cache. It records daily rewards when the Gameforge daily shop page confirms them, can collect them for you if you tick that in its popup, can keep the helper running while Chrome is open, and tells the kit the time.
 
 Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step, and after that an update only needs **Reload** on the extension. Automatic page processing is limited to the Gameforge daily shop and item depot pages; the extension does not send your local data to the developer.
 
