@@ -1,4 +1,6 @@
 /* The Global Bank page. Load ui-tokens.css and ui-components.css first. */
+/* The window itself never scrolls: each part of the page scrolls in its own space */
+html, body { height: 100%; overflow: hidden; }
 body { margin: 0; }
 h1, h2, h3 { margin: 0; line-height: 1.25; }
 h2 { font-size: 15px; font-weight: 650; }
@@ -17,7 +19,7 @@ kbd { font: 11px var(--gb-font); }
 /* The frame: navigation down the left, everything else scrolling in its own space */
 .app-shell { display: grid; grid-template-columns: 218px minmax(0, 1fr); height: 100vh; }
 .main-shell { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
-main { flex: 1 1 auto; min-height: 0; padding: 16px 22px 18px; overflow: auto; outline: none; }
+main { position: relative; flex: 1 1 auto; min-height: 0; padding: 16px 22px 18px; overflow: auto; outline: none; }
 .tab-panel { display: flex; flex-direction: column; gap: 12px; max-width: 1720px; margin: 0 auto; }
 .tab-panel.is-fill { height: 100%; min-height: 560px; }
 .is-grow { flex: 1 1 auto; min-height: 240px; }
@@ -549,7 +551,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .gbt-tool-button:active { transform: none; box-shadow: none; }
 .gbt-tool-button .ico svg { width: 13px; height: 13px; }
 .gbt-tool-button[aria-pressed="true"] { color: var(--gb-gold); }
-.gbt-output { flex: 1 1 auto; min-height: 160px; padding: 14px 18px 18px; overflow: auto; font: 13px/1.5 var(--gbt-mono); font-variant-numeric: tabular-nums; overscroll-behavior: contain; scrollbar-color: #3c4f65 #111c28; scrollbar-width: thin; outline-offset: -3px; }
+.gbt-output { position: relative; flex: 1 1 auto; min-height: 160px; padding: 14px 18px 18px; overflow: auto; font: 13px/1.5 var(--gbt-mono); font-variant-numeric: tabular-nums; overscroll-behavior: contain; scrollbar-color: #3c4f65 #111c28; scrollbar-width: thin; outline-offset: -3px; }
 .gbt-entry { margin-bottom: 13px; }
 .gbt-entry:last-child { margin-bottom: 0; }
 .gbt-entry p { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }

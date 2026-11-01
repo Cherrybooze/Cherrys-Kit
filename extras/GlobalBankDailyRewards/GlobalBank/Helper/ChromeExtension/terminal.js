@@ -61,8 +61,8 @@ const GBTerminal = (() => {
   let requests = 0;
   const newRequestId = () => `page-${Date.now().toString(36)}-${(++requests).toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-  // options: {onChanged(): saved data changed, savedTotals(): {characters, gold} from the Bank's data, for when no helper
-  // knows them, toast(text), startHelper()}
+  // options: {onChanged(): saved data changed, onHelper(): the helper started, stopped or began stopping,
+  // savedTotals(): {characters, gold} from the Bank's data, for when no helper knows them, toast(text), startHelper()}
   function create(options = {}) {
     const byId = id => document.getElementById(id);
     const output = byId('term-output');
@@ -251,6 +251,8 @@ const GBTerminal = (() => {
     }
     function drawEvents(events) {
       for (const event of events) {
+        // What this page itself just did is already on the page. The helper's own window shows it.
+        if (event.origin === 'browser') continue;
         // Updates in a row read as one block, under what you last ran
         if (!eventBlock || eventBlock.lines >= MAX_LINES_IN_A_BLOCK) {
           eventBlock = {node: make('section', 'gbt-entry'), words: [], lines: 0};
@@ -280,6 +282,7 @@ const GBTerminal = (() => {
       else byId('term-run').removeAttribute('aria-busy');
     }
     function showHelper(state) {
+      if (state && (state.running !== helper?.running || state.stopping !== helper?.stopping) && helper) options.onHelper?.();
       if (state) helper = state;
       const box = byId('term-helper');
       const name = bridgeDown ? 'unknown' : helper?.stopping ? 'loading' : helper?.state || 'unknown';
