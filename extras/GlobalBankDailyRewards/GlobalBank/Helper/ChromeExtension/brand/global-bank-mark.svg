@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <title>Global Bank</title>
+  <defs>
+    <linearGradient id="gb-tile" x1="11" y1="4" x2="52" y2="64" gradientUnits="userSpaceOnUse"><stop stop-color="#24354a"/><stop offset="1" stop-color="#0c1622"/></linearGradient>
+    <linearGradient id="gb-coin" x1="18" y1="11" x2="46" y2="53" gradientUnits="userSpaceOnUse"><stop stop-color="#fff0bc"/><stop offset=".42" stop-color="#edc779"/><stop offset="1" stop-color="#aa7835"/></linearGradient>
+    <linearGradient id="gb-door" x1="23" y1="18" x2="43" y2="47" gradientUnits="userSpaceOnUse"><stop stop-color="#334455"/><stop offset="1" stop-color="#142334"/></linearGradient>
+  </defs>
+  <rect x="1" y="1" width="62" height="62" rx="16" fill="url(#gb-tile)" stroke="#907444" stroke-opacity=".7"/>
+  <path d="M17 2h30" stroke="#f4d28a" stroke-opacity=".5"/>
+  <circle cx="32" cy="32" r="21.5" fill="url(#gb-coin)"/>
+  <circle cx="32" cy="32" r="17.5" fill="url(#gb-door)" stroke="#513b20" stroke-opacity=".55"/>
+  <circle cx="32" cy="32" r="13.5" stroke="#e7be70" stroke-width="1.2" stroke-opacity=".75"/>
+  <path d="M32 18v8m0 12v8M18 32h8m12 0h8" stroke="url(#gb-coin)" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="m32 25 7 7-7 7-7-7 7-7Z" fill="url(#gb-coin)"/>
+  <path d="m32 29 3 3-3 3-3-3 3-3Z" fill="#192b3c"/>
+  <circle cx="49" cy="49" r="5" fill="#72cfbc" stroke="#111d2b" stroke-width="2.5"/>
+</svg>
