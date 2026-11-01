@@ -82,7 +82,7 @@ class SaveFolderCase(unittest.TestCase):
 @unittest.skipUnless(POWERSHELL, 'needs PowerShell')
 class BackupTests(SaveFolderCase):
     def test_macro_file_reads_slots_names_and_text(self):
-        macros = self.ps_json(f"@(Read-MacroFile '{self.saves}\\Alice\\Macro.bsd')")
+        macros = self.ps_json(f"@(Read-MacroFile '{self.saves / 'Alice' / 'Macro.bsd'}')")
         self.assertEqual([macro['slot'] for macro in macros], [0, 15])
         self.assertEqual(macros[1], {'slot': 15, 'icon': 22, 'name': 'Häus', 'text': '/run two("ä")'})
 
@@ -158,10 +158,10 @@ class BackupTests(SaveFolderCase):
         self.run_ps('Update-Backups $save $data | Out-Null')
         self.run_ps('Set-BackupMacro $save $data @("Alice") 0 $false 5 "New" "/run new()" | Out-Null')
         self.run_ps('Set-BackupMacro $save $data @("Alice") 15 $false -1 "" "" | Out-Null')
-        macros = self.ps_json(f"@(Read-MacroFile '{self.saves}\\Alice\\Macro.bsd')")
+        macros = self.ps_json(f"@(Read-MacroFile '{self.saves / 'Alice' / 'Macro.bsd'}')")
         self.assertEqual([(m['slot'], m['icon'], m['name'], m['text']) for m in macros], [(0, 5, 'New', '/run new()')])
         self.run_ps('Restore-BackupMacros $save $data "Alice" 15 "newest"')
-        macros = self.ps_json(f"@(Read-MacroFile '{self.saves}\\Alice\\Macro.bsd')")
+        macros = self.ps_json(f"@(Read-MacroFile '{self.saves / 'Alice' / 'Macro.bsd'}')")
         self.assertEqual([m['slot'] for m in macros], [0, 15])
         self.assertEqual(macros[0]['text'], '/run new()', 'the other slot stays')
         self.run_ps('Restore-BackupMacros $save $data "Alice" -1 "newest"')
@@ -186,7 +186,7 @@ class BackupTests(SaveFolderCase):
         (self.saves / 'Bob/Macro.bsd').write_bytes(macro_file({0: (1, '', 'keep')}))
         answer = self.ps_json('Set-BackupMacro $save $data @("Alice","Bob") 0 $true 3 "Copy" "/run c()"')
         self.assertEqual(answer, ['Alice'])
-        macros = self.ps_json(f"@(Read-MacroFile '{self.saves}\\Bob\\Macro.bsd')")
+        macros = self.ps_json(f"@(Read-MacroFile '{self.saves / 'Bob' / 'Macro.bsd'}')")
         self.assertEqual([(m['slot'], m['text']) for m in macros], [(0, 'keep'), (1, '/run c()')])
 
     def test_nothing_is_written_while_the_game_runs(self):
@@ -264,7 +264,7 @@ class LibraryTests(SaveFolderCase):
         entry = next(macro for macro in self.library()['macros'] if macro['text'] == '/run one()')
         answer = self.message(type='macro-save', id=entry['id'], name='One', icon=4, text='/run uno()', apply=True)
         self.assertEqual(answer['changedCharacters'], 2)
-        bob = self.ps_json(f"@(Read-MacroFile '{self.saves}\\Bob\\Macro.bsd')")
+        bob = self.ps_json(f"@(Read-MacroFile '{self.saves / 'Bob' / 'Macro.bsd'}')")
         self.assertEqual([(m['slot'], m['name'], m['icon'], m['text']) for m in bob], [(7, 'One', 4, '/run uno()')], 'in the slot it was in')
         self.assertEqual(self.ps_json("(Get-BackupBefore $data (Get-BackupTarget $save $data 'Bob' 'Macro.bsd')).Exists"), True)
 
