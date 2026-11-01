@@ -16,6 +16,7 @@ rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras
 
 ## Recent changes
 
+- **0.9.33**: auras draw beneath the backpack, the bank, zBag and every other window instead of on top of them. The **Layer** button in the `/rwa` window, or `/rwa layer over`, puts them back on top.
 - **0.9.32**: icons made from the gallery's Present buff and Present debuff templates show the stack count in their bottom-right corner, like the game's own buff icons, and icon displays get a **Stack count** On/Off choice, so an aura you already made can turn it on with one click.
 - **0.9.31**: a little lighter after a fight. The check for its end no longer makes a new table four times a second.
 - **0.9.30**: the scale corner and the move arrows in the placement view really work now. Drag the corner at an aura's bottom right to scale it and the arrows at its top left to move it, or Shift-drag the aura itself to scale it.
@@ -50,6 +51,7 @@ In Cherry's Kit, `/wa` opens rom weakauras (`/rwa` alone opens the kit hub; `/rw
 - `/rwa size 60-160`: window size in percent (also the - and + buttons)
 - `/rwa volume 0-100`, `/rwa loud`: aura sound volume
 - `/rwa soundtest`, `/rwa soundext wav|mp3|ogg`, `/rwa channeltest`, `/rwa channel interface|effects|both`: sound checks
+- `/rwa layer under|over`: draw auras under (default) or over your bags, bank and other windows
 - `/rwa hits`, `/rwa hits reset`: what the Past second trigger has counted
 - `/rwa kitty [name]`: what the Kitty tracker sees for a kitty
 - `/rwa threat`: what the Threat trigger reads from your target's hate list
