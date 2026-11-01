@@ -40,7 +40,7 @@ The requirements come from `release-packages.json`. After changing them, run `py
 
 A ZIP can't install anything by itself. The hub arrives through CurseForge's **Required Dependency** relation, which has to be set on each project, so "the CurseForge app installs it for you" only holds once that is done. People downloading by hand are told by the first line of every description, and the release notes say to install the hub first.
 
-The full kit stays on GitHub rather than becoming a project: it would overlap every other project's files. Link it from the Cherry's Kit page. The Daily Rewards extension isn't a project either, because the Global Bank ZIP already contains it.
+The full kit stays on GitHub rather than becoming a project: it would overlap every other project's files. Link it from the Cherry's Kit page. The Global Bank for RoM extension isn't a project either, because the Global Bank ZIP already contains it.
 
 ### Each addon on its own
 
