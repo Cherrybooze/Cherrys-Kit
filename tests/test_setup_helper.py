@@ -30,6 +30,7 @@ KIT = ADDO / 'CherrysKit'
 HELPER_CONTROL = KIT / 'GlobalBank/Helper/GlobalBank-Control.ps1'
 HELPER_UPDATE = KIT / 'GlobalBank/Helper/GlobalBank-Update.ps1'
 SHELL = shutil.which('powershell') or shutil.which('pwsh')
+os.environ['CHERRYSKIT_FIND_INSTALLS'] = 'none'  # never the real game folders of the PC running these
 
 spec = importlib.util.spec_from_file_location('build_release', ROOT / 'tools/build_release.py')
 build_release = importlib.util.module_from_spec(spec)
