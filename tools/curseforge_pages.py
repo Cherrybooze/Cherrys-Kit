@@ -76,10 +76,12 @@ def front_block(package: dict, names: dict[str, str]) -> str:
         line += " This addon can't load without the hub."
     lines = [line, ">", f"> **Where it goes:** `{install_path(package)}`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.", ">"]
     if package.get("works_with"):
-        lines.append("> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:")
+        lines.append("> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. "
+                     "Each needs the addon named, and is missing until you install that addon too, or the full kit:")
         lines += [f"> - **{names[item['package']]}:** {item['for']}" for item in package["works_with"]]
     else:
-        lines.append("> **On its own:** it runs with just the hub, and nothing it does needs another addon.")
+        lines.append("> **Alone or in the full kit:** the same. Installed alone, with just the hub, it does everything the full kit's copy does, "
+                     "and nothing on this page needs another addon.")
     lines += [">", f"> {origin_text(package['origin'])}"]
     for text in package.get("also", []):
         lines += [">", f"> **Other addons:** {text}"]

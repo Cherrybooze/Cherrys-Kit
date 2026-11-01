@@ -4,11 +4,11 @@
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\GlobalBank`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **zBag:** a button on the one-bag window
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **zBag:** a Global Bank button on zBag's one-bag window
 > - **Advanced AuctionHouse:** its searches fill the helper's auction cache
-> - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
-> - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
+> - **ZShop:** ZShop's daily reminder gets the real time from the Chrome extension or helper
+> - **Cherry's Bar:** Cherry's Bar's Clock gets the real time from the Chrome extension
 > - **LogNextChar:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
 > - **Cherry's Info:** the macro window's Import button brings in macros from the page's library, and the page shows its extra macro icons
 >

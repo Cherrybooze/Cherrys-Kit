@@ -4,7 +4,7 @@
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\LoadTimes`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub, and nothing it does needs another addon.
+> **Alone or in the full kit:** the same. Installed alone, with just the hub, it does everything the full kit's copy does, and nothing on this page needs another addon.
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\!CherrysLoadTimes` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >

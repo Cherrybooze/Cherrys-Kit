@@ -10,9 +10,9 @@ Version **1.1.10** · Kit release **0.11.115** · [All addons / hub](../README.m
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\CherrysBar`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **Cherry's KittyCombo:** the Kitty mode display
-> - **Global Bank:** its Chrome extension gives the Clock the real time
+> - **Global Bank:** the Clock shows the real time, from Global Bank's Chrome extension
 >
 > **Original addon:** XBar III by matif and Bussdee. If `Interface\AddOns\XBar` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
