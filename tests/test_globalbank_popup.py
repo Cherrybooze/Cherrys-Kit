@@ -462,7 +462,7 @@ assert.ok(!settings.whitelist.has('201'));
 // The list of entries carries the flag
 assert.equal(bank.entries([{name: 'A', bag: [{slot: 1, id: '1', name: 'x', bound: true}], bank: [{slot: 1, id: '2', name: 'y'}]}])[1].bound, false);
 assert.equal(bank.entries([{name: 'A', bag: [{slot: 1, id: '1', name: 'x', bound: true}]}])[0].bound, true);
-// Gear never stacks, with details or, in an older save, by its type; other things still do
+// Gear stacks only with identical gear, and in an older save with no details it stays apart; other things still stack
 const gear = {dura: 90, maxDura: 100, plus: 3, tier: 2, freeSlots: 1, stats: ['Genius I', 'Monk V'], runes: ['Quick II'], color: 'a864a8'};
 const held = bank.entries([
   {name: 'A', level: 1, bag: [{slot: 1, count: 1, id: '211000', name: 'Sword', gear}, {slot: 2, count: 1, id: '211000', name: 'Sword', gear: {...gear, plus: 0}}, {slot: 3, count: 1, id: '220000', name: 'Old Boots'}, {slot: 4, count: 1, id: '220000', name: 'Old Boots'}, {slot: 5, count: 2, id: '200000', name: 'Herb'}, {slot: 6, count: 3, id: '200000', name: 'Herb'}]},
@@ -473,7 +473,7 @@ assert.equal(stackedCells.find(cell => cell.name === 'Herb').total, 5);
 assert.equal(stackedCells.filter(cell => cell.name === 'Sword').length, 2);
 assert.deepEqual([...bank.gearLines(gear)], ['Durability 90 / 100', '+3 · Tier +2', 'Stats: Genius I, Monk V', 'Runes: Quick II', 'Free rune slots: 1']);
 assert.deepEqual([...bank.gearLines({dura: 1, maxDura: 2, plus: 0, tier: 0, freeSlots: 0, stats: [], runes: [], color: ''})], ['Durability 1 / 2']);
-// Mana stones with stats don't stack, and the search can tell them from stats on items
+// Mana stones with different stats don't stack, and the search can tell them from stats on items
 const withStones = bank.entries([
   {name: 'Ann', level: 1, bag: [{slot: 1, count: 2, id: '202845', name: 'Stone', stats: ['Monk V', 'Dark I']}, {slot: 2, count: 1, id: '202845', name: 'Stone', stats: ['Dark I']}, {slot: 3, count: 1, id: '211000', name: 'Sword', gear}]},
   {name: 'Bob', level: 1, bag: [{slot: 1, count: 4, id: '202845', name: 'Stone', stats: ['Monk V']}, {slot: 2, count: 1, id: '200000', name: 'Monk Robe'}]},
@@ -1363,15 +1363,65 @@ const ann = {name: 'Ann', key: 'aynara|ann', shownServer: 'Aynara', level: 1, st
 const old = {name: 'Old', key: '|old', shownServer: '', level: 1, stale: true, bag: [{slot: 1, count: 1, id: '211000', name: 'Sword'}], bank: []};
 const list = bank.entries([ann, old]);
 assert.equal(list.find(e => e.slot === 5).quality, 3);
+const noGear = new Set(bank.TYPES.filter(type => !['Armour', 'Weapons', 'Jewellery'].includes(type)));
 const rules = (over = {}) => ({on: true, types: new Set(bank.DEFAULT_RULES.types), stats: 'apart', always: new Set(), ...over});
 const count = r => bank.cells(list, r).length;
-// Like the game: anything with stats of its own stays apart
+// Off: like the game, anything with stats of its own stays apart
 assert.equal(count(rules()), 7);
-// Same stats stack, or every copy; weapons aren't ticked, so each sword stays apart
-assert.equal(count(rules({stats: 'match'})), 6);
-assert.equal(count(rules({stats: 'all'})), 5);
+// By default only identical copies stack: the two Monk V stones, the two swords with the same gear, the herbs.
+// The old save's sword has no details, so nobody can say it's identical.
+assert.equal(count(bank.DEFAULT_RULES), 5);
+assert.equal(count(rules({stats: 'match'})), 5);
+assert.equal(count(rules({stats: 'all'})), 3);
+// A type left unticked stays apart, identical or not
+assert.equal(count(rules({stats: 'match', types: noGear})), 6);
+assert.equal(count(rules({stats: 'all', types: noGear})), 5);
 // An item you chose stacks every copy, even gear
-assert.equal(count(rules({always: new Set(['211000'])})), 5);
+assert.equal(count(rules({types: noGear, always: new Set(['211000'])})), 5);
+// Identical means the same in every way: stats in any order, and plus, tier, durability and runes on gear
+const copy = (over = {}, item = {}) => bank.entries([{name: 'A', level: 1, bag: [{slot: 1, count: 1, id: '211000', name: 'Sword', gear: {...gear, ...over}, ...item}]}])[0];
+const same = (a, b) => bank.cells([a, b], true).length === 1;
+assert.ok(same(copy(), copy()));
+assert.ok(same(copy({stats: ['Monk V', 'Dark I']}), copy({stats: ['Dark I', 'Monk V']})));
+for (const over of [{plus: 9}, {tier: 9}, {dura: 9}, {maxDura: 9}, {stats: ['Dark I']}, {runes: ['Dark I']}]) assert.ok(!same(copy(), copy(over)), JSON.stringify(over));
+const stoneWith = stats => bank.entries([{name: 'A', level: 1, bag: [{slot: 1, count: 1, id: '202845', name: 'Stone', stats}]}])[0];
+assert.ok(same(stoneWith(['Monk V', 'Dark I']), stoneWith(['Dark I', 'Monk V'])));
+assert.ok(!same(stoneWith(['Monk V']), stoneWith(['Dark I'])));
+// A stone saved before stats were recorded could be anything, so it stays apart from the ones known to be clean
+const staleStone = bank.entries([{name: 'Old', level: 1, stale: true, bag: [{slot: 1, count: 1, id: '202845', name: 'Stone'}]}])[0];
+const cleanStone = bank.entries([{name: 'New', level: 1, bag: [{slot: 1, count: 1, id: '202845', name: 'Stone'}]}])[0];
+assert.ok(same(cleanStone, cleanStone));
+assert.ok(!same(staleStone, cleanStone));
+// #clean and #dirty, as in zBag, on saved data. Only a stone can be either, and an old save can't be called clean.
+const stones = [cleanStone, stoneWith(['Monk V']), staleStone, bank.entries([{name: 'A', level: 1, bag: [{slot: 1, count: 1, id: '200000', name: 'Herb'}]}])[0]];
+const named = text => bank.applyFilters(stones, {text}).length;
+assert.equal(named('#clean'), 1);
+assert.equal(named('#dirty'), 1);
+assert.equal(named('#CLEAN'), 1);
+assert.equal(named('#dirty monk'), 1);
+assert.equal(named('monk #dirty'), 1);
+assert.equal(named('#dirty dark'), 0);
+assert.equal(named('#clean monk'), 0);
+assert.equal(named('stone'), 3);
+// A slot's corners
+const marks = (gearOver, item = {}) => {
+  const cell = bank.cells([bank.entries([{name: 'A', level: 1, bag: [{slot: 1, count: 1, id: '211000', name: 'Sword', gear: {...gear, ...gearOver}, tip: [['', 'Sword'], ['', 'Bound'], ['', 'Tier 18', '', 'Blade']], ...item}]}])[0]], true)[0];
+  return bank.slotMarks(cell);
+};
+const seen = marks({plus: 14, dura: 102});
+assert.deepEqual([seen.tier, seen.durability, seen.plus], ['18', 'HD', '+14']);
+assert.equal(marks({dura: 101}).durability, '');
+assert.equal(marks({plus: 0}).plus, '');
+assert.equal(marks({}, {tip: null}).tier, '');
+assert.deepEqual([...seen.words], ['tier 18', '+14', 'high durability']);
+assert.equal(bank.tierOf({id: '211000', gear, tip: [['', 'Grad 5']]}), 5);
+assert.equal(bank.tierOf({id: '211000', gear, tip: [['', '\u00a0 \u0637\u0628\u0642\u0629 7']]}), 7);
+assert.equal(bank.tierOf({id: '202845'}), 6);
+assert.equal(bank.tierOf({id: '202854'}), 15);
+assert.equal(bank.tierOf({id: '202881'}), 0);
+assert.equal(bank.tierOf({id: '200000'}), 0);
+// A stack of different kinds has no one answer
+assert.deepEqual([...bank.slotMarks({mixed: true, tier: 5, gear}).words], []);
 const mixed = bank.cells(list, rules({stats: 'all', always: new Set(['211000'])})).find(c => c.name === 'Sword');
 assert.equal(mixed.total, 3);
 const lines = bank.itemLines(mixed).map(l => l.kind + ':' + l.text);

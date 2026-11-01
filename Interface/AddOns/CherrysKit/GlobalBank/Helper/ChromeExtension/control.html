@@ -109,7 +109,7 @@
       </div>
       <section class="bank-filters" aria-label="Search and filters">
         <div class="search-row">
-          <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Item, stat or rune</span><input id="bank-search" maxlength="80" autocomplete="off" placeholder="Find an item, stat or rune…"><kbd class="key-hint" aria-hidden="true">/</kbd></label>
+          <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Item, stat or rune</span><input id="bank-search" maxlength="80" autocomplete="off" placeholder="Find an item, stat or rune, or #clean or #dirty for mana stones…" title="#clean finds mana stones with no stats, #dirty the ones with stats, and #dirty wisdom the ones with wisdom on them."><kbd class="key-hint" aria-hidden="true">/</kbd></label>
           <label class="filter-select"><span class="gb-sr-only">Search in</span><select id="bank-search-in"><option value="">Names and stats</option><option value="items">Stats on items</option><option value="stones">Stats on mana stones</option></select></label>
         </div>
         <div class="filter-row">
@@ -139,6 +139,7 @@
             <summary><span class="ico" data-ui-icon="compact"></span><span id="bank-stacking-summary">Stacking</span></summary>
             <div class="bank-menu-panel">
               <label class="bank-check"><input id="bank-stack" type="checkbox" checked> Stack copies of the same item</label>
+              <p class="hint">Copies stack when their type is ticked here. Mana stones and gear also have to be identical: the same stats, and on gear the same plus, tier, runes and durability.</p>
               <fieldset class="stack-types">
                 <legend>Stack these types</legend>
                 <label class="bank-check"><input type="checkbox" data-stack-type="Armour"> Armour</label>
@@ -152,7 +153,7 @@
                 <label class="bank-check"><input type="checkbox" data-stack-type="Mounts and pets"> Mounts and pets</label>
                 <label class="bank-check"><input type="checkbox" data-stack-type="Other"> Other</label>
               </fieldset>
-              <label>Items with stats of their own <select id="bank-stack-stats"><option value="apart">Keep each one apart, like the game</option><option value="match">Stack the ones with the same stats</option><option value="all">Stack every copy, whatever its stats</option></select></label>
+              <label>Items with stats of their own <select id="bank-stack-stats"><option value="match">Stack only identical ones</option><option value="apart">Keep each one apart, like the game</option><option value="all">Stack every copy, whatever its stats</option></select></label>
               <h3>Always stacked</h3>
               <p class="hint">Right-click an item and choose Always stack every copy of this item. That beats the ticks above.</p>
               <ul id="bank-always-list" class="bank-exclusion-list"></ul>
@@ -174,6 +175,7 @@
               <ul id="bank-whitelist" class="bank-exclusion-list"></ul>
             </div>
           </details>
+          <label class="bank-switch" title="Copies of an item stack when they're identical: the same stats, and on gear the same plus, tier, runes and durability. Off keeps each one apart, like the game."><span class="gb-switch"><input id="bank-stack-identical" type="checkbox" checked><span aria-hidden="true"></span></span>Stack items with identical stats</label>
           <button id="bank-reset-filters" type="button" class="gb-button--ghost gb-button--sm" hidden>Reset filters</button>
           <span class="push"></span>
           <span id="bank-scope" class="bank-scope"></span>
@@ -196,6 +198,13 @@
           <div id="bank-grid" class="bank-grid" role="listbox" aria-label="Items" tabindex="0"></div>
           <footer class="inventory-footer">
             <span id="bank-made"></span>
+            <div class="mark-legend" role="group" aria-label="The colours of the marks in a slot's corners">
+              <label title="An item's tier, in the upper left corner. Click to change the colour."><input type="color" data-mark-color="tier" value="#ff6b5e" aria-label="Colour of the tier">Tier</label>
+              <label title="Durability above 101, in the upper right corner. Click to change the colour."><input type="color" data-mark-color="hd" value="#5fe07a" aria-label="Colour of the high durability mark">HD</label>
+              <label title="An item's plus, in the lower left corner. Click to change the colour."><input type="color" data-mark-color="plus" value="#ffd75e" aria-label="Colour of the plus">Plus</label>
+              <label title="How many are stacked, in the lower right corner. Click to change the colour."><input type="color" data-mark-color="count" value="#ffffff" aria-label="Colour of the stack count">Stack</label>
+              <button id="bank-marks-reset" type="button" class="link-button" hidden>Reset</button>
+            </div>
             <div class="legend" aria-label="Slot borders show the item's quality"><span><i class="legend-dot q1"></i>Green</span><span><i class="legend-dot q2"></i>Blue</span><span><i class="legend-dot q3"></i>Purple</span><span><i class="legend-dot q4"></i>Orange</span><span><i class="legend-dot q5"></i>Gold</span></div>
           </footer>
         </section>

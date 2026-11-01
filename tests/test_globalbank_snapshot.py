@@ -201,6 +201,34 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         self.assertEqual(lua.eval('parsed.bag[1].stone.link'), '3185d 1 6ade63d3 3af0 0 0 0 0 0 0 0 fc7e')
         self.assertEqual(lua.eval('GlobalBank.Serialize(parsed)'), lua.eval('GlobalBank_Char'))
 
+    def test_clean_and_dirty_find_mana_stones(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          clean = {id = '202845', name = 'Mana Stone Tier 6'}
+          dirty = {id = '202845', name = 'Mana Stone Tier 6', stone = {stats = {'Dark I'}, link = ''}}
+          fusion = {id = '202881', name = 'Fusion Stone', stone = {stats = {'Dark I'}, link = ''}}
+          herb = {id = '200000', name = 'Herb'}
+          named = {id = 'n:Odd', name = '#clean'}
+          holder = {name = 'Ann', bag = {clean, dirty}, bank = {fusion, herb, named}}
+          function search(text) GlobalBank.search = text; return GlobalBank.ItemMatches end
+        """)
+        found = lambda text, item: lua.eval(f'search("{text}")({item})')
+        self.assertTrue(found('#clean', 'clean'))
+        self.assertFalse(found('#clean', 'dirty'))
+        self.assertFalse(found('#clean', 'herb'))
+        self.assertFalse(found('#clean', 'named'))
+        self.assertTrue(found('#dirty', 'dirty'))
+        self.assertTrue(found('#dirty', 'fusion'))
+        self.assertFalse(found('#dirty', 'clean'))
+        self.assertFalse(found('#dirty', 'herb'))
+        self.assertTrue(found('stone', 'dirty'))
+        self.assertEqual(lua.eval('GlobalBank.Matches(holder, "#clean")'), 1)
+        self.assertEqual(lua.eval('GlobalBank.Matches(holder, "#dirty")'), 2)
+        self.assertEqual(lua.eval('GlobalBank.Matches({name = "Bob", bag = {herb}}, "#dirty")'), None)
+        lua.execute('GlobalBank.Changed = function() end; GlobalBank.SetSearch("  #CLEAN ")')
+        self.assertEqual(lua.eval('GlobalBank.search'), '#clean')
+
     def test_the_account_list_class_and_game_tooltips_are_saved(self):
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute(SOURCE.read_text(encoding='utf-8'))

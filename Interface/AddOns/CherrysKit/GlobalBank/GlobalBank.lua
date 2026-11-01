@@ -30,7 +30,7 @@
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.6.0"
+GB.version = "1.6.1"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -816,6 +816,24 @@ GB.search = ""
 GB.sortBy = "gold"
 GB.sortDesc = true
 
+-- "#clean" and "#dirty" (the whole search text), as in zBag: mana and fusion stones without stats, or with stats.
+-- A stone's stats are saved with it, so this works for every character.
+local function itemFound(it, text)
+  if text == "#clean" or text == "#dirty" then
+    local id = tonumber(it.id)
+    if not id or not ((id >= 202840 and id <= 202859) or (id >= 202880 and id <= 202885)) then
+      return false
+    end
+    local hasStats = it.stone ~= nil and #it.stone.stats > 0
+    if text == "#clean" then
+      return not hasStats
+    end
+    return hasStats
+  end
+  it.lower = it.lower or string.lower(it.name)
+  return string.find(it.lower, text, 1, true) ~= nil
+end
+
 -- Number of items (stacks) of c whose name contains text (lower case); nil when nothing matches.
 function GB.Matches(c, text)
   if text == "" then
@@ -824,8 +842,7 @@ function GB.Matches(c, text)
   local n = 0
   local function scan(list)
     for _, it in ipairs(list or {}) do
-      it.lower = it.lower or string.lower(it.name)
-      if string.find(it.lower, text, 1, true) then
+      if itemFound(it, text) then
         n = n + 1
       end
     end
@@ -849,8 +866,7 @@ function GB.ItemMatches(it)
   if GB.search == "" then
     return true
   end
-  it.lower = it.lower or string.lower(it.name)
-  return string.find(it.lower, GB.search, 1, true) ~= nil
+  return itemFound(it, GB.search)
 end
 
 function GB.SetSearch(text)

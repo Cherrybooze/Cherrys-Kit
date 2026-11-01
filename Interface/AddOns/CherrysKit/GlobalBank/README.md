@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.0** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.6.1** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,14 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.1
+
+**Mana stones with identical stats stack**, and so does anything else with stats of its own, gear included (extension 1.3.1). Copies have to match exactly: the same stats, and on gear the same plus, tier, runes and durability. **Stack items with identical stats**, beside the Bank's filters, turns this off to keep each one apart, and **Stacking** still says which types stack at all.
+
+**A slot's corners say more.** The tier is in the upper left, **HD** in the upper right when durability is above 101, the plus in the lower left, and the stack count in the lower right, so a +14 can't be mistaken for 14 of something. Click the colour squares under the grid to pick each one's colour. A mana stone's tier shows too.
+
+**#clean and #dirty** work in the game window's search and on the page, as they do in zBag: mana stones with no stats, or with stats. On the page you can add to them, as in *#dirty wisdom*.
 
 ## Updated in 1.6.0
 
