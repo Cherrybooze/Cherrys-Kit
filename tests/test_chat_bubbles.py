@@ -77,6 +77,29 @@ class ChatBubbleTests(unittest.TestCase):
         self.assertEqual(self.send(f"love {HEART} :star: {FIRE}", "say"), "love ♥ ★ *fire*")
         self.assertEqual(self.send("a :carrot: b", "SAY"), "a :carrot: b")
 
+    def test_emoji_panel_surrogate_halves_are_recognised(self):
+        # U+1F525 as UTF-16 halves D83D DD25, each written as 3-byte UTF-8 (CESU-8).
+        out = self.lua.eval(
+            "function() return CherrysChat.BubbleText('hot \\237\\160\\189\\237\\180\\165', 'code') end"
+        )()
+        self.assertEqual(out, "hot :fire:")
+
+    def test_unknown_emoji_never_reach_the_bubble_raw(self):
+        unknown = "\U0001FAE8"  # shaking face: not in our list
+        self.assertEqual(self.send(f"a {unknown} b", "SAY"), "a ? b")
+
+    def test_bubbletest_reports_the_last_send(self):
+        self.send(f"x {FIRE}", "SAY")
+        last = self.c.lastSend
+        self.assertEqual(last.kind, "SAY")
+        self.assertTrue(last.say)
+        self.assertEqual(last.sent, "x *fire*")
+        printed = []
+        self.c.Print = lambda text: printed.append(text)
+        self.lua.execute("CherrysChat.BubbleTest()")
+        self.assertIn("\\240\\159\\148\\165", printed[1])
+        self.assertEqual(printed[2], "sent: x *fire*")
+
     def test_emoji_mode_sends_as_before(self):
         self.db.sayEmoji = "emoji"
         self.assertEqual(self.send(f"x {FIRE}", "SAY"), f"x {FIRE}")
