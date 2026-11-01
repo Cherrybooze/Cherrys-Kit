@@ -277,6 +277,38 @@ class TwoInstallTests(unittest.TestCase):
         self.assertEqual(len(kept), 1)
         self.assertTrue((kept[0] / "GlobalBank.json").is_file())
 
+    def run_asked(self, game, answers, find):
+        env = dict(os.environ, CHERRYSKIT_FIND_INSTALLS=find)
+        return subprocess.run(
+            [SHELL, "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+             str(game / "Interface/AddOns/CherrysKit/Setup" / SETUP.name), "-NoUpdateCheck", "-FromBat"],
+            input=answers, capture_output=True, text=True, errors="replace", timeout=300, env=env)
+
+    def test_a_found_install_is_asked_about_once_and_yes_sets_it_up(self):
+        self.add_kit(self.gameforge)
+        result = self.run_asked(self.gameforge, "y\n\n", str(self.steam))
+        self.assertIn("Your Steam install", result.stdout)
+        self.check_steam_is_set_up()
+
+    def test_no_leaves_a_found_install_alone(self):
+        self.add_kit(self.gameforge)
+        self.run_asked(self.gameforge, "n\n\n", str(self.steam))
+        self.assertFalse((self.steam / "Interface/AddOns/CherrysKit").exists())
+
+    def test_when_none_turns_up_it_asks_for_a_path(self):
+        self.add_kit(self.gameforge)
+        result = self.run_asked(self.gameforge, f"{self.steam}\ny\n\n", "ask")
+        self.assertIn("no Steam install turned up", result.stdout)
+        self.check_steam_is_set_up()
+
+    def test_enter_at_that_question_is_remembered(self):
+        self.add_kit(self.gameforge)
+        self.run_asked(self.gameforge, "\n\n", "ask")
+        log = (self.gameforge / "Interface/CherrysKit-setup.log").read_text(encoding="utf-8")
+        self.assertIn("no other install", log)
+        again = self.run_asked(self.gameforge, "\n", "ask")
+        self.assertNotIn("no Steam install turned up", again.stdout)
+
     def test_without_being_named_no_other_install_is_touched(self):
         self.add_kit(self.gameforge)
         result = subprocess.run(

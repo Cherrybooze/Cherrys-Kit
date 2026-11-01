@@ -450,17 +450,17 @@ function Find-GameforgeInstalls {
 }
 
 # Game folders that aren't this one: named, remembered in the log, or found. CHERRYSKIT_FIND_INSTALLS replaces the
-# looking, for tests on a PC that really has the game: "none", or folders joined by ;.
+# looking, for tests on a PC that really has the game: "none", or folders joined by ; (any other text finds nothing and still asks).
 function Get-OtherInstalls([string]$game, [string[]]$remembered) {
     $candidates = @()
     if ($AlsoInstall) { $candidates += $AlsoInstall }
     if ($env:CHERRYSKIT_FIND_INSTALLS) {
         if ($env:CHERRYSKIT_FIND_INSTALLS -ne 'none') { $candidates += ($env:CHERRYSKIT_FIND_INSTALLS -split ';') }
     } elseif (-not $NonInteractive) {
-        $candidates += $remembered
         $candidates += @(Find-SteamInstalls)
         $candidates += @(Find-GameforgeInstalls)
     }
+    if (-not $NonInteractive) { $candidates += $remembered }
     $others = @()
     foreach ($candidate in $candidates) {
         if (-not $candidate) { continue }
@@ -1331,7 +1331,7 @@ if (-not $OtherInstall -and (Test-Path -LiteralPath (Join-Path $installedKit 'Ch
     $remembered = @($logLines | Where-Object { $_ -match '  other install  ' } | ForEach-Object { ($_ -split '  other install  ')[1] })
     $others = @(Get-OtherInstalls $gameFolder $remembered)
     $saidNone = @($logLines | Where-Object { $_ -match '  no other install$' }).Count -gt 0
-    if ($others.Count -eq 0 -and -not $NonInteractive -and -not $env:CHERRYSKIT_FIND_INSTALLS -and $script:AskRest -gt 0 -and ($AskAgain -or -not $saidNone)) {
+    if ($others.Count -eq 0 -and -not $NonInteractive -and $env:CHERRYSKIT_FIND_INSTALLS -ne 'none' -and $script:AskRest -gt 0 -and ($AskAgain -or -not $saidNone)) {
         $opposite = if ($thisKind -eq 'Steam') { 'Gameforge' } else { 'Steam' }
         Write-Head 'Other installs'
         Write-Host ('  This is your ' + $thisKind + ' install, and no ' + $opposite + ' install turned up.') -ForegroundColor Gray
