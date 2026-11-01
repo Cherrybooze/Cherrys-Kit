@@ -52,7 +52,7 @@ const GBTerminal = (() => {
   async function ask(message) {
     try {
       const reply = await chrome.runtime.sendMessage(message);
-      if (reply) return reply;
+      if (reply) return reply.ok || reply.outcome ? reply : {...reply, outcome: 'bridge', records: reply.records || []};
       return {ok: false, outcome: 'bridge', error: 'The extension gave no answer. Update Cherry’s Kit, then reload the extension.', records: []};
     } catch (error) {
       return {ok: false, outcome: 'bridge', error: String(error.message || error), records: []};
@@ -489,7 +489,17 @@ const GBTerminal = (() => {
         await navigator.clipboard.writeText(text);
         return true;
       } catch {
-        return false;
+        // A typed copy comes back from the helper too late for the clipboard call: the older way still works then
+        const box = make('textarea');
+        box.value = text;
+        box.style.position = 'fixed';
+        box.style.opacity = '0';
+        document.body.append(box);
+        box.select();
+        const done = document.execCommand('copy');
+        box.remove();
+        input.focus({preventScroll: true});
+        return done;
       }
     }
     function clearView() {

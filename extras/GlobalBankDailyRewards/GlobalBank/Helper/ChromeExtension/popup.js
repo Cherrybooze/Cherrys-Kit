@@ -93,15 +93,16 @@ function showCollection(record) {
   status.textContent = record.name + (record.server ? ' \u00b7 ' + record.server : '') + '\n' + clock + ' (local time)';
   reset.hidden = !(latestReset(new Date()) > collected);
 }
-// What the daily page last reported. A collection Gameforge confirmed that couldn't be saved here says so, because
-// that's not the same as a collection that failed.
+// What the daily page last reported about a collection. One Gameforge confirmed that couldn't be saved here says so,
+// because that's not the same as a collection that failed. Its countdowns are out of date by now, so they stay out.
 function showRewardNote() {
   const note = document.getElementById('reward-note');
   if (!note || !chrome.storage?.session?.get) return;
   chrome.storage.session.get('lastStatus').then(({lastStatus}) => {
-    note.textContent = lastStatus || '';
-    note.hidden = !lastStatus;
-    note.classList.toggle('is-warning', /local save failed/.test(lastStatus || ''));
+    const shown = /^(Collection confirmed|Daily reward extension:)/.test(lastStatus || '') ? lastStatus : '';
+    note.textContent = shown;
+    note.hidden = !shown;
+    note.classList.toggle('is-warning', /local save failed|^Daily reward extension:/.test(shown));
   }).catch(() => {});
 }
 async function send(type) {
