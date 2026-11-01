@@ -2,7 +2,7 @@
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck11 requires **0.4.17** for its History files. Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck12 requires **0.4.17** for its History files. Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
 
 ## 0.11.115 Guided setup and Cherry's Info
 
@@ -437,6 +437,7 @@ The supplied client has no supported addon hook for its private native speech bu
 | M2 | Click each gold preset from Send Gold and C.O.D.; check an amount such as 1,000,001. Then use the normal Send and confirmation controls. | Only the form is filled, C.O.D. is cleared and the chosen amount is exact. Button and confirmation grouping read 1.000.001. No mail is sent merely by choosing a preset; existing subject/body/attachment behavior remains usable. |
 | M3 | Successfully send to A, fail/cancel/time out a send to B, then successfully send to C. Click **Use last**. Repeat after switching characters/relogging. | Only successful send snapshots update the remembered recipient. Use last fills C in To without changing subject/body/gold. All characters share `UMMConfig` in SaveVariables.lua. Empty/busy/disabled shortcut controls cannot overwrite To. |
 | M4 | Open the third **History** tab, successfully send to over 20 different recipients, resend an earlier name and run a mass send. Choose a name in History, then open Mass Send Items. | History has at most 20 distinct names, newest first; resending moves rather than duplicates. Clicking a name fills Compose without sending. Repeated mass mails add one recipient entry. History remains usable with shortcuts off; Mass Send Items remains the fourth tab. Native gold/mail/server timing and cross-character persistence are still to be verified. |
+| M5 | Buy an item (for example from a shop), mark it right away in **Mass Send Items** with one or two other items, and send. Then send again with only that item marked. | Every marked item goes out; no "no longer in that bag slot". If one is skipped anyway, **/umm trace** shows a `skip` line with the old and new link: send that line. |
 
 ## 0.11.81 baseline: offline coverage and limits
 

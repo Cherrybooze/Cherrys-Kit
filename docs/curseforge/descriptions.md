@@ -606,6 +606,7 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 
 ## Recent changes
 
+- **7.0.1-ck12**: mass send no longer stops with "no longer in that bag slot" on an item that never moved, such as one you just bought. **/umm trace** shows both links of any mail it skips.
 - **7.0.1-ck11**: on **Mass Send Items**, the recipient picker shows **History** first (your last 20 recipients, newest first), then **Characters**, then **Friends**. Click a name to put it in To. In a guild, **Guildies** take the place of the **Recently sent** panel until you pick a name. The **History** tab stays as it is.
 - **7.0.1-ck10**: with the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To**. On **Mass Send Items** it fills the mass-send To field and your marked items stay marked; from the inbox or **History** it opens Compose with that name.
 - **7.0.1-ck9**: the gold presets show a comma every three digits while you type and stop at 999,999,999, the most gold a character can hold. **Forget own chars** asks Yes or No first. With the mailbox closed, UMM checks twice a second instead of on every frame.
