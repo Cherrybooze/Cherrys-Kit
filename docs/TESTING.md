@@ -65,6 +65,13 @@ Tested on copies of real save files in Chrome, and the Import window in the simu
 | B6 | Put macros in groups, star one, and search by a word of a name and a group's name. Select two characters and press **Put on selected characters**. | The filters find them, and the macro is in each character's first empty slot when you log in. |
 | B7 | Play on for over a day with Chrome or the helper open, then open **Addon settings**. | **About a day ago** shows a time at least a day old, and the file's copies are in `Interface\GlobalBankHelper\Backups\Shared`. |
 
+## 0.11.115 Stat search and stack counts
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| Z1 | Type *stamina* in zBag's search, in each layout and in the bank. | Items with a stamina line light up a moment after you stop typing, and names still match straight away. `/zb probe` has a stat search line. |
+| W1 | Make an icon from the gallery's Present buff template, on a buff that stacks. | The count sits in its bottom-right corner, and the icon display's **Stack count** choice turns it off and on. |
+
 ## 0.11.115 Chrome Web Store readiness (extension 1.2.3)
 
 | # | Do this | Expected |
@@ -80,7 +87,7 @@ Tested on made-up data, up to 3,000 characters, and not yet in your Chrome. Unti
 
 | # | Do this | Expected |
 | --- | --- | --- |
-| P1 | Press **Reload** on the extension, and open the page from its button. Its header says v1.2.2. | It opens on the region most of your characters are on, and Region settings lists your servers. |
+| P1 | Press **Reload** on the extension, and open the page from its button. Its header says v1.2.5. | It opens on the region most of your characters are on, and Region settings lists your servers. |
 | P2 | Untick a server. | It's hidden on the Bank, Currencies, Characters and heatmap tabs. |
 | P3 | Click and Shift-click characters on Characters, Currencies and the heatmap. | They change the one selection, and the Bank follows it. |
 | P4 | Hover a slot held by a character saved on this build. | The game's own tooltip, then who holds it and where. |

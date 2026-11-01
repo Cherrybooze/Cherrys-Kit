@@ -10,7 +10,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Recent changes
 
-- **0.4.28**: the clock asks for the time only when a look is due, not on every frame.
+- **0.4.29**: its manifest loads zBag's new stat search file.
 - **0.4.27**: knows the merged addons. Cherry's Info gives way to any of the five addons it took over, and LogNextChar to an old Cherry's Loginxml, and the hub names the folder.
 - **Guided setup**: the Hub zip carries `!setup_cherryskit.bat`. Double-click it after extracting, and any time you want to update: it says which addons are out of date against the latest release on GitHub and updates them with the old versions kept, asks before installing anything your addons can use that's missing, moves older copies out of the way, puts the login screen in place and walks you through the Chrome extension.
 
