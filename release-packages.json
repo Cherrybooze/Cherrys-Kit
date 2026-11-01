@@ -444,7 +444,7 @@
     {
       "folder": "LogNextChar",
       "title": "LogNextChar",
-      "version": "1.3.1",
+      "version": "1.3.2",
       "command": "/lnc",
       "description_file": "19-lognextchar.md",
       "summary": "Next and Prev buttons that log you straight into the neighbouring character, with its own login screen: gets past a stuck server list, saved logins, keyboard controls.",

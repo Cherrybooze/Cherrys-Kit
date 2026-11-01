@@ -1,3 +1,6 @@
+LogNextChar 1.3.2
+- The character screen shows Arcane Transmutor charges under gold, as Charges: #, from Global Bank's data.
+
 LogNextChar 1.3.1
 - The character screen finds a character's gold by server and name, so characters with the same name on different servers no longer show each other's gold. Gold saved before servers were recorded shows a ?.
 
