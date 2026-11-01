@@ -91,7 +91,7 @@ Chrome daily reward extension (Windows)
    Rerun the installer after moving the addon. Chrome and the user must approve installation.
 
 Local bank and auction tools in Chrome
-1. Click the Global Bank Daily Rewards extension icon, then click "Open Global Bank".
+1. Click the Global Bank for RoM extension icon, then click "Open Global Bank".
 2. Bank: everything your characters hold in one grid, with a search and filters. Hover an item to
    see who has it and in which slot, or click it for a panel. Update now reads your save files.
 3. Terminal: the helper's commands, the same as in its window, and it reaches the running helper.
@@ -146,4 +146,4 @@ cannot read unsaved game memory. Restart the helper after updating it, then Relo
 
 After installing updated extension files, open its popup and click Reload extension, then reopen
 the popup or local tools page. If your existing popup has no reload button, open chrome://extensions
-and click Reload on Global Bank Daily Rewards once. Chrome keeps the old version loaded until then.
+and click Reload on Global Bank for RoM once. Chrome keeps the old version loaded until then.

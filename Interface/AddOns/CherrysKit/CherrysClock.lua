@@ -1,5 +1,5 @@
 -- CherrysClock: real time for addons. The game's Lua has no clock of its own (no os library).
--- Global Bank's Daily Rewards extension has its local host write Windows' time, uptime counter and
+-- The Global Bank for RoM extension has its local host write Windows' time, uptime counter and
 -- time zone to a small file when Chrome starts, and whenever the extension talks to it.
 -- GetTickCount() (the same uptime counter) carries that time forward, across characters and game
 -- restarts, until Windows restarts. Nothing keeps running and the game server is not involved.

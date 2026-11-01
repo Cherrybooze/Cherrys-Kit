@@ -90,7 +90,7 @@ function Show-SetupWindow([string]$extensionPath, [string]$clockFile, [bool]$pag
     $script:closeIn = 0
 
     $form = New-Object Windows.Forms.Form
-    $form.Text = 'Global Bank Daily Rewards setup'
+    $form.Text = 'Global Bank for RoM setup'
     $form.FormBorderStyle = 'FixedToolWindow'
     $form.TopMost = $true
     $form.ClientSize = New-Object Drawing.Size(390, 176)
@@ -193,7 +193,7 @@ try {
     $data = Join-Path $dir.Parent.FullName 'GlobalBankHelper'
     New-Item -ItemType Directory -Path $data -Force | Out-Null
     $manifestPath = Join-Path $data 'GlobalBank-NativeHost.json'
-    $manifest = [ordered]@{name='com.cherryskit.globalbank';description='Global Bank daily rewards';path=$hostPath;type='stdio';allowed_origins=@($extensionIds | ForEach-Object { "chrome-extension://$_/" })}
+    $manifest = [ordered]@{name='com.cherryskit.globalbank';description='Global Bank for RoM';path=$hostPath;type='stdio';allowed_origins=@($extensionIds | ForEach-Object { "chrome-extension://$_/" })}
     [IO.File]::WriteAllText($manifestPath, (ConvertTo-Json -InputObject $manifest -Depth 4), (New-Object System.Text.UTF8Encoding($false)))
     $key = 'HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.cherryskit.globalbank'
     New-Item -Path $key -Force | Out-Null
