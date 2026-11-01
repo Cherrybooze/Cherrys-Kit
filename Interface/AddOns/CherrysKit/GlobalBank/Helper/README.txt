@@ -91,13 +91,13 @@ Chrome daily reward extension (Windows)
    Rerun the installer after moving the addon. Chrome and the user must approve installation.
 
 Local bank and auction tools in Chrome
-1. Click the Global Bank Daily Rewards extension icon, then click "Open local bank and auction tools".
-2. Bank tab: everything your characters hold in one grid, with a search and filters. Hover an item to
-   see who has it and in which slot. Update now reads your save files.
-3. Terminal tab: the helper's commands, the same as in its window, and it reaches the running helper.
-4. Auctions tab: search the auction cache. Prices are saved observations and may have changed.
+1. Click the Global Bank Daily Rewards extension icon, then click "Open Global Bank".
+2. Bank: everything your characters hold in one grid, with a search and filters. Hover an item to
+   see who has it and in which slot, or click it for a panel. Update now reads your save files.
+3. Terminal: the helper's commands, the same as in its window, and it reaches the running helper.
+4. Auctions: search the auction cache. Prices are saved observations and may have changed.
 To collect auction data and update each time you log out, either keep the helper window open or turn
-on "Start the Global Bank helper automatically when Chrome is open" at the top of the page: it runs
+on "Run automatically" under Connection on the page: it runs
 hidden, stops when Chrome closes, and turning it off closes it. Nothing on the page can buy items. Keep Interface\GlobalBankHelper private.
 
 The bank results come from your saved character snapshots. Auction results are the last prices
@@ -122,7 +122,7 @@ Data for external tools (all files are in Interface\GlobalBankHelper):
   Written atomically by the extension bridge, then reflected in GlobalBank.json by the helper.
 - GlobalBankTips.txt: the game's own tooltips for gear and mana stones, for the extension's page. The game never loads it.
 - GameforgeAccounts.json: your Gameforge accounts, encrypted by the extension's page. Nothing here can open it.
-  It needs your password and the encryption key in Chrome, so copy that key (Gameforge accounts tab) before moving to another PC.
+  It needs your password and the encryption key in Chrome, so copy that key (Gameforge accounts page) before moving to another PC.
 - CharacterLinks.json: editable schemaVersion 1, accounts and characters arrays. Example:
   {"schemaVersion":1,"accounts":[{"id":"account-1","label":"Main account"}],
    "characters":[{"name":"Example","accountId":"account-1"}]}

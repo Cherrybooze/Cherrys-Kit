@@ -105,7 +105,7 @@
           <div class="summary-item"><span class="ico summary-icon is-gold" data-ui-icon="coin"></span><div><strong id="bank-sum-gold">—</strong><span>Gold</span></div></div>
           <div class="summary-item"><span class="ico summary-icon is-teal" data-ui-icon="users"></span><div><strong id="bank-sum-characters">—</strong><span>Characters</span></div></div>
         </div>
-        <button id="bank-update" type="button" class="gb-button--primary" title="Reads your save files again. It can't log a character in or open a bank in game."><span class="ico" data-ui-icon="sync"></span>Update now</button>
+        <button id="bank-update" type="button" class="gb-button--primary" title="Reads your save files again. It can't log a character in."><span class="ico" data-ui-icon="sync"></span>Update now</button>
       </div>
       <section class="bank-filters" aria-label="Search and filters">
         <div class="search-row">
@@ -336,13 +336,13 @@
         <div class="section-tabs" role="group" aria-label="Which characters to show">
           <button type="button" class="section-tab" data-roster-filter="all" aria-pressed="true">All characters <span id="roster-count-all" class="counter"></span></button>
           <button type="button" class="section-tab" data-roster-filter="login" aria-pressed="false" title="Saved by an older version: each needs one login and logout on the current version for its server, currencies and item stats.">Needs login <span id="roster-count-login" class="counter"></span></button>
-          <button type="button" class="section-tab" data-roster-filter="bank" aria-pressed="false" title="The bank has to be opened once in game on that character.">Bank not recorded <span id="roster-count-bank" class="counter"></span></button>
+          <button type="button" class="section-tab" data-roster-filter="bank" aria-pressed="false" title="The game has given Global Bank no bank for that character yet. One login records it.">Bank not recorded <span id="roster-count-bank" class="counter"></span></button>
           <button type="button" class="section-tab" data-roster-filter="excluded" aria-pressed="false" title="Characters the helper doesn't track.">Excluded <span id="roster-count-excluded" class="counter"></span></button>
         </div>
         <span class="push"></span>
         <button id="select-stale" type="button" class="gb-button--ghost gb-button--sm" hidden></button>
       </div>
-      <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it, a character to select it, and a group's Select to select all of it. Selecting doesn't change the Bank until you press Use in Bank. A character needing a login was saved by an older version: log in with it once. A bank not recorded has to be opened once in game: logging in doesn't do that, and neither does Update now. Transfer stones counts Server Transfer Stones in the bag and bank, and shows "at least" while the bank isn't recorded. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p></details>
+      <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it, a character to select it, and a group's Select to select all of it. Selecting doesn't change the Bank until you press Use in Bank. A character needing a login was saved by an older version: log in with it once. A bank not recorded also takes one login with that character. Update now only reads the saved files, so it can't do either. Transfer stones counts Server Transfer Stones in the bag and bank, and shows "at least" while the bank isn't recorded. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p></details>
       <div id="roster-view" class="table-panel table-scroll is-grow" data-select-scope><table class="currency-table roster-table"><thead></thead><tbody></tbody></table></div>
       <section id="excluded-view" class="panel is-grow" aria-labelledby="excluded-title" hidden>
         <h2 id="excluded-title">Excluded characters</h2>
