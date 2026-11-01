@@ -243,7 +243,8 @@ class EditingAffordanceTests(unittest.TestCase):
         slot,row=self.row(kind='action',action='a1')
         self.h.script(row.first.name,'OnClick',key='LBUTTON')
         values={item.value for item in self.editor.menu['values'].values()}
-        self.assertEqual(values,{'actionDetails','text','offset','type'})
+        # Icon displays also offer the RoM-style stack count toggle.
+        self.assertEqual(values,{'actionDetails','text','offset','type','stacks'})
         text_button=next(b for b in self.editor.menu.buttons.values() if b.flowChoice and b.flowChoice.value=='text')
         self.h.script(text_button.name,'OnClick',key='LBUTTON')
         self.assertEqual(self.editor.selection.action,'a1')
