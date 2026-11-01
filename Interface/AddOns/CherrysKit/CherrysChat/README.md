@@ -1,6 +1,6 @@
 # Cherry's Chat
 
-Version **0.11.1** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **0.11.2** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
@@ -20,6 +20,10 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysChat` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 0.11.2
+
+**Say bubbles, second try.** Emoji still reached the bubble as empty boxes in the game. Emoji typed with the Windows emoji panel (Windows key + .) can arrive in two halves that Cherry's Chat did not recognise; it now joins them, and any emoji it still has no name for goes out as `?` instead of boxes. `/cchat bubbletest` shows what your last message looked like when you typed it and when it was sent, so the next fix needs no guessing.
 
 ## Updated in 0.11.1
 

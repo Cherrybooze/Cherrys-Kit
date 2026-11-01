@@ -114,6 +114,7 @@ Cherry's Chat 0.11.0. The simulated client checks what goes out on each channel;
 | --- | --- | --- |
 | CB1 | With Say bubbles on **Symbols (^_^)** (default), say `:heart: :star: :smile: :carrot:`. | The bubble shows ♥ ★ (^_^) :carrot:. Report any symbol that shows as a box. |
 | CB2 | Paste a real emoji with no symbol (Windows key + ., e.g. a carrot) into a Say line. | The bubble shows `:carrot:`, not two boxes. |
+| CB0 | Cherry's Chat 0.11.2: say something with an emoji, then type `/cchat bubbletest`. | Three lines: setting, chat type (should say SAY / Say), and the typed and sent text. "sent" has no \\240 codes. Send a screenshot if the bubble still shows boxes. |
 | CB3 | Click **Say bubbles** until it reads **Text (:fire:)**, then say `hi :fire`. | The bubble shows `hi :fire`; your Cherry's Chat window shows the fire picture. |
 | CB4 | With ":heart: when sending" on, say `:fire` in Party. | Party chat gets the real emoji, as before (no bubble there). |
 | CB5 | Click **Say bubbles** until **Emoji (boxes)** and say `:fire`. | Sends as before (boxes in the bubble if ":heart: when sending" is on). |
