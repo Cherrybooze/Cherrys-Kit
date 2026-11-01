@@ -165,6 +165,13 @@ function RWA.SlashCommand(msg)
       return
     end
     RWA.SetSoundChannel(rest)
+  elseif cmd == "layer" or cmd == "strata" then
+    local s = RWA.SetAuraStrata(rest)
+    if not s then
+      RWA.Print("auras draw " .. RWA.AuraStrataLabel() .. ". Choose with /rwa layer under (default) or over, or low or high")
+      return
+    end
+    RWA.Print("auras now draw " .. RWA.AuraStrataLabel(s))
   elseif cmd == "channeltest" then
     RWA.ChannelTest()
   elseif cmd == "linktest" then
@@ -190,6 +197,6 @@ function RWA.SlashCommand(msg)
     RWA.ReloadAll()
     RWA.Print("all auras reset to the examples")
   else
-    RWA.Print("commands: /rwa (window), unlock, lock, test [name], probe, debug, yup, texext <.tga|.dds|none>, soundtest, soundext <wav|mp3|ogg>, volume <0-100>, channel <interface|effects|both>, channeltest, linktest, loud, kitty [name], hits [reset], lastcast, threat, size <60-160>, reset confirm")
+    RWA.Print("commands: /rwa (window), unlock, lock, test [name], probe, debug, yup, texext <.tga|.dds|none>, soundtest, soundext <wav|mp3|ogg>, volume <0-100>, channel <interface|effects|both>, channeltest, layer <under|over>, linktest, loud, kitty [name], hits [reset], lastcast, threat, size <60-160>, reset confirm")
   end
 end

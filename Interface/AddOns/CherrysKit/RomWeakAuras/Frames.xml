@@ -16,7 +16,7 @@
 			<OnMouseUp>RWA_Script(this:GetName(), "OnMouseUp", key);</OnMouseUp>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region1" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region1" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -26,7 +26,7 @@
 			<OnLeave>RWA_Script("RWA_Region1", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region2" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region2" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -36,7 +36,7 @@
 			<OnLeave>RWA_Script("RWA_Region2", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region3" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region3" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -46,7 +46,7 @@
 			<OnLeave>RWA_Script("RWA_Region3", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region4" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region4" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -56,7 +56,7 @@
 			<OnLeave>RWA_Script("RWA_Region4", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region5" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region5" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -66,7 +66,7 @@
 			<OnLeave>RWA_Script("RWA_Region5", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region6" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region6" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -76,7 +76,7 @@
 			<OnLeave>RWA_Script("RWA_Region6", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region7" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region7" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -86,7 +86,7 @@
 			<OnLeave>RWA_Script("RWA_Region7", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region8" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region8" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -96,7 +96,7 @@
 			<OnLeave>RWA_Script("RWA_Region8", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region9" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region9" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -106,7 +106,7 @@
 			<OnLeave>RWA_Script("RWA_Region9", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region10" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region10" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -116,7 +116,7 @@
 			<OnLeave>RWA_Script("RWA_Region10", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region11" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region11" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -126,7 +126,7 @@
 			<OnLeave>RWA_Script("RWA_Region11", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region12" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region12" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -136,7 +136,7 @@
 			<OnLeave>RWA_Script("RWA_Region12", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region13" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region13" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -146,7 +146,7 @@
 			<OnLeave>RWA_Script("RWA_Region13", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region14" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region14" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -156,7 +156,7 @@
 			<OnLeave>RWA_Script("RWA_Region14", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region15" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region15" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -166,7 +166,7 @@
 			<OnLeave>RWA_Script("RWA_Region15", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region16" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region16" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -176,7 +176,7 @@
 			<OnLeave>RWA_Script("RWA_Region16", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region17" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region17" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -186,7 +186,7 @@
 			<OnLeave>RWA_Script("RWA_Region17", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region18" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region18" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -196,7 +196,7 @@
 			<OnLeave>RWA_Script("RWA_Region18", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region19" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region19" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -206,7 +206,7 @@
 			<OnLeave>RWA_Script("RWA_Region19", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region20" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region20" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -216,7 +216,7 @@
 			<OnLeave>RWA_Script("RWA_Region20", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region21" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region21" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -226,7 +226,7 @@
 			<OnLeave>RWA_Script("RWA_Region21", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region22" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region22" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -236,7 +236,7 @@
 			<OnLeave>RWA_Script("RWA_Region22", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region23" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region23" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -246,7 +246,7 @@
 			<OnLeave>RWA_Script("RWA_Region23", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region24" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region24" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -256,7 +256,7 @@
 			<OnLeave>RWA_Script("RWA_Region24", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region25" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region25" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -266,7 +266,7 @@
 			<OnLeave>RWA_Script("RWA_Region25", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region26" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region26" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -276,7 +276,7 @@
 			<OnLeave>RWA_Script("RWA_Region26", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region27" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region27" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -286,7 +286,7 @@
 			<OnLeave>RWA_Script("RWA_Region27", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region28" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region28" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -296,7 +296,7 @@
 			<OnLeave>RWA_Script("RWA_Region28", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region29" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region29" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -306,7 +306,7 @@
 			<OnLeave>RWA_Script("RWA_Region29", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region30" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region30" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -316,7 +316,7 @@
 			<OnLeave>RWA_Script("RWA_Region30", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region31" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region31" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -326,7 +326,7 @@
 			<OnLeave>RWA_Script("RWA_Region31", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region32" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region32" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -336,7 +336,7 @@
 			<OnLeave>RWA_Script("RWA_Region32", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region33" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region33" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -346,7 +346,7 @@
 			<OnLeave>RWA_Script("RWA_Region33", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region34" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region34" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -356,7 +356,7 @@
 			<OnLeave>RWA_Script("RWA_Region34", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region35" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region35" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -366,7 +366,7 @@
 			<OnLeave>RWA_Script("RWA_Region35", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region36" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region36" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -376,7 +376,7 @@
 			<OnLeave>RWA_Script("RWA_Region36", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region37" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region37" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -386,7 +386,7 @@
 			<OnLeave>RWA_Script("RWA_Region37", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region38" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region38" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -396,7 +396,7 @@
 			<OnLeave>RWA_Script("RWA_Region38", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region39" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region39" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -406,7 +406,7 @@
 			<OnLeave>RWA_Script("RWA_Region39", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region40" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region40" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -416,7 +416,7 @@
 			<OnLeave>RWA_Script("RWA_Region40", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region41" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region41" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -426,7 +426,7 @@
 			<OnLeave>RWA_Script("RWA_Region41", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region42" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region42" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -436,7 +436,7 @@
 			<OnLeave>RWA_Script("RWA_Region42", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region43" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region43" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -446,7 +446,7 @@
 			<OnLeave>RWA_Script("RWA_Region43", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region44" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region44" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -456,7 +456,7 @@
 			<OnLeave>RWA_Script("RWA_Region44", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region45" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region45" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -466,7 +466,7 @@
 			<OnLeave>RWA_Script("RWA_Region45", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region46" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region46" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -476,7 +476,7 @@
 			<OnLeave>RWA_Script("RWA_Region46", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region47" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region47" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -486,7 +486,7 @@
 			<OnLeave>RWA_Script("RWA_Region47", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region48" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region48" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -496,7 +496,7 @@
 			<OnLeave>RWA_Script("RWA_Region48", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region49" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region49" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -506,7 +506,7 @@
 			<OnLeave>RWA_Script("RWA_Region49", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region50" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region50" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -516,7 +516,7 @@
 			<OnLeave>RWA_Script("RWA_Region50", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region51" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region51" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -526,7 +526,7 @@
 			<OnLeave>RWA_Script("RWA_Region51", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region52" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region52" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -536,7 +536,7 @@
 			<OnLeave>RWA_Script("RWA_Region52", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region53" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region53" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -546,7 +546,7 @@
 			<OnLeave>RWA_Script("RWA_Region53", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region54" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region54" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -556,7 +556,7 @@
 			<OnLeave>RWA_Script("RWA_Region54", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region55" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region55" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -566,7 +566,7 @@
 			<OnLeave>RWA_Script("RWA_Region55", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region56" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region56" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -576,7 +576,7 @@
 			<OnLeave>RWA_Script("RWA_Region56", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region57" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region57" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -586,7 +586,7 @@
 			<OnLeave>RWA_Script("RWA_Region57", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region58" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region58" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -596,7 +596,7 @@
 			<OnLeave>RWA_Script("RWA_Region58", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region59" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region59" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -606,7 +606,7 @@
 			<OnLeave>RWA_Script("RWA_Region59", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region60" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region60" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -616,7 +616,7 @@
 			<OnLeave>RWA_Script("RWA_Region60", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region61" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region61" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -626,7 +626,7 @@
 			<OnLeave>RWA_Script("RWA_Region61", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region62" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region62" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -636,7 +636,7 @@
 			<OnLeave>RWA_Script("RWA_Region62", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region63" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region63" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>
@@ -646,7 +646,7 @@
 			<OnLeave>RWA_Script("RWA_Region63", "OnLeave");</OnLeave>
 		</Scripts>
 	</Frame>
-	<Frame name="RWA_Region64" parent="UIParent" frameStrata="MEDIUM" hidden="true">
+	<Frame name="RWA_Region64" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size><AbsDimension x="48" y="48" /></Size>
 		<Anchors><Anchor point="CENTER" relativeTo="UIParent" relativePoint="CENTER" /></Anchors>
 		<Scripts>

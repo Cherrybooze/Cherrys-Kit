@@ -19,7 +19,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 - **Your macros and addon settings on the Global Bank page** (Global Bank 1.5.7, extension 1.2.5): a macro library with groups and a search, read from your characters' save folders, addon settings you can put back, newest and day-old backups, and an **Import** button in the game's macro window (Cherry's Info 1.0.3).
 - **zBag 5.07-ck18:** type a stat name such as *stamina* in the bag or bank search and every item with that stat lights up.
 - **Cherry's Chat 0.11.3:** emoji typed with the Windows emoji panel are joined back together for Say bubbles, unknown ones go out as `?`, and `/cchat bubbletest` shows what was sent.
-- **rom weakauras 0.9.32:** icons from the Present buff and debuff templates show stack counts.
+- **rom weakauras 0.9.33:** auras draw under your bags, bank and other windows; **Layer: over** in the window or `/rwa layer over` puts them back on top. Icons from the Present buff and debuff templates show stack counts (0.9.32).
 - **Lighter and smaller:** Cherry's Grid 1.1.6 makes next to no garbage while drawing, and the XML files of Cherry's Grid, Cherry's Chat, zBag and Global Bank went from 598, 401, 229 and 561 KB to 105, 70, 123 and 113 KB. The hub's clock (0.4.28) asks for the time only when a look is due.
 - **Cherry's Grid 1.1.5:** Mouse 4 joins the click buttons on your frames, and a tick on the Clicks page, off by default, also makes it a game keybind. (`/grid`)
 
