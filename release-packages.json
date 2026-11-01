@@ -110,7 +110,7 @@
     {
       "folder": "zBag",
       "title": "zBag",
-      "version": "5.07-ck17",
+      "version": "5.07-ck18",
       "command": "/zb",
       "description_file": "05-zbag.md",
       "summary": "Bags, searching, sorting, quick sell and an All bags view.",

@@ -2013,4 +2013,5 @@
 	<Frame name="zBagKitBank38" parent="BankItemButton38" inherits="zBagKitSlotTemplate" hidden="true"/>
 	<Frame name="zBagKitBank39" parent="BankItemButton39" inherits="zBagKitSlotTemplate" hidden="true"/>
 	<Frame name="zBagKitBank40" parent="BankItemButton40" inherits="zBagKitSlotTemplate" hidden="true"/>
+	<GameTooltip name="zBagKitTipReader" hidden="true" alpha="0" enableMouse="false" inherits="GameTooltipTemplate" parent="UIParent"/>
 </Ui>

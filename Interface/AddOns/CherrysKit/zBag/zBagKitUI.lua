@@ -79,6 +79,7 @@ function K.OnUpdate(elapsed)
   if watchWait <= 0 then
     watchWait = 0.05
     K.WatchBackpack()
+    if K.StatsTick then K.StatsTick(0.05) end
   end
   wait = wait - (elapsed or 0.03)
   if wait > 0 then
@@ -186,7 +187,8 @@ function K.FillItem(item, slot, search, numbers, isRented, rentTime)
   local duration, remaining = GetBagItemCooldown(index)
   CooldownFrame_SetTime(_G[item:GetName() .. "Cooldown"], duration, remaining)
   K.Label(item, numbers and slot or nil)
-  local match = search == "" or (name and name ~= "" and string.find(string.lower(name), search, 1, true))
+  local match = search == "" or (name and name ~= "" and (string.find(string.lower(name), search, 1, true)
+    or (K.BagStatsMatch and K.BagStatsMatch(index, search))))
   item:SetAlpha(match and 1 or 0.2)
   return true
 end
@@ -775,6 +777,8 @@ function K.Probe()
   add("search: BagSearch " .. yes(FindBagItemByName) .. ", bag hook " .. yes(OldBagFrame_Update)
     .. ", bank hook " .. yes(OldBankFrame_Update) .. ", boxes bag/bank/goods " .. shown(BagSearchEditBox) .. "/"
     .. shown(BankSearchEditBox) .. "/" .. shown(GoodsSearchEditBox) .. ", use search " .. tostring(v["usebagsearch"]))
+  add("stat search: reader " .. yes(zBagKitTipReader) .. ", items known " .. tostring(K.statCount)
+    .. ", tooltips read " .. tostring(K.statsReadTotal) .. ", waiting " .. yes(K.statsMissing))
   local ok, used, free, total = pcall(GetBagCount)
   add("game bag: window " .. shown(BagFrame) .. ", BagItemButton 1-" .. count("BagItemButton", 300)
     .. ", tabs " .. count("BagFrameTab", 10) .. ", selected tab "
