@@ -160,7 +160,7 @@ if ($Watch) { $script:AAHProgressPulse = { param([string]$stage) Write-Beat } }
 function Show-Heartbeat {
     if (-not $script:ConsoleHeartbeat -or (Get-Date) -lt $script:NextConsoleBeat) { return }
     $script:NextConsoleBeat = (Get-Date).AddSeconds(30)
-    Write-GBHeartbeatLine ("[{0}] alive | {1} characters | watching for saves" -f (Get-Date).ToString('HH:mm:ss'), $script:Chars.Count)
+    Write-GBHeartbeatLine ("alive | {0} | watching for saves" -f (Format-GBCount $script:Chars.Count 'character'))
 }
 
 function Invoke-HelperMaintenance([scriptblock]$Report = { param($message) Write-Log $message }) {
@@ -485,7 +485,7 @@ function Load-Model {
 function Describe-Character($c) {
     $text = "$($c.Name) (level $($c.Level)"
     if ($c.Class) { $text += " $($c.Class)" }
-    return $text + "): $(Format-GBGold $c.Gold) gold, $($c.Items) items"
+    return $text + "): $(Format-GBGold $c.Gold) gold, $(Format-GBCount $c.Items 'item')"
 }
 
 function Say-Tracking {
