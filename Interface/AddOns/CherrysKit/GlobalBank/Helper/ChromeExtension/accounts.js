@@ -18,8 +18,9 @@ const GBAccounts = (() => {
   // Below this many, a tile leaves out its gold too, and hovering still says it.
   const HEAT_LETTERS = 'gbHeatLetters';
   const HEAT_GOLD_FROM = 5;
-  // An account's column is at least this wide, for its name, with as many tiles on a line as that takes
-  const HEAT_MIN_COLUMN = 64;
+  // Tiles on a line under an account: 8, 4, 2 or 1, so a full login screen's list is always a neat block, and as many
+  // as fit this wide
+  const HEAT_WIDEST_COLUMN = 200;
   const NO_SERVER = 'Unknown server';
   const NOT_LINKED = 'Not linked';
   const NO_ROM = 'Account not known';
@@ -75,7 +76,24 @@ const GBAccounts = (() => {
     const light = rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 110;
     return {rgb, kind, css: `rgb(${rgb.join(',')})`, text: light ? '#101820' : '#ffffff'};
   }
-  const heatName = (name, letters) => (letters > 0 ? [...name].slice(0, letters).join('') : name);
+  // What a tile says: a name that fits whole, otherwise the letters that tell it apart from the others on its account.
+  // Bank alts often share a long start, so that's the letters after it, with the ones before to fill up.
+  function heatName(name, letters, others = []) {
+    const own = [...name];
+    if (!(letters > 0) || own.length <= letters) return name;
+    const lower = own.map(letter => letter.toLowerCase());
+    let shared = 0;
+    for (const other of others) {
+      if (other === name) continue;
+      const theirs = [...other].map(letter => letter.toLowerCase());
+      let same = 0;
+      while (same < own.length - 1 && same < theirs.length && lower[same] === theirs[same]) same++;
+      shared = Math.max(shared, same);
+    }
+    const rest = own.slice(shared >= 3 ? shared : 0);
+    const picked = (rest.length >= letters ? rest.slice(0, letters) : own.slice(-letters)).join('');
+    return letters === 1 ? picked.toUpperCase() : picked;
+  }
   const heatShowsGold = letters => !(letters > 0) || letters >= HEAT_GOLD_FROM;
   const validHeatColors = colors => Array.isArray(colors) && colors.length === 3 && colors.every(color => /^#[0-9a-f]{6}$/i.test(color));
   const linkKey = name => String(name).toLowerCase();
@@ -468,13 +486,13 @@ const GBAccounts = (() => {
       renderHeat();
       chrome.storage.local.set({[HEAT_LETTERS]: heatLetters}).catch(() => {});
     });
-    // The widest tile the names need at this many letters. Tiles are measured, so a whole name is never cut.
+    // The widest tile the names need. Tiles are measured, so a whole name is never cut.
     let heatMeasure = null;
-    function heatTileWidth(names) {
+    function heatTileWidth(shown) {
       heatMeasure = heatMeasure || document.createElement('canvas').getContext('2d');
       heatMeasure.font = `11px ${getComputedStyle(document.body).fontFamily}`;
       let widest = 0;
-      for (const name of names) widest = Math.max(widest, heatMeasure.measureText(heatName(name, heatLetters)).width);
+      for (const name of shown) widest = Math.max(widest, heatMeasure.measureText(name).width);
       return Math.ceil(widest) + 8 + (heatShowsGold(heatLetters) ? 30 : 0);
     }
 
@@ -508,10 +526,10 @@ const GBAccounts = (() => {
     function renderHeat() {
       heatDirty = false;
       // The page's hover card, click and right-click work from data-char, for every cell at once
-      const cellFor = (cell, server) => {
+      const cellFor = cell => {
         const color = heatColor(cell.gold, heatColors);
         const node = make('div', 'heat-cell');
-        node.append(make('span', 'heat-name', heatName(ownName(cell, server), heatLetters)));
+        node.append(make('span', 'heat-name', cell.shown));
         if (heatShowsGold(heatLetters)) node.append(make('b', '', color.kind === 'full' ? 'MAX' : tinyGold(cell.gold)));
         node.style.background = color.css;
         node.style.color = color.text;
@@ -522,17 +540,29 @@ const GBAccounts = (() => {
       // Under its own server a name needs no "(Server)" after it
       const ownName = (cell, server) => (cell.name.endsWith(` (${server})`) ? cell.name.slice(0, -server.length - 3) : cell.name);
       // An account stays in one piece unless it's longer than a login screen's list
-      const block = (title, cells, server) => {
+      const block = (title, cells) => {
         const box = make('div', 'heat-group' + (cells.length > 8 ? ' is-long' : ''));
         const head = make('h4', '', title);
         head.title = title;
-        box.append(head, ...cells.map(cell => cellFor(cell, server)));
+        box.append(head, ...cells.map(cellFor));
         return box;
       };
       const boxes = heatBoxes(characters.filter(shows), state, !fileKey && sealedFile ? 'Accounts locked' : NOT_LINKED, options.romTitle || null);
-      const tile = heatTileWidth(boxes.flatMap(box => box.servers.flatMap(server => server.roms.flatMap(rom => rom.characters.map(cell => ownName(cell, server.server))))));
-      const perLine = Math.ceil(HEAT_MIN_COLUMN / (tile + 1));
+      const shown = [];
+      for (const server of boxes.flatMap(box => box.servers)) {
+        for (const rom of server.roms) {
+          const names = rom.characters.map(cell => ownName(cell, server.server));
+          rom.characters.forEach((cell, at) => {
+            cell.shown = heatName(names[at], heatLetters, names);
+            shown.push(cell.shown);
+          });
+        }
+      }
+      const tile = heatTileWidth(shown);
+      const perLine = [8, 4, 2].find(count => count * (tile + 1) - 1 <= HEAT_WIDEST_COLUMN) || 1;
       const column = perLine * (tile + 1) - 1;
+      byId('heat-view').style.setProperty('--heat-per-line', perLine);
+      byId('heat-view').classList.toggle('is-letters', !heatShowsGold(heatLetters));
       byId('heat-view').style.setProperty('--heat-tile', `${tile}px`);
       byId('heat-view').style.setProperty('--heat-column', `${column}px`);
       byId('heat-view').classList.toggle('is-narrow', column < 96);
@@ -558,7 +588,7 @@ const GBAccounts = (() => {
           title.title = `${server.server}: ${number(server.total)} gold`;
           title.append(make('span', '', server.server), make('span', '', shortGold(server.total)));
           flow.append(title);
-          for (const rom of server.roms) flow.append(block(rom.rom, rom.characters, server.server));
+          for (const rom of server.roms) flow.append(block(rom.rom, rom.characters));
         }
         node.append(head, flow);
         return node;

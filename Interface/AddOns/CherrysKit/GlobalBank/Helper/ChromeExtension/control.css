@@ -348,7 +348,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .heat-column-sub { font-size: 11px; color: #97aec6; }
 .heat-balance { margin-left: auto; font-size: 12px; font-weight: 650; color: #dfc58d; }
 .heat-flow { column-width: var(--heat-column, 100px); column-gap: 3px; }
-.heat-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--heat-tile, 100px), 1fr)); gap: 1px; padding-bottom: 3px; break-inside: avoid; }
+.heat-group { display: grid; grid-template-columns: repeat(var(--heat-per-line, 1), minmax(0, 1fr)); gap: 1px; padding-bottom: 3px; break-inside: avoid; }
 .heat-group.is-long { break-inside: auto; }
 .heat-server { display: flex; justify-content: space-between; gap: 4px; margin-bottom: 1px; padding: 0 2px; font-size: 11px; font-weight: 650; line-height: 14px; color: #e0c487; border-bottom: 1px solid #3a4b5e; break-after: avoid; }
 .heat-server span:first-child { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -358,6 +358,8 @@ tbody tr:last-child td { border-bottom: 0; }
 .heat-cell { display: flex; align-items: center; gap: 4px; height: 16px; padding: 0 3px; font-size: 11px; line-height: 16px; white-space: nowrap; cursor: pointer; border-radius: 2px; break-inside: avoid; }
 .heat-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .heat-cell b { flex: none; font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.heat-view.is-letters .heat-cell { justify-content: center; padding: 0 1px; }
+.heat-view.is-letters .heat-name { flex: 0 1 auto; }
 .heat-cell:hover { outline: 1px solid #fff; outline-offset: -1px; }
 .heat-cell.is-selected { outline: 2px solid #fff; outline-offset: -2px; }
 

@@ -530,6 +530,16 @@ assert.equal(gb.heatName('Aldermoor', 0), 'Aldermoor');
 assert.equal(gb.heatName('Aldermoor', 3), 'Ald');
 assert.equal(gb.heatName('Sämple', 2), 'Sä');
 assert.equal(gb.heatName('Al', 8), 'Al');
+// A name that doesn't fit: the letters that tell it apart on its account
+const series = ['Hollowbanka', 'Hollowbankb', 'Hollowzwei', 'Hollowdrei', 'Oakenhelm'];
+assert.deepEqual([...series.map(name => gb.heatName(name, 1, series))], ['A', 'B', 'Z', 'D', 'O']);
+assert.deepEqual([...series.map(name => gb.heatName(name, 3, series))], ['nka', 'nkb', 'zwe', 'dre', 'Oak']);
+assert.equal(gb.heatName('Hollowbanka', 11, series), 'Hollowbanka');
+// A name that is the start of another still shows something
+assert.equal(gb.heatName('Oaken', 1, ['Oaken', 'Oakenhelm']), 'N');
+assert.equal(gb.heatName('Oakenhelm', 1, ['Oaken', 'Oakenhelm']), 'H');
+// A start of one or two letters doesn't count as shared
+assert.equal(gb.heatName('Kindle', 3, ['Kindle', 'Kestrel']), 'Kin');
 assert.equal(gb.heatShowsGold(0), true);
 assert.equal(gb.heatShowsGold(5), true);
 assert.equal(gb.heatShowsGold(4), false);
