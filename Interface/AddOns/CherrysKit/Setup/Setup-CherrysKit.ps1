@@ -5,7 +5,8 @@
 # which addons are out of date against the latest release on GitHub and can update them, maps
 # Interface\AddOns, moves older copies of the kit's addons into Interface\offloaded_addons (nothing is
 # deleted), stops the Global Bank helper during updates, checks the tools and Chrome, and can walk through
-# the optional Chrome extension setup.
+# the optional Chrome extension setup. It looks for a second install of the game (Steam and Gameforge can sit
+# side by side) and sets that one up too, with one Global Bank data folder and the extension in the Gameforge one.
 #
 # The only network use is reading that release's files from GitHub, with no account. -NoUpdateCheck skips
 # it. docs/RELEASING.md says what a release and an addon need for this to keep working.
@@ -29,13 +30,17 @@ param(
     [string]$UpdatedFrom = '',    # set when an update relaunched the new copy of this script: the old kit version
     [string]$HelperWas = '',      # with -UpdatedFrom: how the helper ran before the update stopped it
     [int]$QuestionsUsed = 0,      # with -UpdatedFrom: permission questions already asked in this run
-    [switch]$AskAgain             # ask about dependencies that were turned down on an earlier run
+    [switch]$AskAgain,            # ask again about dependencies and other installs that were turned down on an earlier run
+    [string]$AlsoInstall = '',    # another game folder to set up as well, without being asked
+    [switch]$OtherInstall,        # set when another run of this script is setting this folder up as its second install
+    [switch]$LoginScreenToo,      # with -OtherInstall: that run's player said yes to the login screen
+    [string]$ShareData = ''       # with -OtherInstall: the Gameforge Interface folder a Steam install shares its data with
 )
 
 $ErrorActionPreference = 'Stop'
 $script:AskBudget = 5
 $script:AskRest = [Math]::Max(0, $script:AskBudget - $QuestionsUsed)
-$script:SetupVersion = '1.0.0'
+$script:SetupVersion = '1.1.0'
 $script:TempFiles = @()
 # Inside CherrysKit, the folders its manifest doesn't name that still belong to it.
 $script:KitOwnFolders = @('KitLoad', 'Media', 'docs', 'Setup')
@@ -44,6 +49,7 @@ $script:RootFiles = @('!setup_cherryskit.bat', '!setup_cherryskit.ps1')
 # Files players edit by hand. An update puts their copy back; docs/RELEASING.md asks new ones to be listed here.
 $script:KeepOnUpdate = @('Commands.lua', 'LoadTimes/Switch.txt')
 $script:ReleaseBase = 'https://github.com/Cherrybooze/Cherrys-Kit/releases'
+$script:SteamAppId = '808290'
 $script:ReleaseTask = $null
 $script:ReleaseClient = $null
 $script:ReleaseProblem = ''
@@ -388,6 +394,137 @@ function Show-InterfaceMap([string]$addonsFolder, [hashtable]$conflicts, [string
         Write-Host $entry.note -ForegroundColor DarkGray
     }
     return $entries
+}
+
+# --------------------------------------------------------------------------------------------
+# Other installs. Steam and Gameforge use the same client and the same Documents folder, but each has its own
+# Interface folder.
+# --------------------------------------------------------------------------------------------
+function Get-InstallKind([string]$game) {
+    if ($game -match '(?i)\\steamapps\\common\\') { return 'Steam' }
+    return 'Gameforge'
+}
+
+# Where Steam says Runes of Magic is, through each of its libraries.
+function Find-SteamInstalls {
+    $roots = @()
+    foreach ($spot in @(@('HKCU:\SOFTWARE\Valve\Steam', 'SteamPath'), @('HKLM:\SOFTWARE\WOW6432Node\Valve\Steam', 'InstallPath'), @('HKLM:\SOFTWARE\Valve\Steam', 'InstallPath'))) {
+        try {
+            $value = (Get-Item -LiteralPath $spot[0] -ErrorAction Stop).GetValue($spot[1])
+            if ($value) { $roots += ($value -replace '/', '\') }
+        } catch { }
+    }
+    $libraries = @($roots)
+    foreach ($root in $roots) {
+        try {
+            $vdf = [IO.File]::ReadAllText((Join-Path $root 'steamapps\libraryfolders.vdf'))
+            foreach ($match in [regex]::Matches($vdf, '"path"\s+"([^"]+)"')) { $libraries += ($match.Groups[1].Value -replace '\\\\', '\') }
+        } catch { }
+    }
+    $found = @()
+    foreach ($library in @($libraries | Select-Object -Unique)) {
+        try {
+            $manifest = Join-Path $library ('steamapps\appmanifest_' + $script:SteamAppId + '.acf')
+            if (-not (Test-Path -LiteralPath $manifest)) { continue }
+            $folder = 'Runes of Magic'
+            $match = [regex]::Match([IO.File]::ReadAllText($manifest), '"installdir"\s+"([^"]+)"')
+            if ($match.Success) { $folder = $match.Groups[1].Value }
+            $found += (Join-Path $library ('steamapps\common\' + $folder))
+        } catch { }
+    }
+    return $found
+}
+
+function Find-GameforgeInstalls {
+    $found = @()
+    $roots = @($env:SystemDrive, ${env:ProgramFiles(x86)}, $env:ProgramFiles) | Where-Object { $_ }
+    foreach ($root in $roots) {
+        foreach ($name in @('RunesOfMagic', 'Runes of Magic', 'Gameforge\Runes of Magic')) { $found += (Join-Path ($root + '\') $name) }
+    }
+    foreach ($key in @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*')) {
+        try {
+            foreach ($entry in (Get-ItemProperty -Path $key -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like 'Runes of Magic*' -and $_.InstallLocation })) { $found += [string]$entry.InstallLocation }
+        } catch { }
+    }
+    return $found
+}
+
+# Game folders that aren't this one: named, remembered in the log, or found. CHERRYSKIT_FIND_INSTALLS replaces the
+# looking, for tests on a PC that really has the game: "none", or folders joined by ; (any other text finds nothing and still asks).
+function Get-OtherInstalls([string]$game, [string[]]$remembered) {
+    $candidates = @()
+    if ($AlsoInstall) { $candidates += $AlsoInstall }
+    if ($env:CHERRYSKIT_FIND_INSTALLS) {
+        if ($env:CHERRYSKIT_FIND_INSTALLS -ne 'none') { $candidates += ($env:CHERRYSKIT_FIND_INSTALLS -split ';') }
+    } elseif (-not $NonInteractive) {
+        $candidates += @(Find-SteamInstalls)
+        $candidates += @(Find-GameforgeInstalls)
+    }
+    if (-not $NonInteractive) { $candidates += $remembered }
+    $others = @()
+    foreach ($candidate in $candidates) {
+        if (-not $candidate) { continue }
+        $path = ([string]$candidate).Trim().Trim('"').TrimEnd('\')
+        if (-not $path -or -not (Test-Path -LiteralPath (Join-Path $path 'Client.exe'))) { continue }
+        $path = (Resolve-Path -LiteralPath $path).Path
+        if ($path -ieq $game -or @($others | Where-Object { $_ -ieq $path }).Count -gt 0) { continue }
+        $others += $path
+    }
+    return $others
+}
+
+# Turns a game folder into its Interface\AddOns, making it if the game has never had addons.
+function Get-AddonsOf([string]$game) {
+    $found = Resolve-AddonsPath $game
+    if ($found) { return $found }
+    $interface = Join-Path $game 'Interface'
+    foreach ($dir in @(Get-ChildItem -LiteralPath $game -Directory -ErrorAction SilentlyContinue)) { if ($dir.Name -ieq 'Interface') { $interface = $dir.FullName } }
+    return (Join-Path $interface 'AddOns')
+}
+
+# Every addon this copy has, at the same version there. A hub-only or partial install elsewhere just gets more.
+function Test-SameKit([string]$source, [string]$there) {
+    if (-not (Test-Path -LiteralPath (Join-Path $there 'CherrysKit.toc'))) { return $false }
+    if ((Get-KitVersion $source) -ne (Get-KitVersion $there)) { return $false }
+    if ((Read-InstalledVersion $source) -ne (Read-InstalledVersion $there)) { return $false }
+    foreach ($dir in (Get-ChildItem -LiteralPath $source -Directory -ErrorAction SilentlyContinue)) {
+        $version = Read-InstalledVersion $dir.FullName
+        if ($version -and $version -ne (Read-InstalledVersion (Join-Path $there $dir.Name))) { return $false }
+    }
+    return $true
+}
+
+function Test-SharedData([string]$steamInterface, [string]$gameforgeInterface) {
+    $item = Get-Item -LiteralPath (Join-Path $steamInterface 'GlobalBankHelper') -Force -ErrorAction SilentlyContinue
+    if (-not $item -or -not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return $false }
+    return (([string]@($item.Target)[0]).TrimEnd('\') -ieq (Join-Path $gameforgeInterface 'GlobalBankHelper'))
+}
+
+# Global Bank reads its data from the game's own Interface\GlobalBankHelper. A junction makes the Steam install's
+# folder the Gameforge one, so both see one database, clock and macro library. Junctions need no special rights.
+function Set-SharedData([string]$steamInterface, [string]$gameforgeInterface) {
+    if (Test-SharedData $steamInterface $gameforgeInterface) { return }
+    $target = Join-Path $gameforgeInterface 'GlobalBankHelper'
+    $link = Join-Path $steamInterface 'GlobalBankHelper'
+    try {
+        [void][IO.Directory]::CreateDirectory($target)
+        $item = Get-Item -LiteralPath $link -Force -ErrorAction SilentlyContinue
+        if ($item -and ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            # An old link: this removes the link, never what it points at.
+            $item.Delete()
+        } elseif ($item) {
+            $offload = Join-Path $steamInterface 'offloaded_addons'
+            [void][IO.Directory]::CreateDirectory($offload)
+            $kept = Join-Path $offload ('GlobalBankHelper (before sharing ' + (Get-Date -Format 'yyyy-MM-dd HHmmss') + ')')
+            Move-Item -LiteralPath $link -Destination $kept -ErrorAction Stop
+            Write-Dim ('  What was in its own data folder is now in: ' + $kept)
+        }
+        New-Item -ItemType Junction -Path $link -Target $target -ErrorAction Stop | Out-Null
+        Write-Good ('  Global Bank data is shared: ' + $link + ' -> ' + $target)
+    } catch {
+        Write-Warn ('  Could not share Global Bank''s data folder: ' + $_.Exception.Message)
+        Write-Dim '  Steam''s Global Bank window then only shows the character you are on.'
+    }
 }
 
 # --------------------------------------------------------------------------------------------
@@ -990,7 +1127,14 @@ if ($sourceResolved -ine $installedResolved) {
             }
         }
         New-Item -ItemType Directory -Path $installedKit -Force | Out-Null
+        # What players edit by hand stays, as it does in an update.
+        $keep = @{}
+        foreach ($name in $script:KeepOnUpdate) {
+            $path = Join-Path $installedKit $name
+            if (Test-Path -LiteralPath $path) { $keep[$name] = [IO.File]::ReadAllBytes($path) }
+        }
         Get-ChildItem -LiteralPath $sourceKit -Force | Copy-Item -Destination $installedKit -Recurse -Force
+        foreach ($name in $keep.Keys) { [IO.File]::WriteAllBytes((Join-Path $installedKit $name), $keep[$name]) }
         foreach ($name in $script:RootFiles) {
             $launcher = Join-Path $landing $name
             if (Test-Path -LiteralPath $launcher) { Copy-Item -LiteralPath $launcher -Destination $addons -Force }
@@ -1039,7 +1183,7 @@ if ($release -and -not $UpdatedFrom -and (Test-Path -LiteralPath (Join-Path $ins
 # --------------------------------------------------------------------------------------------
 # Dependencies: everything found, then one question for what's missing. A "no" is remembered in the log.
 # --------------------------------------------------------------------------------------------
-if (Test-Path -LiteralPath (Join-Path $installedKit 'CherrysKit.toc')) {
+if (-not $OtherInstall -and (Test-Path -LiteralPath (Join-Path $installedKit 'CherrysKit.toc'))) {
     $dependencies = Get-Dependencies $installedKit $release
     $turnedDown = @()
     if (-not $AskAgain) {
@@ -1152,11 +1296,13 @@ if ($toMove.Count -gt 0) {
 # LogNextChar's login screen. A package can only fill Interface\AddOns, so its installer puts it in place.
 # --------------------------------------------------------------------------------------------
 $loginInstaller = Join-Path $installedKit 'LogNextChar\setup\Install.ps1'
+$wantLogin = $false
 if (Test-Path -LiteralPath $loginInstaller) {
     Write-Head 'LogNextChar login screen'
     Write-Host '  The game only reads a login screen from Interface\loginxml, so it gets copied there.' -ForegroundColor Gray
     Write-Host '  Your saved logins stay. If anything would change, the old folder is copied to offloaded_addons first.' -ForegroundColor Gray
-    if (Confirm-Step 'Install or update the login screen now?' $true $false) {
+    $wantLogin = Confirm-Step 'Install or update the login screen now?' $true ([bool]$LoginScreenToo)
+    if ($wantLogin) {
         try { & $loginInstaller }
         catch { Write-Warn ('  The login screen was not installed: ' + $_.Exception.Message) }
     } else {
@@ -1165,12 +1311,99 @@ if (Test-Path -LiteralPath $loginInstaller) {
 }
 
 # --------------------------------------------------------------------------------------------
-# Chrome extension walkthrough.
+# Steam: addons need to know, and the Gameforge install keeps the data. Then the other install, if there is one.
 # --------------------------------------------------------------------------------------------
+$thisKind = Get-InstallKind $gameFolder
+if ($thisKind -eq 'Steam' -and (Test-Path -LiteralPath (Join-Path $installedKit 'CherrysKit.toc'))) {
+    # Client.exe is the same file on both, so addons read this to tell (CherrysKit.IsSteam).
+    $marker = Join-Path $interfaceFolder 'CherrysKitClient.lua'
+    if (-not (Test-Path -LiteralPath $marker)) {
+        try { [IO.File]::WriteAllText($marker, "return ""steam""`r`n") }
+        catch { Write-Warn ('  Could not mark this as a Steam install: ' + $_.Exception.Message) }
+    }
+}
+if ($ShareData -and $thisKind -eq 'Steam') { Set-SharedData $interfaceFolder $ShareData }
+
+$gameforgeAddons = ''
+if (-not $OtherInstall -and (Test-Path -LiteralPath (Join-Path $installedKit 'CherrysKit.toc'))) {
+    $logLines = @()
+    try { $logLines = @(Get-Content -LiteralPath (Join-Path $interfaceFolder 'CherrysKit-setup.log') -ErrorAction Stop) } catch { }
+    $remembered = @($logLines | Where-Object { $_ -match '  other install  ' } | ForEach-Object { ($_ -split '  other install  ')[1] })
+    $others = @(Get-OtherInstalls $gameFolder $remembered)
+    $saidNone = @($logLines | Where-Object { $_ -match '  no other install$' }).Count -gt 0
+    if ($others.Count -eq 0 -and -not $NonInteractive -and $env:CHERRYSKIT_FIND_INSTALLS -ne 'none' -and $script:AskRest -gt 0 -and ($AskAgain -or -not $saidNone)) {
+        $opposite = if ($thisKind -eq 'Steam') { 'Gameforge' } else { 'Steam' }
+        Write-Head 'Other installs'
+        Write-Host ('  This is your ' + $thisKind + ' install, and no ' + $opposite + ' install turned up.') -ForegroundColor Gray
+        $script:AskRest--
+        $pasted = ''
+        try { $pasted = Read-Line ('Do you have one too? Paste its game folder, or press Enter if not') } catch { Write-Dim $_.Exception.Message }
+        if ($pasted -and $pasted.Trim()) {
+            $others = @(Get-OtherInstalls $gameFolder @($pasted))
+            if ($others.Count -eq 0) { Write-Warn '  There is no Client.exe in that folder, so it was left out. To try again, run this setup with -AskAgain.' }
+        } else {
+            Add-SetupLog $interfaceFolder ('{0}  no other install' -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
+        }
+    }
+    foreach ($other in $others) {
+        $otherKind = Get-InstallKind $other
+        $otherAddons = Get-AddonsOf $other
+        $otherInterface = Split-Path -Parent $otherAddons
+        if ($otherKind -eq 'Gameforge' -and -not $gameforgeAddons) { $gameforgeAddons = $otherAddons }
+        # Steam's data folder follows the Gameforge install, whichever this run started from.
+        $share = ''
+        if ($otherKind -eq 'Steam' -and $thisKind -eq 'Gameforge') { $share = $interfaceFolder }
+        if ($thisKind -eq 'Steam' -and $otherKind -eq 'Gameforge') { Set-SharedData $interfaceFolder $otherInterface }
+        $otherKit = Join-Path $otherAddons 'CherrysKit'
+        $marked = $otherKind -ne 'Steam' -or (Test-Path -LiteralPath (Join-Path $otherInterface 'CherrysKitClient.lua'))
+        $linked = -not $share -or (Test-SharedData $otherInterface $share)
+        Write-Head ('Your ' + $otherKind + ' install')
+        Write-Host ('  ' + $other) -ForegroundColor Gray
+        if ((Test-SameKit $installedKit $otherKit) -and $marked -and $linked) {
+            Write-Good ('  Cherry''s Kit ' + (Get-KitVersion $otherKit) + ' is there and up to date.')
+        } else {
+            if (Test-Path -LiteralPath (Join-Path $otherKit 'CherrysKit.toc')) { Write-Host ('  It has Cherry''s Kit ' + (Get-KitVersion $otherKit) + ', hub ' + (Read-InstalledVersion $otherKit) + '.') -ForegroundColor Gray }
+            else { Write-Host '  It has no Cherry''s Kit yet.' -ForegroundColor Gray }
+            Write-Dim '  Older copies of the kit''s addons move to its offloaded_addons; the others stay.'
+            if (Confirm-Step ('Install Cherry''s Kit ' + (Get-KitVersion $installedKit) + ' there too?') $true ([bool]$AlsoInstall)) {
+                $next = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path (Join-Path $installedKit 'Setup') 'Setup-CherrysKit.ps1'),
+                    '-Landing', $addons, '-Target', $otherAddons, '-NonInteractive', '-NoUpdateCheck', '-OtherInstall', '-FromBat')
+                if ($wantLogin) { $next += '-LoginScreenToo' }
+                if ($share) { $next += @('-ShareData', $share) }
+                $shell = [Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
+                try { [void][IO.Directory]::CreateDirectory($otherAddons) } catch { }
+                $code = 0
+                if (-not (Test-Writable $otherAddons) -and -not (Test-Admin)) {
+                    Write-Host '  That folder needs administrator rights: a Windows permission prompt will appear.' -ForegroundColor Yellow
+                    try {
+                        $quoted = @($next | ForEach-Object { if ($_ -match '\s') { '"' + $_ + '"' } else { $_ } }) -join ' '
+                        $code = (Start-Process -FilePath $shell -Verb RunAs -ArgumentList $quoted -Wait -PassThru -ErrorAction Stop).ExitCode
+                    } catch { $code = 1; Write-Warn '  Administrator rights were not given, so that install was left as it is.' }
+                } else {
+                    & $shell @next | Out-Host
+                    $code = $LASTEXITCODE
+                }
+                if ($code -eq 0) { Write-Good ('  Your ' + $otherKind + ' install is set up.') }
+                else { Write-Warn ('  Setting up that install stopped with code ' + $code + '. Run this setup again to retry.') }
+            }
+        }
+        if (@($remembered | Where-Object { $_ -ieq $other }).Count -eq 0) {
+            Add-SetupLog $interfaceFolder ('{0}  other install  {1}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm'), $other)
+        }
+    }
+}
+
+# --------------------------------------------------------------------------------------------
+# Chrome extension walkthrough. With both installs, the extension and its helper live in the Gameforge one.
+# --------------------------------------------------------------------------------------------
+if ($thisKind -eq 'Steam' -and $gameforgeAddons -and (Test-Path -LiteralPath (Join-Path $gameforgeAddons 'CherrysKit\GlobalBank\Helper'))) {
+    $helperDir = Join-Path $gameforgeAddons 'CherrysKit\GlobalBank\Helper'
+    Write-Dim 'The Chrome extension uses your Gameforge install''s copy, so it stays in one place.'
+}
 $extensionBat = Join-Path $helperDir 'Install Chrome extension.bat'
 $chromePath = Get-ChromePath
 if ($NonInteractive) {
-    # Checks and tests never run the Chrome walkthrough.
+    # Checks, tests and second installs never run the Chrome walkthrough.
 } elseif (-not (Test-Path -LiteralPath $extensionBat)) {
     Write-Dim 'Global Bank is not installed here, so the Chrome extension setup is skipped.'
 } elseif (-not $chromePath) {

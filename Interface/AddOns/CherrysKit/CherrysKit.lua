@@ -8,7 +8,7 @@
 CherrysKit = CherrysKit or {}
 local Kit = CherrysKit
 
-Kit.version = "0.4.29"
+Kit.version = "0.4.30"
 Kit.MAX_ROWS = 14
 
 if SaveVariables then
@@ -31,6 +31,28 @@ local function print(msg)
   end
 end
 Kit.Print = print
+
+-- Whether this client came in through Steam. Client.exe is the same file for Steam and Gameforge, and nothing in
+-- Lua says which it is, so: the setup leaves Interface/CherrysKitClient.lua in a Steam install, and a Steam login
+-- calls its account SteamLogin (Client.exe sets that name; the Gameforge launcher's is TNTLogin).
+function Kit.IsSteam()
+  if Kit.steamMarker == nil then
+    local fn = type(loadfile) == "function" and loadfile("Interface/CherrysKitClient.lua") or nil
+    local ok, kind = false, nil
+    if fn then
+      ok, kind = pcall(fn)
+    end
+    Kit.steamMarker = ok and kind == "steam"
+  end
+  if Kit.steamMarker then
+    return true
+  end
+  if type(GetAccountName) == "function" then
+    local ok, name = pcall(GetAccountName)
+    return ok and name == "SteamLogin"
+  end
+  return false
+end
 
 local function runSlash(key, msg)
   local fn = SlashCmdList and SlashCmdList[key]

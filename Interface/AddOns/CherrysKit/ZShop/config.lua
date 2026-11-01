@@ -5,6 +5,8 @@ return {
     browser = true,
     -- page every item shop button press opens: "home", "daily" or "depot"
     link = "home",
+    -- Steam only: the shop's address, if the daily button lands on the wrong one
+    -- shop_host = "https://eu-shop-runesofmagic.gameforge.com",
     -- seconds the game keeps checking for bought items after the shop opens in the web browser
     open = 300
 }

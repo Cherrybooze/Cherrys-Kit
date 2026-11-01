@@ -1,6 +1,6 @@
 # Cherry's Kit
 
-Version **0.4.29** · Kit release **0.11.115** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.30** · Kit release **0.11.115** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
@@ -12,11 +12,12 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 - **Global Bank's helper lives with Chrome:** the extension's button shows whether the helper is running and for how long, stops it in one press, and a tick runs the background helper in a real terminal window. The helper ends on its own when Chrome or the extension goes away. (`/gb`)
 - **Cherry's Info 1.0** (`/cinfo`, `/cq`) replaces Cherry's Quests, pbInfo, TooltipIds, PortraitHP and Extended Macro Icons: one addon, one switch and one window with four tabs. Saved settings carry over.
 - **LogNextChar 1.3.1** now includes Cherry's Loginxml and lives under the kit's folder; it still works without the login screen (Next and Prev then just log you out). **Global Bank 1.4.16** keeps same-named characters on different servers apart.
+- **Steam and Gameforge installs side by side:** the setup finds both, or asks where the other one is, and puts the kit in each. Both use one Global Bank data folder, and the Chrome extension stays with the Gameforge install. On Steam, ZShop's daily button opens in your normal browser, and Steam's characters show as a Steam account in Global Bank.
 - **Global Bank 1.5.7:** a refreshed in-game window, with server tabs, characters grouped by account, and a search that lights up the matching bag and bank slots.
 - **Global Bank Daily Rewards 1.2.5** for Chrome: the page is built for thousands of characters, with a Region button, server checkmarks (Ayvenas included), a Servers tab to edit them, one selection on every tab, the game's tooltips with item and mana stone stats, stacking checkmarks per item type, Always stack, a Favourites tab, RoM account names, and an item menu that stacks the characters who hold it. Collecting the daily reward automatically is now a tick in the popup, off by default. Press Reload on the extension after updating.
 - **Your macros and addon settings on the Global Bank page** (Global Bank 1.5.7, extension 1.2.5): a macro library with groups and a search, read from your characters' save folders, addon settings you can put back, newest and day-old backups, and an **Import** button in the game's macro window (Cherry's Info 1.0.3).
 - **zBag 5.07-ck18:** type a stat name such as *stamina* in the bag or bank search and every item with that stat lights up.
-- **Cherry's Chat 0.11.2:** emoji typed with the Windows emoji panel are joined back together for Say bubbles, unknown ones go out as `?`, and `/cchat bubbletest` shows what was sent.
+- **Cherry's Chat 0.11.3:** emoji typed with the Windows emoji panel are joined back together for Say bubbles, unknown ones go out as `?`, and `/cchat bubbletest` shows what was sent.
 - **rom weakauras 0.9.32:** icons from the Present buff and debuff templates show stack counts.
 - **Lighter and smaller:** Cherry's Grid 1.1.6 makes next to no garbage while drawing, and the XML files of Cherry's Grid, Cherry's Chat, zBag and Global Bank went from 598, 401, 229 and 561 KB to 105, 70, 123 and 113 KB. The hub's clock (0.4.28) asks for the time only when a look is due.
 - **Cherry's Grid 1.1.5:** Mouse 4 joins the click buttons on your frames, and a tick on the Clicks page, off by default, also makes it a game keybind. (`/grid`)

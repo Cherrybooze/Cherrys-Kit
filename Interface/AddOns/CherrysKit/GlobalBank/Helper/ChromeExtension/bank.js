@@ -336,6 +336,7 @@ const GBBank = (() => {
   ];
   // The RoM account to show: the name you gave it, or the first name on its login screen's list
   const romOf = (character, romTitle) => (romTitle ? romTitle(character) : '')
+    || (character.romAccount?.steam ? 'Steam account' : '')
     || ((character.romAccount || character.group) ? `${(character.romAccount || character.group).names[0]}'s account` : '');
   function rosterRows(characters, sort, descending, accountName, romTitle) {
     const rows = characters.map(character => {
@@ -430,7 +431,7 @@ const GBBank = (() => {
       : loginScreen(row) ? 'group:' + loginScreen(row).names[0].toLowerCase() + '|' + String(row.server || '').toLowerCase() : '~none';
   const groupTitleOf = (how, accountName, romTitle) => row => how === 'server' ? row.server || 'Server unknown'
     : (accountName && accountName(row.name)) ? accountName(row.name)
-      : loginScreen(row) ? `${romOf(row.character, romTitle)}, not linked` : 'No account known yet';
+      : loginScreen(row) ? (loginScreen(row).steam ? romOf(row.character, romTitle) : `${romOf(row.character, romTitle)}, not linked`) : 'No account known yet';
   function searchRows(rows, text) {
     const wanted = String(text || '').trim().toLowerCase();
     if (!wanted) return rows;
