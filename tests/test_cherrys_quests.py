@@ -7,7 +7,7 @@ import unittest
 from lupa.lua51 import LuaRuntime
 
 
-SOURCE = Path(__file__).resolve().parents[1] / "Interface/AddOns/CherrysKit/CherrysQuests"
+SOURCE = Path(__file__).resolve().parents[1] / "Interface/AddOns/CherrysKit/CherrysInfo"
 FILES = ("CherrysQuests.lua", "Npcs.lua", "Tracker.lua", "Options.lua", "Probe.lua")
 
 CLIENT = r'''
@@ -265,7 +265,7 @@ class CherrysQuestsTests(unittest.TestCase):
     def test_hub_off_switch_keeps_it_idle(self):
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute(CLIENT)
-        lua.execute('CherrysKit = { IsEnabled = function(f) return f ~= "CherrysQuests" end }')
+        lua.execute('CherrysKit = { IsEnabled = function(f) return f ~= "CherrysInfo" end }')
         for name in FILES:
             lua.execute((SOURCE / name).read_text(encoding="utf-8-sig"))
         lua.execute('MakeWidget("CQ_Tracker", true); CherrysQuests.OnEvent("VARIABLES_LOADED")')
@@ -288,6 +288,75 @@ class CherrysQuestsTests(unittest.TestCase):
         messages = [str(m) for m in self.lua.globals().messages.values()]
         self.assertTrue(any("Herbalist Mira [110003, summary]" in m for m in messages))
         self.assertTrue(any("||Hnpc:110001" in m for m in messages))
+
+    def test_cinfo_and_cq_tabs_configure_all_merged_modules(self):
+        self.frames(0.6)
+        self.lua.execute("""
+          pbInfoSettings = { ENABLE = true, MODIFYTOOLTIP = true, GameTooltipAlpha = 1, CHATFRAMEFILTERTITLES = false }
+          TooltipIds_Settings = { Options = { [1] = true, [2] = true }, TextColor = { r = 0.33, g = 0.86, b = 0.60 } }
+          PortraitHP = { enable = true, SetEnabled = function(on) PortraitHP.enable = on end }
+          CherrysEMI = { IsSwitchedOff = function() return false end, SetEnabled = function(on) CherrysEMI.active = on end, Slash = function() emiOpened = true end }
+        """)
+        self.lua.globals().SlashCmdList["CHERRYSINFO"](None, "tooltips")
+        self.assertTrue(self.eval("CQ_Options.shown"))
+        self.assertEqual(self.eval("CherrysQuests.Options.tab"), "tooltips")
+        self.assertIn("Tooltips & IDs", self.eval("CQ_Tab2.text"))
+        # Toggle Unit IDs row (row 12 on tooltips tab)
+        self.lua.execute('CherrysQuests.Options.Click(12, "check")')
+        self.assertFalse(self.eval("TooltipIds_Settings.Options[1]"))
+        # Switch to Target & World tab and toggle PortraitHP
+        self.lua.execute('CherrysQuests.Options.SelectTab("target")')
+        self.assertEqual(self.eval("CQ_OptRow1Label.text"), "Target health % on its portrait")
+        self.lua.execute('CherrysQuests.Options.Click(1, "check")')
+        self.assertFalse(self.eval("PortraitHP.enable"))
+        # Switch to Chat & Macros tab and open EMI
+        self.lua.execute('CherrysQuests.Options.SelectTab("chat")')
+        self.lua.execute('CherrysQuests.Options.Click(14, "choice")')
+        self.assertTrue(self.eval("emiOpened == true"))
+        # /cq jumps back to Quests tab
+        self.lua.globals().SlashCmdList["CHERRYSQUESTS"](None, "")
+        self.assertEqual(self.eval("CherrysQuests.Options.tab"), "quests")
+        self.assertEqual(self.eval("CQ_OptRow1Label.text"), "Show the tracker")
+
+    def test_every_tab_fits_the_rows_and_its_labels_fit_the_row(self):
+        self.frames(0.6)
+        for tab in ("quests", "tooltips", "target", "chat"):
+            with self.subTest(tab=tab):
+                self.assertLessEqual(self.eval(f"#CherrysQuests.Options.TABS.{tab}"), self.eval("CherrysQuests.Options.ROWS"))
+                labels = self.lua.eval(f"""(function()
+                  local out = {{}}
+                  for i, def in ipairs(CherrysQuests.Options.TABS.{tab}) do out[i] = def.label end
+                  return table.concat(out, "\\n")
+                end)()""").split("\n")
+                for label in labels:
+                    self.assertLessEqual(len(label), 40, label)
+
+    def test_pbinfo_settings_apply_at_once_like_its_save_button(self):
+        self.frames(0.6)
+        self.lua.execute("""
+          pbInfoSettings = { CHATLOG = true, GameTooltipAlpha = 1 }
+          reloaded = 0
+          pbInfo = { LoadScripts = function() reloaded = reloaded + 1 end }
+          CherrysQuests.Options.SelectTab("chat")
+          for i, def in ipairs(CherrysQuests.Options.TABS.chat) do
+            if def.key == "CHATLOG" then CherrysQuests.Options.Click(i, "check") end
+          end
+        """)
+        self.assertFalse(self.eval('pbInfoSettings["CHATLOG"]'))
+        self.assertEqual(self.eval("reloaded"), 1)
+
+    def test_the_rest_of_pbinfo_stays_reachable(self):
+        self.frames(0.6)
+        self.lua.execute("""
+          pbInfoConfig = { Show = function() opened = true end }
+          pbInfoConfig_PageTooltip = { Show = function() page = true end }
+          pbInfo = { Config = { TabClick = function() end } }
+          CherrysQuests.Options.SelectTab("target")
+          for i, def in ipairs(CherrysQuests.Options.TABS.target) do
+            if def.key == "more_pbinfo" then CherrysQuests.Options.Click(i, "choice") end
+          end
+        """)
+        self.assertTrue(self.eval("opened == true and page == true"))
 
     def test_objective_parsing(self):
         q = self.lua.globals().CherrysQuests

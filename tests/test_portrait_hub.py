@@ -13,7 +13,7 @@ from lupa.lua51 import LuaRuntime
 
 KIT = Path(__file__).resolve().parents[1] / "Interface" / "AddOns" / "CherrysKit"
 NS = {"ui": "http://www.runewaker.com/"}
-PORTRAIT_XML = ET.parse(KIT / "PortraitHP" / "PortraitHP.xml")
+PORTRAIT_XML = ET.parse(KIT / "CherrysInfo" / "PortraitHP.xml")
 HUB_XML = ET.parse(KIT / "CherrysKit.xml")
 
 
@@ -66,7 +66,7 @@ class PortraitHubTests(unittest.TestCase):
         self.lua.execute(node.text)
 
     def portrait_load(self):
-        self.load("PortraitHP/PortraitHP.lua")
+        self.load("CherrysInfo/PortraitHP.lua")
         self.lua.execute("this = PortraitHP_Frame")
         self.script(PORTRAIT_XML, "PortraitHP_Frame", "OnLoad")
 
@@ -112,13 +112,14 @@ class PortraitHubTests(unittest.TestCase):
         self.assertTrue(self.lua.eval("PortraitHP.initialized"))
         self.assertEqual(self.lua.eval("PortraitHP_Text.value"), "65%")
 
-    def test_hub_click_before_variables_loaded_reports_not_ready(self):
+    def test_toggle_before_variables_loaded_reports_not_ready(self):
         self.portrait_load()
-        self.assertFalse(self.lua.eval('CherrysKit.OnRowClick(4, "open")'))
-        self.assertIn("PortraitHP is still loading", self.messages())
+        result, reason = self.lua.eval("PortraitHP.Toggle()")
+        self.assertFalse(result)
+        self.assertIn("still loading", reason)
         self.assertIsNone(self.lua.eval("PortraitHP_DB"))
         self.event("VARIABLES_LOADED")
-        self.assertTrue(self.lua.eval('CherrysKit.OnRowClick(4, "open")'))
+        self.assertTrue(self.lua.eval("PortraitHP.Toggle()"))
         self.assertFalse(self.lua.eval("PortraitHP.enable"))
 
     def test_missing_xml_reports_actionable_failure_once(self):
@@ -136,7 +137,7 @@ class PortraitHubTests(unittest.TestCase):
         self.event("VARIABLES_LOADED")
         self.assertTrue(self.lua.eval("PortraitHP.Toggle()"))
         self.assertFalse(self.lua.eval("PortraitHP_DB.enable"))
-        self.load("PortraitHP/PortraitHP.lua")
+        self.load("CherrysInfo/PortraitHP.lua")
         self.event("VARIABLES_LOADED")
         self.assertTrue(self.lua.eval("PortraitHP.initialized"))
         self.assertFalse(self.lua.eval("PortraitHP_Frame.visible"))
@@ -173,7 +174,7 @@ class PortraitHubTests(unittest.TestCase):
         self.assertIsNotNone(self.lua.eval("PortraitHP.lastError"))
 
     def test_kit_disabled_state_cannot_be_bypassed_by_toggle(self):
-        self.lua.execute("CherrysKit_DB = { disabled = { PortraitHP = true } }")
+        self.lua.execute("CherrysKit_DB = { disabled = { CherrysInfo = true } }")
         self.portrait_load()
         self.event("VARIABLES_LOADED")
         self.event("UNIT_HEALTH", "target")
@@ -183,24 +184,20 @@ class PortraitHubTests(unittest.TestCase):
         self.assertIn("turned off in Cherry's Kit", reason)
         self.assertIsNone(self.lua.eval("PortraitHP_DB and PortraitHP_DB.enable"))
 
-    def test_full_kit_row12_click_invokes_portrait_toggle(self):
-        # The three preseeded entries precede registrations in the full kit's TOC.
-        self.lua.execute(
-            """
-            for _, folder in ipairs({"CherrysChat", "zBag", "GlobalBank",
-                "ExtendedMacroIcons", "TooltipIds", "UltimateMailMod",
-                "AdvancedAuctionHouse", "pbInfo"}) do
-                CherrysKit.Register({folder = folder, title = folder})
-            end
-            """
-        )
+    def test_it_is_part_of_cherrys_info_with_no_hub_row_of_its_own(self):
         self.portrait_load()
         self.event("VARIABLES_LOADED")
-        self.assertEqual(self.lua.eval("CherrysKit.visible[12].folder"), "PortraitHP")
-        self.script(HUB_XML, "CherrysKit_Row12Open", "OnClick")
+        self.lua.execute("""
+            hasRow = false
+            for _, entry in ipairs(CherrysKit.visible) do
+                if entry.folder == "PortraitHP" then hasRow = true end
+            end
+        """)
+        self.assertFalse(self.lua.eval("hasRow"))
+        self.lua.execute('SlashCmdList.PORTRAITHP(nil, "")')
         self.assertFalse(self.lua.eval("PortraitHP.enable"))
         self.assertFalse(self.lua.eval("PortraitHP_Frame.visible"))
-        self.script(HUB_XML, "CherrysKit_Row12Open", "OnClick")
+        self.lua.execute('SlashCmdList.PORTRAITHP(nil, "")')
         self.assertTrue(self.lua.eval("PortraitHP.enable"))
         self.assertEqual(self.lua.eval("PortraitHP_Text.value"), "65%")
 
@@ -244,11 +241,10 @@ class PortraitHubTests(unittest.TestCase):
         self.event("VARIABLES_LOADED")
         self.assertTrue(self.lua.eval("PortraitHP.Toggle()"))
         self.lua.execute("PortraitHP_Text.SetColor = function() error(nil) end")
-        self.assertFalse(self.lua.eval('CherrysKit.OpenWindow("PortraitHP")'))
+        self.assertFalse(self.lua.eval("(pcall(PortraitHP.Toggle))"))
         self.assertFalse(self.lua.eval("PortraitHP.enable"))
         self.assertFalse(self.lua.eval("PortraitHP_DB.enable"))
         self.assertFalse(self.lua.eval("PortraitHP_Frame.visible"))
-        self.assertIn("PortraitHP [PortraitHP, command]", self.messages())
 
     def test_slash_fallback_errors_retain_addon_context(self):
         self.lua.execute('SlashCmdList.KittyCombo = function() error("native failure") end')
@@ -257,17 +253,17 @@ class PortraitHubTests(unittest.TestCase):
         self.assertIn("native failure", self.messages())
         self.assertEqual(len(self.lua.globals().messages), 1)
 
-    def test_partial_kit_row_mapping_and_successful_command_wrapper(self):
+    def test_php_stays_its_own_command_under_the_hub(self):
         self.lua.execute("Kitty = nil; ZShop = nil")
         self.portrait_load()
         self.event("VARIABLES_LOADED")
         self.lua.execute("CherrysKit.ApplyCommands()")
-        self.assertEqual(self.lua.eval("CherrysKit.visible[2].folder"), "PortraitHP")
-        self.assertTrue(self.lua.eval('CherrysKit.OnRowClick(2, "open")'))
+        self.lua.execute('SlashCmdList.PORTRAITHP(nil, "")')
         self.assertFalse(self.lua.eval("PortraitHP.enable"))
         self.lua.execute('SlashCmdList.PORTRAITHP(nil, "")')
         self.assertTrue(self.lua.eval("PortraitHP.enable"))
         self.assertIsNone(self.lua.eval("CherrysKit.lastOpenError"))
+        self.assertNotIn("not installed", self.messages())
 
     def test_corrupt_disabled_setting_does_not_break_startup(self):
         self.lua.execute("CherrysKit_DB = { disabled = true }")

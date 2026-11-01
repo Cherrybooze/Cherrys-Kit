@@ -678,6 +678,7 @@
       </Anchor>
     </Anchors>
     <Frames>
+      <Frame name="$parentHistory" inherits="UMMRecipientListTemplate" hidden="true" />
       <Frame name="$parentOwn" inherits="UMMRecipientListTemplate" hidden="true" />
       <Frame name="$parentFriends" inherits="UMMRecipientListTemplate" hidden="true" />
       <Frame name="$parentGuildies" inherits="UMMRecipientListTemplate" hidden="true" />

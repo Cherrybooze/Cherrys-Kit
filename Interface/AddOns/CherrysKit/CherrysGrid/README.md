@@ -1,6 +1,6 @@
 # Cherry's Grid
 
-Version **1.1.5** · Kit release **0.11.87** · [All addons / hub](../README.md)
+Version **1.1.6** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Compact party and raid frames in the look of WoW's Grid. Click a member to run a Cherry's KittyCombo kitty on them.**
 
@@ -13,9 +13,13 @@ Version **1.1.5** · Kit release **0.11.87** · [All addons / hub](../README.md)
 > **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
 > - **Cherry's KittyCombo:** run a kitty when you click a frame
 >
-> **Original addon:** GridCliqueIt by Skaryon, Jacobian and odie2. If `Interface\AddOns\GridCliqueIt` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one. Cherry's Grid is new code that follows its design, and the two would draw the same raid frames.
+> **Original addon:** GridCliqueIt by Skaryon, Jacobian and odie2. If `Interface\AddOns\GridCliqueIt` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one. Cherry's Grid is new code that follows its design, and the two would draw the same raid frames.
 
 <!-- end of requirements -->
+
+## Updated in 1.1.6
+
+**Much less memory churn in fights.** Drawing a member no longer makes new tables, and the member list only rebuilds when someone or a setting changed. In a simulated 36-member raid with every member redrawn ten times a second, about 580 KB of new memory a second fell to almost nothing. `CherrysGrid.xml` went from 598 KB to 105 KB, so the game has less to read at login. The frames, clicks and colours are the same.
 
 ## Updated in 1.1.5
 

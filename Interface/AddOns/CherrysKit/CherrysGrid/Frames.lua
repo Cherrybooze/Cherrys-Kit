@@ -43,8 +43,14 @@ function F.Obj(slot)
   return o
 end
 
+local mediaPaths = {}
 local function media(file)
-  return G.MEDIA .. file .. ".tga"
+  local path = mediaPaths[file]
+  if not path or path.base ~= G.MEDIA then
+    path = { base = G.MEDIA, path = G.MEDIA .. file .. ".tga" }
+    mediaPaths[file] = path
+  end
+  return path.path
 end
 
 local function place(obj, frameName, x, y, w, h)
@@ -292,6 +298,37 @@ local function setColorBox(obj, result)
   end
 end
 
+-- Drawn up to ten times a second per member in a fight, so drawing makes no new tables or strings.
+local GREY = { 0.5, 0.5, 0.5 }
+local INVERTED_FILL = { 0.08, 0.08, 0.08 }
+local BORDERS = { "BorderT", "BorderB", "BorderL", "BorderR" }
+local DEBUFF_PARTS, DEBUFF_TIME_PARTS, BUFF_PARTS = {}, {}, {}
+for i = 1, 4 do
+  DEBUFF_PARTS[i], DEBUFF_TIME_PARTS[i] = "Debuff" .. i, "Debuff" .. i .. "Time"
+end
+for i = 1, 3 do
+  BUFF_PARTS[i] = "Buff" .. i
+end
+local NO_BUFFS = {}
+
+-- mana / skill strips
+local function strip(o, obj, rect, cur, max, kind)
+  if not rect then
+    return
+  end
+  local mf = (max and max > 0) and (cur / max) or 0
+  if mf <= 0 then
+    obj:Hide()
+    return
+  end
+  if mf > 1 then
+    mf = 1
+  end
+  place(obj, o.name, rect[1], rect[2], rect[3] * mf, rect[4])
+  color(obj, G.Statuses.MANA_COLORS[kind] or G.Statuses.MANA_COLORS[1], 1)
+  obj:Show()
+end
+
 -- Draws one member.
 function F.Draw(slot)
   local o = F.Obj(slot)
@@ -313,12 +350,18 @@ function F.Draw(slot)
   if G.U.IsDead(unit) or not G.U.IsOnline(unit) then
     f = 0
   end
-  local barCol = (ind.barColor and ind.barColor.color) or { 0.5, 0.5, 0.5 }
+  local barCol = (ind.barColor and ind.barColor.color) or GREY
   local dark = tonumber(P.bgDarkness) or 0.25
   local hx, hy, hw, hh = o.health[1], o.health[2], o.health[3], o.health[4]
-  local fillCol, bgCol = barCol, { barCol[1] * dark, barCol[2] * dark, barCol[3] * dark }
+  local bgCol = o.bgCol
+  if not bgCol then
+    bgCol = {}
+    o.bgCol = bgCol
+  end
+  local fillCol = barCol
+  bgCol[1], bgCol[2], bgCol[3] = barCol[1] * dark, barCol[2] * dark, barCol[3] * dark
   if P.invert then
-    fillCol, bgCol = { 0.08, 0.08, 0.08 }, barCol
+    fillCol, bgCol = INVERTED_FILL, barCol
   end
   color(o.BarBg, bgCol, 1)
   if f <= 0 then
@@ -336,30 +379,13 @@ function F.Draw(slot)
     o.Bar:Show()
   end
 
-  -- mana / skill strips
-  local function strip(obj, rect, cur, max, kind)
-    if not rect then
-      return
-    end
-    local mf = (max and max > 0) and (cur / max) or 0
-    if mf <= 0 then
-      obj:Hide()
-      return
-    end
-    if mf > 1 then
-      mf = 1
-    end
-    place(obj, o.name, rect[1], rect[2], rect[3] * mf, rect[4])
-    color(obj, G.Statuses.MANA_COLORS[kind] or G.Statuses.MANA_COLORS[1], 1)
-    obj:Show()
-  end
   if o.mana then
-    strip(o.Mana, o.mana, G.U.Mana(unit))
+    strip(o, o.Mana, o.mana, G.U.Mana(unit))
   end
   if o.skill then
     local cur, max, kind = G.U.Skill(unit)
     if max > 0 then
-      strip(o.Skill, o.skill, cur, max, kind)
+      strip(o, o.Skill, o.skill, cur, max, kind)
     else
       o.Skill:Hide()
     end
@@ -367,8 +393,8 @@ function F.Draw(slot)
 
   -- border and corners
   local border = ind.border
-  for _, e in ipairs({ "BorderT", "BorderB", "BorderL", "BorderR" }) do
-    setColorBox(o[e], border)
+  for i = 1, 4 do
+    setColorBox(o[BORDERS[i]], border)
   end
   setColorBox(o.CornerTL, ind.cornerTL)
   setColorBox(o.CornerTR, ind.cornerTR)
@@ -421,7 +447,7 @@ function F.Draw(slot)
     local count = math.min(n, math.max(0, #list - skip))
     for i = 1, n do
       local a = list[i + skip]
-      local d, dt = o["Debuff" .. i], o["Debuff" .. i .. "Time"]
+      local d, dt = o[DEBUFF_PARTS[i]], o[DEBUFF_TIME_PARTS[i]]
       if a and a.icon then
         if P.separatedLayout then
           local ds = o.debuffSize
@@ -446,9 +472,9 @@ function F.Draw(slot)
   end
 
   -- Tracked buffs have their own upper-right row, separate from the centre icon.
-  local buffs = (o.buffCount or 0) > 0 and G.Auras.ShownBuffs(unit) or {}
+  local buffs = (o.buffCount or 0) > 0 and G.Auras.ShownBuffs(unit) or NO_BUFFS
   for i = 1, 3 do
-    local obj, aura = o["Buff" .. i], buffs[i]
+    local obj, aura = o[BUFF_PARTS[i]], buffs[i]
     if obj and i <= (o.buffCount or 0) and aura and aura.icon then
       G.Try(obj, "SetTexture", aura.icon)
       G.Try(obj, "SetTexCoord", 0, 1, 0, 1)

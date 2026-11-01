@@ -1,9 +1,66 @@
 'use strict';
 // Item icons for the Bank tab. The local host reads them from the game's own interface.fdb, in a format a
 // page can't show, so they are decoded here and kept as PNG data URLs. Nothing leaves this PC.
+// They're kept in this extension's IndexedDB: thousands of them would fill Chrome's extension storage, which the
+// encrypted Gameforge accounts also need.
 const GBIcons = (() => {
   const CACHE = 'icon:';
   const BATCH = 20;
+  const DATABASE = 'gb-icons';
+  const STORE = 'icons';
+  const MOVED = 'iconCacheMoved';
+  let opening = null;
+  function database() {
+    if (!opening) {
+      opening = new Promise((resolve, reject) => {
+        const request = indexedDB.open(DATABASE, 1);
+        request.onupgradeneeded = () => request.result.createObjectStore(STORE);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      opening.catch(() => { opening = null; });
+    }
+    return opening;
+  }
+  function readCached(keys) {
+    return database().then(db => new Promise(resolve => {
+      const found = {};
+      let left = keys.length;
+      if (!left) { resolve(found); return; }
+      const store = db.transaction(STORE).objectStore(STORE);
+      for (const key of keys) {
+        const request = store.get(key);
+        request.onsuccess = () => { if (request.result) found[key] = request.result; if (!--left) resolve(found); };
+        request.onerror = () => { if (!--left) resolve(found); };
+      }
+    }));
+  }
+  function writeCached(values) {
+    if (!Object.keys(values).length) return Promise.resolve();
+    return database().then(db => new Promise((resolve, reject) => {
+      const write = db.transaction(STORE, 'readwrite');
+      const store = write.objectStore(STORE);
+      for (const [key, value] of Object.entries(values)) store.put(value, key);
+      write.oncomplete = resolve;
+      write.onerror = () => reject(write.error);
+      write.onabort = () => reject(write.error);
+    }));
+  }
+  // Icons an older version kept in Chrome's extension storage move over once, and their room is given back.
+  let moving = null;
+  function moveOldCache() {
+    if (!moving) {
+      moving = (async () => {
+        if ((await chrome.storage.local.get(MOVED))[MOVED]) return;
+        const everything = await chrome.storage.local.get(null);
+        const old = Object.fromEntries(Object.entries(everything).filter(([key]) => key.startsWith(CACHE)));
+        await writeCached(old);
+        await chrome.storage.local.remove(Object.keys(old));
+        await chrome.storage.local.set({[MOVED]: true});
+      })().catch(() => {});
+    }
+    return moving;
+  }
 
   function color565(value) {
     return [((value >> 11) & 31) * 255 / 31, ((value >> 5) & 63) * 255 / 63, (value & 31) * 255 / 31];
@@ -95,7 +152,8 @@ const GBIcons = (() => {
   async function load(names, send, show) {
     const unique = [...new Set(names.filter(Boolean))];
     const keys = unique.map(name => CACHE + name.toLowerCase());
-    const cached = await chrome.storage.local.get(keys);
+    await moveOldCache();
+    const cached = await readCached(keys).catch(() => ({}));
     const missing = [];
     unique.forEach((name, i) => {
       if (cached[keys[i]]) show(name, cached[keys[i]]);
@@ -114,8 +172,8 @@ const GBIcons = (() => {
         store[CACHE + name.toLowerCase()] = url;
         show(name, url);
       }
-      // A full cache only means icons are read again next time.
-      await chrome.storage.local.set(store).catch(() => {});
+      // A cache that can't be written only means icons are read again next time.
+      await writeCached(store).catch(() => {});
     }
   }
   return {decode, load};

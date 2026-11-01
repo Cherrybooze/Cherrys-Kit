@@ -1,6 +1,6 @@
 # zBag
 
-Version **5.07-ck16** · Kit release **0.11.87** · [All addons / hub](../README.md)
+Version **5.07-ck17** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
@@ -16,11 +16,15 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 > - **Global Bank:** a Global Bank button on the one-bag window
 > - **Advanced AuctionHouse:** clicks in the bag work in the auction window
 >
-> **Original addon:** zBag 5.07 by adisadicul. If `Interface\AddOns\zBag` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+> **Original addon:** zBag 5.07 by adisadicul. If `Interface\AddOns\zBag` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
 > **Other addons:** AddonManager lists it when you have that addon. BagSearch 1.21, BagSort 1.05b, PocketMaid and Sol are built in, so delete any separate `BagSearch` or `BagSort` folder. The quick-sell filter is based on Lootomatic, which is a separate addon and can stay.
 
 <!-- end of requirements -->
+
+## Updated in 5.07-ck17
+
+**A smaller file to read at login.** The slot numbers on the 220 bag and bank buttons share one template, so `zBagKit.xml` went from 229 KB to 123 KB with the same buttons.
 
 ## Updated in 5.07-ck16
 

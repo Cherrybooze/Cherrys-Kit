@@ -510,6 +510,23 @@ assert.equal(gb.setLinks(gb.emptyState(), many, 'x'), 5000);
         self.assertIn('secret(account.secondary)', source)
         self.assertIn('<input id="gf-new-secondary" type="password"', page)
 
+    def test_right_click_menu_stacks_several_characters(self):
+        folder = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension'
+        source = (folder / 'accounts.js').read_text(encoding='utf-8')
+        page = (folder / 'control.html').read_text(encoding='utf-8')
+        css = (folder / 'control.css').read_text(encoding='utf-8')
+        # One character keeps its copy buttons in the menu. Several are stacked by name, and the hovered
+        # one's buttons open in a side menu headed with its name, so it's clear whose logins they copy.
+        self.assertIn('<div id="gf-side-menu" class="gf-menu gf-side-menu" hidden></div>', page)
+        self.assertIn('if (owners.length === 1) ownerRows(menu, owners[0], extra.length > 0);', source)
+        self.assertIn('ownerRows(side, owner, true);', source)
+        # Clicking in the side menu doesn't close it, and closing the menu closes both
+        self.assertIn("closest?.('#gf-menu, #gf-side-menu')", source)
+        self.assertRegex(source, r"function closeMenu\(\) \{\s+byId\('gf-menu'\)\.hidden = true;\s+closeSide\(\);")
+        # Ten names in view; more scroll
+        self.assertIn('max-height: calc(10 * 30px + 9 * 2px); overflow-y: auto;', css)
+        self.assertIn('flex: 0 0 30px;', css)
+
     def test_only_the_extension_itself_can_reach_stored_data(self):
         folder = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension'
         manifest = json.loads((folder / 'manifest.json').read_text(encoding='utf-8'))
@@ -518,8 +535,15 @@ assert.equal(gb.setLinks(gb.emptyState(), many, 'x'), 5000);
         self.assertNotIn('externally_connectable', manifest)
         self.assertNotIn('web_accessible_resources', manifest)
         self.assertNotIn('host_permissions', manifest)
-        self.assertEqual(sorted(manifest['permissions']), ['nativeMessaging', 'storage'])
+        self.assertEqual(sorted(manifest['permissions']), ['alarms', 'nativeMessaging', 'storage'])
         background = (folder / 'background.js').read_text(encoding='utf-8')
+        # Without a permission its chrome.* namespace is undefined, and the optional calls do nothing.
+        for api in ('alarms', 'storage', 'nativeMessaging'):
+            used = ('chrome.runtime.sendNativeMessage' if api == 'nativeMessaging' else 'chrome.' + api) in background
+            self.assertTrue(used, api)
+            self.assertIn(api, manifest['permissions'])
+        extra = json.loads((ROOT / 'extras/GlobalBankDailyRewards/GlobalBank/Helper/ChromeExtension/manifest.json').read_text(encoding='utf-8'))
+        self.assertEqual(extra, manifest)
         self.assertIn("accessLevel: 'TRUSTED_CONTEXTS'", background)
         self.assertNotIn('onMessageExternal', background)
         self.assertNotIn('onConnectExternal', background)
@@ -630,6 +654,11 @@ const list = folders.charactersFrom([{folder: 'A', time: 0, text: 'GlobalBank_Ch
 assert.equal(list[0].bag[0].tip[0][1], 'Name');
 assert.equal(list[0].classToken, 'MAGE');
 assert.deepEqual([...list[0].roster], ['A', 'B']);
+// One save folder per name: the same name on other servers shares it, and comes out apart
+const shared = folders.charactersFrom([{folder: 'S', time: 0, text: 'GlobalBank_Char = "GB1~S~Mage~1~111~0~0~0~t`S~One"\nGlobalBank_Others = "GB1~S~Mage~1~222~0~0~0~t`S~Two`B~1~1~5~Item~i`GB1~S~Mage~1~333~0~0~0~t`S~Three"\n'}]);
+assert.equal(JSON.stringify(shared.map(c => [c.server, c.gold]).sort()), JSON.stringify([['One', 111], ['Three', 333], ['Two', 222]]));
+assert.equal(bank.tellApart(shared).map(c => c.name).sort().join(), 'S (One),S (Three),S (Two)');
+assert.equal(bank.tellApart([{name: 'Lone', server: 'One'}])[0].name, 'Lone');
 """)
 
     def test_the_depot_page_address_is_never_kept(self):
@@ -729,7 +758,7 @@ const flush=async()=>{for(let i=0;i<8;i++) await new Promise(r=>setImmediate(r))
   const storage={get:async key=>{
     reads++;
     if(mode==='pending') return new Promise((resolve,reject)=>{rejectRead=reject;});
-    return {};
+    return {autoCollect:true};
   },set:async data=>{writes.push(data);},remove:async()=>{}};
   const runtime={id:'test',onMessage:{addListener(){}},sendMessage:async m=>m.type==='session-ready'?{ok:true}:{ok:true,running:true}};
   class Observer { constructor(fn){this.fn=fn;observer=this;} observe(){} disconnect(){disconnected=true;} }
@@ -747,6 +776,67 @@ const flush=async()=>{for(let i=0;i<8;i++) await new Promise(r=>setImmediate(r))
   assert.equal(disconnected,true); assert.equal(cleared,true);
   assert.equal(writes.length,2); // no failed status write after invalidation
   timer(); await flush(); assert.equal(writes.length,2);
+})().catch(e=>{console.error(e);process.exitCode=1;});
+""")
+
+    def test_daily_reward_is_only_clicked_when_auto_collect_is_ticked(self):
+        self.run_js(r"""
+const assert=require('node:assert/strict'), fs=require('node:fs'), vm=require('node:vm'), path=require('node:path');
+const source=fs.readFileSync(path.join(process.argv[1],'content.js'),'utf8');
+const flush=async()=>{for(let i=0;i<8;i++) await new Promise(r=>setImmediate(r));};
+(async()=>{
+  let observer, clicks=0; const session={}, sent=[];
+  const chest={id:'chest3',dataset:{number:'3',status:'nowAvailable'},classList:{contains:()=>false}};
+  const button={getClientRects:()=>[1],getAttribute:()=>null,disabled:false,click:()=>{clicks++;}};
+  const welcome={querySelector:()=>({textContent:'Sample'}),querySelectorAll:()=>[{textContent:'Example',querySelector:()=>null}]};
+  const doc={documentElement:{},querySelector:s=>s==='.welcome'?welcome:s.includes('nowAvailable')&&chest.dataset.status==='nowAvailable'?chest:null,
+    getElementById:id=>id==='chestinfo'?{dataset:{for:'chest3'}}:id==='chestInfoButtonPrice'?button:id==='chest3'?chest:null};
+  const storage={get:async keys=>Object.fromEntries([].concat(keys).filter(k=>k in session).map(k=>[k,session[k]])),
+    set:async data=>{Object.assign(session,data);},remove:async key=>{delete session[key];}};
+  const runtime={id:'test',onMessage:{addListener(){}},sendMessage:async m=>{sent.push(m);return m.type==='helper-status'?{ok:true,running:true}:{ok:true};}};
+  class Observer { constructor(fn){this.fn=fn;observer=this;} observe(){} disconnect(){} }
+  vm.runInNewContext(source,{chrome:{runtime,storage:{session:storage}},document:doc,location:{hostname:'eu-shop-runesofmagic.gameforge.com',pathname:'/dailies/display/5'},
+    MutationObserver:Observer,setInterval:()=>1,clearInterval:()=>{},getComputedStyle:()=>({visibility:'visible',display:'block'}),console,Date});
+  await flush();
+  // Not ticked: nothing is clicked, but the reward is watched for.
+  assert.equal(clicks,0);
+  assert.match(session.lastStatus,/click it on the page/);
+  // The player clicks it themselves: it is still recorded.
+  chest.dataset.status='redeemed'; observer.fn(); await flush();
+  assert.equal(clicks,0);
+  assert.deepEqual(sent.filter(m=>m.type==='reward-confirmed').map(m=>m.day),[3]);
+  // Ticked: the next available reward is clicked for the player.
+  session.autoCollect=true; chest.dataset.status='nowAvailable'; observer.fn(); await flush();
+  assert.equal(clicks,1);
+})().catch(e=>{console.error(e);process.exitCode=1;});
+""")
+
+    def test_auto_collect_tick_is_off_by_default_and_reaches_the_daily_page(self):
+        self.run_js(r"""
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const folder=process.argv[1];
+const html=fs.readFileSync(path.join(folder,'popup.html'),'utf8');
+assert.match(html,/<input id="auto-collect" type="checkbox">/);
+assert.match(html,/against Gameforge's terms of service/);
+const ids=['helper','start','stop','status','reset','reset-time','auto-helper','show-terminal','auto-collect','open-tools','reload-extension'];
+const elements=Object.fromEntries(ids.map(id=>[id,{checked:false,addEventListener(type,fn){this[type]=fn;}}]));
+const local={}; const flush=async()=>{for(let i=0;i<8;i++) await new Promise(r=>setImmediate(r));};
+const chrome={storage:{local:{get:async k=>({[k]:local[k]}),set:async d=>Object.assign(local,d)}},runtime:{sendMessage:async()=>({ok:true,running:true}),reload(){}}};
+vm.runInNewContext(fs.readFileSync(path.join(folder,'popup.js'),'utf8'),{document:{getElementById:id=>elements[id]},chrome,Date,Intl,setTimeout:()=>0,clearTimeout:()=>{}});
+(async()=>{
+  await flush();
+  assert.equal(elements['auto-collect'].checked,false);
+  elements['auto-collect'].checked=true; elements['auto-collect'].change(); await flush();
+  assert.equal(local.autoCollect,true);
+  // background.js copies the choice into session storage, which the daily page can read.
+  let changed; const session={}; const store={autoCollect:true};
+  const bg={runtime:{id:'test',getURL:f=>'chrome-extension://test/'+f,onMessage:{addListener(){}},onStartup:{addListener(){}},onInstalled:{addListener(){}},sendNativeMessage:(h,m,r)=>r({ok:true})},
+    storage:{local:{get:async k=>({[k]:store[k]}),setAccessLevel:async()=>{}},session:{set:async d=>Object.assign(session,d)},onChanged:{addListener:fn=>{changed=fn;}}}};
+  vm.runInNewContext(fs.readFileSync(path.join(folder,'background.js'),'utf8'),{chrome:bg,URL});
+  changed({autoCollect:{newValue:true}},'local'); await flush();
+  assert.equal(session.autoCollect,true);
+  store.autoCollect=false; changed({autoCollect:{newValue:false}},'local'); await flush();
+  assert.equal(session.autoCollect,false);
 })().catch(e=>{console.error(e);process.exitCode=1;});
 """)
 
@@ -877,6 +967,378 @@ listeners.startup();
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
+
+    def test_same_names_on_other_servers_regions_and_one_selection(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const plain = value => JSON.parse(JSON.stringify(value));
+const context = vm.createContext({console, setTimeout, clearTimeout, Intl, Date});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'accounts.js'), 'utf8') + ';this.GBAccounts = GBAccounts;', context);
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'roster.js'), 'utf8') + ';this.GBRoster = GBRoster;', context);
+const gb = context.GBRoster;
+const characters = [
+  {name: 'Bob', server: 'Aynara', gold: 5, roster: ['Bob', 'Cid']},
+  {name: 'Bob', server: 'Ayvenas (PvE)', gold: 7},
+  {name: 'Cid', gold: 999999999},
+  {name: 'Dee', dailyLogin: {server: 'Kadmos (PvE)', day: 3, collectedAt: '2026-10-31T09:00:00Z'}, gold: 1},
+  {name: 'Eve', gold: 2},
+];
+gb.prepare(characters, context.GBAccounts.accountGroups);
+// One name on two servers is two characters, each with its server in its name
+assert.deepEqual(plain(characters.map(c => c.name)), ['Bob (Aynara)', 'Bob (Ayvenas)', 'Cid', 'Dee', 'Eve']);
+assert.deepEqual(plain(characters.map(c => c.key)), ['aynara|bob', 'ayvenas|bob', 'aynara|cid', 'kadmos|dee', '|eve']);
+assert.deepEqual(plain([...characters[0].elsewhere]), ['Ayvenas']);
+// A snapshot without its own server is old, even when its daily reward or its login screen tells the server
+assert.deepEqual(plain(characters.map(c => c.stale)), [false, false, true, true, true]);
+assert.equal(characters[2].shownServer, 'Aynara');
+assert.equal(characters[3].server, 'Kadmos');
+// Preparing twice changes nothing
+gb.prepare(characters, context.GBAccounts.accountGroups);
+assert.deepEqual(plain(characters.map(c => c.key)), ['aynara|bob', 'ayvenas|bob', 'aynara|cid', 'kadmos|dee', '|eve']);
+assert.deepEqual(plain(characters.map(c => c.stale)), [false, false, true, true, true]);
+// Regions: the live servers, and servers nobody listed yet
+assert.equal(gb.regionOf('Ayvenas'), 'na');
+assert.equal(gb.regionOf('Aynara (PvE)'), 'eu');
+for (const server of ['Kadmos', 'Kerub', 'Gaia', 'Svidur']) assert.equal(gb.regionOf(server), 'eu', server);
+assert.equal(gb.regionOf('Newland'), '');
+assert.equal(gb.regionOf('Newland', {na: ['Newland']}), 'na');
+assert.equal(gb.guessRegion(characters), 'eu');
+assert.equal(gb.guessRegion([{shownServer: 'Ayvenas'}]), 'na');
+const view = {region: 'na', serversOff: new Set(), extra: {}};
+assert.deepEqual(plain(characters.filter(c => gb.shows(c, view)).map(c => c.name)), ['Bob (Ayvenas)', 'Eve']);
+view.region = 'eu';
+view.serversOff.add('kadmos');
+assert.deepEqual(plain(characters.filter(c => gb.shows(c, view)).map(c => c.name)), ['Bob (Aynara)', 'Cid', 'Eve']);
+// The ticks offer the region's servers even with nobody on them, and the unknown server last
+const servers = gb.serverList(characters, view);
+assert.deepEqual(plain(servers.map(s => s.name)), ['Aynara', 'Kadmos', 'Gaia', 'Kerub', 'Svidur', 'Server unknown']);
+assert.deepEqual(plain(servers.map(s => s.count)), [2, 1, 0, 0, 0, 1]);
+assert.equal(servers[1].on, false);
+assert.equal(servers[0].stale, 1);
+assert.deepEqual(plain(gb.serverList(characters, {region: 'na', serversOff: new Set(), extra: {}}).map(s => s.name)), ['Ayvenas', 'Server unknown']);
+assert.deepEqual(plain(gb.unlistedServers([{shownServer: 'Newland'}, {shownServer: 'Aynara'}, {shownServer: ''}]).map(s => s.name)), ['Newland']);
+// Grouped by server, with totals
+const groups = gb.groupBy(characters, 'server');
+assert.deepEqual(plain(groups.map(g => [g.title, g.characters.length])), [['Aynara', 2], ['Ayvenas', 1], ['Kadmos', 1], ['Server unknown', 1]]);
+assert.equal(groups[0].fullCaps, 1);
+// The hover card says what matters, in words
+const lines = gb.describe(characters[2]).map(line => line.kind + ':' + line.text);
+assert.ok(lines.includes('gold:999,999,999 gold (a full cap)'), lines.join('\n'));
+assert.ok(lines.some(line => line.startsWith('warn:') && line.includes('log in once')), lines.join('\n'));
+assert.ok(gb.describe(characters[0]).some(line => line.text === 'The same name is also on Ayvenas'));
+assert.ok(gb.describe(characters[3]).some(line => line.text.startsWith('Daily reward: day 3')));
+// One selection for the whole page, kept in this browser
+const saved = [];
+const storage = {get: async () => ({gbView: {region: 'eu', serversOff: [], extra: {}, onlySelected: true}, gbSelection: ['aynara|bob', 'gone|nobody']}), set: async data => { saved.push(data); }};
+const roster = gb.create(storage);
+const told = [];
+roster.onChange(what => told.push(what));
+(async () => {
+  await roster.load();
+  roster.setCharacters(characters);
+  assert.equal(roster.view.region, 'eu');
+  assert.equal(roster.isSelected('aynara|bob'), true);
+  assert.equal(roster.onlySelected(), true);
+  roster.toggle('aynara|cid');
+  const keys = characters.map(c => c.key);
+  // Shift-click: from the last click to this one, in the list's order
+  roster.range(keys, '|eve');
+  assert.deepEqual(plain([...roster.selected().map(c => c.name)]), ['Bob (Aynara)', 'Cid', 'Dee', 'Eve']);
+  roster.clearSelection();
+  assert.equal(roster.selection.size, 0);
+  assert.equal(roster.onlySelected(), false);
+  // A selection on servers not shown doesn't empty the Bank tab
+  roster.setSelection(['ayvenas|bob']);
+  assert.equal(roster.onlySelected(), false);
+  roster.setRegion('na');
+  assert.equal(roster.onlySelected(), true);
+  roster.setOnlySelected(false);
+  assert.equal(roster.onlySelected(), false);
+  assert.ok(told.includes('view') && told.includes('selection'));
+  await new Promise(resolve => setTimeout(resolve, 300));
+  // Many changes, one write
+  assert.equal(saved.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(saved[0])), {gbView: {region: 'na', serversOff: [], extra: {eu: [], na: []}, dropped: [], assigned: {}, onlySelected: false,
+    hideGameforge: false, hideRom: false, romFirst: false}, gbSelection: ['ayvenas|bob']});
+})().catch(error => { console.error(error); process.exit(1); });
+""")
+
+    def test_servers_regions_and_account_names_edited_by_hand(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const plain = value => JSON.parse(JSON.stringify(value));
+const context = vm.createContext({console, setTimeout, clearTimeout, Intl, Date});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'accounts.js'), 'utf8') + ';this.GBAccounts = GBAccounts;', context);
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'roster.js'), 'utf8') + ';this.GBRoster = GBRoster;', context);
+const gb = context.GBRoster, accounts = context.GBAccounts;
+// Regions edited by hand: a server moved to another region, one taken off, one added
+assert.equal(gb.regionOf('Aynara', {na: ['Aynara']}, new Set(['aynara'])), 'na');
+assert.equal(gb.regionOf('Svidur', {}, new Set(['svidur'])), '');
+assert.equal(gb.regionOf('Svidur', {}, ['svidur']), '');
+assert.deepEqual(plain(gb.regionLists({extra: {na: ['Aynara', 'Newland']}, dropped: new Set(['aynara', 'svidur'])})), {eu: ['Kadmos', 'Kerub', 'Gaia'], na: ['Ayvenas', 'Aynara', 'Newland']});
+const characters = [
+  {name: 'Ann', server: 'Aynara', gold: 5, roster: ['Ann', 'Bea', 'Neve']},
+  {name: 'Bea', gold: 7},
+  {name: 'Cal', gold: 1, roster: ['Cal', 'Dot']},
+  {name: 'Dot', gold: 2},
+  {name: 'Eve', gold: 3},
+];
+const [ann, bea, cal, dot, eve] = characters;
+const writes = [];
+const roster = gb.create({get: async () => ({}), set: async data => { writes.push(plain(data)); }});
+const told = [];
+roster.onChange(what => told.push(what));
+const prepare = () => { gb.prepare(characters, accounts.accountGroups, roster.assigned()); roster.setCharacters(characters); };
+(async () => {
+  await roster.load();
+  prepare();
+  // A name only a login screen lists can be selected and linked before it saves anything
+  const neve = roster.byKey('aynara|neve');
+  assert.ok(neve && neve.notSaved);
+  assert.equal(neve.shownServer, 'Aynara');
+  assert.deepEqual(plain(roster.listed().map(c => c.name)), ['Neve']);
+  assert.ok(gb.describe(neve).some(line => line.text === gb.UNSAVED_NOTE));
+  assert.deepEqual(plain(accounts.linkKeysOf(neve)), ['aynara|neve', 'neve']);
+  // RoM accounts: the first name on the login screen's list until you name one
+  assert.equal(roster.romTitle(ann), "Ann's account");
+  assert.equal(roster.romTitle(eve), '');
+  assert.equal(roster.romAccount(eve), null);
+  assert.deepEqual(plain(roster.romAccount(ann).characters.map(c => c.name)).sort(), ['Ann', 'Bea', 'Neve']);
+  roster.setRomName(bea, '  Mains  ');
+  assert.equal(roster.romTitle(ann), 'Mains');
+  assert.equal(roster.romName(neve), 'Mains');
+  assert.ok(told.includes('names'));
+  // Kept for each of its characters, by server and name where the server is sure, and by name where it isn't
+  roster.setRomName(cal, 'Bank alts');
+  const names = () => Object.keys(writes.filter(write => write.gbRomNames).pop().gbRomNames).sort();
+  assert.deepEqual(names(), ['aynara|ann', 'aynara|bea', 'aynara|neve', '|cal', '|dot']);
+  // A server set by hand for a RoM account nothing places: the keys change, the selection stays on them
+  roster.toggle('|cal');
+  roster.setServerOf(roster.romAccount(cal).characters, 'Kadmos (PvE)');
+  assert.ok(told.includes('assigned'));
+  roster.rekey(prepare);
+  assert.deepEqual(plain([cal.shownServer, cal.manualServer, cal.key, dot.key]), ['Kadmos', true, 'kadmos|cal', 'kadmos|dot']);
+  assert.equal(roster.isSelected('kadmos|cal'), true);
+  assert.equal(roster.isSelected('|cal'), false);
+  assert.deepEqual(plain(roster.assigned()), {cal: 'Kadmos', dot: 'Kadmos'});
+  // Its name stays, and its links stay by name: a server set by hand may be wrong
+  assert.equal(roster.romTitle(cal), 'Bank alts');
+  assert.deepEqual(plain(accounts.linkKeysOf(cal)), ['cal']);
+  assert.ok(gb.describe(cal).some(line => line.kind === 'sub' && line.text.endsWith('Kadmos (set by hand)')));
+  // A server the character saved itself always wins
+  assert.equal(bea.manualServer, false);
+  roster.setServerOf([cal, dot], '');
+  roster.rekey(prepare);
+  assert.deepEqual(plain([cal.key, cal.manualServer, roster.romTitle(cal), roster.isSelected('|cal')]), ['|cal', false, 'Bank alts', true]);
+  // The regions' lists through the page
+  roster.setRegion('eu');
+  roster.setServerRegion('Aynara', 'na');
+  assert.equal(roster.shows(ann), false);
+  assert.deepEqual(plain(roster.lists()), {eu: ['Kadmos', 'Kerub', 'Gaia', 'Svidur'], na: ['Ayvenas', 'Aynara']});
+  roster.setServerRegion('Aynara', 'eu');
+  assert.equal(roster.shows(ann), true);
+  assert.deepEqual(plain(roster.lists().eu), ['Aynara', 'Kadmos', 'Kerub', 'Gaia', 'Svidur']);
+  assert.equal(roster.view.dropped.size, 0);
+  assert.equal(roster.addServer('Newland', 'na'), '');
+  assert.match(roster.addServer('newland (PvE)', 'na'), /already/);
+  assert.match(roster.addServer('  ', 'na'), /name/);
+  roster.removeServer('Svidur');
+  const table = roster.serverTable();
+  const row = name => table.find(server => server.name === name);
+  assert.deepEqual(plain([row('Svidur').region, row('Svidur').builtIn, row('Newland').added, row('Newland').region]), ['', 'eu', true, 'na']);
+  assert.deepEqual(plain([row('Aynara').count, row('Aynara').saved]), [3, 2]);
+  roster.removeServer('Newland');
+  assert.equal(roster.serverTable().some(server => server.name === 'Newland'), false);
+  roster.resetRegions();
+  assert.deepEqual(plain(roster.lists()), {eu: ['Aynara', 'Kadmos', 'Kerub', 'Gaia', 'Svidur'], na: ['Ayvenas']});
+  // The hover card's account line, with either half hidden by the page's checkmarks
+  const line = extra => gb.accountLine(ann, extra)?.text || null;
+  const card = {account: c => (c === ann ? 'cherry@example' : ''), rom: c => roster.romTitle(c), locked: () => false};
+  assert.equal(line(card), 'Gameforge / RoM account: cherry@example / Mains');
+  assert.equal(line({...card, hideGameforge: true}), 'RoM account: Mains');
+  assert.equal(line({...card, hideRom: true}), 'Gameforge account: cherry@example');
+  assert.equal(line({...card, hideGameforge: true, hideRom: true}), null);
+  assert.equal(gb.accountLine(eve, {...card, locked: () => true}).text, 'Gameforge / RoM account: locked / not known yet');
+  // One selection, listed names included
+  roster.setSelection(['aynara|neve', 'aynara|ann', 'gone|nobody']);
+  assert.deepEqual(plain(roster.counts()), {shown: 2, hidden: 0});
+  assert.deepEqual(plain(roster.selectedAll().map(c => c.name)), ['Ann', 'Neve']);
+  assert.deepEqual(plain(roster.selected().map(c => c.name)), ['Ann']);
+  roster.setRegion('na');
+  assert.deepEqual(plain(roster.counts()), {shown: 0, hidden: 2});
+  roster.setCard('gameforge', true);
+  roster.setRomFirst(true);
+  await new Promise(resolve => setTimeout(resolve, 300));
+  const view = writes.filter(write => write.gbView).pop().gbView;
+  assert.deepEqual(plain([view.hideGameforge, view.hideRom, view.romFirst, view.assigned, view.dropped]), [true, false, true, {}, []]);
+  // Read back as saved
+  const again = gb.create({get: async () => ({gbView: view, gbRomNames: {'aynara|ann': 'Mains', constructor: 'x'}}), set: async () => {}});
+  await again.load();
+  assert.deepEqual(plain([again.view.romFirst, again.view.hideGameforge, again.view.region]), [true, true, 'na']);
+  // Gameforge accounts: renamed when the name is free, and the heatmap names RoM accounts not linked yet
+  const state = accounts.emptyState();
+  state.accounts.push({id: 'a', name: 'First'}, {id: 'b', name: 'Second'});
+  assert.equal(accounts.renameAccount(state, 'a', ' second '), 'second is already on the list.');
+  assert.equal(accounts.renameAccount(state, 'a', '   '), 'Type a name first.');
+  assert.equal(accounts.renameAccount(state, 'x', 'New'), 'That account is gone.');
+  assert.equal(accounts.nameProblem(state, 'a', 'first'), '');
+  assert.equal(accounts.renameAccount(state, 'a', ' Main@example '), '');
+  assert.equal(state.accounts[0].name, 'Main@example');
+  accounts.setLinks(state, [accounts.linkKeysOf(neve)[0]], 'b');
+  assert.equal(accounts.accountFor(state, neve).name, 'Second');
+  const heat = accounts.heatColumns(characters, state, 'No account', c => roster.romName(c));
+  assert.deepEqual(plain(heat.map(c => c.server)), ['Aynara', 'Server unknown']);
+  assert.deepEqual(plain(heat[0].groups.map(g => g.account)), ['Mains, not linked']);
+  assert.deepEqual(plain(heat[1].groups.map(g => g.account)), ['Bank alts, not linked', 'No account']);
+})().catch(error => { console.error(error); process.exit(1); });
+""")
+
+    def test_account_links_keep_to_server_and_name(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const plain = value => JSON.parse(JSON.stringify(value));
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'accounts.js'), 'utf8') + ';this.GBAccounts = GBAccounts;', context);
+const gb = context.GBAccounts;
+const state = gb.emptyState();
+state.accounts.push({id: 'a', name: 'First'}, {id: 'b', name: 'Second'});
+const bob = {name: 'Bob (Aynara)', key: 'aynara|bob', shownServer: 'Aynara', gold: 1, server: 'Aynara'};
+const old = {name: 'Old', key: '|old', shownServer: '', gold: 1};
+assert.deepEqual(plain([...gb.linkKeysOf(bob)]), ['aynara|bob', 'bob (aynara)']);
+// Without a known server only the name it's shown with can hold a link
+assert.deepEqual(plain([...gb.linkKeysOf(old)]), ['old']);
+// A link made the older way, by the shown name, still counts
+gb.setLinks(state, ['Bob (Aynara)'], 'a');
+assert.equal(gb.accountFor(state, bob).name, 'First');
+// The server and name win over the older form
+gb.setLinks(state, ['aynara|bob'], 'b');
+assert.equal(gb.accountFor(state, bob).name, 'Second');
+// The heatmap's cells say who they are, for the page's hover card and clicks
+const columns = gb.heatColumns([bob, old], state);
+assert.deepEqual(plain([...columns.flatMap(c => c.groups.flatMap(g => g.characters.map(cell => cell.key)))]), ['aynara|bob', '|old']);
+assert.equal(columns[0].groups[0].account, 'Second');
+""")
+
+    def test_stacking_rules_quality_and_favourites(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const plain = value => JSON.parse(JSON.stringify(value));
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+const bank = context.GBBank;
+// Quality is the colour of the item's name
+assert.deepEqual(plain(['ffffff', '00ff00', '0072bc', 'c805f8', 'f68e56', 'f2d24b', 'nonsense'].map(bank.qualityOf)), [0, 1, 2, 3, 4, 5, 0]);
+assert.equal(bank.typeOf('202845', 'interface/icons/mana stone06'), 'Mana stones');
+assert.equal(bank.typeOf('202880', ''), 'Mana stones');
+assert.equal(bank.locationLabel('bank', 205), 'Bank 205 (item shop tab, slot 5)');
+const gear = {dura: 1, maxDura: 2, plus: 3, tier: 0, freeSlots: 0, stats: ['Monk V'], runes: [], color: 'c805f8'};
+const ann = {name: 'Ann', key: 'aynara|ann', shownServer: 'Aynara', level: 1, stale: false, bag: [
+  {slot: 1, count: 1, id: '202845', name: 'Stone', stats: ['Monk V']}, {slot: 2, count: 1, id: '202845', name: 'Stone', stats: ['Monk V']},
+  {slot: 3, count: 1, id: '202845', name: 'Stone', stats: ['Dark I']}, {slot: 4, count: 5, id: '200000', name: 'Herb'},
+  {slot: 5, count: 1, id: '211000', name: 'Sword', gear}, {slot: 6, count: 1, id: '211000', name: 'Sword', gear}], bank: [{slot: 201, count: 2, id: '200000', name: 'Herb', bound: true}]};
+const old = {name: 'Old', key: '|old', shownServer: '', level: 1, stale: true, bag: [{slot: 1, count: 1, id: '211000', name: 'Sword'}], bank: []};
+const list = bank.entries([ann, old]);
+assert.equal(list.find(e => e.slot === 5).quality, 3);
+const rules = (over = {}) => ({on: true, types: new Set(bank.DEFAULT_RULES.types), stats: 'apart', always: new Set(), ...over});
+const count = r => bank.cells(list, r).length;
+// Like the game: anything with stats of its own stays apart
+assert.equal(count(rules()), 7);
+// Same stats stack, or every copy; weapons aren't ticked, so each sword stays apart
+assert.equal(count(rules({stats: 'match'})), 6);
+assert.equal(count(rules({stats: 'all'})), 5);
+// An item you chose stacks every copy, even gear
+assert.equal(count(rules({always: new Set(['211000'])})), 5);
+const mixed = bank.cells(list, rules({stats: 'all', always: new Set(['211000'])})).find(c => c.name === 'Sword');
+assert.equal(mixed.total, 3);
+const lines = bank.itemLines(mixed).map(l => l.kind + ':' + l.text);
+assert.ok(lines.some(l => l.includes('different kinds')), lines.join('\n'));
+assert.ok(lines.some(l => l.startsWith('warn:Stats unknown: Old')), lines.join('\n'));
+// A type left unticked never stacks
+assert.equal(bank.cells(list, rules({types: new Set()})).filter(c => c.name === 'Herb').length, 2);
+assert.equal(bank.cells(list, false).length, list.length);
+// More filters
+const shown = filters => bank.applyFilters(list, filters).length;
+assert.equal(shown({place: 'shop'}), 1);
+assert.equal(shown({binding: 'bound'}), 1);
+assert.equal(shown({binding: 'free'}), list.length - 1);
+assert.equal(shown({minQuality: 3}), 2);
+assert.equal(shown({statsOnly: true}), 5);
+assert.equal(shown({favourites: new Map([['200000', {}]])}), 2);
+assert.equal(shown({keep: character => character.key !== '|old'}), list.length - 1);
+// Who holds what, with servers and keys for clicks
+const who = bank.holders(list.filter(e => e.name === 'Herb'));
+assert.deepEqual(JSON.parse(JSON.stringify(who)), [{name: 'Ann', key: 'aynara|ann', server: 'Aynara', count: 7, parts: ['Bag 4 (page 1, slot 4) × 5', 'Bank 201 (item shop tab, slot 1) × 2']}]);
+// Favourites: totals for each server
+const rows = bank.favouriteRows(list, new Map([['200000', {name: 'Herb', icon: ''}], ['999', {name: 'Gone', icon: ''}]]));
+assert.deepEqual(plain(rows.map(r => [r.name, r.total])), [['Gone', 0], ['Herb', 7]]);
+assert.equal(rows[1].servers.get('Aynara'), 7);
+// Currencies say which characters haven't recorded them yet
+const table = bank.currencyTable([{...ann, gold: 3, currencies: [{key: '12', amount: 4, name: 'Honor'}]}, {...old, gold: 1}], 'gold', true);
+assert.deepEqual(plain(table.rows.map(r => [r.name, r.server, r.stale])), [['Ann', 'Aynara', false], ['Old', '', true]]);
+const roster = bank.rosterRows([{...ann, gold: 3, group: {names: ['Ann', 'Zed']}}], 'name', false, () => '');
+// The Gameforge account only when linked, and the RoM account: its login screen's first name until you name it
+assert.equal(roster[0].account, '');
+assert.equal(roster[0].rom, "Ann's account");
+assert.equal(roster[0].server, 'Aynara');
+assert.equal(bank.rosterRows([{...ann, group: {names: ['Ann', 'Zed']}}], 'name', false, () => 'Main', () => 'Bank alts')[0].rom, 'Bank alts');
+assert.equal(bank.rosterRows([{...ann, group: {names: ['Ann', 'Zed']}}], 'name', false, () => 'Main')[0].account, 'Main');
+""")
+
+    def test_reload_reads_again_when_the_file_changes_on_the_way(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const plain = value => JSON.parse(JSON.stringify(value));
+const stub = () => ({value:'', checked:false, textContent:'', style:{}, dataset:{}, addEventListener() {}, replaceChildren() {}, append() {}, querySelectorAll: () => []});
+const context = vm.createContext({console, document: {createElement: stub}, setTimeout, clearTimeout});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+const make = n => JSON.stringify({made: 'stamp' + n, characters: Array.from({length: 2000 + n}, (_, i) => ({name: 'Alt' + i, gold: 0, bag: [{slot: 1, count: 1, id: '1', name: 'x'.repeat(200)}], bank: []}))});
+let file = make(0);
+const asked = [];
+let rewriteAt = -1;
+const send = async message => {
+  asked.push(message.offset);
+  if (asked.length === rewriteAt) file = make(1);
+  await new Promise(resolve => setTimeout(resolve, 1));
+  return {ok: true, json: file.slice(message.offset, message.offset + 300000), total: file.length};
+};
+let told = 0, characters = 0;
+const elements = new Map();
+const root = {querySelector: id => { if (!elements.has(id)) elements.set(id, stub()); return elements.get(id); }};
+const bank = context.GBBank.create(root, send, () => {}, (totals) => { told++; characters = totals.characters; });
+(async () => {
+  // The helper rewrote the file after the first part: it's read again from the start
+  rewriteAt = 2;
+  assert.equal(await bank.reload(), true);
+  assert.equal(characters, 2001);
+  assert.equal(asked.filter(offset => offset === 0).length, 2);
+  // Nothing changed: one part is enough to tell
+  asked.length = 0;
+  assert.equal(await bank.reload({ifChanged: true}), false);
+  assert.equal(asked.length, 1);
+  // Asking while a load runs waits for it, and loads once more afterwards
+  asked.length = 0;
+  told = 0;
+  const first = bank.reload();
+  const second = bank.reload();
+  await first;
+  await second;
+  await new Promise(resolve => setTimeout(resolve, 200));
+  assert.equal(told, 2);
+})().catch(error => { console.error(error); process.exit(1); });
+""")
+
+    def test_every_element_the_page_scripts_use_is_on_the_page(self):
+        page = (EXTENSION / 'control.html').read_text(encoding='utf-8')
+        ids = set(re.findall(r'\bid="([^"]+)"', page))
+        self.assertEqual(len(re.findall(r'\bid="([^"]+)"', page)), len(ids), 'an id is used twice')
+        wanted = set()
+        for script, pattern in (('control.js', r"byId\('([^']+)'\)"), ('accounts.js', r"byId\('([^']+)'\)"), ('bank.js', r"\bel\('([^']+)'\)")):
+            wanted |= set(re.findall(pattern, (EXTENSION / script).read_text(encoding='utf-8-sig')))
+        self.assertEqual(sorted(wanted - ids), [])
+        # Who is who comes before the tabs that use it
+        scripts = re.findall(r'<script defer src="([^"]+)"', page)
+        self.assertLess(scripts.index('roster.js'), scripts.index('bank.js'))
+        self.assertLess(scripts.index('accounts.js'), scripts.index('control.js'))
 
 @unittest.skipUnless(SHELL, 'PowerShell required')
 class NativeStatusTests(unittest.TestCase):

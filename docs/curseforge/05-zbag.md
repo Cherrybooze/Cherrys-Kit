@@ -8,7 +8,7 @@
 > - **Global Bank:** a Global Bank button on the one-bag window
 > - **Advanced AuctionHouse:** clicks in the bag work in the auction window
 >
-> **Original addon:** zBag 5.07 by adisadicul. If `Interface\AddOns\zBag` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+> **Original addon:** zBag 5.07 by adisadicul. If `Interface\AddOns\zBag` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
 > **Other addons:** AddonManager lists it when you have that addon. BagSearch 1.21, BagSort 1.05b, PocketMaid and Sol are built in, so delete any separate `BagSearch` or `BagSort` folder. The quick-sell filter is based on Lootomatic, which is a separate addon and can stay.
 
@@ -16,21 +16,11 @@
 
 zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
-## Updated in 5.07-ck16
+## Recent changes
 
-One bag and one bank keep the game's own backpack and bank window out of view. If another addon or the game puts them back on screen while zBag is open, zBag moves them away again instead of showing both windows side by side.
-
-## Updated in 5.07-ck15
-
-Lighter while you play. Item slots no longer run an empty script on every frame (each open slot did), the bag sorter's timer runs only while a sort is in progress, and the checks that keep the bag and bank windows in step run 20 times a second instead of on every frame. Resizing a bag still follows the mouse every frame, and sorting still moves an item every frame.
-
-## Updated in 5.07-ck14
-
-Unrelated bag/bank updates no longer close the stack-split number dialog. Confirmations validate the original source and amount; Shift-drag follows the normal pickup path. Slot numbers default to 8 points (about 40% smaller), with **Font size −/+** controls in /zb for 6–20. This applies to all bag/bank layouts and follows shared/per-character settings; stack counts keep their normal size. Native split behavior and readability need in-game checking.
-
-## Updated in 5.07-ck13
-
-The bank XML passes real elapsed time to its 0.2-second timer, targeting about five refreshes per second independently of FPS, without a catch-up burst after a stall. Sorting retains its pass-level rebuild reduction, necessary post-swap rebuilds and no-progress exit; attribute lists are sorted once at build time. Live bank sorting still needs an in-game check.
+- **5.07-ck17**: a smaller file to read at login. The slot numbers on the 220 bag and bank buttons share one template, so that file went from 229 KB to 123 KB with the same buttons.
+- **5.07-ck16**: one bag and one bank keep the game's own backpack and bank window out of view, even when another addon or the game puts them back on screen.
+- **5.07-ck15**: lighter while you play. Item slots no longer run a script on every frame, the bag sorter's timer only runs while you sort, and the bag and bank windows check each other 20 times a second instead of every frame.
 
 ## Features
 
@@ -39,17 +29,19 @@ The bank XML passes real elapsed time to its 0.2-second timer, targeting about f
   - *One bag (classic zBag)*: all bags in one frame.
   - *One bag (Cherry's)*: each bag opens as its own plain box. Drag a bag anywhere and drag its corner to reshape it (narrower = more rows). Bag I has the search box under it, and B opens and closes them all. *Lock resize* keeps the shapes.
 - **Choose the bank separately**: tick **Use one bank (classic zBag)** for zBag's bank, or leave it unticked for the game's bank. It works with any bag layout.
-- **Share bag settings across characters** is on by default. Turn it off for separate settings per character. Existing shared and separate settings are kept when you switch. On the first upgrade, the settings loaded on that character become the initial shared setup. The quick-sell item filter remains separate for each character.
+- **Share bag settings across characters** is on by default. Turn it off for separate settings per character; both sets are kept when you switch. The quick-sell item filter stays separate for each character.
 - **Auto bag and bank pages** (optional): rented pages show while their rent is running and hide once it runs out.
 - **Item search** in every layout (BagSearch).
-- **Slot numbers**: an optional see-through number (1 to 180) in the upper-left corner of every bag slot and bank slot.
+- **Slot numbers**: an optional see-through number (1 to 180) in the upper-left corner of every bag slot and bank slot, in a size you choose (6 to 20).
 - **All bags window**: all six bags in one window that you can drag anywhere. "Reset bag positions" puts it, the Cherry's bags and the money box back.
 - **Hide default backpack** (optional, individual bags): B opens All bags instead.
 - **Money box** (optional): gold, diamonds and rubies in a small box of its own that stays on screen and can be dragged anywhere.
-- **Bag sorting** (BagSort) and the **quick-sell item filter** (based on Lootomatic).
+- **Bag sorting** (BagSort), for bags and bank, and the **quick-sell item filter** (based on Lootomatic).
 - Fixes zBag's old bug that left an empty row above the equipment when the last bag row was full.
-- Hover help on every option. Safe with Reload UI.
+- Hover help on every option. Light while you play. Safe with Reload UI.
 - Works with **Global Bank**: its button sits just above the top right of zBag's one-bag window.
+
+**Still being tested in game:** the split-stack box, how readable the smaller slot numbers are, and sorting a live bank.
 
 ## Chat commands
 
@@ -61,7 +53,7 @@ The bank XML passes real elapsed time to its 0.2-second timer, targeting about f
 ## Install
 
 - **Requires Cherry's Kit** (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\zBag\`.
-- **Delete the old `Interface\AddOns\zBag` folder** (and any separate `BagSearch` or `BagSort` folders). While an old copy is there, Cherry's Kit keeps this version turned off.
+- **Move the old `Interface\AddOns\zBag` folder out of AddOns** (`!setup_cherryskit.bat` offers to) (and any separate `BagSearch` or `BagSort` folders). While an old copy is there, Cherry's Kit keeps this version turned off.
 - Turn it on or off in the Cherry's Kit window (`/ck`).
 
 ## Bug reports

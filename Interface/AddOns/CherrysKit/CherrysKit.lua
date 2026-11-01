@@ -8,8 +8,8 @@
 CherrysKit = CherrysKit or {}
 local Kit = CherrysKit
 
-Kit.version = "0.4.25"
-Kit.MAX_ROWS = 18
+Kit.version = "0.4.28"
+Kit.MAX_ROWS = 14
 
 if SaveVariables then
   SaveVariables("CherrysKit_DB")
@@ -108,6 +108,7 @@ end
 --   before: the global already existed when the kit started loading that addon
 --   after:  the global changed after the kit loaded that addon (another copy loaded later)
 -- A name starting with "-" is one the kit's version never defines: it exists only with the other copy.
+-- A merged addon lists the addons it took over under "others", and each is looked for the same way.
 -- Nothing is said about a kit addon that isn't installed: its original is simply what's running.
 --
 -- The manifest can't skip files, so the kit's copy still loads. When it's known to be giving way, whatever
@@ -117,9 +118,10 @@ end
 ---------------------------------------------------------------------------
 Kit.ORIGINS = CherrysKit_Origins or {}
 Kit.oldCopies = {} -- folder -> how it was found
+Kit.foundOrigin = {} -- folder -> which of its origins was found
 Kit.kitFound = {} -- folder -> is the kit's own copy installed
 Kit.warnedOld = nil -- warn again after Reload UI
--- folder -> { value, version } right after the kit loaded it. Reload UI re-runs every file in the
+-- folder -> fingerprint -> { value, version } right after the kit loaded it. Reload UI re-runs every file in the
 -- same Lua state, so this survives it: a global that is still the kit's own from before the
 -- reload is not another copy.
 Kit.ours = Kit.ours or {}
@@ -150,11 +152,28 @@ local function kitThere(folder)
   return Kit.kitFound[folder]
 end
 
-for folder, origin in pairs(Kit.ORIGINS) do
+-- The addon a kit addon came from, then any others merged into it.
+local originLists = {}
+local function originsOf(folder)
+  if not originLists[folder] then
+    local origin = Kit.ORIGINS[folder]
+    local list = origin and { origin } or {}
+    for _, other in ipairs(origin and origin.others or {}) do
+      table.insert(list, other)
+    end
+    originLists[folder] = list
+  end
+  return originLists[folder]
+end
+
+for folder in pairs(Kit.ORIGINS) do
   if kitThere(folder) then
-    for _, file in ipairs(origin.files) do
-      if fileThere("Interface/AddOns/" .. origin.folder .. "/" .. file) then
-        Kit.oldCopies[folder] = "file"
+    for _, origin in ipairs(originsOf(folder)) do
+      for _, file in ipairs(origin.files) do
+        if fileThere("Interface/AddOns/" .. origin.folder .. "/" .. file) then
+          Kit.oldCopies[folder] = "file"
+          Kit.foundOrigin[folder] = Kit.foundOrigin[folder] or origin
+        end
       end
     end
   end
@@ -165,11 +184,6 @@ local function versionField(v)
     return rawget(v, "version") or rawget(v, "VERSION") or rawget(v, "ADDON_VERSION")
   end
   return nil
-end
-
-local function fingerprintOf(folder)
-  local origin = Kit.ORIGINS[folder]
-  return origin and origin.fingerprint
 end
 
 local loadingFolder
@@ -219,11 +233,16 @@ local function putBack(target, kept, whenChanged)
 end
 
 local function startAddon(folder)
-  local name = fingerprintOf(folder)
-  local ours = Kit.ours[folder]
-  if kitThere(folder) and name and string.sub(name, 1, 1) ~= "-" and rawget(_G, name) ~= nil
-    and not (ours and rawget(_G, name) == ours.value) then
-    Kit.oldCopies[folder] = "before"
+  local ours = Kit.ours[folder] or {}
+  if kitThere(folder) then
+    for _, origin in ipairs(originsOf(folder)) do
+      local name = origin.fingerprint
+      if name and string.sub(name, 1, 1) ~= "-" and rawget(_G, name) ~= nil
+        and not (ours[name] and rawget(_G, name) == ours[name].value) then
+        Kit.oldCopies[folder] = "before"
+        Kit.foundOrigin[folder] = Kit.foundOrigin[folder] or origin
+      end
+    end
   end
   if Kit.oldCopies[folder] then
     keptGlobals = copyOf(_G)
@@ -247,9 +266,12 @@ local function finishAddon(folder)
     putBack(_G, keptGlobals, silence)
     keptGlobals, keptTables = nil, nil
   end
-  local name = fingerprintOf(folder)
-  if name and string.sub(name, 1, 1) ~= "-" then
-    Kit.ours[folder] = { value = rawget(_G, name), version = versionField(rawget(_G, name)) }
+  Kit.ours[folder] = Kit.ours[folder] or {}
+  for _, origin in ipairs(originsOf(folder)) do
+    local name = origin.fingerprint
+    if name and string.sub(name, 1, 1) ~= "-" then
+      Kit.ours[folder][name] = { value = rawget(_G, name), version = versionField(rawget(_G, name)) }
+    end
   end
 end
 
@@ -283,23 +305,28 @@ function Kit.OriginTakesPrecedence(folder)
   if Kit.oldCopies[folder] then
     return true
   end
-  local name = fingerprintOf(folder)
-  if not name then
-    return false
-  end
-  if string.sub(name, 1, 1) == "-" then
-    return rawget(_G, string.sub(name, 2)) ~= nil
-  end
-  local ours = Kit.ours[folder]
-  if ours and loadingFolder ~= folder then
-    local now = rawget(_G, name)
-    return now ~= ours.value or versionField(now) ~= ours.version
+  local ours = Kit.ours[folder] or {}
+  for _, origin in ipairs(originsOf(folder)) do
+    local name = origin.fingerprint
+    if name and string.sub(name, 1, 1) == "-" then
+      if rawget(_G, string.sub(name, 2)) ~= nil then
+        Kit.foundOrigin[folder] = Kit.foundOrigin[folder] or origin
+        return true
+      end
+    elseif name and ours[name] and loadingFolder ~= folder then
+      local now = rawget(_G, name)
+      if now ~= ours[name].value or versionField(now) ~= ours[name].version then
+        Kit.foundOrigin[folder] = Kit.foundOrigin[folder] or origin
+        return true
+      end
+    end
   end
   return false
 end
 
 -- For chat: "the original zBag 5.07 in Interface\AddOns\zBag"
-local function originWords(origin)
+local function originWords(folder)
+  local origin = Kit.foundOrigin[folder] or Kit.ORIGINS[folder]
   local where = "Interface\\AddOns\\" .. origin.folder
   if origin.kind == "older" then
     return "your separate copy in " .. where
@@ -395,7 +422,7 @@ function Kit.Refresh()
         label = label .. "  |cffff6060(off)|r"
       end
       setText(name, label)
-      setText(_G["CherrysKit_Row" .. i .. "Cmd"], old and ("|cffff6060AddOns\\" .. Kit.ORIGINS[entry.folder].folder .. " takes precedence|r")
+      setText(_G["CherrysKit_Row" .. i .. "Cmd"], old and ("|cffff6060AddOns\\" .. (Kit.foundOrigin[entry.folder] or Kit.ORIGINS[entry.folder]).folder .. " takes precedence|r")
         or ("|cffaaaaaa" .. Kit.CommandText(entry.folder) .. "|r"))
       setText(open, "Settings")
       setText(toggle, enabled and "Turn off" or "Turn on")
@@ -601,8 +628,8 @@ function Kit.WarnOrigins()
   table.sort(folders)
   for _, folder in ipairs(folders) do
     local origin = Kit.ORIGINS[folder]
-    print(origin.title .. " from the kit is off: " .. originWords(origin) .. " takes precedence. "
-      .. "To use the kit's version, delete that folder and Reload UI.")
+    print(origin.title .. " from the kit is off: " .. originWords(folder) .. " takes precedence. "
+      .. "To use the kit's version, run !setup_cherryskit.bat or move that folder out of AddOns, then Reload UI.")
   end
 end
 
@@ -624,24 +651,20 @@ end
 -- typed alone it opens the chosen window, with extra words it goes to its owner as before.
 ---------------------------------------------------------------------------
 
-Kit.DEFAULT_COMMANDS = { KittyCombo = "/kc /kitty", RomWeakAuras = "/wa", CherrysChat = "/cchat", zBag = "/zb", ExtendedMacroIcons = "/emi", TooltipIds = "/ti", UltimateMailMod = "/umm", GlobalBank = "/gb", AdvancedAuctionHouse = "/aah", CherrysLoadTimes = "/ckload", ZShop = "/zshop", pbInfo = "/pbinfo", PortraitHP = "/php", CherrysGrid = "/grid", CherrysQuests = "/cq", CherrysBar = "/cbar", ControlHub = "/rwa /ck" }
-Kit.WINDOWS = { "KittyCombo", "RomWeakAuras", "CherrysChat", "zBag", "ExtendedMacroIcons", "TooltipIds", "UltimateMailMod", "GlobalBank", "AdvancedAuctionHouse", "CherrysLoadTimes", "ZShop", "pbInfo", "PortraitHP", "CherrysGrid", "CherrysQuests", "CherrysBar", "ControlHub" }
+Kit.DEFAULT_COMMANDS = { KittyCombo = "/kc /kitty", RomWeakAuras = "/wa", CherrysChat = "/cchat", zBag = "/zb", UltimateMailMod = "/umm", GlobalBank = "/gb", AdvancedAuctionHouse = "/aah", CherrysLoadTimes = "/ckload", ZShop = "/zshop", CherrysInfo = "/cinfo", CherrysGrid = "/grid", CherrysBar = "/cbar", ControlHub = "/rwa /ck" }
+Kit.WINDOWS = { "KittyCombo", "RomWeakAuras", "CherrysChat", "zBag", "UltimateMailMod", "GlobalBank", "AdvancedAuctionHouse", "CherrysLoadTimes", "ZShop", "CherrysInfo", "CherrysGrid", "CherrysBar", "ControlHub" }
 Kit.WINDOW_TITLES = {
   KittyCombo = "Cherry's KittyCombo",
   RomWeakAuras = "rom weakauras",
   CherrysChat = "Cherry's Chat",
   zBag = "zBag",
-  ExtendedMacroIcons = "Extended Macro Icons",
-  TooltipIds = "TooltipIds",
   UltimateMailMod = "Ultimate Mail Mod",
   GlobalBank = "Global Bank",
   AdvancedAuctionHouse = "Advanced AuctionHouse",
   CherrysLoadTimes = "Cherry's Addon LoadTimes",
   ZShop = "ZShop",
-  pbInfo = "pbInfo",
-  PortraitHP = "PortraitHP",
+  CherrysInfo = "Cherry's Info",
   CherrysGrid = "Cherry's Grid",
-  CherrysQuests = "Cherry's Quests",
   CherrysBar = "Cherry's Bar",
   ControlHub = "Control hub",
 }
@@ -663,7 +686,7 @@ function Kit.OpenWindow(window)
   if not entry or not installed(entry) then
     print((Kit.WINDOW_TITLES[window] or tostring(window)) .. " is not installed")
   elseif Kit.OriginTakesPrecedence(window) then
-    print(entry.title .. " from the kit is off: " .. originWords(Kit.ORIGINS[window]) .. " takes precedence.")
+    print(entry.title .. " from the kit is off: " .. originWords(window) .. " takes precedence.")
   elseif not Kit.IsEnabled(window) then
     print(entry.title .. " is turned off. Turn it on here and Reload UI.")
     Kit.Toggle()

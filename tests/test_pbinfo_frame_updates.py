@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 from lupa.lua51 import LuaRuntime
 
 
-PBINFO = Path(__file__).resolve().parents[1] / "Interface/AddOns/CherrysKit/pbInfo"
+PBINFO = Path(__file__).resolve().parents[1] / "Interface/AddOns/CherrysKit/CherrysInfo"
 NS = {"ui": "http://www.runewaker.com/"}
 
 

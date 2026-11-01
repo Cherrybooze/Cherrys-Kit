@@ -5,6 +5,8 @@
 --   GlobalBank_Char   this character's own snapshot, one compact string, saved by the game in
 --                     Documents\Runes of Magic\<Name>\SaveVariables.lua (SaveVariablesPerCharacter).
 --                     The shared account file is not used at all, so it can stay read-only.
+--   GlobalBank_Others snapshots of characters with this name on other servers. The game has one save
+--                     folder per name, whatever the server, so they share this file (see GB.SettleServer).
 --   GlobalBank_Notes  notes this character wrote (and the window size), until the helper's database
 --                     has them; the helper shares them with every character (see "Notes" below).
 --   Helper\          "Start Global Bank helper.bat" in this addon's Helper folder. While its window
@@ -27,7 +29,7 @@
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.4.15"
+GB.version = "1.5.4"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -40,6 +42,7 @@ GB.MAX_WAIT = 15    -- ...but no longer than this while things keep changing (lo
 -- Per character only: the shared account file (often kept read-only) is never touched.
 if SaveVariablesPerCharacter then
   SaveVariablesPerCharacter("GlobalBank_Char")
+  SaveVariablesPerCharacter("GlobalBank_Others")
   SaveVariablesPerCharacter("GlobalBank_Probe")
   SaveVariablesPerCharacter("GlobalBank_Removed")
   SaveVariablesPerCharacter("GlobalBank_Notes")
@@ -230,6 +233,17 @@ local function call(fn, ...)
   return unpack(result)
 end
 
+-- The login screen leaves the server behind too, for a client that can't say in game.
+function GB.ServerNow()
+  local server = call(GetServerName)
+  if type(server) ~= "string" or server == "" then
+    server = _G.LOGCHAR_SERVER
+  end
+  if type(server) == "string" and server ~= "" then
+    return server
+  end
+end
+
 function GB.PlayerName()
   local name = call(UnitName, "player")
   if type(name) == "string" and name ~= "" then
@@ -331,7 +345,7 @@ function GB.ReadStone(id, link)
   return { stats = stats, link = hex }
 end
 
--- Cherry's Loginxml leaves the character select list in the Lua state the game shares with the login screen.
+-- LogNextChar's login screen leaves the character select list in the Lua state the game shares with the login screen.
 -- Only one that has this character on it is believed.
 function GB.ReadRoster(name)
   local roster = _G.LOGCHAR_ROSTER
@@ -499,11 +513,47 @@ GB.bankOpen = false
 
 -- authoritative: the bank window is open, so an empty bank really is empty. With the bank closed the
 -- game may return nothing, so a closed read is only kept when it finds items.
+-- Same name on another server, same save file: GlobalBank_Char may hold the other character. It moves to
+-- GlobalBank_Others, and this one's snapshot comes back from there. Its bag, bank and tooltips never carry over.
+function GB.SettleServer()
+  local server = GB.ServerNow()
+  if not server or GB.settled == server then
+    return
+  end
+  GB.settled = server
+  local others, order = {}, {}
+  local text = type(GlobalBank_Others) == "string" and GlobalBank_Others or ""
+  local from = 1
+  while from <= #text do
+    local at = string.find(text, "`GB1~", from, true)
+    local snapshot = string.sub(text, from, at and at - 1 or #text)
+    local c = GB.Parse(snapshot)
+    if c and c.server then
+      others[c.server] = snapshot
+    end
+    from = at and at + 1 or #text + 1
+  end
+  local mine = GB.Parse(GlobalBank_Char)
+  if mine and mine.server and mine.server ~= server then
+    others[mine.server] = GlobalBank_Char
+    GlobalBank_Char = others[server]
+    GlobalBank_Tips = nil
+    GB.chars[mine.name] = GB.Parse(GlobalBank_Char)
+  end
+  others[server] = nil
+  for _, snapshot in pairs(others) do
+    order[#order + 1] = snapshot
+  end
+  table.sort(order)
+  GlobalBank_Others = #order > 0 and table.concat(order, "`") or nil
+end
+
 function GB.Snapshot(withBank, authoritative)
   local name = GB.PlayerName()
   if not name then
     return
   end
+  GB.SettleServer()
   local c = GB.chars[name] or { name = name, bag = {} }
   c.name, c.live = name, true
   c.cls = call(UnitClass, "player") or c.cls or ""
@@ -521,7 +571,7 @@ function GB.Snapshot(withBank, authoritative)
   end
   c.money = GB.ReadMoney()
   c.currencies = GB.ReadCurrencies()
-  c.server = call(GetServerName) or c.server
+  c.server = GB.ServerNow() or c.server
   c.clsToken = call(UnitClassToken, "player") or c.clsToken
   c.roster = GB.ReadRoster(name) or c.roster
   c.bag, c.bagMax = GB.ReadBag()
@@ -581,7 +631,7 @@ end
 
 -- True when c is a snapshot this character removed (and not a newer one).
 function GB.IsRemoved(c)
-  local stamp = GB.removed[c.name]
+  local stamp = GB.removed[c.key or c.name]
   return stamp ~= nil and (c.saved or "") <= stamp
 end
 
@@ -713,17 +763,27 @@ function GB.LoadDatabase()
   if GB.db.loaded then
     GB.db.made = GlobalBank_Import.made
     GB.SetDatabaseNotes(GlobalBank_Import.notes)
-    local seen = {}
+    local seen, list, count = {}, {}, {}
     for _, entry in ipairs(GlobalBank_Import) do
       local c = GB.Parse(type(entry) == "table" and entry.s or entry)
       if c then
         GB.db.count = GB.db.count + 1
         c.saved = type(entry) == "table" and entry.saved or nil
-        seen[c.name] = true
-        local old = GB.chars[c.name]
-        if c.name ~= me and not (old and old.live) and not GB.IsRemoved(c) then
-          GB.chars[c.name] = c
-        end
+        list[#list + 1] = c
+        count[c.name] = (count[c.name] or 0) + 1
+      end
+    end
+    -- In the list, a character is its name. One that shares its name with another server's is told apart there.
+    local server = GB.ServerNow()
+    for _, c in ipairs(list) do
+      c.key = c.name
+      if c.server and c.server ~= server and (c.name == me or count[c.name] > 1) then
+        c.key = c.name .. " (" .. c.server .. ")"
+      end
+      seen[c.key] = true
+      local old = GB.chars[c.key]
+      if c.key ~= me and not (old and old.live) and not GB.IsRemoved(c) then
+        GB.chars[c.key] = c
       end
     end
     -- Characters the helper no longer exports disappear right away, not at the next Reload UI.
@@ -768,7 +828,7 @@ function GB.Matches(c, text)
   if string.find(string.lower(c.name), text, 1, true) then
     return 0
   end
-  local note = GB.Note(c.name)
+  local note = GB.Note(c.key or c.name)
   if note ~= "" and string.find(string.lower(note), text, 1, true) then
     return 0
   end
@@ -801,19 +861,123 @@ function GB.SetSort(by)
   GB.Changed()
 end
 
--- Rebuilds GB.order (names shown in the list) and GB.found (name -> matching stacks).
-function GB.BuildList()
-  local order, found = {}, {}
-  for name, c in pairs(GB.chars) do
-    local m = GB.Matches(c, GB.search)
-    if m then
-      order[#order + 1] = name
-      found[name] = m
+-- Servers and accounts, as the extension's page shows them: a server is the S~ name without any " (PvE)" after
+-- it, and characters one login screen listed together (R~) are one account on one server, named after its first
+-- name A to Z. Anyone not known to share an account is under "No account". No Gameforge account data is used.
+GB.NO_SERVER = "Server unknown"
+GB.NO_ACCOUNT = "No account"
+GB.groupBy = "account" -- or "none"
+GB.server = nil        -- the server tab: nil until first drawn, "" for all servers
+GB.collapsed = {}      -- account id -> true while folded away
+
+function GB.ServerName(server)
+  server = string.gsub(tostring(server or ""), "%s*%(.*%)%s*$", "")
+  server = string.gsub(string.gsub(server, "^%s+", ""), "%s+$", "")
+  return server ~= "" and server or nil
+end
+
+function GB.ServerOf(c)
+  return GB.ServerName(c.server) or GB.NO_SERVER
+end
+
+-- key -> { id = account id, label = account name }. Built only when the list is rebuilt, never while scrolling.
+function GB.Accounts()
+  local parent, shown, keyOf = {}, {}, {}
+  local function find(id)
+    while parent[id] ~= id do
+      id = parent[id]
+    end
+    return id
+  end
+  local function add(server, name)
+    local id = server .. "\n" .. string.lower(name)
+    if not parent[id] then
+      parent[id], shown[id] = id, name
+    end
+    return id
+  end
+  for key, c in pairs(GB.chars) do
+    keyOf[key] = add(GB.ServerOf(c), c.name)
+  end
+  for key, c in pairs(GB.chars) do
+    local server = GB.ServerOf(c)
+    for _, other in ipairs(c.roster or {}) do
+      if other ~= "" then
+        local a, b = find(add(server, other)), find(keyOf[key])
+        if a ~= b then
+          parent[a] = b
+        end
+      end
     end
   end
+  local first, size = {}, {}
+  for id in pairs(parent) do
+    local root = find(id)
+    size[root] = (size[root] or 0) + 1
+    if not first[root] or string.lower(shown[id]) < string.lower(first[root]) then
+      first[root] = shown[id]
+    end
+  end
+  local out = {}
+  for key, c in pairs(GB.chars) do
+    local root = find(keyOf[key])
+    if size[root] > 1 then
+      out[key] = { id = root, label = first[root] .. "'s account" }
+    else
+      out[key] = { id = GB.ServerOf(c) .. "\n*", label = GB.NO_ACCOUNT }
+    end
+  end
+  return out
+end
+
+-- Rebuilds, for the chosen server tab:
+--   GB.order  character keys shown, in order        GB.found  key -> matching stacks
+--   GB.rows   what the list draws: a key, or an account heading { head = true, id, label, server, n, gold, items, found }
+--   GB.servers  every server, A to Z (unknown last)  GB.serverInfo  server -> { n, gold, found }
+-- Runs when the data, search, sort or tab change, never on scrolling.
+function GB.BuildList()
+  local order, found, info, servers = {}, {}, {}, {}
+  local all = { n = 0, gold = 0, found = 0 }
+  for key, c in pairs(GB.chars) do
+    local server = GB.ServerOf(c)
+    local s = info[server]
+    if not s then
+      s = { n = 0, gold = 0, found = 0 }
+      info[server] = s
+      servers[#servers + 1] = server
+    end
+    s.n, all.n = s.n + 1, all.n + 1
+    s.gold, all.gold = s.gold + (c.money or 0), all.gold + (c.money or 0)
+    local m = GB.Matches(c, GB.search)
+    if m then
+      if GB.search ~= "" then
+        s.found, all.found = s.found + 1, all.found + 1
+      end
+      c.serverName = server
+      found[key] = m
+    end
+  end
+  table.sort(servers, function(a, b)
+    if (a == GB.NO_SERVER) ~= (b == GB.NO_SERVER) then
+      return b == GB.NO_SERVER
+    end
+    return string.lower(a) < string.lower(b)
+  end)
+  info[""] = all
+  -- The first time: the server this character plays on, otherwise all of them.
+  if GB.server == nil or (GB.server ~= "" and not info[GB.server]) then
+    local here = GB.ServerName(GB.ServerNow())
+    GB.server = (here and info[here]) and here or ""
+  end
+  for key in pairs(found) do
+    if GB.server == "" or GB.chars[key].serverName == GB.server then
+      order[#order + 1] = key
+    end
+  end
+  GB.accounts = GB.Accounts()
   local by, desc = GB.sortBy, GB.sortDesc
-  local function key(name)
-    local c = GB.chars[name]
+  local function value(key)
+    local c = GB.chars[key]
     if by == "gold" then
       return c.money or 0
     elseif by == "level" then
@@ -821,10 +985,10 @@ function GB.BuildList()
     elseif by == "items" then
       return filled(c)
     elseif by == "found" then
-      return found[name] or 0
+      return found[key] or 0
     elseif by == "note" then
       -- notes A to Z, characters without one last (either way round)
-      local note = string.lower(GB.Note(name))
+      local note = string.lower(GB.Note(key))
       if note == "" then
         return desc and "" or "\255"
       end
@@ -832,9 +996,13 @@ function GB.BuildList()
     end
     return 0
   end
+  local sortKey = {}
+  for _, key in ipairs(order) do
+    sortKey[key] = value(key)
+  end
   table.sort(order, function(a, b)
     if by ~= "name" then
-      local ka, kb = key(a), key(b)
+      local ka, kb = sortKey[a], sortKey[b]
       if ka ~= kb then
         if desc then
           return ka > kb
@@ -847,7 +1015,45 @@ function GB.BuildList()
     end
     return string.lower(a) < string.lower(b)
   end)
-  GB.order, GB.found = order, found
+  local rows = order
+  if GB.groupBy == "account" and #order > 0 then
+    -- Accounts in the order of their first character under the chosen sort; "No account" last.
+    local accounts, groups, list = GB.accounts, {}, {}
+    for _, key in ipairs(order) do
+      local a = accounts[key]
+      local g = groups[a.id]
+      if not g then
+        g = { head = true, id = a.id, label = a.label, server = GB.chars[key].serverName, n = 0, gold = 0, items = 0, found = 0, keys = {} }
+        groups[a.id] = g
+        list[#list + 1] = g
+      end
+      local c = GB.chars[key]
+      g.n, g.gold, g.items, g.found = g.n + 1, g.gold + (c.money or 0), g.items + filled(c), g.found + (found[key] or 0)
+      g.keys[#g.keys + 1] = key
+    end
+    local position = {}
+    for i, g in ipairs(list) do
+      position[g] = i
+    end
+    table.sort(list, function(a, b)
+      local na, nb = a.label == GB.NO_ACCOUNT, b.label == GB.NO_ACCOUNT
+      if na ~= nb then
+        return nb
+      end
+      return position[a] < position[b]
+    end)
+    rows = {}
+    for _, g in ipairs(list) do
+      rows[#rows + 1] = g
+      -- A search always shows where things are, folded or not.
+      if GB.search ~= "" or not GB.collapsed[g.id] then
+        for _, key in ipairs(g.keys) do
+          rows[#rows + 1] = key
+        end
+      end
+    end
+  end
+  GB.order, GB.found, GB.rows, GB.servers, GB.serverInfo = order, found, rows, servers, info
   return order
 end
 
@@ -925,6 +1131,7 @@ function GB.OnEvent(event)
       GB.ApplySavedSize()
     end
     -- Last session's snapshot keeps the bank until the bank is opened again.
+    GB.SettleServer()
     local mine = GB.Parse(GlobalBank_Char)
     if mine then
       GB.chars[mine.name] = mine

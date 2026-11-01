@@ -112,18 +112,20 @@ Kitty.DamageManager.onDamage = function(self, sourceName, targetName, damage, sk
 			criticalDamage = damage;
 		end
 
-		if(self.damageTable[skillName] == nil) then
+		local entry = self.damageTable[skillName];
+		if(entry == nil) then
 			-- Add
 			-- Skill, hits, total damage, normal hits, critical hits
-			self.damageTable[skillName] = {["skill"]=skillName};
+			entry = {["skill"]=skillName};
+			self.damageTable[skillName] = entry;
 		end
 		-- Update
-		self.damageTable[skillName].totalDamage = (self.damageTable[skillName].totalDamage or 0) + damage;
-		self.damageTable[skillName].normalDamage = (self.damageTable[skillName].normalDamage or 0) + normalDamage;
-		self.damageTable[skillName].criticalDamage = (self.damageTable[skillName].criticalDamage or 0) + criticalDamage;
-		self.damageTable[skillName].totalCount = (self.damageTable[skillName].totalCount or 0) + 1;
-		self.damageTable[skillName].normalCount = (self.damageTable[skillName].normalCount or 0) + normalCount;
-		self.damageTable[skillName].criticalCount = (self.damageTable[skillName].criticalCount or 0) + criticalCount;
+		entry.totalDamage = (entry.totalDamage or 0) + damage;
+		entry.normalDamage = (entry.normalDamage or 0) + normalDamage;
+		entry.criticalDamage = (entry.criticalDamage or 0) + criticalDamage;
+		entry.totalCount = (entry.totalCount or 0) + 1;
+		entry.normalCount = (entry.normalCount or 0) + normalCount;
+		entry.criticalCount = (entry.criticalCount or 0) + criticalCount;
 	end
 
 	local currentTime = Kitty.getTime();

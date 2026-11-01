@@ -20,23 +20,18 @@ Every package is its own CurseForge project. Every ZIP goes straight into `Inter
 | --- | --- | --- | --- | --- |
 | Cherry's Kit | [01-cherrys-kit.md](01-cherrys-kit.md) | `CherrysKit-Hub-<kit version>.zip` | none | none |
 | Cherry's KittyCombo | [02-cherrys-kittycombo.md](02-cherrys-kittycombo.md) | `CherrysKit-KittyCombo-<version>.zip` | Cherry's Kit | rom weakauras, Cherry's Chat, Cherry's Grid, Cherry's Bar |
-| rom weakauras | [03-rom-weakauras.md](03-rom-weakauras.md) | `CherrysKit-RomWeakAuras-<version>.zip` | Cherry's Kit | Cherry's KittyCombo, pbInfo, Extended Macro Icons, Cherry's Quests |
-| Cherry's Chat | [04-cherrys-chat.md](04-cherrys-chat.md) | `CherrysKit-CherrysChat-<version>.zip` | Cherry's Kit | pbInfo, Ultimate Mail Mod, Cherry's KittyCombo |
+| rom weakauras | [03-rom-weakauras.md](03-rom-weakauras.md) | `CherrysKit-RomWeakAuras-<version>.zip` | Cherry's Kit | Cherry's KittyCombo, Cherry's Info |
+| Cherry's Chat | [04-cherrys-chat.md](04-cherrys-chat.md) | `CherrysKit-CherrysChat-<version>.zip` | Cherry's Kit | Cherry's Info, Ultimate Mail Mod, Cherry's KittyCombo |
 | zBag | [05-zbag.md](05-zbag.md) | `CherrysKit-zBag-<version>.zip` | Cherry's Kit | Global Bank, Advanced AuctionHouse |
-| Global Bank | [06-global-bank.md](06-global-bank.md) | `CherrysKit-GlobalBank-<version>.zip` | Cherry's Kit | zBag, Advanced AuctionHouse, ZShop, Cherry's Bar, Cherry's Loginxml |
-| Extended Macro Icons | [07-extended-macro-icons.md](07-extended-macro-icons.md) | `CherrysKit-ExtendedMacroIcons-<version>.zip` | Cherry's Kit | rom weakauras |
-| TooltipIds | [08-tooltipids.md](08-tooltipids.md) | `CherrysKit-TooltipIds-<version>.zip` | Cherry's Kit | pbInfo |
+| Global Bank | [06-global-bank.md](06-global-bank.md) | `CherrysKit-GlobalBank-<version>.zip` | Cherry's Kit | zBag, Advanced AuctionHouse, ZShop, Cherry's Bar, LogNextChar |
 | Ultimate Mail Mod | [09-ultimate-mail-mod.md](09-ultimate-mail-mod.md) | `CherrysKit-UltimateMailMod-<version>.zip` | Cherry's Kit | Cherry's Chat, LogNextChar |
 | Advanced AuctionHouse | [10-advanced-auctionhouse.md](10-advanced-auctionhouse.md) | `CherrysKit-AdvancedAuctionHouse-<version>.zip` | Cherry's Kit | Global Bank, zBag |
 | Cherry's Addon LoadTimes | [11-cherrys-addon-loadtimes.md](11-cherrys-addon-loadtimes.md) | `CherrysKit-LoadTimes-<version>.zip` | Cherry's Kit | none |
 | ZShop | [12-zshop.md](12-zshop.md) | `CherrysKit-ZShop-<version>.zip` | Cherry's Kit | Global Bank |
-| pbInfo | [13-pbinfo.md](13-pbinfo.md) | `CherrysKit-pbInfo-<version>.zip` | Cherry's Kit | TooltipIds, Cherry's Chat, rom weakauras, Cherry's Quests |
-| PortraitHP | [14-portraithp.md](14-portraithp.md) | `CherrysKit-PortraitHP-<version>.zip` | Cherry's Kit | none |
+| Cherry's Info | [16-cherrys-info.md](16-cherrys-info.md) | `CherrysKit-CherrysInfo-<version>.zip` | Cherry's Kit | rom weakauras, Cherry's Chat |
 | Cherry's Grid | [15-cherrys-grid.md](15-cherrys-grid.md) | `CherrysKit-CherrysGrid-<version>.zip` | Cherry's Kit | Cherry's KittyCombo |
-| Cherry's Quests | [16-cherrys-quests.md](16-cherrys-quests.md) | `CherrysKit-CherrysQuests-<version>.zip` | Cherry's Kit | rom weakauras, pbInfo |
 | Cherry's Bar | [17-cherrys-bar.md](17-cherrys-bar.md) | `CherrysKit-CherrysBar-<version>.zip` | Cherry's Kit | Cherry's KittyCombo, Global Bank |
-| Cherry's Loginxml | [18-cherrys-loginxml.md](18-cherrys-loginxml.md) | `CherrysLoginxml-<version>.zip` | Cherry's Kit | LogNextChar, Global Bank |
-| LogNextChar | [19-lognextchar.md](19-lognextchar.md) | `LogNextChar-<version>.zip` | Cherry's Kit | Cherry's Loginxml, Ultimate Mail Mod |
+| LogNextChar | [19-lognextchar.md](19-lognextchar.md) | `LogNextChar-<version>.zip` | Cherry's Kit | Global Bank, Ultimate Mail Mod |
 <!-- end of project table -->
 
 The requirements come from `release-packages.json`. After changing them, run `python tools/curseforge_pages.py`: it rewrites the lines at the front of every description, in the numbered pages and in `descriptions.md`, and this table. A test fails when they are out of date.
@@ -55,19 +50,19 @@ The full kit stays on GitHub rather than becoming a project: it would overlap ev
 
 - **Manifest lines for addons that aren't installed:** the client skips a missing XML file silently. A missing Lua file is reported as a script error, which would light the minimap's bug button on every login, so `KitLoad/start.lua` stops those reports and lets every other error through.
 - **Global Bank's button on zBag's window** hides itself when zBag isn't installed.
-- **Cherry's Loginxml** needs one step more, because the game only reads a login screen from `Interface/loginxml` and a package can only fill `Interface/AddOns`. Its ZIP carries the login screen in `CherrysKit/CherrysLoginxmlHook/LoginScreen/`, and `Install login screen.bat` copies it across. The login screen's `.toc` travels as `loginxml.toc.txt`, because the client loads every `.toc` it finds under `Interface/AddOns`, at any depth. The addon says so in chat while the login screen is missing or a different version.
+- **LogNextChar** needs one step more, because the game only reads a login screen from `Interface/loginxml` and a package can only fill `Interface/AddOns`. Its ZIP carries the login screen in `CherrysKit/LogNextChar/LoginScreen/`, and `Install login screen.bat` copies it across. The login screen's `.toc` travels as `loginxml.toc.txt`, because the client loads every `.toc` it finds under `Interface/AddOns`, at any depth. The addon says so in chat while the login screen is missing or a different version.
 
 ### First publish
 
 1. Create the **Cherry's Kit** project from the hub ZIP. It has to exist before anything can name it as a requirement.
-2. Create **Cherry's Loginxml**, then the kit addons, then **LogNextChar**.
+2. Create the kit addons, then **LogNextChar**.
 3. On each project's upload, set the required and optional relations from the table.
 4. Paste each description from its numbered page, then replace the names in its first lines with links to the projects.
 5. Install one addon through the app into a clean game folder, and check that the hub arrives with it. Do this before relying on it in the descriptions.
 
 ### Every release
 
-1. Run `python tools/build_release.py`, and upload only the ZIPs whose version changed, plus the hub when it did. An addon's `minimum_hub_version` says which hub it needs.
+1. Run `python tools/build_release.py`, and upload only the ZIPs whose version changed, plus the hub when it did. An addon's `minimum_hub_version` says which hub it needs. The same version numbers are what the guided setup compares, so [keep them updateable](../../README.md#keeping-addons-updateable).
 2. Set the relations again on each upload if CurseForge doesn't carry them over from the last file.
 3. Update the description when the behaviour or the requirements changed.
 
@@ -84,16 +79,11 @@ The full kit stays on GitHub rather than becoming a project: it would overlap ev
 - [Cherry's Chat](04-cherrys-chat.md)
 - [zBag](05-zbag.md)
 - [Global Bank](06-global-bank.md)
-- [Extended Macro Icons](07-extended-macro-icons.md)
-- [TooltipIds](08-tooltipids.md)
 - [Ultimate Mail Mod](09-ultimate-mail-mod.md)
 - [Advanced AuctionHouse](10-advanced-auctionhouse.md)
 - [Cherry's Addon LoadTimes](11-cherrys-addon-loadtimes.md)
 - [ZShop](12-zshop.md)
-- [pbInfo](13-pbinfo.md)
-- [PortraitHP](14-portraithp.md)
 - [Cherry's Grid](15-cherrys-grid.md)
-- [Cherry's Quests](16-cherrys-quests.md)
+- [Cherry's Info](16-cherrys-info.md)
 - [Cherry's Bar](17-cherrys-bar.md)
-- [Cherry's Loginxml](18-cherrys-loginxml.md)
 - [LogNextChar](19-lognextchar.md)

@@ -1,3 +1,9 @@
+LogNextChar 1.3.1
+- The character screen finds a character's gold by server and name, so characters with the same name on different servers no longer show each other's gold. Gold saved before servers were recorded shows a ?.
+
+LogNextChar 1.3.0
+- Cherry's Loginxml and LogNextChar are now one addon, LogNextChar, in Interface\AddOns\CherrysKit\LogNextChar. The installer removes the old CherrysLoginxmlHook folder, and your saved logins and toggles stay.
+
 Cherry's Loginxml 1.2.2
 - the in-game addon is now Interface\AddOns\CherrysKit\CherrysLoginxmlHook. The installer removes the old Interface\AddOns\CherrysLoginxml folder.
 

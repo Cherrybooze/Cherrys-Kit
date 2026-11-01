@@ -2,6 +2,7 @@
 import unittest
 import xml.etree.ElementTree as ET
 
+import xml_templates
 from test_chat_copy import CHAT_DIR, CopyClient, UI_NS
 
 
@@ -65,7 +66,7 @@ class ChatScrollBarTests(unittest.TestCase):
             function bar:SetValue(v) set(self, v) end
             bar.drag = set
         """)
-        node = ET.parse(CHAT_DIR / "CherrysChat.xml").getroot().find(".//*[@name='CherrysChat_W1Bar']", UI_NS)
+        node = xml_templates.parse(CHAT_DIR / "CherrysChat.xml").find(".//*[@name='CherrysChat_W1Bar']", UI_NS)
         script = node.find("ui:Scripts/ui:OnValueChanged", UI_NS).text
         self.g.CherrysChat_W1Bar.scripts.OnValueChanged = self.lua.eval(f"function(this, arg1) {script} end")
         self.win = self.g.CherrysChat.Win
@@ -85,7 +86,7 @@ class ChatScrollBarTests(unittest.TestCase):
         return first, last
 
     def test_xml_uses_the_games_standard_scroll_bar_parts(self):
-        node = ET.parse(CHAT_DIR / "CherrysChat.xml").getroot()
+        node = xml_templates.parse(CHAT_DIR / "CherrysChat.xml")
         for i in range(1, 11):
             bar = node.find(f".//*[@name='CherrysChat_W{i}Bar']", UI_NS)
             self.assertEqual(bar.tag.split("}")[1], "Slider")
@@ -93,7 +94,10 @@ class ChatScrollBarTests(unittest.TestCase):
             self.assertEqual(thumb.get("file"), "Interface\\Buttons\\ScrollBar-Knob")
             up = bar.find(f".//*[@name='CherrysChat_W{i}BarUp']", UI_NS)
             self.assertEqual(up.get("inherits"), "UIPanelScrollUpButtonTemplate")
-            self.assertIn(f"CherrysChat.Win.Scroll({i}, 1)", up.find("ui:Scripts/ui:OnClick", UI_NS).text)
+            # One template for all ten: the arrow finds its window from its own name.
+            self.assertIn("CherrysChat.Win.Scroll(CherrysChat.Win.Of(this), 1)", up.find("ui:Scripts/ui:OnClick", UI_NS).text)
+            self.assertEqual(self.win.Of(self.g.MakeFrame(f"CherrysChat_W{i}BarUp", True)), i)
+            self.assertEqual(self.win.Of(self.g.MakeFrame(f"CherrysChat_W{i}", True)), i)
 
     def test_the_bar_follows_new_lines_scrolling_and_the_window_height(self):
         self.assertEqual(self.bar.height, 180 - 2 * (self.win.PAD + self.win.BAR_ARROW))

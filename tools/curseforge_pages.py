@@ -98,9 +98,18 @@ def install_path(package: dict) -> str:
 
 def origin_text(origin: dict) -> str:
     """What happens when the addon this came from, or an older copy of this one, is installed too."""
-    where = f"`Interface\\AddOns\\{origin['folder']}`"
-    off = "this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one."
-    if origin["kind"] == "older":
+    every = [origin, *origin.get("others", [])]
+    where = ", ".join(f"`Interface\\AddOns\\{item['folder']}`" for item in every)
+    if len(every) > 1:
+        where = f"any of {where}"
+    off = ("this version stays off, and the hub says so in chat and in its window. "
+           "Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.")
+    originals = [f"{item['name']} by {item['by']}" for item in every if item["kind"] == "original"]
+    if len(every) > 1 and originals:
+        text = f"**Original addons:** {join_names(originals)}. If {where} is still there, it takes precedence: {off}"
+    elif len(every) > 1:
+        text = f"**Older copies:** this addon has no original to give way to, but if {where} from an earlier release is still there, it takes precedence: {off}"
+    elif origin["kind"] == "older":
         text = f"**Older copy:** this addon has no original to give way to, but if {where} from an earlier release is still there, it takes precedence: {off}"
     else:
         text = f"**Original addon:** {origin['name']} by {origin['by']}. If {where} is still there, it takes precedence: {off}"
@@ -113,6 +122,17 @@ def lua_text(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+def origin_fields(origin: dict) -> list[str]:
+    parts = [f"kind = {lua_text(origin['kind'])}"]
+    if origin.get("name"):
+        parts.append(f"name = {lua_text(origin['name'])}")
+    parts.append(f"folder = {lua_text(origin['folder'])}")
+    parts.append("files = { " + ", ".join(lua_text(item) for item in origin["files"]) + " }")
+    if origin.get("fingerprint"):
+        parts.append(f"fingerprint = {lua_text(origin['fingerprint'])}")
+    return parts
+
+
 def origins_lua(all_packages: list[dict]) -> str:
     rows = ["-- Written by tools/curseforge_pages.py from release-packages.json: the addon each kit addon came from,",
             "-- where it would be, and how to spot it. See CherrysKit.lua, \"Original addons\".",
@@ -121,14 +141,11 @@ def origins_lua(all_packages: list[dict]) -> str:
         origin = package.get("origin")
         if not origin:
             continue
-        parts = [f"title = {lua_text(package['title'])}", f"kind = {lua_text(origin['kind'])}"]
-        if origin.get("name"):
-            parts.append(f"name = {lua_text(origin['name'])}")
-        parts.append(f"folder = {lua_text(origin['folder'])}")
-        parts.append("files = { " + ", ".join(lua_text(item) for item in origin["files"]) + " }")
-        if origin.get("fingerprint"):
-            parts.append(f"fingerprint = {lua_text(origin['fingerprint'])}")
+        parts = [f"title = {lua_text(package['title'])}", *origin_fields(origin)]
         parts.append(f"kit_file = {lua_text(package['kit_file'])}")
+        if origin.get("others"):
+            others = ", ".join("{ " + ", ".join(origin_fields(other)) + " }" for other in origin["others"])
+            parts.append(f"others = {{ {others} }}")
         rows.append(f"  {package.get('hub_key', package['folder'])} = {{ {', '.join(parts)} }},")
     rows.append("}")
     return "\n".join(rows) + "\n"
@@ -141,7 +158,8 @@ def addon_map(all_packages: list[dict], names: dict[str, str]) -> str:
             "Each one runs with only the hub: what's listed under **Works with** is missing until you add that addon, and nothing else is. "
             "`tests/test_addons_alone.py` runs each one that way on a simulated client, and `tests/test_addon_map.py` fails if an addon reaches for another one that isn't listed here.", "",
             "If an addon's original, or an older separate copy, is in its own folder in `Interface\\AddOns`, that one takes precedence: "
-            "the kit's version stays off and the hub says so, one line for each, in chat and in its window. Both still load, because the game can't skip a file in a manifest.", "",
+            "the kit's version stays off and the hub says so, one line for each, in chat and in its window. Both still load, because the game can't skip a file in a manifest. "
+            "`!setup_cherryskit.bat` offers to move such folders to `Interface\\offloaded_addons`, but only when the kit's own copy is installed.", "",
             "## Why everything lives under CherrysKit", "",
             "One folder, loaded and controlled by the hub, keeps the kit simple to develop and lets the hub's switches cover every addon in it. It also keeps the kit out of the way of anyone who'd rather run their own version of an addon. Compatibility with addons managed separately can't be guaranteed, so when one is there, the kit's version stays off instead of clashing with it.", "",
             "## The addons", "",
@@ -151,8 +169,11 @@ def addon_map(all_packages: list[dict], names: dict[str, str]) -> str:
             continue
         partners = ", ".join(names[item["package"]] for item in package.get("works_with", [])) or "nothing"
         origin = package["origin"]
-        who = f"{origin['name']} by {origin['by']}" if origin["kind"] == "original" else "an older copy"
-        rows.append(f"| {package['title']} | `CherrysKit\\{install_folder(package)}` | {partners} | `AddOns\\{origin['folder']}`, {who} |")
+        rivals = []
+        for item in [origin, *origin.get("others", [])]:
+            who = f"{item['name']} by {item['by']}" if item["kind"] == "original" else "an older copy"
+            rivals.append(f"`AddOns\\{item['folder']}`, {who}")
+        rows.append(f"| {package['title']} | `CherrysKit\\{install_folder(package)}` | {partners} | {'; '.join(rivals)} |")
     rows += ["", "## What each link does", ""]
     for package in all_packages:
         if package["kind"] == "hub":

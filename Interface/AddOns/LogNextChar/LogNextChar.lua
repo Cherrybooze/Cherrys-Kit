@@ -1,5 +1,5 @@
 -- LogNextChar: Next / Prev buttons and /lnc log you out and straight into the neighbouring
--- character. Needs the Cherry's Loginxml login screen, which picks the character.
+-- character. Its login screen (Interface\loginxml, put there by Install login screen.bat) picks the character.
 -- Shows up in the Cherry's Kit hub when the kit is installed (Settings has lock/unlock).
 local ADDON = "LogNextChar"
 
@@ -7,7 +7,7 @@ local ADDON = "LogNextChar"
 LogNextChar = LogNextChar or {}
 local me = LogNextChar
 
-me.version = "1.2.2"
+me.version = "1.3.1"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.LogNextChar) or "Interface/AddOns/LogNextChar/"
 
 -- Saved: LogNextChar_Settings = { show, lock, position = { x, y } }
@@ -133,9 +133,9 @@ local function ArmAndLogout(mode, target)
         return
     end
 
-    -- On its own it can still log out. Picking the next character takes Cherry's Loginxml's login screen.
+    -- Without its login screen it can still log out. Picking the next character takes the login screen.
     if type(_G.LOGCHAR_ROSTER) ~= "table" then
-        Print("Cherry's Loginxml isn't installed, so this only logs you out. Pick the character yourself.")
+        Print("The login screen isn't installed, so this only logs you out. Pick the character yourself.")
     end
 
     CloseMailbox()
@@ -296,6 +296,9 @@ function me.OnEvent(event)
         me.Place()
         me.Refresh()
         me.UpdateSettings()
+        if me.AfterSavedVariables then
+            me.AfterSavedVariables()
+        end
     end
     me.UpdateEnabled()
 end
@@ -352,7 +355,7 @@ function me.OnEnter(button)
         GameTooltip:AddLine("|cff9ea8baClick: log out, then log in this character|r")
     end
     if type(_G.LOGCHAR_ROSTER) ~= "table" then
-        GameTooltip:AddLine("|cffff6060Without Cherry's Loginxml this only logs you out|r")
+        GameTooltip:AddLine("|cffff6060Without its login screen this only logs you out|r")
     end
     if me.Get("lock") then
         GameTooltip:AddLine("|cff9ea8baLocked. Unlock in the settings to move: /lnc settings|r")
@@ -428,7 +431,7 @@ local function Probe()
     end
     local roster = _G.LOGCHAR_ROSTER
     Print(string.format("characters %s, playing slot %s, lock %s, show %s, on %s",
-        type(roster) == "table" and tostring(#roster) or "unknown (no Cherry's Loginxml?)",
+        type(roster) == "table" and tostring(#roster) or "unknown (login screen not installed?)",
         tostring(CHARACTER_SELECT and CHARACTER_SELECT.selectedIndex),
         tostring(me.Get("lock")), tostring(me.Get("show")), tostring(me.IsOn())))
 end

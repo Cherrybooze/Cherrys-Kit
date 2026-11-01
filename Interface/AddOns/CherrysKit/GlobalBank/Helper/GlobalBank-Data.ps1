@@ -12,6 +12,7 @@ $script:latin1 = [System.Text.Encoding]::GetEncoding(28591)
 $script:utf8Strict = New-Object System.Text.UTF8Encoding($false, $true)
 $script:entryPattern = [regex]'^  \{ saved = "([^"]*)", s = "(GB1~[^"]*)" \},\s*$'
 $script:notesLinePattern = [regex]'^  notes = "([^"]*)",\s*$'
+$script:serverPattern = [regex]'`S~([^`]*)'
 $script:invariant = [System.Globalization.CultureInfo]::InvariantCulture
 
 # The save files are read byte for byte (Latin-1). Names the game wrote as UTF-8 are decoded here.
@@ -28,6 +29,14 @@ function ConvertTo-GBNumber([string]$text) {
 
 function Format-GBGold($amount) {
     return ([int64]$amount).ToString("N0", $script:invariant)
+}
+
+# What tells a character apart: the game has one save folder per name, and names repeat between servers.
+function Get-GBKey([string]$snapshot) {
+    $name = ConvertTo-GBText $snapshot.Split([char]'`')[0].Split([char]'~')[1]
+    $m = $script:serverPattern.Match($snapshot)
+    if ($m.Success -and $m.Groups[1].Value) { return "$name ($(ConvertTo-GBText $m.Groups[1].Value))" }
+    return $name
 }
 
 # One snapshot string (GB1~name~class~level~gold~bagSlots~bankSlots~bankSeen~time, then
@@ -88,6 +97,8 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
     }
     return [pscustomobject]@{
         Name      = ConvertTo-GBText (& $field 1)
+        Key       = Get-GBKey $snapshot
+        Label     = ConvertTo-GBText (& $field 1)
         Class     = ConvertTo-GBText (& $field 2)
         Classes   = @($classes.ToArray())
         Currencies = @($currencies.ToArray())
@@ -107,15 +118,15 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
     }
 }
 
-# The raw entries of GlobalBankDatabase.lua: a hashtable of folder name -> @{ saved; s; line }.
+# The raw entries of GlobalBankDatabase.lua: a hashtable of character key -> @{ name; folder; saved; s; line }.
 function Read-GBDatabaseEntries([string]$path) {
     $entries = @{}
     if (-not (Test-Path -LiteralPath $path)) { return $entries }
     foreach ($line in [System.IO.File]::ReadAllLines($path, $script:latin1)) {
         $m = $script:entryPattern.Match($line)
         if (-not $m.Success) { continue }
-        $name = $m.Groups[2].Value.Split([char]'~')[1]
-        $entries[$name] = @{ saved = $m.Groups[1].Value; s = $m.Groups[2].Value; line = $line }
+        $key = Get-GBKey $m.Groups[2].Value
+        $entries[$key] = @{ name = $key; folder = ConvertTo-GBText $m.Groups[2].Value.Split([char]'~')[1]; saved = $m.Groups[1].Value; s = $m.Groups[2].Value; line = $line }
     }
     return $entries
 }
@@ -155,8 +166,12 @@ function Set-GBNotes($chars, $notes) {
     $byName = @{}
     foreach ($key in $notes.Keys) { $byName[(ConvertTo-GBText $key)] = ConvertTo-GBText $notes[$key].t }
     foreach ($c in $chars) {
-        $c.Note = if ($byName.ContainsKey($c.Name)) { $byName[$c.Name] } else { "" }
+        $c.Note = if ($byName.ContainsKey($c.Key)) { $byName[$c.Key] } elseif ($byName.ContainsKey($c.Name)) { $byName[$c.Name] } else { "" }
     }
+    # Only a name that repeats needs its server to be told apart
+    $counts = @{}
+    foreach ($c in $chars) { $counts[$c.Name] = 1 + [int]$counts[$c.Name] }
+    foreach ($c in $chars) { $c.Label = if ($counts[$c.Name] -gt 1) { $c.Key } else { $c.Name } }
 }
 
 # Every character in the database, sorted by name, with notes.
@@ -173,6 +188,8 @@ function Read-GBDatabase([string]$path) {
 
 # Exact name (any case) first, otherwise every name that starts with the text.
 function Find-GBCharacter($chars, [string]$name) {
+    $exact = @($chars | Where-Object { $_.Key -ieq $name })
+    if ($exact.Count) { return ,$exact }
     $exact = @($chars | Where-Object { $_.Name -ieq $name })
     if ($exact.Count) { return ,$exact }
     return ,@($chars | Where-Object { $_.Name.StartsWith($name, [System.StringComparison]::OrdinalIgnoreCase) })
@@ -198,8 +215,8 @@ function Search-GBItems($chars, [string]$text) {
                 }
                 $item = $found[$key]
                 $item.Total += $it.Count
-                if (-not $item.Holders.ContainsKey($c.Name)) { $item.Holders[$c.Name] = @{ Name = $c.Name; Bag = [int64]0; Bank = [int64]0 } }
-                if ($it.Where -eq "bag") { $item.Holders[$c.Name].Bag += $it.Count } else { $item.Holders[$c.Name].Bank += $it.Count }
+                if (-not $item.Holders.ContainsKey($c.Key)) { $item.Holders[$c.Key] = @{ Name = $c.Label; Bag = [int64]0; Bank = [int64]0 } }
+                if ($it.Where -eq "bag") { $item.Holders[$c.Key].Bag += $it.Count } else { $item.Holders[$c.Key].Bank += $it.Count }
             }
         }
     }
@@ -334,7 +351,7 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
         if ($matchingLinks.Count -eq 1 -and $sameName -eq 1) {
             [void]$sb.Append(',"accountId":').Append((ConvertTo-GBJsonString $matchingLinks[0].accountId))
         } else { [void]$sb.Append(',"accountId":null') }
-        $tipTable = ConvertTo-GBTipTable ([string]$tips[[string]$c.Name])
+        $tipTable = ConvertTo-GBTipTable ([string]$(if ($tips.ContainsKey([string]$c.Key)) { $tips[[string]$c.Key] } else { $tips[[string]$c.Name] }))
         foreach ($part in @(@("bag", $c.Bag), @("bank", $c.Bank))) {
             [void]$sb.Append(',"').Append($part[0]).Append('":[')
             $firstItem = $true

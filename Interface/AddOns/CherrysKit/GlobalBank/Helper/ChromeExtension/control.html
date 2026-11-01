@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="control.css">
   <script defer src="folders.js"></script>
   <script defer src="icons.js"></script>
+  <script defer src="roster.js"></script>
   <script defer src="bank.js"></script>
   <script defer src="accounts.js"></script>
   <script defer src="control.js"></script>
@@ -33,12 +34,43 @@
         <p id="folders-status" class="hint" role="status"></p>
       </details>
     </section>
+    <section class="view-bar" aria-label="Region, servers and selection">
+      <div class="view-row">
+        <label class="view-region">Region <select id="view-region"><option value="eu">Europe</option><option value="na">North America</option><option value="all">All regions</option></select></label>
+        <div id="view-servers" class="view-servers" role="group" aria-label="Servers to show"></div>
+        <details id="region-settings" class="bank-menu">
+          <summary>Region settings</summary>
+          <div class="bank-menu-panel">
+            <p class="hint">Europe and North America are separate games: characters and items can't move between them. Pick yours and every tab shows only its servers. Characters whose server isn't known yet always show.</p>
+            <div id="region-known" class="region-known"></div>
+            <p id="region-unlisted" class="hint"></p>
+            <button id="region-edit" type="button">Edit the lists on the Servers tab</button>
+          </div>
+        </details>
+      </div>
+      <div class="view-row selection-bar">
+        <span id="selection-count" class="selection-count">No characters selected</span>
+        <label class="bank-check"><input id="selection-only" type="checkbox" checked> The Bank tab shows only the selected characters' items</label>
+        <button id="selection-copy" type="button" disabled>Copy names</button>
+        <button id="selection-clear" type="button" disabled>Clear</button>
+        <button id="select-stale" type="button" hidden></button>
+        <span id="selection-note" class="hint" role="status"></span>
+      </div>
+      <div class="view-row view-help">
+        <p class="hint">Click any character on any tab to select it, Shift-click to select a range. Hover one for its details, right-click to copy its login or rename its accounts.</p>
+        <label class="bank-check"><input id="card-hide-gameforge" type="checkbox"> Hide Gameforge account in tooltips</label>
+        <label class="bank-check"><input id="card-hide-rom" type="checkbox"> Hide RoM account in tooltips</label>
+      </div>
+    </section>
+    <p id="page-twice" class="page-twice" role="alert" hidden>Global Bank is also open in another tab. Close one of them: changes to your Gameforge accounts in two tabs overwrite each other.</p>
     <nav class="tabs" role="tablist" aria-label="Global Bank">
       <button type="button" role="tab" data-tab="bank" aria-selected="true">Bank</button>
+      <button type="button" role="tab" data-tab="favourites" aria-selected="false">Favourites</button>
       <button type="button" role="tab" data-tab="currencies" aria-selected="false">Currencies</button>
       <button type="button" role="tab" data-tab="stats" aria-selected="false">Stats</button>
       <button type="button" role="tab" data-tab="heatmap" aria-selected="false">Gold heatmap</button>
       <button type="button" role="tab" data-tab="characters" aria-selected="false">Characters</button>
+      <button type="button" role="tab" data-tab="servers" aria-selected="false">Servers</button>
       <button type="button" role="tab" data-tab="accounts" aria-selected="false">Gameforge accounts</button>
       <button type="button" role="tab" data-tab="depot" aria-selected="false">Item Depot</button>
       <button type="button" role="tab" data-tab="terminal" aria-selected="false">Terminal</button>
@@ -47,47 +79,97 @@
     <div id="tab-bank" class="tab-panel">
       <section class="bank-filters" aria-label="Search and filters">
         <div class="bank-filter-row">
-          <label class="bank-wide">Item or stat <input id="bank-search" maxlength="80" autocomplete="off" placeholder="A name or a stat"></label>
+          <label class="bank-wide">Item, stat or rune <input id="bank-search" maxlength="80" autocomplete="off" placeholder="A name, a stat or a rune"></label>
           <label>Search in <select id="bank-search-in"><option value="">Names and stats</option><option value="items">Stats on items</option><option value="stones">Stats on mana stones</option></select></label>
-          <label>Type <select id="bank-type"><option value="">All types</option><option>Armour</option><option>Weapons</option><option>Jewellery</option><option>Runes</option><option>Potions</option><option>Materials</option><option>Recipes</option><option>Mounts and pets</option><option>Other</option></select></label>
-          <label>Where <select id="bank-place"><option value="">Bag and bank</option><option value="bag">Bag</option><option value="bank">Bank</option></select></label>
+          <label>Type <select id="bank-type"><option value="">All types</option><option>Armour</option><option>Weapons</option><option>Jewellery</option><option>Runes</option><option>Mana stones</option><option>Potions</option><option>Materials</option><option>Recipes</option><option>Mounts and pets</option><option>Other</option></select></label>
+          <label>Where <select id="bank-place"><option value="">Bag and bank</option><option value="bag">Bag</option><option value="bank">Bank</option><option value="shop">Item shop tab</option></select></label>
           <label>Character level <span class="bank-levels"><input id="bank-min-level" type="number" min="0" placeholder="Min" aria-label="Lowest character level"><input id="bank-max-level" type="number" min="0" placeholder="Max" aria-label="Highest character level"></span></label>
-          <label>Sort by <select id="bank-sort"><option value="name">Name</option><option value="count">Count</option><option value="type">Type</option></select></label>
+          <label>Sort by <select id="bank-sort"><option value="name">Name</option><option value="count">Count</option><option value="type">Type</option><option value="quality">Quality</option><option value="id">Item ID</option></select></label>
           <button id="bank-update" type="button">Update now</button>
         </div>
         <div class="bank-filter-row">
-          <details class="bank-characters-menu">
+          <details id="bank-characters-menu" class="bank-menu">
             <summary id="bank-character-summary">All characters</summary>
-            <div class="bank-menu-buttons"><button id="bank-all" type="button">All</button><button id="bank-none" type="button">None</button></div>
-            <div id="bank-character-list" class="bank-character-list"></div>
+            <div class="bank-menu-panel">
+              <p class="hint">Tick the characters whose items you want to see. It's the same selection as on every other tab.</p>
+              <label>Find <input id="bank-character-find" maxlength="80" autocomplete="off" placeholder="Part of a name"></label>
+              <div class="bank-menu-buttons"><button id="bank-select-shown" type="button">Select all shown</button><button id="bank-select-clear" type="button">Clear selection</button></div>
+              <div id="bank-character-list" class="bank-character-list" data-select-scope></div>
+            </div>
           </details>
-          <details class="bank-characters-menu">
+          <details class="bank-menu">
+            <summary id="bank-stacking-summary">Stacking</summary>
+            <div class="bank-menu-panel">
+              <label class="bank-check"><input id="bank-stack" type="checkbox" checked> Stack copies of the same item</label>
+              <fieldset class="stack-types">
+                <legend>Stack these types</legend>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Armour"> Armour</label>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Weapons"> Weapons</label>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Jewellery"> Jewellery</label>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Runes"> Runes</label>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Mana stones"> Mana stones</label>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Potions"> Potions</label>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Materials"> Materials</label>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Recipes"> Recipes</label>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Mounts and pets"> Mounts and pets</label>
+                <label class="bank-check"><input type="checkbox" data-stack-type="Other"> Other</label>
+              </fieldset>
+              <label>Items with stats of their own <select id="bank-stack-stats"><option value="apart">Keep each one apart, like the game</option><option value="match">Stack the ones with the same stats</option><option value="all">Stack every copy, whatever its stats</option></select></label>
+              <h3>Always stacked</h3>
+              <p class="hint">Right-click an item and choose Always stack every copy of this item. That beats the ticks above.</p>
+              <ul id="bank-always-list" class="bank-exclusion-list"></ul>
+              <label class="bank-check"><input id="bank-quality-borders" type="checkbox" checked> Colour each slot's border by the item's quality</label>
+            </div>
+          </details>
+          <details class="bank-menu">
+            <summary>More filters</summary>
+            <div class="bank-menu-panel">
+              <label>Binding <select id="bank-binding"><option value="">Bound or not</option><option value="bound">Only bound</option><option value="free">Only not bound</option></select></label>
+              <label>Quality <select id="bank-quality"><option value="0">Any quality</option><option value="1">Green or better</option><option value="2">Blue or better</option><option value="3">Purple or better</option><option value="4">Orange or better</option><option value="5">Gold</option></select></label>
+              <label class="bank-check"><input id="bank-only-stats" type="checkbox"> Only items with stats</label>
+              <label class="bank-check"><input id="bank-only-favourites" type="checkbox"> Only favourites</label>
+              <p class="hint">Quality is the colour of the item's name. It's known once a character has logged in and out on the current version.</p>
+            </div>
+          </details>
+          <details class="bank-menu">
             <summary id="bank-exclusions-summary">Excluded items</summary>
-            <p class="hint">Right-click an item in the grid to exclude it. This only changes what this page shows.</p>
-            <label class="bank-check"><input id="bank-exclude-bound" type="checkbox"> Exclude bound items that can't be equipped</label>
-            <label class="bank-check"><input id="bank-show-excluded" type="checkbox"> Show excluded items, dimmed</label>
-            <label>Item name or ID <input id="bank-exclusion-item" maxlength="80" autocomplete="off"></label>
-            <div class="bank-menu-buttons"><button id="bank-exclusion-add" type="button">Exclude</button><button id="bank-whitelist-add" type="button">Always keep</button></div>
-            <p id="bank-exclusion-note" class="hint" role="status"></p>
-            <h3>Excluded</h3>
-            <ul id="bank-excluded-list" class="bank-exclusion-list"></ul>
-            <h3>Always kept</h3>
-            <ul id="bank-whitelist" class="bank-exclusion-list"></ul>
+            <div class="bank-menu-panel">
+              <p class="hint">Right-click an item in the grid to exclude it. This only changes what this page shows.</p>
+              <label class="bank-check"><input id="bank-exclude-bound" type="checkbox"> Exclude bound items that can't be equipped</label>
+              <label class="bank-check"><input id="bank-show-excluded" type="checkbox"> Show excluded items, dimmed</label>
+              <label>Item name or ID <input id="bank-exclusion-item" maxlength="80" autocomplete="off"></label>
+              <div class="bank-menu-buttons"><button id="bank-exclusion-add" type="button">Exclude</button><button id="bank-whitelist-add" type="button">Always keep</button></div>
+              <p id="bank-exclusion-note" class="hint" role="status"></p>
+              <h3>Excluded</h3>
+              <ul id="bank-excluded-list" class="bank-exclusion-list"></ul>
+              <h3>Always kept</h3>
+              <ul id="bank-whitelist" class="bank-exclusion-list"></ul>
+            </div>
           </details>
-          <label class="bank-check"><input id="bank-stack" type="checkbox" checked> Stack the same item (never gear)</label>
           <span id="bank-total" class="hint"></span>
         </div>
         <p id="bank-status" class="hint" role="status"></p>
       </section>
-      <div id="bank-grid" class="bank-grid"></div>
+      <div id="bank-grid" class="bank-grid" aria-label="Items"></div>
       <p id="bank-made" class="hint"></p>
-      <div id="bank-tooltip" class="bank-tooltip" hidden></div>
+    </div>
+    <div id="tab-favourites" class="tab-panel" hidden>
+      <section aria-labelledby="favourites-title">
+        <h2 id="favourites-title">Favourites</h2>
+        <p class="hint">Right-click any item on the Bank tab and choose Add to favourites. Click one here to find it on the Bank tab, and a name to select that character. The counts follow the region and the server ticks at the top.</p>
+        <div id="favourite-grid" class="slot-grid favourite-grid"></div>
+        <div class="auction-table-wrap"><table class="currency-table favourite-table"><thead></thead><tbody></tbody></table></div>
+      </section>
     </div>
     <div id="tab-currencies" class="tab-panel" hidden>
       <section aria-labelledby="currencies-title">
         <h2 id="currencies-title">Currencies</h2>
-        <p class="hint">Click a heading to sort by it. A character's other currencies appear once it has logged in with this version. Diamonds, Bonus and Billdin are per account, so they aren't added up.</p>
-        <div id="currency-view" class="auction-table-wrap"><table class="currency-table"><thead></thead><tbody></tbody></table></div>
+        <div class="bank-filter-row">
+          <label class="bank-wide">Character, server or account <input id="currency-search" maxlength="80" autocomplete="off"></label>
+          <label>Group by <select id="currency-group"><option value="server">Server</option><option value="account">Account</option><option value="none">Nothing</option></select></label>
+        </div>
+        <p class="hint">Every currency any of your characters has gets a column. Click a heading to sort by it, and a character to select it. A dash means not recorded yet: that character needs one login on the current version. Diamonds, Bonus and Billdin are per account, so they aren't added up.</p>
+        <div id="currency-view" class="auction-table-wrap table-scroll" data-select-scope><table class="currency-table"><thead></thead><tbody></tbody></table></div>
       </section>
     </div>
     <div id="tab-stats" class="tab-panel" hidden>
@@ -98,17 +180,16 @@
           <label>Look at <select id="stat-kind"><option value="items">Stats on items</option><option value="stones">Stats on mana stones</option></select></label>
           <span id="stat-total" class="hint"></span>
         </div>
-        <p class="hint">Click a heading to sort by it. Stats appear once a character has logged in with this version. Mana stones include fusion stones.</p>
-        <div class="auction-table-wrap"><table class="currency-table stat-table"><thead></thead><tbody></tbody></table></div>
+        <p class="hint">Click a heading to sort by it. Stats appear once a character has logged in and out on the current version. Mana stones include fusion stones. The counts follow the region and the server ticks at the top. Click a name to select that character.</p>
+        <div class="auction-table-wrap table-scroll"><table class="currency-table stat-table"><thead></thead><tbody></tbody></table></div>
       </section>
     </div>
     <div id="tab-heatmap" class="tab-panel" hidden>
       <section aria-labelledby="heatmap-title">
         <h2 id="heatmap-title">Gold heatmap</h2>
         <div class="heat-legend"><span>No gold</span><span class="heat-bar"></span><span>500,000,000 is orange, a full cap of 999,999,999 is bright green</span></div>
-        <p class="hint">Hover a character for its gold. Right-click to copy its name, Gameforge account or password. Characters are grouped by the accounts you link on the Gameforge accounts tab.</p>
-        <div id="heat-view" class="heat-view"></div>
-        <div id="heat-tooltip" class="bank-tooltip" hidden></div>
+        <p class="hint">Hover a character for its details, click to select it. Right-click to copy its name, Gameforge account or password. Characters are grouped by the accounts you link on the Gameforge accounts tab.</p>
+        <div id="heat-view" class="heat-view" data-select-scope></div>
       </section>
     </div>
     <div id="tab-accounts" class="tab-panel" hidden>
@@ -152,18 +233,19 @@
       </section>
       <section aria-labelledby="links-title">
         <h2 id="links-title">Link characters</h2>
-        <p class="hint">Nothing links by itself. Characters boxed together were listed on one login screen, so they share an account. Filter by part of a name, tick what you want (Shift-click ticks a whole range), pick an account and press Link. You can also paste names.</p>
+        <p class="hint">Nothing links by itself. Each box is one Gameforge account on one server, and the characters not linked yet come after them by server. Each character shows its name and its RoM account, the characters one login screen lists; a dash means no login screen has listed it yet, and logging in any character through Cherry's Loginxml lists its account. Click characters to select them (Shift-click selects a range, Select takes a whole box), pick an account and press Link selected. Right-click a character to select its whole RoM account. You can also paste names.</p>
         <div class="bank-filter-row">
-          <label class="bank-wide">Name contains <input id="gf-filter" maxlength="80" autocomplete="off"></label>
+          <label class="bank-wide">Character or RoM account <input id="gf-filter" maxlength="80" autocomplete="off"></label>
           <label class="bank-check"><input id="gf-unlinked" type="checkbox"> Only unlinked</label>
-          <button id="gf-tick-shown" type="button">Tick all shown</button>
-          <button id="gf-tick-none" type="button">Clear ticks</button>
+          <label>Show first <select id="gf-first"><option value="name">Character name</option><option value="rom">RoM account</option></select></label>
+          <button id="gf-select-shown" type="button">Select all shown</button>
+          <button id="gf-select-none" type="button">Clear selection</button>
           <label>Account <select id="gf-link-account"></select></label>
-          <button id="gf-link" type="button">Link ticked</button>
-          <button id="gf-unlink" type="button">Unlink ticked</button>
+          <button id="gf-link" type="button">Link selected</button>
+          <button id="gf-unlink" type="button">Unlink selected</button>
         </div>
         <p id="gf-link-count" class="hint"></p>
-        <div id="gf-characters" class="gf-characters"></div>
+        <div id="gf-characters" class="gf-characters" data-select-scope></div>
         <label for="gf-paste">Or paste character names, one a line</label>
         <textarea id="gf-paste" rows="4" autocomplete="off"></textarea>
         <button id="gf-link-pasted" type="button">Link pasted names to this account</button>
@@ -187,8 +269,36 @@
     <div id="tab-characters" class="tab-panel" hidden>
       <section aria-labelledby="characters-title">
         <h2 id="characters-title">Characters</h2>
-        <p class="hint">Click a heading to sort by it. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p>
-        <div id="roster-view" class="auction-table-wrap"><table class="currency-table"><thead></thead><tbody></tbody></table></div>
+        <div class="bank-filter-row">
+          <label class="bank-wide">Character, server, account, class or note <input id="roster-search" maxlength="80" autocomplete="off"></label>
+          <label>Group by <select id="roster-group"><option value="server">Server</option><option value="account">Account</option><option value="none">Nothing</option></select></label>
+        </div>
+        <p class="hint">Click a heading to sort by it, a character to select it, and a group's Select to select all of it. A dot marks a character saved by an older version: log in with it once. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p>
+        <div id="roster-view" class="auction-table-wrap table-scroll" data-select-scope><table class="currency-table roster-table"><thead></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+    <div id="tab-servers" class="tab-panel" hidden>
+      <section aria-labelledby="servers-title">
+        <h2 id="servers-title">Servers and regions</h2>
+        <p class="hint">The servers each region lists. The Region button at the top shows only its region's servers, and a server no region lists shows in every region. Move a server with its menu, add one the game's lists don't have, or take one you never play off its list. This only changes what this page shows.</p>
+        <div id="server-regions" class="server-regions"></div>
+        <form id="server-add" class="command server-add" autocomplete="off">
+          <input id="server-add-name" maxlength="40" placeholder="Server name" autocomplete="off" aria-label="Server name">
+          <select id="server-add-region" aria-label="Region for the server"><option value="eu">Europe</option><option value="na">North America</option></select>
+          <button type="submit">Add server</button>
+          <button id="server-reset" type="button">Restore the game's lists</button>
+        </form>
+        <p id="server-note" class="hint" role="status"></p>
+      </section>
+      <section aria-labelledby="server-characters-title">
+        <h2 id="server-characters-title">Characters by server</h2>
+        <div class="bank-filter-row">
+          <label class="bank-wide">Character or RoM account <input id="server-search" maxlength="80" autocomplete="off"></label>
+          <label class="bank-check"><input id="server-unknown" type="checkbox"> Only characters whose server isn't known or was set by hand</label>
+          <button id="server-set-selected" type="button" disabled>Set the server of selected characters whose server isn't known…</button>
+        </div>
+        <p class="hint">Each box is a RoM account: the characters one login screen lists. Click a character to select it, and right-click it to rename its RoM account or its Gameforge account. A character saved by an older version may not know its server: set it here, and it keeps that until it logs in once on the current version. Dimmed names are on a login screen's list but haven't saved anything here yet. This follows the region and the server ticks at the top.</p>
+        <div id="server-view" class="server-view" data-select-scope></div>
       </section>
     </div>
     <div id="tab-depot" class="tab-panel" hidden>
@@ -200,7 +310,7 @@
           <button id="depot-copy" type="button">Copy page layout</button>
         </div>
         <p id="depot-status" class="hint" role="status">Nothing read yet.</p>
-        <div id="depot-grid" class="bank-grid"></div>
+        <div id="depot-grid" class="slot-grid"></div>
       </section>
     </div>
     <div id="tab-terminal" class="tab-panel" hidden>
@@ -247,6 +357,20 @@
     </div>
     <p class="hint">Everything here stays on this PC. Passwords are only here if you add them on the Gameforge accounts tab.</p>
     <div id="gf-menu" class="gf-menu" hidden></div>
+    <div id="gf-side-menu" class="gf-menu gf-side-menu" hidden></div>
+    <dialog id="edit-dialog" class="edit-dialog">
+      <form id="edit-form" autocomplete="off">
+        <h2 id="edit-title"></h2>
+        <p id="edit-hint" class="hint"></p>
+        <label id="edit-label" for="edit-value"></label>
+        <input id="edit-value" maxlength="120" autocomplete="off">
+        <select id="edit-choice" hidden></select>
+        <p id="edit-error" class="edit-error" role="alert"></p>
+        <div class="bank-menu-buttons"><button id="edit-save" type="submit">Save</button><button id="edit-clear" type="button" hidden></button><button id="edit-cancel" type="button">Cancel</button></div>
+      </form>
+    </dialog>
+    <div id="bank-tooltip" class="bank-tooltip" hidden></div>
+    <div id="char-tooltip" class="bank-tooltip char-tip" hidden></div>
   </main>
 </body>
 </html>

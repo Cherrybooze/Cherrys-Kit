@@ -8,44 +8,19 @@
 > - **Cherry's Chat:** Ctrl+click a name in chat to fill the mail's To
 > - **LogNextChar:** LogNextChar closes its window before switching characters
 >
-> **Original addon:** Ultimate Mail Mod by Shardea of Siochain, later Maxeem of Muinin, mvoigt, Jagodragon and Raihir. If `Interface\AddOns\UltimateMailMod` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+> **Original addon:** Ultimate Mail Mod by Shardea of Siochain, later Maxeem of Muinin, mvoigt, Jagodragon and Raihir. If `Interface\AddOns\UltimateMailMod` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
-**A better mail window with mass send that no longer gets stuck after about 60 mails.**
+**A better mail window with mass send that no longer gets stuck after about 60 mails, shared recipient history and gold shortcuts.**
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
 
-## Updated in 7.0.1-ck10
+## Recent changes
 
-- With the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To**. On **Mass Send Items** it fills the mass-send To field and your marked items stay marked; from the inbox or **History** it opens Compose with that name.
-- While a mail is still sending, UMM says so and To stays as it is. While the gold confirmation is open, a mass-send list is waiting for Send, or the inbox is taking mail, the click does what it normally does.
-
-## Updated in 7.0.1-ck9
-
-- The two **gold presets** in the settings put a comma every three digits while you type, like the gold in your backpack, and stop at **999,999,999**, the most gold a character can hold. Gold in UMM's confirmation boxes uses the same commas.
-- **Forget own chars** first asks "Confirm resetting own character list?" with **Yes** and **No**. **No** sits where the button was, so a double click cannot confirm by accident.
-- With the mailbox closed and nothing being sent, UMM checks twice a second instead of on every frame. Opening the mailbox wakes it at once.
-
-## Updated in 7.0.1-ck8
-
-- Clicking an item in **Mass Send Items** no longer takes the cursor out of the **To** field. Only a box you really drag takes the keyboard, so Escape can cancel it.
-- Item tooltips show the drag-a-box help only until you have dragged your first box; hovering the bag background still shows it.
-- While the mail window is open, it checks for screen size or UI scale changes twice a second instead of on every frame.
-
-## Updated in 7.0.1-ck7
-
-**Drag-box selection** works across all six bag grids. Drag from a slot/background to replace the selection; **Ctrl/Shift-drag** adds. Escape/right-click cancels and restores the starting selection. Normal clicks and Ctrl-click group toggles remain; empty background clears marks. Bound items remain red and are excluded from sending. Bag changes, focus loss, navigation and closing cancel unfinished gestures.
-
-The right-side **Recently sent** pane shares the existing **20 distinct successful recipients**, newest first and available across characters. Click a name to fill mass-send To while retaining committed item selections. The mass-send window expands/fits the viewport. C.O.D./sending blocks recipient changes, and queue sending locks all four tabs. Native selection drawing, release/focus handling and layout still need in-game playtesting.
-
-## Updated in 7.0.1-ck6
-
-**Mail shortcuts** is on by default. **Use last** beside To fills the last successfully mailed recipient. Two buttons below Send Gold fill configurable amounts (defaults **100,000** and **1,000,000**); change both in `/umm` and click **Save presets**. Whole amounts from 1 to 999,999,999 are accepted. Gold shortcuts select Send Gold and clear C.O.D.; sending uses the existing Send/confirmation controls.
-
-**History**, the third main tab, lists up to **20 distinct successful recipients**, newest first. Repeated recipients move to the top without duplicates. Click a name to compose; Mass Send Items is the fourth tab. Failed/cancelled/timed-out sends do not replace the last recipient. Single and mass sends share this history.
-
-Shortcut settings, amounts and history live in **UMMConfig in the shared SaveVariables.lua**, available to every character. Turning shortcuts off hides the compose buttons; history remains available. The native layout, money confirmation and cross-character persistence still need in-game checks.
+- **7.0.1-ck11**: on **Mass Send Items**, the recipient picker shows **History** first (your last 20 recipients, newest first), then **Characters**, then **Friends**. Click a name to put it in To. In a guild, **Guildies** take the place of the **Recently sent** panel until you pick a name. The **History** tab stays as it is.
+- **7.0.1-ck10**: with the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To**. On **Mass Send Items** it fills the mass-send To field and your marked items stay marked; from the inbox or **History** it opens Compose with that name.
+- **7.0.1-ck9**: the gold presets show a comma every three digits while you type and stop at 999,999,999, the most gold a character can hold. **Forget own chars** asks Yes or No first. With the mailbox closed, UMM checks twice a second instead of on every frame.
 
 ## Features
 
@@ -59,13 +34,17 @@ New in the Cherry's Kit version:
 
 - **Mass send fixed**: the old version could send the next mail before the item was attached, counted failed mails as sent, and never gave a stuck item back, so it broke after about 60 mails until you logged out. Now each mail waits until its item is really attached, timeouts give the item back, and failures are retried (3 times by default, with growing waits).
 - **Send fast or Send safely**: under 40 mails there is one Send button (fast). From 40 mails you choose: *Send fast* (quick pace, stops at the first failure) or *Send safely* (paced, with a short pause every 20 mails). C.O.D. mails always go the safe way. A **Stop** button stops after the current mail; unsent items stay marked.
+- **Drag a box to select items** across all six bag tabs. Ctrl+drag or Shift+drag adds to what you marked, and Escape or right-click cancels. **Ctrl+click** a marked item to unmark its whole group.
 - **Bound items in red**, also when several are marked; they are skipped with "(N bound, not sent)".
-- **Ctrl+click** a marked item to unmark its whole group.
+- **History tab**: your last 20 recipients, newest first, shared by all your characters. Click a name to start a mail to them. A **Recently sent** list beside Mass Send Items shows the same names: click one to fill the mass-send To and keep your marked items.
+- **Mail shortcuts** (on by default): **Use last** beside To fills the last recipient you mailed successfully, and two gold buttons under Send Gold fill amounts you choose (100,000 and 1,000,000 to start with; change them in `/umm`).
 - **Names from chat**: with the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To** (Compose, or Mass Send Items while that tab is open).
 - **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, mail shortcuts and gold presets, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
-- Faster bag handling (the bag list is no longer rebuilt on every bag change) and a faster loading screen.
+- Faster bag handling (the bag list is no longer rebuilt on every bag change), a faster loading screen, and almost no work while the mailbox is closed.
 
-**Please help test:** after a big mass send, `/umm trace` shows what happened. If sending waits forever, run `/umm x` with an item in the send slot and send the output; `/umm slotcheck off` is the workaround.
+History, the last recipient and the gold presets are kept in the shared `SaveVariables.lua` (as `UMMConfig`), so every character on this PC sees them.
+
+**Please help test:** after a big mass send, `/umm trace` shows what happened. If sending waits forever, run `/umm x` with an item in the send slot and send the output; `/umm slotcheck off` is the workaround. The drag box, the History and Recently sent lists, the gold buttons next to the game's money confirmation, and history across characters still need checking in game.
 
 ## Chat commands
 
@@ -86,8 +65,8 @@ New in the Cherry's Kit version:
 
 ## Install
 
-- **Requires Cherry's Kit hub 0.4.17 or later** for the History manifest entries (installed automatically by CurseForge once configured as a Required dependency). This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
-- **Delete the old `Interface\AddOns\UltimateMailMod` folder.** While it is there, Cherry's Kit keeps this version turned off.
+- **Requires Cherry's Kit** 0.4.17 or later (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
+- **Move the old `Interface\AddOns\UltimateMailMod` folder out of AddOns** (`!setup_cherryskit.bat` offers to). While it is there, Cherry's Kit keeps this version turned off.
 - Turn it on or off in the Cherry's Kit window (`/ck`).
 
 ## Bug reports

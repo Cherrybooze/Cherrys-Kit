@@ -2,7 +2,70 @@
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.30 requires hub 0.4.14 or later; UMM 7.0.1-ck10 requires **0.4.17** for its History files. Cherry's Quests 1.0.0 requires hub **0.4.21**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck11 requires **0.4.17** for its History files. Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
+
+## 0.11.115 Guided setup and Cherry's Info
+
+None of this has run in the game yet. The tests use a simulated client, and the setup has run on throwaway game folders.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| S1 | With the game closed, double-click `!setup_cherryskit.bat` in `Interface\AddOns`. Answer the questions. | A console stays open. The map tags each folder `[kit]`, `[move]` or `[keep]`, older copies land in `Interface\offloaded_addons`, and folders of other addons stay. |
+| S2 | Run it again. | Nothing to move, and at most a question or two. |
+| S3 | With the helper running from Chrome, run it. | The helper stops, and comes back the way it ran: no window if it had none. |
+| S4 | Extract the Full ZIP with Windows' Extract All into a new folder inside `AddOns`, and run the file in that folder. | It offers to install into `AddOns`, then that extra folder moves to `offloaded_addons` and the window closes cleanly. |
+| S5 | With only the Hub ZIP and your own `zBag` folder, run it. | `zBag` is tagged `[keep]` and stays. |
+| S6 | Once a newer release is marked Latest, double-click `!setup_cherryskit.bat` with the game closed. | The window opens at once. Within seconds it lists what's out of date with old and new versions, and asks once. After yes, those addons update, the old ones are in `offloaded_addons`, and your `Commands.lua` is still yours. The next run says up to date. |
+| S7 | Right-click `!setup_cherryskit.ps1` and choose **Run with PowerShell**. | The same setup, in a window that stays open until you press Enter. |
+| S8 | Unplug the network and run it. | One line says it couldn't check GitHub, and the rest carries on. |
+| S9 | With only the hub and Cherry's Grid installed, run it. | **Dependencies** lists what's missing with what uses it, here Cherry's KittyCombo, and asks once: y, n, or numbers. Whatever you pick installs, with nothing else touched. |
+| S10 | Run it again after answering n to something. | It isn't asked about again, and a grey line names it. Run the setup with `-AskAgain` and it's asked again. |
+| S11 | With Global Bank installed and no Chrome, run it and pick Chrome. | winget installs Chrome, and the Chrome extension step then offers its installer. |
+| I1 | Type `/cinfo`, then `/cq`, and go through the four tabs. | One window. `/cq` opens on Quests. No label is cut off and no row overlaps the buttons at the bottom. |
+| I2 | Tick options on each tab and watch what they change: chat filters, the tooltip's lines, the ID numbers, health numbers over heads. | They apply at once, with no Reload UI. They're still set after a relog. |
+| I3 | Untick **Extended Macro Icons** and Reload UI, then tick it and Reload UI. | The game's macro window comes back, then the extended one. The tick stays as you left it. |
+| I4 | Type `/emi`, `/ti`, `/pbinfo` and `/php`. | The macro window, the Tooltips & IDs tab twice, and target health toggling. None says "not installed". |
+| I5 | On Target & World, press **Open pbInfo's window**, then **Move cast bar**, and **Move tooltip box**. | Each opens or moves as it says, and the tab comes back after a cast bar move. |
+| I6 | Look at `/ck`. | One Cherry's Info row and no rows for the five old addons. The window's bottom buttons sit right under the last row. |
+| I7 | Put a folder named `TooltipIds` with its old `TooltipIds.lua` in `AddOns`, and Reload UI. | Chat says Cherry's Info is off because of that folder, and its row says so too. |
+
+## 0.11.115 Lighter addons
+
+The frames in these four XML files now come from shared templates. Tests expand the template and find every frame, part and script where it was, and 15 simulated fights give the same widget calls, but the game's own reader hasn't seen them yet.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| O1 | Reload UI with the game's error window in view, and look at the chat for addon errors. | No errors from `CherrysGrid.xml`, `CherrysChat.xml`, `zBagKit.xml` or `GlobalBank.xml`. |
+| O2 | Type `/grid test`. Hover a test member and click it, then type `/grid test` again. | 36 members with names, health, mana strips and icons. Hover and clicks work, and the frames go away. |
+| O3 | In a group, have someone join or leave, then change Sort by, Group by and the pets tick in `/grid`. | The frames follow within about a second. |
+| O4 | With buffs and debuffs on group members, in a fight, watch the icons, stacks and timers on their frames. | They match the game's own buff and debuff bars, including after a buff ends. |
+| O5 | In two chat windows, select and copy a line, scroll with the wheel and with the scroll bar's arrows, and send an emoji. | Each window scrolls and copies on its own, and the emoji shows as a picture. |
+| O6 | Turn on zBag's slot numbers, and open your bags and the bank. | A number on every bag and bank button, at the font size you chose. |
+| O7 | With Cherry's Load Times on, compare a login with one from before this build. | The XML files of Cherry's Grid, Cherry's Chat, zBag and Global Bank take less time. |
+| O8 | Type `/gb`. Click the server tabs, fold an account, press **Accounts**, and search for an item you own. | A tab for each server and one for all of them. Accounts fold and unfold. The search lights up the matching slots, dims the rest, scrolls to the first one and opens the bag or bank that has it. Item tooltips draw above the window. |
+| O9 | Type `/cinfo` and look at the tabs. | The labels read **Tooltips & IDs**, **Target & World** and **Chat & Macros**, and every tab opens. |
+
+## 0.11.115 Global Bank page in Chrome (extension 1.2.2)
+
+Tested on made-up data, up to 3,000 characters, and not yet in your Chrome. Until a character logs in and out once on this build, the page has no server, stats, game tooltip or currencies for it, and marks it "needs a login".
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| P1 | Press **Reload** on the extension, and open the page from its button. Its header says v1.2.2. | It opens on the region most of your characters are on, and Region settings lists your servers. |
+| P2 | Untick a server. | It's hidden on the Bank, Currencies, Characters and heatmap tabs. |
+| P3 | Click and Shift-click characters on Characters, Currencies and the heatmap. | They change the one selection, and the Bank follows it. |
+| P4 | Hover a slot held by a character saved on this build. | The game's own tooltip, then who holds it and where. |
+| P5 | Right-click a slot. | It offers Always stack, Add to favourites and Select who holds it, and the Favourites tab fills. |
+| P6 | Open the page again from the button, then open a second tab by hand. | The button brings the first tab forward. The tab opened by hand warns. |
+| P7 | On Gameforge accounts, unlock, link a character and lock again, then reload the page. | The link is still there. |
+| P8 | Reload the page once more. | Item icons still show, after the first load moved their cache. |
+| P9 | Log a character in and out once on this build. | Its server, currencies and stats appear, and its "needs a login" dot goes. |
+| P10 | On the **Servers** tab, move a server to the other region, add one, restore the game's lists, and set the server of a character without one. | Each takes effect on every tab, and stays after a reload. |
+| P11 | Right-click a character on any tab. | It selects every character of its RoM account, renames its RoM or Gameforge account, or sets its server. The new name shows on every tab. |
+| P12 | Hover a character, then use the two hide checkmarks. | The card shows Gameforge account / RoM account, and each checkmark hides one. The Characters tab has a RoM account column. |
+| P13 | On **Gameforge accounts**, press **Show first**, select single characters, and press a box's **Select**. | Each box shows its account and server once, the names swap, and the selection links or unlinks in one go. |
+| P14 | With **Collect the daily reward automatically** unticked in the popup, open the daily page. Then tick it and open the page on the next reward. | Unticked: nothing is clicked, and collecting by hand still gets recorded. Ticked: the reward is clicked for you. |
+| P15 | On the Bank tab, right-click an item several characters hold, hover one name and then another, and copy a login. | The names are stacked, ten in view and the rest a scroll away. Each name opens its copy buttons in a side menu next to it, headed with that name, and the menu stays open after copying. An item one character holds keeps the buttons in the menu. |
 
 ## 0.11.113 Cherry's Bar coordinates
 
@@ -52,7 +115,7 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G21 | Put an addon's original in its own folder (for example `Interface\AddOns\zBag`), and start the game. | Chat has one line saying the kit's version is off because that folder takes precedence, and the hub's row says the same. The original runs and has its own commands. Delete the folder and Reload UI: the kit's version is back. |
 | G22 | Try one addon with only the hub (the hub's ZIP plus that addon's ZIP). | It works, with only the features that need another addon missing. Its description lists them. |
 | G23 | Log in and out on a character with gear and mana stones, then hover them in the **Bank** tab. | The tooltip matches the game's, line for line, with the same colours. |
-| G24 | Log in one character through Cherry's Loginxml, and out again. Open **Gameforge accounts** and **Gold heatmap**. | Its whole account is boxed together under Link characters, with even tickboxes and names in class colours, and the others on it have a server, even if they haven't logged in. Nothing is linked until you link it. |
+| G24 | Log in one character through LogNextChar's login screen, and out again. Open **Gameforge accounts** and **Gold heatmap**. | Its whole account is boxed together under Link characters, with even tickboxes and names in class colours, and the others on it have a server, even if they haven't logged in. Nothing is linked until you link it. |
 | G25 | In `/grid`, on the **Clicks** page, pick the mouse button **Mouse 4** and give it a 1st action. Press Mouse 4 over a member, then run `/grid probe`. | The action runs on that member, and the probe lists XBUTTON. |
 | G26 | With **Use Mouse 4 as a game keybind** unticked, as it is by default, open **Key Bindings**, click a slot, press Mouse 4, then press Esc. | The slot just keeps waiting. MOUSE4 shows nowhere, and windows behave as before. |
 | G27 | Tick it, and press Mouse 4 over Grid's options. Then open **Key Bindings**, click a slot of the first action bar button, press Mouse 4, then Okay. Press Mouse 4 over a window, and over the 3D world. | The Clicks page says it was seen. The slot and the hotbar show MOUSE4, and the skill fires over the window but not over the world. Windows still drag, and hotbar and bag clicks still work. |
@@ -60,6 +123,8 @@ This runs in Chrome, not the game. It has run on real Chrome 155 with a test pro
 | G29 | With the helper running, open the extension's button (its icon in the Chrome toolbar). | The helper card shows a green **Running** badge, how long it has been running, how it was started, and a red **Stop Global Bank helper** button. Press it: the helper stops within a couple of seconds (whichever way it was started) and automatic startup is unticked. |
 | G30 | Tick **Show its terminal window** (on the extension's page or its button) with the automatic helper on. | The helper restarts in a real PowerShell window titled "Cherrys Global Bank Helper". Untick it: the helper restarts without a window. |
 | G31 | While the helper runs, open Task Manager, then the Details tab, and add the **Command line** column. | The helper is a powershell.exe row whose command line names GlobalBank-Update.ps1; a shown terminal window carries the title Cherrys Global Bank Helper. |
+| G32 | With an older or other `Interface\loginxml` in place, run LogNextChar's `Install login screen.bat`, start the game, then run it again. | `Interface\offloaded_addons\loginxml` holds the old folder and the login screen shows LogNextChar. Saved logins still work. The second run says nothing changed and adds no copy. |
+| G33 | Log out of a name on one server, then the same name on another, and restart the helper. Open `/gb`, the page's **Characters** and **Gold heatmap**, and the character screen on each server. | Two rows, `Name (Server)`, each with its own gold, items and heatmap column. Each character screen shows only its own server's gold. |
 | G4 | Log out of a character with the helper window closed, then press **Update now**. | That character's changes appear. |
 | G5 | In the Terminal tab, run `list gold`, `search mana`, `show Name`, `note Name test`, then `note Name`. | The same output as the helper window, and the note appears, then goes. |
 
@@ -76,7 +141,7 @@ None of this has run in the game yet. Chrome's side has run on real Chrome 155 w
 | T5 | Open the extension's popup. | **Daily reset** names 00:00 in Germany in your own time: 01:00 in Finland, 00:00 in Germany. |
 | T6 | Run **Install Chrome extension.bat** with Chrome open. | Chrome opens a new tab on its extensions page, and a small window sits above it. Turn on Developer mode and click Load unpacked: the folder fills in, the extension loads, and the small window says Done and closes. Your other tabs are untouched. |
 | T7 | Extract only the hub and ZShop into an empty `Interface/AddOns`, and repeat with another addon or two. | The addon works and shows in `/ck`. The minimap's bug button stays dark. |
-| T8 | Extract the Cherry's Loginxml ZIP into `Interface/AddOns`, log in without running its file yet. | Chat says the login screen isn't in place. After **Install login screen.bat** and a restart, the login screen shows Cherry's Loginxml 1.2.0 and the chat line is gone. Your own `accounts.lua` and `password.lua` are unchanged. |
+| T8 | Extract the LogNextChar ZIP into `Interface/AddOns`, log in without running its file yet. | Chat says the login screen isn't in place. After **Install login screen.bat** and a restart, the login screen shows Cherry's Loginxml 1.2.0 and the chat line is gone. Your own `accounts.lua` and `password.lua` are unchanged. |
 | T9 | On the server screen, change a toggle, log in, log out, restart the game. | The toggle stayed changed. |
 | T10 | Use Up, Down, Enter and Esc on the server and character screens. | They move, join or log in, and go back. |
 | T11 | Install LogNextChar. Press Next, then Prev, on an account with several characters, and on one with a single character. | You land on the neighbouring character. With one character, both buttons are grey. In `/ck`, its Settings opens the unlock option. |

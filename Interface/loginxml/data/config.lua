@@ -1,4 +1,4 @@
--- Settings for Cherry's Loginxml. To change them, copy this file to
+-- Settings for LogNextChar's login screen. To change them, copy this file to
 -- Interface\loginxml\config.lua and edit the copy: loginxml reads that one
 -- first, and installing an update never overwrites it. Keep every line: an
 -- on/off setting missing from the file you use counts as off.

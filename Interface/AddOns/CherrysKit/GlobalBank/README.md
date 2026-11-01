@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.4.15** · Kit release **0.11.114** · [All addons / hub](../README.md)
+Version **1.5.4** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -17,11 +17,37 @@ Built for players with many characters and bank alts. Each character saves a sma
 > - **Advanced AuctionHouse:** its searches fill the helper's auction cache
 > - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
 > - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
-> - **Cherry's Loginxml:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
+> - **LogNextChar:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
 >
-> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.5.4
+
+**A tidier right-click menu for items several characters hold** (extension 1.2.2). The menu stacks their names in alphabetical order, ten in view and the rest a scroll away, and hovering a name opens its copy buttons (character name, Gameforge account name, password and secondary password) in a side menu next to it, headed with that name. A click on the name, or Enter, opens it too. With one character the buttons stay in the menu as before. After updating, press **Reload** on the extension.
+
+## Updated in 1.5.3
+
+**More control on the Global Bank page** (extension 1.2.1). A **Servers** tab edits the region lists by hand: move a server to the other region, add one the page doesn't know yet, or restore the game's lists, and set the server of characters whose server isn't known yet. Right-click a character on any tab to select every character of its RoM account (the characters one login screen lists), rename its RoM account or Gameforge account, or set its server. Hover cards show the Gameforge account / RoM account, with checkmarks to hide either one, and the Characters tab has a RoM account column. On the **Gameforge accounts** tab, each box shows its account and server once, and each character as name / RoM account (**Show first** swaps them); select characters there, or a whole box with its **Select** button, to link or unlink them in one go. RoM account names are only labels, kept in this browser without encryption.
+
+Collecting the daily reward automatically is now a tick in the extension's popup, **Collect the daily reward automatically**, and it's off by default: tick it if you want the reward clicked for you, because automated use may be against Gameforge's terms of service, so use it at your own risk. With it off, click the reward yourself and the extension still records it. After updating, press **Reload** on the extension.
+
+## Updated in 1.5.2
+
+**The Global Bank page in Chrome is built for thousands of characters** (extension 1.2.0). A **Region** button (Europe or North America) and a checkmark for each server, Ayvenas included, decide what every tab shows, and characters with the same name on different servers stay apart everywhere. Click any character on any tab to select it, Shift-click for a range, and hover it for a short card of its details; the Bank tab can show only the selected characters' items. On the Bank tab, hovering an item shows the game's own tooltip with its stats or mana stone stats, **Stacking** has a checkmark for each item type, and right-click offers **Always stack every copy of this item** and **Add to favourites**, with a new **Favourites** tab. **Currencies** has a column for every currency, and Currencies and **Characters** group by server, or by account. Only the slots on screen are drawn, so the page stays quick with thousands of characters. A character saved by an older Global Bank is marked: log it in and out once to record its server, currencies and stats. After updating, press **Reload** on the extension.
+
+## Updated in 1.5.1
+
+**A smaller file to read at login.** Its XML file went from 561 KB to 113 KB with the same frames: every list row and item slot shares one template, so the game has less to read at login.
+
+## Updated in 1.5.0
+
+The in-game window is refreshed. Server tabs across the top (it opens on the server you're playing, with an All servers tab), and characters grouped by account: the ones the login screen lists together, as on the extension's page. Click an account to fold it, or **Accounts** for one plain list. The bag and bank now show every slot where it really is, so a search lights up the matching slots, dims the rest, scrolls to the first one and opens the bag or bank that has it; each server tab counts the characters that match. Item tooltips, and the game's comparison tooltips, now draw on top of the window instead of behind it. No Gameforge account data is used in game.
+
+## Updated in 1.4.16
+
+Characters with the same name on different servers no longer mix. The game keeps one save folder per name, so each one's snapshot now stays in that folder under its server, and the helper, the window and the extension's page tell them apart as `Name (Server)`. Only a character that has logged in and out since this update is sure of its server. Log each one in once on its own server. A Gameforge link made under the bare name has to be ticked again for each.
 
 ## Updated in 1.4.15
 

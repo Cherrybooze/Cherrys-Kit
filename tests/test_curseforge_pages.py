@@ -34,8 +34,8 @@ class DescriptionsTest(unittest.TestCase):
     def test_lognextchar_only_needs_the_hub(self):
         text = (pages.PAGES / "19-lognextchar.md").read_text(encoding="utf-8")
         self.assertIn("**Requires:** Cherry's Kit (hub", text.splitlines()[2])
-        self.assertNotIn("Cherry's Loginxml", text.splitlines()[2])
-        self.assertIn("**Cherry's Loginxml:** picks the next or previous character", text)
+        self.assertIn("**Ultimate Mail Mod:** closes its window", text)
+        self.assertIn("Install login screen.bat", text)
 
     def test_a_hub_version_is_named_when_an_addon_needs_one(self):
         for package in self.packages:

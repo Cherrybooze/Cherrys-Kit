@@ -961,6 +961,7 @@ function UMMMassSendItemsRecipientTemplate_OnLoad(this)
     getglobal(self:GetParent():GetName().."Bags"):Show();
     getglobal(self:GetParent():GetName().."Mark"):Show();
     getglobal(self:GetParent():GetName().."People"):Hide();
+    getglobal(self:GetParent():GetName().."Recent"):Show();
   end;
   
   this.SelectDone = function(self)
@@ -1002,14 +1003,24 @@ end
 
 -- ##### People Columns #####
 
+-- Cherry's Kit: History | Characters | Friends. In a guild, Guildies takes the spot of the
+-- "Recently sent" side panel while the columns show (History holds the same names).
 function UMMMassSendItemsPeopleTemplate_OnShow(this)
   UMMFriends:Load();
   local recipientName = this:GetParent():GetName().."RecipientRecipient";
   local recipientFrame = this:GetParent():GetName().."Recipient";
-  
-  local listFrame = getglobal(this:GetName().."Own")
+
+  local listFrame = getglobal(this:GetName().."History")
   listFrame:ClearAllAnchors();
   listFrame:SetAnchor("TOPLEFT", "TOPLEFT", this:GetName(), 0, 0);
+  listFrame:SetTarget(recipientName);
+  listFrame:SetSelectDone(recipientFrame);
+  listFrame:SetupList("history");
+  listFrame:Show();
+
+  local listFrame = getglobal(this:GetName().."Own")
+  listFrame:ClearAllAnchors();
+  listFrame:SetAnchor("TOPLEFT", "TOPLEFT", this:GetName(), 145, 0);
   listFrame:SetTarget(recipientName);
   listFrame:SetSelectDone(recipientFrame);
   listFrame:SetupList("own");
@@ -1017,7 +1028,7 @@ function UMMMassSendItemsPeopleTemplate_OnShow(this)
 
   local listFrame = getglobal(this:GetName().."Friends")
   listFrame:ClearAllAnchors();
-  listFrame:SetAnchor("TOPLEFT", "TOPLEFT", this:GetName(), 145, 0);
+  listFrame:SetAnchor("TOPLEFT", "TOPLEFT", this:GetName(), 290, 0);
   listFrame:SetTarget(recipientName);
   listFrame:SetSelectDone(recipientFrame);
   listFrame:SetupList("friend");
@@ -1025,8 +1036,9 @@ function UMMMassSendItemsPeopleTemplate_OnShow(this)
   
   local listFrame = getglobal(this:GetName().."Guildies")
   if (IsInGuild()) then
+    getglobal(this:GetParent():GetName().."Recent"):Hide();
     listFrame:ClearAllAnchors();
-    listFrame:SetAnchor("TOPLEFT", "TOPLEFT", this:GetName(), 290, 0);
+    listFrame:SetAnchor("TOPLEFT", "TOPLEFT", this:GetName(), 455, 0);
     listFrame:SetTarget(recipientName);
     listFrame:SetSelectDone(recipientFrame);
     listFrame:SetupList("guild");

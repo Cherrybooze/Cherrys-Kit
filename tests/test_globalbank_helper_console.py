@@ -109,6 +109,49 @@ $SaveFolder=Join-Path $fixture 'Saves'
         result = subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(helper_dir / 'GlobalBank-Update.ps1'), '-SaveFolder', str(saves), '-Command', 'update'], capture_output=True, text=True, timeout=30)
         self.assertNotEqual(result.returncode, 0)
 
+    def test_the_same_name_on_two_servers_stays_two_characters(self):
+        helper_dir = self.root / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
+        helper_dir.mkdir(parents=True)
+        for name in ('GlobalBank-Update.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Control.ps1', 'AAH-Cache.ps1'):
+            shutil.copy2(HELPER.parent / name, helper_dir / name)
+        saves = self.root / 'saves'
+        (saves / 'Same').mkdir(parents=True)
+        (saves / 'Old').mkdir()
+        (saves / 'Same' / 'SaveVariables.lua').write_text(
+            'GlobalBank_Char = "GB1~Same~Mage~60~111~0~0~0~2026-01-02 10:00`S~Aynara"\n'
+            'GlobalBank_Others = "GB1~Same~Mage~60~222~0~0~0~2026-01-01 10:00`S~Sonnenwind`B~1~1~5~Item~icon"\n'
+            'GlobalBank_Tips = "B1~ffffff=Tip"\n')
+        (saves / 'Old' / 'SaveVariables.lua').write_text('GlobalBank_Char = "GB1~Old~Mage~60~5~0~0~0~x"\n')
+        update = helper_dir / 'GlobalBank-Update.ps1'
+        data = self.root / 'Interface/GlobalBankHelper'
+        def command(text):
+            return subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(update),
+                                   '-SaveFolder', str(saves), '-Command', text], capture_output=True, text=True, timeout=120)
+        self.assertEqual(command('update').returncode, 0)
+        result = command('list gold')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('Same (Aynara)', result.stdout)
+        self.assertIn('Same (Sonnenwind)', result.stdout)
+        database = (data / 'GlobalBankDatabase.lua').read_text(encoding='latin-1')
+        self.assertIn('~111~', database)
+        self.assertIn('~222~', database)
+        tips = (data / 'GlobalBankTips.txt').read_text(encoding='latin-1')
+        self.assertIn('Same (Aynara)\tB1', tips)
+        self.assertNotIn('Sonnenwind', tips)
+        # Once the save file only has one of them, the database remembers the other.
+        (saves / 'Same' / 'SaveVariables.lua').write_text('GlobalBank_Char = "GB1~Same~Mage~60~333~0~0~0~y`S~Aynara"\n')
+        self.assertEqual(command('update').returncode, 0)
+        database = (data / 'GlobalBankDatabase.lua').read_text(encoding='latin-1')
+        self.assertIn('~333~', database)
+        self.assertIn('~222~', database)
+        self.assertNotIn('~111~', database)
+        # One saved before servers were recorded gives way when the same folder says which server it's on.
+        (saves / 'Old' / 'SaveVariables.lua').write_text('GlobalBank_Char = "GB1~Old~Mage~60~6~0~0~0~y`S~Aynara"\n')
+        self.assertEqual(command('update').returncode, 0)
+        database = (data / 'GlobalBankDatabase.lua').read_text(encoding='latin-1')
+        self.assertIn('GB1~Old~Mage~60~6~', database)
+        self.assertNotIn('GB1~Old~Mage~60~5~', database)
+
     def test_binary_toggle_keeps_file_beat_and_typed_prompt_without_scroll_redraw(self):
         output = self.check_ps('''
 Invoke-GBCommand 'heartbeat 0'

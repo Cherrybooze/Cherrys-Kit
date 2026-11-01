@@ -230,9 +230,25 @@ end
 -- Roster
 ---------------------------------------------------------------------------
 
+-- Unit names made once, not on every roster check
+local RAID_UNITS, TEST_UNITS, PARTY_UNITS, PET_UNITS = {}, {}, {}, { player = "pet" }
+for i = 1, 36 do
+  RAID_UNITS[i], TEST_UNITS[i] = "raid" .. i, "cgtest" .. i
+  PET_UNITS[RAID_UNITS[i]] = RAID_UNITS[i] .. "pet"
+end
+for i = 1, 5 do
+  PARTY_UNITS[i] = "party" .. i
+  PET_UNITS[PARTY_UNITS[i]] = PARTY_UNITS[i] .. "pet"
+end
+local PARTY_CANDIDATES = { "player", "party1", "party2", "party3", "party4", "party5" }
+
+-- What R.Update's result depends on, as last seen: kept in place so checking makes no tables.
+local seen = { valid = false, name = {}, class = {}, role = {}, pet = {}, groups = {} }
+
 function R.SetTest(on)
   R.test = on and true or false
   R.signature = ""
+  seen.valid = false
 end
 
 local function numRaid()
@@ -251,7 +267,7 @@ function R.GroupType()
     return "raid"
   end
   for i = 1, 5 do
-    if U.Exists("party" .. i) then
+    if U.Exists(PARTY_UNITS[i]) then
       return "party"
     end
   end
@@ -295,7 +311,7 @@ local function members(P, kind)
   if kind == "raid" then
     local count = R.test and 36 or 36
     for i = 1, count do
-      local unit = R.test and ("cgtest" .. i) or ("raid" .. i)
+      local unit = R.test and TEST_UNITS[i] or RAID_UNITS[i]
       if U.Exists(unit) then
         list[#list + 1] = { unit = unit, index = i, group = math.floor((i - 1) / 6) + 1 }
       end
@@ -304,7 +320,7 @@ local function members(P, kind)
     list[1] = { unit = "player", index = 0, group = 1 }
     if kind == "party" then
       for i = 1, 5 do
-        local unit = "party" .. i
+        local unit = PARTY_UNITS[i]
         if U.Exists(unit) then
           list[#list + 1] = { unit = unit, index = i, group = 1 }
         end
@@ -321,7 +337,7 @@ local function pets(list)
     if e.unit == "player" then
       pet = "pet"
     elseif not U.TestIndex(e.unit) then
-      pet = e.unit .. "pet"
+      pet = PET_UNITS[e.unit] or (e.unit .. "pet")
     end
     if pet and U.Exists(pet) then
       out[#out + 1] = { unit = pet, index = e.index, group = 0, pet = true }
@@ -332,10 +348,76 @@ end
 
 local ROLE_TITLES = { tank = "Tanks", attacker = "Attackers" }
 
+-- Compares everything R.Update reads with what it read last time, and remembers the new values.
+-- True when nothing changed: the groups R.Update would build are the ones it built last time.
+local function unchanged(P, kind)
+  local ok = seen.valid and seen.P == P and seen.kind == kind and seen.test == R.test
+    and seen.showSolo == P.showSolo and seen.showParty == P.showParty and seen.showRaid == P.showRaid
+    and seen.showPets == P.showPets and seen.sortBy == P.sortBy and seen.groupBy == P.groupBy
+    and seen.playerFirst == P.playerFirst and seen.perLine == P.perLine and seen.max == G.MAX_UNITS
+  seen.valid, seen.P, seen.kind, seen.test = true, P, kind, R.test
+  seen.showSolo, seen.showParty, seen.showRaid = P.showSolo, P.showParty, P.showRaid
+  seen.showPets, seen.sortBy, seen.groupBy = P.showPets, P.sortBy, P.groupBy
+  seen.playerFirst, seen.perLine, seen.max = P.playerFirst, P.perLine, G.MAX_UNITS
+  local groups = P.raidGroups
+  for g = 1, 6 do
+    local on = groups[g] ~= false
+    if seen.groups[g] ~= on then
+      seen.groups[g] = on
+      ok = false
+    end
+  end
+  local units, count = PARTY_CANDIDATES, 6
+  if kind == "raid" then
+    units, count = R.test and TEST_UNITS or RAID_UNITS, 36
+  end
+  local wantClass = P.sortBy == "class" or (P.groupBy ~= "none" and P.groupBy ~= "group" and P.groupBy ~= "role")
+  local wantRole = P.groupBy == "role"
+  local wantPet = P.showPets
+  for i = 1, count do
+    local unit = units[i]
+    local name = U.Name(unit)
+    if seen.name[i] ~= name then
+      seen.name[i] = name
+      ok = false
+    end
+    local class, role, pet = false, false, false
+    if name then
+      if wantClass then
+        class = classOf(unit)
+      end
+      if wantRole then
+        role = U.Role(unit) or false
+      end
+      if wantPet then
+        local petUnit = (unit == "player") and "pet" or PET_UNITS[unit]
+        pet = petUnit and U.Name(petUnit) or false
+      end
+    end
+    if seen.class[i] ~= class then
+      seen.class[i] = class
+      ok = false
+    end
+    if seen.role[i] ~= role then
+      seen.role[i] = role
+      ok = false
+    end
+    if seen.pet[i] ~= pet then
+      seen.pet[i] = pet
+      ok = false
+    end
+  end
+  return ok
+end
+
 -- Rebuilds R.groups. Returns true when who is shown (or where) changed.
+-- Runs every second: when nothing it reads changed, it keeps the groups it built last time.
 function R.Update(kind)
   local P = G.P
   kind = kind or R.GroupType()
+  if unchanged(P, kind) then
+    return false
+  end
   R.units, R.groups, R.byUnit, R.byName = {}, {}, {}, {}
   local show = (kind == "solo" and P.showSolo) or (kind == "party" and P.showParty) or (kind == "raid" and P.showRaid)
   local list = show and members(P, kind) or {}

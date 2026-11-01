@@ -1,5 +1,9 @@
 Cherry's Grid
 
+1.1.6 (2026-11-01)
+- Drawing a member makes no new tables, and the member list only rebuilds when someone or a
+  setting changed. CherrysGrid.xml shares one template: 598 KB to 105 KB, with the same frames.
+
 1.1.5 (2026-10-31)
 - Clicks: Mouse 4 is one of the click buttons. A check box, off by default, also makes it a game
   keybind: it shows in the game's Key Bindings and works over windows and buttons.

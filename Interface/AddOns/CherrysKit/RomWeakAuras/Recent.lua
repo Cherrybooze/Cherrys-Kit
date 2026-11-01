@@ -333,6 +333,7 @@ function R.WatchEvent(eventName)
 end
 
 -- Ends the fight when combat ends (checked a few times a second).
+local FIGHT_LOGS = { "hits", "taken" }
 local nextCheck = 0
 RWA.SetUpdater("recent", function(t)
   if t < nextCheck then
@@ -342,7 +343,7 @@ RWA.SetUpdater("recent", function(t)
   if fight.start and not fight.stop and not inCombat() then
     -- out of combat and nothing landed for a moment: the fight is over
     local last = 0
-    for _, kind in ipairs({ "hits", "taken" }) do
+    for _, kind in ipairs(FIGHT_LOGS) do
       local list = logs[kind]
       if list and list[#list] then
         last = math.max(last, list[#list].t)

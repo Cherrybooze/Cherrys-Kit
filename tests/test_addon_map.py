@@ -17,25 +17,20 @@ OWN_NAMES = {
     "CherrysChat": ["CherrysChat"],
     "zBag": ["zBagKit", "zBagItem_OnClick", "zBagBackgroundCloseButton", "zBagB_OnUpdate"],
     "GlobalBank": ["GlobalBank"],
-    "ExtendedMacroIcons": ["CherrysEMI"],
-    "TooltipIds": ["TooltipIds"],
     "UltimateMailMod": ["UMMFrame", "UMMMailManager", "UMMConfig"],
     "AdvancedAuctionHouse": ["AAH"],
     "ZShop": ["ZShop"],
-    "pbInfo": ["pbInfo", "pbInfoQuestTracker"],
-    "PortraitHP": ["PortraitHP"],
+    "CherrysInfo": ["CherrysInfo", "CherrysQuests", "CherrysEMI", "TooltipIds", "pbInfo", "pbInfoQuestTracker", "PortraitHP"],
     "CherrysGrid": ["CherrysGrid"],
-    "CherrysQuests": ["CherrysQuests"],
     "CherrysBar": ["CherrysBar"],
     "LogNextChar": ["LogNextChar"],
-    "CherrysLoginxml": ["CherrysLoginxml"],
 }
 # Only reads other addons' names, to time them. Its own description says so.
 LABELS_ONLY = {"Perf.lua"}
 
 
 def source_folder(package):
-    if package in ("CherrysLoginxml", "LogNextChar"):
+    if package == "LogNextChar":
         return ADDONS / PACKAGES[package].get("install_folder", package)
     return KIT / package
 
@@ -99,7 +94,7 @@ class AddonMapTest(unittest.TestCase):
 
     def test_the_hub_manifest_loads_the_separate_packages(self):
         toc = (KIT / "CherrysKit.toc").read_text(encoding="utf-8-sig")
-        for line in ("CherrysLoginxmlHook/CherrysLoginxmlHook.lua", "CherrysLoginxmlHook/CherrysLoginxmlHook.xml", "LogNextChar/LogNextChar.lua", "LogNextChar/LogNextChar.xml", "KitOrigins.lua"):
+        for line in ("LogNextChar/LogNextChar.lua", "LogNextChar/LoginScreen.lua", "LogNextChar/LogNextChar.xml", "KitOrigins.lua"):
             self.assertIn("\n" + line, toc.replace("\r\n", "\n"))
         self.assertLess(toc.index("KitOrigins.lua"), toc.index("\nCherrysKit.lua"))
 

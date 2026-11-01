@@ -1,6 +1,6 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck10** · Kit release **0.11.90** · [All addons / hub](../README.md)
+Version **7.0.1-ck11** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **A better mail window with mass send that no longer gets stuck after about 60 mails.**
 
@@ -16,11 +16,15 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 > - **Cherry's Chat:** Ctrl+click a name in chat to fill the mail's To
 > - **LogNextChar:** LogNextChar closes its window before switching characters
 >
-> **Original addon:** Ultimate Mail Mod by Shardea of Siochain, later Maxeem of Muinin, mvoigt, Jagodragon and Raihir. If `Interface\AddOns\UltimateMailMod` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+> **Original addon:** Ultimate Mail Mod by Shardea of Siochain, later Maxeem of Muinin, mvoigt, Jagodragon and Raihir. If `Interface\AddOns\UltimateMailMod` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
 <!-- end of requirements -->
+
+## Updated in 7.0.1-ck11
+
+- On **Mass Send Items**, the recipient picker now shows **History** first (your last 20 recipients, newest first), then **Characters**, then **Friends**. Click a name to put it in To. When you are in a guild, **Guildies** take the place of the **Recently sent** panel on the right until you pick a name. The **History** tab stays as it is.
 
 ## Updated in 7.0.1-ck10
 

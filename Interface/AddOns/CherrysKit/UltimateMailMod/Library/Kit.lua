@@ -38,6 +38,7 @@ default("UMM_SETTINGS_PRESETERROR", "Enter whole gold amounts from 1 to 999,999,
 default("UMM_SETTINGS_PRESETSAVED", "Gold presets saved.");
 default("UMM_MENU_HISTORY", "History");
 default("UMM_HISTORY_TITLE", "Recipient history");
+default("UMM_RECIPIENT_HISTORY", "History");  -- first column of the Mass Send recipient picker
 default("UMM_HISTORY_HELP", "Your last 20 distinct recipients, newest first. Shared across characters. Click a name to compose mail.");
 default("UMM_HISTORY_EMPTY", "No successfully sent mail yet.");
 default("UMM_HISTORY_COUNT", "%d / 20 recipients");

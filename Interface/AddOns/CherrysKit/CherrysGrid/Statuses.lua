@@ -112,10 +112,12 @@ S.CLASS_COLORS = {
 S.UNKNOWN_CLASS = c(0.6, 0.6, 0.6)
 S.PET_COLOR = c(0.3, 0.75, 0.4)
 
+local WHITE_CLASS = c(0.85, 0.85, 0.85)
+
 function S.ClassColor(unit)
   local P = G.P
   if P.colorScheme == "white" then
-    return c(0.85, 0.85, 0.85)
+    return WHITE_CLASS
   end
   local main = G.U.Class(unit)
   local scheme = S.CLASS_COLORS[P.colorScheme] or S.CLASS_COLORS.rom
@@ -132,6 +134,48 @@ S.MANA_COLORS = { c(0.3, 0.5, 1), c(1, 0.15, 0.15), c(0.55, 0.95, 0), c(0.95, 0.
 local U = G.U
 local GET = {}
 S.GET = GET
+
+-- A member is redrawn up to ten times a second (health changes in a fight), so the results are
+-- not new tables: each member keeps one table per status, emptied and refilled on each draw.
+-- Evaluate hands the status its table in `R` just before calling it; a status fills R and
+-- returns it, or returns nil when it is not active. Callers only read the results until the
+-- member's next draw.
+local R
+local pools = {}
+
+local function take(unit, key)
+  local pool = pools[unit]
+  if not pool then
+    pool = {}
+    pools[unit] = pool
+  end
+  local t = pool[key]
+  if t then
+    for k in pairs(t) do
+      t[k] = nil
+    end
+  else
+    t = {}
+    pool[key] = t
+  end
+  return t
+end
+
+-- Texts that repeat, made once: "57%" and names cut to the name length
+local PERCENT = {}
+local function percentText(n)
+  local t = PERCENT[n]
+  if not t then
+    t = n .. "%"
+    PERCENT[n] = t
+  end
+  return t
+end
+
+local RAID_ICON_COORDS = {}
+for n = 1, 8 do
+  RAID_ICON_COORDS[n] = { (n - 1) / 8, n / 8, 0, 1 }
+end
 
 local function healthFraction(unit)
   local cur, max = U.Health(unit)
@@ -153,7 +197,7 @@ local function shortNumber(n)
 end
 S.ShortNumber = shortNumber
 
-local function utf8Sub(s, n)
+local function cutText(s, n)
   -- cuts after n characters, not bytes (names can have accents)
   local out, count = {}, 0
   for ch in string.gmatch(s, "[%z\1-\127\194-\244][\128-\191]*") do
@@ -165,13 +209,30 @@ local function utf8Sub(s, n)
   end
   return table.concat(out)
 end
+
+local cuts = {} -- [n][text] = cut text: each name is cut once, not on every draw
+local function utf8Sub(s, n)
+  local byText = cuts[n]
+  if not byText then
+    byText = {}
+    cuts[n] = byText
+  end
+  local cut = byText[s]
+  if not cut then
+    cut = cutText(s, n)
+    byText[s] = cut
+  end
+  return cut
+end
 S.Utf8Sub = utf8Sub
 
 function GET.classColor(unit, cfg, e)
   if e and e.pet then
-    return { color = S.PET_COLOR }
+    R.color = S.PET_COLOR
+    return R
   end
-  return { color = S.ClassColor(unit) }
+  R.color = S.ClassColor(unit)
+  return R
 end
 
 function GET.healthColor(unit)
@@ -186,7 +247,11 @@ function GET.healthColor(unit)
   else
     r, g = 1, f * 2
   end
-  return { color = c(r, g, 0.05) }
+  -- the colour table is the member's own too
+  local col = take(unit, "healthColor.color")
+  col[1], col[2], col[3] = r, g, 0.05
+  R.color = col
+  return R
 end
 
 function GET.name(unit, cfg)
@@ -199,7 +264,8 @@ function GET.name(unit, cfg)
   if P.nameClassColor then
     color = S.ClassColor(unit)
   end
-  return { text = utf8Sub(name, math.max(1, tonumber(P.textLength) or 6)), color = color }
+  R.text, R.color = utf8Sub(name, math.max(1, tonumber(P.textLength) or 6)), color
+  return R
 end
 
 function GET.deficit(unit, cfg)
@@ -212,7 +278,7 @@ function GET.deficit(unit, cfg)
   end
   local text
   if cfg.format == "percent" then
-    text = math.floor(f * 100 + 0.5) .. "%"
+    text = percentText(math.floor(f * 100 + 0.5))
   elseif cfg.format == "both" then
     text = "-" .. shortNumber(max - cur) .. " " .. math.floor(f * 100 + 0.5) .. "%"
   elseif cfg.format == "current" then
@@ -220,7 +286,8 @@ function GET.deficit(unit, cfg)
   else
     text = "-" .. shortNumber(max - cur)
   end
-  return { text = text, color = cfg.color }
+  R.text, R.color = text, cfg.color
+  return R
 end
 
 function GET.percent(unit, cfg)
@@ -228,18 +295,21 @@ function GET.percent(unit, cfg)
     return nil
   end
   local f = healthFraction(unit)
-  return { text = math.floor(f * 100 + 0.5) .. "%", color = cfg.color }
+  R.text, R.color = percentText(math.floor(f * 100 + 0.5)), cfg.color
+  return R
 end
 
 function GET.dead(unit, cfg)
   if U.IsOnline(unit) and U.IsDead(unit) then
-    return { text = "Dead", color = cfg.color, alpha = cfg.alpha }
+    R.text, R.color, R.alpha = "Dead", cfg.color, cfg.alpha
+    return R
   end
 end
 
 function GET.offline(unit, cfg)
   if not U.IsOnline(unit) then
-    return { text = "Offline", color = cfg.color, alpha = cfg.alpha }
+    R.text, R.color, R.alpha = "Offline", cfg.color, cfg.alpha
+    return R
   end
 end
 
@@ -249,20 +319,23 @@ function GET.lowHealth(unit, cfg)
   end
   local f, _, max = healthFraction(unit)
   if max > 0 and f * 100 < (tonumber(cfg.threshold) or 40) then
-    return { color = cfg.color }
+    R.color = cfg.color
+    return R
   end
 end
 
 function GET.lowMana(unit, cfg)
   local cur, max, kind = U.Mana(unit)
   if kind == 1 and max > 0 and cur / max * 100 < (tonumber(cfg.threshold) or 20) and not U.IsDead(unit) then
-    return { color = cfg.color }
+    R.color = cfg.color
+    return R
   end
 end
 
 function GET.target(unit, cfg)
   if U.Exists("target") and U.IsUnit(unit, "target") then
-    return { color = cfg.color }
+    R.color = cfg.color
+    return R
   end
 end
 
@@ -272,41 +345,48 @@ function GET.targetOfTarget(unit, cfg)
     return nil
   end
   if U.Exists("targettarget") and U.IsUnit(unit, "targettarget") then
-    return { color = cfg.color }
+    R.color = cfg.color
+    return R
   end
 end
 
 function GET.leader(unit, cfg)
   if U.IsLeader(unit) then
-    return { color = cfg.color }
+    R.color = cfg.color
+    return R
   end
 end
 
 function GET.assistant(unit, cfg)
   if U.IsAssistant(unit) then
-    return { color = cfg.color }
+    R.color = cfg.color
+    return R
   end
 end
 
 function GET.looter(unit, cfg)
   if U.IsLooter(unit) then
-    return { color = cfg.color }
+    R.color = cfg.color
+    return R
   end
 end
 
 function GET.role(unit, cfg)
   local role = U.Role(unit)
   if role == "tank" then
-    return { color = cfg.color, text = "T" }
+    R.color, R.text = cfg.color, "T"
+    return R
   elseif role == "attacker" then
-    return { color = cfg.color2 or cfg.color, text = "A" }
+    R.color, R.text = cfg.color2 or cfg.color, "A"
+    return R
   end
 end
 
 function GET.raidIcon(unit)
   local n = U.RaidIcon(unit)
   if n then
-    return { icon = "Interface/Common/RaidTarget", coords = { (n - 1) / 8, n / 8, 0, 1 } }
+    R.icon, R.coords = "Interface/Common/RaidTarget", RAID_ICON_COORDS[n]
+    return R
   end
 end
 
@@ -314,7 +394,8 @@ function GET.debuff(unit)
   local list = G.Auras.ShownDebuffs(unit)
   local a = list[1]
   if a then
-    return { icon = a.icon, stacks = a.stacks, left = G.Auras.TimeLeft(a), aura = a }
+    R.icon, R.stacks, R.left, R.aura = a.icon, a.stacks, G.Auras.TimeLeft(a), a
+    return R
   end
 end
 
@@ -322,14 +403,16 @@ function GET.debuffAlert(unit, cfg)
   local c2 = G.Auras.Get(unit)
   local a = G.Auras.FindFromList(c2.debuffs, G.Auras.ParseList(G.P.debuffAlert))
   if a then
-    return { color = cfg.color, icon = a.icon, left = G.Auras.TimeLeft(a), stacks = a.stacks, text = a.name }
+    R.color, R.icon, R.left, R.stacks, R.text = cfg.color, a.icon, G.Auras.TimeLeft(a), a.stacks, a.name
+    return R
   end
 end
 
 function GET.anyDebuff(unit, cfg)
   local list = G.Auras.ShownDebuffs(unit)
   if list[1] then
-    return { color = cfg.color, icon = list[1].icon, text = list[1].name }
+    R.color, R.icon, R.text = cfg.color, list[1].icon, list[1].name
+    return R
   end
 end
 
@@ -337,7 +420,8 @@ local function fromList(unit, listText, cfg)
   local c2 = G.Auras.Get(unit)
   local a = G.Auras.FindFromList(c2.buffs, G.Auras.ParseList(listText))
   if a then
-    return { color = cfg.color, icon = a.icon, left = G.Auras.TimeLeft(a), stacks = a.stacks, text = a.name }
+    R.color, R.icon, R.left, R.stacks, R.text = cfg.color, a.icon, G.Auras.TimeLeft(a), a.stacks, a.name
+    return R
   end
 end
 
@@ -376,13 +460,15 @@ function GET.hotTimers(unit, cfg)
       break
     end
   end
-  return { text = table.concat(parts, " "), color = cfg.color }
+  R.text, R.color = table.concat(parts, " "), cfg.color
+  return R
 end
 
 function GET.casting(unit, cfg)
   local name = U.Casting(unit)
   if name and name ~= "" then
-    return { text = tostring(name), color = cfg.color }
+    R.text, R.color = tostring(name), cfg.color
+    return R
   end
 end
 
@@ -393,7 +479,8 @@ function GET.range(unit, cfg)
   end
   local d = U.Distance(unit)
   if d and d > (tonumber(P.rangeDistance) or 250) then
-    return { alpha = cfg.alpha }
+    R.alpha = cfg.alpha
+    return R
   end
 end
 
@@ -401,14 +488,16 @@ end
 function GET.damageFlash(unit, cfg)
   local f = G.Frames and G.Frames.flash[unit]
   if f and f.kind == "damage" then
-    return { color = cfg.color, alpha = f.alpha }
+    R.color, R.alpha = cfg.color, f.alpha
+    return R
   end
 end
 
 function GET.healFlash(unit, cfg)
   local f = G.Frames and G.Frames.flash[unit]
   if f and f.kind == "heal" then
-    return { color = cfg.color, alpha = f.alpha }
+    R.color, R.alpha = cfg.color, f.alpha
+    return R
   end
 end
 
@@ -423,10 +512,12 @@ local function watch(unit, w)
     if a or U.IsDead(unit) or not U.IsOnline(unit) then
       return nil
     end
-    return { color = w.color, text = "!" .. G.Auras.ParseList(w.name).order[1] }
+    R.color, R.text = w.color, "!" .. G.Auras.ParseList(w.name).order[1]
+    return R
   end
   if a then
-    return { color = w.color, icon = a.icon, left = G.Auras.TimeLeft(a), stacks = a.stacks, text = a.name }
+    R.color, R.icon, R.left, R.stacks, R.text = w.color, a.icon, G.Auras.TimeLeft(a), a.stacks, a.name
+    return R
   end
 end
 S.Watch = watch
@@ -475,46 +566,68 @@ end
 ---------------------------------------------------------------------------
 
 -- Returns { [indicator] = result } with result = the winning status' table (+ .status, .prio).
+-- The returned table is the member's own and is refilled on its next draw.
+local WHITE = { 1, 1, 1 }
+local NO_INDICATORS = {}
+local WATCH_KEYS = {}
+local outs = {}
+local out -- the table being filled, for offer
+
+local function offer(key, cfg, result)
+  local prio = tonumber(cfg.prio) or 0
+  -- any status can go on any indicator: fill in what this one did not give
+  result.color = result.color or cfg.color or WHITE
+  result.text = result.text or S.TITLE[key] or ""
+  for indKey, on in pairs(cfg.ind or NO_INDICATORS) do
+    if on then
+      local cur = out[indKey]
+      if not cur or prio > cur.prio then
+        result.prio = prio
+        result.status = key
+        out[indKey] = result
+        -- the same table may win several indicators; they only read it
+      end
+    end
+  end
+end
+
 function S.Evaluate(unit, entry)
   local P = G.P
-  local out = {}
-  local function offer(key, cfg, result)
-    if not result then
-      return
+  out = outs[unit]
+  if out then
+    for k in pairs(out) do
+      out[k] = nil
     end
-    local prio = tonumber(cfg.prio) or 0
-    -- any status can go on any indicator: fill in what this one did not give
-    result.color = result.color or cfg.color or { 1, 1, 1 }
-    result.text = result.text or S.TITLE[key] or ""
-    for indKey, on in pairs(cfg.ind or {}) do
-      if on then
-        local cur = out[indKey]
-        if not cur or prio > cur.prio then
-          result.prio = prio
-          result.status = key
-          out[indKey] = result
-          -- the same table may win several indicators; they only read it
-        end
-      end
-    end
+  else
+    out = {}
+    outs[unit] = out
   end
-  for _, s in ipairs(S.LIST) do
-    local cfg = P.statuses[s.key]
+  local LIST = S.LIST
+  for i = 1, #LIST do
+    local key = LIST[i].key
+    local cfg = P.statuses[key]
     if cfg and cfg.on then
-      local fn = GET[s.key]
-      local ok, result = pcall(fn, unit, cfg, entry)
+      R = take(unit, key)
+      local ok, result = pcall(GET[key], unit, cfg, entry)
       if ok and result then
-        offer(s.key, cfg, result)
+        offer(key, cfg, result)
       end
     end
   end
-  for i, w in ipairs(P.watches or {}) do
+  for i, w in ipairs(P.watches or NO_INDICATORS) do
     if w.on then
+      local key = WATCH_KEYS[i]
+      if not key then
+        key = "watch" .. i
+        WATCH_KEYS[i] = key
+      end
+      R = take(unit, key)
       local ok, result = pcall(watch, unit, w)
       if ok and result then
-        offer("watch" .. i, w, result)
+        offer(key, w, result)
       end
     end
   end
+  R = nil
   return out
 end

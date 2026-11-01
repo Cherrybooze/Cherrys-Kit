@@ -13,6 +13,10 @@ const showTerminal = document.getElementById('show-terminal');
 let starting = false;
 let refreshTimer;
 
+// The version Chrome is running now, so you can see that Reload took.
+const versionLabel = document.getElementById('version');
+if (versionLabel) versionLabel.textContent = ' \u00b7 v' + chrome.runtime.getManifest().version;
+
 function setHelperVisual(state, badge, hint) {
   if (helperCard?.dataset) helperCard.dataset.state = state;
   if (helperBadge) helperBadge.textContent = badge;
@@ -151,6 +155,12 @@ async function poll() {
   await refresh();
   refreshTimer = setTimeout(poll, 30000);
 }
+// Off unless the player turns it on: the daily page then clicks the reward by itself.
+const autoCollect = document.getElementById('auto-collect');
+if (autoCollect) {
+  chrome.storage.local.get('autoCollect').then(({autoCollect: on}) => { autoCollect.checked = on === true; }).catch(() => {});
+  autoCollect.addEventListener('change', () => { chrome.storage.local.set({autoCollect: autoCollect.checked}).catch(() => {}); });
+}
 // The same setting as the toggle on the extension's page.
 chrome.storage.local.get('autoHelper').then(({autoHelper: on}) => { autoHelper.checked = !!on; }).catch(() => {});
 autoHelper.addEventListener('change', async () => {
@@ -213,9 +223,21 @@ showTerminal.addEventListener('change', async () => {
     showTerminal.disabled = false;
   }
 });
-document.getElementById('open-tools').addEventListener('click', event => {
+// One Global Bank page at a time: two would overwrite each other's Gameforge account changes. Chrome 116 and
+// later can say whether it's open already; older ones open another, and the page itself warns.
+document.getElementById('open-tools').addEventListener('click', async event => {
   if (!event.isTrusted) return;
-  chrome.tabs.create({url:chrome.runtime.getURL('control.html')});
+  const url = chrome.runtime.getURL('control.html');
+  try {
+    const open = chrome.runtime.getContexts ? await chrome.runtime.getContexts({contextTypes:['TAB'], documentUrls:[url]}) : [];
+    const page = open.find(context => context.tabId >= 0);
+    if (page) {
+      await chrome.tabs.update(page.tabId, {active:true});
+      if (page.windowId >= 0 && chrome.windows) await chrome.windows.update(page.windowId, {focused:true});
+      return;
+    }
+  } catch { /* open a new one */ }
+  chrome.tabs.create({url});
 });
 document.getElementById('reload-extension').addEventListener('click', event => {
   if (event.isTrusted) chrome.runtime.reload();
