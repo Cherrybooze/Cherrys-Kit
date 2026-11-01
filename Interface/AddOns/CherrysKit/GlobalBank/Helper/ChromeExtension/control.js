@@ -309,7 +309,7 @@
     summary: prefix === 'currency' ? byId('currency-summary') : null,
     selectKeys,
   });
-  // Which characters the Characters page lists. Needs login and Bank not recorded are separate jobs in game and can
+  // Which characters the Characters page lists. Needs login and Bank not recorded mean different things and can
   // overlap. Excluded characters aren't in the saved data at all: the helper keeps that list.
   let rosterFilter = 'all';
   const needsLogin = character => !!character.stale;
@@ -417,7 +417,7 @@
     const add = (label, value) => details.append(make('dt', '', label), make('dd', '', value));
     const bag = (character.bag || []).length, held = (character.bank || []).length;
     add('Bag', character.notSaved ? 'Not recorded' : character.bagSlots ? `${number(bag)} of ${number(character.bagSlots)} slots used` : `${number(bag)} slots used`);
-    add('Bank', !known ? 'Bank not recorded: open it once in game' : character.bankSlots ? `${number(held)} of ${number(character.bankSlots)} slots used` : `${number(held)} slots used`);
+    add('Bank', !known ? 'Bank not recorded: log in once with it' : character.bankSlots ? `${number(held)} of ${number(character.bankSlots)} slots used` : `${number(held)} slots used`);
     add('Last saved', character.saved || 'Not recorded');
     add('Login status', character.notSaved ? 'Nothing saved yet: log in once' : character.stale ? 'Needs a login on the current version' : 'Current');
     if (!roster.view.hideGameforge) add('Gameforge account', accounts.accountNameOf(character) || (accounts.locked() ? 'Locked' : 'Not linked'));

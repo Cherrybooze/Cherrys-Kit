@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.5.9** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.6.0** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,18 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.0
+
+**A new Global Bank page and popup** (extension 1.3.0). The pages are grouped down the side, and the search and filters sit at the top of the Bank. A line at the top always says whether the helper is running, how old your saved data is and whether your Gameforge accounts are locked. Starting the helper, unlocking your accounts and reading from folders moved to a **Connection** panel. Click an item for a panel saying who holds it, on which server and where; hovering still shows the game's tooltip. Slots come large, small or as a list. The extension has a new logo. Press **Reload extension** in the popup after updating.
+
+**Selecting characters doesn't change the Bank by itself any more.** Select them on any page and press **Use in Bank**. The Bank then says whose items it lists, with a button back to everyone. Its own character list still applies at once.
+
+**The Characters page** has a **Transfer stones** column, counting Server Transfer Stones in the bag and bank (and "at least" that many while the bank isn't recorded), and filters for **Needs login** and **Bank not recorded**. **Excluded** lists the characters the helper doesn't track, each with **Track again**, and right-clicking a character offers **Stop tracking**. Until now that took the terminal.
+
+**Gold overview** is the old Gold heatmap: plain at no gold, a climbing green, and gold only for a full cap. **Currencies** adds up Diamonds, Bonus and Billdin at the top, counting each RoM account once.
+
+**One terminal.** The page's **Terminal** now talks to the running helper, with the same commands, results and wording as the helper's own window: `status` shows the real helper, `heartbeat` changes it, and `exit` stops it. With the helper stopped, commands that only read say they're using saved data. In both, Tab completes commands and names, Up and Down recall history, and updates arriving never disturb what you're typing. Restart the helper after updating.
 
 ## Updated in 1.5.9
 
@@ -216,10 +228,10 @@ This is a personal hobby project. Support and PR reviews are best effort, with n
 
 ## Search your data in Chrome
 
-Open the **Global Bank Daily Rewards** extension and choose **Open local bank and auction tools**. The page opens on your computer. It shows whether the helper is running and can start it for you.
+Open the **Global Bank Daily Rewards** extension and choose **Open Global Bank**. The page opens on your computer. The top of the page says whether the helper is running, and **Connection** can start it for you.
 
-- Under **Characters, bags and bank**, try `list`, `list gold`, `search mana`, or `show Name`. Type `help` for more commands.
-- Under **Auction cache search**, enter an item name or ID. Add a realm to narrow the results.
+- On **Terminal**, try `list`, `list gold`, `search mana`, or `show Name`. Type `help` for more commands.
+- On **Auctions**, enter an item name or ID. Add a realm to narrow the results.
 
 The results come from your own saved character snapshots and auction cache. An auction price is a past observation, so the item may have sold or the price may have changed. If the cache is empty, search in the in-game auction house, let the game save your character, and keep the helper running so it can collect the results. Old auction observations expire after two days. The page cannot buy items or change your character data.
 
