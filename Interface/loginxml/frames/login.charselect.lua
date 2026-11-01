@@ -289,7 +289,7 @@ function me.charactersCallback(frame)
     local row = {{tex = data.icon}, {text = text, color = color}}
     if me.goldColumn then
       local known = login.globalbank.character(data.name)
-      row[3] = known and {text = string.format('%s gold%s\n%s', login.globalbank.formatGold(known.gold), known.unsure and ' ?' or '', known.saved), color = color} or ''
+      row[3] = known and {text = login.globalbank.describe(known), color = color} or ''
     end
     table.insert(res, row)
   end
