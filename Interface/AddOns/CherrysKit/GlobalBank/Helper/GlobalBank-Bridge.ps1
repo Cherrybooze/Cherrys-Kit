@@ -72,7 +72,7 @@ function Start-GBFeed([string]$dataFolder, [bool]$auto, [bool]$hidden, [bool]$he
     }
 }
 
-function Add-GBFeedEvent([string]$kind, [string]$text, [string]$tone, [string]$character, [bool]$dataChanged) {
+function Add-GBFeedEvent([string]$kind, [string]$text, [string]$tone, [string]$character, [bool]$dataChanged, [string]$origin = '') {
     $feed = $script:GBFeed
     if (-not $feed) { return }
     if ($text.Length -gt 500) { $text = $text.Substring(0, 500) + [char]0x2026 }
@@ -80,6 +80,7 @@ function Add-GBFeedEvent([string]$kind, [string]$text, [string]$tone, [string]$c
     $item = @{ seq = $feed.seq; time = Format-GBUtc ([DateTime]::UtcNow); kind = $kind; tone = $tone; text = $text }
     if ($character) { $item.character = $character }
     if ($dataChanged) { $item.dataChanged = $true }
+    if ($origin) { $item.origin = $origin }
     $feed.events.Add($item)
     while ($feed.events.Count -gt $script:GBFeedLimit) { $feed.events.RemoveAt(0) }
     $feed.dirty = $true
@@ -127,16 +128,18 @@ function Invoke-GBBridgeInbox([scriptblock]$Handler) {
         if ($null -eq $text) { continue }
         try { [IO.File]::Delete($file) } catch { continue }
         if ($feed.doneReplies.ContainsKey($requestId)) { Publish-GBReply $requestId $feed.doneReplies[$requestId]; continue }
-        $request = $null
-        try { $request = $text | ConvertFrom-Json -ErrorAction Stop } catch { Write-HelperError $_ 'Terminal bridge request' }
-        if (-not $request -or $request.schema -ne 1) { continue }
-        if ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -gt [int64]$request.deadline) { continue }
-        $json = & $Handler $request $requestId
-        $feed.done.Add($requestId)
-        $feed.doneReplies[$requestId] = $json
-        while ($feed.done.Count -gt $script:GBDoneLimit) { [void]$feed.doneReplies.Remove($feed.done[0]); $feed.done.RemoveAt(0) }
-        Publish-GBReply $requestId $json
-        Write-GBFeed
+        # Nothing a request contains can stop the watcher.
+        try {
+            $request = $text | ConvertFrom-Json -ErrorAction Stop
+            if (-not $request -or $request.schema -ne 1) { continue }
+            if ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -gt [int64]$request.deadline) { continue }
+            $json = & $Handler $request $requestId
+            $feed.done.Add($requestId)
+            $feed.doneReplies[$requestId] = $json
+            while ($feed.done.Count -gt $script:GBDoneLimit) { [void]$feed.doneReplies.Remove($feed.done[0]); $feed.done.RemoveAt(0) }
+            Publish-GBReply $requestId $json
+            Write-GBFeed
+        } catch { Write-HelperError $_ 'Terminal bridge request' }
     }
 }
 

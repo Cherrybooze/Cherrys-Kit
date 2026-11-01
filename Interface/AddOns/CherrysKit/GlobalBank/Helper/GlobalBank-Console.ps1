@@ -96,6 +96,12 @@ function Show-Prompt {
         $script:PromptShown = $true
         return
     }
+    # The window can be resized between any two of these calls. A prompt drawn badly once is redrawn
+    # on the next key; it must never stop the watcher.
+    try { Write-GBPromptRows } catch { $script:PromptShown = $true; Write-HelperError $_ 'Drawing the prompt' }
+}
+
+function Write-GBPromptRows {
     $width = [Math]::Max(1, [Console]::BufferWidth)
     $script:GBWidth = $width
     Write-GBSpan 'gb' 'prompt'
@@ -191,8 +197,8 @@ function Format-GBEventLines($item) {
 }
 
 # Both views get it: the feed for the page, the window here unless it is holding its place.
-function Send-GBEvent([string]$kind, [string]$text, [string]$tone = 'info', [string]$character = '', [bool]$dataChanged = $false) {
-    if ($script:GBFeed) { Add-GBFeedEvent $kind $text $tone $character $dataChanged }
+function Send-GBEvent([string]$kind, [string]$text, [string]$tone = 'info', [string]$character = '', [bool]$dataChanged = $false, [string]$origin = '') {
+    if ($script:GBFeed) { Add-GBFeedEvent $kind $text $tone $character $dataChanged $origin }
     # A run with no helper window puts it in the answer, in order.
     if ($script:GBResult -and -not $script:GBLive) { Add-GBMessage $text $tone; return }
     $item = @{ at = (Get-Date).ToString('HH:mm'); text = $text; tone = $tone }
@@ -219,9 +225,11 @@ function Write-GBHeartbeatLine([string]$text) {
     $line = @{ spans = @(@{ t = $text; tone = 'muted' }) }
     if ($script:GBHasConsole -and $script:PromptShown -and $script:GBHeartbeatRow -ge 0 -and $script:GBHeartbeatRow -eq $script:PromptTop - 1) {
         Hide-Prompt
-        [Console]::SetCursorPosition(0, $script:GBHeartbeatRow)
-        Write-Host -NoNewline (' ' * [Math]::Max(1, [Console]::BufferWidth - 1))
-        [Console]::SetCursorPosition(0, $script:GBHeartbeatRow)
+        try {
+            [Console]::SetCursorPosition(0, $script:GBHeartbeatRow)
+            Write-Host -NoNewline (' ' * [Math]::Max(1, [Console]::BufferWidth - 1))
+            [Console]::SetCursorPosition(0, $script:GBHeartbeatRow)
+        } catch { $script:GBHeartbeatRow = -1 }
         Write-GBLine $line
         Show-Prompt
     } else {
@@ -257,9 +265,9 @@ function Update-GBConsole {
                 Update-Prompt
             }
         }
-    } catch { }
-    Send-GBHeldEvents
-    Update-GBTitle
+        Send-GBHeldEvents
+        Update-GBTitle
+    } catch { Write-HelperError $_ 'Console update' }
 }
 
 ###########################################################################
