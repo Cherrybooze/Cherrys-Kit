@@ -30,7 +30,7 @@
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.5.8"
+GB.version = "1.5.9"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -519,7 +519,9 @@ end
 GB.bankOpen = false
 
 -- authoritative: the bank window is open, so an empty bank really is empty. With the bank closed the
--- game may return nothing, so a closed read is only kept when it finds items.
+-- read is just as good once the character's data is there: the server sends the whole bank with it
+-- at login (GetBankItemInfo and GetBankNumItems read that copy), so a closed read counts when it
+-- finds items or when GetBankNumItems gives the bank's size, and an empty bank is saved as empty.
 -- Same name on another server, same save file: GlobalBank_Char may hold the other character. It moves to
 -- GlobalBank_Others, and this one's snapshot comes back from there. Its bag, bank and tooltips never carry over.
 function GB.SettleServer()
@@ -585,7 +587,7 @@ function GB.Snapshot(withBank, authoritative)
   c.bag, c.bagMax = GB.ReadBag()
   if withBank then
     local bank, max = GB.ReadBank()
-    if authoritative or #bank > 0 then
+    if authoritative or #bank > 0 or (tonumber(max) or 0) > 0 then
       c.bank, c.bankMax = bank, max
     end
   end

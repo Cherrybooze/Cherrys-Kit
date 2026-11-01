@@ -144,7 +144,7 @@
     {
       "folder": "GlobalBank",
       "title": "Global Bank",
-      "version": "1.5.8",
+      "version": "1.5.9",
       "command": "/gb",
       "description_file": "06-global-bank.md",
       "summary": "A searchable view of your characters' bags, banks and gold.",
