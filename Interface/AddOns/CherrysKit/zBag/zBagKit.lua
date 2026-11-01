@@ -16,7 +16,7 @@ K.onebag, K.unhooked, K.remembered, K.loadedMode, K.events = nil, nil, nil, nil,
 K.cherryOpen, K.resizing, K.dragging = nil, nil, nil
 K.storageInitialized, K.storageShared = nil, nil
 
-K.version = "5.07-ck17"
+K.version = "5.07-ck18"
 K.DEFAULT_SLOT_FONT_SIZE, K.MIN_SLOT_FONT_SIZE, K.MAX_SLOT_FONT_SIZE = 8, 6, 20
 K.path = (CherrysKit_Paths and CherrysKit_Paths.zBag) or "Interface/AddOns/zBag/"
 K.BAG_SLOTS = 180
@@ -300,7 +300,7 @@ local function matches(name, text)
   return name and name ~= "" and string.find(string.lower(name), text, 1, true) ~= nil
 end
 
--- Bank slots whose item name contains the text; the one bank also has the item shop tab (201-300).
+-- Bank slots whose item name (or a stat name, zBagKitStats.lua) contains the text; the one bank also has the item shop tab (201-300).
 function K.FindBankItems(text, last)
   local list = {}
   if type(text) ~= "string" then
@@ -309,7 +309,7 @@ function K.FindBankItems(text, last)
   text = string.lower(text)
   for i = 1, last do
     local _, name = GetBankItemInfo(i)
-    if matches(name, text) then
+    if matches(name, text) or (name and name ~= "" and K.BankStatsMatch and K.BankStatsMatch(i, text)) then
       table.insert(list, i)
     end
   end

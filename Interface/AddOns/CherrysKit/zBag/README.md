@@ -1,6 +1,6 @@
 # zBag
 
-Version **5.07-ck17** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **5.07-ck18** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
@@ -21,6 +21,10 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 > **Other addons:** AddonManager lists it when you have that addon. BagSearch 1.21, BagSort 1.05b, PocketMaid and Sol are built in, so delete any separate `BagSearch` or `BagSort` folder. The quick-sell filter is based on Lootomatic, which is a separate addon and can stay.
 
 <!-- end of requirements -->
+
+## Updated in 5.07-ck18
+
+**Search by stat.** The search box in every layout, and the bank's, also finds items by the stats on their tooltip. Type a stat name such as *stamina*, *dexterity* or *physical attack* and every item with a line like "Stamina +12" lights up; numbers aren't part of the search. Item names still match straight away. zBag reads each item's tooltip once, a few per moment after you stop typing, and remembers it, so the stat matches appear a moment later and searching again costs nothing. It counts lines with a + or - number, so a plain "Requires level 50" isn't a stat. `/zb probe` shows how many items it knows.
 
 ## Updated in 5.07-ck17
 
@@ -55,7 +59,7 @@ Sorting retains the earlier pass-level rebuild reduction, the necessary rebuilds
 - **Choose the bank separately**: tick **Use one bank (classic zBag)** for zBag's bank, or leave it unticked for the game's bank. It works with any bag layout.
 - **Share bag settings across characters** is on by default. Turn it off for separate settings per character. Your existing shared and separate settings are kept when you switch. On the first upgrade, the settings loaded on that character become the initial shared setup. The quick-sell item filter remains separate for each character.
 - **Auto bag and bank pages** (optional): rented pages show while their rent is running and hide once it runs out.
-- **Item search** in every layout (BagSearch).
+- **Item search** in every layout (BagSearch), by item name or by stat name: *stamina* finds every item with a stamina line.
 - **Slot numbers**: an optional see-through number (1 to 180) in the upper-left corner of every bag slot and bank slot.
 - **All bags window**: all six bags in one window that you can drag anywhere. "Reset bag positions" puts it, the Cherry's bags and the money box back.
 - **Hide default backpack** (optional, individual bags): B opens All bags instead.
