@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 (() => {
   const byId = id => document.getElementById(id);
   const status = byId('helper-status');

@@ -1,5 +1,6 @@
-# For the extension's local page: auction searches, the character file, icons and the helper's commands. Never evaluate command text.
+# For the extension's local page: auction searches, the character file, icons and starting or stopping the helper.
 . (Join-Path $PSScriptRoot 'GlobalBank-Data.ps1')
+. (Join-Path $PSScriptRoot 'GlobalBank-Bridge.ps1')
 $script:ControlEncoding = New-Object System.Text.UTF8Encoding($false, $true)
 
 function Read-ControlJson([string]$dataDirectory, [string]$name) {
@@ -203,28 +204,13 @@ function Get-ControlIcons([string]$interfaceDirectory, $names) {
     return @{icons=$icons;later=$later}
 }
 
-# One of the helper's own commands, with no window. The text reaches it as a plain string, so nothing in it runs.
-function Invoke-ControlCommand([string]$command) {
-    if (-not $command.Trim() -or $command.Length -gt 256 -or $command -match '[\x00-\x1f]') { throw 'Enter a command of at most 256 characters.' }
-    $helper = Join-Path $PSScriptRoot 'GlobalBank-Update.ps1'
-    if (-not (Test-Path -LiteralPath $helper)) { throw 'Global Bank helper was not found' }
-    $env:GB_CONTROL_HELPER = $helper
-    $env:GB_CONTROL_COMMAND = $command
-    $launch = 'try { [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false) } catch { }; & $env:GB_CONTROL_HELPER -Command $env:GB_CONTROL_COMMAND -SkipAuctions'
-    $ErrorActionPreference = 'Continue'
-    try { [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false) } catch { }
-    $lines = & powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command $launch 2>&1
-    $text = (@($lines) | ForEach-Object { [string]$_ }) -join "`n"
-    if ($text.Length -gt 800000) { $text = $text.Substring(0, 800000) + "`n(cut short)" }
-    return $text
-}
-
 # What the page's status line needs: whether the helper runs, since when, and whether the toggle started it.
 function Get-ControlHelperInfo([string]$dataDirectory) {
-    $running = $false
-    try { $existing = [System.Threading.Mutex]::OpenExisting('Local\CherrysKitGlobalBankHelper'); $running = $true; $existing.Dispose() } catch [System.Threading.WaitHandleCannotBeOpenedException] { }
-    $info = @{running=$running;since=$null;auto=$false}
-    if (-not $running) { return $info }
+    $state = Get-GBHelperState $dataDirectory
+    $info = @{running=$state.running;since=$state.since;auto=$state.auto;state=$state.state;stopping=$state.stopping;heartbeatText=$state.heartbeatText;bridged=$state.bridged}
+    if ($state.bridged) { $info.hidden = $state.hidden }
+    if (-not $state.running -or $state.bridged) { return $info }
+    # A helper from before the bridge says nothing about itself.
     $process = Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe' OR Name = 'pwsh.exe'" |
         Where-Object { $_.CommandLine -like '*GlobalBank-Update.ps1*-Watch*' } | Select-Object -First 1
     if ($process) {
