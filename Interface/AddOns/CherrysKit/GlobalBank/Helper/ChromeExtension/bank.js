@@ -872,6 +872,8 @@ const GBBank = (() => {
           empty.querySelector('p').textContent = state.characters.length ? 'Nothing matches these filters.' : 'No characters saved yet: log out of a character in game, then press Update now.';
         } else if (empty) empty.remove();
       }
+      // Before the first read there's nothing to count, which isn't the same as counting nothing
+      if (!state.loadedAt) return;
       const shown = keepCharacters();
       const gold = shown.reduce((sum, character) => sum + (Number(character.gold) || 0), 0);
       const held = totals(shown);

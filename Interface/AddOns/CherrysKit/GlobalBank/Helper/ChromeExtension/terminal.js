@@ -52,7 +52,7 @@ const GBTerminal = (() => {
   async function ask(message) {
     try {
       const reply = await chrome.runtime.sendMessage(message);
-      if (reply) return reply;
+      if (reply) return reply.ok || reply.outcome ? reply : {...reply, outcome: 'bridge', records: reply.records || []};
       return {ok: false, outcome: 'bridge', error: 'The extension gave no answer. Update Cherry’s Kit, then reload the extension.', records: []};
     } catch (error) {
       return {ok: false, outcome: 'bridge', error: String(error.message || error), records: []};
