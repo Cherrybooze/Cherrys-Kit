@@ -14,7 +14,10 @@ function Read-Bytes([int]$length) {
     }
     return ,$buffer
 }
+# Raised whenever the extension needs something new from this bridge; the extension asks for an update when it's lower.
+$BridgeVersion = 2
 function Send-Response($value) {
+    if ($value -is [hashtable]) { $value.bridge = $BridgeVersion }
     $text = ConvertTo-Json -InputObject $value -Compress -Depth 8
     $bytes = $utf8.GetBytes($text)
     $length = [BitConverter]::GetBytes([int]$bytes.Length)

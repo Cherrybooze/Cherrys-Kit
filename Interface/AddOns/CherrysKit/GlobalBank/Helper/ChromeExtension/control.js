@@ -558,6 +558,8 @@
         const how = info.auto ? (info.hidden === false ? 'started automatically with its window' : 'started automatically') : 'in its own window';
         statusHelper.textContent = `Helper: running${ran}, ${how}.`;
       }
+      // Older helper files don't say their version.
+      if ((Number(info.bridge) || 0) < 2) statusHelper.textContent += ' Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.';
     } catch (error) {
       statusHelper.textContent = await GBFolders.usable('saves').catch(() => null)
         ? 'Helper: not installed on this PC. The Bank tab is reading your chosen folders.'
