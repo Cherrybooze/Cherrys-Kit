@@ -758,7 +758,8 @@ $bridgeHandler = {
     $origin = [string]$request.origin
     $envelope = Invoke-GBCommandLine ([string]$request.command) $id $origin $(if ($request.kind -eq 'confirm') { [string]$request.token } else { '' })
     if ($envelope.commandId -and @('mutation', 'session') -contains (Get-GBCommandEntry $envelope.commandId).scope -and $origin -eq 'web') {
-        Send-GBEvent 'notice' "From the browser: $(if ($request.kind -eq 'confirm') { 'erase confirmed' } else { [string]$request.command })" 'muted'
+        # The page has just shown its own answer, so it skips this line; the window shows it.
+        Send-GBEvent 'notice' "From the browser: $(if ($request.kind -eq 'confirm') { 'erase confirmed' } else { [string]$request.command })" 'muted' '' $false 'browser'
     }
     return ConvertTo-GBEnvelopeJson $envelope
 }

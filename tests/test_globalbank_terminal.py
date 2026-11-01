@@ -44,6 +44,10 @@ class TerminalFixture(unittest.TestCase):
             if path.name == 'GlobalBank-Update.ps1':
                 self.assertIn(real_saves, text)
                 text = text.replace(real_saves, "'" + str(self.saves).replace("'", "''") + "'")
+            if path.name == 'GlobalBank-Console.ps1':
+                # A test must not overwrite the clipboard of whoever is using this PC.
+                self.assertIn('Set-Clipboard -Value', text)
+                text = text.replace('Set-Clipboard -Value', "Set-Content -LiteralPath '" + str(self.root / 'clipboard.txt') + "' -Value")
             (self.helper / path.name).write_text(text, encoding='utf-8-sig')
         self.data = self.root / 'Interface/GlobalBankHelper'
         self.write_save('Sampleone', items='`B~1~3~5~Mana Stone~icon`K~1~4~5~Mana Stone~icon')
@@ -117,6 +121,12 @@ class NativeConsoleTests(TerminalFixture):
         self.assertNotIn('0 characters', text)
         self.assertNotIn('CHARACTERS & ITEMS', text, 'The full help waits for help.')
         self.assertIn('Try: goldtotal', text)
+        # Colour reached the console as colour, whichever way this one supports it, and no escape codes show.
+        self.assertNotIn('[38;', text)
+        data = console.screen(back=200)
+        row_of = lambda start: data['top'] + next(i for i, row in enumerate(data['rows']) if row.startswith(start))
+        colour = lambda start: console.ask(kind='attributes', row=row_of(start))['attributes'][0] & 0xF
+        self.assertNotEqual(colour('GLOBAL BANK'), colour('Keep this window'))
         self.run_line('help', 'CHARACTERS & ITEMS')
 
     def test_line_editing_keeps_the_caret_where_the_keys_put_it(self):
@@ -239,6 +249,9 @@ class NativeConsoleTests(TerminalFixture):
         console.wait_for(lambda text: '4,500 gold' not in text, what='the view clearing')
         self.run_line('goldtotal', '4,500 gold')
         self.run_line('copy', 'Visible command output copied.')
+        copied = (self.root / 'clipboard.txt').read_text()
+        self.assertIn('4,500 gold', copied)
+        self.assertNotIn('Loading saved characters', copied, 'clear also clears what copy takes')
         self.run_line('follow off', 'Follow is paused')
         self.write_save('Sampletwo', gold=3000)
         time.sleep(6)
@@ -299,6 +312,15 @@ class NativeConsoleTests(TerminalFixture):
         self.assertIn('Sampletwo', (self.data / 'ExcludedCharacters.json').read_text())
         self.run_line('unban Sampletwo', 'can be tracked again')
 
+    def test_a_broken_request_does_not_stop_the_helper(self):
+        console = self.start_helper()
+        folder = self.data / 'TerminalBridge'
+        (folder / 'request-broken-0001.json').write_text('{broken', encoding='utf-8')
+        (folder / 'request-broken-0002.json').write_text(json.dumps({'schema': 1, 'deadline': 'soon', 'command': 'exit'}), encoding='utf-8')
+        answer = self.command('status')
+        self.assertTrue(answer['ok'], answer)
+        self.assertIsNone(console.process.poll())
+
     def test_exit_stops_and_says_what_automatic_start_will_do(self):
         (self.data).mkdir(parents=True, exist_ok=True)
         (self.data / 'GlobalBankAutoStart.txt').write_text('on')
@@ -330,6 +352,9 @@ class BridgeTests(TerminalFixture):
         self.assertFalse(answer['helper']['heartbeatText'])
         self.assertIn('off (0)', self.texts(answer))
         console.wait_text('From the browser: heartbeat off')
+        feed = self.host({'type': 'terminal-feed', 'session': None, 'after': 0, 'max': 50})[0]
+        self.assertEqual([event['origin'] for event in feed['events'] if 'From the browser' in event['text']], ['browser'])
+        self.assertFalse([event for event in feed['events'] if 'From the browser' not in event['text'] and 'origin' in event])
         self.run_line('status', 'off (0)')
         beat = self.data / 'GlobalBankHelperBeat.lua'
         self.assertTrue(beat.exists())
