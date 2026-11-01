@@ -14,7 +14,8 @@ const GBAccounts = (() => {
   // Red at no gold, orange at half a cap, bright green at a full cap
   const RED = [198, 40, 40], ORANGE = [245, 124, 0], GREEN = [0, 230, 64];
   const NO_SERVER = 'Unknown server';
-  const NO_ACCOUNT = 'No account';
+  const NOT_LINKED = 'Not linked';
+  const NO_ROM = 'RoM account not known';
   const MASK = '***';
   // Names one right-click menu lists (the rest are counted), and how long the pointer rests on another name
   // before its logins replace the open ones
@@ -200,32 +201,37 @@ const GBAccounts = (() => {
     }
     return {found: [...found], missing};
   }
-  // A column for each server: its full caps pooled together, then the rest by account, richest first.
-  // romName(character): the name you gave its RoM account, for the ones not linked yet.
-  function heatColumns(characters, state, noAccount = NO_ACCOUNT, romName = null) {
-    const servers = new Map();
+  // A box for each Gameforge account, then one for the characters not linked to any. In a box its servers, and on a
+  // server its RoM accounts, the characters one login screen lists, richest first, so that a full account shows as a
+  // block of green. romTitle(character): the name to show for its RoM account. unlinked: the last box's name.
+  function heatBoxes(characters, state, unlinked = NOT_LINKED, romTitle = null) {
+    const boxes = new Map();
     const known = accountGroups(characters);
     for (const character of characters) {
-      const server = character.shownServer || serverOf(character, known);
-      if (!servers.has(server)) servers.set(server, {server, total: 0, fullCaps: [], groups: new Map()});
-      const column = servers.get(server);
+      const linked = accountFor(state, character)?.name || '';
+      if (!boxes.has(linked)) boxes.set(linked, {account: linked || unlinked, linked: !!linked, total: 0, count: 0, fullCaps: 0, servers: new Map()});
+      const box = boxes.get(linked);
       const gold = Number(character.gold) || 0;
+      box.total += gold;
+      box.count++;
+      if (gold >= FULL_CAP) box.fullCaps++;
+      const serverName = character.shownServer || serverOf(character, known);
+      if (!box.servers.has(serverName)) box.servers.set(serverName, {server: serverName, total: 0, roms: new Map()});
+      const server = box.servers.get(serverName);
+      server.total += gold;
       const group = known.of(character.name);
-      const rom = romName ? romName(character) : '';
-      const account = accountFor(state, character)?.name || (rom ? `${rom}, not linked` : group.names.length > 1 ? `${group.names[0]}'s account, not linked` : noAccount);
-      const cell = {name: String(character.name), key: String(character.key || ''), gold, account, server};
-      column.total += gold;
-      if (gold >= FULL_CAP) column.fullCaps.push(cell);
-      else {
-        if (!column.groups.has(account)) column.groups.set(account, []);
-        column.groups.get(account).push(cell);
-      }
+      const rom = (romTitle ? romTitle(character) : '') || (group.steam ? 'Steam account' : group.names.length > 1 ? `${group.names[0]}'s account` : NO_ROM);
+      if (!server.roms.has(rom)) server.roms.set(rom, []);
+      server.roms.get(rom).push({name: String(character.name), key: String(character.key || ''), gold});
     }
     const byGold = (a, b) => b.gold - a.gold || a.name.localeCompare(b.name);
     const last = (a, b, unwanted) => Number(a === unwanted) - Number(b === unwanted) || a.localeCompare(b);
-    return [...servers.values()].sort((a, b) => last(a.server, b.server, NO_SERVER)).map(column => ({
-      server: column.server, total: column.total, fullCaps: column.fullCaps.sort(byGold),
-      groups: [...column.groups.entries()].sort((a, b) => last(a[0], b[0], noAccount)).map(([account, list]) => ({account, characters: list.sort(byGold)})),
+    return [...boxes.values()].sort((a, b) => Number(b.linked) - Number(a.linked) || a.account.localeCompare(b.account)).map(box => ({
+      account: box.account, linked: box.linked, total: box.total, count: box.count, fullCaps: box.fullCaps,
+      servers: [...box.servers.values()].sort((a, b) => last(a.server, b.server, NO_SERVER)).map(server => ({
+        server: server.server, total: server.total,
+        roms: [...server.roms.entries()].sort((a, b) => last(a[0], b[0], NO_ROM)).map(([rom, list]) => ({rom, characters: list.sort(byGold)})),
+      })),
     }));
   }
   const number = value => Number(value || 0).toLocaleString('en-US');
@@ -435,38 +441,41 @@ const GBAccounts = (() => {
       // An account stays in one piece unless it's longer than a login screen's list
       const block = (title, cells, server) => {
         const box = make('div', 'heat-group' + (cells.length > 8 ? ' is-long' : ''));
-        const shown = title.replace(/, not linked$/, '');
-        const head = make('h3', '', shown);
-        // While the accounts are locked, nobody can say a character isn't linked
-        head.title = !fileKey && sealedFile ? shown : title;
+        const head = make('h4', '', title);
+        head.title = title;
         box.append(head, ...cells.map(cell => cellFor(cell, server)));
         return box;
       };
-      const columns = heatColumns(characters.filter(shows), state, !fileKey && sealedFile ? 'Accounts locked' : NO_ACCOUNT, options.romName || null);
-      const allGold = columns.reduce((sum, column) => sum + column.total, 0);
-      const allCaps = columns.reduce((sum, column) => sum + column.fullCaps.length, 0);
+      const boxes = heatBoxes(characters.filter(shows), state, !fileKey && sealedFile ? 'Accounts locked' : NOT_LINKED, options.romTitle || null);
+      const allGold = boxes.reduce((sum, box) => sum + box.total, 0);
+      const allCaps = boxes.reduce((sum, box) => sum + box.fullCaps, 0);
       const total = byId('heat-total');
       total.textContent = `${shortGold(allGold)} gold`;
       total.title = `${number(allGold)} gold`;
       total.append(make('span', 'soft-count', `${number(allCaps)} full ${allCaps === 1 ? 'cap' : 'caps'}`));
-      byId('heat-view').replaceChildren(...columns.map(column => {
+      byId('heat-view').replaceChildren(...boxes.map(box => {
         const node = make('section', 'heat-column');
-        const count = column.fullCaps.length + column.groups.reduce((sum, group) => sum + group.characters.length, 0);
-        // Servers share the width by how many lines they take, so they come out about the same height
-        const lines = count + column.groups.length + (column.fullCaps.length ? 1 : 0);
-        node.style.flex = `${lines} 1 ${Math.max(170, lines * 5)}px`;
+        // Boxes share the width by how many lines they take, so they come out about the same height
+        const lines = box.count + box.servers.reduce((sum, server) => sum + 1 + server.roms.length, 1);
+        node.style.flex = `${lines} 1 ${Math.max(116, lines * 5)}px`;
         const head = make('div', 'heat-column-head');
-        head.append(make('h2', '', column.server), make('span', 'heat-column-sub', `${number(count)} ${count === 1 ? 'character' : 'characters'}`));
-        const balance = make('span', 'heat-balance', shortGold(column.total));
-        balance.title = `${number(column.total)} gold, ${number(column.fullCaps.length)} full ${column.fullCaps.length === 1 ? 'cap' : 'caps'}`;
+        head.append(make('h2', '', box.account), make('span', 'heat-column-sub', `${number(box.count)} ${box.count === 1 ? 'character' : 'characters'}`));
+        const balance = make('span', 'heat-balance', shortGold(box.total));
+        balance.title = `${number(box.total)} gold, ${number(box.fullCaps)} full ${box.fullCaps === 1 ? 'cap' : 'caps'}`;
         head.append(balance);
         const flow = make('div', 'heat-flow');
-        if (column.fullCaps.length) flow.append(block(`Full caps (${column.fullCaps.length})`, column.fullCaps, column.server));
-        for (const group of column.groups) flow.append(block(group.account, group.characters, column.server));
+        for (const server of box.servers) {
+          const title = make('h3', 'heat-server');
+          const worth = make('span', '', shortGold(server.total));
+          worth.title = `${number(server.total)} gold`;
+          title.append(make('span', '', server.server), worth);
+          flow.append(title);
+          for (const rom of server.roms) flow.append(block(rom.rom, rom.characters, server.server));
+        }
         node.append(head, flow);
         return node;
       }));
-      if (!columns.length) byId('heat-view').append(make('p', 'hint', characters.length ? 'No characters on the servers ticked at the top.' : 'No characters saved yet.'));
+      if (!boxes.length) byId('heat-view').append(make('p', 'hint', characters.length ? 'No characters on the servers ticked at the top.' : 'No characters saved yet.'));
     }
 
     function renderAccounts() {
@@ -864,6 +873,6 @@ const GBAccounts = (() => {
       openMenu,
     };
   }
-  return {create, heatColor, serverOf, accountOf, accountFor, linkKeysOf, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatColumns, emptyState,
+  return {create, heatColor, serverOf, accountOf, accountFor, linkKeysOf, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
     newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor};
 })();
