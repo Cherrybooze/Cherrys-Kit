@@ -1502,7 +1502,7 @@ class NativeStatusTests(unittest.TestCase):
         return self.data / 'GlobalBankExtensionBeat.txt'
 
     def test_clock_message_writes_only_the_time_for_addons(self):
-        self.assertEqual(self.send({'type':'clock'}), {'ok':True})
+        self.assertEqual(self.send({'type':'clock'}), {'ok':True,'bridge':2})  # every answer says the bridge's version
         text = self.clock_file().read_text(encoding='ascii')
         match = re.fullmatch(r'return \{utc = (\d+), tick = (-?\d+), offset = (-?\d+)\}\s*', text)
         self.assertIsNotNone(match, text)
