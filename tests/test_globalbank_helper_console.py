@@ -8,6 +8,8 @@ import uuid
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/GlobalBank-Update.ps1'
 SHELL = shutil.which('powershell') or shutil.which('pwsh')
+HELPER_FILES = ('GlobalBank-Update.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Control.ps1', 'GlobalBank-Backups.ps1', 'GlobalBank-Macros.ps1', 'AAH-Cache.ps1',
+                'GlobalBank-Bridge.ps1', 'GlobalBank-Commands.ps1', 'GlobalBank-Console.ps1')
 
 
 def quote(path):
@@ -32,14 +34,17 @@ if ($errors.Count) { throw ($errors | Out-String) }
 foreach ($node in $ast.FindAll({param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst]},$false)) {
     Invoke-Expression ($node.Extent.Text.Replace('$PSScriptRoot', '$fixture'))
 }
-$script:Buffer='search mana'; $script:PromptShown=$false
+foreach ($name in 'GlobalBank-Data.ps1','GlobalBank-Bridge.ps1','GlobalBank-Commands.ps1','GlobalBank-Console.ps1') { . (Join-Path HELPERDIR $name) }
+Initialize-GBConsole
+$script:GBLive=$true
+$script:Buffer='search mana'; $script:Caret=11; $script:PromptShown=$false
 $script:Chars=@(); $script:StartedAt=Get-Date
 $script:ConsoleHeartbeat=$true; $script:NextConsoleBeat=(Get-Date).AddSeconds(-1)
 $beat=Join-Path $fixture 'Beat.lua'; $log=Join-Path $fixture 'Activity.log'
 $errorLog=Join-Path $fixture 'GlobalBankHelper-errors.log'
 $data=$fixture
 $SaveFolder=Join-Path $fixture 'Saves'
-'''.replace('SOURCE', quote(HELPER))
+'''.replace('SOURCE', quote(HELPER)).replace('HELPERDIR', quote(HELPER.parent))
         script = self.root / 'check.ps1'
         script.write_text(prefix + body, encoding='utf-8-sig')
         return subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
@@ -54,7 +59,7 @@ $SaveFolder=Join-Path $fixture 'Saves'
         import json
         helper_dir = self.root / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
         helper_dir.mkdir(parents=True)
-        for name in ('GlobalBank-Update.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Control.ps1', 'GlobalBank-Backups.ps1', 'GlobalBank-Macros.ps1', 'AAH-Cache.ps1'):
+        for name in HELPER_FILES:
             shutil.copy2(HELPER.parent / name, helper_dir / name)
         saves = self.root / 'saves'
         saves.mkdir()
@@ -80,22 +85,22 @@ $SaveFolder=Join-Path $fixture 'Saves'
         self.assertIn('Warrior(60), Mage(100)', listing)
         self.assertNotIn('Level', listing.splitlines()[0])
         self.assertIn('Sampleone', command('search warrior > 60'))
-        self.assertNotIn('Sampletwo:', command('search warrior > 60'))
+        self.assertNotIn('Sampletwo', command('search warrior > 60'))
         command('add note Sampleone Sampletwo bank alt')
         self.assertIn('Sampletwo bank alt', command('show Sampleone'))
         note_list = command('list note BANK ALT')
         self.assertIn('Sampleone', note_list)
         self.assertNotIn('Sampletwo  ', note_list)
         self.assertNotIn('Sampletwo  ', command('list note Sampletwo'))
-        self.assertIn('unknown', command('daily'))
+        self.assertIn('Unknown', command('daily'))
         from datetime import datetime, timedelta, timezone
         rewards = data / 'DailyRewards.json'
         def write_reward(when):
             rewards.write_text(json.dumps({'schemaVersion': 1, 'records': [{'name': 'Sampleone', 'server': 'Example', 'day': 1, 'collectedAt': when.strftime('%Y-%m-%dT%H:%M:%SZ')}]}), encoding='utf-8')
         write_reward(datetime.now(timezone.utc))
-        self.assertIn('daily login collected', command('daily'))
+        self.assertIn('Collected', command('daily'))
         write_reward(datetime.now(timezone.utc) - timedelta(days=3))
-        self.assertIn('daily login not collected', command('daily'))
+        self.assertIn('None recorded since the reset', command('daily'))
         command('erase Sampleone')
         self.assertIn('Sampleone', command('ban list'))
         command('update')
@@ -112,7 +117,7 @@ $SaveFolder=Join-Path $fixture 'Saves'
     def test_the_same_name_on_two_servers_stays_two_characters(self):
         helper_dir = self.root / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
         helper_dir.mkdir(parents=True)
-        for name in ('GlobalBank-Update.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Control.ps1', 'GlobalBank-Backups.ps1', 'GlobalBank-Macros.ps1', 'AAH-Cache.ps1'):
+        for name in HELPER_FILES:
             shutil.copy2(HELPER.parent / name, helper_dir / name)
         saves = self.root / 'saves'
         (saves / 'Same').mkdir(parents=True)
@@ -174,7 +179,7 @@ Show-Heartbeat
 Write-Beat
 ''')
         self.assertEqual(output.count('alive |'), 1)
-        self.assertIn('> search mana', output)
+        self.assertIn('gb > search mana', output)
         self.assertIn('off (0)', output)
         self.assertIn('on (1)', output)
         self.assertNotIn('Clear-Host', HELPER.read_text())

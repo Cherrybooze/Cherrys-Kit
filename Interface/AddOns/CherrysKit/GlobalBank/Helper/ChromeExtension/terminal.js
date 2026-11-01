@@ -387,11 +387,11 @@ const GBTerminal = (() => {
         for (const name of names) {
           if (name.toLowerCase().startsWith(typed) && name.toLowerCase() !== typed) found.push({value: prefix + rest.slice(0, stem.length) + name, label: stem + name, text: ''});
         }
-        return found;
+        break;
       }
       for (const command of catalogue.commands || []) {
         for (const value of [command.complete, ...(command.more || [])]) {
-          if (value.toLowerCase().startsWith(lower) && value.toLowerCase() !== lower) found.push({value: prefix + value, label: value.trim(), text: command.text || ''});
+          if (typeof value === 'string' && value.toLowerCase().startsWith(lower) && value.toLowerCase() !== lower) found.push({value: prefix + value, label: value.trim(), text: command.text || ''});
         }
       }
       return found;
