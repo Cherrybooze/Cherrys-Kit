@@ -1,0 +1,59 @@
+GLOBAL BANK — TERMINAL DESIGN AND INTEGRATION NOTES
+
+Purpose
+
+Make the native helper and webpage Terminal two views of the same command experience: matching grammar, aliases, help, result wording, severity, state meanings and editing conventions. Preserve a real Windows PowerShell 5.1 terminal. Comparable typography and hierarchy are practical; browser chrome, console title bars and legacy colour capabilities will differ.
+
+Reviewed source
+
+Repository: Cherrybooze/Cherrys-Kit
+Pinned review: 71f8f117a96b267e31794c44db98f351b90800a9, reviewed 1 November 2026.
+Canonical directory: Interface/AddOns/CherrysKit/GlobalBank/Helper/
+Distributed mirror: extras/GlobalBankDailyRewards/GlobalBank/Helper/
+Reference: https://github.com/Cherrybooze/Cherrys-Kit/tree/71f8f117a96b267e31794c44db98f351b90800a9/Interface/AddOns/CherrysKit/GlobalBank/Helper
+
+Use the current authoritative checkout and established mirror-generation workflow. This SHA is evidence, not an instruction to reset newer work. The reviewed extension manifest is 1.2.2; the supplied installed popup shows 1.2.4. Reconcile that difference before integrating.
+
+Current implementation and divergence
+
+GlobalBank-Update.ps1 owns Invoke-GBCommand, Show-Help, Say, the live character model and the watch loop. Its parser already handles optional slash/get prefixes and existing aliases. Native typed commands operate on the watcher's model.
+
+There is no separate ChromeExtension/terminal.js at the reviewed commit. The webpage handlers are inside control.js. control.html supplies #tab-terminal, #terminal-title, #bank-output, #bank-form and #bank-command; the input limit is 256 characters. Adjacent helper controls are #helper-status, #check-helper and #start-helper. The .terminal rule uses a 320px minimum, 60vh maximum and pre-wrap whitespace.
+
+The webpage sends bank-command through background.js and GlobalBank-NativeHost.ps1 to GlobalBank-Control.ps1::Invoke-ControlCommand. That launches a fresh powershell.exe running GlobalBank-Update.ps1 -Command ... -SkipAuctions and returns one output string. It does not attach to the existing watcher. Browser status therefore describes a newly initialized process; heartbeat changes are temporary. Browser-only regexes reject some stop/heartbeat forms while optional get forms bypass them. The one-shot path discards the parser's exit return.
+
+The browser transcript currently grows through textContent concatenation and always scrolls down. Browser history supports Up/Down but has no bound or unfinished-draft restoration. Native editing currently handles Enter, Backspace, Escape and appended printable characters. There is no existing terminal stream or cursor-polling API.
+
+One command, result and live-state contract
+
+Keep PowerShell authoritative. Extract a small command catalogue/parser/dispatcher if useful, reusing existing data and mutation functions. Generate help and completion metadata from that catalogue. JavaScript should forward literal command text and render results, rather than recreate business interpretation.
+
+Use bounded semantic results with requestId, commandId, ok, records and actual helper state. Records may represent messages, tables, status or errors, with explicit tones. Adapt Say through a shared output sink; do not infer meaning by parsing coloured console strings or English error messages.
+
+When the watcher runs, serialize both surfaces' commands with save processing on its existing loop. A small atomic request/reply mailbox is acceptable if the newer branch has no suitable IPC. Require unique requests, deadlines, explicit results and duplicate-mutation protection. Keep it separate from the AAH worker inbox. Retain a clearly labelled one-shot saved-data mode when stopped; session controls must report that no helper is running.
+
+For live activity, use a bounded feed with session and sequence IDs, cursors and explicit gaps. Do not repeatedly launch full command processes for idle polling. A small persistent native-messaging loop may be appropriate while preserving one-shot callers. Pause terminal-specific polling when hidden. Reuse coalesced bank.reload({ifChanged:true}) after relevant mutations; never reload the bank on each keystroke or output line.
+
+Nonblocking editing and liveness
+
+Keep the existing watch loop responsive. Add caret insertion, Left/Right, Home/End, Delete, bounded history with draft restoration, and command/character completion. Escape closes completion before clearing the draft; Enter executes. Match browser conventions while preserving ordinary selection and focus navigation. Support clear and Clear view without relying on browser-reserved shortcuts.
+
+Preserve draft and caret during asynchronous output, wrapped input and resize. Extend prompt redraw instead of clearing the screen on every event. Bound scrollback; follow new output only while at the bottom, with a visible resume affordance when paused.
+
+Three distinct heartbeat mechanisms must remain separate: optional console text; game-facing GlobalBankHelperBeat.lua; and Chrome's extension heartbeat. Disabling text must not disable either liveness mechanism. Preserve auction-worker ownership and automatic-helper lifetime checks.
+
+Startup and stop lifecycle
+
+At the reviewed baseline, Show-Status runs before Load-Model. Show Loading saved characters first, then the actual loaded count and Watching state after initialization. A temporary zero must not imply a completed empty scan. Keep full help behind help and show short examples at startup.
+
+Terminal exit/quit/stop means stop the current helper, preserving native semantics and the Chrome automatic-start preference. Acknowledge stopping before shutdown. Explain that an enabled preference applies at the next relevant Chrome startup. The existing popup Stop separately disables autoHelper before sending helper-stop. helper-auto-stop only stops an automatically launched instance; it does not stop a manual one.
+
+There is no periodic restart watchdog: startup/installation invokes automatic start; heartbeat alarms and status polls do not. Fix Show terminal changes to restart only a confirmed running automatic instance. When stopped, save its future window preference without launching anything.
+
+Boundaries and verification
+
+NativeHost stdout must contain only four-byte-length-prefixed UTF-8 JSON. Keep banners, ANSI, diagnostics and progress out. Preserve trusted control.html sender checks, literal command transport and input limits. Render returned text as text. Bound encoded JSON bytes, not merely the old 800,000-character output limit. Keep credentials out of transcripts.
+
+Preserve existing daily eligibility, unambiguous confirmation, Germany-midnight reset and local-time presentation. Folder-only reading remains a Bank capability, not a terminal bridge.
+
+The supplied terminal screens are visual/interaction demos, not production IPC or Windows-console verification. Integrate real handlers and test native/web semantic parity, mutation visibility, shutdown acknowledgement, typing during updates, framing and lifecycle states. Run a Windows PowerShell smoke check when available; otherwise identify the exact native checks still outstanding.

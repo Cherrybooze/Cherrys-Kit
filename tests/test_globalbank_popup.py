@@ -58,10 +58,10 @@ const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resol
   const before = fixture('2026-10-28T22:59:59Z', {ok:true,running:false,lastCollected:{name:'Cherry',server:'Test',collectedAt:'2026-10-28T15:00:00Z'}});
   await flush();
   assert.deepEqual(before.sent, ['helper-status']); // Opening popup never launches.
-  assert.equal(before.elements.start.textContent, 'Start Global Bank helper');
+  assert.equal(before.elements.start.textContent, 'Start helper');
   assert.equal(before.elements.start.disabled, false);
   assert.equal(before.elements.reset.hidden, true); // 00:59 local, yesterday's collection is still current.
-  assert.match(before.elements.status.textContent, /Cherry \(Test\).*(17[.:]00|5[.:]00\s*PM).*local time/);
+  assert.match(before.elements.status.textContent, /Cherry \u00b7 Test\n.*(17[.:]00|5[.:]00\s*PM).*local time/);
   const after = fixture('2026-10-28T23:00:00Z', {ok:true,running:true,lastCollected:{name:'Cherry',collectedAt:'2026-10-28T15:00:00Z'}});
   await flush();
   assert.equal(after.elements.reset.hidden, false); // 01:00 local.
@@ -72,7 +72,7 @@ const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resol
   for (const stamp of [null, '', 'already redeemed', '2026-10-28T17:00:00']) {
     vm.runInContext('showCollection(' + JSON.stringify({name:'Unknown',collectedAt:stamp}) + ')', after.context);
     assert.equal(after.elements.reset.hidden, true);
-    assert.match(after.elements.status.textContent, /unknown/);
+    assert.match(after.elements.status.textContent, /Unknown/);
   }
   // Local calendar arithmetic must use the offset at 01:00, across DST transitions.
   assert.equal(vm.runInContext("latestReset(new Date('2026-03-29T02:30:00Z')).toISOString()", after.context), '2026-03-28T23:00:00.000Z');
@@ -129,7 +129,7 @@ async function popup(response) {
 (async () => {
   let page = await popup({ok:true,running:false,lastCollected:null});
   assert.match(page['helper-hint'].textContent, /older than this extension\. Update Cherry’s Kit, then run Install Chrome extension\.bat again/);
-  page = await popup({ok:true,running:false,lastCollected:null,bridge:3});
+  page = await popup({ok:true,running:false,lastCollected:null,bridge:4});
   assert.match(page['helper-hint'].textContent, /Start the helper below/);
   assert.equal(page['get-kit'].hidden, true);
   page = await popup({ok:false,error:'Specified native messaging host not found.',errorKind:'bridge-unavailable'});
@@ -170,7 +170,7 @@ const context = vm.createContext({document:{getElementById:id => elements[id]}, 
     runtime:{sendMessage:async message => {
       sent.push(message.type);
       if (message.type === 'helper-stop') running = false;
-      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null,bridge:3};
+      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null,bridge:4};
     }}},
   setTimeout:() => 0, clearTimeout:() => {}, console});
 vm.runInContext(source, context);
@@ -181,7 +181,7 @@ vm.runInContext(source, context);
   assert.equal(elements['helper-card'].dataset.state, 'running');
   assert.equal(elements['helper-badge'].textContent, 'Running');
   assert.equal(elements['helper-hint'].hidden, false);
-  assert.match(elements['helper-hint'].textContent, /Click Stop Global Bank helper below to stop it and turn off automatic mode/);
+  assert.match(elements['helper-hint'].textContent, /Stop helper stops it and turns off automatic mode/);
   assert.equal(elements['auto-helper'].checked, true);
   assert.equal(elements.stop.hidden, false);
   await elements.stop.click({isTrusted:false});
@@ -197,38 +197,50 @@ vm.runInContext(source, context);
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
-    def test_terminal_setting_restarts_a_running_helper(self):
+    def test_terminal_setting_restarts_only_a_running_automatic_helper(self):
         self.run_js(r'''
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8');
-const elements = Object.fromEntries(['helper','start','stop','status','reset','reset-time','auto-helper','show-terminal','open-tools','reload-extension'].map(id => [id, {
-  textContent:'', hidden:true, disabled:false, checked:false, addEventListener(type, callback) { this[type] = callback; }
-}]));
-const sent = [];
-const stored = {autoHelper:true, showTerminal:false};
-class Clock extends Date { constructor(...args) { super(...(args.length ? args : ['2026-10-30T12:00:00Z'])); } }
-const context = vm.createContext({document:{getElementById:id => elements[id]}, Date:Clock, Intl,
-  chrome:{storage:{local:{get:async key => (typeof key === 'string' ? {[key]: stored[key]} : Object.assign({}, stored)),
-    set:async values => Object.assign(stored, values)}},
-    runtime:{sendMessage:async message => { sent.push(message); return {ok:true,running:true,lastCollected:null}; }}},
-  setTimeout:() => 0, clearTimeout:() => {}, console});
-vm.runInContext(source, context);
-(async () => {
-  const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resolve => setImmediate(resolve)); };
+const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resolve => setImmediate(resolve)); };
+async function change(state, autoHelper) {
+  const elements = Object.fromEntries(['helper','start','stop','status','reset','reset-time','auto-helper','show-terminal','open-tools','reload-extension'].map(id => [id, {
+    textContent:'', hidden:true, disabled:false, checked:false, addEventListener(type, callback) { this[type] = callback; }
+  }]));
+  const sent = [];
+  const stored = {autoHelper, showTerminal:false};
+  class Clock extends Date { constructor(...args) { super(...(args.length ? args : ['2026-10-30T12:00:00Z'])); } }
+  const context = vm.createContext({document:{getElementById:id => elements[id]}, Date:Clock, Intl,
+    chrome:{storage:{local:{get:async key => (typeof key === 'string' ? {[key]: stored[key]} : Object.assign({}, stored)),
+      set:async values => Object.assign(stored, values)}},
+      runtime:{sendMessage:async message => { sent.push(message); return {ok:true,lastCollected:null,...state}; }}},
+    setTimeout:() => 0, clearTimeout:() => {}, console});
+  vm.runInContext(source, context);
   await flush();
-  assert.equal(elements['auto-helper'].checked, true);   // Restored from storage.
+  assert.equal(elements['auto-helper'].checked, autoHelper);   // Restored from storage.
   assert.equal(elements['show-terminal'].checked, false);
   elements['show-terminal'].checked = true;
   await elements['show-terminal'].change();
   await flush();
   assert.equal(stored.showTerminal, true);
-  const starts = sent.filter(message => message.type === 'helper-auto-start');
-  assert.equal(starts.length, 1);
-  assert.equal(starts[0].showWindow, true);
-  assert.equal(sent.filter(message => message.type === 'helper-auto-stop').length, 1);
+  return {starts: sent.filter(message => message.type === 'helper-auto-start'), stops: sent.filter(message => message.type === 'helper-auto-stop').length};
+}
+(async () => {
+  // Running and started automatically: it restarts to take up the new look.
+  let result = await change({running:true,auto:true}, true);
+  assert.equal(result.starts.length, 1);
+  assert.equal(result.starts[0].showWindow, true);
+  assert.equal(result.stops, 1);
+  // Stopped: the choice is saved and nothing starts, even with automatic mode on.
+  result = await change({running:false,auto:false}, true);
+  assert.equal(result.starts.length, 0);
+  assert.equal(result.stops, 0);
+  // Started by hand: left alone, even with automatic mode ticked.
+  result = await change({running:true,auto:false}, true);
+  assert.equal(result.starts.length, 0);
+  assert.equal(result.stops, 0);
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
@@ -496,15 +508,18 @@ const context = vm.createContext({console});
 vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'accounts.js'), 'utf8') + ';this.GBAccounts = GBAccounts;', context);
 const gb = context.GBAccounts;
 const rgb = gold => [...gb.heatColor(gold).rgb];
-assert.deepEqual(rgb(0), [198, 40, 40]);
-assert.deepEqual(rgb(500000000), [245, 124, 0]);
-assert.deepEqual(rgb(999999999), [0, 230, 64]);
-assert.deepEqual(rgb(5000000000), [0, 230, 64]);
-assert.deepEqual(rgb(250000000), [222, 82, 20]);
-assert.ok(rgb(750000000)[1] > 124 && rgb(750000000)[1] < 230);
+// Plain at no gold, a climbing green, and gold only at a full cap, however little or much is short of it
+assert.equal(gb.heatColor(0).kind, 'none');
+assert.equal(gb.heatColor(1).kind, 'some');
+assert.equal(gb.heatColor(999999998).kind, 'some');
+assert.equal(gb.heatColor(999999999).kind, 'full');
+assert.deepEqual(rgb(5000000000), rgb(999999999));
+assert.deepEqual(rgb(500000000), [74, 117, 96]);
+assert.ok(rgb(750000000)[1] > 117 && rgb(750000000)[1] < 168);
+assert.ok(rgb(250000000)[1] > 58 && rgb(250000000)[1] < 117);
 assert.equal(gb.serverOf({server: 'Aynara'}), 'Aynara');
 assert.equal(gb.serverOf({dailyLogin: {server: 'Aynara (PvE)'}}), 'Aynara');
-assert.equal(gb.serverOf({}), 'Server unknown');
+assert.equal(gb.serverOf({}), 'Unknown server');
 const state = gb.emptyState();
 state.accounts.push({id: 'a', name: 'First'}, {id: 'b', name: 'Second'});
 const characters = [
@@ -517,7 +532,7 @@ assert.equal(gb.setLinks(state, ['Mid'], 'a'), 0);
 assert.equal(gb.accountOf(state, 'mid').name, 'First');
 assert.equal(gb.accountOf(state, 'nobody'), null);
 const columns = gb.heatColumns(characters, state);
-assert.deepEqual([...columns.map(c => c.server)], ['Aynara', 'Gaia', 'Server unknown']);
+assert.deepEqual([...columns.map(c => c.server)], ['Aynara', 'Gaia', 'Unknown server']);
 const gaia = columns[1];
 assert.equal(gaia.total, 999999999 * 2 + 500000012);
 assert.deepEqual([...gaia.fullCaps.map(c => c.name)], ['Rich', 'Rich2']);
@@ -660,8 +675,8 @@ assert.equal(known.groups.length, 3);
 // One login names the server for everyone on the account
 assert.equal(gb.serverOf(characters[1], known), 'Gaia');
 assert.equal(gb.serverOf(characters[2], known), 'Aynara');
-assert.equal(gb.serverOf(characters[4], known), 'Server unknown');
-assert.equal(gb.serverOf(characters[1]), 'Server unknown');
+assert.equal(gb.serverOf(characters[4], known), 'Unknown server');
+assert.equal(gb.serverOf(characters[1]), 'Unknown server');
 // Last class, by token first, in any client language
 assert.equal(gb.classColor(characters[0]), '#fa781a');
 assert.equal(gb.classColor(characters[1]), '#9ed61f');
@@ -670,7 +685,7 @@ assert.equal(gb.classColor(characters[4]), null);
 // Grouped on the heatmap too, and never linked
 const state = gb.emptyState();
 const columns = gb.heatColumns(characters, state);
-assert.deepEqual([...columns.map(c => c.server)], ['Aynara', 'Gaia', 'Server unknown']);
+assert.deepEqual([...columns.map(c => c.server)], ['Aynara', 'Gaia', 'Unknown server']);
 assert.deepEqual([...columns[1].groups.map(g => g.account)], ["Ann's account, not linked"]);
 assert.deepEqual([...columns[2].groups.map(g => g.account)], ['No account']);
 assert.equal(Object.keys(state.links).length, 0);
@@ -1059,15 +1074,15 @@ view.serversOff.add('kadmos');
 assert.deepEqual(plain(characters.filter(c => gb.shows(c, view)).map(c => c.name)), ['Bob (Aynara)', 'Cid', 'Eve']);
 // The ticks offer the region's servers even with nobody on them, and the unknown server last
 const servers = gb.serverList(characters, view);
-assert.deepEqual(plain(servers.map(s => s.name)), ['Aynara', 'Kadmos', 'Gaia', 'Kerub', 'Svidur', 'Server unknown']);
+assert.deepEqual(plain(servers.map(s => s.name)), ['Aynara', 'Kadmos', 'Gaia', 'Kerub', 'Svidur', 'Unknown server']);
 assert.deepEqual(plain(servers.map(s => s.count)), [2, 1, 0, 0, 0, 1]);
 assert.equal(servers[1].on, false);
 assert.equal(servers[0].stale, 1);
-assert.deepEqual(plain(gb.serverList(characters, {region: 'na', serversOff: new Set(), extra: {}}).map(s => s.name)), ['Ayvenas', 'Server unknown']);
+assert.deepEqual(plain(gb.serverList(characters, {region: 'na', serversOff: new Set(), extra: {}}).map(s => s.name)), ['Ayvenas', 'Unknown server']);
 assert.deepEqual(plain(gb.unlistedServers([{shownServer: 'Newland'}, {shownServer: 'Aynara'}, {shownServer: ''}]).map(s => s.name)), ['Newland']);
 // Grouped by server, with totals
 const groups = gb.groupBy(characters, 'server');
-assert.deepEqual(plain(groups.map(g => [g.title, g.characters.length])), [['Aynara', 2], ['Ayvenas', 1], ['Kadmos', 1], ['Server unknown', 1]]);
+assert.deepEqual(plain(groups.map(g => [g.title, g.characters.length])), [['Aynara', 2], ['Ayvenas', 1], ['Kadmos', 1], ['Unknown server', 1]]);
 assert.equal(groups[0].fullCaps, 1);
 // The hover card says what matters, in words
 const lines = gb.describe(characters[2]).map(line => line.kind + ':' + line.text);
@@ -1077,7 +1092,7 @@ assert.ok(gb.describe(characters[0]).some(line => line.text === 'The same name i
 assert.ok(gb.describe(characters[3]).some(line => line.text.startsWith('Daily reward: day 3')));
 // One selection for the whole page, kept in this browser
 const saved = [];
-const storage = {get: async () => ({gbView: {region: 'eu', serversOff: [], extra: {}, onlySelected: true}, gbSelection: ['aynara|bob', 'gone|nobody']}), set: async data => { saved.push(data); }};
+const storage = {get: async () => ({gbView: {region: 'eu', serversOff: [], extra: {}, onlySelected: true}, gbSelection: ['aynara|bob', 'gone|nobody'], gbScope: []}), set: async data => { saved.push(data); }};
 const roster = gb.create(storage);
 const told = [];
 roster.onChange(what => told.push(what));
@@ -1086,28 +1101,40 @@ roster.onChange(what => told.push(what));
   roster.setCharacters(characters);
   assert.equal(roster.view.region, 'eu');
   assert.equal(roster.isSelected('aynara|bob'), true);
-  assert.equal(roster.onlySelected(), true);
+  // Selecting never narrows the Bank by itself: an empty scope means everyone
+  assert.equal(roster.scoped(), false);
   roster.toggle('aynara|cid');
   const keys = characters.map(c => c.key);
   // Shift-click: from the last click to this one, in the list's order
   roster.range(keys, '|eve');
   assert.deepEqual(plain([...roster.selected().map(c => c.name)]), ['Bob (Aynara)', 'Cid', 'Dee', 'Eve']);
+  // Use in Bank copies the selection, which then stays as it is
+  roster.useSelection();
+  assert.equal(roster.scoped(), true);
+  assert.deepEqual(plain(roster.inScopeShown().map(c => c.name)), ['Bob (Aynara)', 'Cid', 'Dee', 'Eve']);
+  roster.clearScope();
+  assert.equal(roster.scoped(), false);
+  assert.equal(roster.selected().length, 4);
   roster.clearSelection();
   assert.equal(roster.selection.size, 0);
-  assert.equal(roster.onlySelected(), false);
-  // A selection on servers not shown doesn't empty the Bank tab
-  roster.setSelection(['ayvenas|bob']);
-  assert.equal(roster.onlySelected(), false);
+  // The Bank's own list ticks the scope directly, without touching the selection, and takes ranges
+  roster.toggleScope('aynara|cid');
+  roster.scopeRange(keys, '|eve');
+  assert.deepEqual(plain(roster.inScopeShown().map(c => c.name)), ['Cid', 'Dee', 'Eve']);
+  assert.equal(roster.selection.size, 0);
+  roster.clearScope();
+  // A scope on servers not shown doesn't empty the Bank
+  roster.setScope(['ayvenas|bob']);
+  assert.equal(roster.scoped(), false);
   roster.setRegion('na');
-  assert.equal(roster.onlySelected(), true);
-  roster.setOnlySelected(false);
-  assert.equal(roster.onlySelected(), false);
-  assert.ok(told.includes('view') && told.includes('selection'));
+  assert.equal(roster.scoped(), true);
+  roster.setSelection(['ayvenas|bob']);
+  assert.ok(told.includes('view') && told.includes('selection') && told.includes('scope'));
   await new Promise(resolve => setTimeout(resolve, 300));
   // Many changes, one write
   assert.equal(saved.length, 1);
-  assert.deepEqual(JSON.parse(JSON.stringify(saved[0])), {gbView: {region: 'na', serversOff: [], extra: {eu: [], na: []}, dropped: [], assigned: {}, onlySelected: false,
-    hideGameforge: false, hideRom: false, romFirst: false}, gbSelection: ['ayvenas|bob']});
+  assert.deepEqual(JSON.parse(JSON.stringify(saved[0])), {gbView: {region: 'na', serversOff: [], extra: {eu: [], na: []}, dropped: [], assigned: {},
+    hideGameforge: false, hideRom: false, romFirst: false}, gbSelection: ['ayvenas|bob'], gbScope: ['ayvenas|bob']});
 })().catch(error => { console.error(error); process.exit(1); });
 """)
 
@@ -1235,7 +1262,7 @@ const prepare = () => { gb.prepare(characters, accounts.accountGroups, roster.as
   accounts.setLinks(state, [accounts.linkKeysOf(neve)[0]], 'b');
   assert.equal(accounts.accountFor(state, neve).name, 'Second');
   const heat = accounts.heatColumns(characters, state, 'No account', c => roster.romName(c));
-  assert.deepEqual(plain(heat.map(c => c.server)), ['Aynara', 'Server unknown']);
+  assert.deepEqual(plain(heat.map(c => c.server)), ['Aynara', 'Unknown server']);
   assert.deepEqual(plain(heat[0].groups.map(g => g.account)), ['Mains, not linked']);
   assert.deepEqual(plain(heat[1].groups.map(g => g.account)), ['Bank alts, not linked', 'No account']);
 })().catch(error => { console.error(error); process.exit(1); });
@@ -1380,13 +1407,107 @@ const bank = context.GBBank.create(root, send, () => {}, (totals) => { told++; c
         ids = set(re.findall(r'\bid="([^"]+)"', page))
         self.assertEqual(len(re.findall(r'\bid="([^"]+)"', page)), len(ids), 'an id is used twice')
         wanted = set()
-        for script, pattern in (('control.js', r"byId\('([^']+)'\)"), ('accounts.js', r"byId\('([^']+)'\)"), ('bank.js', r"\bel\('([^']+)'\)")):
+        for script, pattern in (('control.js', r"byId\('([^']+)'\)"), ('accounts.js', r"byId\('([^']+)'\)"), ('backups.js', r"byId\('([^']+)'\)"), ('terminal.js', r"byId\('([^']+)'\)"), ('bank.js', r"\bel\('([^']+)'\)")):
             wanted |= set(re.findall(pattern, (EXTENSION / script).read_text(encoding='utf-8-sig')))
         self.assertEqual(sorted(wanted - ids), [])
         # Who is who comes before the tabs that use it
         scripts = re.findall(r'<script defer src="([^"]+)"', page)
         self.assertLess(scripts.index('roster.js'), scripts.index('bank.js'))
         self.assertLess(scripts.index('accounts.js'), scripts.index('control.js'))
+        self.assertLess(scripts.index('terminal.js'), scripts.index('control.js'))
+        # The interface's icons have their own file: icons.js is what decodes the game's item pictures
+        self.assertLess(scripts.index('ui-icons.js'), scripts.index('control.js'))
+        self.assertIn('const GBIcons', (EXTENSION / 'icons.js').read_text(encoding='utf-8'))
+        self.assertIn('window.GB_ICONS', (EXTENSION / 'ui-icons.js').read_text(encoding='utf-8'))
+        icons = set(re.findall(r'^  "([a-z-]+)":', (EXTENSION / 'ui-icons.js').read_text(encoding='utf-8'), re.M))
+        for name, text in (('control.html', page), ('popup.html', (EXTENSION / 'popup.html').read_text(encoding='utf-8'))):
+            self.assertEqual(sorted(set(re.findall(r'data-ui-icon="([^"]+)"', text)) - icons), [], name)
+
+    def test_every_page_has_a_place_in_the_navigation(self):
+        page = (EXTENSION / 'control.html').read_text(encoding='utf-8')
+        tabs = re.findall(r'data-tab="([^"]+)"', page)
+        panels = re.findall(r'id="tab-([^"]+)"', page)
+        self.assertEqual(sorted(tabs), sorted(panels))
+        for name in ('bank', 'favourites', 'depot', 'stats', 'characters', 'currencies', 'heatmap', 'servers', 'accounts', 'terminal', 'macros', 'settings', 'auctions'):
+            self.assertIn(name, tabs)
+
+    def test_the_icons_chrome_uses_are_the_size_it_says(self):
+        manifest = json.loads((EXTENSION / 'manifest.json').read_text(encoding='utf-8'))
+        for size, name in list(manifest['icons'].items()) + list(manifest['action']['default_icon'].items()):
+            data = (EXTENSION / name).read_bytes()
+            self.assertEqual(data[:8], b'\x89PNG\r\n\x1a\n', name)
+            self.assertEqual(struct.unpack('>II', data[16:24]), (int(size), int(size)), name)
+
+    def test_transfer_stones_gold_short_forms_and_account_currencies(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+const bank = context.GBBank;
+const plain = value => JSON.parse(JSON.stringify(value));
+const stone = (count, id = '244657', name = 'Server Transfer Stone') => ({slot: 1, id, name, count});
+// In the bag and the bank, by ID in any language and by name
+assert.equal(bank.transferStones({bag: [stone(2), {id: '1', name: 'Rock', count: 9}], bank: [stone(3, '244657', 'Serverwechselstein')]}), 5);
+assert.equal(bank.transferStones({bag: [stone(1, '999999')]}), 1);
+assert.equal(bank.transferStones({bag: [], bank: []}), 0);
+const rows = bank.rosterRows([{name: 'Ann', bag: [stone(2)], bank: [], bankSeen: true}, {name: 'Bob', bag: [stone(4)], bank: [], bankSeen: false}, {name: 'Cid', bag: [], bank: []}], 'stones', true);
+assert.deepEqual(plain(rows.map(row => [row.name, row.stones])), [['Bob', 4], ['Ann', 2], ['Cid', 0]]);
+// A bank nobody has opened isn't the same as none in it
+assert.equal(bank.transferStonesText({bag: [stone(2)], bank: [], bankSeen: true}), 'Transfer stones: 2');
+assert.equal(bank.transferStonesText({bag: [stone(2)], bank: []}), 'Transfer stones: at least 2, bank not recorded');
+assert.equal(bank.transferStonesText({bag: [], bank: []}), '');
+assert.equal(bank.bankKnown({bank: [stone(1)]}), true);
+assert.equal(bank.bankKnown({bank: []}), false);
+// Short gold never rounds up to the next number
+assert.equal(bank.formatCompact(999999999), '999.99M');
+assert.equal(bank.formatCompact(3731845169), '3.73B');
+assert.equal(bank.formatCompact(1383092), '1.38M');
+assert.equal(bank.formatCompact(51200), '51.2K');
+assert.equal(bank.formatCompact(100), '100');
+assert.equal(bank.formatCompact(0), '0');
+// Account currencies: each account once, as of its newest save. Old saves and strangers aren't counted.
+const one = {names: ['Ann', 'Bob']}, two = {names: ['Cid']};
+const money = (amount, key = 'account') => [{key, amount}];
+const totals = bank.accountCurrencies([
+  {name: 'Ann', romAccount: one, saved: '2026-10-01 10:00', currencies: money(100)},
+  {name: 'Bob', romAccount: one, saved: '2026-10-02 10:00', currencies: money(90)},
+  {name: 'Cid', romAccount: two, saved: '2026-10-01 10:00', currencies: money(5)},
+  {name: 'Old', romAccount: two, stale: true, saved: '2026-10-09 10:00'},
+  {name: 'Lone', saved: '2026-10-01 10:00', currencies: money(1000)},
+]);
+const diamonds = totals.find(item => item.key === 'account');
+assert.equal(diamonds.name, 'Diamonds');
+assert.equal(diamonds.total, 95);
+assert.equal(diamonds.accounts, 2);
+assert.equal(diamonds.loose, 1);
+assert.equal(diamonds.recorded, true);
+// Nobody on a known account means not recorded, not zero
+assert.equal(bank.accountCurrencies([{name: 'Lone', currencies: money(1000)}])[0].recorded, false);
+""")
+
+    def test_terminal_records_read_as_plain_text(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'terminal.js'), 'utf8') + ';this.GBTerminal = GBTerminal;', context);
+const text = context.GBTerminal.recordsText([
+  {kind: 'message', tone: 'gold', text: '100 gold'},
+  {kind: 'table', title: 'Items', columns: [{label: 'CHARACTER'}, {label: 'QTY', numeric: true}], rows: [{heading: 'Mana Stone'}, ['Ann', {text: '10', tone: 'ok'}]], total: {label: 'All', value: '10'}, notes: ['A note.']},
+  {kind: 'status', pairs: [{label: 'Helper', value: 'Running'}]},
+  {kind: 'help', groups: [{name: 'GROUP', rows: [{usage: 'status', text: 'Helper state'}]}], notes: []},
+  {kind: 'error', code: 'usage', text: 'Bad.', usage: 'note <name>'},
+  {kind: 'confirm', token: 't', text: 'Sure?', yes: 'Yes', no: 'No', prompt: 'Type y or n.'},
+  {kind: 'control', action: 'clear'},
+]);
+assert.equal(text, ['100 gold', 'Items', 'CHARACTER\tQTY', 'Mana Stone', 'Ann\t10', 'All: 10', 'A note.', 'Helper: Running', 'GROUP', 'status \u2014 Helper state', 'Bad.', 'Usage: note <name>', 'Sure?', 'Type y or n.'].join('\n'));
+""")
+
+    def test_terminal_page_has_no_command_parser_of_its_own(self):
+        source = (EXTENSION / 'terminal.js').read_text(encoding='utf-8')
+        for word in ('goldtotal', 'heartbeat', "'exit'", "'erase'", "'unban'"):
+            self.assertNotIn(word, source)
+        # Results are text: nothing the helper sends becomes markup
+        self.assertNotIn('innerHTML', source)
 
 @unittest.skipUnless(SHELL, 'PowerShell required')
 class NativeStatusTests(unittest.TestCase):

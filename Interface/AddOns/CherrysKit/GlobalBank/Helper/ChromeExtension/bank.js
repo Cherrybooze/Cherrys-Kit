@@ -1,7 +1,8 @@
 'use strict';
-// The Bank tab: everything every character holds, in one scrolling grid like the game's own bank, with a search,
-// filters, stacking rules, favourites and the game's own tooltips. The Favourites, Currencies, Stats and Characters
-// tabs read the same data. Only the rows and slots on screen are drawn, so thousands of characters stay quick.
+// The Bank page: everything every character holds, in one scrolling grid like the game's own bank, with a search,
+// filters, stacking rules, favourites, the game's own tooltips and a panel saying who holds an item and where. The
+// Favourites, Currencies, Stats and Characters pages read the same data. Only the rows and slots on screen are
+// drawn, so thousands of characters stay quick.
 const GBBank = (() => {
   // The game's own pages: 30 bag slots, 40 bank slots. Bank slots after 200 are the item shop's tab.
   const PER_PAGE = {bag: 30, bank: 40};
@@ -19,13 +20,43 @@ const GBBank = (() => {
   const FIXED_NAMES = {transmutor: 'Arcane Transmutor Charges'};
   // The order of the game's own currency window
   const CURRENCY_ORDER = ['transmutor', '11', '12', '10', '17', '21', '9', '13', '15', '16', '4', '8', '14', '18', '19', '22', '23', 'account', 'bonus', 'billdin'];
-  const SLOT = 44, GAP = 2, PAD = 10;
+  // The grid's layouts. Slots sit at fixed places, so these and control.css's sizes have to agree.
+  const LAYOUTS = {grid: {slot: 56, gap: 6}, compact: {slot: 44, gap: 3}, list: {slot: 42, gap: 0, rows: true}};
+  const PAD = 10;
   const FULL_CAP = 999999999;
+  // Server Transfer Stones, by ID in any language, and by name for any other item the game calls that.
+  const TRANSFER_STONE = '244657';
+  const NO_SERVER = 'Unknown server';
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString('en-US');
   }
+  // 3.73B, 528.77M, 1.38M, rounded down so a full cap never reads as a billion. Exact numbers stay in tooltips and tables.
+  function formatCompact(value) {
+    const amount = Math.max(0, Number(value) || 0);
+    if (amount >= 1e9) return `${(Math.floor(amount / 1e7) / 100).toFixed(2)}B`;
+    if (amount >= 1e6) return `${(Math.floor(amount / 1e4) / 100).toFixed(2)}M`;
+    if (amount >= 1e4) return `${(Math.floor(amount / 100) / 10).toFixed(1)}K`;
+    return formatNumber(amount);
+  }
   const escapeHtml = text => String(text ?? '').replace(/[&<>"']/g, letter => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[letter]));
+  // A bank opened once in game is known; before that its items are simply missing, which isn't the same as none.
+  const bankKnown = character => !!character.bankSeen || (character.bank || []).length > 0;
+  function transferStones(character) {
+    let count = 0;
+    for (const place of ['bag', 'bank']) {
+      for (const item of character[place] || []) {
+        if (String(item.id) === TRANSFER_STONE || /^server transfer stone/i.test(String(item.name || ''))) count += Number(item.count) || 1;
+      }
+    }
+    return count;
+  }
+  // The line for a character's hover card, or '' when it would only say there are none
+  function transferStonesText(character) {
+    const count = transferStones(character);
+    if (!count) return '';
+    return bankKnown(character) ? `Transfer stones: ${formatNumber(count)}` : `Transfer stones: at least ${formatNumber(count)}, bank not recorded`;
+  }
   // Saved data has no item type, so this goes by the game's ID ranges and icon names. A good guess, not a fact.
   function typeOf(id, icon) {
     const number = Number(id) || 0;
@@ -323,6 +354,7 @@ const GBBank = (() => {
   const ROSTER_COLUMNS = [
     {key: 'name', name: 'Character', text: true},
     {key: 'server', name: 'Server', text: true},
+    {key: 'stones', name: 'Transfer stones'},
     {key: 'account', name: 'Gameforge account', text: true},
     {key: 'rom', name: 'RoM account', text: true},
     {key: 'class', name: 'Class', text: true},
@@ -333,6 +365,7 @@ const GBBank = (() => {
     {key: 'saved', name: 'Last saved', text: true},
     {key: 'day', name: 'Reward day'},
     {key: 'taken', name: 'Reward taken'},
+    {key: 'stale', name: 'Status'},
   ];
   // The RoM account to show: the name you gave it, or the first name on its login screen's list
   const romOf = (character, romTitle) => (romTitle ? romTitle(character) : '')
@@ -344,7 +377,7 @@ const GBBank = (() => {
       const bag = (character.bag || []).length, bank = (character.bank || []).length;
       const linked = accountName ? accountName(character.name) : '';
       return {name: String(character.name || ''), key: character.key, character, server: String(character.shownServer ?? character.server ?? ''),
-        account: linked, rom: romOf(character, romTitle),
+        account: linked, rom: romOf(character, romTitle), stones: transferStones(character),
         class: String(character.class || ''), level: Number(character.level) || 0,
         gold: Number(character.gold) || 0, items: bag + bank, bag, bank, bankSeen: !!character.bankSeen, stale: !!character.stale,
         saved: String(character.saved || ''), day: Number(character.dailyLogin?.day) || 0, taken: Number.isFinite(taken) ? taken : 0};
@@ -359,9 +392,16 @@ const GBBank = (() => {
   function groupedTable(root, spec) {
     const table = root.querySelector('table');
     const sorting = root.sorting;
+    const sortButton = (key, name, text, minor) => {
+      const mark = sorting.key === key ? (sorting.descending ? ' ▼' : ' ▲') : '';
+      return `<button type="button" class="${minor ? 'sort-minor' : ''}${minor && mark ? ' is-sorted' : ''}" data-sort="${escapeHtml(key)}" data-text="${text ? 1 : ''}">${escapeHtml(name + mark)}</button>`;
+    };
+    const cellClass = column => [column.number ? 'num' : '', column.className || ''].filter(Boolean).join(' ');
+    // Two values in one column each keep their own way of sorting: column.also lists the second one's
     const head = spec.columns.map(column => {
-      const mark = sorting.key === column.key ? (sorting.descending ? ' ▼' : ' ▲') : '';
-      return `<th class="${column.number ? 'num' : ''}"><button type="button" data-sort="${escapeHtml(column.key)}" data-text="${column.text ? 1 : ''}">${escapeHtml(column.name + mark)}</button></th>`;
+      const sorted = sorting.key === column.key ? ` aria-sort="${sorting.descending ? 'descending' : 'ascending'}"` : '';
+      const inside = column.noSort ? column.head || '' : sortButton(column.key, column.name, column.text) + (column.also || []).map(other => sortButton(other.key, other.name, other.text, true)).join('');
+      return `<th class="${cellClass(column)}"${sorted}>${inside}</th>`;
     }).join('');
     table.querySelector('thead').innerHTML = `<tr>${head}</tr>`;
     const parts = [];
@@ -379,7 +419,7 @@ const GBBank = (() => {
       }
       for (const row of group.rows) {
         const selected = spec.isSelected && spec.isSelected(row.key) ? ' is-selected' : '';
-        parts.push(`<tr data-char="${escapeHtml(row.key || '')}" class="char-row${selected}${row.stale ? ' is-stale' : ''}">${spec.columns.map(column => `<td class="${column.number ? 'num' : ''}">${column.cell(row)}</td>`).join('')}</tr>`);
+        parts.push(`<tr data-char="${escapeHtml(row.key || '')}" class="char-row${selected}${row.stale ? ' is-stale' : ''}">${spec.columns.map(column => `<td class="${cellClass(column)}">${column.cell(row)}</td>`).join('')}</tr>`);
       }
     }
     if (!parts.length) parts.push(`<tr><td colspan="${span}" class="hint">${escapeHtml(spec.empty || 'Nothing to show.')}</td></tr>`);
@@ -405,6 +445,9 @@ const GBBank = (() => {
         }
         const pick = event.target.closest('[data-group-select]');
         if (pick && root.selectGroup) root.selectGroup(pick.dataset.groupSelect);
+        const open = event.target.closest('[data-open-char]');
+        if (open && root.openCharacter) root.openCharacter(open.dataset.openChar);
+        if (event.target.closest('.select-all') && root.selectAll) root.selectAll();
       });
     }
   }
@@ -429,7 +472,7 @@ const GBBank = (() => {
   const groupKeyOf = (how, accountName) => row => how === 'server' ? String(row.server || '').toLowerCase()
     : (accountName && accountName(row.name)) ? 'gf:' + accountName(row.name).toLowerCase()
       : loginScreen(row) ? 'group:' + loginScreen(row).names[0].toLowerCase() + '|' + String(row.server || '').toLowerCase() : '~none';
-  const groupTitleOf = (how, accountName, romTitle) => row => how === 'server' ? row.server || 'Server unknown'
+  const groupTitleOf = (how, accountName, romTitle) => row => how === 'server' ? row.server || NO_SERVER
     : (accountName && accountName(row.name)) ? accountName(row.name)
       : loginScreen(row) ? (loginScreen(row).steam ? romOf(row.character, romTitle) : `${romOf(row.character, romTitle)}, not linked`) : 'No account known yet';
   function searchRows(rows, text) {
@@ -439,8 +482,47 @@ const GBBank = (() => {
       || String(row.account || '').toLowerCase().includes(wanted) || String(row.rom || '').toLowerCase().includes(wanted) || String(row.class || '').toLowerCase().includes(wanted)
       || String(row.character?.note || '').toLowerCase().includes(wanted));
   }
-  // options: {characters, how, search, isSelected, accountName, romTitle, selectKeys}
+  // Diamonds, Bonus and Billdin belong to an account, and every character on it saved the same balance, so each
+  // account counts once, as of the newest save on it. A character no login screen has listed could be on any account:
+  // it isn't counted, and says so. A character saved before currencies were recorded says nothing either way.
+  function accountCurrencies(characters) {
+    const newest = new Map();
+    let loose = 0;
+    for (const character of characters) {
+      if (character.stale || character.notSaved) continue;
+      const account = character.romAccount || character.group || null;
+      if (!account) { loose++; continue; }
+      const held = newest.get(account);
+      if (!held || String(character.saved || '') > String(held.saved || '')) newest.set(account, character);
+    }
+    return Object.entries(SHOP_NAMES).map(([key, name]) => {
+      let total = 0;
+      for (const character of newest.values()) total += Number((character.currencies || []).find(money => money.key === key)?.amount) || 0;
+      return {key, name, total, accounts: newest.size, loose, recorded: newest.size > 0};
+    });
+  }
+  // The cards above the table: the gold on the characters in view, and the account currencies
+  function renderCurrencySummary(node, characters) {
+    if (!node) return;
+    const gold = characters.reduce((sum, character) => sum + (Number(character.gold) || 0), 0);
+    const caps = characters.filter(character => Number(character.gold) >= FULL_CAP).length;
+    const card = (label, icon, value, unknown, help, primary) => `<div class="currency-card${primary ? ' is-primary' : ''}"><div class="currency-label"><span class="ico" data-card-icon="${icon}"></span>${escapeHtml(label)}</div>`
+      + `<div class="currency-value${unknown ? ' is-unknown' : ''}">${escapeHtml(value)}</div><div class="currency-help">${escapeHtml(help)}</div></div>`;
+    const parts = [card('Total character gold', 'coin', formatNumber(gold), false,
+      `${formatNumber(characters.length)} characters in view · ${formatNumber(caps)} at the ${formatNumber(FULL_CAP)} cap`, true)];
+    const shop = accountCurrencies(characters);
+    for (const money of shop) {
+      parts.push(card(money.name, money.key === 'account' ? 'diamond' : 'wallet', money.recorded ? formatNumber(money.total) : 'Not recorded', !money.recorded,
+        money.recorded ? `${formatNumber(money.accounts)} RoM accounts, as last saved` : 'No character on a known RoM account has saved this yet'));
+    }
+    const loose = shop[0]?.loose || 0;
+    parts.push(`<p class="currency-note">Diamonds, Bonus and Billdin belong to an account, so each RoM account counts once.${loose ? ` ${formatNumber(loose)} characters aren't on a known RoM account yet, so theirs aren't counted.` : ''}</p>`);
+    node.innerHTML = parts.join('');
+    for (const icon of node.querySelectorAll('[data-card-icon]')) icon.innerHTML = window.GB_ICONS?.[icon.dataset.cardIcon] || '';
+  }
+  // options: {characters, how, search, isSelected, accountName, romTitle, selectKeys, summary: the cards' element}
   function renderCurrencies(root, characters, options = {}) {
+    renderCurrencySummary(options.summary, characters);
     root.sorting = root.sorting || {key: 'gold', descending: true};
     root.collapsed = root.collapsed || new Set();
     root.redraw = () => renderCurrencies(root, root.last.characters, root.last.options);
@@ -456,11 +538,12 @@ const GBBank = (() => {
     }
     root.selectGroup = key => options.selectKeys && options.selectKeys((groups.find(group => group.key === key)?.rows || []).map(row => row.key));
     const amount = (row, column) => {
-      if (column.key !== 'gold' && row.stale && !(column.key in row.amounts)) return '<span class="hint" title="Not recorded yet: log in once on the current build">—</span>';
+      if (column.key !== 'gold' && row.stale && !(column.key in row.amounts)) return '<span class="not-recorded" title="Not recorded: log in once on the current version">—</span>';
+      if (column.key === 'gold') return `<span class="gold-cell">${escapeHtml(formatNumber(row.amounts.gold))}</span>`;
       return escapeHtml(formatNumber(row.amounts[column.key] || 0));
     };
     groupedTable(root, {
-      columns: [{key: 'name', name: 'Character', text: true, cell: row => escapeHtml(row.name)}, {key: 'server', name: 'Server', text: true, cell: row => escapeHtml(row.server || '—')},
+      columns: [{key: 'name', name: 'Character', text: true, cell: row => `<span class="char-name">${escapeHtml(row.name)}</span>`}, {key: 'server', name: 'Server', text: true, cell: serverCell},
         ...table.columns.map(column => ({key: column.key, name: column.name, number: true, cell: row => amount(row, column)}))],
       groups, groupSpan: 2, isSelected: options.isSelected, open: !!String(options.search || '').trim(), empty: characters.length ? 'No character matches.' : 'No characters saved yet.',
       groupCells: group => group.title === null ? null : table.columns.map(column => `<td class="num">${group.totals[column.key] === null ? 'per account' : escapeHtml(formatNumber(group.totals[column.key]))}</td>`).join(''),
@@ -471,11 +554,22 @@ const GBBank = (() => {
     total.innerHTML = `<td colspan="2">${rows.length === table.rows.length ? 'All' : 'Matching'} ${escapeHtml(formatNumber(rows.length))} characters</td>${table.columns.map(column => `<td class="num">${column.shop ? 'per account' : escapeHtml(formatNumber(rows.reduce((sum, row) => sum + (row.amounts[column.key] || 0), 0)))}</td>`).join('')}`;
     root.querySelector('tbody').prepend(total);
   }
+  const serverCell = row => (row.server ? `<span class="server-pill">${escapeHtml(row.server)}</span>` : `<span class="server-pill is-unknown">${escapeHtml(NO_SERVER)}</span>`);
+  // The letter on a coloured square: the class at a glance, and its colour where the page knows it
+  const classBadge = (name, color) => `<span class="class-avatar"${color ? ` style="--class-color:${escapeHtml(color)}"` : ''} aria-hidden="true">${escapeHtml(String(name || '?').slice(0, 1).toUpperCase())}</span>`;
+  // How many a character can transfer: "at least" what's in the bag while its bank isn't recorded, never a false 0
+  function stonesCell(row) {
+    const known = row.bankSeen || row.bank > 0;
+    if (known) return `<span class="stone-count${row.stones ? '' : ' is-none'}">${escapeHtml(formatNumber(row.stones))}</span>`;
+    return row.stones ? `<span class="stone-count is-atleast" title="At least this many: the bank isn't recorded">${escapeHtml(formatNumber(row.stones))}+</span>`
+      : '<span class="not-recorded" title="None in the bag, and the bank isn\'t recorded">—</span>';
+  }
   function renderRoster(root, characters, options = {}) {
     root.sorting = root.sorting || {key: 'gold', descending: true};
     root.collapsed = root.collapsed || new Set();
     root.redraw = () => renderRoster(root, root.last.characters, root.last.options);
     root.last = {characters, options};
+    root.openCharacter = options.openCharacter;
     const how = options.how || 'server';
     const rows = searchRows(rosterRows(characters, root.sorting.key, root.sorting.descending, options.accountName, options.romTitle), options.search);
     const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle));
@@ -483,28 +577,37 @@ const GBBank = (() => {
       const gold = group.rows.reduce((sum, row) => sum + row.gold, 0);
       const caps = group.rows.filter(row => row.gold >= FULL_CAP).length;
       const stale = group.rows.filter(row => row.stale).length;
-      group.sub = `${formatNumber(group.rows.length)} characters · ${formatNumber(gold)} gold` + (caps ? ` · ${formatNumber(caps)} full caps` : '') + (stale ? ` · ${formatNumber(stale)} need a login` : '');
+      const stones = group.rows.reduce((sum, row) => sum + row.stones, 0);
+      group.sub = `${formatNumber(group.rows.length)} characters · ${formatNumber(gold)} gold` + (caps ? ` · ${formatNumber(caps)} full caps` : '')
+        + (stones ? ` · ${formatNumber(stones)} transfer stones` : '') + (stale ? ` · ${formatNumber(stale)} need a login` : '');
     }
     root.selectGroup = key => options.selectKeys && options.selectKeys((groups.find(group => group.key === key)?.rows || []).map(row => row.key));
+    root.selectAll = () => options.selectKeys && options.selectKeys(rows.map(row => row.key));
     const clock = new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'});
-    const slots = (used, max, seen = true) => !seen ? '<span class="hint">not seen</span>' : escapeHtml(max ? `${formatNumber(used)} / ${formatNumber(max)}` : formatNumber(used));
+    const slots = (label, used, max) => `${escapeHtml(max ? `${formatNumber(used)} / ${formatNumber(max)}` : formatNumber(used))} ${label}`;
+    const allSelected = rows.length > 0 && !!options.isSelected && rows.every(row => options.isSelected(row.key));
     groupedTable(root, {
       columns: [
-        {key: 'name', name: 'Character', text: true, cell: row => `<span class="char-name">${escapeHtml(row.name)}</span>${row.stale ? ' <span class="stale-mark" title="Needs one login on the current build">●</span>' : ''}`},
-        {key: 'server', name: 'Server', text: true, cell: row => escapeHtml(row.server || '—')},
-        {key: 'account', name: 'Gameforge account', text: true, cell: row => escapeHtml(row.account || '—')},
-        {key: 'rom', name: 'RoM account', text: true, cell: row => escapeHtml(row.rom || '—')},
-        {key: 'class', name: 'Class', text: true, cell: row => escapeHtml(row.class)},
-        {key: 'level', name: 'Level', number: true, cell: row => escapeHtml(formatNumber(row.level))},
-        {key: 'gold', name: 'Gold', number: true, cell: row => escapeHtml(formatNumber(row.gold))},
-        {key: 'bag', name: 'Bag', number: true, cell: row => slots(row.bag, row.character?.bagSlots)},
-        {key: 'bank', name: 'Bank', number: true, cell: row => slots(row.bank, row.character?.bankSlots, row.bankSeen || row.bank > 0)},
-        {key: 'saved', name: 'Last saved', text: true, cell: row => escapeHtml(row.saved || '—')},
-        {key: 'day', name: 'Reward day', number: true, cell: row => escapeHtml(row.day || '—')},
-        {key: 'taken', name: 'Reward taken', cell: row => escapeHtml(row.taken ? clock.format(row.taken) : '—')},
+        {key: 'select', noSort: true, className: 'check-col', head: `<input type="checkbox" class="select-all" aria-label="Select all shown"${allSelected ? ' checked' : ''}>`,
+          cell: row => `<input type="checkbox" class="char-check" aria-label="Select ${escapeHtml(row.name)}"${options.isSelected && options.isSelected(row.key) ? ' checked' : ''}>`},
+        {key: 'name', name: 'Character', text: true, also: [{key: 'class', name: 'Class', text: true}, {key: 'level', name: 'Level'}],
+          cell: row => `<span class="char-cell">${classBadge(row.class, options.classColor && options.classColor(row.character))}<span><span class="char-name">${escapeHtml(row.name)}</span><span class="sub">${escapeHtml([row.class, row.level ? `Lv. ${formatNumber(row.level)}` : ''].filter(Boolean).join(' · ') || 'Class not recorded')}</span></span></span>`},
+        {key: 'server', name: 'Server', text: true, cell: serverCell},
+        {key: 'stones', name: 'Transfer stones', number: true, cell: stonesCell},
+        {key: 'account', name: 'Gameforge', text: true, also: [{key: 'rom', name: 'RoM', text: true}],
+          cell: row => `<span class="stacked">${escapeHtml(row.account || (options.locked && options.locked() ? 'Locked' : 'Not linked'))}<small>${escapeHtml(row.rom || 'RoM account not known')}</small></span>`},
+        {key: 'gold', name: 'Gold', number: true, cell: row => `<span class="gold-cell">${escapeHtml(formatNumber(row.gold))}</span>`},
+        {key: 'bag', name: 'Bag', number: true, also: [{key: 'bank', name: 'Bank'}],
+          cell: row => `<span class="stacked">${slots('in bag', row.bag, row.character?.bagSlots)}<small>${row.bankSeen || row.bank > 0 ? slots('in bank', row.bank, row.character?.bankSlots) : 'Bank not recorded'}</small></span>`},
+        {key: 'saved', name: 'Last saved', text: true, cell: row => escapeHtml(row.saved || 'Not recorded')},
+        {key: 'day', name: 'Reward day', number: true, also: [{key: 'taken', name: 'Taken'}],
+          cell: row => (row.taken ? `<span class="stacked">Day ${escapeHtml(row.day || '?')}<small>${escapeHtml(clock.format(row.taken))}</small></span>` : '<span class="not-recorded">Not recorded</span>')},
+        {key: 'stale', name: 'Status', cell: row => (row.stale ? '<span class="status-pill" title="Saved by an older version: log in once on the current one">Needs login</span>' : '<span class="status-pill is-good">Current</span>')},
+        {key: 'open', noSort: true, className: 'open-col', cell: row => `<button type="button" class="row-open" data-open-char="${escapeHtml(row.key || '')}" aria-label="Details for ${escapeHtml(row.name)}" title="Details"><span class="ico" data-cell-icon="chevron-right"></span></button>`},
       ],
       groups, isSelected: options.isSelected, open: !!String(options.search || '').trim(), empty: characters.length ? 'No character matches.' : 'No characters saved yet.',
     });
+    if (typeof window !== 'undefined') for (const icon of root.querySelectorAll('[data-cell-icon]')) icon.innerHTML = window.GB_ICONS?.[icon.dataset.cellIcon] || '';
   }
   const STAT_COLUMNS = [
     {key: 'stat', name: 'Stat', text: true},
@@ -550,11 +653,11 @@ const GBBank = (() => {
     return [...rows.values()].sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  // options: {roster, onlySelected(): show only the selected characters' items, favouritesRoot, openTab(name),
-  // visible(): whether the Bank tab is open, tooltip: the item tooltip's element}
+  // options: {roster, favouritesRoot, openTab(name), visible(): whether the Bank page is open, tooltip: the item
+  // tooltip's element, review(kind): open the Characters page on 'login' or 'bank', favouritesChanged(count)}
   function create(root, send, status, onData, menu, options = {}) {
     const roster = options.roster || null;
-    const state = {characters: [], entries: [], made: null, total: -1, sort: 'name', cells: [], names: new Map(), loadedAt: 0};
+    const state = {characters: [], entries: [], made: null, total: -1, sort: 'name', cells: [], names: new Map(), loadedAt: 0, layout: 'grid', active: -1};
     const settings = {excluded: new Set(), whitelist: new Set(), excludeBound: false};
     const rules = {on: true, types: new Set(DEFAULT_RULES.types), stats: 'apart', always: new Set(), favourites: new Map(), quality: true};
     const icons = new Map();
@@ -564,8 +667,11 @@ const GBBank = (() => {
     const grid = el('bank-grid');
     const hasDom = typeof window !== 'undefined' && !!grid?.appendChild;
     const storage = typeof chrome !== 'undefined' && chrome.storage ? chrome.storage.local : null;
-    let columns = 1, rows = 0, frame = 0, space = null, typingTimer = 0, shownGold = 0, gridDirty = false, gridFrame = 0, wasSelecting = false, loading = null;
+    let columns = 1, rows = 0, frame = 0, space = null, typingTimer = 0, gridDirty = false, gridFrame = 0, loading = null, panelCell = null;
     const pool = [];
+    const shape = () => LAYOUTS[state.layout];
+    // The same item again after the grid was drawn anew: cells are made each time, the saved entries aren't
+    const sameCell = (a, b) => !!a && !!b && a.places[0] === b.places[0];
 
     function make(tag, className, text) {
       const node = document.createElement(tag);
@@ -614,20 +720,20 @@ const GBBank = (() => {
       }
       if (who.length > MAX_HOLDERS) nodes.push(make('span', 'bank-tip-type', `and ${formatNumber(who.length - MAX_HOLDERS)} more characters`));
       if (/^\d+$/.test(String(cell.id || ''))) nodes.push(make('span', 'bank-tip-hint', `Item ${cell.id}${cell.bound ? ' · bound' : ''}${servers.size > 1 ? ` · on ${formatNumber(servers.size)} servers` : ''}`));
-      nodes.push(make('span', 'bank-tip-hint', 'Right-click: favourite, always stack, exclude, select who holds it, or copy a login'));
+      nodes.push(make('span', 'bank-tip-hint', 'Click for where it is. Right-click: favourite, always stack, exclude, select who holds it, or copy a login'));
       tooltip.replaceChildren(...nodes);
       tooltip.hidden = false;
       moveTooltip(event);
     }
-    // Who the Bank tab shows: the region and server ticks, and the selection when that's on. The other tabs
-    // only follow the region and the ticks, so clicking names there selects them without changing the view.
-    function selecting() {
-      return !!roster && !!options.onlySelected && options.onlySelected();
+    // Who the Bank shows: the region and server ticks, and its scope when it has one. The other pages only follow
+    // the region and the ticks, and selecting a character never changes this until Use in Bank says so.
+    function scoped() {
+      return !!roster?.scoped && roster.scoped();
     }
-    function keep(withSelection = true) {
+    function keep(withScope = true) {
       if (!roster) return null;
-      const only = withSelection && selecting();
-      return character => roster.shows(character) && (!only || roster.isSelected(character.key));
+      const only = withScope && scoped();
+      return character => roster.shows(character) && (!only || roster.inScope(character.key));
     }
     function filters() {
       return {
@@ -650,12 +756,18 @@ const GBBank = (() => {
     // The slots on screen, and a few rows either side, drawn into a pool of slots that is reused as you scroll.
     function makeSlot() {
       const slot = make('div', 'bank-slot filled');
+      slot.id = `bank-slot-${pool.length}`;
+      slot.setAttribute('role', 'option');
       slot.letters = make('span', 'bank-letters');
       slot.picture = make('img');
       slot.picture.alt = '';
       slot.count = make('span', 'bank-count');
       slot.star = make('span', 'bank-star', '★');
-      slot.append(slot.letters, slot.picture, slot.count, slot.star);
+      // Only the list shows these
+      slot.nameText = make('span', 'bank-slot-text is-name');
+      slot.whereText = make('span', 'bank-slot-text is-where');
+      slot.quantityText = make('span', 'bank-slot-text is-quantity');
+      slot.append(slot.letters, slot.picture, slot.count, slot.star, slot.nameText, slot.whereText, slot.quantityText);
       grid.append(slot);
       return slot;
     }
@@ -663,8 +775,19 @@ const GBBank = (() => {
       slot.dataset.index = String(index);
       const excluded = isHidden(cell.places[0], settings);
       const favourite = rules.favourites.has(cell.key);
-      slot.className = 'bank-slot filled' + (excluded ? ' bank-excluded' : '') + (rules.quality && cell.quality ? ` q${cell.quality}` : '') + (favourite ? ' is-favourite' : '');
+      slot.className = 'bank-slot filled' + (excluded ? ' bank-excluded' : '') + (rules.quality && cell.quality ? ` q${cell.quality}` : '') + (favourite ? ' is-favourite' : '')
+        + (index === state.active ? ' is-active' : '') + (sameCell(panelCell, cell) ? ' is-open' : '');
+      slot.setAttribute('aria-label', `${cell.name}, ${formatNumber(cell.total)}`);
+      slot.setAttribute('aria-selected', String(index === state.active));
       slot.letters.textContent = cell.name.slice(0, 2);
+      if (shape().rows) {
+        const who = new Set(cell.places.map(place => place.ch?.key || place.character));
+        slot.nameText.replaceChildren(cell.name, make('small', '', [cell.type, cell.quality ? QUALITY[cell.quality] : ''].filter(Boolean).join(' · ')));
+        slot.nameText.style.color = cell.color ? `#${cell.color}` : '';
+        slot.whereText.replaceChildren(who.size === 1 ? cell.places[0].character : `${formatNumber(who.size)} characters`,
+          make('small', '', [...new Set(cell.places.map(place => PLACE[place.shop ? 'shop' : place.place]))].join(' + ')));
+        slot.quantityText.textContent = formatNumber(cell.total);
+      }
       if (slot.icon !== cell.icon) {
         slot.icon = cell.icon;
         if (icons.has(cell.icon)) slot.picture.src = icons.get(cell.icon);
@@ -679,15 +802,16 @@ const GBBank = (() => {
         space = make('div', 'bank-grid-space');
         grid.append(space);
       }
-      const width = Math.max(SLOT, grid.clientWidth - PAD * 2);
-      columns = Math.max(1, Math.floor((width + GAP) / (SLOT + GAP)));
+      const {slot, gap, rows: oneColumn} = shape();
+      const width = Math.max(slot, grid.clientWidth - PAD * 2);
+      columns = oneColumn ? 1 : Math.max(1, Math.floor((width + gap) / (slot + gap)));
       rows = Math.ceil(state.cells.length / columns);
-      space.style.height = (rows ? rows * (SLOT + GAP) - GAP + PAD * 2 : 0) + 'px';
+      space.style.height = (rows ? rows * (slot + gap) - gap + PAD * 2 : 0) + 'px';
     }
     function paint() {
       frame = 0;
       if (!hasDom) return;
-      const step = SLOT + GAP;
+      const step = shape().slot + shape().gap;
       const top = grid.scrollTop, height = grid.clientHeight || 600;
       const first = Math.max(0, Math.floor((top - PAD) / step) - 2);
       const last = Math.min(rows - 1, Math.ceil((top + height - PAD) / step) + 2);
@@ -706,6 +830,9 @@ const GBBank = (() => {
         used++;
       }
       for (let i = used; i < pool.length; i++) pool[i].hidden = true;
+      const activeSlot = state.active >= from && state.active < to ? pool[state.active - from] : null;
+      if (activeSlot) grid.setAttribute('aria-activedescendant', activeSlot.id);
+      else grid.removeAttribute('aria-activedescendant');
       if (wanted.length && typeof GBIcons !== 'undefined') {
         GBIcons.load(wanted, send, (name, url) => {
           icons.set(name, url);
@@ -727,23 +854,75 @@ const GBBank = (() => {
       const list = [];
       for (const entry of state.entries) if (test(entry) && (showHidden || !isHidden(entry, settings))) list.push(entry);
       state.cells = cells(list, currentRules()).sort(SORTS[state.sort] || SORTS.name);
+      if (state.active >= state.cells.length || fromTop) state.active = -1;
       if (hasDom) {
         layout();
         grid.scrollTop = fromTop ? 0 : Math.min(grid.scrollTop, Math.max(0, grid.scrollHeight - grid.clientHeight));
         paint();
         let empty = grid.querySelector('.bank-empty');
         if (!state.cells.length) {
-          if (!empty) { empty = make('p', 'bank-empty'); grid.append(empty); }
-          empty.textContent = state.characters.length ? 'Nothing matches these filters.' : 'No characters saved yet.';
+          if (!empty) {
+            empty = make('div', 'bank-empty');
+            const picture = make('img');
+            picture.src = 'brand/empty-state-vault.svg';
+            picture.alt = '';
+            empty.append(picture, make('p', 'hint'));
+            grid.append(empty);
+          }
+          empty.querySelector('p').textContent = state.characters.length ? 'Nothing matches these filters.' : 'No characters saved yet: log out of a character in game, then press Update now.';
         } else if (empty) empty.remove();
       }
       const shown = keepCharacters();
-      shownGold = shown.reduce((sum, character) => sum + character.gold, 0);
-      const unseen = shown.filter(character => !character.bankSeen).length;
+      const gold = shown.reduce((sum, character) => sum + (Number(character.gold) || 0), 0);
+      const held = totals(shown);
+      el('bank-sum-items').textContent = formatNumber(held.items);
+      el('bank-sum-stacks').textContent = formatNumber(held.stacks);
+      el('bank-sum-gold').textContent = formatCompact(gold);
+      el('bank-sum-gold').title = `${formatNumber(gold)} gold`;
+      el('bank-sum-characters').textContent = formatNumber(shown.length);
+      el('bank-shown').textContent = formatNumber(state.cells.length);
+      el('bank-total').textContent = `${formatNumber(state.cells.reduce((sum, cell) => sum + cell.total, 0))} items in these`;
+      el('bank-reset-filters').hidden = !filtersActive();
+      renderScope(shown.length);
+      // Separate warnings for separate jobs in game: one doesn't do the other, and Update now does neither.
       const stale = shown.filter(character => character.stale).length;
-      el('bank-total').textContent = `${formatNumber(state.cells.length)} shown · ${formatNumber(shown.length)} characters${selecting() ? ' (your selection)' : ''} · ${formatNumber(shownGold)} gold`
-        + (unseen === 1 ? ' · 1 bank not seen yet: open the bank once on that character' : unseen ? ` · ${formatNumber(unseen)} banks not seen yet: open the bank once on them` : '')
-        + (stale === 1 ? ' · 1 character needs a login on the current version for stats' : stale ? ` · ${formatNumber(stale)} need a login on the current version for stats` : '');
+      const unseen = shown.filter(character => !bankKnown(character)).length;
+      el('coverage-login').hidden = !stale;
+      el('coverage-bank').hidden = !unseen;
+      el('bank-coverage').hidden = !stale && !unseen;
+      el('coverage-login-text').textContent = stale === 1 ? '1 character needs a login on the current version' : `${formatNumber(stale)} characters need a login on the current version`;
+      el('coverage-bank-text').textContent = unseen === 1 ? '1 bank not recorded: open it once in game' : `${formatNumber(unseen)} banks not recorded: open each once in game`;
+    }
+    // Every filter that narrows what's listed, apart from the characters, which have their own reset
+    function filtersActive() {
+      return !!(el('bank-search').value.trim() || el('bank-search-in').value || el('bank-type').value || el('bank-place').value || el('bank-min-level').value || el('bank-max-level').value
+        || el('bank-binding')?.value || Number(el('bank-quality')?.value) || el('bank-only-stats')?.checked || el('bank-only-favourites')?.checked);
+    }
+    function resetFilters() {
+      for (const id of ['bank-search', 'bank-search-in', 'bank-type', 'bank-place', 'bank-min-level', 'bank-max-level', 'bank-binding']) el(id).value = '';
+      el('bank-quality').value = '0';
+      el('bank-only-stats').checked = el('bank-only-favourites').checked = false;
+      renderGrid(true);
+    }
+    // Who is in view, in words, with a way back to everyone
+    function renderScope(count) {
+      const box = el('bank-scope');
+      if (!hasDom) return;
+      if (!scoped()) {
+        box.textContent = `All ${formatNumber(count)} characters in view`;
+        return;
+      }
+      const reset = make('button');
+      reset.type = 'button';
+      reset.setAttribute('aria-label', 'Show all characters');
+      reset.title = 'Show all characters';
+      const cross = make('span', 'ico');
+      cross.innerHTML = window.GB_ICONS?.close || '';
+      reset.append(cross);
+      reset.addEventListener('click', () => roster.clearScope());
+      const chip = make('span', 'active-scope', count === 1 ? `Only ${keepCharacters()[0]?.name || '1 character'}` : `Only ${formatNumber(count)} characters`);
+      chip.append(reset);
+      box.replaceChildren(chip);
     }
     // Many clicks in a row draw once
     function scheduleGrid() {
@@ -761,6 +940,7 @@ const GBBank = (() => {
     }
     // Kept in this browser only: it changes what this page shows, not what the game or the helper saves.
     function settingsChanged() {
+      if (options.favouritesChanged) options.favouritesChanged(rules.favourites.size);
       if (storage) {
         storage.set({bankExclusions: {excluded: [...settings.excluded], whitelist: [...settings.whitelist], excludeBound: settings.excludeBound},
           bankRules: {types: [...rules.types], stats: rules.stats, always: [...rules.always], quality: rules.quality,
@@ -787,7 +967,7 @@ const GBBank = (() => {
       }));
     }
     function renderExclusions() {
-      el('bank-exclusions-summary').textContent = `Excluded items (${settings.excluded.size} excluded, ${settings.whitelist.size} always kept)`;
+      el('bank-exclusions-summary').textContent = settings.excluded.size || settings.whitelist.size ? `Excluded items (${settings.excluded.size} excluded, ${settings.whitelist.size} always kept)` : 'Excluded items';
       el('bank-exclude-bound').checked = settings.excludeBound;
       renderList('bank-excluded-list', settings.excluded, key => settings.excluded.delete(key));
       renderList('bank-whitelist', settings.whitelist, key => settings.whitelist.delete(key));
@@ -817,36 +997,184 @@ const GBBank = (() => {
       box.value = '';
       settingsChanged();
     }
-    function itemMenu(event, cell) {
-      if (tooltip) tooltip.hidden = true;
+    // What can be done with an item, from its right-click menu and its panel
+    function itemActions(cell) {
       const hidden = isHidden(cell.places[0], settings);
       const favourite = rules.favourites.has(cell.key);
       const always = rules.always.has(cell.key);
-      menu(event, [
-        {label: favourite ? 'Remove from favourites' : 'Add to favourites', run() {
+      const holding = new Set(cell.places.map(place => place.ch?.key || place.character)).size;
+      return [
+        {label: favourite ? 'Remove from favourites' : 'Add to favourites', icon: 'star', run() {
           if (favourite) rules.favourites.delete(cell.key);
           else rules.favourites.set(cell.key, {name: cell.name, icon: cell.icon || ''});
           settingsChanged();
         }},
-        {label: always ? 'Stop always stacking this item' : 'Always stack every copy of this item', run() {
+        {label: always ? 'Stop always stacking this item' : 'Always stack every copy of this item', icon: 'compact', run() {
           if (always) rules.always.delete(cell.key);
           else rules.always.add(cell.key);
           settingsChanged();
         }},
-        {label: hidden ? 'Bring this item back' : 'Exclude this item', run() {
+        {label: hidden ? 'Bring this item back' : 'Exclude this item', icon: hidden ? 'eye' : 'eye-off', run() {
           toggleHidden(cell.places[0], settings);
           settingsChanged();
         }},
-        {label: 'Show only this item', run() {
+        {label: 'Show only this item', icon: 'search', run() {
           el('bank-search').value = cell.name;
           el('bank-search-in').value = '';
           if (options.openTab) options.openTab('bank');
           renderGrid(true);
         }},
-        ...(roster ? [{label: `Select the ${formatNumber(new Set(cell.places.map(place => place.ch?.key || place.character)).size)} characters who hold it`, run() {
+        ...(roster ? [{label: holding === 1 ? 'Select the character who holds it' : `Select the ${formatNumber(holding)} characters who hold it`, icon: 'users', run() {
           roster.setSelection([...roster.selection, ...cell.places.map(place => place.ch?.key).filter(Boolean)]);
         }}] : []),
-      ], cell.places.map(place => place.character));
+      ];
+    }
+    function itemMenu(event, cell) {
+      if (tooltip) tooltip.hidden = true;
+      menu(event, itemActions(cell), cell.places.map(place => place.character));
+    }
+    function closePanel() {
+      panelCell = null;
+      el('item-panel').hidden = true;
+      repaint();
+    }
+    function openPanel(cell) {
+      panelCell = cell;
+      if (tooltip) tooltip.hidden = true;
+      drawPanel();
+      repaint();
+    }
+    function drawPanel() {
+      const panel = el('item-panel');
+      if (!hasDom || !panel) return;
+      if (!panelCell) { panel.hidden = true; return; }
+      const cell = panelCell;
+      const who = holders(cell.places);
+      const servers = new Set(who.map(row => row.server));
+      const slot = make('div', `bank-slot filled${rules.quality && cell.quality ? ` q${cell.quality}` : ''}`);
+      slot.append(make('span', 'bank-letters', cell.name.slice(0, 2)));
+      if (icons.has(cell.icon)) {
+        const picture = make('img');
+        picture.alt = '';
+        picture.src = icons.get(cell.icon);
+        slot.append(picture);
+      }
+      const name = make('h2', '', cell.name);
+      if (cell.color) name.style.color = `#${cell.color}`;
+      const heading = make('div');
+      heading.append(name, make('div', 'item-panel-sub', [cell.quality ? QUALITY[cell.quality] : '', cell.type, cell.bound ? 'Bound' : ''].filter(Boolean).join(' · ')));
+      const close = make('button', 'item-panel-close gb-button--icon gb-button--ghost');
+      close.type = 'button';
+      close.setAttribute('aria-label', 'Close the details');
+      const cross = make('span', 'ico');
+      cross.innerHTML = window.GB_ICONS?.close || '';
+      close.append(cross);
+      close.addEventListener('click', () => { closePanel(); grid.focus({preventScroll: true}); });
+      const top = make('div', 'item-panel-top');
+      top.append(slot, heading, close);
+      const nodes = [top];
+      const lines = cell.mixed ? [] : tipLines(cell.tip);
+      if (lines.length) {
+        const game = make('div', 'game-tip');
+        for (const line of lines) {
+          const row = make('div', 'game-tip-line');
+          const left = make('span', 'game-tip-left', line.left);
+          if (line.leftColor) left.style.color = line.leftColor;
+          row.append(left);
+          if (line.right) {
+            const right = make('span', 'game-tip-right', line.right);
+            if (line.rightColor) right.style.color = line.rightColor;
+            row.append(right);
+          }
+          game.append(row);
+        }
+        nodes.push(game);
+      } else {
+        const details = itemLines(cell).filter(line => line.kind !== 'type' || cell.mixed);
+        if (details.length) {
+          const box = make('div', 'game-tip');
+          for (const line of details) box.append(make('div', `bank-tip-${line.kind}`, line.text));
+          nodes.push(box);
+        }
+      }
+      const metrics = make('div', 'detail-metrics');
+      for (const [value, label] of [[formatNumber(cell.total), 'In all'], [formatNumber(who.length), who.length === 1 ? 'Character holds it' : 'Characters hold it']]) {
+        const metric = make('div', 'detail-metric', value);
+        metric.append(make('span', '', label));
+        metrics.append(metric);
+      }
+      nodes.push(metrics, make('div', 'detail-title', 'Where to find it'));
+      const owners = make('div', 'owner-list');
+      for (const row of who.slice(0, 200)) {
+        const card = make('div', 'owner-card' + (roster?.isSelected(row.key) ? ' is-selected' : ''));
+        if (row.key) card.dataset.char = row.key;
+        card.append(make('b', '', row.name), make('span', 'owner-qty', formatNumber(row.count)),
+          make('span', 'owner-meta', [row.server && !row.name.endsWith(`(${row.server})`) ? row.server : row.server ? '' : NO_SERVER, row.parts.join(' · ')].filter(Boolean).join(' · ')));
+        owners.append(card);
+      }
+      if (who.length > 200) owners.append(make('span', 'hint', `and ${formatNumber(who.length - 200)} more characters`));
+      nodes.push(owners);
+      if (/^\d+$/.test(String(cell.id || ''))) nodes.push(make('span', 'hint', `Item ${cell.id}${servers.size > 1 ? ` · on ${formatNumber(servers.size)} servers` : ''}`));
+      const actions = make('div', 'detail-actions');
+      const copy = make('button', 'gb-button--sm', 'Copy name');
+      copy.type = 'button';
+      copy.addEventListener('click', () => navigator.clipboard.writeText(cell.name).then(() => { copy.textContent = 'Copied'; }, () => { copy.textContent = 'Could not copy'; }));
+      actions.append(copy);
+      for (const action of itemActions(cell)) {
+        const button = make('button', 'gb-button--sm', action.label);
+        button.type = 'button';
+        button.addEventListener('click', () => { action.run(); drawPanel(); });
+        actions.append(button);
+      }
+      nodes.push(actions);
+      panel.replaceChildren(...nodes);
+      panel.hidden = false;
+    }
+    // The grid from the keyboard: arrow keys move among the slots, Enter opens the panel, the menu key its menu
+    function setActive(index) {
+      state.active = Math.max(0, Math.min(state.cells.length - 1, index));
+      const step = shape().slot + shape().gap;
+      const top = PAD + Math.floor(state.active / columns) * step;
+      if (top - PAD < grid.scrollTop) grid.scrollTop = top - PAD;
+      else if (top + shape().slot + PAD > grid.scrollTop + grid.clientHeight) grid.scrollTop = top + shape().slot + PAD - grid.clientHeight;
+      paint();
+    }
+    function gridKey(event) {
+      const count = state.cells.length;
+      if (!count) return;
+      const step = shape().slot + shape().gap;
+      const page = Math.max(1, Math.floor(grid.clientHeight / step)) * columns;
+      const at = state.active < 0 ? Math.floor(grid.scrollTop / step) * columns : state.active;
+      const moves = {ArrowRight: at + 1, ArrowLeft: at - 1, ArrowDown: at + columns, ArrowUp: at - columns, PageDown: at + page, PageUp: at - page, Home: 0, End: count - 1};
+      if (event.key in moves) {
+        event.preventDefault();
+        setActive(state.active < 0 ? at : moves[event.key]);
+      } else if ((event.key === 'Enter' || event.key === ' ') && state.active >= 0) {
+        event.preventDefault();
+        openPanel(state.cells[state.active]);
+      } else if (event.key === 'Escape' && panelCell) {
+        event.preventDefault();
+        closePanel();
+      } else if ((event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) && state.active >= 0) {
+        event.preventDefault();
+        const box = pool.find(slot => !slot.hidden && slot.dataset.index === String(state.active))?.getBoundingClientRect();
+        if (box) itemMenu({preventDefault() {}, clientX: box.left + box.width / 2, clientY: box.bottom}, state.cells[state.active]);
+      }
+    }
+    // Large slots, small slots or a list. The first item in view stays in view.
+    function setLayout(name, remember = true) {
+      if (!LAYOUTS[name]) return;
+      const before = shape().slot + shape().gap;
+      const firstRow = hasDom ? Math.floor(grid.scrollTop / before) * columns : 0;
+      state.layout = name;
+      if (remember && storage) storage.set({bankLayout: name}).catch(() => {});
+      if (!hasDom) return;
+      grid.classList.toggle('is-compact', name === 'compact');
+      grid.classList.toggle('is-list', name === 'list');
+      for (const button of root.querySelectorAll('[data-bank-layout]')) button.setAttribute('aria-pressed', String(button.dataset.bankLayout === name));
+      layout();
+      grid.scrollTop = Math.floor(firstRow / columns) * (shape().slot + shape().gap);
+      paint();
     }
 
     // The Favourites tab: favourites in a row of slots like the bank's, then a table of where they are.
@@ -870,7 +1198,7 @@ const GBBank = (() => {
         if (!row.total) slot.classList.add('bank-excluded');
         return slot;
       }));
-      if (!favouriteList.length) gridArea.append(make('p', 'bank-empty', 'No favourites yet. Right-click an item on the Bank tab and choose Add to favourites.'));
+      if (!favouriteList.length) gridArea.append(make('p', 'bank-empty', 'No favourites yet. Right-click an item on the Bank page and choose Add to favourites.'));
       gridArea.cells = favouriteList.map(row => ({key: row.key, id: row.key, name: row.name, icon: row.icon, type: row.places[0]?.type || typeOf(row.key, row.icon),
         gear: null, stats: [], tip: row.places[0]?.tip || null, color: row.places[0]?.color || '', quality: row.places[0]?.quality || 0, bound: false, total: row.total, places: row.places, mixed: false}));
       const missing = favouriteList.filter(row => row.icon && !icons.has(row.icon)).map(row => row.icon);
@@ -888,7 +1216,7 @@ const GBBank = (() => {
       }).join('');
     }
 
-    // The Bank tab's own list of characters: it picks the page's selection, grouped by server, with a search for thousands.
+    // The Bank's own list of characters: it ticks who the Bank shows, grouped by server, with a search for thousands.
     function renderPicker() {
       const list = el('bank-character-list');
       const details = el('bank-characters-menu');
@@ -898,16 +1226,16 @@ const GBBank = (() => {
       const shown = state.characters.filter(character => roster.shows(character) && (!wanted || character.name.toLowerCase().includes(wanted)));
       const groups = new Map();
       for (const character of shown) {
-        const server = character.shownServer || 'Server unknown';
+        const server = character.shownServer || NO_SERVER;
         if (!groups.has(server)) groups.set(server, []);
         groups.get(server).push(character);
       }
       const parts = [];
       for (const [server, members] of [...groups.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))) {
         parts.push(`<div class="picker-server">${escapeHtml(server)} <span class="hint">${formatNumber(members.length)}</span></div>`);
-        // The selected ones first, so they're easy to find and untick
-        for (const character of members.slice().sort((a, b) => Number(roster.isSelected(b.key)) - Number(roster.isSelected(a.key)) || a.name.localeCompare(b.name)).slice(0, 2000)) {
-          parts.push(`<div class="bank-character${roster.isSelected(character.key) ? ' is-selected' : ''}" data-char="${escapeHtml(character.key)}"><span class="tick" aria-hidden="true"></span><span class="bank-name">${escapeHtml(character.name)}</span><span class="bank-detail">${escapeHtml(`${character.class || 'Level'} ${character.level || '?'} · ${formatNumber(character.gold)} gold`)}</span></div>`);
+        // The ticked ones first, so they're easy to find and untick
+        for (const character of members.slice().sort((a, b) => Number(roster.inScope(b.key)) - Number(roster.inScope(a.key)) || a.name.localeCompare(b.name)).slice(0, 2000)) {
+          parts.push(`<div class="bank-character${roster.inScope(character.key) ? ' is-selected' : ''}" role="checkbox" tabindex="0" aria-checked="${roster.inScope(character.key)}" data-scope-char="${escapeHtml(character.key)}" data-char-tip="${escapeHtml(character.key)}"><span class="tick" aria-hidden="true"></span><span class="bank-name">${escapeHtml(character.name)}</span><span class="bank-detail">${escapeHtml(`${character.class || 'Level'} ${character.level || '?'} · ${formatNumber(character.gold)} gold`)}</span></div>`);
         }
       }
       if (!parts.length) parts.push('<p class="hint">No character matches.</p>');
@@ -917,8 +1245,12 @@ const GBBank = (() => {
       const summary = el('bank-character-summary');
       if (!summary || !roster) return;
       const shown = state.characters.filter(character => roster.shows(character)).length;
+      const inScope = roster.scoped() ? roster.inScopeShown().length : 0;
+      summary.textContent = inScope ? `${formatNumber(inScope)} of ${formatNumber(shown)} characters` : `All characters (${formatNumber(shown)})`;
+      const use = el('bank-select-use');
       const selected = roster.selected().length;
-      summary.textContent = selected ? `${formatNumber(selected)} selected of ${formatNumber(shown)} characters` : `All characters (${formatNumber(shown)})`;
+      use.hidden = !selected;
+      use.textContent = `Use my selection (${formatNumber(selected)})`;
     }
 
     // A big file comes in parts, and the local host says how long the whole of it is. When it starts with the same
@@ -989,6 +1321,11 @@ const GBBank = (() => {
       el('bank-made').textContent = made ? `Data from ${made}` : 'No saved data yet: press Update now after logging out of a character.';
       if (roster) roster.setCharacters(list);
       renderGrid();
+      // The panel's item, in the new data, if it's still there
+      if (panelCell) {
+        panelCell = state.cells.find(cell => cell.key === panelCell.key) || null;
+        drawPanel();
+      }
       renderExclusions();
       renderStacking();
       renderSummary();
@@ -999,6 +1336,7 @@ const GBBank = (() => {
     async function update() {
       const button = el('bank-update');
       button.disabled = true;
+      button.setAttribute?.('aria-busy', 'true');
       status('Reading your save files…');
       try {
         const response = await send({type: 'bank-command', command: 'update'});
@@ -1008,6 +1346,7 @@ const GBBank = (() => {
         status(`Could not update: ${error.message || error}`);
       } finally {
         button.disabled = false;
+        button.removeAttribute?.('aria-busy');
       }
     }
 
@@ -1029,10 +1368,32 @@ const GBBank = (() => {
       else rules.types.delete(box.dataset.stackType);
       settingsChanged();
     }));
-    el('bank-select-clear')?.addEventListener('click', () => roster?.clearSelection());
+    el('bank-reset-filters').addEventListener('click', resetFilters);
+    el('coverage-login-review').addEventListener('click', () => options.review?.('login'));
+    el('coverage-bank-review').addEventListener('click', () => options.review?.('bank'));
+    el('bank-select-clear')?.addEventListener('click', () => roster?.clearScope());
+    el('bank-select-use')?.addEventListener('click', () => roster?.useSelection());
     el('bank-select-shown')?.addEventListener('click', () => {
       const wanted = (el('bank-character-find')?.value || '').trim().toLowerCase();
-      roster?.setSelection([...roster.selection, ...state.characters.filter(character => roster.shows(character) && (!wanted || character.name.toLowerCase().includes(wanted))).map(character => character.key)]);
+      roster?.setScope([...roster.scope, ...state.characters.filter(character => roster.shows(character) && (!wanted || character.name.toLowerCase().includes(wanted))).map(character => character.key)]);
+    });
+    // Ticks in the Bank's list change what the Bank shows at once: Shift-click takes a range
+    const pickerKeys = () => [...el('bank-character-list').querySelectorAll('[data-scope-char]')].map(row => row.dataset.scopeChar);
+    function tickCharacter(row, range) {
+      if (range) roster?.scopeRange(pickerKeys(), row.dataset.scopeChar);
+      else roster?.toggleScope(row.dataset.scopeChar);
+    }
+    el('bank-character-list')?.addEventListener('click', event => {
+      const row = event.target?.closest?.('[data-scope-char]');
+      if (!row) return;
+      tickCharacter(row, event.shiftKey);
+      if (event.shiftKey) window.getSelection?.()?.removeAllRanges?.();
+    });
+    el('bank-character-list')?.addEventListener('keydown', event => {
+      const row = event.target?.closest?.('[data-scope-char]');
+      if (!row || (event.key !== ' ' && event.key !== 'Enter')) return;
+      event.preventDefault();
+      tickCharacter(row, event.shiftKey);
     });
     el('bank-character-find')?.addEventListener('input', renderPicker);
     el('bank-characters-menu')?.addEventListener('toggle', renderPicker);
@@ -1044,6 +1405,15 @@ const GBBank = (() => {
         return slot && slot.dataset.index !== undefined ? state.cells[Number(slot.dataset.index)] : null;
       };
       let hovered = null;
+      grid.addEventListener('click', event => {
+        const cell = cellAt(event.target);
+        if (!cell) return;
+        state.active = Number(event.target.closest('.bank-slot').dataset.index);
+        if (sameCell(panelCell, cell)) closePanel();
+        else openPanel(cell);
+      });
+      grid.addEventListener('keydown', gridKey);
+      for (const button of root.querySelectorAll('[data-bank-layout]')) button.addEventListener('click', () => setLayout(button.dataset.bankLayout));
       grid.addEventListener('mouseover', event => {
         const cell = cellAt(event.target);
         if (cell === hovered) return;
@@ -1088,16 +1458,21 @@ const GBBank = (() => {
     }
     if (roster) {
       roster.onChange(what => {
-        // Names, the hover card's checkmarks and the order on the Gameforge accounts tab don't change this tab
-        if (what !== 'selection' && what !== 'view') return;
+        // Names, the hover card's checkmarks and the order on the Gameforge accounts page don't change this page
+        if (what !== 'selection' && what !== 'view' && what !== 'scope') return;
         renderSummary();
+        // Selecting characters is only marks: the Bank waits to be told, through Use in Bank
         if (what === 'selection') {
-          const list = el('bank-character-list');
-          list?.querySelectorAll?.('[data-char]')?.forEach(row => row.classList.toggle('is-selected', roster.isSelected(row.dataset.char)));
-          // The grid only follows the selection while that's on, and once more when it stops
-          const now = selecting();
-          if (now || wasSelecting) scheduleGrid();
-          wasSelecting = now;
+          if (panelCell) drawPanel();
+          return;
+        }
+        if (what === 'scope') {
+          el('bank-character-list')?.querySelectorAll?.('[data-scope-char]')?.forEach(row => {
+            const ticked = roster.inScope(row.dataset.scopeChar);
+            row.classList.toggle('is-selected', ticked);
+            row.setAttribute('aria-checked', String(ticked));
+          });
+          scheduleGrid();
           return;
         }
         renderPicker();
@@ -1106,7 +1481,8 @@ const GBBank = (() => {
       });
     }
     if (storage) {
-      storage.get(['bankExclusions', 'bankRules']).then(({bankExclusions: saved, bankRules: kept}) => {
+      storage.get(['bankExclusions', 'bankRules', 'bankLayout']).then(({bankExclusions: saved, bankRules: kept, bankLayout}) => {
+        setLayout(bankLayout || 'grid', false);
         if (saved) {
           settings.excluded = new Set(saved.excluded || []);
           settings.whitelist = new Set(saved.whitelist || []);
@@ -1123,10 +1499,11 @@ const GBBank = (() => {
         renderStacking();
         renderGrid();
         renderFavourites();
+        if (options.favouritesChanged) options.favouritesChanged(rules.favourites.size);
       }).catch(() => {});
     }
     return {
-      reload, update, renderGrid, renderFavourites,
+      reload, update, renderGrid, renderFavourites, closePanel,
       // The same characters prepared again: a server set by hand moves them
       reprepare() { if (state.characters.length) apply(state.characters, state.made); },
       // The Bank tab was opened: draw what changed while it was hidden
@@ -1141,6 +1518,6 @@ const GBBank = (() => {
     };
   }
   return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, DEFAULT_RULES,
-    formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies,
-    rosterRows, renderRoster, statTable, renderStats, favouriteRows, groupedTable, escapeHtml, formatNumber};
+    formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
+    rosterRows, renderRoster, statTable, renderStats, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, transferStones, transferStonesText, bankKnown};
 })();
