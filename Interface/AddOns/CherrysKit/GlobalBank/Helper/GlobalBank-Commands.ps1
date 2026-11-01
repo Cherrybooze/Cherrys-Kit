@@ -540,7 +540,7 @@ function Show-Character([string]$name) {
     if ($daily) { $pairs.Add((New-GBPair 'Daily login' $daily.text $daily.tone)) }
     if ($pairs.Count) { Add-GBStatus @($pairs.ToArray()) }
     foreach ($section in @(@('Bag', $c.Bag, $c.BagSlots, $true), @('Bank', $c.Bank, $c.BankSlots, $c.BankSeen))) {
-        if (-not $section[3]) { Add-GBMessage "$($section[0]) not recorded: open the bank once on this character." 'warn'; continue }
+        if (-not $section[3]) { Add-GBMessage "$($section[0]) not recorded: log in once on this character." 'warn'; continue }
         $rows = New-Object 'System.Collections.Generic.List[object]'
         foreach ($g in (Group-GBItems $section[1])) { $rows.Add(@((Format-GBGold $g.Count), [string]$g.Name)) }
         Add-GBTable @(@{ label = 'QTY'; numeric = $true }, @{ label = 'ITEM'; wrap = $true }) $rows.ToArray() -title "$($section[0]) ($($section[1].Count) of $($section[2]) slots used):" -caption "$($section[0]) contents"
@@ -774,7 +774,7 @@ function Get-GBCurrentHelperState {
             since = $(if ($feed) { $feed.startedAt } else { $null }); uptimeSeconds = [int64]((Get-Date) - $script:StartedAt).TotalSeconds
             characters = $chars.Count; gold = (Get-GBGoldTotal $chars); snapshot = $(try { Format-GBUtc (Get-Item -LiteralPath $json).LastWriteTimeUtc } catch { $null })
             lastScan = $(if ($feed) { $feed.lastScan } else { $null }); heartbeatText = [bool]$script:ConsoleHeartbeat; watching = $true
-            state = $(if ($feed) { $feed.state } else { 'watching' }); bridged = $true }
+            state = $(if ($feed -and $feed.state -ne 'stopping') { $feed.state } else { 'watching' }); bridged = $true }
     }
     return Get-GBHelperState $data
 }
