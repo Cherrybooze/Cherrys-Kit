@@ -27,7 +27,7 @@ Cherry's Kit combines original addons, rewrites and fixes to older favourites in
 - **Global Bank 1.5.7** has a refreshed in-game window: server tabs, characters grouped by account, and a search that lights up the matching bag and bank slots.
 - **Your macros and addon settings on the Global Bank page** (Global Bank 1.5.7, extension 1.2.5): a macro library with groups and a search, read from your characters' save folders so nobody has to log in, addon settings you can put back, newest and day-old backups, and an **Import** button in the game's macro window (Cherry's Info 1.0.3). Your macros stay on your PC.
 - **zBag 5.07-ck18**: type a stat name such as *stamina* in the bag or bank search and every item with that stat lights up.
-- **Cherry's Chat 0.11.2**: emoji typed with the Windows emoji panel are joined back together for Say bubbles, unknown ones go out as `?`, and `/cchat bubbletest` shows what was sent.
+- **Cherry's Chat 0.11.3**: emoji typed with the Windows emoji panel are joined back together for Say bubbles, unknown ones go out as `?`, and `/cchat bubbletest` shows what was sent.
 - **rom weakauras 0.9.32**: icons from the Present buff and debuff templates show stack counts.
 - **Lighter and smaller.** Cherry's Grid 1.1.6 makes next to no garbage while drawing: in a simulated 36-member raid, about 580 KB of new memory a second fell to almost nothing. The XML files of Cherry's Grid, Cherry's Chat, zBag and Global Bank went from 598, 401, 229 and 561 KB to 105, 70, 123 and 113 KB, with the same frames, so the game has less to read at login.
 - **Global Bank 1.4.16** keeps same-named characters on different servers apart, on its page, in its window and on the character screen.
