@@ -11,8 +11,8 @@ const GBAccounts = (() => {
   const PART = 300000;
   const FULL_CAP = 999999999;
   const HALF_CAP = 500000000;
-  // Nothing is plain, the rest climbs from a dark green to a light one, and only a full cap is gold.
-  const NONE = [22, 35, 48], LOW = [35, 58, 51], HALF = [74, 117, 96], HIGH = [140, 168, 120], FULL = [221, 189, 116];
+  // Red at no gold, orange at half a cap, bright green at a full cap
+  const RED = [198, 40, 40], ORANGE = [245, 124, 0], GREEN = [0, 230, 64];
   const NO_SERVER = 'Unknown server';
   const NO_ACCOUNT = 'No account';
   const MASK = '***';
@@ -61,13 +61,10 @@ const GBAccounts = (() => {
   function heatColor(gold) {
     const amount = Math.max(0, Math.min(FULL_CAP, Number(gold) || 0));
     const kind = amount <= 0 ? 'none' : amount >= FULL_CAP ? 'full' : 'some';
-    let rgb = kind === 'none' ? NONE : FULL;
-    if (kind === 'some') {
-      const [from, to, part] = amount <= HALF_CAP ? [LOW, HALF, amount / HALF_CAP] : [HALF, HIGH, (amount - HALF_CAP) / (FULL_CAP - HALF_CAP)];
-      rgb = from.map((value, i) => Math.round(value + (to[i] - value) * part));
-    }
+    const [from, to, part] = amount <= HALF_CAP ? [RED, ORANGE, amount / HALF_CAP] : [ORANGE, GREEN, (amount - HALF_CAP) / (FULL_CAP - HALF_CAP)];
+    const rgb = from.map((value, i) => Math.round(value + (to[i] - value) * part));
     const light = rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 110;
-    return {rgb, kind, css: `rgb(${rgb.join(',')})`, text: light ? '#14100a' : kind === 'none' ? '#b8c8da' : '#e8f1ec'};
+    return {rgb, kind, css: `rgb(${rgb.join(',')})`, text: light ? '#101820' : '#ffffff'};
   }
   const linkKey = name => String(name).toLowerCase();
   // "Aynara (PvE)", as the shop writes it, and "Aynara", as the game does, are the same server.
@@ -233,6 +230,7 @@ const GBAccounts = (() => {
   }
   const number = value => Number(value || 0).toLocaleString('en-US');
   const shortGold = value => (typeof GBBank !== 'undefined' ? GBBank.formatCompact(value) : number(value));
+  const tinyGold = value => (typeof GBBank !== 'undefined' ? GBBank.formatTiny(value) : number(value));
 
   // options: {shows(character): on the page's region and servers, visible(tab): whether that tab is open,
   // isSelected(key), selectKeys(keys): all of them, or none when all are selected already, addKeys(keys),
@@ -422,22 +420,26 @@ const GBAccounts = (() => {
     function renderHeat() {
       heatDirty = false;
       // The page's hover card, click and right-click work from data-char, for every cell at once
-      const cellFor = cell => {
+      const cellFor = (cell, server) => {
         const color = heatColor(cell.gold);
-        const node = make('div', 'heat-cell' + (color.kind === 'full' ? ' is-max' : ''), cell.name);
-        node.append(make('b', '', shortGold(cell.gold)));
+        // Under its own server a name needs no "(Server)" after it
+        const name = cell.name.endsWith(` (${server})`) ? cell.name.slice(0, -server.length - 3) : cell.name;
+        const node = make('div', 'heat-cell');
+        node.append(make('span', 'heat-name', name), make('b', '', color.kind === 'full' ? 'MAX' : tinyGold(cell.gold)));
         node.style.background = color.css;
         node.style.color = color.text;
         node.setAttribute('aria-label', `${cell.name}, ${number(cell.gold)} gold`);
         if (cell.key) node.dataset.char = cell.key;
         return node;
       };
-      const block = (title, cells) => {
-        const box = make('div', 'heat-group');
-        box.append(make('h3', '', title));
-        const list = make('div', 'heat-cells');
-        list.append(...cells.map(cellFor));
-        box.append(list);
+      // An account stays in one piece unless it's longer than a login screen's list
+      const block = (title, cells, server) => {
+        const box = make('div', 'heat-group' + (cells.length > 8 ? ' is-long' : ''));
+        const shown = title.replace(/, not linked$/, '');
+        const head = make('h3', '', shown);
+        // While the accounts are locked, nobody can say a character isn't linked
+        head.title = !fileKey && sealedFile ? shown : title;
+        box.append(head, ...cells.map(cell => cellFor(cell, server)));
         return box;
       };
       const columns = heatColumns(characters.filter(shows), state, !fileKey && sealedFile ? 'Accounts locked' : NO_ACCOUNT, options.romName || null);
@@ -446,20 +448,22 @@ const GBAccounts = (() => {
       const total = byId('heat-total');
       total.textContent = `${shortGold(allGold)} gold`;
       total.title = `${number(allGold)} gold`;
-      total.append(make('span', 'soft-count', `${number(allCaps)} full caps`));
+      total.append(make('span', 'soft-count', `${number(allCaps)} full ${allCaps === 1 ? 'cap' : 'caps'}`));
       byId('heat-view').replaceChildren(...columns.map(column => {
         const node = make('section', 'heat-column');
         const count = column.fullCaps.length + column.groups.reduce((sum, group) => sum + group.characters.length, 0);
+        // Servers share the width by how many lines they take, so they come out about the same height
+        const lines = count + column.groups.length + (column.fullCaps.length ? 1 : 0);
+        node.style.flex = `${lines} 1 ${Math.max(170, lines * 5)}px`;
         const head = make('div', 'heat-column-head');
-        const title = make('div');
-        title.append(make('h2', '', column.server), make('div', 'heat-column-sub', `${number(count)} characters`));
-        const balance = make('div', 'heat-balance', shortGold(column.total));
-        balance.title = `${number(column.total)} gold`;
-        balance.append(make('small', '', `${number(column.fullCaps.length)} full caps`));
-        head.append(title, balance);
-        node.append(head);
-        if (column.fullCaps.length) node.append(block(`Full caps (${column.fullCaps.length})`, column.fullCaps));
-        for (const group of column.groups) node.append(block(group.account, group.characters));
+        head.append(make('h2', '', column.server), make('span', 'heat-column-sub', `${number(count)} ${count === 1 ? 'character' : 'characters'}`));
+        const balance = make('span', 'heat-balance', shortGold(column.total));
+        balance.title = `${number(column.total)} gold, ${number(column.fullCaps.length)} full ${column.fullCaps.length === 1 ? 'cap' : 'caps'}`;
+        head.append(balance);
+        const flow = make('div', 'heat-flow');
+        if (column.fullCaps.length) flow.append(block(`Full caps (${column.fullCaps.length})`, column.fullCaps, column.server));
+        for (const group of column.groups) flow.append(block(group.account, group.characters, column.server));
+        node.append(head, flow);
         return node;
       }));
       if (!columns.length) byId('heat-view').append(make('p', 'hint', characters.length ? 'No characters on the servers ticked at the top.' : 'No characters saved yet.'));
