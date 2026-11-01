@@ -114,6 +114,26 @@ class GlobalBankOnLoginScreenTest(unittest.TestCase):
         lua.execute(self.FILES)
         return lua
 
+    def test_the_same_name_on_two_servers_keeps_its_own_gold(self):
+        lua = self.screen()
+        lua.execute("""
+          FILES['interface/GlobalBankHelper/GlobalBankDatabase.lua'] = function()
+            GlobalBank_Import = {
+              {saved = 'x', s = 'GB1~Same~Rogue~1~111~60~0~0~a`S~Server'},
+              {saved = 'y', s = 'GB1~Same~Rogue~1~222~60~0~0~b`S~Elsewhere'},
+              {saved = 'z', s = 'GB1~Away~Rogue~1~333~60~0~0~c`S~Elsewhere'}}
+          end
+          login.globalbank.read()
+        """)
+        self.assertEqual(lua.eval("login.globalbank.character('same').gold"), 111)
+        self.assertFalse(lua.eval("login.globalbank.character('same').unsure"))
+        self.assertIsNone(lua.eval("login.globalbank.character('away')"))
+
+    def test_one_saved_without_a_server_says_it_is_unsure(self):
+        lua = self.screen()
+        lua.execute('login.globalbank.read()')
+        self.assertTrue(lua.eval("login.globalbank.character('alpha').unsure"))
+
     def test_reads_gold_and_the_saved_time(self):
         lua = self.screen()
         self.assertTrue(lua.eval("login.globalbank.read()"))
@@ -132,7 +152,7 @@ class GlobalBankOnLoginScreenTest(unittest.TestCase):
           login.charselect.updateCharacterList()
           rows = login.charselect.charactersCallback()
         ''')
-        self.assertEqual(lua.eval("rows[1][3].text"), "1,234,567 gold\n2026-10-28 15:07")
+        self.assertEqual(lua.eval("rows[1][3].text"), "1,234,567 gold ?\n2026-10-28 15:07")
         self.assertEqual(lua.eval("rows[2][3]"), "")
         lua.execute("FILES = {}; login.charselect.goldColumn = login.globalbank.read(); login.charselect.updateCharacterList(); rows = login.charselect.charactersCallback()")
         self.assertIsNone(lua.eval("rows[1][3]"))
@@ -294,7 +314,7 @@ class SavingHelperTest(unittest.TestCase):
         lua = LuaRuntime()
         lua.execute("registered = {}; function SaveVariables(name) registered[name] = true end")
         lua.execute(before)
-        run_file(lua, "AddOns/CherrysLoginxmlHook/CherrysLoginxmlHook.lua")
+        run_file(lua, "AddOns/LogNextChar/LoginScreen.lua")
         return lua
 
     def test_registers_the_settings(self):
@@ -303,25 +323,25 @@ class SavingHelperTest(unittest.TestCase):
     def test_login_screen_changes_go_back_over_the_saved_copy(self):
         lua = self.helper("CherrysLoginxml_Live = {values = {character_sort = true}}")
         lua.execute('CherrysLoginxml_Settings = {character_sort = false, debug = true}')
-        lua.execute('CherrysLoginxml.OnEvent("VARIABLES_LOADED")')
+        lua.execute('LogNextChar.AfterSavedVariables()')
         self.assertTrue(lua.eval("CherrysLoginxml_Settings.character_sort"))
         self.assertTrue(lua.eval("CherrysLoginxml_Settings.debug"))
 
     def test_first_save_has_no_copy_on_disk(self):
         lua = self.helper("CherrysLoginxml_Live = {values = {character_sort = true}}")
-        lua.execute('CherrysLoginxml.OnEvent("VARIABLES_LOADED")')
+        lua.execute('LogNextChar.AfterSavedVariables()')
         self.assertTrue(lua.eval("CherrysLoginxml_Settings.character_sort"))
 
     def test_use_config_clears_the_saved_copy(self):
         lua = self.helper("CherrysLoginxml_Live = {values = {}, reset = true}")
         lua.execute('CherrysLoginxml_Settings = {debug = true}')
-        lua.execute('CherrysLoginxml.OnEvent("VARIABLES_LOADED")')
+        lua.execute('LogNextChar.AfterSavedVariables()')
         self.assertIsNone(lua.eval("CherrysLoginxml_Settings.debug"))
 
     def test_nothing_changed_keeps_the_saved_copy(self):
         lua = self.helper("")
         lua.execute('CherrysLoginxml_Settings = {debug = true}')
-        lua.execute('CherrysLoginxml.OnEvent("VARIABLES_LOADED")')
+        lua.execute('LogNextChar.AfterSavedVariables()')
         self.assertTrue(lua.eval("CherrysLoginxml_Settings.debug"))
 
 
@@ -429,19 +449,24 @@ class LoginScreenNoticeTest(unittest.TestCase):
         lua.execute("""
           said = {}
           DEFAULT_CHAT_FRAME = {AddMessage = function(self, text) said[#said + 1] = text end}
+          LogNextChar = {version = "9.9"}
         """)
         lua.execute(before)
-        run_file(lua, "AddOns/CherrysLoginxmlHook/CherrysLoginxmlHook.lua")
-        lua.execute('CherrysLoginxml.OnEvent("VARIABLES_LOADED")')
+        run_file(lua, "AddOns/LogNextChar/LoginScreen.lua")
+        lua.execute('LogNextChar.AfterSavedVariables()')
         return lua
 
     def said(self, lua):
         return [lua.eval(f"said[{i + 1}]") for i in range(lua.eval("#said"))]
 
     def test_quiet_with_the_matching_login_screen(self):
-        with open(os.path.join(ROOT, "AddOns/CherrysLoginxmlHook/CherrysLoginxmlHook.lua"), encoding="utf-8") as source:
+        self.assertEqual(self.said(self.helper('login = {version = "9.9"}')), [])
+
+    def test_the_login_screen_and_the_addon_ship_the_same_version(self):
+        with open(os.path.join(ROOT, "AddOns/LogNextChar/LogNextChar.lua"), encoding="utf-8") as source:
             version = re.search(r'me\.version = "([^"]+)"', source.read()).group(1)
-        self.assertEqual(self.said(self.helper(f'login = {{version = "{version}"}}')), [])
+        with open(os.path.join(ROOT, "loginxml/frames/login.lua"), encoding="utf-8") as source:
+            self.assertIn(f'version = "{version}"', source.read())
 
     def test_says_how_to_install_a_missing_login_screen(self):
         lines = self.said(self.helper("login = nil"))
@@ -455,19 +480,13 @@ class LoginScreenNoticeTest(unittest.TestCase):
 
     def test_says_it_once_a_session(self):
         lua = self.helper("login = nil")
-        lua.execute('CherrysLoginxml.OnEvent("VARIABLES_LOADED")')
+        lua.execute('LogNextChar.AfterSavedVariables()')
         self.assertEqual(len(self.said(lua)), 1)
 
     def test_turned_off_in_the_hub_it_stays_quiet(self):
-        lua = self.helper("login = nil; CherrysKit = {Register = function(entry) row = entry end, IsEnabled = function() return false end}")
+        lua = self.helper("login = nil; CherrysKit = {IsEnabled = function(folder) asked = folder; return false end}")
         self.assertEqual(self.said(lua), [])
-        self.assertEqual(lua.eval("row.folder"), "CherrysLoginxml")
-
-    def test_has_a_row_in_the_hub(self):
-        lua = self.helper('login = nil; CherrysKit = {Register = function(entry) row = entry end, IsEnabled = function() return true end}')
-        self.assertEqual(lua.eval("row.title"), "Cherry's Loginxml")
-        self.assertTrue(lua.eval("row.installed()"))
-        self.assertTrue(lua.eval("row.open()"))
+        self.assertEqual(lua.eval("asked"), "LogNextChar")
 
 
 if __name__ == "__main__":

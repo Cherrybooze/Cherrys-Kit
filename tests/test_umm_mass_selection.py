@@ -11,6 +11,19 @@ class MassSendFixture:
         self.h = support.MailShortcutsTests()
         self.h.setUp()
         self.lua, self.g = self.h.lua, self.h.g
+        if getattr(self, "recipient_lists", False):
+            # the real recipient columns; the friend and guild lists are the game's boundary
+            self.lua.execute('''
+              ummFriends={{"Pal",true},{"Buddy",false}};ummGuild={{"Guildmate",true}};ummInGuild=false
+              GetFriendCount=function() return #ummFriends end
+              GetFriendInfo=function(_,i) return ummFriends[i][1],nil,ummFriends[i][2] end
+              IsInGuild=function() return ummInGuild end
+              GetNumGuildMembers=function() return #ummGuild end
+              GetGuildRosterInfo=function(i) return ummGuild[i][1],nil,nil,nil,nil,nil,nil,nil,nil,nil,ummGuild[i][2] end
+            ''')
+            self.h.load("Library/Templates.lua")
+            self.h.load("Recipient/Recipient.lua")
+            self.h.load_xml("Recipient/Recipient.xml")
         self.lua.execute('''
           cursorX,cursorY,ctrl,shift=0,0,false,false
           GetCursorPos=function() return cursorX,cursorY end
@@ -30,7 +43,7 @@ class MassSendFixture:
           UMMNormalBar={Hide=function() end,Show=function() end,SetStatus=function() end}
           UMMMailManager={StopAutomation=function() end,Clear=function() end}
           UMMTooltip={SetHyperLink=function() end,Hide=function() end}
-          UMMFriends.GetColor=function() return "ffffff" end
+          UMMFriends.GetColor=UMMFriends.GetColor or function() return "ffffff" end
           HideUIPanel=function(frame) if frame then frame:Hide() end end
           UMMFixtureWidget("Frame","MailFrame","UIParent")
           UMMFixtureWidget("Frame","UMMFrameTab1Tools","UMMFrameTab1")
@@ -521,6 +534,70 @@ class MassRecentTests(MassSendFixture, unittest.TestCase):
         self.assertLessEqual(y + h, 600)
         self.g.UMMMenuSelectTab(2)
         self.assertEqual(self.g.UMMFrame.width, 805)
+
+
+class MassRecipientColumnTests(MassSendFixture, unittest.TestCase):
+    recipient_lists = True
+
+    def picker(self):
+        chooser = self.g.UMMFrameTab3Recipient
+        chooser.HideBody(chooser)
+        return self.g.UMMFrameTab3People
+
+    def column(self, name):
+        frame = getattr(self.g, "UMMFrameTab3People" + name)
+        names = []
+        for i in range(1, 29):
+            button = getattr(self.g, frame.name + "ListName" + str(i))
+            if button.visible:
+                names.append(getattr(self.g, button.name + "Name").text)
+        return frame, names
+
+    def test_history_comes_first_then_characters_then_friends_and_fills_to(self):
+        self.lua.execute('UMMConfig.Characters={"AltTwo"}')
+        self.h.send("Pal")
+        self.h.send("Stranger")
+        self.h.send("AltTwo")
+        self.mark(1, 7)
+        people = self.picker()
+        self.assertTrue(people.IsVisible(people))
+        history, names = self.column("History")
+        own, own_names = self.column("Own")
+        friends, friend_names = self.column("Friends")
+        self.assertEqual([f.anchor[4] for f in (history, own, friends)], [0, 145, 290])
+        self.assertIn("History", self.g.UMMFrameTab3PeopleHistoryHeaderTitle.text)
+        self.assertIn("Characters", self.g.UMMFrameTab3PeopleOwnHeaderTitle.text)
+        self.assertIn("Friends", self.g.UMMFrameTab3PeopleFriendsHeaderTitle.text)
+        # newest first, unsorted, and each name keeps its own list's colour
+        self.assertEqual(names, ["|cff" + self.g.UMMColor.Own + "AltTwo|r", "|cff" + self.g.UMMColor.Yellow + "Stranger|r",
+                                 "|cff" + self.g.UMMColor.Cyan + "Pal|r"])
+        self.assertEqual(len(own_names), 2)
+        self.assertEqual(len(friend_names), 2)
+        self.assertFalse(self.g.UMMFrameTab3PeopleGuildies.visible)
+        self.assertTrue(self.g.UMMFrameTab3Recent.visible, "without a guild the side panel stays")
+        self.h.script("UMMFrameTab3PeopleHistoryListName2")
+        self.assertEqual(self.g.UMMFrameTab3RecipientRecipient.text, "Stranger")
+        self.assertFalse(people.visible)
+        self.assertTrue(self.g.UMMFrameTab3Bags.visible)
+        self.assertEqual(self.marked(), {1, 7})
+
+    def test_guildies_take_the_recently_sent_spot_until_a_name_is_picked(self):
+        self.g.ummInGuild = True
+        self.h.send("Guildmate")
+        self.picker()
+        guild, names = self.column("Guildies")
+        self.assertTrue(guild.visible)
+        self.assertEqual(guild.anchor[4], 455)
+        self.assertFalse(self.g.UMMFrameTab3Recent.visible)
+        self.h.script("UMMFrameTab3PeopleGuildiesListName1")
+        self.assertEqual(self.g.UMMFrameTab3RecipientRecipient.text, "Guildmate")
+        self.assertTrue(self.g.UMMFrameTab3Recent.visible)
+
+    def test_empty_history_shows_an_empty_column(self):
+        self.picker()
+        history, names = self.column("History")
+        self.assertTrue(history.visible)
+        self.assertEqual(names, [])
 
 
 if __name__ == "__main__":

@@ -15,7 +15,11 @@ const GBAccounts = (() => {
   const NO_SERVER = 'Server unknown';
   const NO_ACCOUNT = 'No account';
   const MASK = '***';
-  const MENU_OWNERS = 6;
+  // Names one right-click menu lists (the rest are counted), and how long the pointer rests on another name
+  // before its logins replace the open ones
+  const MENU_OWNERS = 500;
+  const SIDE_DELAY = 150;
+  const collator = new Intl.Collator(undefined, {sensitivity: 'base', numeric: true});
 
   const toHex = bytes => Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
   const fromHex = text => Uint8Array.from(text.match(/../g), pair => parseInt(pair, 16));
@@ -87,9 +91,14 @@ const GBAccounts = (() => {
       while (parent.get(at) !== at) at = parent.get(at);
       return at;
     };
+    const everyone = new Set(characters.map(character => linkKey(character.name)));
     for (const character of characters) {
       const own = add(character.name);
-      for (const other of character.roster || []) parent.set(find(add(other)), find(own));
+      for (const other of character.roster || []) {
+        // A list only names characters on its own server
+        const scoped = `${other} (${ownServer(character)})`;
+        parent.set(find(add(everyone.has(linkKey(scoped)) ? scoped : other)), find(own));
+      }
     }
     const groups = new Map();
     for (const key of parent.keys()) {
@@ -122,6 +131,22 @@ const GBAccounts = (() => {
     const id = state.links[linkKey(name)];
     return id ? state.accounts.find(account => account.id === id) || null : null;
   }
+  // Links are kept by server and name once the server is known, so a name that turns up on a second server
+  // doesn't take the link with it. A link kept the older way, by the name the page showed, still counts. A server
+  // set by hand may be wrong, so those characters keep their links by name until they save their own.
+  function linkKeysOf(character) {
+    const keys = [];
+    if (character.key && character.shownServer && !character.manualServer) keys.push(linkKey(character.key));
+    keys.push(linkKey(character.name));
+    return keys;
+  }
+  function accountFor(state, character) {
+    for (const key of linkKeysOf(character)) {
+      const id = state.links[key];
+      if (id) return state.accounts.find(account => account.id === id) || null;
+    }
+    return null;
+  }
   // Links, or with no ID unlinks, and says how many changed.
   function setLinks(state, names, id) {
     let changed = 0;
@@ -133,6 +158,21 @@ const GBAccounts = (() => {
       changed++;
     }
     return changed;
+  }
+  // What's wrong with a Gameforge account's new name: empty, or another account's. '' when it's fine.
+  function nameProblem(state, id, name) {
+    const text = String(name || '').trim();
+    if (!state.accounts.some(account => account.id === id)) return 'That account is gone.';
+    if (!text) return 'Type a name first.';
+    if (text.length > 120) return 'That name is too long.';
+    if (state.accounts.some(account => account.id !== id && account.name.toLowerCase() === text.toLowerCase())) return `${text} is already on the list.`;
+    return '';
+  }
+  // Renames it when the name is fine, and says what's wrong otherwise
+  function renameAccount(state, id, name) {
+    const problem = nameProblem(state, id, name);
+    if (!problem) state.accounts.find(account => account.id === id).name = String(name).trim();
+    return problem;
   }
   function removeAccount(state, id) {
     state.accounts = state.accounts.filter(account => account.id !== id);
@@ -151,17 +191,19 @@ const GBAccounts = (() => {
     return {found: [...found], missing};
   }
   // A column for each server: its full caps pooled together, then the rest by account, richest first.
-  function heatColumns(characters, state, noAccount = NO_ACCOUNT) {
+  // romName(character): the name you gave its RoM account, for the ones not linked yet.
+  function heatColumns(characters, state, noAccount = NO_ACCOUNT, romName = null) {
     const servers = new Map();
     const known = accountGroups(characters);
     for (const character of characters) {
-      const server = serverOf(character, known);
+      const server = character.shownServer || serverOf(character, known);
       if (!servers.has(server)) servers.set(server, {server, total: 0, fullCaps: [], groups: new Map()});
       const column = servers.get(server);
       const gold = Number(character.gold) || 0;
       const group = known.of(character.name);
-      const account = accountOf(state, character.name)?.name || (group.names.length > 1 ? `${group.names[0]}'s account, not linked` : noAccount);
-      const cell = {name: String(character.name), gold, account, server};
+      const rom = romName ? romName(character) : '';
+      const account = accountFor(state, character)?.name || (rom ? `${rom}, not linked` : group.names.length > 1 ? `${group.names[0]}'s account, not linked` : noAccount);
+      const cell = {name: String(character.name), key: String(character.key || ''), gold, account, server};
       column.total += gold;
       if (gold >= FULL_CAP) column.fullCaps.push(cell);
       else {
@@ -178,7 +220,13 @@ const GBAccounts = (() => {
   }
   const number = value => Number(value || 0).toLocaleString('en-US');
 
-  function create(send) {
+  // options: {shows(character): on the page's region and servers, visible(tab): whether that tab is open,
+  // isSelected(key), selectKeys(keys): all of them, or none when all are selected already, addKeys(keys),
+  // clearSelection(): the page's one selection; listed(): names only a login screen listed, which can be linked
+  // before they save anything; romTitle(character) and romName(character): its RoM account's name to show, and the
+  // name you gave it; romFirst(): whether the RoM account comes before the character's name; linksChanged(): an
+  // account renamed or characters linked, so tables grouped by account are drawn again}
+  function create(send, options = {}) {
     const byId = id => document.getElementById(id);
     let state = emptyState();
     // Only while unlocked. The password itself is never held on to.
@@ -186,9 +234,18 @@ const GBAccounts = (() => {
     let key = null, sealedFile = null;
     let saving = Promise.resolve();
     let characters = [];
+    let byLabel = new Map();
     let reveal = false;
-    const ticked = new Set();
-    let lastTicked = null;
+    let linksDirty = true, heatDirty = true;
+    const shows = character => !options.shows || options.shows(character);
+    const isSelected = key => !!key && !!options.isSelected && options.isSelected(key);
+    const romOf = character => (options.romTitle ? options.romTitle(character) : '') || '';
+    const visible = tab => !options.visible || options.visible(tab);
+    const characterOf = name => byLabel.get(linkKey(name)) || null;
+    const accountOfName = name => {
+      const character = characterOf(name);
+      return character ? accountFor(state, character) : accountOf(state, name);
+    };
     const make = (tag, className, text) => {
       const node = document.createElement(tag);
       if (className) node.className = className;
@@ -203,17 +260,34 @@ const GBAccounts = (() => {
     };
     // Encrypted first, then to Chrome and to the file beside the helper's. Without the local host, Chrome's copy
     // and the backup button are what there is.
+    // Each copy is written on its own, so a full Chrome storage doesn't also stop the helper's copy.
     function save() {
       if (!fileKey) return saving;
       const snapshot = structuredClone(state);
       saving = saving.then(async () => {
         sealedFile = await seal(snapshot, fileKey, fileSalt, fileIterations);
-        await chrome.storage.local.set({[FILE_STORE]: sealedFile});
-        await send({type: 'gf-save', text: JSON.stringify(sealedFile)}).catch(() => {
-          byId('gf-status').textContent = 'Saved in Chrome. The helper\'s folder couldn\'t be reached, so use the backup button to move these to another PC.';
+        const failed = [];
+        await chrome.storage.local.set({[FILE_STORE]: sealedFile}).catch(error => { failed.push(`Chrome couldn't keep its copy (${error.message || error})`); });
+        await send({type: 'gf-save', text: JSON.stringify(sealedFile)}).catch(error => {
+          failed.push(`the helper's folder didn't take its copy (${error.message || error}), so use the backup button to move these to another PC`);
         });
+        if (failed.length === 2) byId('gf-status').textContent = `Could not save: ${failed.join('; and ')}.`;
+        else if (failed.length) byId('gf-status').textContent = `Saved, but ${failed[0]}.`;
       }).catch(error => { byId('gf-status').textContent = `Could not save: ${error.message || error}`; });
       return saving;
+    }
+    // Links kept by the name the page showed move to the character's server and name once that is known.
+    function settleLinks() {
+      if (!fileKey) return;
+      let moved = 0;
+      for (const character of characters) {
+        const keys = linkKeysOf(character);
+        if (keys.length < 2 || state.links[keys[0]] || !state.links[keys[1]]) continue;
+        state.links[keys[0]] = state.links[keys[1]];
+        delete state.links[keys[1]];
+        moved++;
+      }
+      if (moved) save();
     }
     async function readFile() {
       let text = '';
@@ -239,7 +313,6 @@ const GBAccounts = (() => {
       state = emptyState();
       reveal = false;
       byId('gf-reveal').checked = false;
-      ticked.clear();
       closeMenu();
       renderLock();
       renderAll();
@@ -249,8 +322,19 @@ const GBAccounts = (() => {
     }
 
     // The right-click menu stays open after copying, so the account name and then the password are two clicks.
+    // For several characters it stacks their names, and each one's logins open in a side menu next to its name.
+    let menuOwners = [], sideRow = null, sideTimer = 0;
+    function closeSide() {
+      clearTimeout(sideTimer);
+      if (sideRow) sideRow.classList.remove('is-open');
+      sideRow = null;
+      const side = byId('gf-side-menu');
+      side.hidden = true;
+      side.replaceChildren();
+    }
     function closeMenu() {
       byId('gf-menu').hidden = true;
+      closeSide();
     }
     function copyRow(label, text) {
       const row = button(label, async () => {
@@ -260,43 +344,74 @@ const GBAccounts = (() => {
       row.disabled = !text;
       return row;
     }
-    function ownerRows(menu, name, heading) {
-      const account = accountOf(state, name);
+    // owner: a character (saved, or only listed on a login screen) or the name the page shows it by
+    function ownerRows(menu, owner, heading) {
+      const name = typeof owner === 'string' ? owner : String(owner.name);
+      const account = typeof owner === 'string' ? accountOfName(owner) : accountFor(state, owner);
       if (heading) menu.append(make('strong', '', name));
-      menu.append(copyRow('Copy character name', name), copyRow('Copy Gameforge account name', account?.name || ''),
+      menu.append(copyRow('Copy character name', String(name).replace(/ \([^()]*\)$/, '')), copyRow('Copy Gameforge account name', account?.name || ''),
         copyRow('Copy password', account?.password || ''), copyRow('Copy secondary password', account?.secondary || ''));
       if (!account) menu.append(make('span', 'hint', fileKey ? 'Not linked to a Gameforge account yet.' : 'Unlock your Gameforge accounts to copy logins.'));
     }
-    function openMenu(event, extra, names) {
+    const ownerName = owner => typeof owner === 'string' ? owner : String(owner.name);
+    // Level with its name: to the right of the menu, or to the left when the window has no room there
+    function openSide(row, focus = false) {
+      clearTimeout(sideTimer);
+      const owner = menuOwners[Number(row.dataset.owner)];
+      if (owner === undefined) return;
+      const side = byId('gf-side-menu');
+      if (row !== sideRow) {
+        closeSide();
+        sideRow = row;
+        row.classList.add('is-open');
+        ownerRows(side, owner, true);
+        side.hidden = false;
+        const menuBox = byId('gf-menu').getBoundingClientRect(), rowBox = row.getBoundingClientRect();
+        const width = side.offsetWidth, height = side.offsetHeight;
+        side.style.left = (menuBox.right - 1 + width <= window.innerWidth - 8 ? menuBox.right - 1 : Math.max(4, menuBox.left - width + 1)) + 'px';
+        side.style.top = Math.max(4, Math.min(rowBox.top - 9, window.innerHeight - height - 8)) + 'px';
+      }
+      if (focus) side.querySelector('button:not(:disabled)')?.focus();
+    }
+    function nameList(owners) {
+      const list = make('div', 'gf-menu-names');
+      owners.forEach((owner, index) => {
+        const row = make('button', 'gf-menu-name');
+        row.type = 'button';
+        row.dataset.owner = String(index);
+        row.append(make('span', '', ownerName(owner)), make('span', 'gf-menu-more', '›'));
+        list.append(row);
+      });
+      return list;
+    }
+    // extra: rows above the logins, names: who to copy logins of, after: rows below them, each {label, run}
+    function openMenu(event, extra, names, after = []) {
       event.preventDefault();
+      closeSide();
       const menu = byId('gf-menu');
       menu.replaceChildren();
       for (const row of extra) menu.append(button(row.label, () => { closeMenu(); row.run(); }));
       const owners = [...new Set(names)];
-      for (const name of owners.slice(0, MENU_OWNERS)) ownerRows(menu, name, owners.length > 1 || extra.length > 0);
-      if (owners.length > MENU_OWNERS) menu.append(make('span', 'hint', `and ${owners.length - MENU_OWNERS} more`));
+      if (owners.length === 1) ownerRows(menu, owners[0], extra.length > 0);
+      menuOwners = owners.length > 1 ? owners.sort((a, b) => collator.compare(ownerName(a), ownerName(b))).slice(0, MENU_OWNERS) : [];
+      if (menuOwners.length) menu.append(nameList(menuOwners));
+      if (owners.length > MENU_OWNERS) menu.append(make('span', 'hint', `and ${number(owners.length - MENU_OWNERS)} more`));
+      if (after.length) menu.append(make('hr', 'gf-menu-line'));
+      for (const row of after) menu.append(button(row.label, () => { closeMenu(); row.run(); }));
       menu.hidden = false;
       menu.style.left = Math.max(4, Math.min(event.clientX, window.innerWidth - menu.offsetWidth - 8)) + 'px';
       menu.style.top = Math.max(4, Math.min(event.clientY, window.innerHeight - menu.offsetHeight - 8)) + 'px';
     }
 
     function renderHeat() {
-      const tip = byId('heat-tooltip');
+      heatDirty = false;
+      // The page's hover card, click and right-click work from data-char, for every cell at once
       const cellFor = cell => {
         const color = heatColor(cell.gold);
         const node = make('div', 'heat-cell', cell.name);
         node.style.background = color.css;
         node.style.color = color.text;
-        node.addEventListener('mouseenter', () => {
-          tip.replaceChildren(make('strong', '', cell.name), make('span', '', `${number(cell.gold)} gold`), make('span', 'hint', `${cell.account} · ${cell.server}`));
-          tip.hidden = false;
-        });
-        node.addEventListener('mousemove', event => {
-          tip.style.left = Math.min(event.clientX + 14, window.innerWidth - 260) + 'px';
-          tip.style.top = Math.min(event.clientY + 14, window.innerHeight - tip.offsetHeight - 8) + 'px';
-        });
-        node.addEventListener('mouseleave', () => { tip.hidden = true; });
-        node.addEventListener('contextmenu', event => { tip.hidden = true; openMenu(event, [], [cell.name]); });
+        if (cell.key) node.dataset.char = cell.key;
         return node;
       };
       const block = (title, cells) => {
@@ -307,7 +422,7 @@ const GBAccounts = (() => {
         box.append(list);
         return box;
       };
-      const columns = heatColumns(characters, state, !fileKey && sealedFile ? 'Accounts locked' : NO_ACCOUNT);
+      const columns = heatColumns(characters.filter(shows), state, !fileKey && sealedFile ? 'Accounts locked' : NO_ACCOUNT, options.romName || null);
       byId('heat-view').replaceChildren(...columns.map(column => {
         const node = make('section', 'heat-column');
         node.append(make('h2', '', column.server));
@@ -316,7 +431,7 @@ const GBAccounts = (() => {
         for (const group of column.groups) node.append(block(group.account, group.characters));
         return node;
       }));
-      if (!columns.length) byId('heat-view').append(make('p', 'hint', 'No characters saved yet.'));
+      if (!columns.length) byId('heat-view').append(make('p', 'hint', characters.length ? 'No characters on the servers ticked at the top.' : 'No characters saved yet.'));
     }
 
     function renderAccounts() {
@@ -346,18 +461,24 @@ const GBAccounts = (() => {
             return box;
           };
           const secretType = reveal ? 'text' : 'password';
+          // The name is what Copy Gameforge account name copies: the one you log in with
+          const name = field('text', account.name, 'Account name');
+          name.maxLength = 120;
           const password = field(secretType, account.password, 'Password');
           const secondary = field(secretType, account.secondary, 'Secondary password');
           const notes = field('text', account.notes, 'Notes');
           const set = button('Save', () => {
+            const problem = renameAccount(state, account.id, name.value);
+            if (problem) { byId('gf-status').textContent = problem; name.focus(); return; }
             account.password = password.value;
             account.secondary = secondary.value;
             account.notes = notes.value;
             save();
-            renderAccounts();
+            renderAll();
+            if (options.linksChanged) options.linksChanged();
           });
-          actions.replaceChildren(password, secondary, notes, set, button('Cancel', renderAccounts));
-          password.focus();
+          actions.replaceChildren(name, password, secondary, notes, set, button('Cancel', renderAccounts));
+          name.focus();
         });
         const remove = button('Delete', () => {
           if (!window.confirm(`Delete the Gameforge account ${account.name} and unlink its characters?`)) return;
@@ -379,90 +500,106 @@ const GBAccounts = (() => {
       if (state.accounts.some(account => account.id === chosen)) select.value = chosen;
     }
 
-    // Everyone on a login screen's list can be linked, whether or not they've saved anything here yet.
-    function linkable(known) {
-      const byName = new Map(characters.map(character => [linkKey(character.name), character]));
-      return known.groups.flatMap(group => group.names.map(name => ({...(byName.get(linkKey(name)) || {name, notSaved: true}), group})));
-    }
+    // Everyone a login screen listed can be linked, whether or not they've saved anything here yet.
+    const everyone = () => (options.listed ? characters.concat(options.listed()) : characters);
     function shownCharacters() {
       const text = byId('gf-filter').value.trim().toLowerCase();
       const unlinked = byId('gf-unlinked').checked;
-      const known = accountGroups(characters);
-      const wanted = linkable(known).filter(character => (!text || String(character.name).toLowerCase().includes(text)) && (!unlinked || !accountOf(state, character.name)));
-      // Accounts first, in their boxes, then everyone not known to share one
-      return [...wanted.filter(character => character.group.names.length > 1), ...wanted.filter(character => character.group.names.length < 2)];
+      return everyone().filter(character => shows(character)
+        && (!text || String(character.name).toLowerCase().includes(text) || romOf(character).toLowerCase().includes(text))
+        && (!unlinked || !accountFor(state, character)));
     }
+    // The selected characters this list can link: on the region and servers the page shows, whatever the filter
+    const picked = () => everyone().filter(character => isSelected(character.key) && shows(character));
+    let orphans = 0;
+    let boxKeys = [];
+    // One box for each Gameforge account on each server, then the characters not linked yet, by server. Each
+    // character shows its name and its RoM account, in the order the page's switch asks for.
     function renderLinks() {
+      linksDirty = false;
       const shown = shownCharacters();
-      const known = accountGroups(characters);
-      const rowFor = (character, index) => {
-        const row = make('label', 'gf-character');
-        const box = make('input');
-        box.type = 'checkbox';
-        box.checked = ticked.has(character.name);
-        // Shift-click ticks everything between this one and the last one clicked
-        box.addEventListener('click', event => {
-          const on = box.checked;
-          const from = event.shiftKey && lastTicked !== null ? Math.min(lastTicked, index) : index;
-          const to = event.shiftKey && lastTicked !== null ? Math.max(lastTicked, index) : index;
-          for (let i = from; i <= to; i++) {
-            if (on) ticked.add(shown[i].name);
-            else ticked.delete(shown[i].name);
-          }
-          lastTicked = index;
-          if (from !== to) renderLinks();
-          else showTicked();
-        });
-        const name = make('span', 'bank-name', character.name);
+      // Links that match nobody: a character renamed or deleted, or a name linked before it was on two servers
+      const used = new Set();
+      for (const character of everyone()) for (const key of linkKeysOf(character)) used.add(key);
+      orphans = Object.keys(state.links).filter(key => !used.has(key)).length;
+      const boxes = new Map();
+      for (const character of shown) {
+        const account = accountFor(state, character);
+        const server = character.shownServer || '';
+        const id = `${account ? account.id : ''}|${server.toLowerCase()}`;
+        if (!boxes.has(id)) boxes.set(id, {account, server, members: []});
+        boxes.get(id).members.push(character);
+      }
+      const romFirst = !!(options.romFirst && options.romFirst());
+      const first = character => (romFirst ? romOf(character) : String(character.name));
+      const second = character => (romFirst ? String(character.name) : romOf(character));
+      // Characters no login screen listed yet go after the others when the RoM account comes first
+      const byFirst = (a, b) => Number(!first(a)) - Number(!first(b)) || first(a).localeCompare(first(b)) || second(a).localeCompare(second(b));
+      const sorted = [...boxes.values()].sort((a, b) => Number(!a.account) - Number(!b.account)
+        || (a.account && b.account ? a.account.name.localeCompare(b.account.name) : 0)
+        || Number(!a.server) - Number(!b.server) || a.server.localeCompare(b.server));
+      boxKeys = [];
+      const rowFor = character => {
+        const row = make('div', 'gf-character' + (character.notSaved ? ' is-unsaved' : '') + (isSelected(character.key) ? ' is-selected' : ''));
+        const name = make('span', 'gf-name', String(character.name));
         const color = classColor(character);
         if (color) name.style.color = color;
-        const where = character.notSaved ? 'nothing saved yet' : serverOf(character, known);
-        row.append(box, name, make('span', 'bank-detail', `${where} · ${accountOf(state, character.name)?.name || NO_ACCOUNT}`));
+        const rom = make('span', 'gf-rom', romOf(character) || '—');
+        const parts = romFirst ? [rom, name] : [name, rom];
+        row.append(parts[0], make('span', 'gf-slash', ' / '), parts[1]);
+        // The page's hover card; a click selects, Shift-click a range
+        if (character.key) row.dataset.char = character.key;
         return row;
       };
-      const boxes = [];
-      let at = 0;
-      while (at < shown.length) {
-        const group = shown[at].group;
-        const together = group.names.length > 1;
-        const members = [];
-        while (at < shown.length && (together ? shown[at].group === group : shown[at].group.names.length < 2)) {
-          members.push(rowFor(shown[at], at));
-          at++;
-        }
-        const box = make('div', together ? 'gf-group' : 'gf-group gf-loose');
+      const nodes = sorted.map(box => {
+        const keys = box.members.map(character => character.key).filter(Boolean);
+        boxKeys.push(keys);
+        const node = make('div', box.account ? 'gf-group' : 'gf-group gf-loose');
         const head = make('div', 'gf-group-head');
-        head.append(make('span', '', together
-          ? `Same account: ${group.names.length} characters${group.server ? `, ${group.server}` : ''}`
-          : 'Not known to share an account yet. Logging in any character through Cherry\'s Loginxml groups its account.'));
-        if (together) {
-          const names = shown.filter(character => character.group === group).map(character => character.name);
-          head.append(button('Tick these', () => {
-            for (const member of names) ticked.add(member);
-            renderLinks();
-          }));
-        }
+        const title = make('span', 'gf-group-title');
+        title.append(make('b', '', box.account ? box.account.name : 'Not linked'), ` · ${box.server || NO_SERVER} · ${number(box.members.length)} characters`);
+        const pick = button('Select', () => { if (options.selectKeys) options.selectKeys(keys); });
+        pick.className = 'group-select';
+        head.append(title, pick);
         const rows = make('div', 'gf-group-rows');
-        rows.append(...members);
-        box.append(head, rows);
-        boxes.push(box);
+        rows.append(...box.members.sort(byFirst).map(rowFor));
+        node.append(head, rows);
+        return node;
+      });
+      if (!nodes.length) nodes.push(make('p', 'hint', everyone().length ? 'No character matches.' : 'No characters saved yet.'));
+      byId('gf-characters').replaceChildren(...nodes);
+      showSelected();
+    }
+    function showSelected() {
+      const shown = shownCharacters();
+      const chosen = shown.reduce((count, character) => count + Number(isSelected(character.key)), 0);
+      byId('gf-link-count').textContent = `${number(chosen)} selected of ${number(shown.length)} shown`
+        + (orphans ? ` · ${number(orphans)} links match no saved character (renamed, deleted, or the name is now on two servers): link those again` : '');
+    }
+    // By server and name where the server is known, and the older form taken away. list: characters, or the
+    // names the page shows them by.
+    function link(list, id) {
+      let changed = 0;
+      for (const item of list) {
+        const character = typeof item === 'string' ? characterOf(item) || {name: item} : item;
+        const keys = linkKeysOf(character);
+        const before = accountFor(state, character)?.id || null;
+        setLinks(state, keys, null);
+        if (id) setLinks(state, [keys[0]], id);
+        if (before !== (id || null)) changed++;
       }
-      byId('gf-characters').replaceChildren(...boxes);
-      showTicked();
-    }
-    function showTicked() {
-      byId('gf-link-count').textContent = `${number(ticked.size)} ticked of ${number(shownCharacters().length)} shown`;
-    }
-    function link(names, id) {
-      const changed = setLinks(state, names, id);
       save();
       byId('gf-status').textContent = `${number(changed)} characters ${id ? 'linked' : 'unlinked'}.`;
       renderAll();
+      if (changed && options.linksChanged) options.linksChanged();
+      return changed;
     }
+    // Only the open tab is drawn; the others when they're opened.
     function renderAll() {
       renderAccounts();
-      renderLinks();
-      renderHeat();
+      linksDirty = heatDirty = true;
+      if (visible('accounts')) renderLinks();
+      if (visible('heatmap')) renderHeat();
     }
 
     byId('gf-create').addEventListener('submit', async event => {
@@ -490,6 +627,7 @@ const GBAccounts = (() => {
       fileKey = trying;
       fileSalt = salt;
       fileIterations = sealedFile.iterations;
+      settleLinks();
     }
     byId('gf-unlock').addEventListener('submit', async event => {
       event.preventDefault();
@@ -589,20 +727,21 @@ const GBAccounts = (() => {
       byId('gf-new-password').type = byId('gf-new-secondary').type = reveal ? 'text' : 'password';
       renderAccounts();
     });
-    byId('gf-filter').addEventListener('input', () => { lastTicked = null; renderLinks(); });
-    byId('gf-unlinked').addEventListener('change', () => { lastTicked = null; renderLinks(); });
-    byId('gf-tick-shown').addEventListener('click', () => {
-      for (const character of shownCharacters()) ticked.add(character.name);
-      renderLinks();
-    });
-    byId('gf-tick-none').addEventListener('click', () => { ticked.clear(); renderLinks(); });
-    byId('gf-link').addEventListener('click', () => {
-      if (!byId('gf-link-account').value) { byId('gf-status').textContent = 'Add a Gameforge account first.'; return; }
-      link([...ticked], byId('gf-link-account').value);
-      ticked.clear();
-      renderLinks();
-    });
-    byId('gf-unlink').addEventListener('click', () => { link([...ticked], null); ticked.clear(); renderLinks(); });
+    byId('gf-filter').addEventListener('input', () => renderLinks());
+    byId('gf-unlinked').addEventListener('change', () => renderLinks());
+    byId('gf-select-shown').addEventListener('click', () => { if (options.addKeys) options.addKeys(shownCharacters().map(character => character.key).filter(Boolean)); });
+    byId('gf-select-none').addEventListener('click', () => { if (options.clearSelection) options.clearSelection(); });
+    // The page's selection, as on every tab. It's cleared after linking, so the next box starts from nothing.
+    for (const [id, linking] of [['gf-link', true], ['gf-unlink', false]]) {
+      byId(id).addEventListener('click', () => {
+        const account = byId('gf-link-account').value;
+        if (linking && !account) { byId('gf-status').textContent = 'Add a Gameforge account first.'; return; }
+        const list = picked();
+        if (!list.length) { byId('gf-status').textContent = 'Select characters first: click them, or a box\'s Select.'; return; }
+        link(list, linking ? account : null);
+        if (options.clearSelection) options.clearSelection();
+      });
+    }
     byId('gf-link-pasted').addEventListener('click', () => {
       if (!byId('gf-link-account').value) { byId('gf-status').textContent = 'Add a Gameforge account first.'; return; }
       const {found, missing} = matchNames(byId('gf-paste').value, characters);
@@ -610,7 +749,32 @@ const GBAccounts = (() => {
       byId('gf-paste').value = missing.join('\n');
       if (missing.length) byId('gf-status').textContent += ` ${number(missing.length)} names aren't saved characters, so they're left in the box.`;
     });
-    document.addEventListener('click', event => { if (!event.target.closest?.('#gf-menu')) closeMenu(); });
+    document.addEventListener('click', event => { if (!event.target.closest?.('#gf-menu, #gf-side-menu')) closeMenu(); });
+    // A name's logins open on hover. On the way over to them the pointer may cross other names, so another name
+    // takes over only once the pointer rests on it. A click, or Enter, opens them at once.
+    const menuNode = byId('gf-menu');
+    menuNode.addEventListener('mouseover', event => {
+      const row = event.target.closest?.('.gf-menu-name') || null;
+      clearTimeout(sideTimer);
+      if (row === sideRow) return;
+      if (row && !sideRow) openSide(row);
+      else if (row) sideTimer = setTimeout(() => openSide(row), SIDE_DELAY);
+      else if (sideRow && event.target.closest?.('button')) sideTimer = setTimeout(closeSide, SIDE_DELAY);
+    });
+    menuNode.addEventListener('click', event => {
+      const row = event.target.closest?.('.gf-menu-name');
+      if (row) openSide(row, event.detail === 0);
+    });
+    menuNode.addEventListener('scroll', closeSide, {capture: true, passive: true});
+    byId('gf-side-menu').addEventListener('mouseover', () => clearTimeout(sideTimer));
+    // Another tab of this page saved: take its changes rather than overwrite them with the next save here.
+    chrome.storage.onChanged?.addListener((changes, area) => {
+      const file = area === 'local' ? changes[FILE_STORE]?.newValue : null;
+      if (!validFile(file) || (sealedFile && file.saved === sealedFile.saved && file.data === sealedFile.data)) return;
+      sealedFile = file;
+      if (!fileKey) { renderLock(); return; }
+      unseal(file, fileKey).then(opened => { state = opened; renderAll(); }, () => lock());
+    });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
 
     // Whichever copy was saved last, and a copy left in the helper's folder is what a new PC starts from.
@@ -627,10 +791,44 @@ const GBAccounts = (() => {
       renderAll();
     });
     return {
-      setCharacters(list) { characters = list; renderAll(); },
+      setCharacters(list) {
+        characters = list;
+        byLabel = new Map(list.map(character => [linkKey(character.name), character]));
+        settleLinks();
+        renderAll();
+      },
+      // A tab that was hidden when its data changed, drawn now that it's open
+      refresh(tab) {
+        if (tab === 'accounts' && linksDirty) renderLinks();
+        if (tab === 'heatmap' && heatDirty) renderHeat();
+      },
+      // The linked Gameforge account's name, only while the accounts are open: by the name the page shows, or for
+      // a character, saved or only listed on a login screen
+      accountName: name => accountOfName(name)?.name || '',
+      accountNameOf: character => accountFor(state, character)?.name || '',
+      // Its Gameforge account's id and name, never its passwords
+      linkedAccount(character) {
+        const account = accountFor(state, character);
+        return account ? {id: account.id, name: account.name} : null;
+      },
+      locked: () => !fileKey && !!sealedFile,
+      nameProblem: (id, name) => nameProblem(state, id, name),
+      // A new name for a Gameforge account, saved like any other change. Says what's wrong, or ''.
+      rename(id, name) {
+        const problem = renameAccount(state, id, name);
+        if (!problem) {
+          save();
+          renderAll();
+        }
+        return problem;
+      },
+      // Everything drawn again: the region, the ticks or a RoM account's name changed
+      redraw: renderAll,
+      // The selection changed: the count under Link characters
+      showSelected() { if (visible('accounts') && !linksDirty) showSelected(); },
       openMenu,
     };
   }
-  return {create, heatColor, serverOf, accountOf, setLinks, removeAccount, matchNames, heatColumns, emptyState,
+  return {create, heatColor, serverOf, accountOf, accountFor, linkKeysOf, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatColumns, emptyState,
     newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor};
 })();

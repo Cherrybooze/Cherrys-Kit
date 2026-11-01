@@ -150,10 +150,11 @@ function me.OnUpdate(elapsed)
     return
   end
   elapsed = elapsed or 0
-  if not me.UTC() then
-    me.lookWait = me.lookWait + elapsed
-    if me.lookWait >= me.LOOK_EVERY then
-      me.lookWait = 0
+  -- The time is only asked for when a look is due, not on every frame.
+  me.lookWait = me.lookWait + elapsed
+  if me.lookWait >= me.LOOK_EVERY then
+    me.lookWait = 0
+    if not me.UTC() then
       me.Look()
     end
   end

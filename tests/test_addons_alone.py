@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 KIT_PATH = "Interface/AddOns/CherrysKit"
 KIT = ROOT / KIT_PATH
 # Separate packages: their source is beside the kit, and they're installed inside it
-BESIDE = {"CherrysLoginxmlHook": ROOT / "Interface/AddOns/CherrysLoginxmlHook", "LogNextChar": ROOT / "Interface/AddOns/LogNextChar"}
+BESIDE = {"LogNextChar": ROOT / "Interface/AddOns/LogNextChar"}
 FRAME_TAGS = {"Frame", "Button", "CheckButton", "RadioButton", "EditBox", "StatusBar", "Slider", "ScrollFrame",
               "MessageFrame", "Model", "Tooltip", "FontString", "Texture"}
 EVENTS = ("VARIABLES_LOADED", "SAVE_VARIABLES", "LOADING_END", "PLAYER_ENTERING_WORLD", "PLAYER_LEVEL_UP",
@@ -31,7 +31,7 @@ EVENTS = ("VARIABLES_LOADED", "SAVE_VARIABLES", "LOADING_END", "PLAYER_ENTERING_
 # Each addon's own names. They read as nil when it isn't installed, as they would in the game.
 ADDON_PREFIXES = ("Kitty", "KC_", "RWA", "RomWeakAuras", "CherrysChat", "zBag", "GlobalBank", "GB_", "ExtendedMacroIcons",
                   "CEMI_", "TooltipIds", "UltimateMailMod", "UMM", "AAH", "AdvancedAuctionHouse", "ZShop", "pbInfo",
-                  "PortraitHP", "CherrysGrid", "CherrysQuests", "CherrysBar", "CBar_", "CherrysLoadTimes", "LogNextChar", "CherrysLoginxml", "LOGCHAR_", "CherrysClock")
+                  "PortraitHP", "CherrysGrid", "CherrysQuests", "CherrysInfo", "CherrysBar", "CBar_", "CherrysLoadTimes", "LogNextChar", "CherrysLoginxml", "LOGCHAR_", "CherrysClock")
 
 STAND_IN = r"""
 local real = { type = type, tostring = tostring, pairs = pairs, ipairs = ipairs, next = next }
@@ -367,7 +367,7 @@ class AddonsAloneTest(unittest.TestCase):
             self.assertTrue(any("planted" in error and "pbInfo" in error for error in alone.errors()))
         finally:
             alone.close()
-        both = Install(["ZShop", "pbInfo"], self.folders)
+        both = Install(["ZShop", "CherrysInfo"], self.folders)
         try:
             both.run()
             both.lua.globals().run_code(None, planted, "planted")
@@ -478,6 +478,69 @@ class OriginalAddonsTest(unittest.TestCase):
         install.lua.execute('SlashCmdList.ZBAGORIGINAL(nil, "")')
         self.assertTrue(install.lua.globals().usedTheOriginal)
         self.assertEqual(install.lua.eval("rawget(_G, 'SLASH_ZBAGORIGINAL1')"), "/zb")
+
+    def test_a_merged_addon_gives_way_to_each_addon_it_took_over(self):
+        package = next(item for item in all_packages() if item["folder"] == "CherrysInfo")
+        for origin in [package["origin"], *package["origin"]["others"]]:
+            with self.subTest(origin=origin["folder"]):
+                install, new, said = self.run_with(package, [f"{origin['folder']}/{origin['files'][0]}"])
+                self.assertEqual(new, [])
+                self.assertFalse(install.lua.globals().CherrysKit.IsEnabled("CherrysInfo"))
+                lines = [line for line in said if "takes precedence" in line]
+                self.assertEqual(len(lines), 1, lines)
+                self.assertIn("Interface\\AddOns\\" + origin["folder"] + " takes precedence", lines[0])
+
+    def test_a_merged_addon_shows_by_any_of_their_globals(self):
+        package = next(item for item in all_packages() if item["folder"] == "CherrysInfo")
+        install, _, said = self.run_with(package, originals=[], before="GetIdName = function() return 'the original' end")
+        self.assertFalse(install.lua.globals().CherrysKit.IsEnabled("CherrysInfo"))
+        self.assertEqual(install.lua.eval("GetIdName()"), "the original")
+        self.assertEqual(len([line for line in said if "takes precedence" in line]), 1)
+
+    def test_a_merged_addon_does_not_give_way_to_itself_after_reload(self):
+        package = next(item for item in all_packages() if item["folder"] == "CherrysInfo")
+        install, _, said = self.run_with(package, originals=[])
+        self.assertTrue(install.lua.globals().CherrysKit.IsEnabled("CherrysInfo"))
+        self.assertEqual([line for line in said if "takes precedence" in line], [])
+
+    def test_merged_addons_keep_their_commands_and_never_say_not_installed(self):
+        package = next(item for item in all_packages() if item["folder"] == "CherrysInfo")
+        install, _, _ = self.run_with(package, originals=[])
+        install.lua.execute("""
+          CherrysKit.ApplyCommands()
+          said = {}
+          local owners = {}
+          for key in pairs(SlashCmdList) do
+            for n = 1, 20 do
+              local cmd = rawget(_G, "SLASH_" .. key .. n)
+              if type(cmd) == "string" then owners[string.lower(cmd)] = key end
+            end
+          end
+          missing = {}
+          for _, cmd in ipairs({ "/cinfo", "/cq", "/emi", "/ti", "/pbinfo", "/php" }) do
+            if owners[cmd] then
+              pcall(SlashCmdList[owners[cmd]], nil, "")
+            else
+              missing[#missing + 1] = cmd
+            end
+          end
+        """)
+        self.assertEqual(list(install.lua.globals().missing.values()), [])
+        lines = [str(v) for v in install.lua.globals().said.values()]
+        self.assertEqual([line for line in lines if "not installed" in line], [])
+
+    def test_a_switch_saved_under_an_old_name_keeps_nothing_off(self):
+        # Those rows are gone from the hub, so nobody could ever clear it
+        package = next(item for item in all_packages() if item["folder"] == "CherrysInfo")
+        install, _, _ = self.run_with(package, originals=[], before="""
+          CherrysKit_DB = { disabled = { pbInfo = true, PortraitHP = true, TooltipIds = true, ExtendedMacroIcons = true, CherrysQuests = true } }
+        """)
+        lua = install.lua
+        self.assertIsNone(lua.eval("rawget(pbInfo, 'Off')"))
+        self.assertFalse(lua.eval("PortraitHP.IsOffInKit()"))
+        self.assertFalse(lua.eval("TooltipIds.IsOffInKit()"))
+        self.assertFalse(lua.eval("CherrysEMI.IsOffInKit()"))
+        self.assertFalse(lua.eval("CherrysQuests.off"))
 
     def test_one_in_a_renamed_folder_still_shows_by_its_global(self):
         package = next(item for item in all_packages() if item["folder"] == "CherrysBar")

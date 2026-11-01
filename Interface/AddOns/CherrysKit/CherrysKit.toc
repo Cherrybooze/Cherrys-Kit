@@ -1,5 +1,5 @@
 ## Title: Cherry's Kit
-## Version: 0.11.114
+## Version: 0.11.115
 ## Description: Hub for Cherry's addons. Type /rwa or /ck to open each addon's settings, turn addons on or off, and reload the UI.
 ## Author: Cherry
 ## SavedVariables: RWA_DB, ZShop_Settings, CherrysGrid_DB, CherrysQuests_DB, CherrysBar_DB, CherrysLoginxml_Settings, LogNextChar_Settings
@@ -94,13 +94,6 @@ KitLoad/GlobalBank.lua
 GlobalBank/GlobalBank.lua
 GlobalBank/GlobalBankUI.lua
 GlobalBank/GlobalBank.xml
-KitLoad/ExtendedMacroIcons.lua
-ExtendedMacroIcons/Categories.lua
-ExtendedMacroIcons/ExtendedMacroIcons.lua
-ExtendedMacroIcons/ExtendedMacroIcons.xml
-KitLoad/TooltipIds.lua
-TooltipIds/TooltipIds.lua
-TooltipIds/TooltipIds.xml
 KitLoad/UltimateMailMod.lua
 UltimateMailMod/Library/Colors.lua
 UltimateMailMod/Library/Tools.lua
@@ -161,17 +154,27 @@ KitLoad/ZShop.lua
 ZShop/ZShop.lua
 ZShop/ZShopButton.lua
 ZShop/ZShop.xml
-KitLoad/pbInfo.lua
-pbInfo/Includes/inc.Core.lua
-pbInfo/Xml/pbInfo.xml
-pbInfo/Xml/ConfigTemplates.xml
-pbInfo/Xml/Config.xml
-pbInfo/Xml/QuestTracker.xml
-pbInfo/Xml/CastingBar.xml
-pbInfo/pbInfoKit.lua
-KitLoad/PortraitHP.lua
-PortraitHP/PortraitHP.lua
-PortraitHP/PortraitHP.xml
+KitLoad/CherrysInfo.lua
+CherrysInfo/Categories.lua
+CherrysInfo/ExtendedMacroIcons.lua
+CherrysInfo/ExtendedMacroIcons.xml
+CherrysInfo/TooltipIds.lua
+CherrysInfo/TooltipIds.xml
+CherrysInfo/Includes/inc.Core.lua
+CherrysInfo/Xml/pbInfo.xml
+CherrysInfo/Xml/ConfigTemplates.xml
+CherrysInfo/Xml/Config.xml
+CherrysInfo/Xml/QuestTracker.xml
+CherrysInfo/Xml/CastingBar.xml
+CherrysInfo/pbInfoKit.lua
+CherrysInfo/PortraitHP.lua
+CherrysInfo/PortraitHP.xml
+CherrysInfo/CherrysQuests.lua
+CherrysInfo/Npcs.lua
+CherrysInfo/Tracker.lua
+CherrysInfo/Options.lua
+CherrysInfo/Probe.lua
+CherrysInfo/CherrysQuests.xml
 KitLoad/CherrysGrid.lua
 CherrysGrid/Core.lua
 CherrysGrid/Roster.lua
@@ -187,13 +190,6 @@ CherrysGrid/Menu.lua
 CherrysGrid/Options.lua
 CherrysGrid/Probe.lua
 CherrysGrid/CherrysGrid.xml
-KitLoad/CherrysQuests.lua
-CherrysQuests/CherrysQuests.lua
-CherrysQuests/Npcs.lua
-CherrysQuests/Tracker.lua
-CherrysQuests/Options.lua
-CherrysQuests/Probe.lua
-CherrysQuests/CherrysQuests.xml
 KitLoad/CherrysBar.lua
 CherrysBar/Core.lua
 CherrysBar/Bars.lua
@@ -204,11 +200,9 @@ CherrysBar/Options.lua
 CherrysBar/Probe.lua
 CherrysBar/Perf.lua
 CherrysBar/CherrysBar.xml
-KitLoad/CherrysLoginxmlHook.lua
-CherrysLoginxmlHook/CherrysLoginxmlHook.lua
-CherrysLoginxmlHook/CherrysLoginxmlHook.xml
 KitLoad/LogNextChar.lua
 LogNextChar/LogNextChar.lua
+LogNextChar/LoginScreen.lua
 LogNextChar/LogNextChar.xml
 KitLoad/end.lua
 LoadTimesLast.xml

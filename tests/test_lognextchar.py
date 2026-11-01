@@ -3,7 +3,7 @@ import os
 import unittest
 import xml.etree.ElementTree as ET
 
-from lua_env import ROOT, in_game, lua_list
+from lua_env import ROOT, in_game, lua_list, run_file
 
 HUB = """
 hub_rows = {}
@@ -20,6 +20,14 @@ def press(lua, button, key="LBUTTON", move=None):
     if move:
         lua.execute(f"LogNextCharBar.x = LogNextCharBar.x + {move}")
     lua.execute(f"LogNextChar.OnMouseUp({button})")
+
+
+class LoginScreenHalfTest(unittest.TestCase):
+    def test_saved_variables_reach_the_login_screen_half(self):
+        lua = in_game("CherrysLoginxml_Live = {values = {character_sort = true}}")
+        run_file(lua, "AddOns/LogNextChar/LoginScreen.lua")
+        lua.execute('LogNextChar.OnEvent("VARIABLES_LOADED")')
+        self.assertTrue(lua.eval("CherrysLoginxml_Settings.character_sort"))
 
 
 class LayoutTest(unittest.TestCase):
@@ -150,9 +158,9 @@ class ButtonTest(unittest.TestCase):
     def test_tooltip_says_when_loginxml_is_missing(self):
         lua = in_game()
         lua.execute("LogNextChar.OnEnter(LogNextCharBarNext)")
-        self.assertTrue(any("Without Cherry's Loginxml" in line for line in lua_list(lua.eval("tip"))))
+        self.assertTrue(any("Without its login screen" in line for line in lua_list(lua.eval("tip"))))
         lua.execute('LOGCHAR_ROSTER = {"Aa", "Bb"}; LogNextChar.OnEnter(LogNextCharBarNext)')
-        self.assertFalse(any("Without Cherry's Loginxml" in line for line in lua_list(lua.eval("tip"))))
+        self.assertFalse(any("Without its login screen" in line for line in lua_list(lua.eval("tip"))))
 
 
 class SingleCharacterTest(unittest.TestCase):

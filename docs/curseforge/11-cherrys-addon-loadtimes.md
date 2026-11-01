@@ -6,13 +6,17 @@
 >
 > **On its own:** it runs with just the hub, and nothing it does needs another addon.
 >
-> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\!CherrysLoadTimes` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\!CherrysLoadTimes` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
 > **Other addons:** It times every addon the game loads, kit or not, and needs none of them.
 
 **Find out which addons make your loading screen slow.**
 
 A small report of how long each addon took while the loading screen was up, and how much memory it added. It is a troubleshooting tool, so it comes switched off and then uses no memory at all.
+
+## New in 1.3.0
+
+LoadTimes is a troubleshooting addon now: it stays off, using no memory, until `Switch.txt` turns it on (see below). It's its own download instead of part of the hub, and needs hub 0.4.22 or later.
 
 ## Turning it on and off
 
@@ -24,14 +28,6 @@ Addons cannot change their own files, so the switch is a small text file you edi
 4. Set it back to `false` when you are done.
 
 While it is off, nothing of it loads except the switch check, and `/ckload` tells you how to turn it on.
-
-## Updated in 1.3.0
-
-Now a troubleshooting addon that stays off until `Switch.txt` turns it on, as described above. Switched off, the kit only reads that small file and keeps nothing of LoadTimes in memory. The hub no longer bundles it: it is its own optional download, and it needs hub 0.4.22 or later.
-
-## Updated in 1.2.1
-
-Both probe frames stop after the loading screen is gone, so a tiny hidden frame no longer keeps processing every frame.
 
 ## Features
 
@@ -51,7 +47,7 @@ Both probe frames stop after the loading screen is gone, so a tiny hidden frame 
 ## Install
 
 - **Requires Cherry's Kit** 0.4.22 or later (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\LoadTimes\` and loads first in the kit. It comes switched off: see **Turning it on and off** above.
-- **Delete the old `Interface\AddOns\!CherrysLoadTimes` folder** if you have it from an older kit.
+- **Move the old `Interface\AddOns\!CherrysLoadTimes` folder out of AddOns** (`!setup_cherryskit.bat` offers to) if you have it from an older kit.
 
 ## Bug reports
 

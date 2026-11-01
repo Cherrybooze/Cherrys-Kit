@@ -56,12 +56,30 @@ end
 local function overlay(i)
   return _G["CherrysChat_W" .. i]
 end
+
+-- The ten overlays share one XML template, so their scripts find their window from the frame's
+-- name (CherrysChat_W3 or one of its parts, such as CherrysChat_W3BarUp). Each name is read once.
+local windowOfName = {}
+function Wn.Of(frame)
+  local name = frame and frame.GetName and frame:GetName()
+  if not name then
+    return nil
+  end
+  local i = windowOfName[name]
+  if i == nil then
+    i = tonumber(string.match(name, "^CherrysChat_W(%d+)")) or false
+    windowOfName[name] = i
+  end
+  return i or nil
+end
 local function line(i, k)
   return _G["CherrysChat_W" .. i .. "Line" .. k]
 end
 local function hi(i, k)
   return _G["CherrysChat_W" .. i .. "Hi" .. k]
 end
+
+local NO_PICS = {}
 
 -- state[i] = { offset, w, h, selA, selB }
 Wn.state = {}
@@ -594,7 +612,7 @@ function Wn.Draw(i)
       try(fs, "SetColor", 1, 1, 1)
       fs:SetText(rows[idx].text)
       fs:Show()
-      for _, p in ipairs(rows[idx].pics or {}) do
+      for _, p in ipairs(rows[idx].pics or NO_PICS) do
         local pt = _G["CherrysChat_W" .. i .. "Pic" .. (used + 1)]
         if pt then
           used = used + 1

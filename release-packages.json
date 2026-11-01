@@ -1,13 +1,13 @@
 {
-  "kit_version": "0.11.114",
-  "hub_version": "0.4.25",
-  "release_summary": "Global Bank's helper now lives with Chrome: the extension pings it while Chrome is open, and the helper ends on its own when Chrome or the extension goes away. The extension's button shows whether it is running and for how long, stops it directly, and a new tick, Show its terminal window, runs the background helper in a real PowerShell window; it also clears leftover files from the pre-kit helper. Everything since the 0.11.101 playtest: Global Bank (1.4.15) and its Chrome extension (1.0.17) turn the page into a full bank viewer — one scrolling grid with the game's own icons, search, filters and a slot tooltip, plus Currencies, Characters, Item Depot and Stats tabs, a gold heatmap and Gameforge accounts. Gear and mana stones show the game's own tooltip, saved when a character logs out, and logging in one character through Cherry's Loginxml records the whole account's character list, which fills in their servers and boxes them together under Link characters and on the heatmap. Gear never stacks, auctions leave the cache when they end, and the Bank tab can read your folders without the local helper. Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 show gold and last save on the login screens and close the mailbox before switching characters, and now live under CherrysKit and load through the hub. Cherry's Grid 1.1.5 puts Mouse 4 to work: a click button on your frames, and a tick, off by default, that makes it a game keybind too. Cherry's Chat 0.11.0 sends emoji in Say as symbols the game font can draw, or as :code: text when there is no symbol. Cherry's Bar 1.1.9 can show your coordinates in Location, the hub is at 0.4.25, and Global Bank's in-game window shows the game's own item tooltip. The rest of the 0.11.100 and 0.11.101 work is included unchanged.",
-  "runtime_validation": "Lua 5.1 simulated-client suite: 1028 tests; 1002 passed and 26 retired-editor tests skipped, none failing — the helper fixture now uses a private mutex, so a helper running on the test PC cannot change results. New tests cover the heartbeat, the Stop button, the uptime line and the terminal toggle, the addon map and origins, one-addon installs, and Cherry's Grid's Mouse 4. The release build verifies all 21 install packages, 209 manifest entries and 54 Markdown files. The extension's page also ran on real Chrome 155 with a test profile: the tabs, encryption and locking with made-up data, and setup with real saved data. No character names, shop token, email or user folder appear in any release ZIP or in git history. Nothing has been confirmed in the game client yet; docs/TESTING.md lists the checks (G1 to G31). Unchanged addon packages keep their versions and byte-identical files.",
+  "kit_version": "0.11.115",
+  "hub_version": "0.4.28",
+  "release_summary": "New in this build: Cherry's Info 1.0 (/cinfo, /cq) replaces Cherry's Quests, pbInfo, TooltipIds, PortraitHP and Extended Macro Icons, with one switch and one tabbed settings window; saved settings carry over. LogNextChar 1.3.1 includes Cherry's Loginxml, in one ZIP with its login screen. The guided setup (!setup_cherryskit.bat, at the root of the Full and Hub ZIPs) says which addons are out of date against this page's Latest release and updates them with the old versions kept, asks before installing anything your addons can use that's missing, maps Interface\\AddOns, moves older copies and folders the kit no longer loads into Interface\\offloaded_addons (nothing is deleted), stops the Global Bank helper during updates, puts the login screen in place and walks through the Chrome extension. Lighter and smaller: Cherry's Grid 1.1.6 makes next to no garbage while drawing, and the XML files of Cherry's Grid, Cherry's Chat and zBag went from 598, 401 and 229 KB to 105, 70 and 123 KB, with the same frames. Global Bank 1.5.4 has a refreshed in-game window: server tabs, characters grouped by account, and a search that lights up the matching bag and bank slots, in an XML file of 113 KB. Global Bank 1.4.16 keeps same-named characters on different servers apart. Global Bank Daily Rewards 1.2.2 for Chrome: the page is built for thousands of characters, with a Region button, server checkmarks (Ayvenas included), a Servers tab to edit them, one selection on every tab, the game's tooltips with item and mana stone stats, stacking checkmarks per item type, Always stack, a Favourites tab, RoM account names, and an item menu that stacks the characters who hold it. Collecting the daily reward automatically is now a tick in the popup, off by default. It has a redesigned popup, and its heartbeat now really runs. Ultimate Mail Mod 7.0.1-ck11: History, Characters and Friends in the Mass Send recipient picker. Everything from 0.11.114 is included.",
+  "runtime_validation": "Lua 5.1 simulated-client suite: 1112 tests; 1086 passed and 26 retired-editor tests skipped, none failing. New tests run the guided setup through its real launcher the way a double-click does, stop and restart a hidden helper, update from a build folder (checksums, ZIP paths, kept player files, merged addons), install the dependencies picked, and cover hub-only installs, a ZIP extracted into a folder of its own, folders the manifest no longer loads, merged addons' origins, Cherry's Info's tabs and the shared XML templates. The release build verifies all 16 install packages, 203 manifest entries and 44 Markdown files. The update route ran against GitHub's Latest release in a throwaway folder, and from the previous build in a throwaway game folder. Nothing has been confirmed in the game client yet; docs/TESTING.md lists the checks. Addon packages whose code didn't change keep their versions; only the generated requirement lines in their READMEs changed.",
   "addons": [
     {
       "folder": "KittyCombo",
       "title": "Cherry's KittyCombo",
-      "version": "1.7.17",
+      "version": "1.7.18",
       "command": "/kc",
       "description_file": "02-cherrys-kittycombo.md",
       "summary": "One-key priority combos, safer prediction and shared rotation codes.",
@@ -48,7 +48,7 @@
     {
       "folder": "RomWeakAuras",
       "title": "rom weakauras",
-      "version": "0.9.30",
+      "version": "0.9.31",
       "command": "/wa",
       "description_file": "03-rom-weakauras.md",
       "summary": "Custom buff, debuff, cooldown, cast and status displays.",
@@ -59,16 +59,8 @@
           "for": "track its next skills and modes"
         },
         {
-          "package": "pbInfo",
-          "for": "mob information for triggers"
-        },
-        {
-          "package": "ExtendedMacroIcons",
-          "for": "its icon picker uses the icon categories"
-        },
-        {
-          "package": "CherrysQuests",
-          "for": "Cherry's Quests can use its fonts"
+          "package": "CherrysInfo",
+          "for": "mob information for triggers and the macro icon categories in its icon picker, and its quest tracker can use rom weakauras' fonts"
         }
       ],
       "kit_file": "RomWeakAuras/Init.lua",
@@ -86,13 +78,13 @@
     {
       "folder": "CherrysChat",
       "title": "Cherry's Chat",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "command": "/cchat",
       "description_file": "04-cherrys-chat.md",
       "summary": "Selectable chat, copying, emoji and chat display settings.",
       "works_with": [
         {
-          "package": "pbInfo",
+          "package": "CherrysInfo",
           "for": "class colours from its player list"
         },
         {
@@ -118,7 +110,7 @@
     {
       "folder": "zBag",
       "title": "zBag",
-      "version": "5.07-ck16",
+      "version": "5.07-ck17",
       "command": "/zb",
       "description_file": "05-zbag.md",
       "summary": "Bags, searching, sorting, quick sell and an All bags view.",
@@ -151,7 +143,7 @@
     {
       "folder": "GlobalBank",
       "title": "Global Bank",
-      "version": "1.4.15",
+      "version": "1.5.4",
       "command": "/gb",
       "description_file": "06-global-bank.md",
       "summary": "A searchable view of your characters' bags, banks and gold.",
@@ -173,7 +165,7 @@
           "for": "its Chrome extension gives Cherry's Bar's Clock the real time"
         },
         {
-          "package": "CherrysLoginxml",
+          "package": "LogNextChar",
           "for": "the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers"
         }
       ],
@@ -189,64 +181,9 @@
       }
     },
     {
-      "folder": "ExtendedMacroIcons",
-      "title": "Extended Macro Icons",
-      "version": "3.0.4",
-      "command": "/emi",
-      "description_file": "07-extended-macro-icons.md",
-      "summary": "A larger, categorised macro icon picker.",
-      "kit_file": "ExtendedMacroIcons/Categories.lua",
-      "origin": {
-        "kind": "original",
-        "name": "ExtendedMacroIcons 2.15",
-        "by": "Amurilon",
-        "folder": "ExtendedMacroIcons",
-        "files": [
-          "ExtendedMacroIcons.lua",
-          "ExtendedMacroIcons.toc"
-        ],
-        "fingerprint": "-ExtendedMacroIcons"
-      },
-      "works_with": [
-        {
-          "package": "RomWeakAuras",
-          "for": "rom weakauras' icon picker uses its categories"
-        }
-      ]
-    },
-    {
-      "folder": "TooltipIds",
-      "title": "TooltipIds",
-      "version": "1.0b3-ck3",
-      "command": "/ti",
-      "description_file": "08-tooltipids.md",
-      "summary": "ID numbers for items, buffs, skills and other game data.",
-      "works_with": [
-        {
-          "package": "pbInfo",
-          "for": "ID numbers in its tooltips too"
-        }
-      ],
-      "kit_file": "TooltipIds/TooltipIds.lua",
-      "origin": {
-        "kind": "original",
-        "name": "TooltipIds 1.0b3",
-        "by": "Rock5",
-        "folder": "TooltipIds",
-        "files": [
-          "TooltipIds.lua",
-          "TooltipIds.toc"
-        ],
-        "fingerprint": "GetIdName"
-      },
-      "also": [
-        "AddonManager lists it when you have that addon."
-      ]
-    },
-    {
       "folder": "UltimateMailMod",
       "title": "Ultimate Mail Mod",
-      "version": "7.0.1-ck10",
+      "version": "7.0.1-ck11",
       "command": "/umm",
       "description_file": "09-ultimate-mail-mod.md",
       "summary": "Mail management, drag-box selection, shared recipients, gold presets and mass sending.",
@@ -360,31 +297,14 @@
       }
     },
     {
-      "folder": "pbInfo",
-      "title": "pbInfo",
-      "version": "0.60-ck5",
-      "command": "/pbinfo",
-      "description_file": "13-pbinfo.md",
-      "summary": "Richer tooltips, quest tracking, chat filters and cast-bar options.",
-      "works_with": [
-        {
-          "package": "TooltipIds",
-          "for": "ID numbers in its tooltips"
-        },
-        {
-          "package": "CherrysChat",
-          "for": "class colours from its player list"
-        },
-        {
-          "package": "RomWeakAuras",
-          "for": "mob information for triggers"
-        },
-        {
-          "package": "CherrysQuests",
-          "for": "takes over from its quest tracker"
-        }
-      ],
-      "kit_file": "pbInfo/pbInfoKit.lua",
+      "folder": "CherrysInfo",
+      "title": "Cherry's Info",
+      "version": "1.0.1",
+      "command": "/cinfo, /cq",
+      "description_file": "16-cherrys-info.md",
+      "summary": "Quest tracker with Ctrl+click NPCs, richer tooltips with IDs, target portrait HP%, chat filters and 10,500+ macro icons.",
+      "minimum_hub_version": "0.4.27",
+      "kit_file": "CherrysInfo/pbInfoKit.lua",
       "origin": {
         "kind": "original",
         "name": "pbInfo v0.60",
@@ -393,39 +313,67 @@
         "files": [
           "pbInfo.toc"
         ],
-        "fingerprint": "pbInfo"
+        "fingerprint": "pbInfo",
+        "others": [
+          {
+            "kind": "original",
+            "name": "PortraitHP v2019.07.14",
+            "by": "Nonante@Nuada",
+            "folder": "PortraitHP",
+            "files": [
+              "PortraitHP.lua",
+              "PortraitHP.toc"
+            ],
+            "fingerprint": "PortraitHP"
+          },
+          {
+            "kind": "original",
+            "name": "TooltipIds 1.0b3",
+            "by": "Rock5",
+            "folder": "TooltipIds",
+            "files": [
+              "TooltipIds.lua",
+              "TooltipIds.toc"
+            ],
+            "fingerprint": "GetIdName"
+          },
+          {
+            "kind": "original",
+            "name": "ExtendedMacroIcons 2.15",
+            "by": "Amurilon",
+            "folder": "ExtendedMacroIcons",
+            "files": [
+              "ExtendedMacroIcons.lua",
+              "ExtendedMacroIcons.toc"
+            ],
+            "fingerprint": "-ExtendedMacroIcons"
+          },
+          {
+            "kind": "older",
+            "folder": "CherrysQuests",
+            "files": [
+              "CherrysQuests.lua",
+              "CherrysQuests.toc"
+            ],
+            "fingerprint": "CherrysQuests"
+          }
+        ]
       },
-      "also": [
-        "AddonManager lists it when you have that addon."
-      ]
-    },
-    {
-      "folder": "PortraitHP",
-      "title": "PortraitHP",
-      "version": "2019.07.14-ck2",
-      "command": "/php",
-      "description_file": "14-portraithp.md",
-      "summary": "Your target's health percentage on its portrait.",
-      "kit_file": "PortraitHP/PortraitHP.lua",
-      "origin": {
-        "kind": "original",
-        "name": "PortraitHP v2019.07.14",
-        "by": "Nonante@Nuada",
-        "folder": "PortraitHP",
-        "files": [
-          "PortraitHP.lua",
-          "PortraitHP.toc"
-        ],
-        "fingerprint": "PortraitHP"
-      },
-      "also": [
-        "AddonManager lists it when you have that addon."
+      "works_with": [
+        {
+          "package": "RomWeakAuras",
+          "for": "rom weakauras' fonts for the quest tracker; its triggers and icon picker can use the mob information and macro icon categories from here"
+        },
+        {
+          "package": "CherrysChat",
+          "for": "class colours in chat from its player list"
+        }
       ]
     },
     {
       "folder": "CherrysGrid",
       "title": "Cherry's Grid",
-      "version": "1.1.5",
+      "version": "1.1.6",
       "command": "/grid",
       "description_file": "15-cherrys-grid.md",
       "summary": "Party and raid frames, with KittyCombo actions on click.",
@@ -446,35 +394,6 @@
         ],
         "fingerprint": "-gciraid",
         "note": "Cherry's Grid is new code that follows its design, and the two would draw the same raid frames."
-      }
-    },
-    {
-      "folder": "CherrysQuests",
-      "title": "Cherry's Quests",
-      "version": "1.0.0",
-      "command": "/cq",
-      "description_file": "16-cherrys-quests.md",
-      "summary": "A prettier quest tracker; Ctrl+click a quest to track the NPCs it names.",
-      "minimum_hub_version": "0.4.21",
-      "works_with": [
-        {
-          "package": "RomWeakAuras",
-          "for": "more fonts to choose from"
-        },
-        {
-          "package": "pbInfo",
-          "for": "keeps its quest tracker out of the way"
-        }
-      ],
-      "kit_file": "CherrysQuests/Probe.lua",
-      "origin": {
-        "kind": "older",
-        "folder": "CherrysQuests",
-        "files": [
-          "CherrysQuests.lua",
-          "CherrysQuests.toc"
-        ],
-        "fingerprint": "CherrysQuests"
       }
     },
     {
@@ -514,42 +433,12 @@
   "hub_description_file": "01-cherrys-kit.md",
   "standalone_packages": [
     {
-      "folder": "CherrysLoginxml",
-      "title": "Cherry's Loginxml",
-      "version": "1.2.2",
-      "description_file": "18-cherrys-loginxml.md",
-      "summary": "A better login screen: gets past a stuck server list, saved logins, keyboard controls.",
-      "works_with": [
-        {
-          "package": "LogNextChar",
-          "for": "Next and Prev character buttons in game"
-        },
-        {
-          "package": "GlobalBank",
-          "for": "shows each character's gold and last save on the character screen and the helper's status on the server screen, and gives it your account's character list, which boxes them together on its page and fills in their servers"
-        }
-      ],
-      "after_install": "close the game and double-click `Interface\\AddOns\\CherrysKit\\CherrysLoginxmlHook\\Install login screen.bat`. The game only reads a login screen from `Interface\\loginxml`, so this copies it there.",
-      "kit_file": "CherrysLoginxmlHook/CherrysLoginxmlHook.lua",
-      "origin": {
-        "kind": "older",
-        "folder": "CherrysLoginxml",
-        "files": [
-          "CherrysLoginxml.lua",
-          "CherrysLoginxml.toc"
-        ],
-        "note": "Install login screen.bat removes that folder for you. The login screen itself is Rom Autologin by Pyrrhus with fixes, and has to live in `Interface\\loginxml`, the only place the game reads one: the same installer replaces whatever is there and keeps your saved logins."
-      },
-      "install_folder": "CherrysLoginxmlHook",
-      "minimum_hub_version": "0.4.25"
-    },
-    {
       "folder": "LogNextChar",
       "title": "LogNextChar",
-      "version": "1.2.2",
+      "version": "1.3.1",
       "command": "/lnc",
       "description_file": "19-lognextchar.md",
-      "summary": "Next and Prev buttons that log you straight into the neighbouring character.",
+      "summary": "Next and Prev buttons that log you straight into the neighbouring character, with its own login screen: gets past a stuck server list, saved logins, keyboard controls.",
       "kit_file": "LogNextChar/LogNextChar.lua",
       "origin": {
         "kind": "older",
@@ -557,19 +446,31 @@
         "files": [
           "LogNextChar.lua",
           "LogNextChar.toc"
+        ],
+        "note": "Install login screen.bat, or the guided setup, moves those folders to `Interface\\offloaded_addons` for you, along with `CherrysKit\\CherrysLoginxmlHook` from before Cherry's Loginxml became part of this addon. The login screen itself is Rom Autologin by Pyrrhus with fixes, and has to live in `Interface\\loginxml`, the only place the game reads one: the same installer updates what is there, copies the old folder to `Interface\\offloaded_addons` first, and keeps your saved logins.",
+        "others": [
+          {
+            "kind": "older",
+            "folder": "CherrysLoginxml",
+            "files": [
+              "CherrysLoginxml.lua",
+              "CherrysLoginxml.toc"
+            ]
+          }
         ]
       },
-      "minimum_hub_version": "0.4.25",
+      "minimum_hub_version": "0.4.27",
       "works_with": [
         {
-          "package": "CherrysLoginxml",
-          "for": "picks the next or previous character on the login screen; without it Next and Prev only log you out, and you pick the character yourself"
+          "package": "GlobalBank",
+          "for": "shows each character's gold and last save on the character screen and the helper's status on the server screen, and gives it your account's character list, which boxes them together on its page and fills in their servers"
         },
         {
           "package": "UltimateMailMod",
           "for": "closes its window before switching characters, as it does the game's mail window"
         }
-      ]
+      ],
+      "after_install": "close the game and run `!setup_cherryskit.bat`, or double-click `Interface\\AddOns\\CherrysKit\\LogNextChar\\Install login screen.bat`. The game only reads a login screen from `Interface\\loginxml`, so this copies it there. Until then, Next and Prev only log you out."
     }
   ]
 }

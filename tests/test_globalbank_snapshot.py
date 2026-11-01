@@ -70,6 +70,77 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         self.assertEqual(lua.eval('#GlobalBank.Parse("GB1~Old~Warrior~40~0~0~0~0~x`B~1~1~5~Name~icon").currencies'), 0)
         self.assertEqual(lua.eval('GlobalBank.Parse("GB1~Old~Warrior~40~0~0~0~0~x`B~1~1~5~Name~icon").bag[1].name'), 'Name')
 
+    def login_on(self, server, carried, money=1):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute(f"""
+          UnitName=function() return 'Same' end
+          UnitClass=function() return 'Mage' end
+          UnitLevel=function() return 60 end
+          GetServerName=function() return '{server}' end
+          GlobalBank.ReadMoney=function() return {money} end
+          GlobalBank.ReadBank=function() return {{}}, 0 end
+        """)
+        lua.globals().GlobalBank_Char = carried[0]
+        lua.globals().GlobalBank_Others = carried[1]
+        lua.globals().GlobalBank_Tips = carried[2]
+        lua.execute('GlobalBank.Snapshot(false,false)')
+        return lua
+
+    @staticmethod
+    def carried(lua):
+        g = lua.globals()
+        return g.GlobalBank_Char, g.GlobalBank_Others, g.GlobalBank_Tips
+
+    def test_the_same_name_on_two_servers_shares_a_save_file_without_mixing(self):
+        first = self.login_on('Aynara', (None, None, None), 111)
+        kept = list(self.carried(first))
+        kept[0] = kept[0] + '`K~7~1~5~Banked~icon'
+        second = self.login_on('Sonnenwind', tuple(kept[:2]) + ('B1~ffffff=Aynara tip',), 222)
+        self.assertEqual(second.eval('GlobalBank.Parse(GlobalBank_Char).server'), 'Sonnenwind')
+        self.assertEqual(second.eval('GlobalBank.Parse(GlobalBank_Char).money'), 222)
+        self.assertNotIn('Banked', second.globals().GlobalBank_Char)
+        self.assertIn('Aynara', second.globals().GlobalBank_Others)
+        self.assertNotIn('Aynara tip', str(second.globals().GlobalBank_Tips))
+        back = self.login_on('Aynara', self.carried(second), 333)
+        self.assertEqual(back.eval('GlobalBank.Parse(GlobalBank_Char).server'), 'Aynara')
+        self.assertEqual(back.eval('GlobalBank.Parse(GlobalBank_Char).money'), 333)
+        self.assertIn('Sonnenwind', back.globals().GlobalBank_Others)
+        self.assertNotIn('`S~Aynara', back.globals().GlobalBank_Others)
+
+    def test_three_servers_all_stay_in_the_one_file(self):
+        lua = self.login_on('One', (None, None, None))
+        lua = self.login_on('Two', self.carried(lua))
+        lua = self.login_on('Three', self.carried(lua))
+        others = lua.globals().GlobalBank_Others
+        self.assertIn('`S~One', others)
+        self.assertIn('`S~Two', others)
+
+    def test_the_login_screen_can_tell_it_the_server(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("LOGCHAR_SERVER = 'FromLogin'")
+        self.assertEqual(lua.eval('GlobalBank.ServerNow()'), 'FromLogin')
+
+    def test_the_window_lists_the_same_name_on_two_servers_apart(self):
+        lua = self.login_on('Aynara', (None, None, None), 111)
+        lua.execute("""
+          dofile=function()
+            GlobalBank_Import={
+              {saved='a', s='GB1~Same~Mage~60~999~0~0~0~a`S~Aynara'},
+              {saved='b', s='GB1~Same~Mage~60~222~0~0~0~b`S~Sonnenwind'},
+              {saved='c', s='GB1~Twin~Mage~60~1~0~0~0~c`S~Aynara'},
+              {saved='d', s='GB1~Twin~Mage~60~2~0~0~0~d`S~Sonnenwind'},
+              {saved='e', s='GB1~Solo~Mage~60~3~0~0~0~e`S~Sonnenwind'}}
+          end
+          GlobalBank.LoadDatabase()
+        """)
+        self.assertEqual(lua.eval("GlobalBank.chars['Same'].money"), 111)
+        self.assertEqual(lua.eval("GlobalBank.chars['Same (Sonnenwind)'].money"), 222)
+        self.assertEqual(lua.eval("GlobalBank.chars['Twin'].money"), 1)
+        self.assertEqual(lua.eval("GlobalBank.chars['Twin (Sonnenwind)'].money"), 2)
+        self.assertEqual(lua.eval("GlobalBank.chars['Solo'].money"), 3)
+
     def test_gear_details_come_from_the_link_and_round_trip(self):
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute(SOURCE.read_text(encoding='utf-8'))
@@ -188,7 +259,7 @@ class GlobalBankSnapshotTests(unittest.TestCase):
             AddLine=function(self, text) lines[#lines+1]=text end}
           ITEMS={{id='211000', name='Sword', count=1, slot=4, gear={link='33a18 3 5f'}},
                  {id='200000', name='Herb', count=5, slot=2}, {id='n:Odd', name='Odd', count=1, slot=3}}
-          GlobalBank.DetailItems=function() return ITEMS end
+          GlobalBank.cells=ITEMS
           GlobalBank.gridOffset, GlobalBank.COLS, GlobalBank.tab = 0, 10, 'bag'
           hasTitle=true
         """)

@@ -183,6 +183,10 @@ end
 local _original_updateList = login.charselect.updateCharacterList
 login.charselect.updateCharacterList = function(...)
   _original_updateList(...)
+  -- Global Bank records it with each character: names repeat between servers
+  if type(GetServerName) == "function" then
+    LOGCHAR_SERVER = GetServerName()
+  end
   local roster = {}
   for i = 1, GetNumCharacters() do
     roster[i] = (GetCharacterInfo(i))

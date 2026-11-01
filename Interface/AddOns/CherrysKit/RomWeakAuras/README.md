@@ -1,6 +1,6 @@
 # rom weakauras
 
-Version **0.9.30** · Kit release **0.11.100** · [All addons / hub](../README.md)
+Version **0.9.31** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
@@ -14,13 +14,15 @@ rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras
 >
 > **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
 > - **Cherry's KittyCombo:** track its next skills and modes
-> - **pbInfo:** mob information for triggers
-> - **Extended Macro Icons:** its icon picker uses the icon categories
-> - **Cherry's Quests:** Cherry's Quests can use its fonts
+> - **Cherry's Info:** mob information for triggers and the macro icon categories in its icon picker, and its quest tracker can use rom weakauras' fonts
 >
-> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\RomWeakAuras` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one. It's a rewrite of WeakAuras for World of Warcraft, so there's no original for this game.
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\RomWeakAuras` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one. It's a rewrite of WeakAuras for World of Warcraft, so there's no original for this game.
 
 <!-- end of requirements -->
+
+## Updated in 0.9.31
+
+**A little lighter after a fight.** The check for its end no longer makes a new table four times a second.
 
 ## Updated in 0.9.30
 

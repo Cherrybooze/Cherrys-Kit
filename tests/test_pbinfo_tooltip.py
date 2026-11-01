@@ -6,7 +6,7 @@ import unittest
 from lupa.lua51 import LuaRuntime
 
 
-SOURCE = Path(__file__).resolve().parents[1] / "Interface/AddOns/CherrysKit/pbInfo/Includes"
+SOURCE = Path(__file__).resolve().parents[1] / "Interface/AddOns/CherrysKit/CherrysInfo/Includes"
 
 
 class TooltipReadTests(unittest.TestCase):

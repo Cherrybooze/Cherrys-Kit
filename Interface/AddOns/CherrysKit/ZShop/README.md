@@ -15,7 +15,7 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 > **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
 > - **Global Bank:** its Chrome extension or helper tells ZShop the time, for the daily reminder
 >
-> **Original addon:** ZShop by Pyrr. If `Interface\AddOns\ZShop` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+> **Original addon:** ZShop by Pyrr. If `Interface\AddOns\ZShop` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
 

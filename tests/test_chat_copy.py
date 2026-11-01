@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 
 from lupa.lua51 import LuaRuntime
 
+import xml_templates
+
 
 CHAT_DIR = (
     Path(__file__).resolve().parents[1]
@@ -57,6 +59,7 @@ class CopyClient:
                 self:Run("OnTextChanged")
               end
               function frame:GetText() return self.text end
+              function frame:GetName() return self.name end
               function frame:ClearFocus()
                 self.clearCalls = self.clearCalls + 1
                 if focusedFrame == self then
@@ -93,7 +96,7 @@ class CopyClient:
         # Load the actual modules, including the real C.Try and configuration code.
         for name in ("CherrysChat.lua", "ChatWindow.lua"):
             self.lua.execute((CHAT_DIR / name).read_text(encoding="utf-8"))
-        self.ui = ET.parse(CHAT_DIR / "CherrysChat.xml").getroot()
+        self.ui = xml_templates.parse(CHAT_DIR / "CherrysChat.xml")
         for name in ("CherrysChat_WinCopyBar", "CherrysChat_WinCopy"):
             node = self.node(name)
             for script in node.findall("ui:Scripts/*", UI_NS):

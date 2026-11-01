@@ -27,7 +27,7 @@ This explains why displaying an unowned NPC's raw `UnitHealth / UnitMaxHealth` a
 
 The number comes the way the original [pbInfo](https://www.curseforge.com/rom/addons/pbinfo) target frame (`Includes/inc.TargetFrame.lua` with `inc.MobDB.lua`) gets it: when a monster is at 100%, `UnitChangeHealth` is remembered as its maximum HP, stored by name, level and class; the HP shown is `maximum × percentage / 100`, rounded up. The project is by p.b. / novayuna and its contributors; its original notices remain with the bundled addon.
 
-RWA keeps its own list of learned maxima for the session, by name, level and class, so a second monster of the same kind already shows a number when you target it hurt. The list holds up to 300 kinds and then starts over. When pbInfo is on, RWA also reads pbInfo's saved MobDB (without calling its updater or writing to it) and uses the larger maximum.
+RWA keeps its own list of learned maxima for the session, by name, level and class, so a second monster of the same kind already shows a number when you target it hurt. The list holds up to 300 kinds and then starts over. When Cherry's Info is on, RWA also reads the saved MobDB of the pbInfo inside it (without calling its updater or writing to it) and uses the larger maximum.
 
 A learned maximum only grows: a heal back to full gives a small change, and that never lowers what was learned. A damage change is never taken as a maximum. Without a learned maximum RWA shows `?`; it does not invent HP. When the game cannot say whether the target is a player (the function is missing or fails), an ambiguous 100-point pool also stays `?`.
 
@@ -35,4 +35,4 @@ The number is an estimate for monsters, as pbInfo's was: the percentage is whole
 
 ## Native checks
 
-Compare a player, an owned pet, a fresh monster, the same monster after damage, a second monster of the same kind targeted while hurt, and a dead target. Repeat with pbInfo on and off, change targets quickly, and check monsters with the same name at different levels or classes. Clear the target to confirm the stock aura hides. Check that the percentage sits just above the bar and the HP number inside its right end at different UI and aura scales, and that a custom second text keeps the normal layout.
+Compare a player, an owned pet, a fresh monster, the same monster after damage, a second monster of the same kind targeted while hurt, and a dead target. Repeat with Cherry's Info on and off, change targets quickly, and check monsters with the same name at different levels or classes. Clear the target to confirm the stock aura hides. Check that the percentage sits just above the bar and the HP number inside its right end at different UI and aura scales, and that a custom second text keeps the normal layout.

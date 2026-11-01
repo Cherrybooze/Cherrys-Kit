@@ -34,7 +34,9 @@
       const who = identity();
       if (!who) return;
       const pendingKey = 'pendingReward:' + encodeURIComponent(who.server.toLocaleLowerCase()) + ':' + encodeURIComponent(who.name.toLocaleLowerCase());
-      const state = await chrome.storage.session.get(pendingKey);
+      const state = await chrome.storage.session.get([pendingKey, 'autoCollect']);
+      // Off unless the player ticked it in the popup: then the player clicks, and the result is still recorded.
+      const auto = state.autoCollect === true;
       if (!active()) { stop(); return; }
       let pending = state[pendingKey];
       if (pending && pending.name === who.name && pending.server === who.server) {
@@ -83,9 +85,9 @@
       const day = Number(chest?.dataset.number);
       if (!chest || !chest.id || info?.dataset.for !== chest.id || !visible(button) || button.disabled || button.getAttribute('aria-disabled') === 'true' || !Number.isInteger(day) || day < 1 || day > 28) return;
       pending = {...who,chestId:chest.id,day,started:Date.now()};
-      await chrome.storage.session.set({[pendingKey]:pending,lastStatus:'Collecting the available reward for ' + who.name + '…'});
+      await chrome.storage.session.set({[pendingKey]:pending,lastStatus:auto ? 'Collecting the available reward for ' + who.name + '…' : 'Daily reward ready for ' + who.name + ': click it on the page and it will be recorded.'});
       if (!active()) { stop(); return; }
-      button.click();
+      if (auto) button.click();
     } catch (error) {
       if (invalidated(error)) { stop(); return; }
       try { await chrome.storage.session.set({lastStatus:'Daily reward extension: ' + String(error.message || error)}); }

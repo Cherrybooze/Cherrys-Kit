@@ -1,105 +1,50 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-Full-0.11.114.zip)
+[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)
 
 # Cherry's Kit
 
-> Playtest build: kit **0.11.114**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
+> Playtest build: kit **0.11.115**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
 
-## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-Full-0.11.114.zip)
+## [Download the full kit — install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)
 
-**Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Start the game or Reload UI, then type `/ck`.
+**Extract this ZIP straight into your game's `Interface/AddOns/` folder.** It creates `Interface/AddOns/CherrysKit/CherrysKit.toc`. Then double-click **`!setup_cherryskit.bat`**, which lands next to the `CherrysKit` folder, start the game or Reload UI, and type `/ck`.
+
+> **What the setup does:** it says which addons are out of date against the latest release here on GitHub and can update them, checks what your addons can use and asks before installing what's missing, moves older copies of the kit's addons to `Interface\offloaded_addons` so the kit's versions win (nothing is deleted), stops the Global Bank helper during updates, puts LogNextChar's login screen in place, and walks you through the optional Chrome extension. It asks at most five questions. Run the same file whenever you want to update.
 
 > **Installing the addon? Use the download above.** GitHub's green **Code → Download ZIP** button and **Source code (zip)** links download the repository, with an extra `Cherrys-Kit-main` or version folder. Those downloads are for working on the source.
 
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest build: **0.11.114** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.114)
+Current playtest build: **0.11.115** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115)
 
 Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection: chat, bags and the shared bank view, an auction house, tooltips, one-key rotations, on-screen bars and displays, a quest tracker, and a replacement login screen. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
 
-## What’s new in 0.11.114
+## What's new in 0.11.115
 
-- **The helper lives with Chrome.** The extension pings it while Chrome is open; when Chrome, or the extension itself, goes away, the helper ends on its own within a few minutes. The checks are cheap: a stop-flag look every 2 seconds, and one heartbeat read every 15.
-- **The extension's button controls it.** The popup shows whether the helper is running and for how long, and has a **Stop Global Bank helper** button that stops it however it was started.
-- **A terminal window if you want one.** A new tick, **Show its terminal window**, runs the background helper in a real PowerShell window titled "Cherrys Global Bank Helper" instead of invisibly.
-- The helper also clears leftover files from the pre-kit Global Bank helper in its data folder.
-- **The page follows your last logout.** Gear and mana stones on Global Bank's page hover with the game's own tooltip, saved when a character logs out. Logging in one character through Cherry's Loginxml records your whole account's character list: their servers filled in, boxed together under Link characters and on the heatmap, names coloured by last class.
-- **Mouse 4 for Cherry's Grid 1.1.5.** It joins the click buttons on your frames, with Shift, Ctrl and Alt mixes, and a tick on the Clicks page, off by default, also makes it a real game keybind over windows and buttons.
-- **Cherry's Loginxml and LogNextChar 1.2.2** live inside `CherrysKit\` and load through the hub; each still comes as its own download as well. LogNextChar also runs without the login screen: Next and Prev then just log you out.
+- **Cherry's Info 1.0** (`/cinfo`, `/cq`) replaces **Cherry's Quests**, **pbInfo**, **TooltipIds**, **PortraitHP** and **Extended Macro Icons**: one addon, one switch in `/ck` and one window with four tabs. Your saved settings carry over, and their commands still work.
+- **LogNextChar 1.3.1** now includes Cherry's Loginxml: one addon, one ZIP, with its login screen inside. Its installer moves old folders to `Interface\offloaded_addons` instead of deleting them, and copies your old `loginxml` there first when anything would change.
+- **The guided setup** (`!setup_cherryskit.bat`, in the Full and Hub ZIPs) for installs and updates. It tells you which addons are out of date against GitHub and updates them for you, with the old versions kept. It knows hub-only installs, so your own copy of an addon only moves when the kit's copy is there to replace it.
+- **Global Bank 1.5.4** has a refreshed in-game window: server tabs, characters grouped by account, and a search that lights up the matching bag and bank slots.
+- **Lighter and smaller.** Cherry's Grid 1.1.6 makes next to no garbage while drawing: in a simulated 36-member raid, about 580 KB of new memory a second fell to almost nothing. The XML files of Cherry's Grid, Cherry's Chat, zBag and Global Bank went from 598, 401, 229 and 561 KB to 105, 70, 123 and 113 KB, with the same frames, so the game has less to read at login.
+- **Global Bank 1.4.16** keeps same-named characters on different servers apart, on its page, in its window and on the character screen.
+- **Global Bank Daily Rewards 1.2.2** for Chrome: the page is built for thousands of characters, with a Region button, server checkmarks (Ayvenas included), a Servers tab to edit them, one selection on every tab, the game's tooltips with item and mana stone stats, stacking checkmarks per item type, Always stack, a Favourites tab, RoM account names, and an item menu that stacks the characters who hold it. Collecting the daily reward automatically is now a tick in the popup, off by default. A dark and gold popup with a live helper badge, and **Stop** also unticks automatic startup. The helper no longer stops after three minutes on its own: the extension's heartbeat now really runs. Already have the extension? Press **Reload** on it, and that's all.
+- **Ultimate Mail Mod 7.0.1-ck11**: on **Mass Send Items**, the recipient picker shows History, Characters and Friends.
 
-## What’s new in 0.11.113
+## In 0.11.114
 
-This playtest gathers everything since 0.11.101. The highlights:
+- **Global Bank's helper lives with Chrome.** Tick **Keep the helper running automatically when Chrome is open** and it ends on its own when Chrome, or the extension, goes away. The extension's button shows whether it is running and for how long, has a **Stop Global Bank helper** button, and a **Show its terminal window** tick if you want to watch it.
+- **The game's own tooltips on the Global Bank page.** Gear and mana stones hover with the tooltip the game shows, saved when a character logs out.
+- **Whole accounts at once.** Logging in one character through LogNextChar's login screen records its account's character list: their servers are filled in, and they're boxed together under Link characters and on the gold heatmap, names in class colours.
+- **Mouse 4 in Cherry's Grid 1.1.5.** It joins the click buttons on your frames, with Shift, Ctrl and Alt, and a tick on the Clicks page, off by default, also makes it a game keybind over windows and buttons.
 
-- **Global Bank** (up to 1.4.14) and its Chrome extension (1.0.16): the page is now a full bank viewer — one scrolling grid with the game's own icons, search, filters and a slot tooltip, plus Currencies, Characters, Item Depot and Stats tabs, a gold heatmap and Gameforge accounts. Gear never stacks, the auction cache clears itself, and the Bank tab can read your folders without the local helper.
-- **Cherry's Loginxml 1.2.1 and LogNextChar 1.2.1**: gold and last save on the login screens, and the mailbox closes before switching characters.
-- **Cherry's Chat 0.11.0**: emoji in `/say` go out as symbols the game font can draw, or as `:code:` text when there is no symbol, so the speech bubble over your head no longer shows empty boxes.
+## Since 0.11.101
+
+- **Global Bank 1.4.8 to 1.4.14** and its Chrome extension turn the extension's page into a full bank viewer: one scrolling grid with the game's own icons, search (also by stat, on items or mana stones), filters and exclusions, plus **Currencies**, **Stats**, **Gold heatmap**, **Characters**, **Item Depot** and **Gameforge accounts** tabs. Accounts are encrypted with your own password and stay on your PC. Gear never stacks, auctions leave the cache when they end, and the Bank tab can read your folders without the helper.
+- **LogNextChar's login screen and buttons**: each character's gold and last save on the character screen, the helper's status on the server screen, and the mailbox closes before switching characters.
+- **Cherry's Chat 0.11.0**: emoji in `/say` go out as symbols the game font can draw, or as `:code:` text when there is no symbol, so the speech bubble over your head no longer shows empty boxes. Pick the style with **Say bubbles** in `/cchat`.
 - **Cherry's Bar 1.1.9**: Location can show your coordinates, with a tick in its right-click menu or in `/cbar`.
-- Plus the fixes in the sections below.
+- **Real time for addons** (0.11.101): the hub has a clock, fed by the Chrome extension when Chrome starts, and Cherry's Bar's Clock and ZShop's daily reminder use it.
 
-## In 0.11.109
-
-- **Emoji in Say bubbles**: **Cherry's Chat 0.11.0** sends emoji in Say as symbols the game font can draw (♥ ★ (^_^)), or as text like `:carrot:` when there is no symbol, so the bubble over your head shows them instead of two empty boxes. The game draws bubbles itself, so no addon can put pictures in them; Cherry's Chat users still see pictures in chat. Pick the style with **Say bubbles** in `/cchat`.
-
-## In 0.11.107
-
-- **Cherry's Loginxml 1.2.1**: The character screen shows each character's gold and when it was last saved, from Global Bank's data. The server screen says when Global Bank's helper isn't running or hasn't been set up.
-- **LogNextChar 1.2.1**: Next, Prev and the other switches now close the mailbox and Ultimate Mail Mod's window first, so the mailbox still opens on the next character.
-- **Global Bank 1.4.14**: The extension's page has a Stats tab listing every stat, how many there are and which characters hold them, for items or for mana stones separately. The Bank tab's search can look at stats on items or on mana stones, and mana stones with different stats no longer stack. A character saves mana stone stats the next time it logs in.
-- **Global Bank 1.4.13**: The extension's page has a Gold heatmap tab, with a column per server and full caps pooled together, and a Gameforge accounts tab for copying logins and linking characters to accounts in bulk. Right-click an item or a heatmap cell to copy a character, account or password. Accounts and passwords stay in this Chrome profile, unencrypted. A character saves its server the next time it logs in.
-- **Global Bank 1.4.12**: Gear no longer stacks in the Bank tab. Each piece shows its durability, plus level, tier upgrades, runes and stats when you hover it, and the name search finds stats too. A character saves these the next time it logs in.
-- **Global Bank 1.4.11**: The extension's page has a Currencies tab with every character's currencies, totals and a sort per currency. The Bank tab can exclude items, with an option to exclude bound items that can't be equipped, and an always-keep list. Characters save their currencies and which items are bound the next time they log in.
-- **Global Bank 1.4.10**: The auction cache now removes an item when its auction ends, not only after two days, and forgets old transfer records. The page also handles a character file of any size, for players with thousands of alts.
-- **Global Bank 1.4.9**: The Bank tab can now run without the local helper: choose your save folder, and your game folder for icons, and it reads them straight from there. The Terminal and Auctions tabs still need the helper.
-- **Global Bank 1.4.8**: the Daily Rewards extension's page shows everything your characters hold in one grid with search and filters, using the game's own icons, and runs the helper's commands. Viewing your bank no longer needs a terminal window.
-
-## In 0.11.101
-
-- **Real time for addons.** The hub has a clock now, fed by Global Bank's Daily Rewards Chrome extension 1.0.9, and **Cherry's Bar** and **ZShop 1.2.0-ck5** read it. Chrome starting is enough; it lasts until Windows restarts.
-
-- **Global Bank 1.4.7**: the daily reset follows 00:00 in Germany in any time zone, and the extension's setup takes one click plus Chrome's two.
-
-- **New separate packages:** [Cherry's Loginxml](Interface/AddOns/CherrysLoginxmlHook/README.md), a replacement login screen that gets past a stuck server list, and [LogNextChar](Interface/AddOns/LogNextChar/README.md), Next and Prev character buttons.
-
-- **Installing only some addons** no longer lights the minimap's bug button. Each addon is tested with only the hub, on a simulated client.
-
-## In 0.11.100
-
-- **rom weakauras 0.9.30**: dragging the corner at an aura's bottom right scales it again, and the arrows at its top left move it. Before this the game gave those grips no mouse scripts, so they did nothing. Shift-drag on an aura also scales it.
-
-- **Cherry's Bar 1.1.7** (`/cbar`) is new: full-width information bars at the top of the screen, the bottom, or both, with nineteen displays set per bar. Its Kitty mode display replaces KittyCombo 1.7.17's "Mode:" plate. Drag displays on a map of the bars or on the bars themselves. Its bar styles and icons are Cherry's Studio Panel art. It is a fork of XBar III, with bars and right-click settings in the spirit of Titan Panel. It shows the top bar at first, drawn under the game's portrait, housing controls and minimap. A bottom bar lifts the whole interface and fits underneath. Hub 0.4.23 lists it. None of it has run in the game client yet, and [the checks are here](docs/TESTING.md).
-
-## In 0.11.90
-
-- **Names from chat into the mail**: with the mail window open, Ctrl+click or Shift+click a player's name in chat to put it in To. **Ultimate Mail Mod 7.0.1-ck10** fills Compose's To (switching to Compose from the inbox or History) or the mass-send To field on Mass Send Items, and **Cherry's Chat 0.10.12** hands these clicks to the mail window first.
-
-## In 0.11.89
-
-- **Cherry's Chat 0.10.11**: the right-click menu (Copy line, Copy name, Whisper, Add friend, Ignore) opens just right of the chat window's scroll bar, level with the middle of the window, instead of at the mouse, where it could hang below the bottom of the screen. With no room on the right it opens on the window's left.
-
-## In 0.11.88
-
-- **rom weakauras 0.9.29**: much shorter share codes (`RWA5!`), made like KittyCombo's CKC3 codes with a codebook every player has. An aura made from a template is about 20 to 45 characters instead of 450 to 1000, so most single auras fit in a chat line. Import also finds a code inside pasted text, and older codes still import.
-
-## In 0.11.87
-
-- **No work on every frame.** No kit addon does its work on every frame any more unless you are moving, sizing, sorting or selecting something. **rom weakauras 0.9.28** makes about 98% less garbage per second (about 4.6 MB down to 90 KB every 10 seconds with 15 buffs and 6 debuffs), and **pbInfo**, **Ultimate Mail Mod**, **zBag**, **Cherry's Grid** and **KittyCombo** check a few times a second instead.
-- **Cherry's Chat 0.10.10**: no more freeze when many lines arrive at once, such as after raising a skill to its maximum and confirming, and a working scroll bar made from the game's own scroll parts.
-- **rom weakauras 0.9.28**: the corner at an aura's bottom right scales it without a key, and the Position section is open. **Target health** shows the percentage above the bar and the HP number inside it, learned the way pbInfo does it (`?` until known).
-- **Ultimate Mail Mod 7.0.1-ck9**: gold presets stop at 999,999,999 and get commas while you type, and **Forget own chars** asks Yes or No first.
-- **Addon LoadTimes 1.3.0** is a troubleshooting addon now: it comes switched off in `LoadTimes/Switch.txt` and then uses no memory. The hub no longer bundles it.
-
-## Also in this playtest
-
-- **Cherry's Quests 1.0.0** (from 0.11.86): a prettier quest tracker. Ctrl+click a quest to cycle through the NPCs it names and track one.
-- **KittyCombo 1.7.15** (from 0.11.85): the mode pictures open even while the mode button is hidden, two **Change kitty mode** rows can no longer flip the mode on every key press, and `/kc window 0.6` tries the older ready window.
-- **KittyCombo**: a mode picker with pictures for the mode button, the "Mode:" readout and the **Change kitty mode** action, with pages when you have many modes. The mode button sits a little lower to clear the housing controls.
-- **rom weakauras**: clickthrough auras (untick **Make clickthrough** to get an aura's tooltip back), a Scale setting for whole auras, optional scaling with your screen size (off by default), **Reset position**, and cast bars for transport books and other casts that are not spells.
-- **Ultimate Mail Mod**: drag a box to select items across all six bags, a **Recently sent** list beside Mass Send, **Use last** and gold buttons, and a **History** tab with your last 20 recipients, shared by all your characters. Clicking an item keeps the cursor in the To field.
-- **zBag**: the split-stack box stays open when your bags update, and slot numbers are smaller by default with a **Font size** setting in /zb.
-- **Advanced AuctionHouse**: reads items with its own hidden tooltip instead of borrowing the game's upgrade tooltip.
-- [Emoji pictures above players' heads](docs/CHAT_BUBBLES.md) are still not possible: the game gives addons no way to draw them.
-
-Some features still need confirmation in the game client; see the release notes and individual addon guides for details.
+Older changes are in each addon's guide and in the [release notes](https://github.com/Cherrybooze/Cherrys-Kit/releases). Some features still need confirmation in the game client; the guides say which.
 
 ## Why this project exists
 
@@ -109,10 +54,11 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-Full-0.11.114.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.113)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115)
 
 - **Full kit:** the install ZIP above includes the hub and every addon.
-- **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets.
+- **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets. Updating one addon? Update the hub too.
+- **Updating:** double-click `!setup_cherryskit.bat` in `Interface/AddOns/`. [It finds and installs what's out of date](#keeping-addons-updateable). Don't have that file yet (0.11.114 or older)? Extract the Full or Hub ZIP over your `Interface/AddOns/` once, then run it.
 
 Extract the selected ZIPs into your game's **`Interface/AddOns/`** folder. They all contain a top-level `CherrysKit/` folder: merge those folders, keeping `CherrysKit.toc` directly inside `CherrysKit/`. Start the game or Reload UI, then type **`/ck`** (or **`/rwa`**).
 
@@ -129,9 +75,9 @@ Interface/
       ...
 ```
 
-If you already downloaded `Cherrys-Kit-main.zip`, use the install ZIP linked above instead. If Windows offers an extraction folder named after the ZIP, change that destination to your existing `Interface/AddOns/` folder.
+If you already downloaded `Cherrys-Kit-main.zip`, use the install ZIP linked above instead. If Windows offers an extraction folder named after the ZIP, change that destination to your existing `Interface/AddOns/` folder. If it's already extracted that way inside `AddOns`, run the setup from there: it installs the kit properly and moves that extra folder out, because the game would otherwise load both.
 
-Remove old separate copies of the same addons from `Interface/AddOns/` first; the hub keeps its copy idle if another copy is detected. Your saved settings live outside the addon folders. The [hub README](Interface/AddOns/CherrysKit/README.md) explains this in more detail.
+Old separate copies of the same addons: **`!setup_cherryskit.bat`** moves them to `Interface\offloaded_addons`, but only for addons the kit's copy is installed for. Until one is moved, the hub keeps its own copy of that addon off and says which folder takes precedence. Your saved settings live outside the addon folders. The [hub README](Interface/AddOns/CherrysKit/README.md) explains this in more detail, and the [addon map](docs/ADDON_MAP.md) lists what each addon works with.
 
 **Addon LoadTimes** is a troubleshooting addon with its own ZIP. It comes switched off in its `LoadTimes/Switch.txt` and then uses no memory. Every individual addon ZIP requires the hub.
 
@@ -139,42 +85,55 @@ Remove old separate copies of the same addons from `Interface/AddOns/` first; th
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches and minimap button. | `/ck`,`/rwa` | 0.4.25 |
-| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.17 |
-| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays. | `/wa` | 0.9.30 |
-| [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji and chat display settings. | `/cchat` | 0.11.0 |
-| [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck16 |
-| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold. | `/gb` | 1.4.15 |
-| [Extended Macro Icons](Interface/AddOns/CherrysKit/ExtendedMacroIcons/README.md) | A larger, categorised macro icon picker. | `/emi` | 3.0.4 |
-| [TooltipIds](Interface/AddOns/CherrysKit/TooltipIds/README.md) | ID numbers for items, buffs, skills and other game data. | `/ti` | 1.0b3-ck3 |
-| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck10 |
-| [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Auction searching, stat filters, history and a resizable window. | `/aah` | 6.2.5 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches, minimap button and a clock for other addons. | `/ck`,`/rwa` | 0.4.28 |
+| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.18 |
+| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays, with short share codes. | `/wa` | 0.9.31 |
+| [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji, encrypted channels and chat display settings. | `/cchat` | 0.11.1 |
+| [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck17 |
+| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold, in game and in Chrome. | `/gb` | 1.5.4 |
+| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck11 |
+| [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Auction searching, stat filters, Broad search, history and a resizable window. | `/aah` | 6.2.5 |
 | [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Troubleshooting: loading times and memory use, off until its Switch.txt turns it on. | `/ckload` | 1.3.0 |
 | [ZShop](Interface/AddOns/CherrysKit/ZShop/README.md) | Item-shop access and a daily loyalty reward shortcut. | `/zshop` | 1.2.0-ck5 |
-| [pbInfo](Interface/AddOns/CherrysKit/pbInfo/README.md) | Richer tooltips, quest tracking, chat filters and cast-bar options. | `/pbinfo` | 0.60-ck5 |
-| [PortraitHP](Interface/AddOns/CherrysKit/PortraitHP/README.md) | Your target's health percentage on its portrait. | `/php` | 2019.07.14-ck2 |
-| [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click. | `/grid` | 1.1.5 |
-| [Cherry's Quests](Interface/AddOns/CherrysKit/CherrysQuests/README.md) | A prettier quest tracker; Ctrl+click a quest to track the NPCs it names. | `/cq` | 1.0.0 |
+| [Cherry's Info](Interface/AddOns/CherrysKit/CherrysInfo/README.md) | Quest tracker with Ctrl+click NPCs, richer tooltips with IDs, target health on its portrait, chat filters and 10,500+ macro icons. | `/cinfo`,`/cq` | 1.0.1 |
+| [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click and Mouse 4. | `/grid` | 1.1.6 |
 | [Cherry's Bar](Interface/AddOns/CherrysKit/CherrysBar/README.md) | Information bars at the top, bottom or both, with displays set per bar. | `/cbar` | 1.1.9 |
 
 Some integrations need both addons: for example, running a kitty from Grid needs KittyCombo. Each addon's README lists its requirements and current limits. Features still being tested are labelled there.
 
 ## Separate packages
 
-These aren't in the full kit: extract them into `Interface/AddOns/` as usual, and both need the hub. Each goes into `CherrysKit\` and loads through it like any kit addon.
+This one isn't in the full kit: extract it into `Interface/AddOns/` as usual. It needs the hub, goes into `CherrysKit\` and loads through it like any kit addon.
 
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Loginxml](Interface/AddOns/CherrysLoginxmlHook/README.md) | A replacement login screen: gets past a stuck server list, saved logins, keyboard controls. Run its `Install login screen.bat` once. | | 1.2.2 |
-| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character. With Cherry's Loginxml it picks the character. | `/lnc` | 1.2.2 |
+| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character, with its own login screen: gets past a stuck server list, saved logins, keyboard controls, and each character's gold with Global Bank. The guided setup puts the login screen in place, or run its `Install login screen.bat` once. | `/lnc` | 1.3.1 |
 
-Download them from this build: [CherrysLoginxml-1.2.2.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysLoginxml-1.2.2.zip) · [LogNextChar-1.2.2.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/LogNextChar-1.2.2.zip). Each needs the hub.
+Download it from this build: [LogNextChar-1.3.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/LogNextChar-1.3.1.zip).
 
 ## Optional Chrome extension
 
-[Download Global Bank Daily Rewards for Chrome 1.0.17](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.114/CherrysKit-GlobalBankDailyRewards-1.0.17.zip) — an optional, separate Windows package for Chrome. It collects available rewards on the Gameforge daily shop page, records confirmed collections locally, and provides local character and auction-cache search. It requires Global Bank and its helper.
+[Download Global Bank Daily Rewards for Chrome 1.2.2](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-GlobalBankDailyRewards-1.2.2.zip): an optional, separate Windows package for Chrome, for Global Bank. Its page shows every character's bank in one grid, with currencies, stats, a gold heatmap, the item depot, encrypted Gameforge accounts and the helper's terminal and auction cache. It records daily rewards when the Gameforge daily shop page confirms them, can collect them for you if you tick that in its popup, can keep the helper running while Chrome is open, and tells the kit the time.
 
-Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step. Automatic page processing is limited to the Gameforge daily shop page; the extension does not send your local data to the developer.
+Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step, and after that an update only needs **Reload** on the extension. Automatic page processing is limited to the Gameforge daily shop and item depot pages; the extension does not send your local data to the developer.
+
+## Keeping addons updateable
+
+**Players:** double-click **`!setup_cherryskit.bat`** in `Interface/AddOns/`, or right-click **`!setup_cherryskit.ps1`** beside it and choose **Run with PowerShell**. The window opens at once, and within a couple of seconds says which addons are out of date against the release marked Latest here. Say yes and it downloads only those, checks each file against the release's checksums, moves the old versions to `Interface\offloaded_addons` and puts the new ones in place, keeping any changes you made to `Commands.lua`. It also lists what your addons can use that isn't there, such as Chrome for Global Bank's extension or an addon yours works with, and asks yes or no before installing any of it. All it contacts is this repository's release files, with no account, and `-NoUpdateCheck` turns that off. Press **Reload** on the Chrome extension afterwards if Global Bank changed.
+
+**Developers:** the tool only works while every addon and release keeps to these rules. A change that breaks one isn't ready to merge.
+
+1. **One folder per addon**, at `Interface/AddOns/CherrysKit/<Folder>`, listed in `release-packages.json` and loaded through `CherrysKit.toc`. No `.toc` of its own: the game loads every `.toc` it finds under `AddOns`.
+2. **A version line near the top of its README**, `Version **x** · ...`, in the first 12 lines and equal to its version in `release-packages.json`. That line is what the setup compares. A test fails when they differ.
+3. **A new version for every changed addon.** Change the files and keep the number, and players never get the change. The hub follows the same rule, and every release gets a new `kit_version`, in `CherrysKit.toc` too.
+4. **No player data in addon folders.** An update moves the old folder away. Settings go in saved variables. A file players edit by hand, like `Commands.lua`, must be on the setup's `$script:KeepOnUpdate` list.
+5. **Say what a rename or merge replaces.** Take the old folder's lines out of `CherrysKit.toc`, so the setup moves it out, and list the old folders under `origin.others` in `release-packages.json`, so the new addon comes in for whoever had the old one.
+6. **ZIPs hold only `CherrysKit/...`**, plus the two launchers at the root of the Full and Hub ZIPs. The builder checks this, and the setup refuses anything else.
+7. **A release is tagged `v<kit version>`, carries every ZIP, `release-versions.json`, `release-manifest.json` and `SHA256SUMS.txt`, and is marked Latest.** The setup only offers the release marked Latest, so a prerelease reaches testers by its link and not through the tool. Never replace a published ZIP's files.
+8. **Try the update before publishing:** build, then run `Setup-CherrysKit.ps1 -ReleaseFolder dist\<kit version>` in a copy of a game folder. Add `-ReinstallAll` to reinstall packages whose version didn't change.
+9. **Say what an addon can use.** The setup's Dependencies step offers the `works_with` addons in `release-packages.json` to anyone who has the addon naming them. A Windows program an addon needs goes in the setup's `Get-Dependencies`.
+
+[The release guide](docs/RELEASING.md) has the steps in order.
 
 ## Support and pull requests
 
@@ -186,27 +145,26 @@ Bug reports are welcome as well: say which addon and kit version you use, what y
 
 ## Inside this repository
 
-- [`Interface/AddOns/CherrysKit/`](Interface/AddOns/CherrysKit/) holds the installed addon tree, with a README in the hub and every addon folder.
+- [`Interface/AddOns/CherrysKit/`](Interface/AddOns/CherrysKit/) holds the installed addon tree, with a README in the hub and every addon folder. LogNextChar sits beside it, in [`Interface/AddOns/LogNextChar/`](Interface/AddOns/LogNextChar/), with the login screen itself in [`Interface/loginxml/`](Interface/loginxml/).
 - [`docs/curseforge/`](docs/curseforge/README.md) contains the copy-and-paste CurseForge descriptions and publishing notes.
+- [`docs/ADDON_MAP.md`](docs/ADDON_MAP.md) lists what each addon works with, and [`docs/TESTING.md`](docs/TESTING.md) the checks that need the real game client.
 - [`docs/RELEASING.md`](docs/RELEASING.md) explains packaging, installation layouts and publishing a version.
-- [`release-packages.json`](release-packages.json) records the package names and versions.
-- [`tools/build_release.py`](tools/build_release.py) creates the ZIPs, validates their contents and writes SHA-256 checksums.
+- [`release-packages.json`](release-packages.json) records the package names, versions and links between addons.
+- [`tools/build_release.py`](tools/build_release.py) creates the ZIPs, validates their contents and writes SHA-256 checksums, and [`tools/curseforge_pages.py`](tools/curseforge_pages.py) keeps the descriptions' requirement lines in step with `release-packages.json`.
 
 All addon source lives on **`main`**. Use short-lived branches for changes and tags for releases. Generated ZIPs live in Releases rather than Git history.
 
 ## Development and checks
 
-Python 3.10 or later is enough; there are no Python package dependencies:
+Python 3.10 or later is enough to build; there are no Python package dependencies:
 
 ```sh
 python tools/build_release.py
 ```
 
-This creates twenty-one ZIPs in `dist/<kit version>/` (the full kit, the hub, eighteen addons and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
+This creates sixteen ZIPs in `dist/<kit version>/` (the full kit, the hub, twelve addons, LogNextChar and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
 
-The original 0.11.77 import preserved the supplied runtime code. Earlier READMEs referring to old tests or generators are kept as reference notes, but those development tools were not included in the handoff. Current tests simulate client APIs; native drawing, input, sound and event timing still need in-game checks.
-
-The current fixes also have Lua 5.1 regression coverage: install `tests/requirements.txt`, then run `python -m unittest discover -s tests -p 'test_*.py' -v`. The [in-game check list](docs/TESTING.md) describes the remaining native-client checks.
+The tests run the addons on Lua 5.1 against a simulated client: install `tests/requirements.txt`, then run `python -m unittest discover -s tests -p 'test_*.py' -v`. Native drawing, input, sound and event timing still need in-game checks, listed in [TESTING.md](docs/TESTING.md).
 
 ## Credits and licences
 

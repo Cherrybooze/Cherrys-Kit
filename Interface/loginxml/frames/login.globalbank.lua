@@ -32,7 +32,8 @@ local function readFile(path)
   return env, result
 end
 
--- GB1~name~class~level~gold~bagSlots~bankSlots~bankSeen~time, then more records after a backtick
+-- GB1~name~class~level~gold~bagSlots~bankSlots~bankSeen~time, then more records after a backtick,
+-- with S~server among them. Names repeat between servers, so a character is found by both.
 function me.read()
   local env = readFile(me.DATABASE)
   local import = env and env.GlobalBank_Import
@@ -44,15 +45,30 @@ function me.read()
   for _, entry in ipairs(import) do
     local name, gold, when = string.match(tostring(entry.s), '^GB1~([^~`]*)~[^~`]*~[^~`]*~([^~`]*)~[^~`]*~[^~`]*~[^~`]*~([^~`]*)')
     if name and name ~= '' then
-      me.characters[string.lower(name)] = {gold = tonumber(gold) or 0, saved = when ~= '' and when or tostring(entry.saved or '')}
+      local server = string.match(tostring(entry.s), '`S~([^`]*)')
+      local key = string.lower(name)
+      me.characters[key] = me.characters[key] or {servers = {}}
+      local known = {gold = tonumber(gold) or 0, saved = when ~= '' and when or tostring(entry.saved or '')}
+      if server and server ~= '' then
+        me.characters[key].servers[server] = known
+      else
+        known.unsure = true
+        me.characters[key].unsure = known
+      end
       me.hasData = true
     end
   end
   return me.hasData
 end
 
+-- One saved before servers were recorded could be either character, so it says so (a ? on the screen).
 function me.character(name)
-  return me.characters[string.lower(tostring(name))]
+  local found = me.characters[string.lower(tostring(name))]
+  if not found then
+    return nil
+  end
+  local server = type(GetServerName) == 'function' and GetServerName() or nil
+  return found.servers[server] or found.unsure
 end
 
 function me.formatGold(amount)

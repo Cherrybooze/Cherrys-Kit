@@ -1,0 +1,17 @@
+Cherry's Info
+
+1.0.1 (2026-11-01)
+- Overhead health bars build their frame names once, not on every pass.
+- CherrysQuests.xml: three tab labels had a bare &, which XML doesn't allow.
+
+1.0 (2026-10-31)
+- Cherry's Quests, pbInfo, TooltipIds, PortraitHP and Extended Macro Icons in one addon and one folder,
+  with one switch in /ck and one window (/cinfo, /cq) with four tabs. Saved settings carry over.
+
+Cherry's Quests
+
+1.0.0 (2026-10-30)
+- First version for Cherry's Kit: a quest tracker with font, outline, size, scale, width,
+  background, sort and progress-bar options (/cq). Ctrl+click a quest cycles through the NPCs
+  its texts name and puts the one picked in the game's NPC tracking list; the pick is kept per
+  character and quest. Replaces the game's and pbInfo's trackers while shown.

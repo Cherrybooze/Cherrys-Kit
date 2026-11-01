@@ -14,7 +14,7 @@ A small report of how long each addon took while the loading screen was up, and 
 >
 > **On its own:** it runs with just the hub, and nothing it does needs another addon.
 >
-> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\!CherrysLoadTimes` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+> **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\!CherrysLoadTimes` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
 > **Other addons:** It times every addon the game loads, kit or not, and needs none of them.
 

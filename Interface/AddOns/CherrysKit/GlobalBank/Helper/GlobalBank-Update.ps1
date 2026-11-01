@@ -106,11 +106,12 @@ $oldShortcut = if ($startupFolder) { Join-Path $startupFolder "Global Bank helpe
 $pattern = [regex]'(?m)^GlobalBank_Char = ("(?:[^"\\\r\n]|\\.)*")\s*$'
 $removedPattern = [regex]'(?m)^GlobalBank_Removed = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 $notesPattern = [regex]'(?m)^GlobalBank_Notes = "((?:[^"\\\r\n]|\\.)*)"\s*$'
+$othersPattern = [regex]'(?m)^GlobalBank_Others = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 $tipsPattern = [regex]'(?m)^GlobalBank_Tips = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 
 $script:Excluded = @{}
-$script:Entries = @{}      # folder name -> @{ saved; s; line }, as in the database file
-$script:ByKey = @{}        # folder name -> character object
+$script:Entries = @{}      # character key -> @{ name; folder; saved; s; line }, as in the database file
+$script:ByKey = @{}        # character key -> character object
 $script:Notes = @{}        # name -> @{ v; t }: notes (and the window size, "*size") as in the database
 $script:Chars = @()        # character objects sorted by name
 $script:Buffer = ""        # what the player is typing
@@ -345,6 +346,8 @@ function Update-Database {
         return $null
     }
     $previous = Read-GBDatabaseEntries $out
+    $previousByFolder = @{}
+    foreach ($old in $previous.Values) { $previousByFolder[$old.folder] = @($previousByFolder[$old.folder]) + @($old) | Where-Object { $_ } }
     # Read from each save below; a busy file keeps the tooltips it had.
     $tips = Read-GBTips $tipsFile
     # Notes: the highest version of each name wins (versions only grow), a tie goes to the newest
@@ -361,6 +364,7 @@ function Update-Database {
         $file = Join-Path $folder.FullName "SaveVariables.lua"
         if (-not (Test-Path -LiteralPath $file)) { continue }
         $entry = $null
+        $folderEntries = @{}
         try {
             $text = [System.IO.File]::ReadAllText($file, $script:latin1)
             # A one-shot character edit must not rebuild the unrelated auction cache.
@@ -372,11 +376,30 @@ function Update-Database {
             if ($m.Success -and $m.Groups[1].Value.StartsWith('"GB1~')) {
                 $saved = (Get-Item -LiteralPath $file).LastWriteTime.ToString("yyyy-MM-dd HH:mm")
                 $s = $m.Groups[1].Value.Substring(1, $m.Groups[1].Value.Length - 2)
-                $entry = @{ name = $folder.Name; saved = $saved; s = $s; line = "  { saved = ""$saved"", s = ""$s"" }," }
+                $key = Get-GBKey $s
+                $entry = @{ name = $key; folder = $folder.Name; saved = $saved; s = $s; line = "  { saved = ""$saved"", s = ""$s"" }," }
+                $folderEntries[$key] = $entry
+            }
+            # The same name on other servers shares this save file
+            $o = $othersPattern.Match($text)
+            if ($o.Success) {
+                foreach ($s in [regex]::Split($o.Groups[1].Value, '`(?=GB1~)')) {
+                    if (-not $s.StartsWith('GB1~')) { continue }
+                    $key = Get-GBKey $s
+                    if ($folderEntries.ContainsKey($key)) { continue }
+                    $when = $s.Split([char]'`')[0].Split([char]'~')
+                    $saved = if ($previous.ContainsKey($key) -and $previous[$key].s -ceq $s) { $previous[$key].saved }
+                        elseif ($when.Count -gt 8 -and $when[8] -match '^\d{4}-\d\d-\d\d ') { $when[8] }
+                        else { (Get-Item -LiteralPath $file).LastWriteTime.ToString("yyyy-MM-dd HH:mm") }
+                    $folderEntries[$key] = @{ name = $key; folder = $folder.Name; saved = $saved; s = $s; line = "  { saved = ""$saved"", s = ""$s"" }," }
+                }
             }
             $t = $tipsPattern.Match($text)
-            if ($t.Success -and $t.Groups[1].Value) { $tips[$folder.Name] = $t.Groups[1].Value }
-            elseif ($entry) { $tips.Remove($folder.Name) }
+            # A save file's tooltips are always those of the character in GlobalBank_Char
+            if ($entry) {
+                if ($t.Success -and $t.Groups[1].Value) { $tips[$entry.name] = $t.Groups[1].Value }
+                else { $tips.Remove($entry.name) }
+            }
             $n = $notesPattern.Match($text)
             if ($n.Success) {
                 $time = (Get-Item -LiteralPath $file).LastWriteTimeUtc
@@ -401,20 +424,24 @@ function Update-Database {
                 }
             }
         } catch { Write-HelperError $_ 'Read character snapshot' }
-        if (-not $entry -and $previous.ContainsKey($folder.Name)) {
-            $old = $previous[$folder.Name]
-            $entry = @{ name = $folder.Name; saved = $old.saved; s = $old.s; line = $old.line }
+        # What's known from before stays: this name on another server, and everything when this file is busy.
+        # One saved before servers were recorded gives way to a save that says which server it's on.
+        foreach ($old in @($previousByFolder[$folder.Name] | Where-Object { $_ })) {
+            if ($folderEntries.ContainsKey($old.name)) { continue }
+            if ($old.name -ceq $old.folder -and $folderEntries.Count) { continue }
+            $folderEntries[$old.name] = $old
             $kept++
         }
-        if ($entry) {
-            $character = ConvertFrom-GBSnapshot $entry.s $entry.saved
-            if ($character -and -not (Is-Excluded $character.Name)) { $found.Add($entry) }
+        foreach ($key in @($folderEntries.Keys | Sort-Object)) {
+            $character = ConvertFrom-GBSnapshot $folderEntries[$key].s $folderEntries[$key].saved
+            if ($character -and -not (Is-Excluded $character.Name)) { $found.Add($folderEntries[$key]) }
         }
     }
     # Leave out snapshots someone removed in game, unless the character has saved a newer one since.
     $entries = New-Object 'System.Collections.Generic.List[object]'
     foreach ($e in $found) {
         if ($removed.ContainsKey($e.name) -and [string]::CompareOrdinal($e.saved, $removed[$e.name]) -le 0) { continue }
+        if ($removed.ContainsKey($e.folder) -and [string]::CompareOrdinal($e.saved, $removed[$e.folder]) -le 0) { continue }
         $entries.Add($e)
     }
     foreach ($key in @($notes.Keys)) { if (Is-Excluded (ConvertTo-GBText $key)) { $notes.Remove($key) } }
@@ -497,7 +524,7 @@ function Sync-Model($entries, $loggedOut, [bool]$always) {
         if ($oldEntry -and $oldChar -and $oldEntry.s -eq $e.s) {
             $oldChar.Saved = $e.saved
             $newByKey[$e.name] = $oldChar
-            if ($loggedOut -and $loggedOut.ContainsKey($e.name)) { $messages.Add("$($oldChar.Name) saved; nothing changed.") }
+            if ($loggedOut -and $loggedOut.ContainsKey($e.folder)) { $messages.Add("$($oldChar.Name) saved; nothing changed.") }
             continue
         }
         $c = ConvertFrom-GBSnapshot $e.s $e.saved
@@ -593,7 +620,7 @@ function Get-OneCharacter([string]$name) {
     $hits = Find-GBCharacter $script:Chars $name
     if ($hits.Count -eq 1) { return $hits[0] }
     if ($hits.Count -eq 0) { Say "No character called $name. Type list to see them all."; return $null }
-    Say "Several characters start with ${name}: $((@($hits | Select-Object -First 15 | ForEach-Object { $_.Name })) -join ', ')$(if ($hits.Count -gt 15) { ', ...' })"
+    Say "Several characters start with ${name}: $((@($hits | Select-Object -First 15 | ForEach-Object { $_.Label })) -join ', ')$(if ($hits.Count -gt 15) { ', ...' })"
     return $null
 }
 
@@ -618,13 +645,13 @@ function Show-List([string]$rest) {
     $classWidth = 12
     foreach ($c in $list) {
         $text = if ($c.Classes.Count) { @($c.Classes | ForEach-Object { "$($_.Name)($($_.Level))" }) -join ', ' } else { "$($c.Class)($($c.Level))" }
-        $classTexts[$c.Name] = $text
+        $classTexts[$c.Key] = $text
         $classWidth = [Math]::Max($classWidth, $text.Length)
     }
     $format = '{0,-22} {1,-' + $classWidth + '} {2,15} {3,6}  {4,-16}  {5}'
     Say ($format -f 'Name', 'Classes', 'Gold', 'Items', 'Saved', 'Note')
     foreach ($c in $list) {
-        Say ($format -f $c.Name, $classTexts[$c.Name], (Format-GBGold $c.Gold), $c.Items, $c.Saved, $c.Note)
+        Say ($format -f $c.Label, $classTexts[$c.Key], (Format-GBGold $c.Gold), $c.Items, $c.Saved, $c.Note)
     }
     Say "$($list.Count) characters, $(Format-GBGold (Get-GBGoldTotal $list)) gold."
 }

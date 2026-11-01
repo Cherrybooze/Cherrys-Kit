@@ -13,6 +13,10 @@ const startHelperIfWanted = async () => {
   const {autoHelper, showTerminal} = await chrome.storage.local.get(['autoHelper', 'showTerminal']);
   if (autoHelper) chrome.runtime.sendNativeMessage(HOST, {type:'helper-auto-start', showWindow: !!showTerminal}, () => void chrome.runtime.lastError);
 };
+// The daily page can't read local storage, so it gets the auto-collect choice through session storage.
+const shareAutoCollect = () => chrome.storage.local.get('autoCollect')
+  .then(({autoCollect}) => chrome.storage.session.set({autoCollect: autoCollect === true})).catch(() => {});
+chrome.storage?.onChanged?.addListener((changes, area) => { if (area === 'local' && 'autoCollect' in changes) shareAutoCollect(); });
 const chromeStarted = () => { ensureHeartbeat(); stampClock(); startHelperIfWanted().catch(() => {}); };
 ensureHeartbeat();
 chrome.runtime.onStartup.addListener(chromeStarted);
@@ -54,6 +58,7 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       const keys = Object.keys(old).filter(key => key === 'lastStatus' || key.startsWith('pendingReward:'));
       if (keys.length) await chrome.storage.local.remove(keys);
       await chrome.storage.session.setAccessLevel({accessLevel:'TRUSTED_AND_UNTRUSTED_CONTEXTS'});
+      await shareAutoCollect();
     })().then(() => reply({ok:true}), error => reply({ok:false,error:String(error)}));
     return true;
   }

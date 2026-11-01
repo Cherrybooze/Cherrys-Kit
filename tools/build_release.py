@@ -17,8 +17,10 @@ ROOT = Path(__file__).resolve().parents[1]
 KIT = ROOT / "Interface" / "AddOns" / "CherrysKit"
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 LOGIN_SCREEN = ROOT / "Interface" / "loginxml"
-LOGIN_HELPER = ROOT / "Interface" / "AddOns" / "CherrysLoginxmlHook"
 LOG_NEXT_CHAR = ROOT / "Interface" / "AddOns" / "LogNextChar"
+# The guided setup's two ways in travel at the ZIP root, next to the CherrysKit folder.
+SETUP_LAUNCHER = ROOT / "Interface" / "AddOns" / "!setup_cherryskit.bat"
+SETUP_STUB = ROOT / "Interface" / "AddOns" / "!setup_cherryskit.ps1"
 # A player's own files in their login screen folder. Blank templates live in its data folder.
 LOGIN_PERSONAL = ("accounts.lua", "password.lua", "config.lua", "savedpath.lua")
 LOGIN_TEMPLATE_WORDS = {"List 1"}
@@ -63,8 +65,12 @@ def validate_markdown() -> int:
     return count
 
 
-def write_zip(path: Path, files: dict[str, bytes], root: str = "CherrysKit") -> dict:
-    expected = {f"{root}/{name}": data for name, data in sorted(files.items())}
+def write_zip(path: Path, files: dict[str, bytes], root: str = "CherrysKit",
+              root_files: dict[str, bytes] | None = None) -> dict:
+    expected = {f"{root}/{name}": data for name, data in files.items()}
+    for name, data in (root_files or {}).items():
+        expected[name] = data
+    expected = dict(sorted(expected.items()))
     with ZipFile(path, "w", compression=ZIP_DEFLATED, compresslevel=9) as archive:
         for name, data in expected.items():
             require(
@@ -124,7 +130,7 @@ def toc_version(path: Path) -> str:
 
 def check_login_source(version: str) -> None:
     code = (LOGIN_SCREEN / "frames" / "login.lua").read_text(encoding="utf-8")
-    require(f'version = "{version}"' in code, "frames/login.lua and CherrysLoginxmlHook.lua disagree on the version.")
+    require(f'version = "{version}"' in code, "frames/login.lua and LogNextChar.lua disagree on the version.")
     for name in LOGIN_PERSONAL:
         require(not (LOGIN_SCREEN / name).exists(), f"Interface/loginxml/{name} is a personal copy: remove it.")
     for name in ("accounts.lua", "password.lua"):
@@ -141,10 +147,10 @@ def lua_version(path: Path) -> str:
 
 
 def write_login_packages(output: Path) -> list[dict]:
-    """Cherry's Loginxml and LogNextChar: folders of their own in Interface/AddOns, not in the full kit."""
-    version = lua_version(LOGIN_HELPER / "CherrysLoginxmlHook.lua")
+    """LogNextChar and its login screen: a folder of its own under CherrysKit, not in the full kit."""
+    version = lua_version(LOG_NEXT_CHAR / "LogNextChar.lua")
     check_login_source(version)
-    files = tree_files(LOGIN_HELPER)
+    files = tree_files(LOG_NEXT_CHAR)
     # The client loads every .toc it finds under Interface/AddOns, so the login screen's travels under
     # another name. Install login screen.bat puts it back when it copies the login screen into place.
     for name, data in tree_files(LOGIN_SCREEN).items():
@@ -153,17 +159,10 @@ def write_login_packages(output: Path) -> list[dict]:
             "The hub's manifest loads this addon, so no .toc may be under Interface/AddOns.")
     guide = files["README.md"].decode("utf-8").replace("(../../loginxml/docs/", "(LoginScreen/docs/")
     files["README.md"] = guide.encode("utf-8")
-    login = write_zip(output / f"CherrysLoginxml-{version}.zip", files, "CherrysKit/CherrysLoginxmlHook")
-    login.update({"package": "CherrysLoginxml", "title": "Cherry's Loginxml", "version": version, "requires_hub": True,
-                  "archive_root": "CherrysKit/CherrysLoginxmlHook/", "bundled_addons": []})
-    lnc_version = lua_version(LOG_NEXT_CHAR / "LogNextChar.lua")
-    lnc_files = tree_files(LOG_NEXT_CHAR)
-    require(not [name for name in lnc_files if name.lower().endswith(".toc")],
-            "The hub's manifest loads this addon, so no .toc may be under Interface/AddOns.")
-    lnc = write_zip(output / f"LogNextChar-{lnc_version}.zip", lnc_files, "CherrysKit/LogNextChar")
-    lnc.update({"package": "LogNextChar", "title": "LogNextChar", "version": lnc_version, "requires_hub": True,
+    lnc = write_zip(output / f"LogNextChar-{version}.zip", files, "CherrysKit/LogNextChar")
+    lnc.update({"package": "LogNextChar", "title": "LogNextChar", "version": version, "requires_hub": True,
                 "archive_root": "CherrysKit/LogNextChar/", "bundled_addons": []})
-    return [login, lnc]
+    return [lnc]
 
 
 def build(output: Path) -> None:
@@ -183,8 +182,10 @@ def build(output: Path) -> None:
             require(not is_private_release_path(path.relative_to(KIT)), f"Private game data must not be packaged: {path}")
             sources[path.relative_to(KIT).as_posix()] = path.read_bytes()
     require(sources, "No addon files found.")
+    require(SETUP_LAUNCHER.is_file() and SETUP_STUB.is_file(), "Missing !setup_cherryskit.bat or .ps1 for the ZIP root.")
+    setup_root = {SETUP_LAUNCHER.name: SETUP_LAUNCHER.read_bytes(), SETUP_STUB.name: SETUP_STUB.read_bytes()}
     require(
-        {path.name for path in KIT.iterdir() if path.is_dir()} == folders | {"KitLoad", "Media", "docs"},
+        {path.name for path in KIT.iterdir() if path.is_dir()} == folders | {"KitLoad", "Media", "docs", "Setup"},
         "Addon directory list differs from release-packages.json.",
     )
     toc = sources["CherrysKit.toc"].decode("utf-8-sig")
@@ -197,7 +198,7 @@ def build(output: Path) -> None:
         for line in toc.splitlines()
         if line.strip() and not line.lstrip().startswith("#")
     ]
-    # Two addons are separate packages that aren't in the full kit, and still load through its manifest.
+    # LogNextChar is a separate package that aren't in the full kit, and still load through its manifest.
     standalone = {package.get("install_folder", package["folder"]) for package in metadata["standalone_packages"]}
     require(all(ref in sources or ref.split("/")[0] in standalone for ref in references), "The full kit has missing manifest files.")
     require(sources["LICENSE.txt"] == (ROOT / "LICENSE.txt").read_bytes(), "Root licence copy differs.")
@@ -245,7 +246,8 @@ def build(output: Path) -> None:
         *((addon["folder"], addon["title"], addon["version"], modules[addon["folder"]], [addon["folder"]])
           for addon in addons),
     ]:
-        result = write_zip(output / f"CherrysKit-{kind}-{package_version}.zip", files)
+        extra = setup_root if kind in {"Full", "Hub"} else None
+        result = write_zip(output / f"CherrysKit-{kind}-{package_version}.zip", files, root_files=extra)
         result.update({
             "package": kind, "title": title, "version": package_version,
             "requires_hub": kind not in {"Full", "Hub"},
@@ -255,7 +257,7 @@ def build(output: Path) -> None:
         if addon and addon.get("minimum_hub_version"):
             result["minimum_hub_version"] = addon["minimum_hub_version"]
         packages.append(result)
-    require(len(packages) == 18, "Expected a full kit, a hub, and sixteen addon ZIPs.")
+    require(len(packages) == 14, "Expected a full kit, a hub, and twelve addon ZIPs.")
     # The optional browser extension is separate: including it in Global Bank
     # would change the bytes of that unchanged addon's published archive.
     extension_root = ROOT / "extras" / "GlobalBankDailyRewards"
@@ -303,8 +305,27 @@ def build(output: Path) -> None:
     }
     manifest_path = output / "release-manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
+    # What the guided setup reads to find out-of-date addons and fetch them: the manifest, without its file lists.
+    replaced, works_with = {}, {}
+    for item in [*addons, *metadata["standalone_packages"]]:
+        origin = item.get("origin") or {}
+        names = [origin.get("folder"), *(other["folder"] for other in origin.get("others", []))]
+        replaced[item["folder"]] = [name for name in names if name and name != item["folder"]]
+        works_with[item["folder"]] = [other["package"] for other in item.get("works_with", [])]
+    versions = {
+        "kit_version": version,
+        "hub_version": metadata["hub_version"],
+        "packages": [
+            {**{key: value for key, value in package.items() if key != "files"}, "replaces": replaced.get(package["package"], []),
+             "works_with": works_with.get(package["package"], [])}
+            for package in packages
+        ],
+    }
+    versions_path = output / "release-versions.json"
+    versions_path.write_text(json.dumps(versions, indent=2) + "\n", encoding="utf-8", newline="\n")
     sums = [f"{package['sha256']}  {package['filename']}" for package in packages]
     sums.append(f"{sha256(manifest_path.read_bytes())}  {manifest_path.name}")
+    sums.append(f"{sha256(versions_path.read_bytes())}  {versions_path.name}")
     (output / "SHA256SUMS.txt").write_text("\n".join(sums) + "\n", encoding="ascii", newline="\n")
 
     release_url = f"https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v{version}"
@@ -329,13 +350,17 @@ def build(output: Path) -> None:
         "## Install", "",
         f"Choose **Full** for the addons, or **Hub** plus the addon ZIPs you want. "
         f"Extract into {tick}Interface/AddOns/{tick}, merging the {tick}CherrysKit/{tick} folders. "
-        f"Remove old separate copies, start the game or Reload UI, and type {tick}/ck{tick}.", "",
+        f"Start the game or Reload UI, and type {tick}/ck{tick}.", "",
+        f"After extracting, double-click {tick}!setup_cherryskit.bat{tick} (Full and Hub ZIPs; from then on it also finds and installs updates) for a guided "
+        f"setup: it maps {tick}Interface\\AddOns{tick}, moves older copies into {tick}Interface\\offloaded_addons{tick} "
+        f"(nothing is deleted), stops the Global Bank helper during updates, puts LogNextChar's login screen in place "
+        f"and can run the Chrome extension steps.", "",
         "Addon LoadTimes is a troubleshooting addon: it is switched off in its "
         f"{tick}LoadTimes/Switch.txt{tick} and then uses no memory. Individual ZIPs require the hub.", "",
         hub_note, "",
         "The optional Chrome extension is a separate ZIP; see its included installation instructions.", "",
-        f"Cherry's Loginxml and LogNextChar are separate too, and not in the Full ZIP. Extract them into {tick}Interface/AddOns/{tick} as well: each is its own folder. LogNextChar needs Cherry's Loginxml, and Cherry's Loginxml needs its "
-        f"{tick}Install login screen.bat{tick} run once.", "",
+        f"LogNextChar is separate too, and not in the Full ZIP. Extract it into {tick}Interface/AddOns/{tick} as well, and run "
+        f"{tick}!setup_cherryskit.bat{tick} or its {tick}Install login screen.bat{tick} once.", "",
         "## Downloads", "",
         "| Package | Version | ZIP |", "| --- | --- | --- |",
     ]

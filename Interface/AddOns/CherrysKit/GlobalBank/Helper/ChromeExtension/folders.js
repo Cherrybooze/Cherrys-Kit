@@ -92,6 +92,13 @@ const GBFolders = (() => {
       if (excluded.has(save.folder)) continue;
       const saved = localTime(save.time);
       const character = snapshot(savedString(save.text, 'GlobalBank_Char'), saved);
+      // The game has one save folder per name, so this name on other servers shares this file
+      for (const raw of (savedString(save.text, 'GlobalBank_Others') || '').split(/`(?=GB1~)/)) {
+        const other = snapshot(raw, raw.split('`')[0].split('~')[8] || saved);
+        if (other && other.server && other.server !== character?.server && !excluded.has(other.name)) {
+          found.push({folder: save.folder, saved: other.saved || saved, character: other});
+        }
+      }
       if (character && !excluded.has(character.name)) {
         const tips = tipsFrom(savedString(save.text, 'GlobalBank_Tips'));
         for (const [place, tag] of [['bag', 'B'], ['bank', 'K']]) {
@@ -113,7 +120,8 @@ const GBFolders = (() => {
       }
     }
     return found.filter(entry => !(removed.has(entry.folder) && entry.saved <= removed.get(entry.folder))).map(entry => {
-      entry.character.note = notes.get(entry.character.name)?.text || '';
+      const {name, server} = entry.character;
+      entry.character.note = (notes.get(`${name} (${server})`) || notes.get(name))?.text || '';
       return entry.character;
     }).sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -264,20 +272,30 @@ const GBFolders = (() => {
     } catch { return new Set(); }
   }
   // A file the game is writing right now can't be read; it counts as busy and the next read picks it up.
+  // While no save file's size or date changed, the last read is used again: with thousands of characters, coming
+  // back to the page then only looks at each file's date instead of reading them all.
+  let lastRead = null;
   async function readCharacters() {
     const folder = await usable('saves');
-    const saves = [];
+    const files = [];
     let busy = 0;
     for await (const [name, entry] of folder.entries()) {
       if (entry.kind !== 'directory') continue;
       let handle;
       try { handle = await entry.getFileHandle('SaveVariables.lua'); } catch { continue; }
-      try {
-        const file = await handle.getFile();
-        saves.push({folder: name, text: bytesToRaw(new Uint8Array(await file.arrayBuffer())), time: file.lastModified});
-      } catch { busy++; }
+      try { files.push({folder: name, file: await handle.getFile()}); } catch { busy++; }
     }
-    return {characters: charactersFrom(saves, await readExcluded(await usable('game'))), busy};
+    const excluded = await readExcluded(await usable('game'));
+    const stamp = files.map(({folder: name, file}) => `${name}:${file.size}:${file.lastModified}`).join('|') + '#' + [...excluded].join(',');
+    if (lastRead && lastRead.stamp === stamp && !busy) return lastRead;
+    const saves = [];
+    for (const {folder: name, file} of files) {
+      try { saves.push({folder: name, text: bytesToRaw(new Uint8Array(await file.arrayBuffer())), time: file.lastModified}); } catch { busy++; }
+    }
+    const characters = charactersFrom(saves, excluded);
+    const read = {stamp, busy, count: characters.length, json: JSON.stringify({made: localTime(Date.now()), characters})};
+    lastRead = busy ? null : read;
+    return read;
   }
   let icons = null;
   async function readIcons(names) {
@@ -302,9 +320,9 @@ const GBFolders = (() => {
   // Takes the same requests the local host does, for the Bank tab's needs.
   async function answer(message) {
     if (message.type === 'bank-icons') return {ok: true, icons: await readIcons(message.names)};
-    const {characters, busy} = await readCharacters();
-    if (message.type === 'bank-data') return {ok: true, json: JSON.stringify({made: localTime(Date.now()), characters})};
-    return {ok: true, output: `Read ${characters.length} characters from your save files.${busy ? ` ${busy} were busy, so try again in a moment.` : ''}`};
+    const {json, count, busy} = await readCharacters();
+    if (message.type === 'bank-data') return {ok: true, json, total: json.length};
+    return {ok: true, output: `Read ${count} characters from your save files.${busy ? ` ${busy} were busy, so try again in a moment.` : ''}`};
   }
   return {choose, state, allowAgain, usable, answer, bytesToRaw, savedString, snapshot, charactersFrom, tipsFrom, iconKey, iconIndex, readIcon};
 })();

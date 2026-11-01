@@ -148,7 +148,11 @@ function UMMRecipientListTemplate_OnLoad(this)
       if (index <= table.getn(self.NameList)) then
         local name = self.NameList[index];
         local color = self.BaseColor;
-        if (UMMFriends.List[name].Online == true) then
+        local known = UMMFriends.List[name];
+        if (self.History == true) then
+          -- history names keep the colour of the list they come from (own, friend, guild)
+          color = UMMFriends:GetColor(name, true);
+        elseif (known and known.Online == true) then
           color = self.BaseColor;
         else
           if (self.Own == true) then
@@ -171,7 +175,13 @@ function UMMRecipientListTemplate_OnLoad(this)
   end;
   
   this.SetupList = function(self, type)
-    if (string.lower(type) == "own") then
+    self.Own, self.Friend, self.Guild, self.History = nil, nil, nil, nil;
+    if (string.lower(type) == "history") then
+      -- Cherry's Kit: the shared recipient history (newest first), same list as the History tab
+      self.BaseColor = UMMColor.Yellow;
+      self.BaseTitle = UMM_RECIPIENT_HISTORY;
+      self.History = true;
+    elseif (string.lower(type) == "own") then
       self.BaseColor = UMMColor.Own;
       self.BaseTitle = UMM_RECIPIENT_OWN;
       self.Own = true;
@@ -190,6 +200,12 @@ function UMMRecipientListTemplate_OnLoad(this)
     getglobal(self:GetName().."HeaderTitle"):SetText("|cff"..self.BaseColor..self.BaseTitle.."|r");
     
     self.NameList = {};
+    if (self.History == true) then
+      local history = UMMSettings:History();
+      for index = 1, table.getn(history) do
+        table.insert(self.NameList, history[index]);
+      end
+    end
     for name in pairs(UMMFriends.List) do
       if (self.Guild == true) then
         if (UMMFriends.List[name].Guild == true) then
@@ -205,7 +221,9 @@ function UMMRecipientListTemplate_OnLoad(this)
         end
       end
     end
-    table.sort(self.NameList);
+    if (self.History ~= true) then
+      table.sort(self.NameList);
+    end
     if (self.Own == true) then
       -- Rebuild the list according to hardwired list
       if (UMM_OwnCharacters) then

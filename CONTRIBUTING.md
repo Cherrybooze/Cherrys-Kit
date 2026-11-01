@@ -19,6 +19,7 @@ The original addon test harnesses and generators mentioned in some archived READ
 - Preserve the original credits, licence files and media notices.
 - Update the affected addon README when commands, installation, limitations or behaviour change.
 - Every changed addon needs a new runtime version for a new release. Update its package metadata and README, bump the kit version, and follow [the release guide](docs/RELEASING.md). Keep unchanged addon packages byte-identical.
+- Keep addons updateable through the guided setup: [the rules are on the front page](README.md#keeping-addons-updateable). In short, the README's version line has to match, player data stays out of addon folders, and a rename or merge says what it replaces.
 
 ## Reporting a bug
 

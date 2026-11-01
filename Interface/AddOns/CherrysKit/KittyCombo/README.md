@@ -1,6 +1,6 @@
 # Cherry's KittyCombo
 
-Version **1.7.17** · Kit release **0.11.100** · [All addons / hub](../README.md)
+Version **1.7.18** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
@@ -18,11 +18,15 @@ A "kitty" is a list of commands (skills, items, macros) in priority order. Each 
 > - **Cherry's Grid:** Cherry's Grid can run a kitty when you click a frame
 > - **Cherry's Bar:** Cherry's Bar shows the Kitty mode
 >
-> **Original addon:** KittyCombo 0.973 by Miranda. If `Interface\AddOns\KittyCombo` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Delete that folder and Reload UI to use this one.
+> **Original addon:** KittyCombo 0.973 by Miranda. If `Interface\AddOns\KittyCombo` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
 > **Other addons:** AddonManager lists it when you have that addon.
 
 <!-- end of requirements -->
+
+## Updated in 1.7.18
+
+**A little lighter on each hit.** The damage tracker looks up its table once, not twelve times.
 
 ## Updated in 1.7.17
 

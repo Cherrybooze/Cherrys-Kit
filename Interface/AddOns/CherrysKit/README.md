@@ -1,10 +1,21 @@
 # Cherry's Kit
 
-Version **0.4.25** · Kit release **0.11.113** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.28** · Kit release **0.11.115** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.115 playtest
+
+- **The guided setup:** after extracting the Full or Hub ZIP, and any time you want to update, double-click `!setup_cherryskit.bat` next to the `CherrysKit` folder. It says which addons are out of date against the latest release on GitHub and updates them, with the old versions kept, and asks before installing anything your addons can use that's missing. It checks the install, maps `Interface\AddOns`, moves older copies of the kit's addons into `Interface\offloaded_addons` (nothing is deleted), stops the Global Bank helper during updates, checks Chrome and can walk through the Chrome extension steps. The same file is the update route for later versions.
+- **Global Bank's helper lives with Chrome:** the extension's button shows whether the helper is running and for how long, stops it in one press, and a tick runs the background helper in a real terminal window. The helper ends on its own when Chrome or the extension goes away. (`/gb`)
+- **Cherry's Info 1.0** (`/cinfo`, `/cq`) replaces Cherry's Quests, pbInfo, TooltipIds, PortraitHP and Extended Macro Icons: one addon, one switch and one window with four tabs. Saved settings carry over.
+- **LogNextChar 1.3.1** now includes Cherry's Loginxml and lives under the kit's folder; it still works without the login screen (Next and Prev then just log you out). **Global Bank 1.4.16** keeps same-named characters on different servers apart.
+- **Global Bank 1.5.4:** a refreshed in-game window, with server tabs, characters grouped by account, and a search that lights up the matching bag and bank slots.
+- **Global Bank Daily Rewards 1.2.2** for Chrome: the page is built for thousands of characters, with a Region button, server checkmarks (Ayvenas included), a Servers tab to edit them, one selection on every tab, the game's tooltips with item and mana stone stats, stacking checkmarks per item type, Always stack, a Favourites tab, RoM account names, and an item menu that stacks the characters who hold it. Collecting the daily reward automatically is now a tick in the popup, off by default. Press Reload on the extension after updating.
+- **Lighter and smaller:** Cherry's Grid 1.1.6 makes next to no garbage while drawing, and the XML files of Cherry's Grid, Cherry's Chat, zBag and Global Bank went from 598, 401, 229 and 561 KB to 105, 70, 123 and 113 KB. The hub's clock (0.4.28) asks for the time only when a look is due.
+- **Cherry's Grid 1.1.5:** Mouse 4 joins the click buttons on your frames, and a tick on the Clicks page, off by default, also makes it a game keybind. (`/grid`)
 
 ## Kit 0.11.113 playtest
 
@@ -31,7 +42,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 - **Installing only some addons:** the client's reports of files the manifest lists but you didn't install no longer light the minimap's bug button.
 
-- **Separate packages:** Cherry's Loginxml, a replacement login screen, and LogNextChar, Next and Prev character buttons.
+- **Separate package:** LogNextChar, Next and Prev character buttons with their own replacement login screen.
 
 ## Kit 0.11.100 playtest
 
@@ -108,15 +119,11 @@ Each one is its own download and needs Cherry's Kit:
 - **Cherry's Chat**: selectable, copyable chat with emoji symbols (`/cchat`)
 - **zBag**: bags with search, slot numbers and an All bags window (`/zb`)
 - **Global Bank**: every character's bags, bank and gold in one window (`/gb`)
-- **Extended Macro Icons**: thousands more macro icons (`/emi`)
-- **TooltipIds**: ID numbers of buffs, items, skills and more (`/ti`)
 - **Ultimate Mail Mod**: mail window with shared recipient history, configurable gold shortcuts and reliable mass send (`/umm`)
 - **Advanced AuctionHouse**: resizable auction house with stat filters (`/aah`)
 - **ZShop**: item shop and daily loyalty reward in one click (`/zshop`)
-- **pbInfo**: richer tooltips, quest tracker, chat filters and cast bar options (`/pbinfo`)
-- **PortraitHP**: target health percent on its portrait (`/php`)
+- **Cherry's Info**: quest tracker with Ctrl+click NPCs, richer tooltips with IDs, target portrait HP%, chat filters and 10,500+ macro icons (`/cinfo`, `/cq`, `/emi`)
 - **Cherry's Grid**: party and raid frames that run kitties on click (`/grid`)
-- **Cherry's Quests**: a prettier quest tracker; Ctrl+click a quest to track the NPCs it names (`/cq`)
 - **Cherry's Bar**: information bars at the top, bottom or both, with displays set per bar (`/cbar`)
 - **Cherry's Addon LoadTimes**: how long each addon takes to load, for troubleshooting; off until its `Switch.txt` turns it on (`/ckload`)
 
@@ -142,7 +149,7 @@ Download packages from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/rel
 
 1. Choose the **Full** ZIP for everything, or the **Hub** ZIP plus the addons you want.
 2. Extract all selected ZIPs into your game's `Interface/AddOns/` folder. Merge the `CherrysKit` folders; do not nest one inside another.
-3. Remove old separate copies of the same addons from `Interface/AddOns/` (the list is in the Features and addon sections above). Saved settings live separately from these addon files.
+3. Double-click `!setup_cherryskit.bat`. It moves old separate copies of the addons you installed to `Interface\offloaded_addons`. Saved settings live separately from these addon files.
 4. Start the game or Reload UI, then type `/ck`.
 
 The hub ZIP includes shared files, the manifest, path and load markers, and its media. Every addon ZIP, LoadTimes included, contains its own subfolder and requires this hub. Optional integrations such as Grid running a kitty also need the relevant addon.
@@ -155,7 +162,7 @@ Write to **cherry** on the Runes of Magic Discord.
 
 Cherry's Kit is written by Cherry and is free software under the **GNU General Public License v2**. The full licence text, and the notices of every addon in the kit, are in [LICENSE.txt](LICENSE.txt). That file also holds the **GNU GPL v3** text, which Advanced AuctionHouse uses.
 
-Some kit addons contain parts under Creative Commons **NonCommercial** licences (zBag's BagSearch and quick-sell filter, pbInfo, some rom weakauras sounds). **Cherry's Kit and its addons are free and must never be sold.**
+Some kit addons contain parts under Creative Commons **NonCommercial** licences (zBag's BagSearch and quick-sell filter, Cherry's Info's pbInfo parts, Cherry's Bar, some rom weakauras sounds). **Cherry's Kit and its addons are free and must never be sold.**
 
 ## Support and contributions
 
