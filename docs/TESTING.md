@@ -45,6 +45,21 @@ The frames in these four XML files now come from shared templates. Tests expand 
 | O8 | Type `/gb`. Click the server tabs, fold an account, press **Accounts**, and search for an item you own. | A tab for each server and one for all of them. Accounts fold and unfold. The search lights up the matching slots, dims the rest, scrolls to the first one and opens the bag or bank that has it. Item tooltips draw above the window. |
 | O9 | Type `/cinfo` and look at the tabs. | The labels read **Tooltips & IDs**, **Target & World** and **Chat & Macros**, and every tab opens. |
 
+## 0.11.115 Steam (hub 0.4.30, ZShop 1.2.0-ck6, Global Bank 1.5.8, extension 1.2.6)
+
+Read from Client.exe and Steam's own log, not yet seen in game. The two links the daily button relies on are the shop address and the order of the login parts.
+
+| # | Do this | Expect |
+|---|---|---|
+| S1 | Run `!setup_cherryskit.bat` in the Gameforge install. | It names your Steam install, asks once, sets it up, and older copies there move to its `offloaded_addons`. A second run says it's up to date and asks nothing about it. |
+| S2 | Look in the Steam install's `Interface`. | `CherrysKitClient.lua` is there, and `GlobalBankHelper` is a link to the Gameforge one. |
+| S3 | Log in through Steam, then type `/zshop probe`. | It says client Steam, and the shop address for your region. |
+| S4 | With a level 100 character on Steam, click the daily button. | The reward page opens in your normal browser, logged in as this character, not in Steam's browser. The extension sees it. |
+| S5 | On Steam, click the game's item shop button, then type `/zshop depot`. | Both open in Steam's browser, the second on the depot page. |
+| S6 | Log out on Steam, then look at the Global Bank page and the `/gb` window. | The character is under **Steam account**, with your Gameforge accounts as they were. |
+| S7 | Open `/gb` on Steam. | It lists every character, the Gameforge ones too, because both installs share the data folder. |
+| S8 | Log in through the Gameforge client and click the daily button. | Same as before: the shop link goes to your normal browser on the daily page. |
+
 ## 0.11.115 Macros, addon settings and backups (Global Bank 1.5.7, Cherry's Info 1.0.3, extension 1.2.5)
 
 Tested on copies of real save files in Chrome, and the Import window in the simulated client. Nothing yet proves that the game draws the new window as intended, or reads a changed macro file the way it reads its own. I1 to I4, I6 and B3 are the checks that matter.
@@ -121,6 +136,7 @@ Cherry's Chat 0.11.0. The simulated client checks what goes out on each channel;
 | --- | --- | --- |
 | CB1 | With Say bubbles on **Symbols (^_^)** (default), say `:heart: :star: :smile: :carrot:`. | The bubble shows ♥ ★ (^_^) :carrot:. Report any symbol that shows as a box. |
 | CB2 | Paste a real emoji with no symbol (Windows key + ., e.g. a carrot) into a Say line. | The bubble shows `:carrot:`, not two boxes. |
+| CB1 | Cherry's Chat 0.11.3: watch World for coloured trade lines, then type `/cchat linkprobe` and compare with `/cchat window` (the game's own chat). | No stray `\|` or `h` in Cherry's chat, the same text and colours as the game's chat, and item links still click. |
 | CB0 | Cherry's Chat 0.11.2: say something with an emoji, then type `/cchat bubbletest`. | Three lines: setting, chat type (should say SAY / Say), and the typed and sent text. "sent" has no \\240 codes. Send a screenshot if the bubble still shows boxes. |
 | CB3 | Click **Say bubbles** until it reads **Text (:fire:)**, then say `hi :fire`. | The bubble shows `hi :fire`; your Cherry's Chat window shows the fire picture. |
 | CB4 | With ":heart: when sending" on, say `:fire` in Party. | Party chat gets the real emoji, as before (no bubble there). |

@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.5.7** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.5.8** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.5.8
+
+**Steam shows as one more account** (extension 1.2.6). Steam logs in to one account, so characters saved from Steam group together as **Steam account** on each server, in the window and on the page. You can rename it on the page and it keeps saying Steam. They're marked the next time each one saves, so log in once from Steam. The setup shares one data folder between a Steam and a Gameforge install, and the Chrome extension stays with the Gameforge one. After updating, press **Reload** on the extension.
 
 ## Updated in 1.5.7
 

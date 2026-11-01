@@ -1,6 +1,6 @@
 # ZShop
 
-Version **1.2.0-ck5** · Kit release **0.11.113** · [All addons / hub](../README.md)
+Version **1.2.0-ck6** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Open the item shop, or go straight to today's daily loyalty reward, with one click.**
 
@@ -18,6 +18,10 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 > **Original addon:** ZShop by Pyrr. If `Interface\AddOns\ZShop` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.2.0-ck6
+
+**On Steam, the daily button skips Steam's browser.** The client sends every shop link to Steam's overlay, so the daily button opens the reward page in your normal browser instead, logged in as this character, and Global Bank's Chrome extension works on it as usual. The item shop button, the character menu's shop entry and `/zshop depot` stay in Steam's browser. If the page opens on the wrong shop, set `shop_host` in `config.lua`. The shop address is only known for certain on EU; US is a guess until someone tries it. The Steam route still needs an in-game check.
 
 ## Updated in 1.2.0-ck5
 

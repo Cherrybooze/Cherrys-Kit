@@ -258,6 +258,38 @@ class ChatLinkTests(unittest.TestCase):
         _, links = self.install_rows(incomplete)
         self.assertEqual(list(links.values()), [TARGET2])
 
+    def test_empty_link_colour_wrappers_from_real_chat_logs_draw_only_their_text(self):
+        # Shapes copied from the game's Chat.Log, which is written below the addons.
+        link = item("Pendiente del místico")
+        cases = (
+            ("|H|h|cFF40FF40|h" + link + "|H|h|cFF40FF40|h", "[Pendiente del místico]"),
+            ("WTS|H|h|cffc805f8[Elder Katan]|r|h WTS" + link, "WTS[Elder Katan] WTS[Pendiente del místico]"),
+            ("|H|h|cff00ff00WTS " + link + " 50k|r|h", "WTS [Pendiente del místico] 50k"),
+            ("|H|h|cffffffrrSMASH USED!!!|h", "SMASH USED!!!"),
+        )
+        for raw, shown in cases:
+            for width in (500, 12):
+                with self.subTest(raw=raw, width=width):
+                    self.assertEqual(self.c.Plain(raw), shown)
+                    rows, _ = self.win.WrapMessage(raw, width)
+                    self.assertEqual("".join(row.plain for row in rows.values()), shown)
+                    for row in rows.values():
+                        self.assertNotIn("|H", row.text)
+                        self.assertNotIn("|h", row.text)
+                        self.assertNotIn("rr", row.text)
+
+    def test_wrapped_link_inside_an_empty_wrapper_stays_clickable(self):
+        link = item("Pendiente del místico")
+        rows, links = self.install_rows("|H|h|cff00ff00WTS " + link + " 50k|r|h")
+        self.assertEqual(list(links.values()), [TARGET])
+        self.assertEqual(rows[1].spans[1].full, link)
+
+    def test_a_lone_pipe_at_the_end_of_a_row_is_not_joined_to_the_closing_reset(self):
+        rows, _ = self.win.WrapMessage("idk :|", 500, None, "|cffcc88ff")
+        self.assertEqual(rows[1].plain, "idk :|")
+        self.assertEqual(self.c.Plain(rows[1].text), "idk :|")
+        self.assertTrue(rows[1].text.endswith("|||r"))
+
     def test_literal_control_delimiters_in_labels_do_not_terminate_the_link(self):
         full = item("Kamień ||h dosłownie || pipe")
         link = self.c.ReadLink(full)
