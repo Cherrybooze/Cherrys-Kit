@@ -330,9 +330,51 @@ function W.HoverFrame(parent)
 end
 
 -- Aura display frames come from the RWA_Region pool in Frames.xml, so they can be dragged.
+-- Their frame strata is settings.auraStrata: BACKGROUND (the default) keeps auras under the
+-- bag, bank and every other window; MEDIUM is how they drew before 0.9.33 (over most windows).
+-- Child elements draw with their parent, so only these top frames need the strata.
+RWA.AURA_STRATA = { BACKGROUND = true, LOW = true, MEDIUM = true, HIGH = true }
+local regionFrames = {}
+W.regionFrames = regionFrames
+
+function RWA.AuraStrata()
+  local s = RWA_DB and RWA_DB.settings and RWA_DB.settings.auraStrata
+  if RWA.AURA_STRATA[s] then return s end
+  return "BACKGROUND"
+end
+
 function W.RegionFrame()
   local f = claim("RWA_Region", "Frame", "UIParent")
+  if f then
+    regionFrames[#regionFrames + 1] = f
+    RWA.Try(f, "SetFrameStrata", RWA.AuraStrata())
+  end
   return f
+end
+
+-- Moves every aura frame made so far to the saved strata (after the setting changes).
+function RWA.ApplyAuraStrata()
+  local s = RWA.AuraStrata()
+  for i = 1, #regionFrames do RWA.Try(regionFrames[i], "SetFrameStrata", s) end
+  return s
+end
+
+-- "under" / "over" for the window button and chat; the strata name for LOW and HIGH.
+function RWA.AuraStrataLabel(s)
+  s = s or RWA.AuraStrata()
+  if s == "BACKGROUND" then return "under windows" end
+  if s == "MEDIUM" then return "over windows" end
+  return s
+end
+
+function RWA.SetAuraStrata(s)
+  s = type(s) == "string" and string.upper(s) or nil
+  if s == "UNDER" then s = "BACKGROUND" elseif s == "OVER" then s = "MEDIUM" end
+  if not RWA.AURA_STRATA[s] then return nil end
+  RWA_DB.settings.auraStrata = s
+  RWA.ApplyAuraStrata()
+  if RWA.OnAuraStrataChanged then RWA.OnAuraStrataChanged(s) end
+  return s
 end
 
 -- Placement grips come from the RWA_PlaceGrip pool in Frames.xml: a frame made at runtime gets

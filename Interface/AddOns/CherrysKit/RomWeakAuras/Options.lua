@@ -916,6 +916,15 @@ local function build()
     RWA.SetLoudSounds((tonumber(RWA_DB.settings.soundVolume) or 0) == 0)
   end, 150)
   RWA.OnLoudChanged((tonumber(RWA_DB.settings.soundVolume) or 0) > 0)
+  -- Under: auras draw beneath the bag, bank and other windows (default). Over: on top of them.
+  ui.layerBtn = action("", ax + 760, listBottom, function()
+    RWA.SetAuraStrata(RWA.AuraStrata() == "BACKGROUND" and "MEDIUM" or "BACKGROUND")
+  end, 96)
+  W.Tooltip(ui.layerBtn, function()
+    return "Aura layer", "Under: auras draw beneath your bags, bank and other windows. Over: on top of them.",
+      "Now " .. RWA.AuraStrataLabel() .. ". Also /rwa layer under or over."
+  end)
+  RWA.OnAuraStrataChanged(RWA.AuraStrata())
 
   -- Share codes, the same format as Cherry's KittyCombo: Import on the upper line, the selected
   -- aura's code (or all auras) on the lower one. Export buttons copy the code to the clipboard.
@@ -1024,6 +1033,12 @@ function RWA.OnLoudChanged(on)
   if ui and ui.loudBtn then
     local pct = tonumber(RWA_DB.settings.soundVolume) or 0
     W.SetText(ui.loudBtn, pct > 0 and ("Vol: |cff40ff40" .. pct .. "%|r") or "Vol: game")
+  end
+end
+
+function RWA.OnAuraStrataChanged(s)
+  if ui and ui.layerBtn then
+    W.SetText(ui.layerBtn, s == "BACKGROUND" and "Layer: under" or s == "MEDIUM" and "Layer: over" or ("Layer: " .. string.lower(s)))
   end
 end
 
