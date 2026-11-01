@@ -1,6 +1,6 @@
 # rom weakauras
 
-Version **0.9.31** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **0.9.32** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Track buffs, debuffs, health, resources, casts and cooldowns, and draw your own icons, bars, text and textures on screen. A Runes of Magic rewrite of WeakAuras.**
 
@@ -19,6 +19,10 @@ rom weakauras brings the idea of WoW's WeakAuras to Runes of Magic: build "auras
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\RomWeakAuras` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one. It's a rewrite of WeakAuras for World of Warcraft, so there's no original for this game.
 
 <!-- end of requirements -->
+
+## Updated in 0.9.32
+
+**Stack counts on template icons.** Icons made from the gallery's Present buff and Present debuff templates show the stack count in their bottom-right corner, like the game's own buff icons. Icon displays get a **Stack count** On/Off choice, so an aura you already made can turn it on with one click.
 
 ## Updated in 0.9.31
 
