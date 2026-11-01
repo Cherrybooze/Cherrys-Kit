@@ -580,7 +580,7 @@ local function drawDetail()
   end
   local text
   if GB.tab == "bank" and not c.bank then
-    text = GREY .. "Bank not seen yet: open the bank once on " .. c.name .. "."
+    text = GREY .. "Bank not seen yet: log in once on " .. c.name .. "."
   elseif searching then
     text = GB.cellMatches .. " matching " .. (GB.cellMatches == 1 and "stack" or "stacks") .. " here, lit up"
   elseif GB.tab == "bank" then
