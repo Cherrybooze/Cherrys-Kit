@@ -34,6 +34,8 @@ end
 
 -- GB1~name~class~level~gold~bagSlots~bankSlots~bankSeen~time, then more records after a backtick,
 -- with S~server among them. Names repeat between servers, so a character is found by both.
+-- M~transmutor~amount is its Arcane Transmutor charges, left out at zero. A snapshot old enough to have
+-- no server has no currencies either, so there no record means unknown, not zero.
 function me.read()
   local env = readFile(me.DATABASE)
   local import = env and env.GlobalBank_Import
@@ -49,6 +51,10 @@ function me.read()
       local key = string.lower(name)
       me.characters[key] = me.characters[key] or {servers = {}}
       local known = {gold = tonumber(gold) or 0, saved = when ~= '' and when or tostring(entry.saved or '')}
+      known.charges = tonumber(string.match(tostring(entry.s), '`M~transmutor~(%d+)'))
+      if not known.charges and server and server ~= '' then
+        known.charges = 0
+      end
       if server and server ~= '' then
         me.characters[key].servers[server] = known
       else
@@ -69,6 +75,16 @@ function me.character(name)
   end
   local server = type(GetServerName) == 'function' and GetServerName() or nil
   return found.servers[server] or found.unsure
+end
+
+-- The character screen's column: gold, then charges when they're known, then when it was saved
+function me.describe(known)
+  local lines = {string.format('%s gold%s', me.formatGold(known.gold), known.unsure and ' ?' or '')}
+  if known.charges then
+    lines[#lines + 1] = string.format('Charges: %s', me.formatGold(known.charges))
+  end
+  lines[#lines + 1] = known.saved
+  return table.concat(lines, '\n')
 end
 
 function me.formatGold(amount)
