@@ -151,10 +151,13 @@ function UMMMassSendItemsStatusTemplate_OnLoad(this)
     self:SetStatusText(string.format(UMM_MSI_SEND_STATUS, self.priv_SendCount, self.priv_SendTotal));
     self.priv_Offset = self.priv_SendCount - 1;
     self:Refresh();
-    -- the item must still be where it was when the list was made
-    if (GetBagItemLink(mail.Index) ~= mail.Link) then
+    -- the item must still be where it was when the list was made. Compare the item itself, not
+    -- the whole link: parts of a RoM link change while the item stays put (that made mass send
+    -- stop with "no longer in that bag slot" on items that never moved).
+    local nowLink = GetBagItemLink(mail.Index);
+    if (not UMMSameItem(nowLink, nil, mail.Link, mail.Name)) then
       UMMPrompt("|r|cff"..UMMColor.Red..string.format(UMM_MSI_SKIPPED, mail.Name or "?"));
-      UMMTraceAdd("skip", mail.Name);
+      UMMTraceAdd("skip", tostring(mail.Name).." slot "..tostring(mail.Index).." had "..tostring(mail.Link).." now "..tostring(nowLink));
       self:NextMail(0);
       return;
     end
@@ -321,7 +324,8 @@ function UMMMassSendItemsStatusTemplate_OnLoad(this)
   this.BuildSendList = function(self)
     getglobal(self:GetParent():GetName().."Bags"):CancelBoxSelection();
     self.priv_SendTable = {};
-    UMMBagManager:Ensure();
+    -- read the bags fresh: a bag change the game did not announce must not leave old links here
+    UMMBagManager:Load();
     local list = UMMBagManager.ItemList;
     for i = 1, table.getn(list) do
       local item = list[i];

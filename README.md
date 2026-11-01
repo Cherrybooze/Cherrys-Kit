@@ -44,7 +44,7 @@ Cherry's Kit combines original addons, rewrites and fixes to older favourites in
 - **Lighter and smaller.** Cherry's Grid 1.1.6 makes next to no garbage while drawing: in a simulated 36-member raid, about 580 KB of new memory a second fell to almost nothing. The XML files of Cherry's Grid, Cherry's Chat, zBag and Global Bank went from 598, 401, 229 and 561 KB to 105, 70, 123 and 113 KB, with the same frames, so the game has less to read at login.
 - **Global Bank 1.4.16** keeps same-named characters on different servers apart, on its page, in its window and on the character screen.
 - **Global Bank for RoM**, the Chrome extension: the page is built for thousands of characters, with a Region button, server checkmarks (Ayvenas included), a Servers page to edit them, one selection on every page, the game's tooltips with item and mana stone stats, stacking checkmarks per item type, Always stack, a Favourites page, RoM account names, and an item menu that stacks the characters who hold it. Collecting the daily reward automatically is now a tick in the popup, off by default. **Stop helper** also turns off automatic startup. The helper no longer stops after three minutes on its own: the extension's heartbeat now really runs. Already have the extension? Press **Reload** on it, and that's all.
-- **Ultimate Mail Mod 7.0.1-ck11**: on **Mass Send Items**, the recipient picker shows History, Characters and Friends.
+- **Ultimate Mail Mod 7.0.1-ck12**: on **Mass Send Items**, the recipient picker shows History, Characters and Friends, and mass send no longer stops with "no longer in that bag slot" on an item that never moved.
 
 ## In 0.11.114
 
@@ -108,7 +108,7 @@ Old separate copies of the same addons: **`!setup_cherryskit.bat`** moves them t
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji, encrypted channels and chat display settings. | `/cchat` | 0.11.2 |
 | [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck17 |
 | [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold, in game and in Chrome. | `/gb` | 1.6.0 |
-| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck11 |
+| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck12 |
 | [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Auction searching, stat filters, Broad search, history and a resizable window. | `/aah` | 6.2.5 |
 | [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Troubleshooting: loading times and memory use, off until its Switch.txt turns it on. | `/ckload` | 1.3.0 |
 | [ZShop](Interface/AddOns/CherrysKit/ZShop/README.md) | Item-shop access and a daily loyalty reward shortcut. | `/zshop` | 1.2.0-ck6 |
