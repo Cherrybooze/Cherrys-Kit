@@ -241,8 +241,17 @@
         <h1 class="page-title" id="heatmap-title">Gold overview</h1>
         <div id="heat-total" class="panel-title"></div>
         <span class="push"></span>
-        <div class="heat-legend"><span>No gold</span><span class="heat-bar" title="Orange at half a cap"></span><span>A full cap of 999,999,999</span></div>
-        <details class="help-note"><summary>How this works</summary><p class="hint">Red is no gold, orange is half a cap, and bright green is a full cap, marked MAX. Hover a character for its details, click to select it. Right-click to copy its name, Gameforge account or password. Each box is a Gameforge account you linked on the Gameforge accounts page, with its servers and RoM accounts, so a full account shows as a block of green and the colours in between are what's left to collect. A balance says nothing about whether the saved data is current: see the Characters page for that.</p></details>
+        <div id="heat-legend" class="heat-legend" role="group" aria-label="The colours for gold">
+          <span>No gold</span>
+          <input id="heat-color-none" class="heat-swatch" type="color" value="#c62828" aria-label="Colour at no gold" title="Colour at no gold: click to change it">
+          <span class="heat-bar is-low"></span>
+          <input id="heat-color-half" class="heat-swatch" type="color" value="#f57c00" aria-label="Colour at half a cap" title="Colour at half a cap: click to change it">
+          <span class="heat-bar is-high"></span>
+          <input id="heat-color-full" class="heat-swatch" type="color" value="#00e640" aria-label="Colour at a full cap" title="Colour at a full cap: click to change it">
+          <span>A full cap of 999,999,999</span>
+          <button id="heat-colors-reset" type="button" class="link-button" hidden>Reset colours</button>
+        </div>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Red is no gold, orange is half a cap, and bright green is a full cap, marked MAX. Click the three squares beside the colour bar to pick your own colours. Hover a character for its details, click to select it. Right-click to copy its name, Gameforge account or password. Each box is a Gameforge account you linked on the Gameforge accounts page, with its servers and RoM accounts, so a full account shows as a block of green and the colours in between are what's left to collect. A balance says nothing about whether the saved data is current: see the Characters page for that.</p></details>
       </div>
       <div id="heat-view" class="heat-view" data-select-scope></div>
     </div>
