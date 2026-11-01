@@ -26,7 +26,7 @@ None of this has run in the game yet. The tests use a simulated client, and the 
 | I3 | Untick **Extended Macro Icons** and Reload UI, then tick it and Reload UI. | The game's macro window comes back, then the extended one. The tick stays as you left it. |
 | I4 | Type `/emi`, `/ti`, `/pbinfo` and `/php`. | The macro window, the Tooltips & IDs tab twice, and target health toggling. None says "not installed". |
 | I5 | On Target & World, press **Open pbInfo's window**, then **Move cast bar**, and **Move tooltip box**. | Each opens or moves as it says, and the tab comes back after a cast bar move. |
-| I6 | Look at `/ck`. | One Cherry's Info row and no rows for the five old addons. The window's bottom buttons sit right under the last row. |
+| I6 | Open the page's **Macros** tab and the game's macro window on the same character, with no login needed for the page. Open **Default Icons** in each icon picker. | Each macro shows the same picture in both, and icon numbers match in both pickers. |
 | I7 | Put a folder named `TooltipIds` with its old `TooltipIds.lua` in `AddOns`, and Reload UI. | Chat says Cherry's Info is off because of that folder, and its row says so too. |
 
 ## 0.11.115 Lighter addons
@@ -45,11 +45,31 @@ The frames in these four XML files now come from shared templates. Tests expand 
 | O8 | Type `/gb`. Click the server tabs, fold an account, press **Accounts**, and search for an item you own. | A tab for each server and one for all of them. Accounts fold and unfold. The search lights up the matching slots, dims the rest, scrolls to the first one and opens the bag or bank that has it. Item tooltips draw above the window. |
 | O9 | Type `/cinfo` and look at the tabs. | The labels read **Tooltips & IDs**, **Target & World** and **Chat & Macros**, and every tab opens. |
 
+## 0.11.115 Macros, addon settings and backups (Global Bank 1.5.7, Cherry's Info 1.0.3, extension 1.2.5)
+
+Tested on copies of real save files in Chrome, and the Import window in the simulated client. Nothing yet proves that the game draws the new window as intended, or reads a changed macro file the way it reads its own. I1 to I4, I6 and B3 are the checks that matter.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| I1 | Log in, open the macro window (`/emi`) and look at its bottom row. | **Edit**, **Delete**, **Import** and **Cancel** fit in a row, with their labels readable. |
+| I2 | Press **Import**. | A window opens beside the macro window with a search box, the group arrows, your library's macros with their icons, and the first macro's text under the list. The list scrolls by wheel and bar when it's long. |
+| I3 | Type part of a macro's name, then a group's name. Step through the groups with the arrows. | The list narrows as you type, and the arrows show only groups with macros in them. |
+| I4 | Click an empty slot on the left, pick a macro and press **Import**. Then choose a used slot and press **Import** again. | The macro is in the empty slot with its name, icon and text, and it works on a hotbar. The used slot asks first. Log out and in: both are still there. |
+| I5 | With the game open, write a new macro on the page, then press **Refresh** in the Import window. | The new macro is in the list, with no Reload UI. |
+| I6 | Log in once with this version, log out, and open the page's edit window on a macro using one of the game's own icons. | The macro shows its picture, and **Default Icons** in the icon picker lists the game's icons. Before that login they show as numbers. |
+| B1 | Press **Reload** on the extension, and open the page's **Macros** tab. | The library lists your characters' macros, and the macro window shows the first character's 56 slots. |
+| B2 | With the game open, **Edit** a slot in the macro window and save. | It refuses inside the edit window and says to close the game. Nothing changes. |
+| B3 | Close the game, **Edit** a slot on a character (name, icon and text), then log in to that character and open its macro window. | The game shows the edited macro, with the new icon, and any hotbar button using it still works. Log out and reopen the tab: it's still there. |
+| B4 | Choose **Newest** under **Compare with a backup**, click the slot marked different, press **Put this one back** and log in again. | The old macro is back, and the character's other macros didn't change. |
+| B5 | Move an aura in game and log out. With the game closed, on **Addon settings**, press **Put back** on `RWA_DB` from the backup that still has the old place, and log in. | The aura is back where it was, and other addons kept their settings. |
+| B6 | Put macros in groups, star one, and search by a word of a name and a group's name. Select two characters and press **Put on selected characters**. | The filters find them, and the macro is in each character's first empty slot when you log in. |
+| B7 | Play on for over a day with Chrome or the helper open, then open **Addon settings**. | **About a day ago** shows a time at least a day old, and the file's copies are in `Interface\GlobalBankHelper\Backups\Shared`. |
+
 ## 0.11.115 Chrome Web Store readiness (extension 1.2.3)
 
 | # | Do this | Expected |
 | --- | --- | --- |
-| W1 | Run **Install Chrome extension.bat** again, press **Reload** on the extension, and open its popup. | The header says v1.2.3 and the helper card shows no "older than this extension" line. |
+| W1 | Run **Install Chrome extension.bat** again, press **Reload** on the extension, and open its popup. | The header says the current version and the helper card shows no "older than this extension" line. |
 | W2 | Open the page. | The status line under the header has no "older than this extension" note. |
 | W3 | Rename `Interface\GlobalBankHelper\GlobalBank-NativeHost.json` for a moment and reopen the popup. | It says the helper isn't set up, explains what the extension needs, and shows **Get Cherry's Kit**. Rename the file back. |
 | W4 | Tick **Collect the daily reward automatically** off, open the daily page through ZShop and collect by hand. | The popup's last confirmed collection updates. |

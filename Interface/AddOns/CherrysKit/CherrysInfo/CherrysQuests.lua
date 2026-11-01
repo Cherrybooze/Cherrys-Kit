@@ -11,7 +11,7 @@ CherrysQuests = {}
 CherrysInfo = CherrysQuests
 local Q = CherrysQuests
 
-Q.version = "1.0.1"
+Q.version = "1.0.3"
 Q.MAX_ROWS = 30 -- quest rows declared in CherrysQuests.xml
 
 if SaveVariables then

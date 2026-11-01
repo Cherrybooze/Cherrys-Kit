@@ -10,6 +10,7 @@
   <script defer src="roster.js"></script>
   <script defer src="bank.js"></script>
   <script defer src="accounts.js"></script>
+  <script defer src="backups.js"></script>
   <script defer src="control.js"></script>
 </head>
 <body>
@@ -72,6 +73,8 @@
       <button type="button" role="tab" data-tab="characters" aria-selected="false">Characters</button>
       <button type="button" role="tab" data-tab="servers" aria-selected="false">Servers</button>
       <button type="button" role="tab" data-tab="accounts" aria-selected="false">Gameforge accounts</button>
+      <button type="button" role="tab" data-tab="macros" aria-selected="false">Macros</button>
+      <button type="button" role="tab" data-tab="settings" aria-selected="false">Addon settings</button>
       <button type="button" role="tab" data-tab="depot" aria-selected="false">Item Depot</button>
       <button type="button" role="tab" data-tab="terminal" aria-selected="false">Terminal</button>
       <button type="button" role="tab" data-tab="auctions" aria-selected="false">Auctions</button>
@@ -301,6 +304,76 @@
         <div id="server-view" class="server-view" data-select-scope></div>
       </section>
     </div>
+    <div id="tab-macros" class="tab-panel" hidden>
+      <section aria-labelledby="macros-title">
+        <h2 id="macros-title">Macros</h2>
+        <p class="hint">Every macro your characters have, read from their save folders, so no character needs to log in. Group them, search them, and write new ones. In game, the Import button in the macro window (<code>/emi</code>) brings in any of them with no need to close anything. Changing a character's own macros from here needs the game closed, and keeps a copy of the file it replaces.</p>
+        <p id="macro-summary" class="hint"></p>
+        <p id="macro-status" class="hint" role="status"></p>
+        <div class="macro-layout">
+          <div class="macro-library">
+            <h3>Library</h3>
+            <div class="bank-filter-row">
+              <label class="bank-wide">Search name, group or text <input id="macro-search" maxlength="80" autocomplete="off" placeholder="For example: dps warden"></label>
+              <button id="macro-new" type="button">New macro&hellip;</button>
+            </div>
+            <div id="macro-group-chips" class="macro-chips" role="group" aria-label="Groups"></div>
+            <div class="bank-filter-row">
+              <label class="bank-check"><input id="macro-selected" type="checkbox"> Only on selected characters</label>
+              <label class="bank-check"><input id="macro-deleted" type="checkbox"> Show deleted</label>
+              <button id="macro-groups-edit" type="button">Edit groups&hellip;</button>
+              <button id="macro-refresh" type="button">Read the save files again</button>
+            </div>
+            <div id="macro-rows" class="macro-rows"></div>
+          </div>
+          <div class="macro-window">
+            <h3>Macro window</h3>
+            <label for="macro-character">Character</label>
+            <input id="macro-character" list="macro-character-list" maxlength="80" autocomplete="off">
+            <datalist id="macro-character-list"></datalist>
+            <div id="macro-slots" class="macro-slots"></div>
+            <p class="hint">Click a macro, or drag one from the library onto a slot.</p>
+            <div class="bank-menu-buttons macro-window-buttons">
+              <button id="macro-slot-edit" type="button" disabled>Create&hellip;</button>
+              <button id="macro-slot-clear" type="button" disabled>Delete</button>
+            </div>
+            <div class="bank-menu-buttons macro-window-buttons"><button id="macro-slot-put" type="button" disabled>Pick a library macro to put here</button></div>
+            <div id="macro-slot-detail" class="macro-slot-detail"></div>
+            <label for="macro-compare">Compare with a backup</label>
+            <select id="macro-compare"></select>
+            <div class="bank-menu-buttons"><button id="macro-restore-all" type="button" hidden>Put all of them back</button></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div id="tab-settings" class="tab-panel" hidden>
+      <section aria-labelledby="settings-title">
+        <h2 id="settings-title">Addon settings</h2>
+        <p class="hint">The settings each addon saved, such as your auras in RoM WeakAuras and your rotations in KittyCombo. Most are shared by all characters; a few belong to one character. Compare them with the backups and put back one addon's settings or the whole file. Close the game first, because it saves over these files when a character logs out.</p>
+        <div class="bank-filter-row">
+          <label>Saved for <select id="settings-who"><option value="">Shared by all characters</option></select></label>
+          <label class="bank-check"><input id="settings-kit" type="checkbox" checked> Only Cherry's Kit addons</label>
+        </div>
+        <p id="settings-times" class="hint"></p>
+        <p id="settings-warning" class="settings-warning" role="alert"></p>
+        <div class="bank-menu-buttons">
+          <button id="settings-whole-newest" type="button" disabled>Put the whole file back from the newest backup</button>
+          <button id="settings-whole-earlier" type="button" disabled>Put the whole file back from about a day ago</button>
+          <button id="settings-whole-before" type="button" disabled>Undo my last change</button>
+        </div>
+        <p id="settings-status" class="hint" role="status"></p>
+        <div class="auction-table-wrap"><table>
+          <thead><tr><th>Addon</th><th>Saved variable</th><th>Size now</th><th>Newest backup</th><th>About a day ago</th></tr></thead>
+          <tbody id="settings-rows"></tbody>
+        </table></div>
+      </section>
+      <section id="settings-value-box" aria-labelledby="settings-value-title" hidden>
+        <h2 id="settings-value-title"></h2>
+        <label>Show <select id="settings-value-from"><option value="now">What the game has now</option><option value="newest">The newest backup</option><option value="earlier">About a day ago</option></select></label>
+        <p id="settings-auras" class="hint"></p>
+        <pre id="settings-value"></pre>
+      </section>
+    </div>
     <div id="tab-depot" class="tab-panel" hidden>
       <section aria-labelledby="depot-title">
         <h2 id="depot-title">Item Depot</h2>
@@ -358,6 +431,60 @@
     <p class="hint">Everything here stays on this PC. Passwords are only here if you add them on the Gameforge accounts tab.</p>
     <div id="gf-menu" class="gf-menu" hidden></div>
     <div id="gf-side-menu" class="gf-menu gf-side-menu" hidden></div>
+    <dialog id="macro-dialog" class="edit-dialog macro-dialog">
+      <div class="macro-dialog-parts">
+        <form id="macro-edit-form" autocomplete="off">
+          <h2 id="macro-edit-title"></h2>
+          <div class="macro-edit-top">
+            <button id="macro-edit-icon" type="button" class="macro-edit-icon" title="Choose an icon" aria-label="Choose an icon"></button>
+            <label for="macro-edit-name">Name</label>
+            <input id="macro-edit-name" maxlength="32" autocomplete="off">
+          </div>
+          <div class="macro-edit-label"><label for="macro-edit-text">Text</label> <span id="macro-edit-count" class="hint"></span></div>
+          <textarea id="macro-edit-text" rows="10" maxlength="767" spellcheck="false"></textarea>
+          <div class="macro-edit-label"><span>Groups</span></div>
+          <div id="macro-edit-groups" class="macro-chips" role="group" aria-label="Groups"></div>
+          <div class="command macro-edit-add">
+            <input id="macro-edit-new-group" maxlength="40" placeholder="New group" autocomplete="off" aria-label="New group">
+            <button id="macro-edit-add-group" type="button">Add</button>
+          </div>
+          <label id="macro-edit-apply-row" class="bank-check" hidden><input id="macro-edit-apply" type="checkbox"> <span id="macro-edit-apply-text"></span></label>
+          <p id="macro-edit-error" class="edit-error" role="alert"></p>
+          <div class="bank-menu-buttons"><button type="submit">Save</button><button id="macro-edit-cancel" type="button">Cancel</button></div>
+        </form>
+        <div id="macro-icon-picker" class="macro-icon-picker" hidden>
+          <h2>Choose an icon</h2>
+          <div class="macro-icon-nav">
+            <button id="macro-icon-left" type="button" aria-label="Previous category">&lt;</button>
+            <select id="macro-icon-category" aria-label="Icon category"></select>
+            <button id="macro-icon-right" type="button" aria-label="Next category">&gt;</button>
+          </div>
+          <p id="macro-icon-note" class="hint"></p>
+          <div id="macro-icon-grid" class="macro-icon-grid"></div>
+          <div class="macro-icon-pages">
+            <button id="macro-icon-prev" type="button">Previous</button>
+            <span id="macro-icon-page" class="hint"></span>
+            <button id="macro-icon-next" type="button">Next</button>
+          </div>
+          <label for="macro-icon-number">Icon number</label>
+          <input id="macro-icon-number" type="number" min="1" step="1">
+          <div class="bank-menu-buttons"><button id="macro-icon-ok" type="button">OK</button><button id="macro-icon-cancel" type="button">Cancel</button></div>
+        </div>
+      </div>
+    </dialog>
+    <dialog id="macro-groups-dialog" class="edit-dialog">
+      <form id="macro-groups-form" autocomplete="off">
+        <h2>Macro groups</h2>
+        <p class="hint">The groups you can put macros in, in the order they show here and in game. A macro can be in several.</p>
+        <ul id="macro-groups-list" class="macro-groups-list"></ul>
+        <div class="command">
+          <input id="macro-groups-new" maxlength="40" placeholder="New group" autocomplete="off" aria-label="New group">
+          <button type="submit">Add</button>
+        </div>
+        <p id="macro-groups-error" class="edit-error" role="alert"></p>
+        <div class="bank-menu-buttons"><button id="macro-groups-close" type="button">Close</button></div>
+      </form>
+    </dialog>
     <dialog id="edit-dialog" class="edit-dialog">
       <form id="edit-form" autocomplete="off">
         <h2 id="edit-title"></h2>

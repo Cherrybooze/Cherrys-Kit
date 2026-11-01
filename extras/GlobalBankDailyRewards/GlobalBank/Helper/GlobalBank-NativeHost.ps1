@@ -1,4 +1,4 @@
-# Chrome native messaging host. Accepts confirmed rewards and fixed, read-only local queries; never receives shop URLs.
+# Chrome native messaging host. Accepts confirmed rewards and fixed local queries, and the page's own backup requests; never receives shop URLs.
 # Each message also writes Windows' time for the game's addons (CherrysClock), which have no clock of their own.
 $ErrorActionPreference = 'Stop'
 $inputStream = [Console]::OpenStandardInput()
@@ -15,7 +15,7 @@ function Read-Bytes([int]$length) {
     return ,$buffer
 }
 # Raised whenever the extension needs something new from this bridge; the extension asks for an update when it's lower.
-$BridgeVersion = 2
+$BridgeVersion = 3
 function Send-Response($value) {
     if ($value -is [hashtable]) { $value.bridge = $BridgeVersion }
     $text = ConvertTo-Json -InputObject $value -Compress -Depth 8
@@ -79,6 +79,11 @@ try {
     Write-ExtensionBeat
     if ($message.type -eq 'clock') {
         Send-Response @{ok=$true}
+        # Chrome is open but the helper window may not be: a save still reaches the backups and the macro library.
+        try {
+            . (Join-Path $PSScriptRoot 'GlobalBank-Backups.ps1')
+            Update-BackupsIfSaved (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Runes of Magic') (Get-HelperDataDirectory)
+        } catch { }
         exit 0
     }
     if ($message.type -eq 'helper-status' -or $message.type -eq 'helper-start') {
@@ -136,6 +141,13 @@ try {
             if ($message.command -isnot [string]) { throw 'Invalid command.' }
             Send-Response @{ok=$true;output=(Invoke-ControlCommand $message.command)}
         }
+        exit 0
+    }
+    if (([string]$message.type) -match '^(backup|macro)-') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Backups.ps1')
+        $answer = if ($message.type -like 'backup-*') { Invoke-BackupMessage $message (Get-HelperDataDirectory) } else { Invoke-MacroMessage $message (Get-HelperDataDirectory) }
+        $answer.ok = $true
+        Send-Response $answer
         exit 0
     }
     if ($message.type -eq 'auction-query') {

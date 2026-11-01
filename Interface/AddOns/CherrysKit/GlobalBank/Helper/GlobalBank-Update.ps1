@@ -127,6 +127,7 @@ $script:AAHWorkerInbox = Join-Path $data ('.AAH-worker-' + $PID + '.json')
 
 . (Join-Path $PSScriptRoot "GlobalBank-Data.ps1")
 . (Join-Path $PSScriptRoot "AAH-Cache.ps1")
+. (Join-Path $PSScriptRoot "GlobalBank-Backups.ps1")
 
 ###########################################################################
 # Output
@@ -921,6 +922,8 @@ $watcher.EnableRaisingEvents = $true
 $root = (Get-Item -LiteralPath $SaveFolder).FullName.TrimEnd("\")
 $due = $null
 $loggedOut = @{}
+# At the start, and a little after any save: the game writes several files for each logout.
+$backupsDue = Get-Date
 
 $canType = $true
 try { [void][Console]::KeyAvailable }
@@ -983,6 +986,7 @@ while ($true) {
         Remove-Event -EventIdentifier $e.EventIdentifier -ErrorAction SilentlyContinue
         if (-not $path) { continue }
         $parent = (Split-Path -Parent $path).TrimEnd("\")
+        $backupsDue = (Get-Date).AddSeconds(5)
         # Character files only (Documents\Runes of Magic\<Name>\SaveVariables.lua), not the shared one.
         if ($parent -ne $root) {
             $loggedOut[(Split-Path -Leaf $parent)] = $true
@@ -1010,6 +1014,11 @@ while ($true) {
         $loggedOut = @{}
         try { Invoke-Update $names $false }
         catch { Write-HelperError $_ 'Character database update'; Write-Log 'Update failed; see GlobalBankHelper-errors.log. Watching continues.' }
+    }
+    if ($backupsDue -and (Get-Date) -ge $backupsDue) {
+        $backupsDue = $null
+        try { [void](Update-Backups $SaveFolder $data) }
+        catch { Write-HelperError $_ 'Save file backups'; Write-Log 'Backups deferred; see GlobalBankHelper-errors.log.' }
     }
     Update-AAHWorker
     Start-Sleep -Milliseconds 100

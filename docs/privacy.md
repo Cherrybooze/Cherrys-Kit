@@ -12,7 +12,7 @@ Everything the extension reads or saves stays on your own PC. There is no develo
 
 - **The shop's daily loyalty page** (`https://<server>-shop-runesofmagic.gameforge.com/dailies/display/5`): the character name and server shown on the page, and the state of the reward chests. If you tick **Collect the daily reward automatically** in the popup (off by default), it also clicks the available reward for you.
 - **The shop's item depot page**, while you have it open: the item names, counts and picture addresses listed there. It never keeps the page's address, which holds a private sign-in token.
-- **Your game's save files**, through the local helper or through folders you choose on the Bank tab: each character's bags, bank, gold, currencies and the list of characters on an account, which Global Bank writes into `Documents\Runes of Magic`.
+- **Your game's save files**, through the local helper or through folders you choose on the Bank tab: each character's macros and addon settings (shown on the page, and copied to the helper folder as backups), and its bags, bank, gold, currencies and the list of characters on an account, which Global Bank writes into `Documents\Runes of Magic`.
 - **The helper's auction cache**: auction results Advanced AuctionHouse saved while you searched in game.
 
 ## What it keeps, and where
@@ -26,6 +26,8 @@ Everything the extension reads or saves stays on your own PC. There is no develo
 - **storage**: settings and the encrypted accounts copy, as above.
 - **alarms**: a signal once a minute to the local helper, so it knows Chrome is still open.
 - **nativeMessaging**: talks to the Global Bank helper, a PowerShell script on your own PC, which reads the save files and writes the helper folder. It is installed separately by `Install Chrome extension.bat` and runs only on your computer.
+- **Changing your save files**: only when you press a button on the Macros or Addon settings tab. The helper keeps a copy of the file it replaces first.
+- **Macro library**: every macro your characters have, and your groups, stay in the helper folder (`MacroLibrary.json`, and `GlobalBankMacros.lua` for the game's macro window). The helper reads the list of the game's macro icons from the game's `interface.fdb`.
 - **Gameforge shop pages**: the extension's scripts run only on the daily loyalty and item depot pages, and check the exact address before doing anything.
 
 ## Your choices

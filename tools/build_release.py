@@ -102,12 +102,17 @@ PRIVATE_DATA_NAMES = frozenset(name.casefold() for name in (
     "SaveVariables.lua", "GlobalBankDatabase.lua", "GlobalBank.json", "GlobalBankTips.txt", "GameforgeAccounts.json", "ExcludedCharacters.json",
     "DailyRewards.json", "CharacterLinks.json", "GlobalBankHelperBeat.lua",
     "GlobalBankHelper.log", "GlobalBankHelper-errors.log", "AAHBroadCache.json", "AAHBroadCache.lua",
+    "MacroLibrary.json", "GlobalBankMacros.lua",
 ))
+# Global Bank's copies of a player's save files.
+PRIVATE_FOLDER_NAMES = frozenset(("globalbankhelper", "backups"))
 
 
 def is_private_release_path(path: Path) -> bool:
     name = path.name.casefold()
-    return (any(part.casefold() == "globalbankhelper" for part in path.parts)
+    # Every .bsd is the game's own per-character save: macros, action bars and chat windows.
+    return (any(part.casefold() in PRIVATE_FOLDER_NAMES for part in path.parts)
+            or name.endswith(".bsd")
             or any(name == private or name.startswith(private + ".") for private in PRIVATE_DATA_NAMES))
 
 

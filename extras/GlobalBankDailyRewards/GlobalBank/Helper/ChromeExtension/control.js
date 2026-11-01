@@ -48,7 +48,7 @@
   const dirty = new Set(['servers']);
   const views = {};
   // These keep track of their own changes, and are cheap to ask
-  const selfTracking = new Set(['bank', 'favourites', 'accounts', 'heatmap']);
+  const selfTracking = new Set(['bank', 'favourites', 'accounts', 'heatmap', 'macros', 'settings']);
   function showTab(name) {
     currentTab = name;
     document.querySelectorAll('[data-tab]').forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.tab === name)));
@@ -198,6 +198,19 @@
     visible: () => currentTab === 'bank',
     tooltip: byId('bank-tooltip'),
   });
+  // Macros and addon settings come from the save folders, whose names are the characters' names.
+  // A folder the page has no character for always shows, like a character whose server isn't known.
+  const named = name => roster.characters().concat(roster.listed()).filter(character => character.name === name);
+  const backups = GBBackups.create(send, {
+    shows: (name, onlySelected) => {
+      const found = named(name);
+      if (onlySelected) return found.some(character => roster.isSelected(character.key));
+      return !found.length || found.some(character => roster.shows(character));
+    },
+    selectedNames: () => [...new Set(roster.selectedAll().map(character => character.name))],
+  });
+  views.macros = () => { backups.showMacros(); };
+  views.settings = () => { backups.showSettings(); };
   // Characters and Currencies: a search, and groups by server or account
   const tables = {characters: ['roster', 'roster-view'], currencies: ['currency', 'currency-view']};
   const tableOptions = prefix => ({
@@ -559,7 +572,7 @@
         statusHelper.textContent = `Helper: running${ran}, ${how}.`;
       }
       // Older helper files don't say their version.
-      if ((Number(info.bridge) || 0) < 2) statusHelper.textContent += ' Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.';
+      if ((Number(info.bridge) || 0) < 3) statusHelper.textContent += ' Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.';
     } catch (error) {
       statusHelper.textContent = await GBFolders.usable('saves').catch(() => null)
         ? 'Helper: not installed on this PC. The Bank tab is reading your chosen folders.'
