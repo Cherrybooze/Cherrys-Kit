@@ -1,6 +1,6 @@
 # Cherry's Chat
 
-Version **0.11.2** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **0.11.3** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
@@ -20,6 +20,10 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysChat` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 0.11.3
+
+The colour-wrapped chat lines (an empty link around the text, common in trade macros) no longer show stray `|` and `h` or break when they wrap, a lone `|` at the end of a line no longer shows as `|r`, and copied text leaves those codes out. This has simulated-client coverage and still needs an in-game check.
 
 ## Updated in 0.11.2
 
