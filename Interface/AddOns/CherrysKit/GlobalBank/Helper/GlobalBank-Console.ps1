@@ -220,9 +220,10 @@ function Send-GBHeldEvents {
 
 # The heartbeat keeps to one line instead of piling up. It's rewritten only if nothing has been written since.
 function Write-GBHeartbeatLine([string]$text) {
+    # The page puts each event's own time in front; the window's line has to carry it.
     if ($script:GBFeed) { Add-GBFeedEvent 'heartbeat' $text 'muted' '' $false }
     if (Test-GBOutputHeld) { return }
-    $line = @{ spans = @(@{ t = $text; tone = 'muted' }) }
+    $line = @{ spans = @(@{ t = "[$((Get-Date).ToString('HH:mm:ss'))] $text"; tone = 'muted' }) }
     if ($script:GBHasConsole -and $script:PromptShown -and $script:GBHeartbeatRow -ge 0 -and $script:GBHeartbeatRow -eq $script:PromptTop - 1) {
         Hide-Prompt
         try {
