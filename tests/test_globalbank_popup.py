@@ -517,6 +517,17 @@ assert.equal(gb.heatColor(0).kind, 'none');
 assert.equal(gb.heatColor(1).kind, 'some');
 assert.equal(gb.heatColor(999999998).kind, 'some');
 assert.equal(gb.heatColor(999999999).kind, 'full');
+// Your own three colours, with text that can be read on them
+const own = ['#000000', '#808080', '#ffffff'];
+assert.deepEqual([...gb.heatColor(0, own).rgb], [0, 0, 0]);
+assert.deepEqual([...gb.heatColor(500000000, own).rgb], [128, 128, 128]);
+assert.deepEqual([...gb.heatColor(999999999, own).rgb], [255, 255, 255]);
+assert.deepEqual([...gb.heatColor(250000000, own).rgb], [64, 64, 64]);
+assert.equal(gb.heatColor(0, own).text, '#ffffff');
+assert.equal(gb.heatColor(999999999, own).text, '#101820');
+assert.equal(gb.validHeatColors(own), true);
+assert.equal(gb.validHeatColors(['#000000', '#808080']), false);
+assert.equal(gb.validHeatColors(['#000000', '#808080', 'red']), false);
 assert.equal(gb.serverOf({server: 'Aynara'}), 'Aynara');
 assert.equal(gb.serverOf({dailyLogin: {server: 'Aynara (PvE)'}}), 'Aynara');
 assert.equal(gb.serverOf({}), 'Unknown server');

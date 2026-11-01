@@ -331,8 +331,16 @@ tbody tr:last-child td { border-bottom: 0; }
 
 /* The Gold overview: Gameforge account, server, RoM account, characters, in columns like a sheet. 200+ characters fit on one screen. */
 .gold-overview-intro { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
-.heat-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 11px; color: #a1b6ca; }
-.heat-bar { width: 130px; height: 8px; background: linear-gradient(90deg, rgb(198,40,40), rgb(245,124,0) 50%, rgb(0,230,64)); border-radius: 2px; }
+.heat-legend { --heat-color-none: #c62828; --heat-color-half: #f57c00; --heat-color-full: #00e640; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 11px; color: #a1b6ca; }
+.heat-legend > span:first-child { margin-right: 4px; }
+.heat-bar { width: 60px; height: 8px; }
+.heat-bar.is-low { background: linear-gradient(90deg, var(--heat-color-none), var(--heat-color-half)); }
+.heat-bar.is-high { background: linear-gradient(90deg, var(--heat-color-half), var(--heat-color-full)); }
+.heat-legend .heat-swatch { width: 18px; min-height: 18px; height: 18px; padding: 0; cursor: pointer; background: none; border: 1px solid #ffffff55; border-radius: 3px; }
+.heat-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.heat-swatch::-webkit-color-swatch { border: 0; border-radius: 2px; }
+.heat-legend .heat-swatch + span:last-of-type { margin-left: 4px; }
+.heat-legend .link-button { margin-left: 8px; font-size: 11px; }
 .heat-view { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
 .heat-column { min-width: 0; padding: 4px 6px 3px; background: linear-gradient(140deg, #152231, #111c29); border: 1px solid #2a3d51; border-radius: 7px; }
 .heat-column-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; padding: 0 2px 2px; }

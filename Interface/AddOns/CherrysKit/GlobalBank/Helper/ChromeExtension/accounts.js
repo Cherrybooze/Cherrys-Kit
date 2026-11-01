@@ -11,8 +11,9 @@ const GBAccounts = (() => {
   const PART = 300000;
   const FULL_CAP = 999999999;
   const HALF_CAP = 500000000;
-  // Red at no gold, orange at half a cap, bright green at a full cap
-  const RED = [198, 40, 40], ORANGE = [245, 124, 0], GREEN = [0, 230, 64];
+  // Red at no gold, orange at half a cap, bright green at a full cap, until you pick your own
+  const HEAT_STORE = 'gbHeatColors';
+  const HEAT_COLORS = ['#c62828', '#f57c00', '#00e640'];
   const NO_SERVER = 'Unknown server';
   const NOT_LINKED = 'Not linked';
   const NO_ROM = 'RoM account not known';
@@ -59,14 +60,16 @@ const GBAccounts = (() => {
       && typeof file.salt === 'string' && typeof file.iv === 'string' && typeof file.data === 'string';
   }
   // A tile's colour for an amount of gold, with text that can be read on it
-  function heatColor(gold) {
+  function heatColor(gold, colors = HEAT_COLORS) {
     const amount = Math.max(0, Math.min(FULL_CAP, Number(gold) || 0));
     const kind = amount <= 0 ? 'none' : amount >= FULL_CAP ? 'full' : 'some';
-    const [from, to, part] = amount <= HALF_CAP ? [RED, ORANGE, amount / HALF_CAP] : [ORANGE, GREEN, (amount - HALF_CAP) / (FULL_CAP - HALF_CAP)];
+    const [none, half, full] = colors.map(color => [1, 3, 5].map(at => parseInt(color.slice(at, at + 2), 16)));
+    const [from, to, part] = amount <= HALF_CAP ? [none, half, amount / HALF_CAP] : [half, full, (amount - HALF_CAP) / (FULL_CAP - HALF_CAP)];
     const rgb = from.map((value, i) => Math.round(value + (to[i] - value) * part));
     const light = rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 110;
     return {rgb, kind, css: `rgb(${rgb.join(',')})`, text: light ? '#101820' : '#ffffff'};
   }
+  const validHeatColors = colors => Array.isArray(colors) && colors.length === 3 && colors.every(color => /^#[0-9a-f]{6}$/i.test(color));
   const linkKey = name => String(name).toLowerCase();
   // "Aynara (PvE)", as the shop writes it, and "Aynara", as the game does, are the same server.
   function ownServer(character) {
@@ -423,11 +426,39 @@ const GBAccounts = (() => {
       menu.style.top = Math.max(4, Math.min(event.clientY, window.innerHeight - menu.offsetHeight - 8)) + 'px';
     }
 
+    // Your own colours for the Gold overview, kept in this Chrome
+    let heatColors = HEAT_COLORS;
+    let heatFrame = 0;
+    const heatInputs = ['heat-color-none', 'heat-color-half', 'heat-color-full'].map(byId);
+    function showHeatColors() {
+      heatInputs.forEach((input, at) => {
+        input.value = heatColors[at];
+        byId('heat-legend').style.setProperty(`--${input.id}`, heatColors[at]);
+      });
+      byId('heat-colors-reset').hidden = heatColors.every((color, at) => color === HEAT_COLORS[at]);
+    }
+    for (const input of heatInputs) {
+      // Tiles follow while you pick, once a frame, and the pick is kept when you're done
+      input.addEventListener('input', () => {
+        heatColors = heatInputs.map(each => each.value.toLowerCase());
+        showHeatColors();
+        cancelAnimationFrame(heatFrame);
+        heatFrame = requestAnimationFrame(renderHeat);
+      });
+      input.addEventListener('change', () => { chrome.storage.local.set({[HEAT_STORE]: heatColors}).catch(() => {}); });
+    }
+    byId('heat-colors-reset').addEventListener('click', () => {
+      heatColors = HEAT_COLORS;
+      showHeatColors();
+      renderHeat();
+      chrome.storage.local.remove(HEAT_STORE).catch(() => {});
+    });
+
     function renderHeat() {
       heatDirty = false;
       // The page's hover card, click and right-click work from data-char, for every cell at once
       const cellFor = (cell, server) => {
-        const color = heatColor(cell.gold);
+        const color = heatColor(cell.gold, heatColors);
         // Under its own server a name needs no "(Server)" after it
         const name = cell.name.endsWith(` (${server})`) ? cell.name.slice(0, -server.length - 3) : cell.name;
         const node = make('div', 'heat-cell');
@@ -823,14 +854,16 @@ const GBAccounts = (() => {
 
     // Whichever copy was saved last, and a copy left in the helper's folder is what a new PC starts from.
     (async () => {
-      const stored = await chrome.storage.local.get([KEY_STORE, FILE_STORE]);
+      const stored = await chrome.storage.local.get([KEY_STORE, FILE_STORE, HEAT_STORE]);
       key = stored[KEY_STORE] || null;
+      if (validHeatColors(stored[HEAT_STORE])) heatColors = stored[HEAT_STORE];
       const local = validFile(stored[FILE_STORE]) ? stored[FILE_STORE] : null;
       const inFolder = await readFile().catch(() => null);
       sealedFile = !inFolder || (local && local.saved >= inFolder.saved) ? local : inFolder;
       if (sealedFile && sealedFile !== local) await chrome.storage.local.set({[FILE_STORE]: sealedFile});
       if (sealedFile && !inFolder) await send({type: 'gf-save', text: JSON.stringify(sealedFile)}).catch(() => {});
     })().catch(() => {}).finally(() => {
+      showHeatColors();
       renderLock();
       renderAll();
     });
@@ -873,6 +906,6 @@ const GBAccounts = (() => {
       openMenu,
     };
   }
-  return {create, heatColor, serverOf, accountOf, accountFor, linkKeysOf, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
+  return {create, heatColor, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
     newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor};
 })();
