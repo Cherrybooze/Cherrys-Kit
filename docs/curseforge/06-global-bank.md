@@ -20,10 +20,9 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.5.9**: logging in is enough to record a character's bank, also when it is empty. No bank visit needed.
 - **1.5.7**: the game's own macro icons show on the Global Bank page, with no need to log in first.
 - **1.5.6**: the page has a Macros tab, with every character's macros in one library you can group and search, and a macro window like the game's, and an Addon settings tab. It keeps the newest copy of your save files and one from about a day earlier, to compare and restore from.
-- **1.5.5**: the extension says when the helper files are older than it, or when the helper isn't set up, and the Chrome extension installer accepts a Chrome Web Store copy too.
-- **1.5.4**: when several characters hold an item, its right-click menu on the Global Bank page stacks their names, and hovering one opens its copy buttons in a side menu. More than ten names scroll.
 - **1.5.3**: a Servers tab edits the region lists by hand on the Global Bank page, right-click renames a character's RoM or Gameforge account, tooltips show both, and the Gameforge accounts tab is more compact. Collecting the daily reward automatically is now a tick in the extension's popup, off by default.
 
 ## In game
