@@ -1,10 +1,10 @@
-# Global Bank Daily Rewards — Chrome Web Store draft
+# Global Bank for RoM — Chrome Web Store draft
 
 This is a working draft, not a published listing or final privacy policy.
 
 ## Listing description
 
-Global Bank Daily Rewards helps Runes of Magic players collect an available Daily Loyalty Bonus on the Gameforge shop page. Once Gameforge confirms the collection, the extension can record the character, server, reward day and collection time in the local Global Bank helper data for a matching level 100 character.
+Global Bank for RoM helps Runes of Magic players collect an available Daily Loyalty Bonus on the Gameforge shop page. Once Gameforge confirms the collection, the extension can record the character, server, reward day and collection time in the local Global Bank helper data for a matching level 100 character.
 
 The extension can show whether the Global Bank helper is running and offers a button to start it. The helper and its native messaging bridge must be installed separately with Cherry's Kit. The extension is an independent community tool and is not presented as an official Gameforge product.
 

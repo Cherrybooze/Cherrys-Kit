@@ -183,7 +183,7 @@ class SteamPageTests(unittest.TestCase):
         self.assertEqual(out, {"same": True, "steam": True, "far": False, "farSteam": True, "gf": False})
 
 
-@unittest.skipUnless(SHELL, "PowerShell required")
+@unittest.skipUnless(SHELL and os.name == "nt", "Windows only: this makes real junctions and Windows paths")
 class TwoInstallTests(unittest.TestCase):
     def game(self, root, relative, *addons):
         game = Path(root) / relative

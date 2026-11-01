@@ -15,7 +15,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 - **Steam and Gameforge installs side by side:** the setup finds both, or asks where the other one is, and puts the kit in each. Both use one Global Bank data folder, and the Chrome extension stays with the Gameforge install. On Steam, ZShop's daily button opens in your normal browser, and Steam's characters show as a Steam account in Global Bank.
 - **A new Global Bank page and popup** (Global Bank 1.6.0, extension 1.3.0): grouped pages down the side, the search and filters at the top of the Bank, an item panel, one tight line for each character with Transfer stones and an Excluded list, a Gold overview that fits 200+ characters on one screen, and a Terminal that runs in the helper itself, with the same commands and wording as its window.
 - **Global Bank 1.5.7:** a refreshed in-game window, with server tabs, characters grouped by account, and a search that lights up the matching bag and bank slots.
-- **Global Bank Daily Rewards 1.2.5** for Chrome: the page is built for thousands of characters, with a Region button, server checkmarks (Ayvenas included), a Servers tab to edit them, one selection on every tab, the game's tooltips with item and mana stone stats, stacking checkmarks per item type, Always stack, a Favourites tab, RoM account names, and an item menu that stacks the characters who hold it. Collecting the daily reward automatically is now a tick in the popup, off by default. Press Reload on the extension after updating.
+- **Global Bank for RoM**, the Chrome extension: the page is built for thousands of characters, with a Region button, server checkmarks (Ayvenas included), a Servers tab to edit them, one selection on every tab, the game's tooltips with item and mana stone stats, stacking checkmarks per item type, Always stack, a Favourites tab, RoM account names, and an item menu that stacks the characters who hold it. Collecting the daily reward automatically is now a tick in the popup, off by default. Press Reload on the extension after updating.
 - **Your macros and addon settings on the Global Bank page** (Global Bank 1.5.7, extension 1.2.5): a macro library with groups and a search, read from your characters' save folders, addon settings you can put back, newest and day-old backups, and an **Import** button in the game's macro window (Cherry's Info 1.0.3).
 - **zBag 5.07-ck18:** type a stat name such as *stamina* in the bag or bank search and every item with that stat lights up.
 - **Cherry's Chat 0.11.3:** emoji typed with the Windows emoji panel are joined back together for Say bubbles, unknown ones go out as `?`, and `/cchat bubbletest` shows what was sent.
@@ -42,7 +42,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Kit 0.11.101 playtest
 
-- **Real time for addons:** the hub now has a clock, fed by Global Bank's Daily Rewards Chrome extension 1.0.9. Cherry's Bar's Clock and **ZShop 1.2.0-ck5** read it. See [Real time for addons](#real-time-for-addons).
+- **Real time for addons:** the hub now has a clock, fed by the Global Bank for RoM Chrome extension. Cherry's Bar's Clock and **ZShop 1.2.0-ck5** read it. See [Real time for addons](#real-time-for-addons).
 
 - **Global Bank 1.4.7:** the daily reset follows 00:00 in Germany in any time zone, and the extension's setup takes one click plus Chrome's two.
 
@@ -135,7 +135,7 @@ Each one is its own download and needs Cherry's Kit:
 
 ## Real time for addons
 
-The game's Lua has no clock, so `CherrysClock` stays unknown until something outside the game tells it the time. That something is Global Bank's Daily Rewards Chrome extension: when Chrome starts, or the extension talks to its local host, the host writes Windows' time to a small file and exits. Windows' uptime counter carries the time from there, across characters and game restarts, until Windows restarts. Nothing stays running and nothing is asked of the game server. Without the extension the clock stays unknown.
+The game's Lua has no clock, so `CherrysClock` stays unknown until something outside the game tells it the time. That something is the Global Bank for RoM Chrome extension: when Chrome starts, or the extension talks to its local host, the host writes Windows' time to a small file and exits. Windows' uptime counter carries the time from there, across characters and game restarts, until Windows restarts. Nothing stays running and nothing is asked of the game server. Without the extension the clock stays unknown.
 
 | Call | Returns, or nil while unknown |
 | --- | --- |
