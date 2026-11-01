@@ -48,6 +48,7 @@ class SlotFontTests(unittest.TestCase):
 
     def test_labels_use_small_default_scaled_override_and_change_only_cache(self):
         self.lua.execute('''
+          zBag_VAR.slothover=0
           zBagKit.Label(Owner,123)
           assert(OwnerKitSlot.fontSize==8 and OwnerKitSlot.text=="123")
           assert(OwnerKitSlotBack.w==16 and OwnerKitSlotBack.h==10)
@@ -77,6 +78,59 @@ class SlotFontTests(unittest.TestCase):
         self.assertEqual(self.g.zBag_VAR.slotfontsize, 20)
         self.g.zBagKit.StepSlotFontSize(-100)
         self.assertEqual(self.g.zBag_VAR.slotfontsize, 6)
+
+    def test_mouseover_only_is_the_default_and_shows_the_hovered_slot(self):
+        self.lua.execute('''
+          label("Item2");label("Item2KitSlot");label("Item2KitSlotBack")
+          zBagKit.Label(Owner,5);zBagKit.Label(Item2,6)
+          assert(not OwnerKitSlot.visible and not Item2KitSlot.visible)
+          zBagKit.HoverLabel(Owner,true)
+          assert(OwnerKitSlot.visible and OwnerKitSlot.text=="5" and not Item2KitSlot.visible)
+          zBagKit.HoverLabel(Item2,true)
+          assert(not OwnerKitSlot.visible and Item2KitSlot.visible and Item2KitSlot.text=="6")
+          zBagKit.HoverLabel(Owner,false) -- leaving another slot changes nothing
+          assert(Item2KitSlot.visible)
+          zBagKit.HoverLabel(Item2,false)
+          assert(not Item2KitSlot.visible)
+          -- a refresh while hovered keeps the number; a refresh after leaving keeps it hidden
+          zBagKit.HoverLabel(Owner,true);zBagKit.Label(Owner,5);assert(OwnerKitSlot.visible)
+          zBagKit.HoverLabel(Owner,false);zBagKit.Label(Owner,5);assert(not OwnerKitSlot.visible)
+          zBag_VAR.slothover=0;zBagKit.Label(Owner,5);assert(OwnerKitSlot.visible)
+        ''')
+
+    def test_game_buttons_follow_the_tooltip_owner_and_overlays_show_only_when_hovered(self):
+        self.lua.execute('''
+          for n=1,180 do
+            local b=label("BagItemButton"..n);b.visible=true
+            label("zBagKitBag"..n);label("zBagKitBag"..n.."KitSlot");label("zBagKitBag"..n.."KitSlotBack")
+          end
+          tipOwner=nil;tipShown=false
+          GameTooltip={IsVisible=function() return tipShown end, IsOwned=function(_,f) return f==tipOwner end}
+          for n=1,30 do zBagKit.Label(_G["zBagKitBag"..n],n,nil,true) end
+          zBagKit.bagNumbers=true
+          zBagKit.WatchHover()
+          assert(not zBagKitBag7.visible)
+          tipOwner=BagItemButton7;tipShown=true
+          zBagKit.WatchHover()
+          assert(zBagKitBag7.visible and zBagKitBag7KitSlot.visible and zBagKitBag7KitSlot.text=="7")
+          assert(not zBagKitBag8.visible)
+          tipShown=false
+          zBagKit.WatchHover()
+          assert(not zBagKitBag7.visible)
+          -- numbers off: nothing is looked at
+          zBagKit.bagNumbers=false;tipShown=true
+          zBagKit.WatchHover();assert(not zBagKitBag7.visible)
+        ''')
+
+    def test_item_templates_report_mouseover_and_the_setting_has_a_tick(self):
+        tmpl = ET.parse(SOURCE / "zBagTmpl.xml").getroot()
+        for name in ("zTBagItem", "zTBankItem"):
+            button = tmpl.find(".//ui:Button[@name='" + name + "']", NS)
+            self.assertIn("zBagKit.HoverLabel(this, true)", button.find("ui:Scripts/ui:OnEnter", NS).text)
+            self.assertIn("zBagKit.HoverLabel(this, false)", button.find("ui:Scripts/ui:OnLeave", NS).text)
+        root = ET.parse(SOURCE / "zBagKit.xml").getroot()
+        tick = root.find(".//ui:CheckButton[@name='$parentSlotHover']", NS)
+        self.assertIn('OnConfigClick("slothover")', tick.find("ui:Scripts/ui:OnClick", NS).text)
 
     def test_profile_settings_keep_their_own_font_size_when_sharing_switches(self):
         self.lua.execute('''
