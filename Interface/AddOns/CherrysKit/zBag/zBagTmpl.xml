@@ -95,8 +95,10 @@
 			<OnEnter>
 				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
 				GameTooltip:SetBagItem(this.index);
+				zBagKit.HoverLabel(this, true);
 			</OnEnter>
 			<OnLeave>
+				zBagKit.HoverLabel(this, false);
 				GameTooltip:Hide();
 				GameTooltip1:Hide();
 				GameTooltip2:Hide();
@@ -124,8 +126,10 @@
 			<OnEnter>
 				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
 				GameTooltip:SetBagItem(this.index);
+				zBagKit.HoverLabel(this, true);
 			</OnEnter>
 			<OnLeave>
+				zBagKit.HoverLabel(this, false);
 				GameTooltip:Hide();
 				GameTooltip1:Hide();
 				GameTooltip2:Hide();
@@ -182,8 +186,10 @@
 			<OnEnter>
 				GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT",-5,0);
 				GameTooltip:SetBankItem(this.index);
+				zBagKit.HoverLabel(this, true);
 			</OnEnter>
 			<OnLeave>
+				zBagKit.HoverLabel(this, false);
 				GameTooltip:Hide();
 			</OnLeave>
 		</Scripts>

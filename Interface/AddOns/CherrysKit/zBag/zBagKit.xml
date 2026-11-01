@@ -225,6 +225,15 @@
 				<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
 				<Scripts><OnClick>zBagKit.OnConfigClick("share");</OnClick><OnEnter>zBagKit.ShowTooltip(this, "share");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
 			</CheckButton>
+			<CheckButton name="$parentSlotHover">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentShare" relativePoint="TOPLEFT"><Offset><AbsDimension x="300" y="0"/></Offset></Anchor></Anchors>
+				<HitRectInsets><AbsInset top="0" left="8" bottom="8" right="0"/></HitRectInsets>
+				<Layers><Layer level="OVERLAY"><FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Numbers on mouseover only"><Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="6"/></Offset></Anchor></Anchors></FontString></Layer></Layers>
+				<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/><PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+				<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+				<Scripts><OnClick>zBagKit.OnConfigClick("slothover");</OnClick><OnEnter>zBagKit.ShowTooltip(this, "slothover");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+			</CheckButton>
 			<CheckButton name="$parentOneBank">
 				<Size><AbsDimension x="24" y="24"/></Size>
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentOneBag" relativePoint="BOTTOMLEFT"/></Anchors>
