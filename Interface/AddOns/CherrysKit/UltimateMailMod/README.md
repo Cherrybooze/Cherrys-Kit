@@ -1,6 +1,6 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck12** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **7.0.1-ck13** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **A better mail window with mass send that no longer gets stuck after about 60 mails.**
 
@@ -21,6 +21,10 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
 <!-- end of requirements -->
+
+## Updated in 7.0.1-ck13
+
+- **Compose** shows your recently sent recipients as the first name column, before **Characters** and **Friends**, newest first. Click a name to put it in To. It updates as soon as a mail goes out. In a guild, the window gets a little wider on Compose so **Guildies** fit as a fourth column.
 
 ## Updated in 7.0.1-ck12
 

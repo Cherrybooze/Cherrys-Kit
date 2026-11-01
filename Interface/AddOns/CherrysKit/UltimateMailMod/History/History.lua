@@ -28,6 +28,11 @@ end
 function UMMHistory_Refresh()
   fillHistory(getglobal("UMMFrameTab4"), false);
   fillHistory(getglobal("UMMFrameTab3Recent"), true);
+  -- the Compose tab's recently sent column (shown already, so its OnShow does not run again)
+  local column = getglobal("UMMFrameTab2History");
+  if (column and column.SetupList and column:IsVisible()) then
+    column:SetupList("history");
+  end
 end
 
 function UMMHistory_Select(index)
