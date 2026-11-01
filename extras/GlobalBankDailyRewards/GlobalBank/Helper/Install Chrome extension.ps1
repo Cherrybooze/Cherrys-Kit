@@ -181,8 +181,9 @@ try {
     foreach ($file in @($extensionManifest, $hostPath, $idFile, $chromeLauncher)) {
         if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { throw "Missing file: $file. Reinstall the complete Global Bank addon." }
     }
-    $extensionId = (Get-Content -LiteralPath $idFile -Raw).Trim()
-    if ($extensionId -notmatch '^[a-p]{32}$') { throw 'The extension ID file is invalid.' }
+    # One ID per line: the copy loaded from this folder, and the Chrome Web Store copy once it has one.
+    $extensionIds = @((Get-Content -LiteralPath $idFile) | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    if (-not $extensionIds.Count -or @($extensionIds | Where-Object { $_ -notmatch '^[a-p]{32}$' }).Count) { throw 'The extension ID file is invalid.' }
     $dir = Get-Item -LiteralPath $PSScriptRoot
     while ($dir -and $dir.Name -ine 'AddOns') { $dir = $dir.Parent }
     if (-not $dir) { throw 'Put the addon in your game''s Interface\AddOns folder first.' }
@@ -192,7 +193,7 @@ try {
     $data = Join-Path $dir.Parent.FullName 'GlobalBankHelper'
     New-Item -ItemType Directory -Path $data -Force | Out-Null
     $manifestPath = Join-Path $data 'GlobalBank-NativeHost.json'
-    $manifest = [ordered]@{name='com.cherryskit.globalbank';description='Global Bank daily rewards';path=$hostPath;type='stdio';allowed_origins=@("chrome-extension://$extensionId/")}
+    $manifest = [ordered]@{name='com.cherryskit.globalbank';description='Global Bank daily rewards';path=$hostPath;type='stdio';allowed_origins=@($extensionIds | ForEach-Object { "chrome-extension://$_/" })}
     [IO.File]::WriteAllText($manifestPath, (ConvertTo-Json -InputObject $manifest -Depth 4), (New-Object System.Text.UTF8Encoding($false)))
     $key = 'HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.cherryskit.globalbank'
     New-Item -Path $key -Force | Out-Null
