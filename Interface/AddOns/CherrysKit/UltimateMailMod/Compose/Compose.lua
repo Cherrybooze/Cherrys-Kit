@@ -452,6 +452,7 @@ function UMMComposeMailTemplate_OnLoad(this)
   end;
   
   this.SetReply = function(self, name, subject)
+    getglobal(self:GetParent():GetName().."History"):Hide();
     getglobal(self:GetParent():GetName().."Own"):Hide();
     getglobal(self:GetParent():GetName().."Friends"):Hide();
     getglobal(self:GetParent():GetName().."Guildies"):Hide();
@@ -515,6 +516,7 @@ function UMMComposeMailTemplate_OnLoad(this)
       getglobal(self:GetName().."HeaderSubject"):SetFocus();
     end
   
+    getglobal(self:GetParent():GetName().."History"):Show();
     getglobal(self:GetParent():GetName().."Own"):Show();
     getglobal(self:GetParent():GetName().."Friends"):Show();
     if (IsInGuild()) then

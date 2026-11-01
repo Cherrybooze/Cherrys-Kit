@@ -21,7 +21,13 @@ function UMMMenuLayout(id)
   local frame = UMMFrame;
   id = id or frame.ummTab or 1;
   frame.ummTab = id;
-  local width = id == 3 and 985 or 805;
+  -- Mass Send Items needs room for its side panel; Compose for a fourth name column in a guild
+  local width = 805;
+  if (id == 3) then
+    width = 985;
+  elseif (id == 2 and IsInGuild and IsInGuild()) then
+    width = 950;
+  end
   local uiScale = positive(GetUIScale) or 1;
   local screenW, screenH = positive(GetScreenWidth), positive(GetScreenHeight);
   if (not screenW) then local w = positive(UIParent.GetWidth, UIParent);screenW = w and w * uiScale; end
