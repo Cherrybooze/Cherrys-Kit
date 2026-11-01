@@ -1925,16 +1925,40 @@ function F.CloseSection(group)
   if group=="field" then F.selection=nil end
   refresh()
 end
+-- Stack count on an icon: its secondary text, drawn in the bottom-right corner, holds %s.
+function F.StackCountShown(output)
+  return type(output.text2)=="string" and string.find(output.text2,"%s",1,true)~=nil
+end
+function F.SetStackCount(output,on)
+  if on then
+    if not F.StackCountShown(output) then
+      output.text2=(output.text2 and output.text2~="") and output.text2.."%s" or "%s"
+    end
+  elseif F.StackCountShown(output) then
+    local rest=string.gsub(output.text2,"%%s","")
+    output.text2=rest
+  end
+end
 function F.OpenDisplaySettings(anchor,entry)
   selectField(entry,"actionDetails"); refresh()
   for _,row in ipairs(F.ruleRows) do
     if row.entry and row.entry.kind=="action" and row.entry.ruleId==entry.ruleId and row.entry.actionId==entry.actionId then anchor=row.first; break end
   end
   local owner=token(entry,"actionDetails")
-  openMenu(anchor,{{label="Appearance, size and colour",value="actionDetails"},{label="Text and font",value="text"},
-    {label="Offset and attachment",value="offset"},{label="Change display type",value="type"}},function(value)
+  local choices={{label="Appearance, size and colour",value="actionDetails"},{label="Text and font",value="text"},
+    {label="Offset and attachment",value="offset"},{label="Change display type",value="type"}}
+  local _,_,_,shownAction=findOwner(owner)
+  local output=shownAction and shownAction.output
+  if output and output.regionType=="icon" then
+    choices[#choices+1]={label=F.StackCountShown(output) and "Stack count: On" or "Stack count: Off",value="stacks",
+      description="The small stack number in the icon's bottom-right corner, like the game's own buff icons. Blank at zero or one stack."}
+  end
+  openMenu(anchor,choices,function(value)
     if not matches(owner) then return end
-    if value=="type" then
+    if value=="stacks" then
+      local _,_,_,a=findOwner(owner)
+      if a and a.output then F.SetStackCount(a.output,not F.StackCountShown(a.output)); changed() end
+    elseif value=="type" then
       openMenu(anchor,outputKinds,function(kind)
         if not matches(owner) then return end
         local d,r,_,a=findOwner(owner); F.SetOutputKind(d,r,a,kind); changed()

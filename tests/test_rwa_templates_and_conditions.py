@@ -264,6 +264,65 @@ class TemplateAndConditionTests(unittest.TestCase):
         self.assertEqual(len(list(self.rwa.Editor.new.keys())), 0)
         self.assertEqual(len(list(self.rwa.Editor.seeds.keys())), 0)
 
+    def test_present_buff_templates_show_the_stack_count_from_the_first_scan(self):
+        # Tester report (kit 0.11.101): a debuff made from the gallery showed only its
+        # icon, and stacks appeared only after the aura was built again another way.
+        # The template left the icon's corner text blank; it now holds %s like a
+        # display added in the editor.
+        self.lua.execute('function templateNamed(id) for _,e in ipairs(RWA.Templates.Catalog()) do if e.id==id then return e end end end')
+        for key in ('player:HELPFUL:false', 'target:HARMFUL:false'):
+            output = self.lua.globals().templateNamed(key).definition.rules[1].actions[1].output
+            self.assertEqual(output.text2, '%s', key)
+        for key in ('player:HELPFUL:true', 'target:HARMFUL:true'):
+            output = self.lua.globals().templateNamed(key).definition.rules[1].actions[1].output
+            self.assertEqual(output.text2, '', key)
+        self.lua.execute('''
+          fixtureBuffs.target={{name="Chosen",id=42,icon="icon",stacks=8,left=20}}
+          local d=RWA.CopyTable(templateNamed("target:HARMFUL:false").definition)
+          d.id="Stacked debuff"; d.sources[1].ids={42}
+          RWA.AddAura(d)
+        ''')
+        self.h.tick()
+        region = self.rwa.loaded['Stacked debuff'].outputs[1].region
+        self.assertTrue(region.shown)
+        self.assertEqual(region.text2.obj.text, '8')
+        self.lua.execute('fixtureBuffs.target[1].stacks=9; RWA.Triggers.InvalidateAuras()')
+        self.h.tick()
+        self.assertEqual(region.text2.obj.text, '9')
+        self.lua.execute('fixtureBuffs.target[1].stacks=1; RWA.Triggers.InvalidateAuras()')
+        self.h.tick()
+        self.assertEqual(region.text2.obj.text, '')
+
+    def test_icon_display_menu_toggles_the_stack_count(self):
+        self.lua.execute('''
+          local d
+          for _,e in ipairs(RWA.Templates.Catalog()) do if e.id=="target:HARMFUL:false" then d=RWA.CopyTable(e.definition) end end
+          d.id="Toggle stacks"; d.rules[1].actions[1].output.text2=""
+          RWA.AddAura(d)
+        ''')
+        self.rwa.ToggleOptions()
+        self.rwa.ShowEditor('Toggle stacks')
+        self.h.tick()
+        F = self.rwa.UnifiedEditor
+        draft = self.rwa.Editor.Get('Toggle stacks')
+        rule, action = draft.rules[1], draft.rules[1].actions[1]
+        F.OpenDisplaySettings(F.save, self.lua.table_from({'ruleId': rule.id, 'actionId': action.id}))
+        labels = [v.label for v in F.menu['values'].values()]
+        self.assertIn('Stack count: Off', labels)
+        F.menu.choose('stacks')
+        self.assertEqual(action.output.text2, '%s')
+        F.menu.open = False
+        F.OpenDisplaySettings(F.save, self.lua.table_from({'ruleId': rule.id, 'actionId': action.id}))
+        self.assertIn('Stack count: On', [v.label for v in F.menu['values'].values()])
+        F.menu.choose('stacks')
+        self.assertEqual(action.output.text2, '')
+        # Text the user typed beside %s stays.
+        action.output.text2 = 'x%s'
+        F.SetStackCount(action.output, False)
+        self.assertEqual(action.output.text2, 'x')
+        F.SetStackCount(action.output, True)
+        self.assertEqual(action.output.text2, 'x%s')
+
 
 if __name__ == '__main__':
     unittest.main()
