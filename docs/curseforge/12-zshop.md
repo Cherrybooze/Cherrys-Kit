@@ -4,8 +4,8 @@
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\ZShop`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Global Bank:** its Chrome extension or helper tells ZShop the time, for the daily reminder
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Global Bank:** the daily reminder uses the real time, from Global Bank's Chrome extension or helper
 >
 > **Original addon:** ZShop by Pyrr. If `Interface\AddOns\ZShop` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
@@ -15,8 +15,8 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
 ## Recent changes
 
+- **1.2.0-ck6**: on Steam, the daily button opens the reward page in your normal browser, logged in as this character, instead of Steam's overlay, so Global Bank's Chrome extension works on it. The item shop button and `/zshop depot` stay in Steam's browser. Not yet tried in game.
 - **1.2.0-ck5**: ZShop reads the time from Cherry's Kit's clock, so the daily reminder works without the Global Bank helper running.
-- **1.2.0-ck4**: the daily button only marks the day once the daily page has really been handed to your browser or the game's shop window. Copy, Home and Depot don't mark it.
 
 ## Features
 

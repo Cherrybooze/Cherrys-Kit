@@ -42,8 +42,8 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Recent changes
 
+- **0.4.30**: Steam and Gameforge installs side by side. The setup finds both, or asks where the other one is, and puts the kit in each. They share one Global Bank data folder, and the Chrome extension stays with the Gameforge install.
 - **0.4.29**: its manifest loads zBag's new stat search file.
-- **0.4.27**: knows the merged addons. Cherry's Info gives way to any of the five addons it took over, and LogNextChar to an old Cherry's Loginxml, and the hub names the folder.
 - **Guided setup**: the Hub zip carries `!setup_cherryskit.bat`. Double-click it after extracting, and any time you want to update: it says which addons are out of date against the latest release on GitHub and updates them with the old versions kept, asks before installing anything your addons can use that's missing, moves older copies out of the way, puts the login screen in place and walks you through the Chrome extension.
 
 ## Features
@@ -55,11 +55,32 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 - **One minimap button** (a cherry) that opens the hub. It replaces Cherry's KittyCombo's own minimap button, so your minimap stays tidy.
 - **Resizable**: the - and + buttons next to the close button, or drag the bottom right corner (right for bigger, left for smaller). The size is saved.
 - **Your own chat commands**: every command is listed in `Interface\AddOns\CherrysKit\Commands.lua`. Open it in Notepad, change the text between the quotes, save and Reload UI. Commands an addon already owns keep working with extra words (`/kc <class>`, `/rwa unlock`).
-- **Install only what you want**: every addon is its own download and runs with just the hub. Whatever it would do with another addon is simply missing until you install that one, with no errors and no lit bug button on the minimap.
+- **Install only what you want**: every addon is its own download and runs with just the hub. Whatever it would do with another addon is simply missing until you install that one, with no errors and no lit bug button on the minimap. **Single addons or the full kit**, below, lists what that is.
 - **A real clock for other addons**: the game gives addons no clock. Once the Global Bank for RoM Chrome extension has told the hub the time (Chrome starting is enough), Cherry's Bar's Clock and ZShop's daily reminder use it until Windows restarts. Nothing keeps running for it.
 - **Why everything lives under `CherrysKit`**: One folder, loaded and controlled by the hub, keeps the kit simple to develop and lets the hub's switches cover every addon in it. It also keeps the kit out of the way of anyone who'd rather run their own version of an addon. Compatibility with addons managed separately can't be guaranteed, so when one is there, the kit's version stays off instead of clashing with it.
 - **Original addons**: if the addon a kit addon came from, or an older separate copy, is still in its own folder (for example `Interface\AddOns\zBag` next to `Interface\AddOns\CherrysKit`), it takes precedence. The kit's version stays off, and the hub says so for each one, in chat and in its window. `!setup_cherryskit.bat` moves such folders to `Interface\offloaded_addons`, but only when the kit's own copy is installed. Then Reload UI to use the kit's version.
 - Only lists the kit addons you actually have installed.
+
+## Single addons or the full kit
+
+Every addon runs with just this hub. The full kit adds nothing an addon needs, only the other addons. A few features join two addons, and each is missing until you have both:
+
+- **Cherry's KittyCombo + rom weakauras**: your auras as combo conditions, and auras that show KittyCombo's next skills and modes.
+- **Cherry's KittyCombo + Cherry's Grid**: click a party or raid frame to run a kitty.
+- **Cherry's KittyCombo + Cherry's Bar**: the Kitty mode on the bar.
+- **Cherry's KittyCombo + Cherry's Chat**: their copy boxes share one size.
+- **rom weakauras + Cherry's Info**: mob information and macro icon categories for auras, and rom weakauras' fonts for the quest tracker.
+- **Cherry's Chat + Cherry's Info**: class colours for names in chat.
+- **Cherry's Chat + Ultimate Mail Mod**: Ctrl+click a name in chat to fill in a mail's recipient.
+- **zBag + Global Bank**: a Global Bank button on the one-bag window.
+- **zBag + Advanced AuctionHouse**: clicks in the bag work in the auction window.
+- **Global Bank + Advanced AuctionHouse**: a searchable cache of your auction searches.
+- **Global Bank + Cherry's Bar or ZShop**: the real time, for the Clock and the daily reminder.
+- **Global Bank + LogNextChar**: each character's gold and last save on the character screen, and whole accounts recorded at once.
+- **Global Bank + Cherry's Info**: an Import button in the macro window, and the extra macro icons on the Global Bank page.
+- **Ultimate Mail Mod + LogNextChar**: the mail window closes before switching characters.
+
+Each addon's page lists its own under **Alone or in the full kit**.
 
 ## The addons
 
@@ -93,6 +114,8 @@ Each one is its own download and needs Cherry's Kit:
 
 Updating an addon by hand? Update the hub too: some addons need a newer hub, and their pages say which.
 
+**Playing on Steam and Gameforge?** Run `!setup_cherryskit.bat` in either game folder. It finds the other install, or asks where it is, and sets up both.
+
 For addon authors: `if CherrysKit and not CherrysKit.IsEnabled("<Folder>") then ... stay idle ... end`. An addon joining the kit also has to [stay updateable through the setup](https://github.com/Cherrybooze/Cherrys-Kit#keeping-addons-updateable).
 
 ## Bug reports
@@ -115,11 +138,11 @@ Some kit addons contain parts under Creative Commons **NonCommercial** licences 
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\KittyCombo`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **rom weakauras:** use your auras as combo conditions
-> - **Cherry's Chat:** shares its copy-box size
-> - **Cherry's Grid:** Cherry's Grid can run a kitty when you click a frame
-> - **Cherry's Bar:** Cherry's Bar shows the Kitty mode
+> - **Cherry's Chat:** its code boxes use Cherry's Chat's copy-box size
+> - **Cherry's Grid:** click a party or raid frame to run a kitty
+> - **Cherry's Bar:** the Kitty mode shows on Cherry's Bar instead of its own plate
 >
 > **Original addon:** KittyCombo 0.973 by Miranda. If `Interface\AddOns\KittyCombo` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
@@ -202,8 +225,8 @@ Write to **cherry** on the Runes of Magic Discord (also named on the "found a bu
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\RomWeakAuras`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Cherry's KittyCombo:** track its next skills and modes
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Cherry's KittyCombo:** triggers for KittyCombo's next skills and modes
 > - **Cherry's Info:** mob information for triggers and the macro icon categories in its icon picker, and its quest tracker can use rom weakauras' fonts
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\RomWeakAuras` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one. It's a rewrite of WeakAuras for World of Warcraft, so there's no original for this game.
@@ -291,10 +314,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/rwa probe
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\CherrysChat`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Cherry's Info:** class colours from its player list
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Cherry's Info:** class colours for names, from Cherry's Info's player list
 > - **Ultimate Mail Mod:** Ctrl+click a name in chat to fill the mail's To
-> - **Cherry's KittyCombo:** KittyCombo shares its copy-box size
+> - **Cherry's KittyCombo:** KittyCombo's code boxes use the same copy-box size
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysChat` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
@@ -373,7 +396,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cchat pro
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\zBag`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **Global Bank:** a Global Bank button on the one-bag window
 > - **Advanced AuctionHouse:** clicks in the bag work in the auction window
 >
@@ -449,11 +472,11 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zb probe`
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\GlobalBank`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **zBag:** a button on the one-bag window
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **zBag:** a Global Bank button on zBag's one-bag window
 > - **Advanced AuctionHouse:** its searches fill the helper's auction cache
-> - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
-> - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
+> - **ZShop:** ZShop's daily reminder gets the real time from the Chrome extension or helper
+> - **Cherry's Bar:** Cherry's Bar's Clock gets the real time from the Chrome extension
 > - **LogNextChar:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
 > - **Cherry's Info:** the macro window's Import button brings in macros from the page's library, and the page shows its extra macro icons
 >
@@ -568,9 +591,9 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/gb probe`
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\UltimateMailMod`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **Cherry's Chat:** Ctrl+click a name in chat to fill the mail's To
-> - **LogNextChar:** LogNextChar closes its window before switching characters
+> - **LogNextChar:** LogNextChar closes the mail window before switching characters
 >
 > **Original addon:** Ultimate Mail Mod by Shardea of Siochain, later Maxeem of Muinin, mvoigt, Jagodragon and Raihir. If `Interface\AddOns\UltimateMailMod` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
@@ -654,8 +677,8 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\AdvancedAuctionHouse`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Global Bank:** its helper keeps a searchable auction cache
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Global Bank:** Global Bank's helper keeps a searchable cache of your auction searches
 > - **zBag:** clicks in the bag work in the auction window
 >
 > **Original addon:** Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves. If `Interface\AddOns\AdvancedAuctionHouse` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one. Its saved searches, price history and settings carry over to this version.
@@ -728,7 +751,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/aah probe
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\LoadTimes`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub, and nothing it does needs another addon.
+> **Alone or in the full kit:** the same. Installed alone, with just the hub, it does everything the full kit's copy does, and nothing on this page needs another addon.
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\!CherrysLoadTimes` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
@@ -792,8 +815,8 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/ckload pr
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\ZShop`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
-> - **Global Bank:** its Chrome extension or helper tells ZShop the time, for the daily reminder
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
+> - **Global Bank:** the daily reminder uses the real time, from Global Bank's Chrome extension or helper
 >
 > **Original addon:** ZShop by Pyrr. If `Interface\AddOns\ZShop` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
@@ -803,8 +826,8 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 
 ## Recent changes
 
+- **1.2.0-ck6**: on Steam, the daily button opens the reward page in your normal browser, logged in as this character, instead of Steam's overlay, so Global Bank's Chrome extension works on it. The item shop button and `/zshop depot` stay in Steam's browser. Not yet tried in game.
 - **1.2.0-ck5**: ZShop reads the time from Cherry's Kit's clock, so the daily reminder works without the Global Bank helper running.
-- **1.2.0-ck4**: the daily button only marks the day once the daily page has really been handed to your browser or the game's shop window. Copy, Home and Depot don't mark it.
 
 ## Features
 
@@ -853,7 +876,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/zshop pro
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\CherrysGrid`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **Cherry's KittyCombo:** run a kitty when you click a frame
 >
 > **Original addon:** GridCliqueIt by Skaryon, Jacobian and odie2. If `Interface\AddOns\GridCliqueIt` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one. Cherry's Grid is new code that follows its design, and the two would draw the same raid frames.
@@ -915,7 +938,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/grid prob
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\CherrysInfo`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **rom weakauras:** rom weakauras' fonts for the quest tracker; its triggers and icon picker can use the mob information and macro icon categories from here
 > - **Cherry's Chat:** class colours in chat from its player list
 > - **Global Bank:** the macro window's Import button lists its macro library
@@ -1004,9 +1027,9 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cinfo pro
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\CherrysBar`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **Cherry's KittyCombo:** the Kitty mode display
-> - **Global Bank:** its Chrome extension gives the Clock the real time
+> - **Global Bank:** the Clock shows the real time, from Global Bank's Chrome extension
 >
 > **Original addon:** XBar III by matif and Bussdee. If `Interface\AddOns\XBar` is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 >
@@ -1073,7 +1096,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/cbar prob
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\LogNextChar`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
-> **On its own:** it runs with just the hub. Only the parts listed here need another addon, and without that addon they're simply missing:
+> **Alone or in the full kit:** installed alone, with just the hub, everything on this page works except the parts below. Each needs the addon named, and is missing until you install that addon too, or the full kit:
 > - **Global Bank:** shows each character's gold and last save on the character screen and the helper's status on the server screen, and gives it your account's character list, which boxes them together on its page and fills in their servers
 > - **Ultimate Mail Mod:** closes its window before switching characters, as it does the game's mail window
 >
