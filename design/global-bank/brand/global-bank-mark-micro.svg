@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+  <title>Global Bank</title>
+  <rect x=".5" y=".5" width="15" height="15" rx="4" fill="#162536" stroke="#8d7448"/>
+  <circle cx="8" cy="8" r="5.3" stroke="#edc779" stroke-width="1.8"/>
+  <path d="M8 3.5v9m-4.5-4.5h9" stroke="#edc779" stroke-width="1.3"/>
+  <path d="m8 5.5 2.5 2.5L8 10.5 5.5 8 8 5.5Z" fill="#edc779" stroke="#162536" stroke-width=".8"/>
+  <circle cx="12.5" cy="12.5" r="1.7" fill="#72cfbc" stroke="#162536" stroke-width=".8"/>
+</svg>

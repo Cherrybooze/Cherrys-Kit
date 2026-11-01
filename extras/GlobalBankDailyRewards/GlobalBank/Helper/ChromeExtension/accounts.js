@@ -1,5 +1,5 @@
 'use strict';
-// The Gold heatmap and Gameforge accounts tabs, and the right-click menu for copying logins.
+// The Gold overview and Gameforge accounts pages, and the right-click menu for copying logins.
 // Accounts, passwords and links only exist in the clear in this page's memory while unlocked. What's kept is
 // encrypted: GameforgeAccounts.json beside the helper's other files, and a copy in Chrome. Opening it takes both
 // a random key, which stays in Chrome's storage for this extension's own pages, and the player's password, which
@@ -11,8 +11,9 @@ const GBAccounts = (() => {
   const PART = 300000;
   const FULL_CAP = 999999999;
   const HALF_CAP = 500000000;
-  const RED = [198, 40, 40], ORANGE = [245, 124, 0], GREEN = [0, 230, 64];
-  const NO_SERVER = 'Server unknown';
+  // Nothing is plain, the rest climbs from a dark green to a light one, and only a full cap is gold.
+  const NONE = [22, 35, 48], LOW = [35, 58, 51], HALF = [74, 117, 96], HIGH = [140, 168, 120], FULL = [221, 189, 116];
+  const NO_SERVER = 'Unknown server';
   const NO_ACCOUNT = 'No account';
   const MASK = '***';
   // Names one right-click menu lists (the rest are counted), and how long the pointer rests on another name
@@ -56,13 +57,17 @@ const GBAccounts = (() => {
     return !!file && file.schema === 1 && Number.isInteger(file.iterations) && file.iterations > 0
       && typeof file.salt === 'string' && typeof file.iv === 'string' && typeof file.data === 'string';
   }
-  // Red at no gold, orange at exactly half a cap, bright green at a full cap, and a gradient between
+  // A tile's colour for an amount of gold, with text that can be read on it
   function heatColor(gold) {
     const amount = Math.max(0, Math.min(FULL_CAP, Number(gold) || 0));
-    const [from, to, part] = amount <= HALF_CAP ? [RED, ORANGE, amount / HALF_CAP] : [ORANGE, GREEN, (amount - HALF_CAP) / (FULL_CAP - HALF_CAP)];
-    const rgb = from.map((value, i) => Math.round(value + (to[i] - value) * part));
+    const kind = amount <= 0 ? 'none' : amount >= FULL_CAP ? 'full' : 'some';
+    let rgb = kind === 'none' ? NONE : FULL;
+    if (kind === 'some') {
+      const [from, to, part] = amount <= HALF_CAP ? [LOW, HALF, amount / HALF_CAP] : [HALF, HIGH, (amount - HALF_CAP) / (FULL_CAP - HALF_CAP)];
+      rgb = from.map((value, i) => Math.round(value + (to[i] - value) * part));
+    }
     const light = rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 110;
-    return {rgb, css: `rgb(${rgb.join(',')})`, text: light ? '#101820' : '#ffffff'};
+    return {rgb, kind, css: `rgb(${rgb.join(',')})`, text: light ? '#14100a' : kind === 'none' ? '#b8c8da' : '#e8f1ec'};
   }
   const linkKey = name => String(name).toLowerCase();
   // "Aynara (PvE)", as the shop writes it, and "Aynara", as the game does, are the same server.
@@ -227,13 +232,15 @@ const GBAccounts = (() => {
     }));
   }
   const number = value => Number(value || 0).toLocaleString('en-US');
+  const shortGold = value => (typeof GBBank !== 'undefined' ? GBBank.formatCompact(value) : number(value));
 
   // options: {shows(character): on the page's region and servers, visible(tab): whether that tab is open,
   // isSelected(key), selectKeys(keys): all of them, or none when all are selected already, addKeys(keys),
   // clearSelection(): the page's one selection; listed(): names only a login screen listed, which can be linked
   // before they save anything; romTitle(character) and romName(character): its RoM account's name to show, and the
   // name you gave it; romFirst(): whether the RoM account comes before the character's name; linksChanged(): an
-  // account renamed or characters linked, so tables grouped by account are drawn again}
+  // account renamed or characters linked, so tables grouped by account are drawn again; lockChanged(state):
+  // 'none' (no accounts file), 'needs-key', 'locked' or 'open'}
   function create(send, options = {}) {
     const byId = id => document.getElementById(id);
     let state = emptyState();
@@ -314,6 +321,7 @@ const GBAccounts = (() => {
       byId('gf-need-key').hidden = !sealedFile || !!key;
       byId('gf-locked-note').hidden = !locked;
       byId('gf-open').hidden = !fileKey;
+      if (options.lockChanged) options.lockChanged(fileKey ? 'open' : !sealedFile ? 'none' : key ? 'locked' : 'needs-key');
     }
     function lock() {
       fileKey = null;
@@ -416,9 +424,11 @@ const GBAccounts = (() => {
       // The page's hover card, click and right-click work from data-char, for every cell at once
       const cellFor = cell => {
         const color = heatColor(cell.gold);
-        const node = make('div', 'heat-cell', cell.name);
+        const node = make('div', 'heat-cell' + (color.kind === 'full' ? ' is-max' : ''), cell.name);
+        node.append(make('b', '', shortGold(cell.gold)));
         node.style.background = color.css;
         node.style.color = color.text;
+        node.setAttribute('aria-label', `${cell.name}, ${number(cell.gold)} gold`);
         if (cell.key) node.dataset.char = cell.key;
         return node;
       };
@@ -431,10 +441,23 @@ const GBAccounts = (() => {
         return box;
       };
       const columns = heatColumns(characters.filter(shows), state, !fileKey && sealedFile ? 'Accounts locked' : NO_ACCOUNT, options.romName || null);
+      const allGold = columns.reduce((sum, column) => sum + column.total, 0);
+      const allCaps = columns.reduce((sum, column) => sum + column.fullCaps.length, 0);
+      const total = byId('heat-total');
+      total.textContent = `${shortGold(allGold)} gold`;
+      total.title = `${number(allGold)} gold`;
+      total.append(make('span', 'soft-count', `${number(allCaps)} full caps`));
       byId('heat-view').replaceChildren(...columns.map(column => {
         const node = make('section', 'heat-column');
-        node.append(make('h2', '', column.server));
-        node.append(make('p', 'hint', `${number(column.total)} gold · ${column.fullCaps.length} full caps`));
+        const count = column.fullCaps.length + column.groups.reduce((sum, group) => sum + group.characters.length, 0);
+        const head = make('div', 'heat-column-head');
+        const title = make('div');
+        title.append(make('h2', '', column.server), make('div', 'heat-column-sub', `${number(count)} characters`));
+        const balance = make('div', 'heat-balance', shortGold(column.total));
+        balance.title = `${number(column.total)} gold`;
+        balance.append(make('small', '', `${number(column.fullCaps.length)} full caps`));
+        head.append(title, balance);
+        node.append(head);
         if (column.fullCaps.length) node.append(block(`Full caps (${column.fullCaps.length})`, column.fullCaps));
         for (const group of column.groups) node.append(block(group.account, group.characters));
         return node;
@@ -641,7 +664,7 @@ const GBAccounts = (() => {
       event.preventDefault();
       const box = byId('gf-unlock-password');
       const note = byId('gf-unlock-status');
-      note.textContent = 'Unlocking...';
+      note.textContent = 'Unlocking…';
       try {
         await open(box.value);
         note.textContent = '';

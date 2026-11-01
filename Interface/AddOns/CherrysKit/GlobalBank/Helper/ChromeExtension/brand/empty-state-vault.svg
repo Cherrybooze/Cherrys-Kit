@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180" viewBox="0 0 240 180" fill="none">
+  <title>An empty vault ready for your items</title>
+  <defs><linearGradient id="empty-door" x1="73" y1="49" x2="163" y2="150" gradientUnits="userSpaceOnUse"><stop stop-color="#243449"/><stop offset="1" stop-color="#14202e"/></linearGradient></defs>
+  <ellipse cx="120" cy="154" rx="77" ry="9" fill="#070d14" fill-opacity=".5"/>
+  <circle cx="121" cy="85" r="64" stroke="#2b3b4d" stroke-dasharray="3 7"/>
+  <path d="M52 79h-9m157 40h-11m-8-72v9m-4-4h9M47 134v7m-4-3h8" stroke="#51667d" stroke-linecap="round"/>
+  <rect x="69" y="41" width="108" height="112" rx="15" fill="url(#empty-door)" stroke="#40516a" stroke-width="2"/>
+  <rect x="79" y="51" width="88" height="91" rx="10" fill="#0f1925" stroke="#38485b"/>
+  <path d="M93 54h57" stroke="#e2bd72" stroke-opacity=".35"/>
+  <circle cx="123" cy="95" r="27" fill="#1c2a39" stroke="#baa16c" stroke-width="4"/>
+  <circle cx="123" cy="95" r="19" stroke="#baa16c" stroke-opacity=".6"/>
+  <path d="M123 75v13m0 14v13m-20-20h13m14 0h13" stroke="#d7b773" stroke-width="3" stroke-linecap="round"/>
+  <path d="m123 87 8 8-8 8-8-8 8-8Z" fill="#edc779"/>
+  <rect x="158" y="65" width="6" height="14" rx="2" fill="#506075"/><rect x="158" y="115" width="6" height="14" rx="2" fill="#506075"/>
+  <circle cx="178" cy="142" r="13" fill="#23453e" stroke="#72cfbc" stroke-width="1.5"/>
+  <path d="m172 142 4 4 7-8" stroke="#9fe1d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

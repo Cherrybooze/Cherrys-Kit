@@ -1,0 +1,58 @@
+GLOBAL BANK — EXTENSION POPUP MOCKUP
+
+Open popup.html directly. It uses the same local icons, mark, colour tokens,
+buttons, and focus treatments as the full Global Bank mockup. No network
+request, Chrome extension API, helper connection, account mutation, or actual
+collection is performed. Toggle states live only in the displayed page.
+
+The 380px popup surface keeps Open Global Bank, helper status, auto-start,
+reward context, collection preference, settings, and reload readily accessible.
+The panel is responsive below that width. Help and advanced settings expand
+without clipping; they can naturally make the page taller. The surrounding
+preview header and navigation are presentation elements, not extension UI.
+
+SOURCE BASELINE
+Repository: Cherrybooze/Cherrys-Kit
+Branch: main
+Commit reviewed: 71f8f117a96b267e31794c44db98f351b90800a9
+Commit date: 2026-11-01 14:20:15 UTC
+Canonical directory:
+Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension/
+Mirrored directory:
+extras/GlobalBankDailyRewards/GlobalBank/Helper/ChromeExtension/
+
+Relevant files: popup.html (also contains its CSS), popup.js, manifest.json,
+background.js, content.js. Existing brand files: icon16.png, icon32.png,
+icon48.png, icon128.png. The new reusable mark is in assets/brand/.
+
+The main-branch manifest at this commit is 1.2.2; the supplied installed-popup
+screenshot shows 1.2.4. The mockup does not claim to be either production build.
+The installed UI should continue deriving its version from getManifest().
+
+BEHAVIOURS TO PRESERVE DURING IMPLEMENTATION
+- Open Global Bank opens control.html or focuses its existing tab/window.
+- Start/stop helper, auto-start, terminal visibility, and reload remain present.
+- Stopping the helper also disables automatic mode.
+- Changing terminal visibility restarts a helper running automatically.
+- Auto-collect is off by default and operates on the authenticated daily page.
+- Manual collections remain recorded when auto-collect is off.
+- A redeemed-page confirmation precedes the local collection record.
+- Local recording requires an unambiguous matching level-100-or-higher snapshot.
+- Collection can succeed on Gameforge while its local recording fails.
+- Daily reset is midnight in Europe/Berlin, displayed in the user's local time.
+- A calendar reset does not establish current character eligibility.
+- Unknown collection data must not be presented as a known uncollected reward.
+
+The displayed character and 30 October confirmation are sample preview content.
+The “New reward day” state demonstrates the existing saved-confirmation/calendar
+comparison; it is not a live availability claim. No Claim button is added.
+
+The current icon source reviewed is a gold vault door on a navy rounded square.
+The redesigned editable vector retains the vault idea and supplies a consistent
+visual language with the main bank page. Do not replace the existing icons.js
+item-image decoding/cache logic with the new UI icon bundle: they have different
+purposes. Integrate the new UI assets under a distinct name.
+
+PINNED SOURCES
+https://github.com/Cherrybooze/Cherrys-Kit/tree/71f8f117a96b267e31794c44db98f351b90800a9/Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension
+https://github.com/Cherrybooze/Cherrys-Kit/blob/71f8f117a96b267e31794c44db98f351b90800a9/extras/GlobalBankDailyRewards/README.md

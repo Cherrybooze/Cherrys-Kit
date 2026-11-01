@@ -1,0 +1,91 @@
+{
+  "name": "Global Bank \u2014 Gilded Slate",
+  "version": "1.0.0",
+  "iconCount": 44,
+  "icons": [
+    "bank",
+    "star",
+    "wallet",
+    "users",
+    "heatmap",
+    "depot",
+    "gift",
+    "auction",
+    "shield",
+    "settings",
+    "terminal",
+    "sync",
+    "search",
+    "filter",
+    "chevron-down",
+    "chevron-right",
+    "chevron-left",
+    "close",
+    "check",
+    "plus",
+    "minus",
+    "copy",
+    "more",
+    "lock",
+    "unlock",
+    "grid",
+    "list",
+    "compact",
+    "globe",
+    "info",
+    "warning",
+    "clock",
+    "bag",
+    "server",
+    "diamond",
+    "coin",
+    "ruby",
+    "sparkles",
+    "eye",
+    "eye-off",
+    "expand",
+    "download",
+    "arrow-up-right",
+    "mail"
+  ],
+  "rarities": [
+    "common",
+    "uncommon",
+    "rare",
+    "epic",
+    "legendary"
+  ],
+  "implementation": "Original SVG and CSS; no runtime dependencies.",
+  "notes": "Inline SVG inherits currentColor. Standalone SVG files use #a9b9cb as a neutral visible fallback. Real game item artwork is not included in this original UI asset set.",
+  "brand": {
+    "svg": [
+      "global-bank-mark.svg",
+      "global-bank-mark-micro.svg",
+      "global-bank-mark-mono.svg",
+      "wordmark.svg",
+      "empty-state-vault.svg"
+    ],
+    "pngSizes": [
+      16,
+      32,
+      48,
+      128,
+      256,
+      512
+    ],
+    "wordmarkPngWidth": 596
+  },
+  "buttonSkins": {
+    "svgCount": 10,
+    "pngCount": 20,
+    "buttonSize": [
+      160,
+      36
+    ],
+    "pngScales": [
+      1,
+      2
+    ]
+  },
+  "integrationWarning": "The UI icons.js is distinct from the extension game-item decoder; copy it under a new name such as ui-icons.js and keep the decoder intact."
+}

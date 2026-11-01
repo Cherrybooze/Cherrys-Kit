@@ -1,0 +1,70 @@
+/* What the page and the popup share: buttons, form controls, badges and the switch. Load ui-tokens.css first.
+   A plain button is the quiet kind: gold is for the one main action of a view. */
+* { box-sizing: border-box; }
+html { color-scheme: dark; }
+body { color: var(--gb-text); font: 13px/1.45 var(--gb-font); font-variant-numeric: tabular-nums; background: var(--gb-bg); }
+a { color: var(--gb-gold); }
+:focus-visible { outline: 2px solid var(--gb-gold); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+.ico { display: inline-flex; flex: none; align-items: center; justify-content: center; color: inherit; }
+.ico svg { display: block; width: 17px; height: 17px; }
+
+button, .gb-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 32px; padding: 0 11px;
+  font: 600 12px/1.2 var(--gb-font); color: var(--gb-text); white-space: nowrap; text-decoration: none; cursor: pointer;
+  background: linear-gradient(180deg, #243346, #1a2838); border: 1px solid var(--gb-border-strong); border-radius: var(--gb-radius);
+  box-shadow: var(--gb-shadow-button); transition: border-color var(--gb-fast), filter var(--gb-fast), transform var(--gb-fast), box-shadow var(--gb-fast);
+}
+button:hover, .gb-button:hover { filter: brightness(1.13); border-color: #62738b; }
+button:active, .gb-button:active { transform: translateY(1px); filter: brightness(.95); box-shadow: inset 0 2px 4px #00000028; }
+button:disabled, .gb-button[aria-disabled="true"] { cursor: not-allowed; opacity: .45; filter: none; transform: none; box-shadow: none; }
+button[aria-busy="true"] { cursor: progress; }
+button .ico svg { width: 15px; height: 15px; }
+.gb-button--primary { color: #30240e; background: linear-gradient(180deg, #f5d994 0%, #edc779 52%, #d7ae5f 100%); border-color: #f1d28e; box-shadow: 0 3px 10px #00000025, inset 0 1px 0 #fff3cfb3; }
+.gb-button--primary:hover { border-color: #ffe8b6; }
+.gb-button--ghost { color: var(--gb-muted); background: none; border-color: transparent; box-shadow: none; }
+.gb-button--ghost:hover { color: var(--gb-text); background: #ffffff0a; border-color: var(--gb-border); }
+.gb-button--danger { color: #f1a4aa; background: linear-gradient(180deg, #472b35, #35212a); border-color: #6a3d4a; }
+.gb-button--sm { min-height: 26px; padding: 0 8px; font-size: 11px; border-radius: 6px; }
+.gb-button--icon { width: 32px; padding: 0; }
+.gb-spinner { display: inline-block; width: 13px; height: 13px; border: 1.7px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: gb-spin .8s linear infinite; }
+@keyframes gb-spin { to { transform: rotate(360deg); } }
+
+input, select, textarea { font: 13px/1.3 var(--gb-font); color: var(--gb-text); }
+input:not([type="checkbox"], [type="radio"], [type="file"]), select, textarea {
+  min-height: 32px; padding: 0 9px; background: var(--gb-surface-sunken); border: 1px solid var(--gb-border); border-radius: var(--gb-radius);
+}
+textarea { padding: 7px 9px; }
+input:not([type="checkbox"], [type="radio"], [type="file"]):hover, select:hover, textarea:hover { border-color: var(--gb-border-strong); }
+input::placeholder, textarea::placeholder { color: #8fa2b8; opacity: 1; }
+input:disabled, select:disabled { cursor: not-allowed; opacity: .5; }
+input[type="checkbox"] { flex: none; width: 14px; height: 14px; margin: 0; accent-color: var(--gb-gold); cursor: pointer; }
+select { cursor: pointer; }
+select option { color: var(--gb-text); background: #182536; }
+
+.gb-badge { display: inline-flex; align-items: center; gap: 5px; min-height: 22px; padding: 0 7px; font-size: 11px; font-weight: 500; color: var(--gb-muted); white-space: nowrap; background: #ffffff04; border: 1px solid var(--gb-border); border-radius: var(--gb-radius-small); }
+.gb-badge--success { color: #9ee1d1; background: #72cfbc0d; border-color: #72cfbc30; }
+.gb-badge--warning { color: var(--gb-gold); background: #edc7790c; border-color: #edc77933; }
+.gb-badge--danger { color: #f0a6a6; background: #ee8b8b0d; border-color: #ee8b8b33; }
+
+.gb-switch { position: relative; display: inline-flex; flex: none; align-items: center; cursor: pointer; }
+.gb-switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.gb-switch > span { position: relative; display: block; width: 30px; height: 17px; background: #26374a; border: 1px solid #405169; border-radius: 20px; }
+.gb-switch > span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; background: #a1b2c5; border-radius: 50%; transition: transform var(--gb-fast), background var(--gb-fast); }
+.gb-switch input:checked + span { background: #28594e; border-color: #458474; }
+.gb-switch input:checked + span::after { background: #b2ecdf; transform: translateX(13px); }
+.gb-switch input:focus-visible + span { box-shadow: var(--gb-focus); }
+.gb-switch input:disabled + span { opacity: .5; }
+
+.gb-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  .gb-spinner { animation: gb-spin 1.8s linear infinite !important; }
+}
+@media (forced-colors: active) {
+  button, .gb-button, .gb-badge, .nav-item, .status-chip { border: 1px solid ButtonText; }
+  [aria-current="page"], [aria-pressed="true"] { outline: 2px solid Highlight; }
+  .status-dot, .connection-dot, .gbt-dot { background: CanvasText !important; }
+}

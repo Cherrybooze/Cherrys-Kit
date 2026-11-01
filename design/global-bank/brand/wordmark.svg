@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="298" height="64" viewBox="0 0 298 64" fill="none">
+  <title>Global Bank</title>
+  <defs><linearGradient id="wordmark-coin" x1="18" y1="11" x2="46" y2="53" gradientUnits="userSpaceOnUse"><stop stop-color="#fff0bc"/><stop offset=".45" stop-color="#edc779"/><stop offset="1" stop-color="#aa7835"/></linearGradient></defs>
+  <rect x="1" y="1" width="62" height="62" rx="16" fill="#162536" stroke="#907444" stroke-opacity=".7"/>
+  <circle cx="32" cy="32" r="21.5" fill="url(#wordmark-coin)"/>
+  <circle cx="32" cy="32" r="17.5" fill="#1a2b3c"/>
+  <circle cx="32" cy="32" r="13.5" stroke="#e7be70" stroke-width="1.2"/>
+  <path d="M32 18v8m0 12v8M18 32h8m12 0h8" stroke="url(#wordmark-coin)" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="m32 25 7 7-7 7-7-7 7-7Z" fill="url(#wordmark-coin)"/><path d="m32 29 3 3-3 3-3-3 3-3Z" fill="#192b3c"/>
+  <circle cx="49" cy="49" r="5" fill="#72cfbc" stroke="#111d2b" stroke-width="2.5"/>
+  <text x="82" y="41" fill="#e8edf4" font-size="29" font-weight="650" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" letter-spacing="-.7">Global Bank</text>
+</svg>
