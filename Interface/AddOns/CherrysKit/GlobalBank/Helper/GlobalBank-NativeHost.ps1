@@ -1,9 +1,12 @@
 # Chrome native messaging host. Accepts confirmed rewards and fixed local queries, and the page's own backup requests; never receives shop URLs.
+# Stdout carries only length-prefixed JSON frames: nothing here may print, and helper scripts run in their own process.
+# A terminal-* message keeps this process open for more of them, until Chrome closes the port (or, for a one-shot message, stdin).
 # Each message also writes Windows' time for the game's addons (CherrysClock), which have no clock of their own.
 $ErrorActionPreference = 'Stop'
 $inputStream = [Console]::OpenStandardInput()
 $outputStream = [Console]::OpenStandardOutput()
 $utf8 = New-Object System.Text.UTF8Encoding($false, $true)
+. (Join-Path $PSScriptRoot 'GlobalBank-Bridge.ps1')
 function Read-Bytes([int]$length) {
     $buffer = New-Object byte[] $length
     $offset = 0
@@ -15,15 +18,34 @@ function Read-Bytes([int]$length) {
     return ,$buffer
 }
 # Raised whenever the extension needs something new from this bridge; the extension asks for an update when it's lower.
-$BridgeVersion = 3
-function Send-Response($value) {
-    if ($value -is [hashtable]) { $value.bridge = $BridgeVersion }
-    $text = ConvertTo-Json -InputObject $value -Compress -Depth 8
+$BridgeVersion = 4
+function Send-Frame([string]$text) {
     $bytes = $utf8.GetBytes($text)
+    # Chrome ends the connection on anything over 1 MB, so the page gets a reason rather than a dead port.
+    if ($bytes.Length -gt 1048576) { $bytes = $utf8.GetBytes((ConvertTo-Json -InputObject @{ok=$false;outcome='bridge';error='That answer was too large to send.';records=@();bridge=$BridgeVersion} -Compress)) }
     $length = [BitConverter]::GetBytes([int]$bytes.Length)
     $outputStream.Write($length, 0, 4)
     $outputStream.Write($bytes, 0, $bytes.Length)
     $outputStream.Flush()
+}
+function Send-Response($value) {
+    if ($value -is [hashtable]) { $value.bridge = $BridgeVersion }
+    Send-Frame (ConvertTo-Json -InputObject $value -Compress -Depth 12)
+}
+# Null when the other side has closed cleanly between messages.
+function Read-NativeMessage {
+    $head = New-Object byte[] 4
+    $first = $inputStream.Read($head, 0, 4)
+    if ($first -le 0) { return $null }
+    $offset = $first
+    while ($offset -lt 4) {
+        $read = $inputStream.Read($head, $offset, 4 - $offset)
+        if ($read -le 0) { throw 'Incomplete native message' }
+        $offset += $read
+    }
+    $length = [BitConverter]::ToInt32($head, 0)
+    if ($length -lt 2 -or $length -gt 16384) { throw 'Invalid message length' }
+    return $utf8.GetString((Read-Bytes $length)) | ConvertFrom-Json
 }
 function Get-HelperDataDirectory {
     $dir = Get-Item -LiteralPath $PSScriptRoot
@@ -63,6 +85,15 @@ function Write-ClockStamp {
         [System.IO.File]::WriteAllText((Join-Path (Get-HelperDataDirectory) 'CherrysClockStamp.lua'), $text, [Text.Encoding]::ASCII)
     } catch { }
 }
+# What the extension's automatic-start checkbox says, for the helper's exit message. Only Chrome knows otherwise.
+function Write-AutoStartChoice($value) {
+    if ($value -isnot [bool]) { return }
+    try {
+        $path = Join-Path (Get-HelperDataDirectory) 'GlobalBankAutoStart.txt'
+        $text = if ($value) { 'on' } else { 'off' }
+        if ((Read-GBSharedText $path) -cne $text) { Write-GBAtomicText $path $text }
+    } catch { }
+}
 # The helper watches this file: while the extension keeps talking, it keeps running.
 function Write-ExtensionBeat {
     try {
@@ -71,13 +102,34 @@ function Write-ExtensionBeat {
         else { [System.IO.File]::WriteAllText($path, ([DateTime]::UtcNow.ToString('o')), [Text.Encoding]::ASCII) }
     } catch { }
 }
+function Send-TerminalAnswer($message, [string]$data) {
+    $answer = switch ([string]$message.type) {
+        'terminal-command' { Invoke-GBTerminalCommand $PSScriptRoot $data ([string]$message.requestId) $message.command }
+        'terminal-confirm' { Invoke-GBTerminalConfirm $PSScriptRoot $data ([string]$message.requestId) $message.token $message.answer }
+        'terminal-feed' { Get-GBTerminalFeed $data $message.session $message.after $message.max }
+        'terminal-catalogue' { Get-GBTerminalCatalogue $data }
+        default { throw 'Unknown terminal message.' }
+    }
+    if ($answer -is [string]) { Send-Frame $answer } else { Send-Response $answer }
+}
 try {
-    $length = [BitConverter]::ToInt32((Read-Bytes 4), 0)
-    if ($length -lt 2 -or $length -gt 16384) { throw 'Invalid message length' }
-    $message = $utf8.GetString((Read-Bytes $length)) | ConvertFrom-Json
+    $message = Read-NativeMessage
+    if ($null -eq $message) { throw 'Incomplete native message' }
     Write-ClockStamp
     Write-ExtensionBeat
+    if (([string]$message.type) -like 'terminal-*') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Commands.ps1')
+        $data = Get-HelperDataDirectory
+        while ($null -ne $message) {
+            # One bad request answers for itself and doesn't end the port.
+            try { Send-TerminalAnswer $message $data }
+            catch { Send-Response @{ok=$false;outcome='bridge';error=$_.Exception.Message;records=@();requestId=[string]$message.requestId} }
+            $message = Read-NativeMessage
+        }
+        exit 0
+    }
     if ($message.type -eq 'clock') {
+        Write-AutoStartChoice $message.autoHelper
         Send-Response @{ok=$true}
         # Chrome is open but the helper window may not be: a save still reaches the backups and the macro library.
         try {
@@ -96,7 +148,14 @@ try {
             Send-Response @{ok=$true;running=$false;starting=$true}
         } else {
             $response = @{ok=$true;running=$running;starting=$false;lastCollected=$null;since=$null;auto=$false}
-            if ($running) {
+            $state = Get-GBHelperState (Get-HelperDataDirectory)
+            $response.state = $state.state
+            $response.stopping = $state.stopping
+            if ($state.bridged) {
+                $response.since = $state.since
+                $response.auto = $state.auto
+                $response.hidden = $state.hidden
+            } elseif ($running) {
                 $process = Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe' OR Name = 'pwsh.exe'" |
                     Where-Object { $_.CommandLine -like '*GlobalBank-Update.ps1*-Watch*' } | Select-Object -First 1
                 if ($process) {
@@ -139,7 +198,11 @@ try {
             Send-Response @{ok=$true;icons=$found.icons;later=@($found.later)}
         } else {
             if ($message.command -isnot [string]) { throw 'Invalid command.' }
-            Send-Response @{ok=$true;output=(Invoke-ControlCommand $message.command)}
+            # The older route, same commands: the records come back as text too, and ok only says the bridge answered.
+            . (Join-Path $PSScriptRoot 'GlobalBank-Commands.ps1')
+            $answer = Invoke-GBTerminalCommand $PSScriptRoot $data '' $message.command
+            if ($answer -is [string]) { $answer = $answer | ConvertFrom-Json }
+            Send-Response @{ok=$true;output=(ConvertTo-GBPlainText $answer.records);result=$answer}
         }
         exit 0
     }

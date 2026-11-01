@@ -14,7 +14,7 @@ const getKit = document.getElementById('get-kit');
 let starting = false;
 let refreshTimer;
 // The bridge says which version it is; older helper files lack what this extension asks for.
-const BRIDGE_VERSION = 3;
+const BRIDGE_VERSION = 4;
 const OLD_BRIDGE = 'Your Global Bank helper files are older than this extension. Update Cherry\u2019s Kit, then run Install Chrome extension.bat again.';
 
 // The version Chrome is running now, so you can see that Reload took.
