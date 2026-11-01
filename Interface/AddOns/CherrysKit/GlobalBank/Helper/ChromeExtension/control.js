@@ -104,6 +104,8 @@
   // The Gameforge accounts' lock: at the top of the page, and in the Connection panel with its password box
   let accountState = 'none';
   function showAccountState(state) {
+    // Locked and not linked read differently, so the tables that name accounts are drawn again
+    if (state !== accountState) changed(['characters', 'currencies', 'servers']);
     accountState = state;
     const words = {none: 'No accounts saved', 'needs-key': 'Accounts need their key', locked: 'Accounts locked', open: 'Accounts open'};
     byId('status-accounts-text').textContent = words[state];
