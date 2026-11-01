@@ -32,7 +32,7 @@ A fork of XBar III, with bars and settings in the spirit of Titan Panel.
 - **Seven styles** (Ironstone, Blacksteel, Froststeel, Darkwood, Verdant, Arcane and plain Slate) with a matching set of icons.
 - **Drawn under the game**: the portrait, housing controls, target, buffs and minimap stay on top and where they are, and the top bar's displays are kept clear of them.
 - **The bottom bar lifts the whole interface** by its height and fits underneath: the action bars, chat, cast bar, bags and other addons' frames along the bottom rise together.
-- **Real time**: the Clock shows the time once Cherry's Kit knows it, from Global Bank's Daily Rewards Chrome extension. Until then it shows your time online.
+- **Real time**: the Clock shows the time once Cherry's Kit knows it, from the Global Bank for RoM Chrome extension. Until then it shows your time online.
 - **Light on the game**: displays read only on events or slow timers, and displays you hid do nothing. `/cbar perf` measures frame times and what each addon costs per frame.
 
 **Still being tested in game:** the bottom bar's lift and moving the game's frames, text widths, coordinates on the bar and some of XBar's older game calls. `/cbar probe` shows what the client does.
