@@ -26,7 +26,7 @@ ZShop by Pyrr and Cherry, updated for Cherry's Kit.
 - ZShop window with its settings, and a row in Cherry's Kit. No other library needed (the original needed aaa_pylib).
 - ZShop never stores your shop login link, and never opens shop pages by itself. It cannot click Collect for you: you still press it on the page.
 
-**Clock:** the game gives addons no clock, so ZShop takes the time from Cherry's Kit, which Global Bank's Daily Rewards Chrome extension sets when Chrome starts. Without it, start the Global Bank helper: ZShop reads the time from it, which can take about a minute. `/zshop probe` names the clock in use. The clock and the page-open mark still need testing in game.
+**Clock:** the game gives addons no clock, so ZShop takes the time from Cherry's Kit, which the Global Bank for RoM Chrome extension sets when Chrome starts. Without it, start the Global Bank helper: ZShop reads the time from it, which can take about a minute. `/zshop probe` names the clock in use. The clock and the page-open mark still need testing in game.
 
 ## Chat commands
 
