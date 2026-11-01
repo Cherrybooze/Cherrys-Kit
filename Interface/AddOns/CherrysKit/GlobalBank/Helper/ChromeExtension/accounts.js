@@ -74,7 +74,8 @@ const GBAccounts = (() => {
     return ownServer(character) || known?.of(character.name)?.server || NO_SERVER;
   }
   // Characters one login screen listed together are on one account and one server. This only says who belongs
-  // together: it never links anyone to a Gameforge account.
+  // together: it never links anyone to a Gameforge account. Steam logs in to one account, so its characters are one
+  // account on each server even before a login screen lists them.
   function accountGroups(characters) {
     const parent = new Map();
     const shown = new Map();
@@ -92,8 +93,14 @@ const GBAccounts = (() => {
       return at;
     };
     const everyone = new Set(characters.map(character => linkKey(character.name)));
+    const steamFirst = new Map();
     for (const character of characters) {
       const own = add(character.name);
+      if (character.steam) {
+        const server = ownServer(character).toLowerCase();
+        if (steamFirst.has(server)) parent.set(find(own), find(steamFirst.get(server)));
+        else steamFirst.set(server, own);
+      }
       for (const other of character.roster || []) {
         // A list only names characters on its own server
         const scoped = `${other} (${ownServer(character)})`;
@@ -109,6 +116,7 @@ const GBAccounts = (() => {
     for (const character of characters) {
       const group = groups.get(find(linkKey(character.name)));
       group.server = group.server || ownServer(character);
+      group.steam = group.steam || !!character.steam;
     }
     for (const group of groups.values()) group.names.sort((a, b) => a.localeCompare(b));
     return {

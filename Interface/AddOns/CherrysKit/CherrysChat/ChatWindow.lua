@@ -271,13 +271,18 @@ local function tokenize(list, msg, link, full, pics, classColour)
       i = i + 2
     elseif string.match(msg, "^|T.-|t", i) then
       i = i + string.len(string.match(msg, "^|T.-|t", i))
+    elseif C.EmptyCode(msg, i) then
+      i = i + C.EmptyCode(msg, i)
     else
       local word = string.match(msg, "^[^|%s\1]*%s*", i)
       if word == "" then
-        word = string.sub(msg, i, i) -- a lone "|"
+        -- A lone "|": doubled so the |r that closes a row cannot join it and show as text.
+        list[#list + 1] = { kind = "word", raw = "||", vis = "|", link = link, full = full }
+        i = i + 1
+      else
+        list[#list + 1] = { kind = "word", raw = word, vis = word, link = link, full = full }
+        i = i + string.len(word)
       end
-      list[#list + 1] = { kind = "word", raw = word, vis = word, link = link, full = full }
-      i = i + string.len(word)
     end
   end
 end

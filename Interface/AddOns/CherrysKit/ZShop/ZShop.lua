@@ -8,11 +8,16 @@
 -- never prints it, never saves it and never sends it anywhere else.
 --
 -- The game can't see inside the shop page, so pressing Collect on the daily page stays your click.
+--
+-- On Steam the client hands every shop link to Steam's own browser and sends no WEBFRAM_URL, unless the player
+-- turned Steam's overlay off. GC_OpenWebRadio has no such check and always uses the normal browser, and it fills in
+-- the same [$...] placeholders itself. So the daily button gives it a page with placeholders, and the login never
+-- reaches Lua. Everything else on Steam stays in Steam's browser. All of this was read from Client.exe.
 
 ZShop = ZShop or {}
 local me = ZShop
 
-me.version = "1.2.0-ck5"
+me.version = "1.2.0-ck6"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.ZShop) or "Interface/AddOns/ZShop/"
 me.DAILY_LEVEL = 100
 
@@ -27,7 +32,15 @@ me.PAGES = {
 --            Shift is held, "copy" = copy the link to the clipboard instead of opening anything
 --   link:    "home", "daily" or "depot": the page every shop button press opens
 --   open:    seconds the game keeps checking for bought items after the shop opens
+--   shop_host: the shop's address, for Steam's daily button when the guess below is wrong
 me.config = { browser = true, link = "home", open = 300 }
+
+-- The parts of a shop link after the page, as Steam's log shows them: sas is the session, c the language, pid the
+-- character and sid the server.
+me.STEAM_QUERY = "?sas=[$SESSIONID]&c=[$LANGUAGE]&shopType=ingame&pid=[$ROLEDBID]&sid=[$WORLDID]"
+me.SHOP_EU = "https://eu-shop-runesofmagic.gameforge.com"
+me.SHOP_US = "https://us-shop-runesofmagic.gameforge.com"
+me.US_LANGUAGES = { ENUS = true, ESUS = true, LA = true }
 
 if SaveVariablesPerCharacter then
   SaveVariablesPerCharacter("ZShop_Probe")
@@ -96,12 +109,66 @@ local function markDaily()
   if me.Button and me.Button.MarkClaimed then me.Button.MarkClaimed() end
 end
 
+function me.OnSteam()
+  return CherrysKit and CherrysKit.IsSteam and CherrysKit.IsSteam() or false
+end
+
+-- The shop's address for Steam's links: yours in config.lua, the one a shop link last came from (only the address
+-- is kept, and it holds no login), or the guess from the client's language.
+function me.ShopHost()
+  local pattern = "^https://[%w%-]+%-shop%-runesofmagic%.gameforge%.com$"
+  if type(me.config.shop_host) == "string" and string.match(me.config.shop_host, "^https://[%w%-%.]+$") then
+    return me.config.shop_host
+  end
+  local saved = type(ZShop_Settings) == "table" and ZShop_Settings.shopHost
+  if type(saved) == "string" and string.match(saved, pattern) then
+    return saved
+  end
+  local ok, language = false, nil
+  if type(GetLanguage) == "function" then
+    ok, language = pcall(GetLanguage)
+  end
+  if ok and type(language) == "string" and me.US_LANGUAGES[string.upper(language)] then
+    return me.SHOP_US
+  end
+  return me.SHOP_EU
+end
+
+function me.SteamLink(page)
+  return me.ShopHost() .. (me.PAGES[page] or "") .. me.STEAM_QUERY
+end
+
+-- Steam's way to a page. True when the page was handed over.
+function me.OpenOnSteam(page)
+  if page == "daily" then
+    if not succeeded(GC_OpenWebRadio, me.SteamLink("daily")) then
+      chat("could not open the shop in your web browser.")
+      return false
+    end
+    if succeeded(SetOnTimeWebBagRequest, 1) then
+      me.bagTimer = tonumber(me.config.open) or 300
+    end
+    markDaily()
+    return true
+  end
+  -- OpenTopupPage takes any page and goes to Steam's browser like the shop button
+  if page == "depot" and succeeded(OpenTopupPage, me.SteamLink("depot")) then
+    return true
+  end
+  me.opener = me.PressShopButton()
+  return me.opener ~= nil
+end
+
 function me.OnShopLink(link)
   if type(link) ~= "string" or not string.match(link, "^https?://[^/%s%?#]+[^%s]*$")
     or string.find(link, "%c") then
     return false
   end
   me.lastLink = shape(link)
+  local host = string.match(link, "^(https://[%w%-]+%-shop%-runesofmagic%.gameforge%.com)[/?]")
+  if host and type(ZShop_Settings) == "table" then
+    ZShop_Settings.shopHost = host
+  end
   me.waitTimer = nil
   me.dailyOnShow = nil
   local conf = me.config
@@ -165,7 +232,7 @@ me.OPENERS = {
   { "ItemMallButton_OnClick", { "ItemMallButton" } },
 }
 
-local function pressShopButton()
+function me.PressShopButton()
   for _, opener in ipairs(me.OPENERS) do
     local fn = _G[opener[1]]
     if type(fn) == "function" then
@@ -198,10 +265,15 @@ function me.Open(page)
       return
     end
   end
+  if me.OnSteam() then
+    me.pending, me.dailyOnShow, me.waitTimer = nil, nil, nil
+    me.OpenOnSteam(page)
+    return
+  end
   me.pending = { page = page, left = 60 }
   me.dailyOnShow = nil
   me.waitTimer = 3
-  me.opener = pressShopButton()
+  me.opener = me.PressShopButton()
 end
 
 ---------------------------------------------------------------------------
@@ -371,7 +443,8 @@ function me.Probe()
   end
   table.sort(seen)
   add("events seen " .. table.concat(seen, " ") .. "; last link " .. tostring(me.lastLink) .. "; opener used " .. tostring(me.opener))
-  local names = { "WebXX", "MallWeb", "MoneyWebFrame", "GC_OpenWebRadio", "SetOnTimeWebBagRequest", "OnClick_MinimapStoreButton",
+  add("client " .. (me.OnSteam() and "Steam" or "not Steam") .. ", shop address " .. me.ShopHost())
+  local names = { "WebXX", "MallWeb", "MoneyWebFrame", "GC_OpenWebRadio", "OpenTopupPage", "SetOnTimeWebBagRequest", "OnClick_MinimapStoreButton",
     "MinimapFrameStoreButton", "MinimapStoreButton", "ItemMallButton_OnClick", "ItemMallButton", "ItemMallFrame", "ItemMallFrame_Open",
     "GetItemMallLink", "GetItemMallInfo", "GetNumItemMallItems", "CIMF_OpenMall2", "LuaFunc_WebBrowserFrame_LoadUrl", "LuaFunc_WebBrowserFrame_GetItemsList" }
   local parts = {}
