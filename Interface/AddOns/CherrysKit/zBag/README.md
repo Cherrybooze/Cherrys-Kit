@@ -26,6 +26,8 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 **Slot numbers on mouseover.** A new tick in **/zb**, *Numbers on mouseover only*, is on by default: a bag or bank slot shows its number only while the mouse is over it. Untick it to see every number all the time, as before. It works in every bag and bank layout. With the game's own bag and bank window, the number comes and goes with the game's item tooltip, checked 20 times a second while one is showing, so a slot the game shows no tooltip for (it may be an empty one) shows no number there.
 
+**Clean and dirty mana stones.** Type *#clean* in the search box, the whole text, to light up only mana and fusion stones with no stats on them, or *#dirty* for the ones that have stats. zBag reads this from the item link, so it shows straight away.
+
 ## Updated in 5.07-ck18
 
 **Search by stat.** The search box in every layout, and the bank's, also finds items by the stats on their tooltip. Type a stat name such as *stamina*, *dexterity* or *physical attack* and every item with a line like "Stamina +12" lights up; numbers aren't part of the search. Item names still match straight away. zBag reads each item's tooltip once, a few per moment after you stop typing, and remembers it, so the stat matches appear a moment later and searching again costs nothing. It counts lines with a + or - number, so a plain "Requires level 50" isn't a stat. `/zb probe` shows how many items it knows.
@@ -63,7 +65,7 @@ Sorting retains the earlier pass-level rebuild reduction, the necessary rebuilds
 - **Choose the bank separately**: tick **Use one bank (classic zBag)** for zBag's bank, or leave it unticked for the game's bank. It works with any bag layout.
 - **Share bag settings across characters** is on by default. Turn it off for separate settings per character. Your existing shared and separate settings are kept when you switch. On the first upgrade, the settings loaded on that character become the initial shared setup. The quick-sell item filter remains separate for each character.
 - **Auto bag and bank pages** (optional): rented pages show while their rent is running and hide once it runs out.
-- **Item search** in every layout (BagSearch), by item name or by stat name: *stamina* finds every item with a stamina line.
+- **Item search** in every layout (BagSearch), by item name or by stat name (*stamina* finds every item with a stamina line), and *#clean* or *#dirty* for mana stones without or with stats.
 - **Slot numbers**: an optional see-through number (1 to 180) in the upper-left corner of the bag or bank slot under the mouse, or of every slot.
 - **All bags window**: all six bags in one window that you can drag anywhere. "Reset bag positions" puts it, the Cherry's bags and the money box back.
 - **Hide default backpack** (optional, individual bags): B opens All bags instead.
