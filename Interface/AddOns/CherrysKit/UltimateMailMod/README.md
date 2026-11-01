@@ -1,6 +1,6 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck11** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **7.0.1-ck12** · Kit release **0.11.116** · [All addons / hub](../README.md)
 
 **A better mail window with mass send that no longer gets stuck after about 60 mails.**
 
@@ -21,6 +21,11 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
 <!-- end of requirements -->
+
+## Updated in 7.0.1-ck12
+
+- Mass send no longer stops with "no longer in that bag slot" on an item that never moved, such as a ring you just bought. It used to compare the item's whole link, and parts of a link can change, or be missing at first, while the item stays in its slot. It now checks the item itself and reads your bags fresh when you press Send. An item that really was swapped out is still skipped.
+- `/umm trace` now shows the old and the new link of every skipped mail, so a stop like this can be traced.
 
 ## Updated in 7.0.1-ck11
 
