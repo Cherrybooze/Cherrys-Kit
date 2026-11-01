@@ -110,6 +110,8 @@ const flush = async () => { for (let i = 0; i < 12; i++) await new Promise(resol
         self.assertIn(f'const BRIDGE_VERSION = {version};', (folder / 'ChromeExtension/popup.js').read_text(encoding='utf-8'))
         self.assertIn(f'(Number(info.bridge) || 0) < {version}', (folder / 'ChromeExtension/control.js').read_text(encoding='utf-8-sig'))
         self.assertIn('id="get-kit"', (folder / 'ChromeExtension/popup.html').read_text(encoding='utf-8'))
+        # An id rule beats .hint[hidden], so the link's own display rule must leave a hidden link hidden.
+        self.assertIn('#get-kit:not([hidden]) {', (folder / 'ChromeExtension/popup.html').read_text(encoding='utf-8'))
         self.run_js(r'''
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
 const source = fs.readFileSync(path.join(process.argv[1], 'popup.js'), 'utf8');
