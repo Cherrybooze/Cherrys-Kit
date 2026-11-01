@@ -1434,7 +1434,7 @@ if ($NonInteractive) {
         Write-Host '  1  Turn on Developer mode (top right of the extensions page).' -ForegroundColor Gray
         Write-Host '  2  Click Load unpacked (top left), and pick the folder the small window shows.' -ForegroundColor Gray
         Write-Host ('     If the folder window did not open, choose: ' + (Join-Path $helperDir 'ChromeExtension')) -ForegroundColor DarkGray
-        Write-Host '  3  Check that Global Bank Daily Rewards is listed and switched on.' -ForegroundColor Gray
+        Write-Host '  3  Check that Global Bank for RoM is listed and switched on.' -ForegroundColor Gray
         Write-Host '  4  Click its button in the toolbar: it shows the helper status and opens the bank tools.' -ForegroundColor Gray
         Write-Host '  Already had the extension? Click its Reload arrow on the extensions page instead.' -ForegroundColor DarkGray
         if (-not $NonInteractive) { try { [void](Read-Line 'Press Enter when done (or when you want to skip the rest)') } catch { } }

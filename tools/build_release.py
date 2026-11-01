@@ -278,7 +278,7 @@ def build(output: Path) -> None:
             extension_files[relative.as_posix()] = path.read_bytes()
     require(extension_files, "Missing Global Bank browser extension files.")
     extension = write_zip(output / f"CherrysKit-GlobalBankDailyRewards-{extension_version}.zip", extension_files)
-    extension.update({"package": "GlobalBankDailyRewards", "title": "Global Bank Daily Rewards (Chrome)",
+    extension.update({"package": "GlobalBankDailyRewards", "title": "Global Bank for RoM (Chrome)",
                       "version": extension_version, "requires_hub": True,
                       "requires_addon": "GlobalBank", "bundled_addons": []})
     packages.append(extension)
