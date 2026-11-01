@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 (() => {
   const byId = id => document.getElementById(id);
   const status = byId('helper-status');
@@ -572,7 +572,7 @@
         statusHelper.textContent = `Helper: running${ran}, ${how}.`;
       }
       // Older helper files don't say their version.
-      if ((Number(info.bridge) || 0) < 3) statusHelper.textContent += ' Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.';
+      if ((Number(info.bridge) || 0) < 4) statusHelper.textContent += ' Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.';
     } catch (error) {
       statusHelper.textContent = await GBFolders.usable('saves').catch(() => null)
         ? 'Helper: not installed on this PC. The Bank tab is reading your chosen folders.'
