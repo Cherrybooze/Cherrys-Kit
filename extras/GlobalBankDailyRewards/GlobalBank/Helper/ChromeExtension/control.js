@@ -944,6 +944,7 @@
       const all = roster.characters();
       return all.length ? {characters: all.length, gold: all.reduce((sum, character) => sum + (Number(character.gold) || 0), 0)} : null;
     },
+    onHelper: () => refreshStatus(),
     toast,
     startHelper,
   });
