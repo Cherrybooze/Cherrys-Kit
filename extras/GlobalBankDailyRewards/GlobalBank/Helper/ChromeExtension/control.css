@@ -254,3 +254,76 @@ main { max-width: 1180px; }
 .edit-dialog input, .edit-dialog select { width: 100%; box-sizing: border-box; }
 .edit-dialog [hidden] { display: none; }
 .edit-error { min-height: 1.2em; margin: 6px 0; color: #ffb366; }
+main:has(#tab-macros:not([hidden])) { max-width: 1240px; }
+.macro-layout { display: grid; grid-template-columns: minmax(0, 1fr) 346px; gap: 18px; align-items: start; }
+@media (max-width: 900px) { .macro-layout { grid-template-columns: minmax(0, 1fr); } }
+.macro-layout h3 { margin: 0 0 8px; font-size: 1rem; color: #ffdc7c; }
+.macro-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+.macro-chip { padding: 2px 9px; font-size: .82rem; color: #d7e0e8; background: #0d1620; border: 1px solid #52677a; border-radius: 12px; }
+.macro-chip.active { color: #101820; background: #f1c85e; border-color: #e7c061; }
+.macro-rows { max-height: 640px; overflow-y: auto; border-top: 1px solid #334657; }
+.macro-row { border-bottom: 1px solid #334657; }
+.macro-row.open { background: #111c28; }
+.macro-row-head { display: flex; align-items: center; gap: 8px; padding: 4px 6px; cursor: pointer; }
+.macro-row-head:hover { background: #223244; }
+.macro-row-name { flex: 0 1 auto; min-width: 90px; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.macro-row-name.unnamed { font-weight: 400; color: #bdc9d5; font-family: monospace; font-size: .82rem; }
+.macro-row-groups { display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: 3px; justify-content: flex-end; min-width: 0; }
+.macro-tag { padding: 0 6px; font-size: .74rem; color: #ffdc7c; border: 1px solid #5c5a3a; border-radius: 8px; white-space: nowrap; }
+.macro-row-count { flex: none; font-size: .78rem; white-space: nowrap; }
+.macro-star { flex: none; padding: 0 4px; font-size: 1.05rem; line-height: 1.2; color: #8fa3b5; background: none; border: 0; }
+.macro-star.active { color: #ffd15a; }
+.macro-row-details { padding: 2px 10px 10px 44px; }
+.macro-text { max-height: 200px; margin: 4px 0; padding: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.macro-icon { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; width: 32px; height: 32px; overflow: hidden; font-size: .62rem; color: #8fa3b5; background: #0b121b; border: 1px solid #334657; border-radius: 3px; }
+.macro-icon img { display: block; width: 100%; height: 100%; }
+.macro-icon img[hidden], .macro-icon span[hidden] { display: none; }
+.macro-window label { font-size: .85rem; }
+.macro-window > input, .macro-window > select { box-sizing: border-box; width: 100%; }
+.macro-slots { display: grid; grid-template-columns: repeat(7, 42px); gap: 4px; margin: 10px 0 6px; padding: 8px; width: max-content; background: #111c28; border: 1px solid #334657; border-radius: 6px; }
+.macro-slot { position: relative; display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; padding: 0; overflow: hidden; background: #0d1620; border: 1px solid #445a6e; border-radius: 4px; }
+.macro-slot:hover { border-color: #f1c85e; }
+.macro-slot.selected { border: 2px solid #ffd15a; box-shadow: 0 0 6px #ffd15a; }
+.macro-slot.different { background: #4a3b10; }
+.macro-slot .macro-icon { width: 36px; height: 36px; background: none; border: 0; }
+.macro-slot-name { position: absolute; right: 0; bottom: 0; left: 0; overflow: hidden; font-size: .6rem; line-height: 1.1; color: #fff; text-align: center; white-space: nowrap; text-shadow: 0 0 2px #000, 0 0 2px #000; }
+.macro-window-buttons { flex-wrap: wrap; }
+.macro-slot-detail { min-height: 40px; margin: 8px 0; }
+.macro-title { font-weight: 600; margin: 0 0 4px; overflow-wrap: anywhere; }
+.macro-backup-label { margin: 8px 0 2px; color: #ffdc7c; }
+.edit-dialog.macro-dialog { width: fit-content; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); overflow: auto; }
+.macro-dialog-parts { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+.macro-dialog form { flex: 0 1 430px; width: 430px; min-width: 280px; }
+.macro-edit-top { display: flex; align-items: center; gap: 10px; }
+.macro-edit-top label { margin: 0; }
+.macro-edit-top input { flex: 1; min-width: 0; }
+.macro-edit-icon { display: inline-flex; padding: 2px; background: #0d1620; border: 1px solid #708698; }
+.macro-edit-icon .macro-icon { width: 40px; height: 40px; border: 0; }
+.macro-edit-label { display: flex; justify-content: space-between; align-items: baseline; margin: 10px 0 5px; font-weight: 600; }
+.macro-edit-label label { margin: 0; }
+.macro-edit-label .hint { font-weight: 400; font-size: .85rem; }
+.macro-edit-add { margin: 6px 0; }
+.macro-edit-add input { width: 180px; }
+#macro-edit-text { box-sizing: border-box; width: 100%; padding: 8px; color: #f4f6f8; background: #0d1620; border: 1px solid #708698; border-radius: 4px; font: .9rem monospace; }
+.macro-icon-picker { flex: 0 1 405px; width: 405px; }
+.macro-icon-picker h2 { margin-bottom: 8px; }
+.macro-icon-nav { display: flex; gap: 6px; align-items: center; }
+.macro-icon-nav select { flex: 1; min-width: 0; }
+.macro-icon-nav button { padding: 4px 10px; }
+.macro-icon-grid { display: grid; grid-template-columns: repeat(9, 42px); gap: 3px; margin: 8px 0; min-height: 230px; align-content: start; }
+.macro-icon-choice { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; padding: 0; background: #0d1620; border: 1px solid #445a6e; border-radius: 4px; }
+.macro-icon-choice:hover { border-color: #f1c85e; }
+.macro-icon-choice.selected { border: 2px solid #ffd15a; box-shadow: 0 0 6px #ffd15a; }
+.macro-icon-choice .macro-icon { width: 36px; height: 36px; background: none; border: 0; }
+.macro-icon-pages { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.macro-icon-picker input { width: 140px; }
+.macro-groups-list { margin: 8px 0; padding: 0; max-height: 380px; overflow-y: auto; list-style: none; }
+.macro-groups-list li { display: flex; align-items: center; gap: 5px; padding: 3px 0; border-bottom: 1px solid #334657; }
+.macro-group-name { flex: 1; min-width: 120px; overflow-wrap: anywhere; }
+.macro-groups-list button { padding: 2px 8px; font-size: .82rem; }
+.link-button { padding: 0; color: #ffdc7c; background: none; border: 0; text-decoration: underline; }
+.settings-changed { color: #ffdc7c; }
+.settings-absent { color: #ffb4a8; }
+.settings-same, .settings-none { color: #9fb6cc; }
+.settings-warning { color: #ffb4a8; }
+#settings-value { max-height: 480px; }

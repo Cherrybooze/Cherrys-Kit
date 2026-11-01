@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.5.5** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.5.7** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -18,10 +18,27 @@ Built for players with many characters and bank alts. Each character saves a sma
 > - **ZShop:** its Chrome extension or helper tells ZShop the time, for the daily reminder
 > - **Cherry's Bar:** its Chrome extension gives Cherry's Bar's Clock the real time
 > - **LogNextChar:** the character screen shows each character's gold and last save, the server screen shows the helper's status, and its list of your account's characters boxes them together on the page and fills in their servers
+> - **Cherry's Info:** the macro window's Import button brings in macros from the page's library, and the page shows its extra macro icons
 >
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.5.7
+
+**The game's own macro icons show on the page** (extension 1.2.5), in the library, the macro window and the icon picker's **Default Icons**, with no need to log in first. After updating, press **Reload** on the extension.
+
+## Updated in 1.5.6
+
+**Your macros and addon settings on the Global Bank page, with backups** (extension 1.2.4).
+
+A **Macros** tab gathers every macro your characters have into one library, read straight from their save folders, so no character has to log in. Put macros in groups (Favourites, Tank, DPS, Heal, Event, each class, or your own), and search by name, group or text. Write new ones, with the same icon choice as the game's macro window. A macro window beside the library shows one character's 56 slots as the game draws them: click one to create, edit or delete it, drag a library macro onto it, or compare with a backup and put one or all of them back.
+
+In game, the **Import** button in the macro window (Cherry's Info) searches this library by name and group and puts the macro you pick in the slot you chose. It needs no restart, so a macro you just wrote on the page is there when you press **Refresh**. Changes from the page to the library work with the game open. Changes to a character's own save files need it closed.
+
+An **Addon settings** tab shows what each addon saved, such as your auras in RoM WeakAuras and your rotations in KittyCombo, for the shared file or one character. It marks what differs from the backups, and puts back one addon's settings or the whole file.
+
+The helper, or the extension while Chrome is open, keeps the newest copy of `SaveVariables.lua` and of each character's files, and a copy from about a day earlier, in `Interface\GlobalBankHelper\Backups`. The day-old copy appears once a day of saves has gone by. Every change keeps the file it replaced in `Backups\Before restore` (the last 30 changes). Your macros, groups and backups stay in `Interface\\GlobalBankHelper`, outside the kit, so sharing the kit never shares them. After updating, press **Reload** on the extension.
 
 ## Updated in 1.5.5
 
