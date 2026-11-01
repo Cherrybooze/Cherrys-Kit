@@ -84,6 +84,7 @@
     byId('char-tooltip').hidden = true;
     byId('main').scrollTop = 0;
     history.replaceState(null, '', '#' + name);
+    document.title = `${document.querySelector(`[data-tab="${name}"] .nav-text`)?.textContent || 'Bank'} · Global Bank`;
     drawOpenTab();
     if (terminal) terminal.visible(name === 'terminal');
   }
