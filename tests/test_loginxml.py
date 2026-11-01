@@ -134,6 +134,31 @@ class GlobalBankOnLoginScreenTest(unittest.TestCase):
         lua.execute('login.globalbank.read()')
         self.assertTrue(lua.eval("login.globalbank.character('alpha').unsure"))
 
+    def charges_screen(self):
+        lua = self.screen()
+        lua.execute("""
+          FILES['interface/GlobalBankHelper/GlobalBankDatabase.lua'] = function()
+            GlobalBank_Import = {
+              {saved = 'x', s = 'GB1~Has~Rogue~1~1234567~60~0~0~when`S~Server`M~12~345~Honor`M~transmutor~1250~'},
+              {saved = 'y', s = 'GB1~None~Rogue~1~5~60~0~0~when`S~Server`M~12~345~Honor'},
+              {saved = 'z', s = 'GB1~Old~Rogue~1~5~60~0~0~when'}}
+          end
+          login.globalbank.read()
+        """)
+        return lua
+
+    def describe(self, lua, name):
+        return lua.eval(f"login.globalbank.describe(login.globalbank.character('{name}'))")
+
+    def test_charges_sit_under_the_gold(self):
+        self.assertEqual(self.describe(self.charges_screen(), "has"), "1,234,567 gold\nCharges: 1,250\nwhen")
+
+    def test_a_character_recorded_without_any_has_none(self):
+        self.assertEqual(self.describe(self.charges_screen(), "none"), "5 gold\nCharges: 0\nwhen")
+
+    def test_one_saved_before_currencies_never_claims_zero(self):
+        self.assertEqual(self.describe(self.charges_screen(), "old"), "5 gold ?\nwhen")
+
     def test_reads_gold_and_the_saved_time(self):
         lua = self.screen()
         self.assertTrue(lua.eval("login.globalbank.read()"))
