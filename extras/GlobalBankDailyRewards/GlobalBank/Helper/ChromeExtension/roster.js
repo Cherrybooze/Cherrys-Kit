@@ -82,7 +82,7 @@ const GBRoster = (() => {
       const group = groups?.of(character.name) || null;
       character.group = group && group.names.length > 1 ? group : null;
       // Its RoM account: the characters one login screen lists, known once a list names it
-      character.romAccount = group && (group.names.length > 1 || (Array.isArray(character.roster) && character.roster.length > 0)) ? group : null;
+      character.romAccount = group && (group.names.length > 1 || group.steam || (Array.isArray(character.roster) && character.roster.length > 0)) ? group : null;
       const known = character.server || cleanServer(group?.server);
       const manual = known ? '' : cleanServer(pick(assigned, character.base.toLowerCase()));
       character.manualServer = !!manual;
@@ -497,10 +497,12 @@ const GBRoster = (() => {
       },
       // The name you gave its RoM account, or ''
       romName: character => romNameOf(character?.romAccount),
-      // The name to show: yours, or the first name on its login screen's list; '' while no list names it
+      // The name to show: yours, or the first name on its login screen's list; '' while no list names it. Steam's says so.
       romTitle(character) {
         const group = character?.romAccount;
-        return group ? romNameOf(group) || `${group.names[0]}'s account` : '';
+        if (!group) return '';
+        if (group.steam) return romNameOf(group) ? `${romNameOf(group)} (Steam)` : 'Steam account';
+        return romNameOf(group) || `${group.names[0]}'s account`;
       },
       setRomName(character, name) {
         const group = character?.romAccount;
