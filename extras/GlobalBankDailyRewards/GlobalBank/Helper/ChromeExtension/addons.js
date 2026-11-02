@@ -4,7 +4,7 @@
 // The bridge does the work; installs and updates run in a window of their own with the guided setup's checks.
 const GBAddons = (() => {
   const STATE_TEXT = {current: 'Up to date', update: 'Update available', missing: 'Not installed', offloaded: 'Offloaded',
-    newer: 'Newer than the release', unknown: 'Not checked yet', extra: 'Not in the release', superseded: 'Replaced'};
+    newer: 'Newer than the release', unknown: 'Not checked yet', extra: 'Not in the release', superseded: 'Replaced', curseforge: 'CurseForge copy'};
   const stateText = row => row.state === 'superseded' && row.by ? `Replaced by ${row.by}` : STATE_TEXT[row.state] || row.state;
   const OLD_BRIDGE = /Invalid reward record|Unknown addons request/;
 
@@ -40,7 +40,8 @@ const GBAddons = (() => {
     }
     const offloaded = new Map((list?.offloaded || []).filter(entry => entry.from === 'kit').map(entry => [entry.folder, entry]));
     for (const item of packages) {
-      if (item.package === 'Hub') continue;
+      // The mail addons' own folder ones (zMail) have the Mail panel instead
+      if (item.package === 'Hub' || item.external) continue;
       const row = byFolder.get(item.folder);
       if (row) {
         Object.assign(row, {latest: item.latest, state: row.state === 'superseded' ? 'superseded' : item.state, by: item.by || row.by || '',
@@ -68,6 +69,13 @@ const GBAddons = (() => {
     const map = list?.replaced || {};
     const key = Object.keys(map).find(name => name.toLowerCase() === String(folder).toLowerCase());
     return key ? map[key] : null;
+  }
+  const MAIL_NAMES = {UMM: 'Ultimate Mail Mod', zMail: 'zMail'};
+  // Which mail addon runs and what the Mail panel offers. "auto" is zMail when it's installed, as the hub decides.
+  function mailState(mailbox) {
+    if (!mailbox || (!mailbox.known && !mailbox.zmail)) return null;
+    const running = mailbox.running || '';
+    return {running, setting: mailbox.setting || '', offers: ['zMail', 'UMM'].filter(use => use !== running), known: !!mailbox.known};
   }
   const updatable = rows => rows.filter(row => row.state === 'update' && row.package);
 
@@ -143,6 +151,54 @@ const GBAddons = (() => {
         watchJob();
       } catch (error) { problem(error); }
     }
+    // The mail switch. To zMail: install it if it isn't here, then choose it. To Ultimate Mail Mod: install it if
+    // needed, choose it, and move the zmail folder out, since zMail has no off switch of its own. Reload UI applies it.
+    async function switchMail(use) {
+      const mailbox = list?.mailbox || {};
+      const name = MAIL_NAMES[use];
+      const here = use === 'zMail' ? mailbox.zmail : mailbox.umm;
+      const leaving = use === 'UMM' && mailbox.zmail ? ' The zmail folder moves to Interface\\offloaded_addons, and Restore brings it back.' : '';
+      if (here) {
+        if (!window.confirm(`Use ${name} for mail?${leaving} Reload UI in game for it to take effect.`)) return;
+        try {
+          await send({type: 'addons-mailbox', use});
+          say(`The kit now uses ${name} for mail. Reload UI in game (or start it) to switch.`);
+          await load();
+        } catch (error) { problem(error); }
+        return;
+      }
+      if (!check) await checkNow();
+      if (!check) return;
+      const item = check.packages.find(entry => entry.package === (use === 'zMail' ? 'zMail' : 'UltimateMailMod'));
+      if (!item) {
+        say(`${name} isn’t in the latest release on GitHub (${check.latestKit}) yet, so it can’t be installed from here.`);
+        return;
+      }
+      if (!window.confirm(`Switch to ${name}? This downloads ${name} ${item.latest} (${size(Number(item.bytes) || 0)}) from GitHub in its own window, then uses it for mail.${leaving}`)) return;
+      try {
+        const request = {type: 'addons-install', packages: [item.package], mailbox: use};
+        if (leaving) request.offload = [{where: 'addons', name: 'zmail'}];
+        await send(request);
+        say(`Switching to ${name} in its own window…`);
+        watchJob();
+      } catch (error) { problem(error); }
+    }
+    function drawMail() {
+      const box = byId('addons-mailbox');
+      const mail = mailState(list.mailbox);
+      box.hidden = !mail;
+      if (!mail) return;
+      const running = mail.running ? MAIL_NAMES[mail.running] : 'neither (not installed)';
+      const where = list.mailbox.zmail ? `zMail ${list.mailbox.zmailVersion || '(a CurseForge copy)'} is in Interface\\AddOns\\zmail.` : '';
+      byId('addons-mail-text').textContent = `Mail runs with ${running}${mail.setting === 'auto' ? ', chosen automatically' : ''}. ${where}`.trim();
+      // zMail's own updates, from the kit's copy of it; a CurseForge copy updates through CurseForge
+      const zmail = (check?.packages || []).find(item => item.external && item.package === 'zMail' && item.state === 'update');
+      byId('addons-mail-actions').replaceChildren(
+        ...(zmail ? [button(`Update zMail to ${zmail.latest}`, () => install([{...zmail, title: 'zMail'}]), {className: 'gb-button--primary gb-button--sm'})] : []),
+        ...(mail.known ? mail.offers.map(use =>
+          button(`Switch to ${MAIL_NAMES[use]}`, () => switchMail(use), {className: 'gb-button--sm'})) : [
+          el('span', {className: 'hint', textContent: 'Update the hub to switch between them here.'})]));
+    }
     // The install window writes how it went; the page asks until it's done.
     function watchJob() {
       clearTimeout(polling);
@@ -204,6 +260,7 @@ const GBAddons = (() => {
       const job = list.job;
       byId('addons-job').textContent = !job ? '' : job.state === 'running' || job.state === 'starting' ? 'An install is running in its own window…'
         : `Last install (${when(job.finishedAt || job.startedAt)}): ${job.state === 'stopped' ? 'its window was closed before it finished.' : job.text || job.state}`;
+      drawMail();
       const rows = kitRows(list, check);
       const updates = updatable(rows);
       const all = byId('addons-update-all');
@@ -216,7 +273,8 @@ const GBAddons = (() => {
         versionCell(row.installed), versionCell(row.latest),
         el('td', {}, el('span', {className: `addons-state is-${row.state}`, textContent: stateText(row)})),
         kitActions(row))) : [el('tr', {}, el('td', {colSpan: 5, className: 'hint', textContent: 'Cherry’s Kit is not in this AddOns folder.'}))]));
-      const others = list.others || [];
+      // zmail shows in the Mail panel
+      const others = (list.others || []).filter(addon => !(list.mailbox?.known && addon.folder.toLowerCase() === 'zmail'));
       byId('addons-other-rows').replaceChildren(...(others.length ? others.map(addon => {
         const row = {title: addon.title || addon.folder};
         const by = replacedBy(list, addon.folder);
@@ -258,5 +316,5 @@ const GBAddons = (() => {
       },
     };
   }
-  return {create, kitRows, otherOffloaded, updatable, replacedBy};
+  return {create, kitRows, otherOffloaded, updatable, replacedBy, mailState};
 })();

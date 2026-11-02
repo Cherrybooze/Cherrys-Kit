@@ -20,6 +20,8 @@ Not run on Windows yet: the tests check the page in Node and the bridge's offloa
 | AD8 | Press an install button with the game running. | The page says to close the game first and nothing changes. |
 | AD10 | Put an old `pbInfo` folder in `Interface\AddOns`, with Cherry's Info installed, and press **Switch with Cherry's Info**. | It asks once, then `pbInfo` is in `Interface\offloaded_addons` and Cherry's Info stays. Restore brings `pbInfo` back. |
 | AD11 | Offload Cherry's Info, keep the old `pbInfo` folder, and press **Switch with Cherry's Info**. | The install window installs Cherry's Info from GitHub, then offloads `pbInfo`. If the latest release has no Cherry's Info, the page says so and nothing moves. |
+| AD12 | With Ultimate Mail Mod in use and no zMail, press **Switch to zMail** on the Mail panel, then Reload UI. | The install window installs zMail into `Interface\AddOns\zmail` and `CherrysKit\Mailbox.txt` says `Mailbox = "zMail"`, comments kept. In game, zMail opens at the mailbox and Ultimate Mail Mod stays out of the way. |
+| AD13 | Press **Switch to Ultimate Mail Mod**, then Reload UI. | `Mailbox.txt` says `"UMM"`, the zmail folder is in `Interface\offloaded_addons`, and Ultimate Mail Mod is back at the mailbox. Switching to zMail again restores nothing by itself: it installs zMail anew, or use Restore first. |
 | AD9 | Unplug the network and press **Check for updates**. | One line says it couldn't read the release; the lists still work. |
 
 ## 0.11.115 Guided setup and Cherry's Info

@@ -14,7 +14,7 @@
 # Copyright (C) Cherry. GPL v2 (see LICENSE.txt in Cherry's Kit).
 #
 # Run on its own (a copy in a temporary folder, so nothing it updates is in use) with -Install it is that window.
-param([string]$Install = '', [string]$AddonsFolder = '', [string]$SetupScript = '', [string]$Offload = '')
+param([string]$Install = '', [string]$AddonsFolder = '', [string]$SetupScript = '', [string]$Offload = '', [string]$Mailbox = '')
 
 $script:AddonsMarker = 'offloaded-by-global-bank.json'
 # Kit addons go in a folder of their own, so they go back into CherrysKit and not beside it.
@@ -107,6 +107,72 @@ function Get-AddonsReplaced([string]$kit, $release = $null) {
     return $replaced
 }
 
+# Packages with an install_folder live in a folder of their own in Interface\AddOns (zMail, pyrr's addon, which the
+# kit distributes with permission), not inside CherrysKit. Their version is line 1 of CherrysKit-version.txt; a copy
+# without that file came from CurseForge.
+function Get-AddonsPackagePath($paths, $package) {
+    if ($package.install_folder) { return (Join-Path $paths.addons ([string]$package.install_folder)) }
+    return (Join-Path $paths.kit (Get-PackageFolder $package))
+}
+
+function Read-AddonsExternalVersion([string]$folder) {
+    try { return ([string](Get-Content -LiteralPath (Join-Path $folder 'CherrysKit-version.txt') -TotalCount 1 -ErrorAction Stop)).Trim() } catch { return '' }
+}
+
+# CherrysKit\Mailbox.txt: which mailbox addon the hub runs. ASCII, CRLF, comment lines and one Mailbox = "..." line.
+$script:AddonsMailboxChoices = @('auto', 'UMM', 'zMail')
+function Read-AddonsMailbox($paths) {
+    try {
+        foreach ($line in [IO.File]::ReadAllLines((Join-Path $paths.kit 'Mailbox.txt'), [Text.Encoding]::ASCII)) {
+            if ($line -match '^Mailbox\s*=\s*"([^"]*)"') { return $Matches[1] }
+        }
+    } catch { }
+    return ''
+}
+
+function Write-AddonsMailbox($paths, [string]$choice) {
+    $choice = @($script:AddonsMailboxChoices | Where-Object { $_ -eq $choice })[0]
+    if (-not $choice) { throw 'Invalid mailbox choice.' }
+    $path = Join-Path $paths.kit 'Mailbox.txt'
+    if (-not (Test-Path -LiteralPath $path)) { throw 'This Cherry''s Kit doesn''t know zMail yet. Update the hub first.' }
+    $lines = @([IO.File]::ReadAllLines($path, [Text.Encoding]::ASCII))
+    $found = $false
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match '^Mailbox\s*=') { $lines[$i] = 'Mailbox = "' + $choice + '"'; $found = $true; break }
+    }
+    if (-not $found) { $lines += 'Mailbox = "' + $choice + '"' }
+    $tmp = "$path.$PID.tmp"
+    [IO.File]::WriteAllText($tmp, (($lines -join "`r`n") + "`r`n"), [Text.Encoding]::ASCII)
+    Move-Item -LiteralPath $tmp -Destination $path -Force
+}
+
+function Get-AddonsMailbox($paths) {
+    $zmail = Join-Path $paths.addons 'zmail'
+    $answer = @{ setting = (Read-AddonsMailbox $paths); known = (Test-Path -LiteralPath (Join-Path $paths.kit 'Mailbox.txt'))
+        umm = (Test-Path -LiteralPath (Join-Path $paths.kit 'UltimateMailMod')); zmail = (Test-Path -LiteralPath $zmail); zmailVersion = '' }
+    if ($answer.zmail) { $answer.zmailVersion = Read-AddonsExternalVersion $zmail }
+    # "auto" is zMail when it's installed, otherwise Ultimate Mail Mod, as the hub decides at load.
+    $answer.running = if ($answer.setting -eq 'zMail' -or ($answer.setting -ne 'UMM' -and $answer.zmail)) { 'zMail' } else { 'UMM' }
+    if ($answer.running -eq 'zMail' -and -not $answer.zmail) { $answer.running = '' }
+    if ($answer.running -eq 'UMM' -and -not $answer.umm) { $answer.running = '' }
+    return $answer
+}
+
+# Without an install: the chosen one is already here. Leaving zMail means moving its folder out too, since zMail
+# has no switch of its own.
+function Set-AddonsMailbox($paths, [string]$use) {
+    $mailbox = Get-AddonsMailbox $paths
+    if ($use -eq 'zMail' -and -not $mailbox.zmail) { throw 'zMail is not installed.' }
+    if ($use -eq 'UMM' -and -not $mailbox.umm) { throw 'Ultimate Mail Mod is not installed.' }
+    Write-AddonsMailbox $paths $use
+    $answer = @{ mailbox = $use; offloaded = $false; gameRunning = (Test-AddonsGameRunning $paths) }
+    if ($use -eq 'UMM' -and $mailbox.zmail) {
+        [void](Invoke-AddonsOffload $paths 'addons' 'zmail')
+        $answer.offloaded = $true
+    }
+    return $answer
+}
+
 function Read-AddonsMarker([string]$folder) {
     try {
         $note = [IO.File]::ReadAllText((Join-Path $folder $script:AddonsMarker)) | ConvertFrom-Json
@@ -142,7 +208,7 @@ function Get-AddonsList($paths) {
     $own = if ($script:KitOwnFolders) { $script:KitOwnFolders } else { @('KitLoad', 'Media', 'docs', 'Setup') }
     $answer = @{ kit = @(); others = @(); offloaded = @(); kitVersion = ''; hubVersion = ''; hasKit = $false
         gameRunning = (Test-AddonsGameRunning $paths); setupProblem = $script:AddonsSetupProblem; job = (Read-AddonsStatus $paths)
-        replaced = (Get-AddonsReplaced $paths.kit) }
+        replaced = (Get-AddonsReplaced $paths.kit); mailbox = (Get-AddonsMailbox $paths) }
     if (Test-Path -LiteralPath (Join-Path $paths.kit 'CherrysKit.toc')) {
         $answer.hasKit = $true
         if (Get-Command Get-KitVersion -ErrorAction SilentlyContinue) {
@@ -217,10 +283,13 @@ function Get-AddonsCheck($paths) {
             $row.state = if ($row.installed -eq $row.latest -and $localKit -eq $answer.latestKit) { 'current' } elseif ($answer.ahead) { 'newer' } else { 'update' }
         } else {
             $row.folder = Get-PackageFolder $package
-            $here = Join-Path $paths.kit $row.folder
+            $here = Get-AddonsPackagePath $paths $package
+            if ($package.install_folder) { $row.external = $true; $row.folder = [string]$package.install_folder }
+            if ($package.alternative_to) { $row.alternativeTo = [string]$package.alternative_to }
             if (Test-Path -LiteralPath $here) {
-                $row.installed = Read-InstalledVersion $here
+                $row.installed = if ($package.install_folder) { Read-AddonsExternalVersion $here } else { Read-InstalledVersion $here }
                 $row.state = if ($row.installed -eq $row.latest) { 'current' } elseif ($answer.ahead) { 'newer' } else { 'update' }
+                if ($package.install_folder -and -not $row.installed) { $row.state = 'curseforge' }
             } elseif ($offloaded.ContainsKey($row.folder)) {
                 $row.installed = ''
                 $row.state = 'offloaded'
@@ -244,7 +313,8 @@ function Get-AddonsCheck($paths) {
 # Starts the install window from a copy of this file and the setup in a temporary folder, so an update of
 # Global Bank or the hub never replaces a script while it runs, and no folder it moves is held open.
 # $offload: the folders it replaces, as {where; name}, moved to offloaded_addons once the install has worked ("Switch").
-function Start-AddonsInstall($paths, $names, $offload = @()) {
+function Start-AddonsInstall($paths, $names, $offload = @(), [string]$mailbox = '') {
+    if ($mailbox -and $script:AddonsMailboxChoices -notcontains $mailbox) { throw 'Invalid mailbox choice.' }
     if ($script:AddonsSetupProblem) { throw $script:AddonsSetupProblem }
     $list = @($names | ForEach-Object { [string]$_ } | Where-Object { $_ })
     if ($list.Count -eq 0 -or $list.Count -gt 30) { throw 'Pick the addons to install.' }
@@ -271,6 +341,7 @@ function Start-AddonsInstall($paths, $names, $offload = @()) {
     $arguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Install "{1}" -AddonsFolder "{2}" -SetupScript "{3}"' -f $runner, ($list -join ','), $paths.addons, $setup
     # Windows PowerShell drops an empty quoted argument, so -Offload only goes along with something in it.
     if ($moves.Count -gt 0) { $arguments += ' -Offload "{0}"' -f ($moves -join '|') }
+    if ($mailbox) { $arguments += ' -Mailbox "{0}"' -f $mailbox }
     $process = Start-Process -FilePath 'powershell.exe' -ArgumentList $arguments -WorkingDirectory $paths.interface -WindowStyle Normal -PassThru
     return @{ started = $true; pid = $process.Id }
 }
@@ -358,7 +429,8 @@ function Invoke-AddonsMessage($message) {
     switch ([string]$message.type) {
         'addons-list' { return (Get-AddonsList $paths) }
         'addons-check' { return (Get-AddonsCheck $paths) }
-        'addons-install' { return (Start-AddonsInstall $paths @($message.packages) @($message.offload)) }
+        'addons-install' { return (Start-AddonsInstall $paths @($message.packages) @($message.offload) ([string]$message.mailbox)) }
+        'addons-mailbox' { return (Set-AddonsMailbox $paths ([string]$message.use)) }
         'addons-offload' { return (Invoke-AddonsOffload $paths ([string]$message.where) ([string]$message.name)) }
         'addons-restore' { return (Invoke-AddonsRestore $paths ([string]$message.name)) }
         'addons-delete' { return (Invoke-AddonsDelete $paths ([string]$message.where) ([string]$message.name)) }
@@ -400,7 +472,7 @@ function Start-AddonsHelper($paths, $modes) {
     } catch { Write-Warn ('  Could not start the helper again: ' + $_.Exception.Message) }
 }
 
-function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$offload = '') {
+function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$offload = '', [string]$mailbox = '') {
     try { $host.UI.RawUI.WindowTitle = "Cherry's Kit - install from Global Bank" } catch { }
     $paths = Get-AddonsPaths $addons
     $status = @{ state = 'running'; pid = $PID; packages = @($names -split ','); startedAt = [DateTime]::UtcNow.ToString('o'); text = 'Downloading...'; done = @() }
@@ -431,9 +503,9 @@ function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$of
                 $items += @{ package = $package; folder = ''; from = (Read-InstalledVersion $paths.kit); to = [string]$release.hub_version; title = "Cherry's Kit hub" }
                 continue
             }
-            $folder = Get-PackageFolder $package
-            $here = Join-Path $paths.kit $folder
-            $from = if (Test-Path -LiteralPath $here) { Read-InstalledVersion $here } else { 'new' }
+            $folder = if ($package.install_folder) { [string]$package.install_folder } else { Get-PackageFolder $package }
+            $here = Get-AddonsPackagePath $paths $package
+            $from = if (-not (Test-Path -LiteralPath $here)) { 'new' } elseif ($package.install_folder) { Read-AddonsExternalVersion $here } else { Read-InstalledVersion $here }
             if (-not $from) { $from = 'unknown' }
             if ($from -eq [string]$package.version) { Write-Dim ('  ' + $package.title + ' is already ' + $from + '.'); continue }
             $items += @{ package = $package; folder = $folder; from = $from; to = [string]$package.version; title = [string]$package.title }
@@ -461,8 +533,9 @@ function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$of
         }
         # A switch: the folders the new addon replaces leave Interface\AddOns only now it is in place.
         $switched = @()
-        if ($offload -and $skipped -gt 0) {
+        if (($offload -or $mailbox) -and $skipped -gt 0) {
             $offload = ''
+            $mailbox = ''
             $status.state = 'failed'
             $status.text = 'The addon to switch to is not in the latest release, so nothing was switched.'
             Write-Warn ('  ' + $status.text)
@@ -476,6 +549,12 @@ function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$of
             } catch { Write-Warn ('  ' + $_.Exception.Message) }
         }
         if ($switched.Count -gt 0) { $status.text += ' Offloaded: ' + ($switched -join ', ') + '.' }
+        # The mail switch: the hub reads this at its next load.
+        if ($mailbox) {
+            Write-AddonsMailbox $paths $mailbox
+            $status.text += ' Mailbox addon: ' + $(if ($mailbox -eq 'UMM') { 'Ultimate Mail Mod' } else { $mailbox }) + '.'
+            Write-Good ('  The kit now uses ' + $(if ($mailbox -eq 'UMM') { 'Ultimate Mail Mod' } else { $mailbox }) + ' for mail.')
+        }
     } catch {
         $status.state = 'failed'
         $status.text = $_.Exception.Message
@@ -493,6 +572,6 @@ function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$of
 }
 
 if ($Install) {
-    Invoke-AddonsInstallWindow $Install $AddonsFolder $Offload
+    Invoke-AddonsInstallWindow $Install $AddonsFolder $Offload $Mailbox
     exit 0
 }
