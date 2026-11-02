@@ -13,9 +13,11 @@
   <script defer src="folders.js"></script>
   <script defer src="icons.js"></script>
   <script defer src="roster.js"></script>
+  <script defer src="mail.js"></script>
   <script defer src="bank.js"></script>
   <script defer src="accounts.js"></script>
   <script defer src="backups.js"></script>
+  <script defer src="addons.js"></script>
   <script defer src="terminal.js"></script>
   <script defer src="control.js"></script>
 </head>
@@ -23,13 +25,13 @@
   <a class="skip-link" href="#main">Skip to the page</a>
   <div class="app-shell">
     <aside class="sidebar" aria-label="Global Bank">
-      <div class="brand">
+      <a id="brand-home" class="brand" href="#bank" title="Back to the Bank, with no characters selected and no filters">
         <img src="brand/global-bank-mark.svg" alt="" width="34" height="34">
         <div class="brand-copy">
           <div class="brand-name">GLOBAL <b>BANK</b></div>
           <div class="brand-tagline">Runes of Magic companion</div>
         </div>
-      </div>
+      </a>
       <nav class="sidebar-nav" aria-label="Pages">
         <div class="nav-group">
           <span class="nav-label">Collection</span>
@@ -43,6 +45,7 @@
           <button type="button" class="nav-item" data-tab="characters" title="Characters"><span class="ico" data-ui-icon="users"></span><span class="nav-text">Characters</span><span id="nav-count-characters" class="nav-count"></span></button>
           <button type="button" class="nav-item" data-tab="currencies" title="Currencies"><span class="ico" data-ui-icon="wallet"></span><span class="nav-text">Currencies</span></button>
           <button type="button" class="nav-item" data-tab="heatmap" title="Gold overview"><span class="ico" data-ui-icon="heatmap"></span><span class="nav-text">Gold overview</span></button>
+          <button type="button" class="nav-item" data-tab="mail" title="Mail"><span class="ico" data-ui-icon="mail"></span><span class="nav-text">Mail</span><span id="nav-count-mail" class="nav-count"></span></button>
           <button type="button" class="nav-item" data-tab="servers" title="Servers"><span class="ico" data-ui-icon="server"></span><span class="nav-text">Servers</span></button>
           <button type="button" class="nav-item" data-tab="accounts" title="Gameforge accounts"><span class="ico" data-ui-icon="shield"></span><span class="nav-text">Gameforge accounts</span></button>
         </div>
@@ -51,6 +54,7 @@
           <button type="button" class="nav-item" data-tab="terminal" title="Terminal"><span class="ico" data-ui-icon="terminal"></span><span class="nav-text">Terminal</span></button>
           <button type="button" class="nav-item" data-tab="macros" title="Macros"><span class="ico" data-ui-icon="sparkles"></span><span class="nav-text">Macros</span></button>
           <button type="button" class="nav-item" data-tab="settings" title="Addon settings"><span class="ico" data-ui-icon="filter"></span><span class="nav-text">Addon settings</span></button>
+          <button type="button" class="nav-item" data-tab="addons" title="Addons"><span class="ico" data-ui-icon="download"></span><span class="nav-text">Addons</span></button>
           <button type="button" class="nav-item" data-tab="auctions" title="Auctions"><span class="ico" data-ui-icon="auction"></span><span class="nav-text">Auctions</span></button>
         </div>
       </nav>
@@ -104,12 +108,16 @@
           <div class="summary-item"><span class="ico summary-icon" data-ui-icon="grid"></span><div><strong id="bank-sum-stacks">—</strong><span>Stacks</span></div></div>
           <div class="summary-item"><span class="ico summary-icon is-gold" data-ui-icon="coin"></span><div><strong id="bank-sum-gold">—</strong><span>Gold</span></div></div>
           <div class="summary-item"><span class="ico summary-icon is-teal" data-ui-icon="users"></span><div><strong id="bank-sum-characters">—</strong><span>Characters</span></div></div>
+          <details id="bank-server-pick" class="summary-item server-pick">
+            <summary title="Show one server, a region, or all of them, on every page"><span class="ico summary-icon is-blue" data-ui-icon="server"></span><div><strong id="bank-server-label">All</strong><span>Server</span></div><span class="ico server-pick-arrow" data-ui-icon="chevron-down"></span></summary>
+            <div id="bank-server-list" class="bank-menu-panel server-pick-panel" role="group" aria-label="Servers to show"></div>
+          </details>
         </div>
         <button id="bank-update" type="button" class="gb-button--primary" title="Reads your save files again. It can't log a character in."><span class="ico" data-ui-icon="sync"></span>Update now</button>
       </div>
       <section class="bank-filters" aria-label="Search and filters">
         <div class="search-row">
-          <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Item, stat or rune</span><input id="bank-search" maxlength="80" autocomplete="off" placeholder="Find an item, stat or rune, or #clean or #dirty for mana stones…" title="#clean finds mana stones with no stats, #dirty the ones with stats, and #dirty wisdom the ones with wisdom on them."><kbd class="key-hint" aria-hidden="true">/</kbd></label>
+          <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Item, stat or rune</span><input id="bank-search" maxlength="120" autocomplete="off" placeholder="Find an item, stat or rune, or filter: #+1&gt;, #t10&gt;, #equipped=false, #clean, #dirty…" title="Quick filters, with commas or spaces between them: #+5&gt; a plus above 5 (#+5&lt; below, #+5 exactly), #t10&gt; a tier above 10, #equipped=true or false for worn or not, #clean and #dirty for mana stones without or with stats. Anything else is a name, stat or rune to find."><kbd class="key-hint" aria-hidden="true">/</kbd></label>
           <label class="filter-select"><span class="gb-sr-only">Search in</span><select id="bank-search-in"><option value="">Names and stats</option><option value="items">Stats on items</option><option value="stones">Stats on mana stones</option></select></label>
         </div>
         <div class="filter-row">
@@ -122,7 +130,7 @@
               <div id="bank-character-list" class="bank-character-list"></div>
             </div>
           </details>
-          <label class="filter-select"><span class="ico" data-ui-icon="bag"></span><span class="gb-sr-only">Where</span><select id="bank-place"><option value="">Bag and bank</option><option value="bag">Bag</option><option value="bank">Bank</option><option value="shop">Item shop tab</option></select></label>
+          <label class="filter-select"><span class="ico" data-ui-icon="bag"></span><span class="gb-sr-only">Where</span><select id="bank-place"><option value="">Everywhere</option><option value="stored">Bag and bank</option><option value="bag">Bag</option><option value="bank">Bank</option><option value="shop">Item shop tab</option><option value="worn">Worn</option></select></label>
           <label class="filter-select"><span class="ico" data-ui-icon="grid"></span><span class="gb-sr-only">Type</span><select id="bank-type"><option value="">All types</option><option>Armour</option><option>Weapons</option><option>Jewellery</option><option>Runes</option><option>Mana stones</option><option>Potions</option><option>Materials</option><option>Recipes</option><option>Mounts and pets</option><option>Other</option></select></label>
           <label class="filter-select"><span class="ico" data-ui-icon="sparkles"></span><span class="gb-sr-only">Quality</span><select id="bank-quality"><option value="0">Any quality</option><option value="1">Green or better</option><option value="2">Blue or better</option><option value="3">Purple or better</option><option value="4">Orange or better</option><option value="5">Gold</option></select></label>
           <details class="bank-menu">
@@ -188,7 +196,8 @@
             <div class="panel-title">Items <span id="bank-shown" class="soft-count"></span></div>
             <span id="bank-total" class="panel-meta"></span>
             <span class="push"></span>
-            <label class="filter-select"><span class="gb-sr-only">Sort by</span><select id="bank-sort"><option value="name">Name A–Z</option><option value="count">Count</option><option value="type">Type</option><option value="quality">Quality</option><option value="id">Item ID</option></select></label>
+            <label class="bank-switch" title="Keeps each kind of item together: weapons, jewellery, armour and wings first, then mana stones, runes by rank, consumables, item shop items (plus jewels and backpack tickets first), Dynamic, Mystical and Steadfast crafting materials, other materials, recipes, mounts and pets, and the rest. Inside each, the order picked beside it."><span class="gb-switch"><input id="bank-sort-type" type="checkbox"><span aria-hidden="true"></span></span>Sort by type</label>
+            <label class="filter-select"><span class="gb-sr-only">Sort by</span><select id="bank-sort"><option value="name">Name A–Z</option><option value="count">Count</option><option value="quality">Quality</option><option value="id">Item ID</option></select></label>
             <div class="view-toggle" role="group" aria-label="Item layout">
               <button type="button" data-bank-layout="grid" title="Large slots" aria-label="Large slots" aria-pressed="true"><span class="ico" data-ui-icon="grid"></span></button>
               <button type="button" data-bank-layout="compact" title="Small slots" aria-label="Small slots" aria-pressed="false"><span class="ico" data-ui-icon="compact"></span></button>
@@ -200,6 +209,7 @@
             <span id="bank-made"></span>
             <div class="mark-legend" role="group" aria-label="The colours of the marks in a slot's corners">
               <label title="An item's tier, in the upper left corner. Click to change the colour."><input type="color" data-mark-color="tier" value="#ff6b5e" aria-label="Colour of the tier">Tier</label>
+              <label class="mark-from" title="Slots show an item's tier from this one up">from <select id="bank-tier-from" aria-label="Show the tier from"><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option><option value="4">T4</option><option value="5">T5</option><option value="6">T6</option><option value="7" selected>T7</option><option value="8">T8</option><option value="9">T9</option><option value="10">T10</option><option value="11">T11</option><option value="12">T12</option><option value="13">T13</option><option value="14">T14</option><option value="15">T15</option><option value="16">T16</option><option value="17">T17</option><option value="18">T18</option><option value="19">T19</option><option value="20">T20</option></select></label>
               <label title="Durability above 101, in the upper right corner. Click to change the colour."><input type="color" data-mark-color="hd" value="#5fe07a" aria-label="Colour of the high durability mark">HD</label>
               <label title="An item's plus, in the lower left corner. Click to change the colour."><input type="color" data-mark-color="plus" value="#ffd75e" aria-label="Colour of the plus">Plus</label>
               <label title="How many are stacked, in the lower right corner. Click to change the colour."><input type="color" data-mark-color="count" value="#ffffff" aria-label="Colour of the stack count">Stack</label>
@@ -213,6 +223,8 @@
       <section id="bank-coverage" class="attention-bar" aria-label="What's missing from the saved data" hidden>
         <div id="coverage-login" class="attention-item" hidden><span class="ico" data-ui-icon="warning"></span><span id="coverage-login-text"></span><button id="coverage-login-review" type="button" class="link-button">Review</button></div>
         <div id="coverage-bank" class="attention-item" hidden><span class="ico" data-ui-icon="bag"></span><span id="coverage-bank-text"></span><button id="coverage-bank-review" type="button" class="link-button">Review</button></div>
+        <div id="coverage-mail" class="attention-item" hidden><span class="ico" data-ui-icon="mail"></span><span id="coverage-mail-text"></span><button id="coverage-mail-review" type="button" class="link-button">Review</button></div>
+        <div id="coverage-mail-gold" class="attention-item" hidden><span class="ico" data-ui-icon="coin"></span><span id="coverage-mail-gold-text"></span><button id="coverage-mail-gold-review" type="button" class="link-button">Review</button></div>
       </section>
     </div>
 
@@ -227,7 +239,7 @@
       <h1 class="page-title" id="currencies-title">Currencies</h1>
       <div id="currency-summary" class="currency-summary"></div>
       <div class="filter-row">
-        <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server or account</span><input id="currency-search" maxlength="80" autocomplete="off" placeholder="Find a character, server or account…"><kbd class="key-hint" aria-hidden="true">/</kbd></label>
+        <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server or account</span><input id="currency-search" maxlength="160" autocomplete="off" placeholder="Find a character, server or account, or filter: #gold&gt;500m, #charges&gt;10k…" title="Filters, with commas or spaces between them: #level&gt;=100, #classes&gt;3, #classlevels&gt;500, #gold&lt;1m, #dailytokens&gt;5k, #charges&gt;10k, #diamonds, #rubies, #stones, #bagfree&gt;10, #bankfree, #worn, #mail, #mailgold&gt;1m, #class=mage, and any currency by the start of its name, such as #honor&gt;1000. k, m and b mean thousands, millions and billions. A filter with no number, such as #charges, means more than none; #needslogin, #nobank, #steam and #linked are yes or no. Anything else is a name, server, account, class or note to find."><kbd class="key-hint" aria-hidden="true">/</kbd></label>
         <label class="filter-select"><span class="ico" data-ui-icon="users"></span><span class="gb-sr-only">Group by</span><select id="currency-group"><option value="server">Group by server</option><option value="account">Group by account</option><option value="none">No groups</option></select></label>
       </div>
       <details class="help-note"><summary>How this works</summary><p class="hint">Every currency any of your characters has gets a column. Click a heading to sort by it, and a character to select it. A dash means not recorded: that character needs one login on the current version, and a 0 is a real zero. Diamonds and Rubies belong to an account, so the table doesn't add them up, and the cards above count each RoM account once. Daily Tokens are each character's own.</p></details>
@@ -251,6 +263,15 @@
         <div id="heat-total" class="panel-title"></div>
         <span class="push"></span>
         <label class="filter-select" title="Fewer letters make the tiles smaller, for a more compact view. A name that doesn't fit shows the letters that tell it apart from the others on its account. Below 5 letters a tile leaves out its gold too, and hovering still shows it."><span>Name letters</span><select id="heat-letters"><option value="0">Whole name</option><option value="12">12</option><option value="10">10</option><option value="8">8</option><option value="6">6</option><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></label>
+        <details id="heat-servers" class="bank-menu heat-servers">
+          <summary><span class="ico" data-ui-icon="server"></span><span id="heat-servers-summary">All servers</span></summary>
+          <div class="bank-menu-panel">
+            <label class="bank-check"><input id="heat-server-names" type="checkbox" checked> Each server's name on top of its region</label>
+            <p class="hint">Untick a server to leave it off this map. The server ticks at the top of the page hide one on every page.</p>
+            <div id="heat-server-list" class="heat-server-list"></div>
+            <div class="bank-menu-buttons"><button id="heat-servers-all" type="button" class="gb-button--sm">Show every server</button></div>
+          </div>
+        </details>
         <div id="heat-legend" class="heat-legend" role="group" aria-label="The colours for gold">
           <span>No gold</span>
           <input id="heat-color-none" class="heat-swatch" type="color" value="#c62828" aria-label="Colour at no gold" title="Colour at no gold: click to change it">
@@ -261,9 +282,26 @@
           <span>A full cap of 999,999,999</span>
           <button id="heat-colors-reset" type="button" class="link-button" hidden>Reset colours</button>
         </div>
-        <details class="help-note"><summary>How this works</summary><p class="hint">Red is no gold, orange is half a cap, and bright green is a full cap, marked MAX. Click the three squares beside the colour bar to pick your own colours, and use Name letters for smaller tiles. Hover a character for its details, click to select it. Right-click to copy its name, Gameforge account or password. Each box is a Gameforge account you linked on the Gameforge accounts page, with its servers and RoM accounts, so a full account shows as a block of green and the colours in between are what's left to collect. A balance says nothing about whether the saved data is current: see the Characters page for that.</p></details>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Red is no gold, orange is half a cap, and bright green is a full cap, marked MAX. Click the three squares beside the colour bar to pick your own colours, and use Name letters for smaller tiles. Hover a character for its details, click to select it. Right-click to copy its name, Gameforge account or password. Each box is a Gameforge account you linked on the Gameforge accounts page, with a region for each of its servers, named on top, and its RoM accounts in them, so a full account shows as a block of green and the colours in between are what's left to collect. Servers leaves one off this map, or the names off the regions. A mailbox after a name is gold waiting in its mailbox, with a red ! when some of its mail goes within 48 hours: see the Mail page. A balance says nothing about whether the saved data is current: see the Characters page for that.</p></details>
       </div>
       <div id="heat-view" class="heat-view" data-select-scope></div>
+    </div>
+
+    <div id="tab-mail" class="tab-panel" hidden>
+      <h1 class="page-title" id="mail-title">Mail</h1>
+      <div id="mail-summary" class="currency-summary"></div>
+      <div class="filter-row">
+        <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, sender, subject or item</span><input id="mail-search" maxlength="80" autocomplete="off" placeholder="Find a character, sender, subject or item…"><kbd class="key-hint" aria-hidden="true">/</kbd></label>
+      </div>
+      <details class="help-note"><summary>How this works</summary><p class="hint">The game only shows a mailbox while it's open, so Global Bank keeps what each one held then, and every mail your characters send, the newest 360. Mail sent to one of your characters after its mailbox was last open is added to it as an estimate, until that mailbox is opened again. A mail waits 30 days before the game sends it back: the time left for one seen in a mailbox is the game's own, and for one sent since it's counted from when it was sent. A red ! marks mail that goes within 48 hours. Mail with nothing on it isn't counted. The counts follow the region and the server ticks at the top. Click a name to select that character.</p></details>
+      <section class="panel" aria-labelledby="mail-waiting-title">
+        <h2 id="mail-waiting-title">Waiting to be collected <span id="mail-waiting-count" class="soft-count"></span></h2>
+        <div class="table-panel table-scroll"><table id="mail-waiting" class="currency-table mail-table"><thead><tr><th>Character</th><th>From</th><th>Subject</th><th class="num">Gold</th><th>Items</th><th class="num">Time left</th><th>Seen</th></tr></thead><tbody></tbody></table></div>
+      </section>
+      <section class="panel" aria-labelledby="mail-sent-title">
+        <h2 id="mail-sent-title">Sent <span id="mail-sent-count" class="soft-count"></span></h2>
+        <div class="table-panel table-scroll"><table id="mail-sent" class="currency-table mail-table"><thead><tr><th>When</th><th>From</th><th>To</th><th>Subject</th><th class="num">Gold</th><th>Items</th></tr></thead><tbody></tbody></table></div>
+      </section>
     </div>
 
     <div id="tab-accounts" class="tab-panel" hidden>
@@ -348,7 +386,7 @@
     <div id="tab-characters" class="tab-panel is-fill is-tight" hidden>
       <div class="filter-row">
         <h1 class="page-title" id="characters-title">Characters</h1>
-        <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server, account, class or note</span><input id="roster-search" maxlength="80" autocomplete="off" placeholder="Find a character, server, account, class or note…"><kbd class="key-hint" aria-hidden="true">/</kbd></label>
+        <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server, account, class or note</span><input id="roster-search" maxlength="160" autocomplete="off" placeholder="Find a character, server, account, class or note, or filter: #level&gt;=100, #classes&gt;3, #dailytokens&gt;5k…" title="Filters, with commas or spaces between them: #level&gt;=100, #classes&gt;3, #classlevels&gt;500, #gold&lt;1m, #dailytokens&gt;5k, #charges&gt;10k, #diamonds, #rubies, #stones, #bagfree&gt;10, #bankfree, #worn, #mail, #mailgold&gt;1m, #class=mage, and any currency by the start of its name, such as #honor&gt;1000. k, m and b mean thousands, millions and billions. A filter with no number, such as #charges, means more than none; #needslogin, #nobank, #steam and #linked are yes or no. Anything else is a name, server, account, class or note to find."><kbd class="key-hint" aria-hidden="true">/</kbd></label>
         <label class="filter-select"><span class="ico" data-ui-icon="users"></span><span class="gb-sr-only">Group by</span><select id="roster-group"><option value="account">Group by account</option><option value="server">Group by server</option><option value="none">No groups</option></select></label>
       </div>
       <div class="filter-row">
@@ -360,7 +398,7 @@
         </div>
         <span class="push"></span>
         <button id="select-stale" type="button" class="gb-button--ghost gb-button--sm" hidden></button>
-        <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it, a character to select it, and a group's Select to select all of it. Selecting doesn't change the Bank until you press Use in Bank. A character needing a login was saved by an older version: log in with it once. A bank not recorded also takes one login with that character. Update now only reads the saved files, so it can't do either. Transfer stones counts Server Transfer Stones in the bag and bank, and shows "at least" while the bank isn't recorded. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p></details>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it, a character to select it, and a group's Select to select all of it. Selecting doesn't change the Bank until you press Use in Bank. A character needing a login was saved by an older version: log in with it once. A bank not recorded also takes one login with that character. Update now only reads the saved files, so it can't do either. The search also takes filters, with commas or spaces between them: <code>#level&gt;=100</code>, <code>#classes&gt;3</code> (how many classes), <code>#classlevels&gt;500</code> (their levels added up), <code>#gold&lt;1m</code>, <code>#dailytokens&gt;5k</code>, <code>#charges&gt;10k</code> (Arcane Transmutor), <code>#diamonds</code>, <code>#rubies</code>, <code>#stones</code>, <code>#bagfree&gt;10</code>, <code>#bankfree</code>, <code>#worn</code>, <code>#mail</code>, <code>#mailgold&gt;1m</code>, <code>#class=mage</code>, and any currency by the start of its name, such as <code>#honor&gt;1000</code>. k, m and b are thousands, millions and billions; a filter with no number, such as <code>#charges</code>, means more than none; <code>#needslogin</code>, <code>#nobank</code>, <code>#steam</code> and <code>#linked</code> are yes or no. Transfer stones counts Server Transfer Stones in the bag and bank, and shows "at least" while the bank isn't recorded. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p></details>
       </div>
       <div id="roster-view" class="table-panel table-scroll is-grow" data-select-scope><table class="currency-table roster-table"><thead></thead><tbody></tbody></table></div>
       <section id="excluded-view" class="panel is-grow" aria-labelledby="excluded-title" hidden>
@@ -464,6 +502,43 @@
         <label class="filter-select">Show <select id="settings-value-from"><option value="now">What the game has now</option><option value="newest">The newest backup</option><option value="earlier">About a day ago</option></select></label>
         <p id="settings-auras" class="hint"></p>
         <pre id="settings-value"></pre>
+      </section>
+    </div>
+
+    <div id="tab-addons" class="tab-panel" hidden>
+      <h1 class="page-title" id="addons-title">Addons</h1>
+      <section class="panel" aria-labelledby="addons-title">
+        <details class="help-note"><summary>How this works</summary><p class="hint">Check for updates reads the latest Cherry’s Kit release on GitHub. Update and Download and install fetch that release’s files in a window of their own, check each one against the release’s checksum, and move the old version to Interface\offloaded_addons first, the same way the guided setup does. Offload moves an addon to Interface\offloaded_addons, where the game doesn’t load it, and Restore puts it back. Delete sends it to the Recycle Bin. Saved settings are kept either way. An addon the kit has taken over, such as pbInfo or TooltipIds (now Cherry’s Info) or Cherry’s Loginxml (now part of LogNextChar), says what replaced it and offers Switch: the new addon installs if it isn’t here, then the old folder is offloaded. Close the game before installing.</p></details>
+        <div class="bank-menu-buttons">
+          <button id="addons-check" type="button" class="gb-button--primary"><span class="ico" data-ui-icon="sync"></span>Check for updates</button>
+          <button id="addons-update-all" type="button" hidden></button>
+          <button id="addons-refresh" type="button" class="gb-button--ghost">Read the folder again</button>
+        </div>
+        <p id="addons-status" class="hint" role="status"></p>
+        <p id="addons-game" class="settings-warning" role="alert"></p>
+        <p id="addons-setup" class="settings-warning" role="alert"></p>
+        <p id="addons-job" class="hint"></p>
+        <div id="addons-mailbox" hidden>
+          <h2 class="addons-heading">Mail</h2>
+          <p class="hint">Cherry’s Kit runs one mailbox addon: Ultimate Mail Mod, which is part of the kit, or zMail, pyrr’s addon, which the kit distributes with his permission in its own folder, Interface\AddOns\zmail.</p>
+          <p id="addons-mail-text"></p>
+          <div id="addons-mail-actions" class="bank-menu-buttons"></div>
+        </div>
+        <h2 class="addons-heading">Cherry’s Kit</h2>
+        <div class="table-panel table-scroll"><table>
+          <thead><tr><th>Addon</th><th>Installed</th><th>On GitHub</th><th>Status</th><th></th></tr></thead>
+          <tbody id="addons-kit-rows"></tbody>
+        </table></div>
+        <h2 class="addons-heading">Other addons</h2>
+        <div class="table-panel table-scroll"><table>
+          <thead><tr><th>Addon</th><th>Version</th><th></th></tr></thead>
+          <tbody id="addons-other-rows"></tbody>
+        </table></div>
+        <h2 class="addons-heading">Offloaded</h2>
+        <div class="table-panel table-scroll"><table>
+          <thead><tr><th>Folder</th><th>Version</th><th>Since</th><th></th></tr></thead>
+          <tbody id="addons-offloaded-rows"></tbody>
+        </table></div>
       </section>
     </div>
 

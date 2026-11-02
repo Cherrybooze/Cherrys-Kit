@@ -161,7 +161,9 @@ def addon_map(all_packages: list[dict], names: dict[str, str]) -> str:
             "`tests/test_addons_alone.py` runs each one that way on a simulated client, and `tests/test_addon_map.py` fails if an addon reaches for another one that isn't listed here.", "",
             "If an addon's original, or an older separate copy, is in its own folder in `Interface\\AddOns`, that one takes precedence: "
             "the kit's version stays off and the hub says so, one line for each, in chat and in its window. Both still load, because the game can't skip a file in a manifest. "
-            "`!setup_cherryskit.bat` offers to move such folders to `Interface\\offloaded_addons`, but only when the kit's own copy is installed.", "",
+            "`!setup_cherryskit.bat` offers to move such folders to `Interface\\offloaded_addons`, but only when the kit's own copy is installed. "
+            "The Global Bank page's Addons page marks them too, with a **Switch with** button that installs the kit's addon "
+            "if needed and then offloads the old folder.", "",
             "## Why everything lives under CherrysKit", "",
             "One folder, loaded and controlled by the hub, keeps the kit simple to develop and lets the hub's switches cover every addon in it. It also keeps the kit out of the way of anyone who'd rather run their own version of an addon. Compatibility with addons managed separately can't be guaranteed, so when one is there, the kit's version stays off instead of clashing with it.", "",
             "## The addons", "",

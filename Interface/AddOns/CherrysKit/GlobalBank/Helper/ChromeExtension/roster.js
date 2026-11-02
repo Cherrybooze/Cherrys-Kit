@@ -300,6 +300,8 @@ const GBRoster = (() => {
     lines.push({kind: 'row', text: `${bagText} · ${bankText}`});
     const stones = extra.stones ? extra.stones(character) : '';
     if (stones) lines.push({kind: 'row', text: stones});
+    const mail = extra.mail ? extra.mail(character) : null;
+    if (mail) lines.push({kind: mail.soon ? 'warn' : 'row', text: mail.text});
     const money = (character.currencies || []).filter(item => Number(item.amount) > 0);
     if (money.length) {
       const named = money.slice(0, 3).map(item => `${extra.currencyName ? extra.currencyName(item) : item.name || item.key} ${number(item.amount)}`);
@@ -475,6 +477,14 @@ const GBRoster = (() => {
         save();
         changed('view');
       },
+      // One choice for the whole view: a region with all its servers ticked, or only these servers of it
+      setView(region, only = null) {
+        view.region = region || view.region;
+        view.serversOff = new Set();
+        if (only) for (const server of serverList(characters, view)) if (!only.includes(server.key)) view.serversOff.add(server.key);
+        save();
+        changed('view');
+      },
       // The regions' lists, edited by hand: a server moved to a region, or to none ('')
       setServerRegion(name, region) {
         place(name, region);
@@ -627,7 +637,8 @@ const GBRoster = (() => {
   // The hover card for any element with data-char (click selects it) or data-char-tip (hover only), and the
   // clicks, for every tab at once: one set of listeners, however many characters there are.
   // options: what describe() needs, classColor(character), menu(event, rows, owners, after) for the right-click
-  // menu, and rows(character): the menu's own rows for that character.
+  // menu, rows(character): the menu's own rows for that character, and bulk(character): rows above its logins, for
+  // all the characters selected with it.
   function attach(roster, tooltip, options = {}) {
     const make = (tag, className, text) => {
       const node = document.createElement(tag);
@@ -686,7 +697,7 @@ const GBRoster = (() => {
       if (!character) return;
       tooltip.hidden = true;
       shownKey = null;
-      options.menu(event, [], [character], options.rows ? options.rows(character) : []);
+      options.menu(event, options.bulk ? options.bulk(character) : [], [character], options.rows ? options.rows(character) : []);
     });
   }
 

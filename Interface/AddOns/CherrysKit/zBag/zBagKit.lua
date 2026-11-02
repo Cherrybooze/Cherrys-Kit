@@ -19,7 +19,7 @@ K.cherryOpen, K.resizing, K.dragging = nil, nil, nil
 K.storageInitialized, K.storageShared = nil, nil
 K.hoverOwner, K.hoverButton = nil, nil
 
-K.version = "5.07-ck19"
+K.version = "5.07-ck20"
 K.DEFAULT_SLOT_FONT_SIZE, K.MIN_SLOT_FONT_SIZE, K.MAX_SLOT_FONT_SIZE = 8, 6, 20
 K.path = (CherrysKit_Paths and CherrysKit_Paths.zBag) or "Interface/AddOns/zBag/"
 K.BAG_SLOTS = 180

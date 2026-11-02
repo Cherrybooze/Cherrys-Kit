@@ -170,6 +170,27 @@ def write_login_packages(output: Path) -> list[dict]:
     return [lnc]
 
 
+def write_external_packages(output: Path, metadata: dict) -> list[dict]:
+    """Addons that live in their own Interface/AddOns folder, outside CherrysKit (zMail), so the
+    author's own releases can replace them. Not in the Full ZIP: the guided setup offers them."""
+    packages = []
+    for item in metadata.get("external_packages", []):
+        folder = item["install_folder"]
+        require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", folder) is not None and folder != "CherrysKit",
+                f"Unsafe install folder: {folder}")
+        files = tree_files(ROOT / "Interface" / "AddOns" / folder)
+        marker = (files.get("CherrysKit-version.txt", b"").decode("ascii").splitlines() or [""])[0].strip()
+        require(marker == item["version"], f"{folder}/CherrysKit-version.txt differs from release-packages.json.")
+        result = write_zip(output / f"{item['folder']}-{item['version']}.zip", files, folder)
+        result.update({"package": item["folder"], "title": item["title"], "version": item["version"],
+                       "requires_hub": False, "archive_root": folder + "/", "install_folder": folder,
+                       "external": True, "bundled_addons": []})
+        if item.get("alternative_to"):
+            result["alternative_to"] = item["alternative_to"]
+        packages.append(result)
+    return packages
+
+
 def build(output: Path) -> None:
     require(not output.is_relative_to(KIT), "Build output must be outside the installed addon tree.")
     metadata = json.loads((ROOT / "release-packages.json").read_text(encoding="utf-8"))
@@ -261,6 +282,8 @@ def build(output: Path) -> None:
         addon = next((item for item in addons if item["folder"] == kind), None)
         if addon and addon.get("minimum_hub_version"):
             result["minimum_hub_version"] = addon["minimum_hub_version"]
+        if addon and addon.get("alternative_to"):
+            result["alternative_to"] = addon["alternative_to"]
         packages.append(result)
     require(len(packages) == 14, "Expected a full kit, a hub, and twelve addon ZIPs.")
     # The optional browser extension is separate: including it in Global Bank
@@ -296,6 +319,7 @@ def build(output: Path) -> None:
         require(listed is not None and listed["version"] == package["version"],
                 f"{package['package']} differs from release-packages.json.")
     packages += standalone
+    packages += write_external_packages(output, metadata)
     revision = git_output("rev-parse", "HEAD")
     status = git_output("status", "--porcelain")
     manifest = {

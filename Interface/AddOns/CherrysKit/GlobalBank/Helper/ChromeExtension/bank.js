@@ -6,7 +6,16 @@
 const GBBank = (() => {
   // The game's own pages: 30 bag slots, 40 bank slots. Bank slots after 200 are the item shop's tab.
   const PER_PAGE = {bag: 30, bank: 40};
-  const PLACE = {bag: 'Bag', bank: 'Bank', shop: 'Item shop tab'};
+  const PLACE = {bag: 'Bag', bank: 'Bank', shop: 'Item shop tab', worn: 'Worn'};
+  // What a character wears, by the slot names the game's character window uses
+  const SLOT_LABELS = {Head: 'Head', Shoulder: 'Shoulders', Chest: 'Chest', Hands: 'Hands', Waist: 'Waist', Feet: 'Feet', Legs: 'Legs', Back: 'Back',
+    MainHand: 'Main hand', SecondaryHand: 'Off hand', Ranged: 'Ranged weapon', Ammo: 'Ammunition', Necklace: 'Necklace', Earring0: 'Earring', Earring1: 'Earring',
+    Ring0: 'Ring', Ring1: 'Ring', Talisman0: 'Talisman', Talisman1: 'Talisman', Talisman2: 'Talisman', Adornment: 'Adornment'};
+  const WORN_TYPES = {MainHand: 'Weapons', SecondaryHand: 'Weapons', Ranged: 'Weapons', Ammo: 'Weapons', Necklace: 'Jewellery', Earring0: 'Jewellery',
+    Earring1: 'Jewellery', Ring0: 'Jewellery', Ring1: 'Jewellery', Talisman0: 'Jewellery', Talisman1: 'Jewellery', Talisman2: 'Jewellery'};
+  const slotLabel = where => SLOT_LABELS[where] || String(where || 'Worn');
+  // A slot's tier mark shows from this tier up, until you pick another
+  const TIER_FROM = 7;
   const SHOP_FROM = 200;
   const MAX_HOLDERS = 10;
   const TYPES = ['Armour', 'Weapons', 'Jewellery', 'Runes', 'Mana stones', 'Potions', 'Materials', 'Recipes', 'Mounts and pets', 'Other'];
@@ -103,7 +112,8 @@ const GBBank = (() => {
     if (/earring|eq_ear|eq_neck|eq_finger|ring_|jewelry\//.test(path) && number >= 220000 && number < 240000) return 'Jewellery';
     if (number >= 210000 && number < 220000) return 'Weapons';
     if (number >= 220000 && number < 240000) return 'Armour';
-    if (isStone(number) || /mana stone|fusnion_stone/.test(path)) return 'Mana stones';
+    // Plus jewels share the fusion stones' pictures, but aren't stones
+    if (isStone(number) || (/mana stone|fusnion_stone/.test(path) && !/fusnion_stone\/(uv|fi)_/.test(path))) return 'Mana stones';
     if (/potion/.test(path)) return 'Potions';
     if (/item_ore|item_mat|phantom\/material/.test(path)) return 'Materials';
     if (/mount|charger|pet_|egg/.test(path)) return 'Mounts and pets';
@@ -131,11 +141,11 @@ const GBBank = (() => {
     if (hours < 24) return `${hours} h ${minutes % 60} min`;
     return `${Math.floor(hours / 24)} days ${hours % 24} h`;
   }
-  // Characters, stacks and items in all, for the page's status line
+  // Characters, stacks and items in all, for the page's status line, with what they wear
   function totals(characters) {
     let stacks = 0, items = 0;
     for (const character of characters) {
-      for (const place of ['bag', 'bank']) {
+      for (const place of ['bag', 'bank', 'equip']) {
         for (const item of character[place] || []) {
           stacks++;
           items += Number(item.count) || 1;
@@ -144,8 +154,9 @@ const GBBank = (() => {
     }
     return {characters: characters.length, stacks, items};
   }
-  // Bank 45 (page 2, slot 5)
-  function locationLabel(place, slot) {
+  // Bank 45 (page 2, slot 5), or Worn (Main hand)
+  function locationLabel(place, slot, where) {
+    if (place === 'worn') return `Worn (${slotLabel(where)})`;
     if (place === 'bank' && slot > SHOP_FROM) return `Bank ${slot} (item shop tab, slot ${slot - SHOP_FROM})`;
     const perPage = PER_PAGE[place];
     const page = Math.floor((slot - 1) / perPage) + 1;
@@ -154,37 +165,92 @@ const GBBank = (() => {
   function itemKey(entry) {
     return String(entry.id || entry.name);
   }
-  // One row for each stack on each character, with what a search and the filters need worked out once.
+  // A worn item has no link, so what a link would say comes from its tooltip, as the game's character window shows it:
+  // the plus on the first line ("Staff + 12"), a stat's name beside the first line of its effects, and its durability.
+  function wornGear(item) {
+    const tip = Array.isArray(item.tip) ? item.tip : [];
+    const plus = Number(/\+\s*(\d+)\s*$/.exec(String(tip[0]?.[1] || ''))?.[1]) || 0;
+    const stats = tip.filter(line => line[3] && /^[+-]\s*\d/.test(String(line[1] || ''))).map(line => String(line[3]));
+    return {dura: Number(item.dura) || 0, maxDura: Number(item.maxDura) || 0, plus, tier: 0, freeSlots: 0, stats, runes: [],
+      color: /^[0-9a-f]{6}$/i.test(tip[0]?.[0] || '') ? tip[0][0] : '', worn: true};
+  }
+  // One row for each stack on each character, and for each thing it wears, with what a search and the filters need
+  // worked out once. A worn item's ID comes from the same item in someone's bag or bank, when there is one.
   function entries(characters) {
     const list = [];
+    const worn = [];
+    const ids = new Map();
     for (const character of characters) {
       const level = Number(character.level) || 0;
-      for (const place of ['bag', 'bank']) {
+      for (const place of ['bag', 'bank', 'equip']) {
         for (const item of character[place] || []) {
-          const gear = item.gear || null;
+          const onBody = place === 'equip';
+          const gear = onBody ? wornGear(item) : item.gear || null;
           const stats = gear?.stats || item.stats || [];
           const name = String(item.name || 'Unknown item');
           const color = /^[0-9a-f]{6}$/i.test(gear?.color || '') ? gear.color : /^[0-9a-f]{6}$/i.test(item.tip?.[0]?.[0] || '') ? item.tip[0][0] : '';
-          list.push({id: item.id, name, lower: name.toLowerCase(), icon: item.icon, count: Number(item.count) || 1, tier: tierOf(item),
-            type: typeOf(item.id, item.icon), bound: !!item.bound, gear, stats, stone: !!item.stats, tip: item.tip || null, color, quality: qualityOf(color),
-            search: stats.concat(gear?.runes || []).join('\n').toLowerCase(), character: character.name, ch: character, level, place,
-            shop: place === 'bank' && Number(item.slot) > SHOP_FROM, slot: Number(item.slot) || 0});
+          const entry = {id: item.id, name, lower: name.toLowerCase(), icon: item.icon, count: Number(item.count) || 1, tier: tierOf(onBody ? {...item, gear} : item),
+            type: onBody ? WORN_TYPES[item.where] || 'Armour' : typeOf(item.id, item.icon), bound: onBody || !!item.bound, gear, stats, stone: !!item.stats,
+            tip: item.tip || null, color, quality: qualityOf(color), search: stats.concat(gear?.runes || []).join('\n').toLowerCase(), character: character.name,
+            ch: character, level, place: onBody ? 'worn' : place, where: onBody ? String(item.where || '') : '',
+            shop: place === 'bank' && Number(item.slot) > SHOP_FROM, slot: Number(item.slot) || 0};
+          if (onBody) worn.push(entry);
+          else if (/^\d+$/.test(String(item.id || '')) && !ids.has(entry.lower)) ids.set(entry.lower, String(item.id));
+          list.push(entry);
         }
       }
     }
+    for (const entry of worn) entry.id = ids.get(entry.lower) || `n:${entry.name}`;
     return list;
+  }
+  // The plus on a piece of gear, from its link or, for a worn one, its tooltip
+  const plusOf = entry => Number(entry.gear?.plus) || 0;
+  // The quick filters a search can hold, each one word: #+5> (a plus above 5), #+5< (below), #+5>= and #+5 or #+5= (exactly +5), the same with
+  // #t for the tier, and #equipped=true or false (worn by a character, or not). A plus works without its # too. Only
+  // gear has a plus, and only gear and mana stones a tier, so the rest never matches those.
+  const QUICK = /^(?:#?\+(\d{1,2})|#t(\d{1,2}))(>=|=>|<=|=<|!=|>|<|=)?$/i;
+  function quickFilters(text) {
+    const tests = [];
+    const words = [];
+    const all = String(text || '');
+    // Only a search with a quick filter in it is split at its commas: an item's name can have one
+    if (!/(^|[\s,])(#?\+\d|#t\d|#equipped|#worn)/i.test(all)) return {tests, text: all};
+    for (const word of all.split(/[\s,]+/)) {
+      if (!word) continue;
+      const found = QUICK.exec(word);
+      if (found) {
+        const limit = Number(found[1] ?? found[2]);
+        const plus = found[1] !== undefined;
+        const how = found[3] || '=';
+        tests.push(entry => {
+          if (plus ? !entry.gear : !(entry.tier > 0)) return false;
+          return compare(plus ? plusOf(entry) : entry.tier, how, limit);
+        });
+        continue;
+      }
+      const worn = /^#(?:equipped|worn)(?:=(true|false|yes|no))?$/i.exec(word);
+      if (worn) {
+        const on = !worn[1] || /^(true|yes)$/i.test(worn[1]);
+        tests.push(entry => (entry.place === 'worn') === on);
+        continue;
+      }
+      words.push(word);
+    }
+    return {tests, text: words.join(' ')};
   }
   // The test each item passes to be shown. keep(character) says whether its holder is on the page at all.
   function matcher(filters) {
-    // #clean and #dirty: mana and fusion stones without stats, or with stats, as in zBag. The rest of the search still
-    // applies here, so #dirty wisdom finds stones with wisdom on them.
+    // The quick filters first, then #clean and #dirty: mana and fusion stones without stats, or with stats, as in zBag.
+    // The rest of the search still applies here, so #dirty wisdom finds stones with wisdom on them.
+    const quick = quickFilters(filters.text);
     let stones = '';
-    const text = (filters.text || '').toLowerCase().replace(/(^|\s)#(clean|dirty)(?=\s|$)/g, (all, space, word) => {
+    const text = quick.text.toLowerCase().replace(/(^|[\s,])#(clean|dirty)(?=[\s,]|$)/g, (all, space, word) => {
       stones = word;
       return ' ';
     }).trim();
     const anyStat = names => names.some(name => name.toLowerCase().includes(text));
     return entry => {
+      for (const test of quick.tests) if (!test(entry)) return false;
       if (stones) {
         if (!isStone(entry.id)) return false;
         // A stone saved before stats were recorded could be either, so it only counts once it says it has some
@@ -196,7 +262,8 @@ const GBBank = (() => {
         else if (!(entry.lower ?? entry.name.toLowerCase()).includes(text) && !(entry.search ?? '').includes(text) && !anyStat(entry.stats) && !anyStat(entry.gear?.runes || [])) return false;
       }
       if (filters.type && entry.type !== filters.type) return false;
-      if (filters.place === 'shop' ? !entry.shop : filters.place && entry.place !== filters.place) return false;
+      // '' is everywhere, 'stored' the bag and the bank without what's worn
+      if (filters.place === 'shop' ? !entry.shop : filters.place === 'stored' ? entry.place === 'worn' : filters.place && entry.place !== filters.place) return false;
       if (filters.hidden && filters.hidden.has(entry.character)) return false;
       if (filters.keep && entry.ch && !filters.keep(entry.ch)) return false;
       if (filters.minLevel && entry.level < filters.minLevel) return false;
@@ -285,21 +352,90 @@ const GBBank = (() => {
     }
     return out;
   }
-  // What a slot's corners say about a cell, and the same in words for a screen reader
-  function slotMarks(cell) {
+  // What a slot's corners say about a cell, and the same in words for a screen reader. The tier shows from tierFrom up.
+  function slotMarks(cell, tierFrom = TIER_FROM) {
     if (cell.mixed) return {tier: '', durability: '', plus: '', words: []};
-    const tier = cell.tier > 0 ? String(cell.tier) : '';
+    const tier = cell.tier > 0 && cell.tier >= tierFrom ? `T${cell.tier}` : '';
     const plus = cell.gear?.plus > 0 ? `+${cell.gear.plus}` : '';
     const durability = cell.gear?.dura > HIGH_DURABILITY ? 'HD' : '';
-    return {tier, durability, plus, words: [tier && `tier ${tier}`, plus, durability && 'high durability'].filter(Boolean)};
+    return {tier, durability, plus, words: [tier && `tier ${cell.tier}`, plus, durability && 'high durability'].filter(Boolean)};
+  }
+  // By name, with a numeral at the end counted, so Wrath VIII comes before Wrath IX and Wrath X
+  const ROMAN_END = /^(.*\S)\s+([IVXLC]+)$/;
+  const ROMAN = {I: 1, V: 5, X: 10, L: 50, C: 100};
+  function romanValue(text) {
+    let total = 0, highest = 0;
+    for (const letter of [...text].reverse()) {
+      const value = ROMAN[letter];
+      total += value < highest ? -value : value;
+      highest = Math.max(highest, value);
+    }
+    return total;
+  }
+  function byName(a, b) {
+    const x = ROMAN_END.exec(a.name), y = ROMAN_END.exec(b.name);
+    if (x && y && x[1] === y[1]) return romanValue(x[2]) - romanValue(y[2]);
+    return a.name.localeCompare(b.name);
   }
   const SORTS = {
-    name: (a, b) => a.name.localeCompare(b.name),
-    count: (a, b) => b.total - a.total || a.name.localeCompare(b.name),
-    type: (a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
-    quality: (a, b) => b.quality - a.quality || a.name.localeCompare(b.name),
-    id: (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0) || a.name.localeCompare(b.name),
+    name: byName,
+    count: (a, b) => b.total - a.total || byName(a, b),
+    type: (a, b) => a.type.localeCompare(b.type) || byName(a, b),
+    quality: (a, b) => b.quality - a.quality || byName(a, b),
+    id: (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0) || byName(a, b),
   };
+  // Sorting by type: what can be worn first, as the character window goes (weapons, jewellery, armour, wings), then the
+  // rest, each kind together and in the chosen order inside it, some kinds in parts of their own: runes by rank, the
+  // item shop's plus jewels and backpack tickets, and the Dynamic, Mystical and Steadfast crafting materials. A good
+  // guess from IDs, icons and names, like typeOf.
+  const SORT_GROUPS = ['Weapons', 'Jewellery', 'Armour', 'Wings', 'Mana stones', 'Runes', 'Consumables', 'Item shop', 'Crafting materials', 'Materials',
+    'Recipes', 'Mounts and pets', 'Other'];
+  // The parts some kinds have, in their order. A part not listed comes last.
+  const SORT_PARTS = {
+    Runes: ['Rank 0', 'Rank 1', 'Rank 2', 'Rank 3', 'Rank 4', 'Rank 5', 'Rank 6', 'Unranked', 'Other runes'],
+    'Item shop': ['Plus jewels', 'Backpack tickets', 'Other item shop items'],
+    'Crafting materials': ['Dynamic', 'Mystical', 'Steadfast'],
+  };
+  // Each rune's rank, by its name without its numeral
+  const RUNE_RANKS = new Map(Object.entries({
+    'Rank 0': 'Defense Endurance Harm Magic Mind Quickness Resistance Shell Strike Vigor Vitality',
+    'Rank 1': 'Atonement Charm Cruelty Dexterity Excite Guts Intellect Life Payback Rouse Safeguard Savage Spell Spirit Stamina Triumph Ward',
+    'Rank 2': 'Anger Barrier Capability Comprehension Devil Ferocity Grasp Keenness Mayhem Resistor',
+    'Rank 3': 'Dauntlessness Destruction Enchantment Fearless Fountain Madness Passion Potential',
+    'Rank 4': 'Accuracy Agile Curse Enlightenment Might Raid Sorcery',
+    'Rank 5': 'Advance Aggression Assassin Block Revolution Sage Shield Tyrant',
+    'Rank 6': 'Enigma Experience Hatred Judge Loot Massacre Reconciliation',
+    Unranked: 'Burst Fatal Miracle Wrath',
+  }).flatMap(([rank, names]) => names.split(' ').map(name => [name.toLowerCase(), rank])));
+  // shopIds: the items someone keeps in the item shop tab, which only takes what was bought there. Returns [group, part].
+  function sortGroupOf(cell, shopIds = null) {
+    const path = String(cell.icon || '').toLowerCase();
+    const name = String(cell.name || '').toLowerCase();
+    const worn = cell.places?.find(place => place.place === 'worn');
+    if (worn?.where === 'Adornment' || /wing|adorn|back_ornament/.test(path)) return ['Wings', ''];
+    if (cell.type === 'Runes') return ['Runes', RUNE_RANKS.get((ROMAN_END.exec(cell.name)?.[1] || cell.name).toLowerCase()) || 'Other runes'];
+    if (/fusnion_stone\/(uv|fi)_|\bjewel\b/.test(path + ' ' + name)) return ['Item shop', 'Plus jewels'];
+    if (/backpack ticket/.test(name)) return ['Item shop', 'Backpack tickets'];
+    if (cell.type === 'Weapons' || cell.type === 'Jewellery' || cell.type === 'Armour' || cell.type === 'Mana stones') return [cell.type, ''];
+    if (/power stone|mana stone/.test(path)) return ['Mana stones', ''];
+    const family = /^(dynamic|mystical|steadfast)\b/.exec(name);
+    if (family) return ['Crafting materials', family[1][0].toUpperCase() + family[1].slice(1)];
+    if (shopIds?.has(String(cell.id)) || /shop_goods|shop key|firework|ticket/.test(path + ' ' + name)) return ['Item shop', 'Other item shop items'];
+    if (cell.type === 'Potions' || /potion|food|cook|dish|scroll|elixir/.test(path)) return ['Consumables', ''];
+    if (cell.type === 'Materials' || cell.type === 'Recipes' || cell.type === 'Mounts and pets') return [cell.type, ''];
+    return ['Other', ''];
+  }
+  // The cells in type order, then in each kind's parts, each sorted as asked inside
+  function sortByType(list, order, shopIds) {
+    const rank = new Map(SORT_GROUPS.map((group, at) => [group, at]));
+    const partRank = (group, part) => {
+      const parts = SORT_PARTS[group];
+      const at = parts ? parts.indexOf(part) : 0;
+      return at < 0 ? parts.length : at;
+    };
+    for (const cell of list) [cell.group, cell.part] = sortGroupOf(cell, shopIds);
+    return list.sort((a, b) => rank.get(a.group) - rank.get(b.group) || partRank(a.group, a.part) - partRank(b.group, b.part) || order(a, b));
+  }
   // A piece of gear's details, one line each, for the tooltip
   function gearLines(gear) {
     const lines = [`Durability ${formatNumber(gear.dura)} / ${formatNumber(gear.maxDura)}`];
@@ -345,19 +481,19 @@ const GBBank = (() => {
     const found = new Map();
     for (const entry of places) {
       const id = entry.ch?.key || entry.character;
-      if (!found.has(id)) found.set(id, {name: entry.character, key: entry.ch?.key || '', server: entry.ch?.shownServer || '', count: 0, at: {bag: [], bank: [], shop: []}});
+      if (!found.has(id)) found.set(id, {name: entry.character, key: entry.ch?.key || '', server: entry.ch?.shownServer || '', count: 0, at: {worn: [], bag: [], bank: [], shop: []}});
       const row = found.get(id);
       row.count += entry.count;
       row.at[entry.shop ? 'shop' : entry.place].push(entry);
     }
     return [...found.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).map(row => {
       const parts = [];
-      for (const place of ['bag', 'bank', 'shop']) {
+      for (const place of ['worn', 'bag', 'bank', 'shop']) {
         const list = row.at[place];
         if (!list.length) continue;
         const count = list.reduce((sum, entry) => sum + entry.count, 0);
-        parts.push(list.length === 1 ? locationLabel(list[0].place, list[0].slot) + (count > 1 ? ` × ${formatNumber(count)}` : '')
-          : `${PLACE[place]} × ${formatNumber(count)} in ${list.length} slots`);
+        parts.push(list.length === 1 ? locationLabel(list[0].place, list[0].slot, list[0].where) + (count > 1 ? ` × ${formatNumber(count)}` : '')
+          : place === 'worn' ? `Worn (${list.map(entry => slotLabel(entry.where)).join(', ')})` : `${PLACE[place]} × ${formatNumber(count)} in ${list.length} slots`);
       }
       return {name: row.name, key: row.key, server: row.server, count: row.count, parts};
     });
@@ -547,12 +683,82 @@ const GBBank = (() => {
     if (linked) return `${linked} › ${rom}`;
     return loginScreen(row).steam ? rom : `${rom}, ${locked && locked() ? 'accounts locked' : 'not linked'}`;
   };
-  function searchRows(rows, text) {
-    const wanted = String(text || '').trim().toLowerCase();
-    if (!wanted) return rows;
-    return rows.filter(row => row.name.toLowerCase().includes(wanted) || String(row.server || '').toLowerCase().includes(wanted)
-      || String(row.account || '').toLowerCase().includes(wanted) || String(row.rom || '').toLowerCase().includes(wanted) || String(row.class || '').toLowerCase().includes(wanted)
-      || String(row.character?.note || '').toLowerCase().includes(wanted));
+  // The Characters and Currencies searches' filters, each one word: #level>=100, #classes>3, #dailytokens>5k,
+  // #charges>10k, #gold<1m, #class=mage and so on, with k, m and b for thousands, millions and billions. A word on its
+  // own, such as #charges, means more than none. extra.mailbox(key): its mailbox, for #mail and #mailgold.
+  const AMOUNT = /^(\d+(?:\.\d+)?)([kmb]?)$/i;
+  const SCALE = {'': 1, k: 1e3, m: 1e6, b: 1e9};
+  const ownMoney = key => character => Number((character.currencies || []).find(item => item.key === key)?.amount) || 0;
+  const CHARACTER_FILTERS = {
+    level: character => Number(character.level) || 0,
+    classes: character => (character.classes || []).filter(item => Number(item.level) > 0).length,
+    classlevels: character => (character.classes || []).reduce((sum, item) => sum + (Number(item.level) || 0), 0),
+    gold: character => Number(character.gold) || 0,
+    dailytokens: ownMoney('billdin'),
+    charges: ownMoney('transmutor'),
+    diamonds: ownMoney('account'),
+    rubies: ownMoney('bonus'),
+    stones: character => transferStones(character),
+    bag: character => (character.bag || []).length,
+    bank: character => (character.bank || []).length,
+    bagfree: character => Math.max(0, (Number(character.bagSlots) || 0) - (character.bag || []).length),
+    bankfree: character => Math.max(0, (Number(character.bankSlots) || 0) - (character.bank || []).length),
+    worn: character => (Array.isArray(character.equip) ? character.equip.length : 0),
+    mail: (character, extra) => extra?.mailbox?.(character.key)?.count || 0,
+    mailgold: (character, extra) => extra?.mailbox?.(character.key)?.gold || 0,
+  };
+  const FILTER_NAMES = {lvl: 'level', classtotal: 'classes', class_total: 'classes', dailytoken: 'dailytokens', tokens: 'dailytokens', token: 'dailytokens',
+    charge: 'charges', transmutor: 'charges', diamond: 'diamonds', ruby: 'rubies', transferstones: 'stones', stone: 'stones', transfer: 'stones', mails: 'mail'};
+  // Yes or no, with no number
+  const CHARACTER_FLAGS = {needslogin: character => !!character.stale, steam: character => !!character.steam,
+    nobank: character => !bankKnown(character), linked: (character, extra, row) => !!row?.account};
+  const lettersOf = text => String(text || '').toLowerCase().replace(/[^a-zÀ-￿]/g, '');
+  function compare(have, how, limit) {
+    return how === '>' ? have > limit : how === '<' ? have < limit : how === '>=' || how === '=>' ? have >= limit
+      : how === '<=' || how === '=<' ? have <= limit : how === '!=' ? have !== limit : have === limit;
+  }
+  function characterFilters(text, extra) {
+    const tests = [];
+    const words = [];
+    const all = String(text || '');
+    // Only a search with a filter in it is split at its commas and spaces: a note can hold either
+    if (!/(^|[\s,])#[a-z]/i.test(all)) return {tests, text: all.trim()};
+    for (const word of all.split(/[\s,]+/)) {
+      if (!word) continue;
+      const found = /^#([a-z_]+)(?:(>=|=>|<=|=<|!=|>|<|=)(.*))?$/i.exec(word);
+      if (!found) { words.push(word); continue; }
+      const name = FILTER_NAMES[found[1].toLowerCase()] || found[1].toLowerCase();
+      const [, , how, value = ''] = found;
+      if (CHARACTER_FLAGS[name] && !how) {
+        tests.push((character, row) => CHARACTER_FLAGS[name](character, extra, row));
+        continue;
+      }
+      if (name === 'class' && (how === '=' || how === '!=') && value) {
+        const wanted = value.toLowerCase();
+        const has = character => [character.class, ...(character.classes || []).map(item => item.name)].some(item => String(item || '').toLowerCase().startsWith(wanted));
+        tests.push(character => has(character) === (how === '='));
+        continue;
+      }
+      // A number, or any currency by the start of its name: #honor>1000
+      const field = CHARACTER_FILTERS[name] || (name.length >= 3 ? character => {
+        const money = (character.currencies || []).find(item => lettersOf(currencyName(item)).startsWith(name));
+        return Number(money?.amount) || 0;
+      } : null);
+      const amount = how ? AMOUNT.exec(value) : null;
+      if (!field || (how && !amount)) { words.push(word); continue; }
+      const limit = amount ? Number(amount[1]) * SCALE[amount[2].toLowerCase()] : 0;
+      tests.push(character => compare(field(character, extra), how || '>', limit));
+    }
+    return {tests, text: words.join(' ')};
+  }
+  function searchRows(rows, text, extra = null) {
+    const filters = characterFilters(text, extra);
+    const wanted = filters.text.toLowerCase();
+    if (!wanted && !filters.tests.length) return rows;
+    return rows.filter(row => filters.tests.every(test => test(row.character || {}, row)) && (!wanted || row.name.toLowerCase().includes(wanted)
+      || String(row.server || '').toLowerCase().includes(wanted) || String(row.account || '').toLowerCase().includes(wanted)
+      || String(row.rom || '').toLowerCase().includes(wanted) || String(row.class || '').toLowerCase().includes(wanted)
+      || String(row.character?.note || '').toLowerCase().includes(wanted)));
   }
   // Diamonds and Rubies belong to an account, and every character on it saved the same balance, so each account counts
   // once, as of the newest save on it. A character no login screen has listed could be on any account: it isn't counted,
@@ -607,7 +813,7 @@ const GBBank = (() => {
     root.last = {characters, options};
     const how = options.how || 'server';
     const table = currencyTable(characters, root.sorting.key, root.sorting.descending);
-    const rows = searchRows(table.rows, options.search);
+    const rows = searchRows(table.rows, options.search, options);
     const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
     for (const group of groups) {
       group.totals = {};
@@ -649,7 +855,7 @@ const GBBank = (() => {
     root.last = {characters, options};
     root.openCharacter = options.openCharacter;
     const how = options.how || 'server';
-    const rows = searchRows(rosterRows(characters, root.sorting.key, root.sorting.descending, options.accountName, options.romTitle), options.search);
+    const rows = searchRows(rosterRows(characters, root.sorting.key, root.sorting.descending, options.accountName, options.romTitle), options.search, options);
     const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
     // A heading that names the accounts says them for every line under it
     const showAccounts = how !== 'account';
@@ -700,22 +906,129 @@ const GBBank = (() => {
     {key: 'total', name: 'How many'},
     {key: 'characters', name: 'Characters'},
   ];
-  // options: {data: {entries}} from the Bank tab, so the stats count the same characters it shows
+  // The template a stat is shown on: a tier 6 mana stone, as the game lists one, in its own colours
+  const TEMPLATE_STONE = '202845';
+  const STONE_EFFECT = 'f0610d';
+  const EFFECT_LINE = /^[+-]\s*\d/;
+  // What each stat does, from the game's own saved tooltips: a stat's name stands beside the first of its effects, and
+  // the rest follow on the lines below. The way most items show a stat wins, a mana stone's counting double.
+  // Returns {effects: Map stat -> [effect lines], header: the template stone's first two lines}.
+  function statEffects(list) {
+    const seen = new Map();
+    let header = null;
+    const tally = (stat, lines, weight) => {
+      if (!seen.has(stat)) seen.set(stat, new Map());
+      const ways = seen.get(stat);
+      const key = lines.join('\n');
+      ways.set(key, (ways.get(key) || 0) + weight);
+    };
+    for (const entry of list || []) {
+      if (!Array.isArray(entry.tip)) continue;
+      if (!header && String(entry.id) === TEMPLATE_STONE && entry.tip.length >= 2) header = entry.tip.slice(0, 2).map(line => String(line[1] || ''));
+      if (!entry.stats?.length) continue;
+      const names = new Set(entry.stats);
+      let current = null, lines = [];
+      const finish = () => {
+        if (current && lines.length) tally(current, lines, entry.stone ? 2 : 1);
+        current = null;
+        lines = [];
+      };
+      for (const line of entry.tip) {
+        const left = String(line[1] || ''), right = String(line[3] || '');
+        if (right && names.has(right) && EFFECT_LINE.test(left)) {
+          finish();
+          current = right;
+          lines = [left];
+        } else if (current && !right && EFFECT_LINE.test(left)) lines.push(left);
+        else finish();
+      }
+      finish();
+    }
+    const effects = new Map();
+    for (const [stat, ways] of seen) effects.set(stat, [...ways.entries()].sort((a, b) => b[1] - a[1])[0][0].split('\n'));
+    return {effects, header: header || ['Mana Stone Tier 6', 'Cannot be sold']};
+  }
+  // The stat on a tier 6 mana stone, as lines for the page's game tooltip: [colour, left, colour, right]
+  function templateTip(stat, known) {
+    const lines = known.effects.get(stat);
+    if (!lines) return null;
+    return [['ffffff', known.header[0]], ['ffffff', known.header[1]],
+      ...lines.map((text, at) => (at === 0 ? [STONE_EFFECT, text, 'ffffff', stat] : [STONE_EFFECT, text]))];
+  }
+  // A stat's name, hovered: the stat as the game shows it on a tier 6 mana stone
+  function showStatTip(tooltip, event, stat, known) {
+    const make = (tag, className, text) => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    };
+    const lines = tipLines(templateTip(stat, known));
+    const nodes = [];
+    if (lines.length) {
+      const game = make('div', 'game-tip');
+      for (const line of lines) {
+        const row = make('div', 'game-tip-line');
+        const left = make('span', 'game-tip-left', line.left);
+        if (line.leftColor) left.style.color = line.leftColor;
+        row.append(left);
+        if (line.right) {
+          const right = make('span', 'game-tip-right', line.right);
+          if (line.rightColor) right.style.color = line.rightColor;
+          row.append(right);
+        }
+        game.append(row);
+      }
+      nodes.push(game, make('span', 'bank-tip-hint', 'As it shows on a tier 6 mana stone, from the game’s own tooltips.'));
+    } else {
+      nodes.push(make('strong', '', stat), make('span', 'bank-tip-type', 'What it does isn’t known yet: it comes from the game’s tooltip of an item that has it, which one login with its holder on the current version saves.'));
+    }
+    tooltip.replaceChildren(...nodes);
+    tooltip.hidden = false;
+    tooltip.style.left = Math.max(4, Math.min(event.clientX + 14, window.innerWidth - tooltip.offsetWidth - 8)) + 'px';
+    tooltip.style.top = Math.max(4, Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 8)) + 'px';
+  }
+  // options: {data: {entries}} from the Bank tab, so the stats count the same characters it shows; all: every entry,
+  // whose tooltips say what each stat does; tooltip: the element hovering a stat shows it in
   function renderStats(root, characters, options = {}) {
     root.sorting = root.sorting || {key: 'total', descending: true};
     root.collapsed = root.collapsed || new Set();
     if (!root.listening) {
       root.listening = true;
       for (const id of ['stat-search', 'stat-kind']) root.querySelector('#' + id).addEventListener('input', () => renderStats(root, root.characters, root.options));
+      const table = root.querySelector('table');
+      let hovered = null;
+      table.addEventListener('mouseover', event => {
+        const cell = event.target?.closest?.('[data-stat]');
+        const tooltip = root.options?.tooltip;
+        if (!tooltip) return;
+        if (!cell) { if (hovered) { hovered = null; tooltip.hidden = true; } return; }
+        if (cell === hovered) return;
+        hovered = cell;
+        showStatTip(tooltip, event, cell.dataset.stat, root.known);
+      });
+      table.addEventListener('mousemove', event => {
+        const tooltip = root.options?.tooltip;
+        if (!hovered || !tooltip || tooltip.hidden) return;
+        tooltip.style.left = Math.max(4, Math.min(event.clientX + 14, window.innerWidth - tooltip.offsetWidth - 8)) + 'px';
+        tooltip.style.top = Math.max(4, Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 8)) + 'px';
+      }, {passive: true});
+      table.addEventListener('mouseleave', () => { hovered = null; if (root.options?.tooltip) root.options.tooltip.hidden = true; });
     }
     root.characters = characters;
     root.options = options;
+    // Worked out again only when the data is new
+    if (root.knownFrom !== options.all) {
+      root.knownFrom = options.all;
+      root.known = statEffects(options.all || options.data?.entries || []);
+    }
     root.redraw = () => renderStats(root, root.characters, root.options);
     const rows = statTable(options.data || characters, root.querySelector('#stat-kind').value, root.querySelector('#stat-search').value.trim(), root.sorting.key, root.sorting.descending);
     const owners = row => row.owners.slice(0, 12).map(owner => `<span class="owner" ${owner.key ? `data-char="${escapeHtml(owner.key)}"` : ''}>${escapeHtml(owner.name)} ${escapeHtml(formatNumber(owner.count))}</span>`).join(', ')
       + (row.owners.length > 12 ? ` <span class="hint">and ${formatNumber(row.owners.length - 12)} more</span>` : '');
     groupedTable(root, {
-      columns: [...STAT_COLUMNS.map(column => ({...column, number: !column.text, cell: row => escapeHtml(column.text ? row.stat : formatNumber(row[column.key]))})),
+      columns: [...STAT_COLUMNS.map(column => ({...column, number: !column.text,
+        cell: row => (column.text ? `<span class="stat-name" data-stat="${escapeHtml(row.stat)}" tabindex="0">${escapeHtml(row.stat)}</span>` : escapeHtml(formatNumber(row[column.key])))})),
         {key: 'breakdown', name: 'Who has them', text: true, cell: owners}],
       groups: [{key: '', title: null, sub: '', rows}],
       empty: 'No stats saved yet. Stats appear once a character has logged in and out on the current build.',
@@ -743,7 +1056,13 @@ const GBBank = (() => {
   // tooltip's element, review(kind): open the Characters page on 'login' or 'bank', favouritesChanged(count)}
   function create(root, send, status, onData, menu, options = {}) {
     const roster = options.roster || null;
-    const state = {characters: [], entries: [], made: null, total: -1, sort: 'name', cells: [], names: new Map(), loadedAt: 0, layout: 'grid', active: -1};
+    const state = {characters: [], entries: [], made: null, total: -1, sort: 'name', byType: false, cells: [], names: new Map(), loadedAt: 0, layout: 'grid', active: -1};
+    // The items someone keeps in the item shop tab, worked out once for each load
+    let shopKnown = null;
+    function shopIds() {
+      if (!shopKnown || shopKnown.entries !== state.entries) shopKnown = {entries: state.entries, ids: new Set(state.entries.filter(entry => entry.shop).map(entry => String(entry.id)))};
+      return shopKnown.ids;
+    }
     const settings = {excluded: new Set(), whitelist: new Set(), excludeBound: false};
     const rules = {on: true, types: new Set(DEFAULT_RULES.types), stats: DEFAULT_RULES.stats, always: new Set(), favourites: new Map(), quality: true};
     const icons = new Map();
@@ -754,6 +1073,8 @@ const GBBank = (() => {
     const hasDom = typeof window !== 'undefined' && !!grid?.appendChild;
     const storage = typeof chrome !== 'undefined' && chrome.storage ? chrome.storage.local : null;
     let columns = 1, rows = 0, frame = 0, space = null, typingTimer = 0, gridDirty = false, gridFrame = 0, loading = null, panelCell = null;
+    // The lowest tier a slot's corner shows, kept in this Chrome
+    let tierFrom = TIER_FROM;
     const pool = [];
     const shape = () => LAYOUTS[state.layout];
     // The same item again after the grid was drawn anew: cells are made each time, the saved entries aren't
@@ -862,7 +1183,7 @@ const GBBank = (() => {
     }
     // Tier upper left, HD upper right, plus lower left. A stack of different kinds has no one answer, so it shows none.
     function fillMarks(slot, cell) {
-      const marks = slotMarks(cell);
+      const marks = slotMarks(cell, tierFrom);
       slot.tierMark.textContent = marks.tier;
       slot.durabilityMark.textContent = marks.durability;
       slot.plusMark.textContent = marks.plus;
@@ -873,12 +1194,12 @@ const GBBank = (() => {
       const favourite = rules.favourites.has(cell.key);
       slot.className = 'bank-slot filled' + (excluded ? ' bank-excluded' : '') + (rules.quality && cell.quality ? ` q${cell.quality}` : '') + (favourite ? ' is-favourite' : '')
         + (index === state.active ? ' is-active' : '') + (sameCell(panelCell, cell) ? ' is-open' : '');
-      slot.setAttribute('aria-label', [`${cell.name}, ${formatNumber(cell.total)}`, ...slotMarks(cell).words].join(', '));
+      slot.setAttribute('aria-label', [`${cell.name}, ${formatNumber(cell.total)}`, ...slotMarks(cell, tierFrom).words].join(', '));
       slot.setAttribute('aria-selected', String(index === state.active));
       slot.letters.textContent = cell.name.slice(0, 2);
       if (shape().rows) {
         const who = new Set(cell.places.map(place => place.ch?.key || place.character));
-        slot.nameText.replaceChildren(cell.name, make('small', '', [cell.type, cell.quality ? QUALITY[cell.quality] : ''].filter(Boolean).join(' · ')));
+        slot.nameText.replaceChildren(cell.name, make('small', '', [state.byType && cell.group ? [cell.group, cell.part].filter(Boolean).join(': ') : cell.type, cell.quality ? QUALITY[cell.quality] : ''].filter(Boolean).join(' · ')));
         slot.nameText.style.color = cell.color ? `#${cell.color}` : '';
         slot.whereText.replaceChildren(who.size === 1 ? cell.places[0].character : `${formatNumber(who.size)} characters`,
           make('small', '', [...new Set(cell.places.map(place => PLACE[place.shop ? 'shop' : place.place]))].join(' + ')));
@@ -950,7 +1271,8 @@ const GBBank = (() => {
       const test = matcher(filters());
       const list = [];
       for (const entry of state.entries) if (test(entry) && (showHidden || !isHidden(entry, settings))) list.push(entry);
-      state.cells = cells(list, currentRules()).sort(SORTS[state.sort] || SORTS.name);
+      const order = SORTS[state.sort] || SORTS.name;
+      state.cells = state.byType ? sortByType(cells(list, currentRules()), order, shopIds()) : cells(list, currentRules()).sort(order);
       if (state.active >= state.cells.length || fromTop) state.active = -1;
       if (hasDom) {
         layout();
@@ -988,9 +1310,51 @@ const GBBank = (() => {
       const unseen = shown.filter(character => !bankKnown(character)).length;
       el('coverage-login').hidden = !stale;
       el('coverage-bank').hidden = !unseen;
-      el('bank-coverage').hidden = !stale && !unseen;
       el('coverage-login-text').textContent = stale === 1 ? '1 character needs a login on the current version' : `${formatNumber(stale)} characters need a login on the current version`;
       el('coverage-bank-text').textContent = unseen === 1 ? '1 bank not recorded: log in once with that character' : `${formatNumber(unseen)} banks not recorded: log in once with each`;
+      // Mail waiting to be collected, and the gold in it: as each mailbox was when last open, with the mail sent since
+      const boxes = options.mailboxes ? options.mailboxes() : null;
+      const mail = boxes && typeof GBMail !== 'undefined' ? GBMail.totals(boxes, shown) : null;
+      el('coverage-mail').hidden = !mail?.mails;
+      el('coverage-mail-gold').hidden = !mail?.gold;
+      if (mail?.mails) {
+        el('coverage-mail-text').textContent = `${counted(mail.mails, 'mail')} waiting in ${formatNumber(mail.characters)} ${mail.characters === 1 ? 'mailbox' : 'mailboxes'}`
+          + (mail.expiring ? ` · ${formatNumber(mail.expiring)} ${mail.expiring === 1 ? 'expires' : 'expire'} within 48 hours` : '');
+        el('coverage-mail').classList.toggle('is-urgent', mail.expiring > 0);
+        el('coverage-mail-gold-text').textContent = `${mail.estimated ? 'About ' : ''}${formatCompact(mail.gold)} gold waiting in mailboxes`;
+        el('coverage-mail-gold-text').title = `${formatNumber(mail.gold)} gold` + (mail.estimated ? `, counting ${counted(mail.estimated, 'mail')} sent since the mailbox was last open` : ', as each mailbox was when last open');
+      }
+      el('bank-coverage').hidden = !stale && !unseen && !mail?.mails;
+      renderServerPick();
+    }
+    // The server to show, picked in two clicks: all of them, a region's, or one server. It sets the same view as the
+    // region and the server ticks at the top, so every page follows it.
+    function renderServerPick() {
+      const label = el('bank-server-label');
+      if (!label || !roster || typeof GBRoster === 'undefined') return;
+      const view = roster.view;
+      const servers = GBRoster.serverList(roster.characters(), {...view, region: 'all', serversOff: new Set()}).filter(server => server.count > 0);
+      const inView = servers.filter(server => (view.region === 'all' || !server.region || server.region === view.region) && !view.serversOff.has(server.key));
+      const regionName = id => GBRoster.REGIONS[id]?.name || 'Other servers';
+      label.textContent = inView.length === servers.length ? 'All' : inView.length === 1 ? inView[0].name
+        : !view.serversOff.size && view.region !== 'all' ? regionName(view.region) : `${formatNumber(inView.length)} servers`;
+      const list = el('bank-server-list');
+      if (!list || !el('bank-server-pick')?.open) return;
+      const pressed = on => ` aria-pressed="${on}"`;
+      const parts = [`<button type="button" class="server-pick-all" data-pick-region="all"${pressed(inView.length === servers.length)}>All servers <span class="hint">${formatNumber(servers.reduce((sum, server) => sum + server.count, 0))}</span></button>`];
+      for (const id of [...Object.keys(GBRoster.REGIONS), '']) {
+        const members = servers.filter(server => (server.region || '') === id);
+        if (!members.length) continue;
+        const whole = id && view.region === id && !view.serversOff.size;
+        parts.push(id ? `<button type="button" class="server-pick-region" data-pick-region="${escapeHtml(id)}"${pressed(!!whole)}>${escapeHtml(regionName(id))}</button>`
+          : `<span class="server-pick-region">${escapeHtml(regionName(id))}</span>`);
+        for (const server of members) {
+          const only = inView.length === 1 && inView[0].key === server.key;
+          parts.push(`<button type="button" class="server-pick-server" data-pick-server="${escapeHtml(server.key)}" data-pick-in="${escapeHtml(server.region || 'all')}"${pressed(only)}>`
+            + `${escapeHtml(server.name)} <span class="hint">${formatNumber(server.count)}</span></button>`);
+        }
+      }
+      list.innerHTML = parts.join('');
     }
     // Every filter that narrows what's listed, apart from the characters, which have their own reset
     function filtersActive() {
@@ -1465,7 +1829,10 @@ const GBBank = (() => {
       el(id)?.addEventListener('change', () => renderGrid(true));
     }
     el('bank-stack').addEventListener('change', () => { renderStacking(); renderGrid(); });
-    el('bank-sort').addEventListener('change', event => { state.sort = event.target.value; renderGrid(true); });
+    // The order, and whether each type keeps together, kept in this Chrome
+    const keepSort = () => { if (storage) storage.set({bankSort: {by: state.sort, type: state.byType}}).catch(() => {}); };
+    el('bank-sort').addEventListener('change', event => { state.sort = event.target.value; keepSort(); renderGrid(true); });
+    el('bank-sort-type')?.addEventListener('change', event => { state.byType = event.target.checked; keepSort(); renderGrid(true); });
     el('bank-update').addEventListener('click', update);
     el('bank-exclude-bound').addEventListener('change', event => { settings.excludeBound = event.target.checked; settingsChanged(); });
     el('bank-exclusion-add').addEventListener('click', () => addFromBox(settings.excluded, settings.whitelist));
@@ -1502,6 +1869,23 @@ const GBBank = (() => {
     el('bank-reset-filters').addEventListener('click', resetFilters);
     el('coverage-login-review').addEventListener('click', () => options.review?.('login'));
     el('coverage-bank-review').addEventListener('click', () => options.review?.('bank'));
+    el('coverage-mail-review')?.addEventListener('click', () => options.review?.('mail'));
+    el('coverage-mail-gold-review')?.addEventListener('click', () => options.review?.('mail'));
+    el('bank-server-pick')?.addEventListener('toggle', renderServerPick);
+    el('bank-server-list')?.addEventListener('click', event => {
+      const button = event.target?.closest?.('[data-pick-region], [data-pick-server]');
+      if (!button || !roster?.setView) return;
+      if (button.dataset.pickServer !== undefined) roster.setView(button.dataset.pickIn, [button.dataset.pickServer]);
+      else roster.setView(button.dataset.pickRegion);
+      el('bank-server-pick').open = false;
+    });
+    // The lowest tier a corner shows
+    el('bank-tier-from')?.addEventListener('change', event => {
+      tierFrom = Number(event.target.value) || TIER_FROM;
+      repaint();
+      if (panelCell) drawPanel();
+      if (storage) storage.set({bankTierFrom: tierFrom}).catch(() => {});
+    });
     el('bank-select-clear')?.addEventListener('click', () => roster?.clearScope());
     el('bank-select-use')?.addEventListener('click', () => roster?.useSelection());
     el('bank-select-shown')?.addEventListener('click', () => {
@@ -1612,8 +1996,18 @@ const GBBank = (() => {
       });
     }
     if (storage) {
-      storage.get(['bankExclusions', 'bankRules', 'bankLayout', 'bankMarkColors']).then(({bankExclusions: saved, bankRules: kept, bankLayout, bankMarkColors}) => {
+      storage.get(['bankExclusions', 'bankRules', 'bankLayout', 'bankMarkColors', 'bankTierFrom', 'bankSort']).then(({bankExclusions: saved, bankRules: kept, bankLayout, bankMarkColors, bankTierFrom, bankSort}) => {
         setLayout(bankLayout || 'grid', false);
+        if (bankSort && SORTS[bankSort.by]) {
+          state.sort = bankSort.by;
+          state.byType = bankSort.type === true;
+          if (el('bank-sort')) el('bank-sort').value = state.sort;
+          if (el('bank-sort-type')) el('bank-sort-type').checked = state.byType;
+        }
+        if (Number.isInteger(bankTierFrom) && bankTierFrom >= 1 && bankTierFrom <= 30) {
+          tierFrom = bankTierFrom;
+          if (el('bank-tier-from')) el('bank-tier-from').value = String(tierFrom);
+        }
         if (bankMarkColors) {
           for (const name of Object.keys(MARK_COLORS)) if (/^#[0-9a-f]{6}$/i.test(bankMarkColors[name] || '')) markColors[name] = bankMarkColors[name];
           showMarkColors();
@@ -1641,7 +2035,14 @@ const GBBank = (() => {
       }).catch(() => {});
     }
     return {
-      reload, update, renderGrid, renderFavourites, closePanel,
+      reload, update, renderGrid, renderFavourites, closePanel, resetFilters,
+      tierFrom: () => tierFrom,
+      // A search on the Bank page, from elsewhere: an item's name, shown at once
+      find(text) {
+        el('bank-search').value = String(text || '');
+        el('bank-search-in').value = '';
+        renderGrid(true);
+      },
       // The same characters prepared again: a server set by hand moves them
       reprepare() { if (state.characters.length) apply(state.characters, state.made); },
       // The Bank tab was opened: draw what changed while it was hidden
@@ -1656,6 +2057,7 @@ const GBBank = (() => {
     };
   }
   return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, DEFAULT_RULES,
+    quickFilters, wornGear, plusOf, slotLabel, SLOT_LABELS, TIER_FROM, statEffects, templateTip, SORT_GROUPS, sortGroupOf, sortByType, SORTS,
     formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
-    rosterRows, renderRoster, statTable, renderStats, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
+    rosterRows, renderRoster, statTable, renderStats, searchRows, characterFilters, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
 })();

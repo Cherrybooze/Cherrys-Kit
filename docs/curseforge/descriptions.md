@@ -42,8 +42,8 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Recent changes
 
+- **0.4.31**: the guided setup runs from wherever the ZIP was extracted: it lists the Runes of Magic installs it finds, Steam or Gameforge, and asks which to set up, or takes a typed folder, or shows how to put the files in the game by hand. On a first setup it asks whether the kit uses Ultimate Mail Mod or zMail. The hub reads that choice from `CherrysKit\Mailbox.txt`, and with zMail it keeps Ultimate Mail Mod off and says why in `/ck`.
 - **0.4.30**: Steam and Gameforge installs side by side. The setup finds both, or asks where the other one is, and puts the kit in each. They share one Global Bank data folder, and the Chrome extension stays with the Gameforge install.
-- **0.4.29**: its manifest loads zBag's new stat search file.
 - **Guided setup**: the Hub zip carries `!setup_cherryskit.bat`. Double-click it after extracting, and any time you want to update: it says which addons are out of date against the latest release on GitHub and updates them with the old versions kept, asks before installing anything your addons can use that's missing, moves older copies out of the way, puts the login screen in place and walks you through the Chrome extension.
 
 ## Features
@@ -272,6 +272,7 @@ In Cherry's Kit, `/wa` opens rom weakauras (`/rwa` alone opens the kit hub; `/rw
 - `/rwa size 60-160`: window size in percent (also the - and + buttons)
 - `/rwa volume 0-100`, `/rwa loud`: aura sound volume
 - `/rwa soundtest`, `/rwa soundext wav|mp3|ogg`, `/rwa channeltest`, `/rwa channel interface|effects|both`: sound checks
+- `/rwa layer under|over`: draw auras under (default) or over your bags, bank and other windows
 - `/rwa hits`, `/rwa hits reset`: what the Past second trigger has counted
 - `/rwa kitty [name]`: what the Kitty tracker sees for a kitty
 - `/rwa threat`: what the Threat trigger reads from your target's hate list
@@ -411,6 +412,7 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 ## Recent changes
 
+- **5.07-ck20**: *Numbers on mouseover only* sits next to *Show bag slot numbers* in **/zb**, with a new *Slot number font size* setting (- and +) right under it.
 - **5.07-ck19**: slot numbers show only on the slot under the mouse; untick *Numbers on mouseover only* in **/zb** to see every number again. Search *#clean* for mana stones without stats, or *#dirty* for mana stones with stats.
 - **5.07-ck18**: the bag and bank search also finds items by their stats. Type a stat name such as *stamina* or *dexterity* and every item with that stat lights up. Numbers aren't needed.
 - **5.07-ck17**: a smaller file to read at login. The slot numbers on the 220 bag and bank buttons share one template, so that file went from 229 KB to 123 KB with the same buttons.
@@ -489,6 +491,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.2**: records what each character wears, shown in the Bank and in a character profile like the game's, and its mailbox and the mail it sends, on a new Mail page with mail about to expire marked. Quick filters such as *#+1>*, *#t10>* and *#equipped=false* on the Bank, and *#level>=100*, *#classes>3* or *#dailytokens>5k* on Characters, a server picker, server regions on the Gold overview, and a stat's effects on hover.
 - **1.6.1**: mana stones and gear with identical stats stack, with a switch beside the Bank's filters. Slots show the tier, plus, durability above 101 and stack count in their own corners, in colours you can pick. *#clean* and *#dirty* find mana stones without or with stats, in the window and on the page.
 - **1.6.0**: a new Global Bank page and popup, with its pages grouped down the side, an item panel, Transfer stones and an Excluded list on Characters, and a Terminal that runs in the helper itself. Selecting characters only changes the Bank when you press Use in Bank.
 - **1.5.9**: logging in is enough to record a character's bank, also when it is empty. No bank visit needed.

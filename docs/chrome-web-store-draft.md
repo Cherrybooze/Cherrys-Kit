@@ -16,6 +16,10 @@ The extension’s session data is cleared when the browser closes or the extensi
 
 The local bridge also writes Windows' time to `CherrysClockStamp.lua` in that same folder whenever Chrome starts or the extension contacts it, so the game's addons can show the real time. That file stays on the player's PC.
 
+The page shows what the game saved for each character: its bags, bank, gold, currencies, what it wears, and its mail (what its mailbox held when last open, and the recipient, subject, gold and items of the mail it sent, the newest 360). All of it is read from the player's own save files through the local helper and stays on the player's PC.
+
+When the player presses **Check for updates**, **Update from GitHub** or **Download and install** on the Addons page, the local helper downloads Cherry's Kit's release files from github.com/Cherrybooze/Cherrys-Kit. Nothing about the player is sent; this is the only time the extension or helper goes online, apart from the Gameforge shop pages the player opens. The data-use declarations should say so.
+
 ## Before submission
 
 - Register and configure the owner's Chrome Web Store developer account, including required verification.

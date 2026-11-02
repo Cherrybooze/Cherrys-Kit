@@ -1,0 +1,5 @@
+1.4-ck1
+
+zMail is pyrr's project (CurseForge). Cherry's Kit has no connection with it other than
+distributing it, with pyrr's permission. The only change in this copy: src/inbox.lua no longer
+opens mails with gold it cannot take at the gold cap, so they keep their 30 days.

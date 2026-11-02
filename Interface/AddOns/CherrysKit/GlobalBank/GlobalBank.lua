@@ -9,6 +9,9 @@
 --                     folder per name, whatever the server, so they share this file (see GB.SettleServer).
 --   GlobalBank_Notes  notes this character wrote (and the window size), until the helper's database
 --                     has them; the helper shares them with every character (see "Notes" below).
+--   GlobalBank_Mail   what this character's mailbox held when it was last open, and the mail it sent (see "Mail"
+--                     below). The helper reads it for the extension's page; the game never loads anyone else's.
+--                     GlobalBank_MailOthers keeps the same name's on other servers, by server.
 --   Helper\          "Start Global Bank helper.bat" in this addon's Helper folder. While its window
 --                     is open it creates Interface\GlobalBankHelper (outside the kit, so the kit stays
 --                     safe to share) and, a few seconds after any character logs out, collects every
@@ -26,11 +29,16 @@
 --   T~token    its main class, the same in every client language
 --   R~a;b;c    everyone the login screen listed with it: its account, on this server
 --   L~steam    it was last saved from Steam
+--   W~count    its equipment was read, and this many slots hold something; each is then
+--   E~slot~count~slotName~name~icon~durability~maxDurability~quality   (the game gives no link for what's worn)
+--   P~mails~gold~itemMails~days~time   its mailbox as last read: mails, gold waiting (not C.O.D.), mails with
+--              items, days until the first mail holding gold or items expires (-1 for none), and when. Only the
+--              mail list's headers are read, with any mail addon, so no mail is opened (opening cuts it to 3 days).
 
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.6.1"
+GB.version = "1.6.2"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -48,6 +56,8 @@ if SaveVariablesPerCharacter then
   SaveVariablesPerCharacter("GlobalBank_Removed")
   SaveVariablesPerCharacter("GlobalBank_Notes")
   SaveVariablesPerCharacter("GlobalBank_Tips")
+  SaveVariablesPerCharacter("GlobalBank_Mail")
+  SaveVariablesPerCharacter("GlobalBank_MailOthers")
 end
 
 -- Per-session state: GlobalBank survives Reload UI, so it is reset here.
@@ -132,8 +142,19 @@ function GB.Serialize(c)
   if c.steam then
     parts[#parts + 1] = "L~steam"
   end
+  if c.mail then
+    local m = c.mail
+    parts[#parts + 1] = table.concat({ "P", tostring(m.mails), tostring(m.gold), tostring(m.items), tostring(m.days), clean(m.when) }, "~")
+  end
   for _, money in ipairs(c.currencies or {}) do
     parts[#parts + 1] = table.concat({ "M", clean(money.key), tostring(money.amount), clean(money.name) }, "~")
+  end
+  if c.equip then
+    parts[#parts + 1] = "W~" .. #c.equip
+    for _, it in ipairs(c.equip) do
+      parts[#parts + 1] = table.concat({ "E", it.slot, it.count, clean(it.where), clean(it.name), clean(it.icon), tostring(it.dura or 0),
+        tostring(it.maxDura or 0), tostring(it.quality or 0) }, "~")
+    end
   end
   add("B", c.bag)
   add("K", c.bank)
@@ -208,8 +229,18 @@ function GB.Parse(text)
     if f[1] == "L" and f[2] == "steam" then
       c.steam = true
     end
+    if f[1] == "P" and tonumber(f[2]) then
+      c.mail = { mails = tonumber(f[2]), gold = tonumber(f[3]) or 0, items = tonumber(f[4]) or 0, days = tonumber(f[5]) or -1, when = f[6] or "" }
+    end
     if f[1] == "M" and f[2] and f[2] ~= "" and tonumber(f[3]) then
       c.currencies[#c.currencies + 1] = { key = f[2], amount = tonumber(f[3]), name = f[4] or "" }
+    end
+    if f[1] == "W" then
+      c.equip = c.equip or {}
+    end
+    if f[1] == "E" and c.equip and tonumber(f[2]) and f[5] then
+      c.equip[#c.equip + 1] = { slot = tonumber(f[2]), count = tonumber(f[3]) or 1, where = f[4] or "", name = f[5], icon = f[6] or "",
+        dura = tonumber(f[7]) or 0, maxDura = tonumber(f[8]) or 0, quality = tonumber(f[9]) or 0 }
     end
     local list = (f[1] == "B" and c.bag) or (f[1] == "K" and c.bank) or nil
     if list and f[4] then
@@ -397,12 +428,13 @@ local function tipPart(line)
   return string.lower(color), text
 end
 
-local function readTipLines(hex)
+-- show(reader) puts the item on the hidden tooltip: a link, or a slot of what the character wears
+local function readTipLines(show)
   local reader = _G.GlobalBankTipReader
   if not reader then
     return ""
   end
-  reader:SetHyperLink("|Hitem:" .. hex .. "|h|h")
+  show(reader)
   reader:Hide()
   -- The game can open its comparison tooltips beside any item tooltip
   if GameTooltip1 then GameTooltip1:Hide() end
@@ -425,14 +457,27 @@ end
 
 function GB.ReadTip(hex)
   if GB.tipCache[hex] == nil then
-    local ok, text = pcall(readTipLines, hex)
+    local ok, text = pcall(readTipLines, function(reader) reader:SetHyperLink("|Hitem:" .. hex .. "|h|h") end)
     GB.tipCache[hex] = ok and text or ""
   end
   return GB.tipCache[hex]
 end
 
+-- What's worn changes with every fight, so its tooltip is read each time, never kept.
+function GB.ReadSlotTip(id)
+  local ok, text = pcall(readTipLines, function(reader) reader:SetInventoryItem("player", id) end)
+  return ok and text or ""
+end
+
 function GB.TipsFor(c)
   local parts, size = {}, 0
+  -- What's worn first: a few lines, and the page's character profile needs them
+  for _, it in ipairs(c.equip or {}) do
+    if it.tip and it.tip ~= "" and size + #it.tip <= GB.TIPS_MAX then
+      parts[#parts + 1] = "E" .. it.slot .. "~" .. it.tip
+      size = size + #it.tip
+    end
+  end
   local function add(tag, list)
     for _, it in ipairs(list or {}) do
       local kept = it.gear or it.stone
@@ -493,6 +538,35 @@ function GB.ReadBag()
   return list, tonumber(open) or 0
 end
 
+-- The character window's slots, by the names GetInventorySlotInfo knows them by ("HeadSlot" and so on)
+GB.EQUIP_SLOTS = { "Head", "Shoulder", "Chest", "Hands", "Waist", "Feet", "Legs", "Back", "MainHand", "SecondaryHand", "Ranged", "Ammo",
+  "Necklace", "Earring0", "Earring1", "Ring0", "Ring1", "Talisman0", "Talisman1", "Talisman2", "Adornment" }
+
+-- What the character wears. The game has no link for a worn item, so its name and everything else come from its
+-- tooltip, as the character window shows it. nil when this client can't say.
+function GB.ReadEquipment()
+  if type(GetInventorySlotInfo) ~= "function" or type(GetInventoryItemTexture) ~= "function" then
+    return nil
+  end
+  local list = {}
+  for _, where in ipairs(GB.EQUIP_SLOTS) do
+    local id = tonumber((call(GetInventorySlotInfo, where .. "Slot")))
+    local icon = id and call(GetInventoryItemTexture, "player", id)
+    if type(icon) == "string" and icon ~= "" then
+      local dura, maxDura, name = call(GetInventoryItemDurable, "player", id)
+      local tip = GB.ReadSlotTip(id)
+      -- The tooltip's first line is the name, with its plus as " + 12"
+      local first = string.match(tip, "^%x+=([^=%^]*)")
+      first = first and string.gsub(first, "%s*%+%s*%d+%s*$", "")
+      list[#list + 1] = { slot = id, where = where, count = math.max(1, tonumber((call(GetInventoryItemCount, "player", id))) or 1),
+        name = (first and first ~= "" and first) or (type(name) == "string" and name) or where, icon = icon,
+        dura = math.floor(tonumber(dura) or 0), maxDura = math.floor(tonumber(maxDura) or 0),
+        quality = tonumber((call(GetInventoryItemQuality, "player", id))) or 0, tip = tip }
+    end
+  end
+  return list
+end
+
 function GB.ReadBank()
   local list = {}
   for i = 1, GB.BANK_SLOTS do
@@ -548,6 +622,19 @@ function GB.SettleServer()
     GlobalBank_Char = others[server]
     GlobalBank_Tips = nil
     GB.chars[mine.name] = GB.Parse(GlobalBank_Char)
+    -- Its mail can't be read again, so it waits in GlobalBank_MailOthers until that character logs in again
+    if type(GlobalBank_MailOthers) ~= "table" then
+      GlobalBank_MailOthers = {}
+    end
+    GlobalBank_MailOthers[mine.server] = GlobalBank_Mail
+    GlobalBank_Mail = GlobalBank_MailOthers[server]
+    GlobalBank_MailOthers[server] = nil
+    if next(GlobalBank_MailOthers) == nil then
+      GlobalBank_MailOthers = nil
+    end
+    if GB.LoadMail then
+      GB.LoadMail()
+    end
   end
   others[server] = nil
   for _, snapshot in pairs(others) do
@@ -567,7 +654,9 @@ function GB.Snapshot(withBank, authoritative)
   c.name, c.live = name, true
   c.cls = call(UnitClass, "player") or c.cls or ""
   c.lvl = call(UnitLevel, "player") or c.lvl or 0
-  local count = tonumber(call(GetPlayerNumClasses))
+  -- Classes learned, and the most there can be: only the first. Passed whole, the second became tonumber's base, and a
+  -- character with as many classes as it can have, or two, saved none.
+  local count = tonumber((call(GetPlayerNumClasses)))
   if count and count > 0 then
     local classes = {}
     for i = 1, count do
@@ -585,6 +674,8 @@ function GB.Snapshot(withBank, authoritative)
   c.roster = GB.ReadRoster(name) or c.roster
   c.steam = CherrysKit and CherrysKit.IsSteam and CherrysKit.IsSteam() or nil
   c.bag, c.bagMax = GB.ReadBag()
+  c.equip = GB.ReadEquipment() or c.equip
+  c.mail = GB.MailboxSummary() or c.mail
   if withBank then
     local bank, max = GB.ReadBank()
     if authoritative or #bank > 0 or (tonumber(max) or 0) > 0 then
@@ -1117,11 +1208,171 @@ function GB.Changed()
 end
 
 ---------------------------------------------------------------------------
+-- Mail. The game only says what a mailbox holds while it's open, so GlobalBank_Mail keeps what it held then, and
+-- the mail this character sent, which the page adds to the mailboxes of your other characters. Records joined by
+-- backticks, fields by "~", times as os.time():
+--   I~time~count     the mailbox was read at this time and held this many mails, each then
+--   N~sender~subject~gold~diamonds~cod~items~minutesLeft~flags   (flags: u unread, r returned)
+--   O~time~to~subject~gold~diamonds~cod~items   a mail that went, oldest first, the last GB.MAIL_SENT_MAX of them
+---------------------------------------------------------------------------
+GB.MAIL_SENT_MAX = 360
+GB.MAIL_READ_MAX = 200
+GB.mailbox = nil      -- {time, list} as the mailbox last was
+GB.mailSent = {}      -- the sent records, oldest first
+GB.mailOut = nil      -- the mail on its way, until the server says it went or failed
+GB.mailMoney, GB.mailDiamonds, GB.mailCOD = 0, 0, 0
+
+local function clock()
+  if os and os.time then
+    local ok, value = pcall(os.time)
+    if ok and type(value) == "number" then
+      return value
+    end
+  end
+  return 0
+end
+GB.Clock = clock
+
+function GB.SerializeMail()
+  local parts = {}
+  if GB.mailbox then
+    parts[#parts + 1] = table.concat({ "I", GB.mailbox.time, #GB.mailbox.list }, "~")
+    for _, mail in ipairs(GB.mailbox.list) do
+      parts[#parts + 1] = table.concat({ "N", clean(mail.from), clean(mail.subject), mail.gold, mail.diamonds, mail.cod, mail.items, mail.minutes,
+        (mail.unread and "u" or "") .. (mail.returned and "r" or "") }, "~")
+    end
+  end
+  for _, mail in ipairs(GB.mailSent) do
+    parts[#parts + 1] = table.concat({ "O", mail.time, clean(mail.to), clean(mail.subject), mail.gold, mail.diamonds, mail.cod, clean(mail.items) }, "~")
+  end
+  return table.concat(parts, "`")
+end
+
+function GB.ParseMail(text)
+  local box, sent = nil, {}
+  if type(text) ~= "string" or text == "" then
+    return box, sent
+  end
+  for _, record in ipairs(split(text, "`")) do
+    local f = split(record, "~")
+    if f[1] == "I" and tonumber(f[2]) then
+      box = { time = tonumber(f[2]), list = {} }
+    elseif f[1] == "N" and box and f[9] then
+      box.list[#box.list + 1] = { from = f[2], subject = f[3], gold = tonumber(f[4]) or 0, diamonds = tonumber(f[5]) or 0, cod = tonumber(f[6]) or 0,
+        items = tonumber(f[7]) or 0, minutes = tonumber(f[8]) or 0, unread = string.find(f[9], "u", 1, true) ~= nil, returned = string.find(f[9], "r", 1, true) ~= nil }
+    elseif f[1] == "O" and tonumber(f[2]) and f[8] then
+      sent[#sent + 1] = { time = tonumber(f[2]), to = f[3], subject = f[4], gold = tonumber(f[5]) or 0, diamonds = tonumber(f[6]) or 0,
+        cod = tonumber(f[7]) or 0, items = f[8] }
+    end
+  end
+  return box, sent
+end
+
+function GB.LoadMail()
+  GB.mailbox, GB.mailSent = GB.ParseMail(GlobalBank_Mail)
+  GB.mailOut = nil
+end
+
+function GB.SaveMail()
+  GlobalBank_Mail = GB.SerializeMail()
+end
+
+-- Every mail's header, while the mailbox is open. Diamonds come as "account" money; cash on delivery is what the
+-- receiver would pay, so it's neither.
+function GB.ReadMailbox()
+  local count = tonumber((call(GetInboxNumItems)))
+  if not count then
+    return
+  end
+  local list = {}
+  for i = 1, math.min(count, GB.MAIL_READ_MAX) do
+    local _, sender, subject, cod, mode, money, daysLeft, _, items, wasRead, wasReturned = call(GetInboxHeaderInfo, i)
+    money = tonumber(money) or 0
+    local diamonds = type(mode) == "string" and string.lower(mode) == "account"
+    list[#list + 1] = { from = sender or "", subject = subject or "", gold = (not cod and not diamonds) and money or 0,
+      diamonds = (not cod and diamonds) and money or 0, cod = cod and money or 0, items = tonumber(items) or 0,
+      minutes = math.max(0, math.floor((tonumber(daysLeft) or 0) * 1440)), unread = not wasRead, returned = wasReturned and true or false }
+  end
+  GB.mailbox = { time = clock(), list = list }
+  GB.SaveMail()
+end
+
+-- The mailbox as last read, in short, for the snapshot's P record: mails, gold waiting (not C.O.D.), mails with items,
+-- and days until the first mail holding gold or items expires (-1 for none). nil before any mailbox was read.
+function GB.MailboxSummary()
+  if not GB.mailbox then
+    return nil
+  end
+  local m = { mails = #GB.mailbox.list, gold = 0, items = 0, days = -1 }
+  for _, mail in ipairs(GB.mailbox.list) do
+    m.gold = m.gold + (mail.gold or 0)
+    if (mail.items or 0) > 0 then
+      m.items = m.items + 1
+    end
+    local days = (mail.minutes or 0) / 1440
+    if ((mail.gold or 0) > 0 or (mail.diamonds or 0) > 0 or (mail.items or 0) > 0) and (m.days < 0 or days < m.days) then
+      m.days = days
+    end
+  end
+  if m.days >= 0 then
+    m.days = math.floor(m.days * 10 + 0.5) / 10
+  end
+  local ok, when = pcall(os.date, "%Y-%m-%d %H:%M", GB.mailbox.time)
+  m.when = ok and type(when) == "string" and when or ""
+  return m
+end
+
+-- SendMail itself carries no money: the game's window and mail addons set it just before.
+function GB.MailMoney(copper, diamonds)
+  GB.mailMoney, GB.mailDiamonds = tonumber(copper) or 0, tonumber(diamonds) or 0
+end
+
+function GB.MailCOD(copper)
+  GB.mailCOD = tonumber(copper) or 0
+end
+
+function GB.MailSending(recipient, subject)
+  local names = {}
+  local function add(name, count)
+    if type(name) == "string" and name ~= "" then
+      count = tonumber(count) or 1
+      names[#names + 1] = clean(name) .. (count > 1 and (" x" .. count) or "")
+    end
+  end
+  if call(GetSendMailMultiItemEnable) then
+    for i = 1, 10 do
+      local name, _, count = call(GetSendMailItem, i)
+      add(name, count)
+    end
+  else
+    local name, _, count = call(GetSendMailItem)
+    add(name, count)
+  end
+  GB.mailOut = { time = clock(), to = clean(recipient), subject = clean(subject), gold = GB.mailMoney, diamonds = GB.mailDiamonds,
+    cod = GB.mailCOD, items = string.sub(table.concat(names, ", "), 1, 160) }
+end
+
+-- The server's answer to the mail on its way: kept when it went, forgotten when it didn't. The money set for it
+-- goes either way, as the game's window clears it too.
+function GB.MailAnswered(went)
+  if went and GB.mailOut and GB.mailOut.to ~= "" then
+    GB.mailSent[#GB.mailSent + 1] = GB.mailOut
+    while #GB.mailSent > GB.MAIL_SENT_MAX do
+      table.remove(GB.mailSent, 1)
+    end
+    GB.SaveMail()
+  end
+  GB.mailOut = nil
+  GB.mailMoney, GB.mailDiamonds, GB.mailCOD = 0, 0, 0
+end
+
+---------------------------------------------------------------------------
 -- Events: the only moments anything is read from the game
 ---------------------------------------------------------------------------
 
 GB.EVENTS = { "VARIABLES_LOADED", "LOADING_END", "BAG_ITEM_UPDATE", "PLAYER_BAG_CHANGED", "PLAYER_MONEY",
-  "BANK_OPEN", "BANK_CLOSE", "BANK_UPDATE", "UNIT_LEVEL", "EXCHANGECLASS_SUCCESS" }
+  "BANK_OPEN", "BANK_CLOSE", "BANK_UPDATE", "UNIT_LEVEL", "EXCHANGECLASS_SUCCESS",
+  "MAIL_SHOW", "MAIL_INBOX_UPDATE", "MAIL_SEND_SUCCESS", "MAIL_FAILED" }
 
 function GB.OnLoad(frame)
   GB.registered = {}
@@ -1163,6 +1414,7 @@ function GB.OnEvent(event)
     GB.started = true
     GB.LoadRemoved()
     GB.LoadNotes()
+    GB.LoadMail()
     if GB.ApplySavedSize then
       GB.ApplySavedSize()
     end
@@ -1200,6 +1452,10 @@ function GB.OnEvent(event)
     GB.bankOpen = false
   elseif event == "PLAYER_MONEY" then
     GB.UpdateMoney() -- right away: gold often changes just before logging out (mail, trade)
+  elseif event == "MAIL_SHOW" or event == "MAIL_INBOX_UPDATE" then
+    GB.ReadMailbox()
+  elseif event == "MAIL_SEND_SUCCESS" or event == "MAIL_FAILED" then
+    GB.MailAnswered(event == "MAIL_SEND_SUCCESS")
   else -- bags changed
     GB.dirty = true
     schedule(GB.QUIET, GB.bankOpen, GB.bankOpen, true)
@@ -1239,7 +1495,8 @@ GB.originals = GB.originals or {}
 GB.wrappers = GB.wrappers or {}
 GB.hooked = {}
 
-local function hookExit(name)
+-- method: the GlobalBank function that sees the call first, with the same arguments
+local function hookBefore(name, method)
   local current = _G[name]
   if type(current) ~= "function" then
     return
@@ -1248,8 +1505,8 @@ local function hookExit(name)
     GB.originals[name] = current
     GB.wrappers[name] = function(...)
       local gb = GlobalBank
-      if gb and gb.started and gb.Flush then
-        pcall(gb.Flush)
+      if gb and gb.started and gb[method] then
+        pcall(gb[method], ...)
       end
       return gb.originals[name](...)
     end
@@ -1259,8 +1516,12 @@ local function hookExit(name)
 end
 
 for _, name in ipairs({ "Logout", "QuitGame", "ReloadUI" }) do
-  hookExit(name)
+  hookBefore(name, "Flush")
 end
+-- Mail goes out through these, from the game's own mail window and from mail addons alike
+hookBefore("SendMail", "MailSending")
+hookBefore("SetSendMailMoney", "MailMoney")
+hookBefore("SetSendMailCOD", "MailCOD")
 
 function GB.OnUpdate(elapsed)
   if timer == nil then
@@ -1401,7 +1662,9 @@ function GB.Probe()
   end
   table.sort(hooks)
   add("events registered " .. table.concat(GB.registered or {}, " ") .. "; seen " .. table.concat(seen, " ")
-    .. "; save before " .. (#hooks > 0 and table.concat(hooks, " ") or "nothing"))
+    .. "; hooked " .. (#hooks > 0 and table.concat(hooks, " ") or "nothing"))
+  add("mail: " .. (GB.mailbox and (#GB.mailbox.list .. " in the mailbox when last open") or "mailbox not open yet") .. ", "
+    .. #GB.mailSent .. " sent kept; worn: " .. (c and c.equip and (#c.equip .. " items") or "not read yet"))
   local function shown(f)
     if not f then
       return "missing"

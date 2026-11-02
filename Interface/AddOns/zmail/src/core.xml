@@ -1,0 +1,177 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+    <Button name="ZMailFrame_MinimapButton" parent="UIParent" inherits="MinimapButtonTemplate" hidden="true">
+        <Size>
+            <AbsDimension x="24" y="24" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="MinimapViewFrame" relativePoint="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="0" y="0" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentFlash" file="Interface/Minimap/minimapbutton_flash" alphaMode="ADD" hidden="true">
+                    <Size>
+                        <AbsDimension x="32" y="32" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="CENTER" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>
+                this:RegisterForClicks("LeftButton", "RightButton")
+            </OnLoad>
+            <OnClick>
+                zmail.MinimapButton_OnClick(this, key)
+            </OnClick>
+            <OnEnter>
+                zmail.MinimapButton_OnEnter(this)
+            </OnEnter>
+            <OnLeave>
+                GameTooltip:Hide()
+            </OnLeave>
+        </Scripts>
+		<NormalTexture file="interface/addons/ZMail/res/Mail.tga"/>
+		<PushedTexture file="interface/addons/ZMail/res/Mail_pushed"/>
+		<DisabledTexture file="interface/addons/ZMail/res/Mail_Disabled.tga"/>
+	    <HighlightTexture file="interface/minimap/minimapbutton_highlight" alphaMode="ADD"/>
+    </Button>
+    <Frame name="ZMailFrame" parent="UIParent" inherits="UICommonFrameTemplate" frameStrata="MEDIUM" hidden="true" enableMouse="true">
+        <Size>
+            <AbsDimension x="805" y="580" />
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentStatus" inherits="GameTitleFont" text="> Status" justifyH="CENTER" justifyV="MIDDLE">
+                    <Size>
+                        <AbsDimension x="800" y="25" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="BOTTOM">
+                            <Offset>
+                                <AbsDimension x="0" y="-3"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentTab1" inherits="ZMailFrameTabTemplate" id="1" text="> inbox" >
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="16" y="29"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </Button>
+            <Button name="$parentTab2" inherits="ZMailFrameTabTemplate" id="2" text="> send" >
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentTab1" />
+                </Anchors>
+            </Button>
+            <Button name="$parentTab3" inherits="ZMailFrameTabTemplate" id="3" text="> mass" >
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentTab2" />
+                </Anchors>
+            </Button>
+            <Button name="$parentTab4" inherits="ZMailFrameTabTemplate" id="4" text="> autosend" >
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentTab3" />
+                </Anchors>
+            </Button>
+            <Button name="$parentStop" inherits="UIPanelButtonTemplate" text="> Stop">
+                <Anchors>
+                    <Anchor point="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="-16" y="29"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Size>
+                    <AbsDimension x="70" y="22"/>
+                </Size>
+                <Scripts>
+                    <OnClick>
+                        zmail.Stop()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Frame name="$parentBody" inherits="ZMailFrameBackdropTemplate" hidden="false">
+                <Size>
+                    <AbsDimension x="785" y="500" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="10" y="54" />
+                        </Offset>
+                    </Anchor>
+                    <Anchor point="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="-10" y="-25" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <Frame name="$parentInbox" inherits="ZMailFrameInboxTemplate" hidden="true"/>
+                    <Frame name="$parentSend" inherits="ZMailSendTemplate" hidden="true"/>
+                    <Frame name="$parentMassSendItems" inherits="ZMailMassSendItemsTemplate" hidden="true"/>
+                    <Frame name="$parentAutoSend" inherits="ZMailAutoSendTemplate" hidden="true"/>
+                </Frames>
+            </Frame>
+            
+            <Frame name="$parentRecipients" inherits="ZMailRecipientFrameTemplate" hidden="true">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentBody" relativePoint="TOPLEFT"/>
+                    <Anchor point="BOTTOMRIGHT" relativeTo="$parentBody" relativePoint="BOTTOMRIGHT"/>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        zmail.charlist.frame.FrameOnLoad(this)
+                    </OnLoad>
+                    <OnShow>
+                        _G[this:GetParent():GetName().."Body"]:Hide()
+                        zmail.charlist.frame.FrameOnShow(this)
+                    </OnShow>
+                    <OnHide>
+                        _G[this:GetParent():GetName().."Body"]:Show()
+                        zmail.charlist.frame.FrameOnHide(this)
+                    </OnHide>
+                </Scripts>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+				UIPanelBackdropFrame_SetTexture( this, "Interface/Common/PanelCommonFrame", 256, 256 );
+                zmail.OnLoad(this)
+                ZMailFrameTitle:SetText(GIF_ICON_DESC22)
+            </OnLoad>
+            <OnEvent>
+                zmail.OnEvent(this, event, arg1, arg2, arg3, arg4, arg5, arg6)
+            </OnEvent>
+            <OnShow>
+                zmail.OnShow(this)
+            </OnShow>
+            <OnHide>
+                zmail.OnHide(this)
+            </OnHide>
+            <OnUpdate>
+                zmail.OnUpdate(this, elapsedTime)
+            </OnUpdate>
+        </Scripts>
+    </Frame>
+</Ui>

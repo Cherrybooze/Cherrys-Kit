@@ -27,6 +27,25 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         lua.execute('playerLevel=62; GlobalBank.Flush()')
         self.assertEqual(lua.eval('GlobalBank.Parse(GlobalBank_Char).classes[1].level'), 62)
 
+    def test_every_class_is_saved_whatever_the_most_allowed(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          UnitName=function() return 'Example' end
+          UnitClass=function() return 'Mage' end
+          UnitLevel=function() return 100 end
+          CLASSES={{'Mage', 'MAGE', 100}, {'Priest', 'AUGUR', 100}, {'Druid', 'DRUID', 72}}
+          -- The game gives the classes learned, then the most there can be, as its character window shows them
+          GetPlayerNumClasses=function() return #CLASSES, most end
+          GetPlayerClassInfo=function(i) return unpack(CLASSES[i]) end
+          GlobalBank.ReadBag=function() return {}, 0 end
+          GlobalBank.ReadMoney=function() return 0 end
+        """)
+        for most in (3, 2, 10):
+            lua.execute(f'most={most}; GlobalBank.chars={{}}; GlobalBank.Snapshot(false,false)')
+            self.assertEqual(lua.eval('#GlobalBank.Parse(GlobalBank_Char).classes'), 3, most)
+        self.assertEqual(lua.eval('GlobalBank.Parse(GlobalBank_Char).classes[3].level'), 72)
+
     def test_currencies_and_bound_items_round_trip(self):
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute(SOURCE.read_text(encoding='utf-8'))
@@ -327,5 +346,132 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         # the game knows the bank's size: an empty bank is saved as empty
         self.assertEqual(lua.eval('#after.bank'), 0)
         self.assertEqual(lua.eval('after.bankMax'), 80)
+
+    def test_what_is_worn_comes_from_its_tooltip_and_round_trips(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          UnitName=function() return 'Example' end
+          UnitClass=function() return 'Mage' end
+          UnitLevel=function() return 100 end
+          GlobalBank.ReadBag=function() return {}, 0 end
+          GlobalBank.ReadMoney=function() return 0 end
+          SLOTS={HeadSlot=0, NecklaceSlot=8, MainHandSlot=15}
+          GetInventorySlotInfo=function(name) return SLOTS[name], 'bg' end
+          WORN={[0]='interface/icons/eq_head', [15]='interface/icons/wp_staff'}
+          GetInventoryItemTexture=function(unit, id) return WORN[id] end
+          GetInventoryItemDurable=function(unit, id) return 118.4, 120, 'Plain name' end
+          GetInventoryItemCount=function() return 0 end
+          GetInventoryItemQuality=function(unit, id) return id == 15 and 4 or 2 end
+          local function line(text) return {IsVisible=function() return text ~= nil end, GetText=function() return text end, GetColor=function() return 1, 1, 1 end} end
+          GlobalBankTipReader={SetInventoryItem=function(self, unit, id) asked=id; GlobalBankTipReaderTextLeft1=line(id == 15 and '|cffc805f8Staff of Ash + 12|r' or 'Hood') end,
+            SetHyperLink=function() end, Hide=function() end}
+          GlobalBankTipReaderTextRight1=line(nil)
+          GlobalBankTipReaderTextLeft2=line('Tier 9')
+          GlobalBankTipReaderTextRight2=line('Durability 118/120')
+          GlobalBankTipReaderTextLeft3=line(nil)
+          GlobalBankTipReaderTextRight3=line(nil)
+          GlobalBank.Snapshot(false,false)
+          parsed=GlobalBank.Parse(GlobalBank_Char)
+        """)
+        self.assertEqual(lua.eval('#parsed.equip'), 2)
+        self.assertEqual(lua.eval('parsed.equip[1].where'), 'Head')
+        self.assertEqual(lua.eval('parsed.equip[1].name'), 'Hood')
+        # The plus is on the tooltip's first line, not in the name
+        self.assertEqual(lua.eval('parsed.equip[2].name'), 'Staff of Ash')
+        self.assertEqual(lua.eval('parsed.equip[2].slot'), 15)
+        self.assertEqual(lua.eval('parsed.equip[2].dura'), 118)
+        self.assertEqual(lua.eval('parsed.equip[2].maxDura'), 120)
+        self.assertEqual(lua.eval('parsed.equip[2].quality'), 4)
+        self.assertEqual(lua.eval('parsed.equip[2].count'), 1)
+        self.assertEqual(lua.eval('GlobalBank.Serialize(parsed)'), lua.eval('GlobalBank_Char'))
+        self.assertIn('`W~2`E~0~1~Head~Hood~interface/icons/eq_head~118~120~2', lua.eval('GlobalBank_Char'))
+        tips = lua.eval('GlobalBank_Tips')
+        self.assertTrue(tips.startswith('E0~ffffff=Hood^ffffff=Tier 9=ffffff=Durability 118/120`E15~c805f8=Staff of Ash + 12^'), tips)
+        # Nothing worn is still recorded as read; a client that can't say leaves what was saved alone
+        lua.execute('WORN={}; GlobalBank.Snapshot(false,false); empty=GlobalBank.Parse(GlobalBank_Char)')
+        self.assertEqual(lua.eval('#empty.equip'), 0)
+        lua.execute('WORN={[8]="interface/icons/neck"}; GlobalBank.Snapshot(false,false); GetInventorySlotInfo=nil; GlobalBank.Snapshot(false,false); kept=GlobalBank.Parse(GlobalBank_Char)')
+        self.assertEqual(lua.eval('kept.equip[1].where'), 'Necklace')
+        # A snapshot from before equipment was read has none, which isn't the same as nothing worn
+        self.assertIsNone(lua.eval('GlobalBank.Parse("GB1~Old~Warrior~40~0~0~0~0~x").equip'))
+
+    def test_the_mailbox_and_the_mail_sent_are_kept(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute("""
+          sent={}
+          SendMail=function(to, subject, body) sent[#sent+1]=to end
+          SetSendMailMoney=function() end
+          SetSendMailCOD=function() end
+        """)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          os.time=function() return 1800000000 end
+          UnitName=function() return 'Example' end
+          GlobalBank.started=true
+          MAILS={{nil, 'Alt', 'Gold', false, 'copper', 5000, 1.5, 0, 0, true, false},
+                 {nil, 'Shop', 'Gems', false, 'account', 30, 0.25, 0, 0, false, false},
+                 {nil, 'Trader', 'Pay me', true, 'copper', 900, 2, 0, 1, false, true}}
+          GetInboxNumItems=function() return #MAILS end
+          GetInboxHeaderInfo=function(i) return unpack(MAILS[i]) end
+          GetSendMailMultiItemEnable=function() return false end
+          GetSendMailItem=function() return 'Herb', 'icon', 3 end
+          GlobalBank.OnEvent('MAIL_SHOW')
+        """)
+        self.assertEqual(lua.eval('GlobalBank_Mail'),
+            'I~1800000000~3`N~Alt~Gold~5000~0~0~0~2160~`N~Shop~Gems~0~30~0~0~360~u`N~Trader~Pay me~0~0~900~1~2880~ur')
+        # Money set just before SendMail goes with it, once the server says it went
+        lua.execute("""
+          SetSendMailMoney(250000, 0)
+          SendMail('Bank~1', 'Some gold', '')
+          GlobalBank.OnEvent('MAIL_SEND_SUCCESS')
+        """)
+        self.assertEqual(lua.eval('sent[1]'), 'Bank~1')
+        self.assertTrue(lua.eval('GlobalBank_Mail').endswith('`O~1800000000~Bank1~Some gold~250000~0~0~Herb x3'))
+        # A mail that failed isn't kept, and its money doesn't carry over to the next one
+        lua.execute("""
+          SetSendMailMoney(7, 0)
+          SendMail('Other', 'No', '')
+          GlobalBank.OnEvent('MAIL_FAILED')
+          GetSendMailItem=function() return nil end
+          SendMail('Other', 'Letter', '')
+          GlobalBank.OnEvent('MAIL_SEND_SUCCESS')
+        """)
+        self.assertTrue(lua.eval('GlobalBank_Mail').endswith('`O~1800000000~Other~Letter~0~0~0~'))
+        self.assertEqual(lua.eval('#GlobalBank.mailSent'), 2)
+        # Only the newest are kept, and they come back after a reload
+        lua.execute("""
+          for i = 1, 365 do SendMail('Alt', 'n' .. i, ''); GlobalBank.OnEvent('MAIL_SEND_SUCCESS') end
+          GlobalBank.LoadMail()
+        """)
+        self.assertEqual(lua.eval('#GlobalBank.mailSent'), 360)
+        self.assertEqual(lua.eval('GlobalBank.mailSent[360].subject'), 'n365')
+        self.assertEqual(lua.eval('#GlobalBank.mailbox.list'), 3)
+        self.assertTrue(lua.eval('GlobalBank.mailbox.list[3].returned'))
+        self.assertEqual(lua.eval('GlobalBank.SerializeMail()'), lua.eval('GlobalBank_Mail'))
+
+    def test_mail_of_the_same_name_on_another_server_waits_for_it(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          GlobalBank_Char='GB1~Example~Mage~10~0~0~0~0~x`S~Kerub'
+          GlobalBank_Mail='I~5~0'
+          server='Aynara'
+          GetServerName=function() return server end
+          GlobalBank.LoadMail()
+          GlobalBank.SettleServer()
+        """)
+        self.assertIsNone(lua.eval('GlobalBank_Mail'))
+        self.assertIsNone(lua.eval('GlobalBank.mailbox'))
+        self.assertEqual(lua.eval('GlobalBank_MailOthers.Kerub'), 'I~5~0')
+        lua.execute("""
+          GlobalBank_Char='GB1~Example~Mage~10~0~0~0~0~x`S~Aynara'
+          GlobalBank_Mail='O~9~Alt~Hi~0~0~0~'
+          server='Kerub'; GlobalBank.settled=nil
+          GlobalBank.SettleServer()
+        """)
+        self.assertEqual(lua.eval('GlobalBank_Mail'), 'I~5~0')
+        self.assertEqual(lua.eval('GlobalBank_MailOthers.Aynara'), 'O~9~Alt~Hi~0~0~0~')
+        self.assertEqual(lua.eval('GlobalBank.mailbox.time'), 5)
 
 if __name__ == '__main__': unittest.main()

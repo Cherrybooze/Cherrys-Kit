@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.1** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.6.2** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,20 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.2
+
+**What each character wears** is recorded at every login and logout (extension 1.3.2). The game gives no link for a worn item, so Global Bank reads each slot's tooltip, as the character window shows it. Worn items join the Bank: **Where** is now **Everywhere** by default, with **Bag and bank** and **Worn** to pick. A character's details open wider, with a **Character profile** laid out like the game's character window: hover a slot for the game's own tooltip, click it to find the item on the Bank page.
+
+**Mail.** Opening a mailbox records what it holds, and every mail a character sends is kept, the newest 360. A new **Mail** page lists the mail waiting in each mailbox, soonest gone first, with a red **!** on mail that goes within 48 hours, and the mail sent. Mail sent to one of your characters after its mailbox was last open counts as on its way, so the gold in mailboxes is an estimate until that mailbox is opened again. The Bank's bottom line says how many mails wait and about how much gold is in them, and the **Gold overview** shows a mailbox after a character's name when gold waits for it.
+
+**Quick filters** in the Bank's search, with commas or spaces between them: *#+1>* finds gear with a plus above 1, *#+30* exactly +30, *#t10>* a tier above 10, and *#equipped=false* what nobody wears. *>=*, *<=* and *!=* work too. A slot's tier now reads **T18**, and shows from **T7** up, or the tier you pick under the grid. **Sort by type**, beside the sort order, keeps each kind of item together: weapons, jewellery, armour and wings first, then mana stones, runes by rank (0 to 6, then the unranked ones), consumables, item shop items with the plus jewels and backpack tickets first, the Dynamic, Mystical and Steadfast crafting materials each together, other materials, recipes, mounts and pets, and the rest, each A to Z, or by the order picked beside it. A to Z counts a numeral at the end, so Wrath VIII comes before Wrath IX.
+
+**Characters with more than one class keep them all.** A character with as many classes as it can have, or two, used to save none; one login on 1.6.2 saves them.
+
+**Filters on Characters and Currencies**, the same way: *#level>=100*, *#classes>3* (how many classes), *#classlevels>500* (their levels added up), *#gold<1m*, *#dailytokens>5k*, *#charges>10k* (Arcane Transmutor), *#diamonds*, *#rubies*, *#stones*, *#bagfree>10*, *#bankfree*, *#worn*, *#mail*, *#mailgold>1m*, *#class=mage*, and any currency by the start of its name, such as *#honor>1000*. k, m and b are thousands, millions and billions; a filter with no number means more than none, and *#needslogin*, *#nobank*, *#steam* and *#linked* are yes or no.
+
+**A server picker** after the Characters tile shows all servers, a region, or one server, on every page. The **Gold overview** gives each server a region of its own with its name on top, and **Servers** there leaves a server, or the names, off that map. Hovering a stat's name on **Stats** shows what it does, as on a tier 6 mana stone, from the game's own saved tooltips. **Add note…** is the first line of a character's right-click menu, and in its details: the note shows when you hover the character, on the page and in the game's window. Several selected characters get their own lines on the right-click menu: view their bank, copy their names separated by commas, and more. **Copy names** separates them with commas too. Clicking the logo goes back to the Bank with nothing selected or filtered.
 
 ## Updated in 1.6.1
 
@@ -63,6 +77,8 @@ Built for players with many characters and bank alts. Each character saves a sma
 A **Macros** tab gathers every macro your characters have into one library, read straight from their save folders, so no character has to log in. Put macros in groups (Favourites, Tank, DPS, Heal, Event, each class, or your own), and search by name, group or text. Write new ones, with the same icon choice as the game's macro window. A macro window beside the library shows one character's 56 slots as the game draws them: click one to create, edit or delete it, drag a library macro onto it, or compare with a backup and put one or all of them back.
 
 In game, the **Import** button in the macro window (Cherry's Info) searches this library by name and group and puts the macro you pick in the slot you chose. It needs no restart, so a macro you just wrote on the page is there when you press **Refresh**. Changes from the page to the library work with the game open. Changes to a character's own save files need it closed.
+
+An **Addons** page in Chrome lists Cherry's Kit's addons, your other addons and what is in `Interface\offloaded_addons`. **Check for updates** compares them with the latest release on GitHub; **Update from GitHub** and **Download and install** fetch that release's files in a window of their own, check each against the release's checksum and keep the old version in `Interface\offloaded_addons`, as the guided setup does. **Offload** moves an addon out of `Interface\AddOns` and **Restore** puts it back; **Delete** asks first and sends it to the Recycle Bin. Addons the kit has taken over say what replaced them: pbInfo, PortraitHP, TooltipIds, Extended Macro Icons and Cherry's Quests are now Cherry's Info, Cherry's Loginxml is part of LogNextChar, and a separate copy of a kit addon is an older one. They offer **Switch with** the new one instead of an install: it installs the new addon if needed, then offloads the old folder, so Restore still brings it back. A **Mail** panel shows whether mail runs with Ultimate Mail Mod or zMail (pyrr's addon, which the kit distributes with his permission in `Interface\AddOns\zmail`) and switches between them: to zMail it installs zMail if needed and chooses it in `CherrysKit\Mailbox.txt`; back to Ultimate Mail Mod it chooses that and offloads the zmail folder, since zMail has no off switch. Reload UI applies the change. These buttons are the only time Global Bank goes online, and only to github.com/Cherrybooze/Cherrys-Kit.
 
 An **Addon settings** tab shows what each addon saved, such as your auras in RoM WeakAuras and your rotations in KittyCombo, for the shared file or one character. It marks what differs from the backups, and puts back one addon's settings or the whole file.
 
