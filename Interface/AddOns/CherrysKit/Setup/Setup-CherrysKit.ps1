@@ -1298,7 +1298,9 @@ if (-not (Test-Writable $interfaceFolder) -or -not (Test-Writable $addons)) { $n
 
 # Everything else runs as administrator too, so Windows can't refuse a move or an update part way through
 # (a game in C:\RunesOfMagic can let a normal user create folders but not replace what an administrator put there).
-$askAdmin = -not $NonInteractive -and -not $Elevated -and -not $UpdatedFrom -and -not $OtherInstall -and -not (Test-Admin)
+# Only Windows has a permission prompt to ask (the tests run this on Linux too).
+$onWindows = $PSVersionTable.PSEdition -eq 'Desktop' -or $IsWindows
+$askAdmin = $onWindows -and -not $NonInteractive -and -not $Elevated -and -not $UpdatedFrom -and -not $OtherInstall -and -not (Test-Admin)
 if ($needRights -or $askAdmin) {
     if (Test-Admin) {
         Write-Warn ('Even as administrator, writing to ' + $interfaceFolder + ' failed. Moves below may fail too.')

@@ -88,7 +88,7 @@ class AddonsSourceTests(unittest.TestCase):
 
     def test_setup_and_login_screen_ask_for_administrator_rights(self):
         setup = SETUP.read_text(encoding='utf-8')
-        self.assertIn('$askAdmin = -not $NonInteractive -and -not $Elevated -and -not $UpdatedFrom -and -not $OtherInstall -and -not (Test-Admin)', setup)
+        self.assertIn('$askAdmin = $onWindows -and -not $NonInteractive -and -not $Elevated -and -not $UpdatedFrom -and -not $OtherInstall -and -not (Test-Admin)', setup)
         self.assertIn('if ($needRights -or $askAdmin) {', setup)
         self.assertIn('-Elevated -UserDocuments "{3}"', setup)
         self.assertIn('& $loginInstaller -Documents $UserDocuments', setup)
