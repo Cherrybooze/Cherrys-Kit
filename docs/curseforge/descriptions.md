@@ -42,6 +42,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Recent changes
 
+- **0.4.34**: the guided setup asks for administrator rights at the start, so protected game folders can't stop a move or update part way.
 - **0.4.33**: kit 0.11.117 clarifies published releases and reloading installed files, and corrects the hub version comparison.
 - **0.4.32**: kit 0.11.116 adds the Global Bank Stats-page fixes and stronger private-data release checks.
 - **0.4.31**: the guided setup runs from wherever the ZIP was extracted: it lists the Runes of Magic installs it finds, Steam or Gameforge, and asks which to set up, or takes a typed folder, or shows how to put the files in the game by hand. On a first setup it asks whether the kit uses Ultimate Mail Mod or zMail. The hub reads that choice from `CherrysKit\Mailbox.txt`, and with zMail it keeps Ultimate Mail Mod off and says why in `/ck`.
@@ -1126,6 +1127,7 @@ Made for alts. One click, and you are on the next character without touching the
 
 ## Recent changes
 
+- **1.3.4**: `Install login screen.bat` asks Windows for administrator rights and installs in that window, so a protected game folder can't refuse it.
 - **1.3.3**: Next and Prev no longer stay on the character screen. The login screen waits for the whole character list before it picks, and a logout you cancel drops the queued switch. Run `Install login screen.bat` again after updating.
 - **1.3.2**: the character screen shows each character's Arcane Transmutor charges under its gold.
 - **1.3.1**: the login screen finds each character's gold by server, so same-named characters on different servers no longer mix. Gold saved before servers were recorded shows a question mark.

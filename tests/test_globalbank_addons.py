@@ -63,6 +63,44 @@ class AddonsSourceTests(unittest.TestCase):
         read = re.search(r'function Read-AddonsStatus.*?\n\}', source, re.S).group(0)
         self.assertIn('Start-AddonsHelper $paths $modes -Quiet', read)
 
+    def test_page_file_changes_run_as_administrator(self):
+        source = ADDONS.read_text(encoding='utf-8')
+        self.assertIn("$script:AddonsElevatedTypes = @('addons-offload', 'addons-restore', 'addons-delete', 'addons-mailbox')", source)
+        message = re.search(r'function Invoke-AddonsMessage.*?\n\}', source, re.S).group(0)
+        # The bridge Chrome starts runs as the player: these go to an administrator window; that window does them -Here.
+        self.assertLess(message.index('Invoke-AddonsElevated $paths $message'), message.index('switch ('))
+        elevated = re.search(r'function Invoke-AddonsElevated.*?\n\}', source, re.S).group(0)
+        self.assertIn("Join-Path $paths.data ('addons-run-'", elevated)
+        self.assertIn('-Verb RunAs', elevated)
+        self.assertIn('-Wait -PassThru', elevated)
+        self.assertIn('it was not given, so nothing changed', elevated)
+        self.assertIn('Remove-Item -LiteralPath $work -Recurse', elevated)
+        action = re.search(r'function Invoke-AddonsAction.*?\n\}', source, re.S).group(0)
+        self.assertIn('$script:AddonsElevatedTypes -notcontains', action)
+        self.assertIn('Invoke-AddonsMessage $message $addons -Here', action)
+        login = re.search(r'function Start-AddonsLoginScreen.*?\n\}', source, re.S).group(0)
+        self.assertIn('-Verb RunAs', login)
+        self.assertIn("-Documents '{1}'", login)
+        # Never elevated: the native host Chrome starts, and the helper it talks to.
+        host = (HELPER / 'GlobalBank-NativeHost.ps1').read_text(encoding='utf-8')
+        self.assertNotIn('RunAs', host)
+        self.assertNotIn('RunAs', (HELPER / 'Install Chrome extension.ps1').read_text(encoding='utf-8'))
+
+    def test_setup_and_login_screen_ask_for_administrator_rights(self):
+        setup = SETUP.read_text(encoding='utf-8')
+        self.assertIn('$askAdmin = -not $NonInteractive -and -not $Elevated -and -not $UpdatedFrom -and -not $OtherInstall -and -not (Test-Admin)', setup)
+        self.assertIn('if ($needRights -or $askAdmin) {', setup)
+        self.assertIn('-Elevated -UserDocuments "{3}"', setup)
+        self.assertIn('& $loginInstaller -Documents $UserDocuments', setup)
+        root = ROOT / 'Interface/AddOns/LogNextChar'
+        install = (root / 'setup' / 'Install.ps1').read_text(encoding='utf-8')
+        self.assertIn('[switch]$Elevate', install)
+        self.assertIn("-Verb RunAs -Wait", install)
+        self.assertIn('exit 3', install)
+        bat = (root / 'Install login screen.bat').read_text(encoding='utf-8')
+        self.assertIn('Install.ps1" -Elevate %*', bat)
+        self.assertIn('if errorlevel 3 exit /b 0', bat)
+
     def test_action_cells_stay_table_cells_and_update_all_sits_on_the_table(self):
         css = (EXTENSION / 'control.css').read_text(encoding='utf-8')
         rule = re.search(r'td\.addons-actions, th\.addons-actions \{([^}]*)\}', css).group(1)
@@ -117,10 +155,10 @@ class AddonsSourceTests(unittest.TestCase):
     def test_own_arguments_survive_loading_the_setup(self):
         # Dot-sourcing the setup binds its parameters here; the window's arguments are copied aside first.
         source = ADDONS.read_text(encoding='utf-8')
-        kept = source.index("$script:AddonsArgs = @{ Install = $Install; AddonsFolder = $AddonsFolder; Offload = $Offload; Mailbox = $Mailbox }")
+        kept = source.index("$script:AddonsArgs = @{ Install = $Install; AddonsFolder = $AddonsFolder; Offload = $Offload; Mailbox = $Mailbox; Action = $Action }")
         self.assertLess(kept, source.index('. $script:AddonsSetupPath -LoadOnly'))
         tail = source[source.index('. $script:AddonsSetupPath -LoadOnly'):]
-        for name in ('$Install', '$AddonsFolder', '$Offload', '$Mailbox'):
+        for name in ('$Install', '$AddonsFolder', '$Offload', '$Mailbox', '$Action'):
             self.assertNotRegex(tail, re.escape(name) + r'(?![A-Za-z])', name)
         setup = re.search(r'param\((.*?)\n\)', SETUP.read_text(encoding='utf-8'), re.S).group(1)
         own = set(re.findall(r'\$([A-Za-z]+)', re.search(r'^param\((.*?)\)$', source, re.M).group(1)))

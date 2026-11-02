@@ -5,8 +5,27 @@
 # Older homes of this addon move there too, so nothing here is ever deleted.
 # It also writes savedpath.lua, which tells the login screen where the game keeps SaveVariables.lua, so the
 # settings toggles are back after a restart. It leaves nothing running. Delete savedpath.lua to undo that part.
-param([string]$SaveFolder = 'Runes of Magic', [string]$Documents = [Environment]::GetFolderPath('MyDocuments'))
+# -Elevate (Install login screen.bat): run in an administrator window, so Windows can't refuse to replace files in a game
+# folder such as C:\RunesOfMagic. It carries this player's Documents along, as the administrator can be another user.
+param([string]$SaveFolder = 'Runes of Magic', [string]$Documents = [Environment]::GetFolderPath('MyDocuments'), [switch]$Elevate)
 $ErrorActionPreference = 'Stop'
+
+if ($Elevate) {
+    $admin = $false
+    try { $admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) } catch { }
+    if (-not $admin) {
+        $quote = { param($text) "'" + ($text -replace "'", "''") + "'" }
+        $command = "try {{ & {0} -SaveFolder {1} -Documents {2} }} catch {{ Write-Host `$_.Exception.Message -ForegroundColor Red }}; Write-Host ''; Read-Host 'Press Enter to close'" -f (& $quote $PSCommandPath), (& $quote $SaveFolder), (& $quote $Documents)
+        Write-Host 'Asking Windows for administrator rights; the login screen installs in the new window.'
+        try {
+            # One argument string: Windows PowerShell's Start-Process joins a list without quoting it.
+            Start-Process -FilePath 'powershell.exe' -Verb RunAs -Wait -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -Command "{0}"' -f $command) -ErrorAction Stop
+            exit 3
+        } catch {
+            Write-Host 'Administrator rights were not given, so this carries on without them.' -ForegroundColor Yellow
+        }
+    }
+}
 
 $helper = Split-Path -Parent $PSScriptRoot
 $kit = Split-Path -Parent $helper

@@ -1,6 +1,6 @@
 local me = {
   name = "LogNextChar",
-  version = "1.3.3",
+  version = "1.3.4",
   sub = {
     'account', --
     'server', --

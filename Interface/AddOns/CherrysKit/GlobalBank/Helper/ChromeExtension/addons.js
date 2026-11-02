@@ -264,7 +264,7 @@ const GBAddons = (() => {
     }
     function remove(row, where, name) {
       const place = where === 'offloaded' ? 'Interface\\offloaded_addons' : where === 'kit' ? 'Cherry’s Kit' : 'Interface\\AddOns';
-      if (!window.confirm(`Delete ${row.title} (${name}) from ${place}? It goes to the Recycle Bin, and its saved settings stay. Offload keeps it here to bring back instead.`)) return;
+      if (!window.confirm(`Delete ${row.title} (${name}) from ${place}? It goes to the Recycle Bin, and its saved settings stay. Offload keeps it here to bring back instead. Windows asks for administrator permission first.`)) return;
       act('addons-delete', row, where, name);
     }
 

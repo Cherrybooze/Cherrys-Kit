@@ -38,6 +38,7 @@ param(
     [switch]$LoginScreenToo,      # with -OtherInstall: that run's player said yes to the login screen
     [string]$ShareData = '',      # with -OtherInstall: the Gameforge Interface folder a Steam install shares its data with
     [switch]$LoadOnly,            # dot-sourced by the Global Bank helper's Addons page: define the functions, then stop
+    [string]$UserDocuments = '',  # with -Elevated: the player's own Documents folder (an administrator can be another user)
     # UMM or zMail: the mailbox addon to use, without being asked. Not -Mailbox: Global Bank's Addons page dot-sources
     # this script, which sets every parameter here as a variable of the page's own, and the page has a $Mailbox.
     [string]$MailboxAddon = ''
@@ -1289,34 +1290,49 @@ if ($MailboxAddon) {
 }
 
 # --------------------------------------------------------------------------------------------
-# Permission check. Windows rights are only asked for when writing to the game folder needs them.
+# Permission check. Setup asks Windows for administrator rights; it can carry on without them only when it can write.
 # --------------------------------------------------------------------------------------------
 $needRights = $false
 try { New-Item -ItemType Directory -Path $interfaceFolder -Force | Out-Null } catch { }
 if (-not (Test-Writable $interfaceFolder) -or -not (Test-Writable $addons)) { $needRights = $true }
 
-if ($needRights) {
+# Everything else runs as administrator too, so Windows can't refuse a move or an update part way through
+# (a game in C:\RunesOfMagic can let a normal user create folders but not replace what an administrator put there).
+$askAdmin = -not $NonInteractive -and -not $Elevated -and -not $UpdatedFrom -and -not $OtherInstall -and -not (Test-Admin)
+if ($needRights -or $askAdmin) {
     if (Test-Admin) {
         Write-Warn ('Even as administrator, writing to ' + $interfaceFolder + ' failed. Moves below may fail too.')
     } elseif ($NonInteractive) {
         Write-Dim 'Run this file as administrator, or move the game somewhere writable.'
         Stop-Setup ('No permission to write to ' + $interfaceFolder + '.')
     } else {
-        Write-Warn ('Writing to ' + $interfaceFolder + ' needs administrator rights.')
+        if ($needRights) {
+            Write-Warn ('Writing to ' + $interfaceFolder + ' needs administrator rights.')
+        } else {
+            Write-Host 'Setup runs as administrator, so Windows can''t stop a move or an update part way through.' -ForegroundColor Gray
+        }
         $elevate = Confirm-Step 'Ask Windows for administrator rights now?' $true
-        if (-not $elevate) {
+        if (-not $elevate -and $needRights) {
             Stop-Setup 'Setup cannot continue without permission to write to the game folder.'
         }
-        # The folder chosen here goes along, so the new window doesn't ask for it again.
-        $arguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Landing "{1}" -Target "{2}" -Elevated' -f $PSCommandPath, $landing, $addons
-        if ($mailboxWanted) { $arguments += ' -MailboxAddon ' + $mailboxWanted }
-        Write-Host 'A Windows permission prompt will appear; setup continues in a new window.' -ForegroundColor Yellow
-        try {
-            Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $arguments -ErrorAction Stop | Out-Null
-        } catch {
-            Stop-Setup 'Administrator rights were not given. Nothing was changed.'
+        if ($elevate) {
+            # The folder chosen here goes along, so the new window doesn't ask for it again, and so does this
+            # player's Documents folder: the administrator can be another Windows user with Documents of their own.
+            $arguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Landing "{1}" -Target "{2}" -Elevated -UserDocuments "{3}"' -f $PSCommandPath, $landing, $addons, [Environment]::GetFolderPath('MyDocuments')
+            if ($mailboxWanted) { $arguments += ' -MailboxAddon ' + $mailboxWanted }
+            Write-Host 'A Windows permission prompt will appear; setup continues in a new window.' -ForegroundColor Yellow
+            $started = $false
+            try {
+                Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $arguments -ErrorAction Stop | Out-Null
+                $started = $true
+            } catch {
+                if ($needRights) { Stop-Setup 'Administrator rights were not given. Nothing was changed.' }
+                Write-Warn 'Administrator rights were not given. Setup carries on without them; if a move fails, run it again and choose Yes.'
+            }
+            if ($started) { exit 0 }
+        } else {
+            Write-Dim 'Carrying on without administrator rights. If a move fails, run setup again and choose Yes.'
         }
-        exit 0
     }
 }
 
@@ -1602,7 +1618,7 @@ if (Test-Path -LiteralPath $loginInstaller) {
     Write-Host '  Your saved logins stay. If anything would change, the old folder is copied to offloaded_addons first.' -ForegroundColor Gray
     $wantLogin = Confirm-Step 'Install or update the login screen now?' $true ([bool]$LoginScreenToo)
     if ($wantLogin) {
-        try { & $loginInstaller }
+        try { if ($UserDocuments) { & $loginInstaller -Documents $UserDocuments } else { & $loginInstaller } }
         catch { Write-Warn ('  The login screen was not installed: ' + $_.Exception.Message) }
     } else {
         Write-Dim '  Skipped. To do it later: close the game and double-click LogNextChar\Install login screen.bat.'
