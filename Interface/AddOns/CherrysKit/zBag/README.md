@@ -1,6 +1,6 @@
 # zBag
 
-Version **5.07-ck19** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **5.07-ck20** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
@@ -21,6 +21,10 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 > **Other addons:** AddonManager lists it when you have that addon. BagSearch 1.21, BagSort 1.05b, PocketMaid and Sol are built in, so delete any separate `BagSearch` or `BagSort` folder. The quick-sell filter is based on Lootomatic, which is a separate addon and can stay.
 
 <!-- end of requirements -->
+
+## Updated in 5.07-ck20
+
+**Slot number settings side by side.** In **/zb**, *Numbers on mouseover only* now sits right next to *Show bag slot numbers (1-180)*, and the row under it has *Slot number font size* with - and + buttons (6 to 20, default 8) for the bag and bank numbers. The font size buttons were in earlier versions too but never showed up in the window. *Reset bag positions* moved to the bottom row. Mouseover only stays on by default.
 
 ## Updated in 5.07-ck19
 

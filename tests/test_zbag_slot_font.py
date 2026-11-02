@@ -68,8 +68,9 @@ class SlotFontTests(unittest.TestCase):
           zBagKit.UpdateCherry=function() refreshed=refreshed+1 end
         ''')
         root = ET.parse(SOURCE / "zBagKit.xml").getroot()
+        row = root.find(".//ui:Frame[@name='$parentSlotFont']", NS)
         for suffix, expected in (("Plus", 9), ("Minus", 8)):
-            code = root.find(".//ui:Button[@name='$parentSlotFont" + suffix + "']/ui:Scripts/ui:OnClick", NS).text
+            code = row.find("ui:Frames/ui:Button[@name='$parent" + suffix + "']/ui:Scripts/ui:OnClick", NS).text
             self.lua.execute(code)
             self.assertEqual(self.g.zBag_VAR.slotfontsize, expected)
         self.assertEqual(self.g.refreshed, 4)
@@ -139,6 +140,27 @@ class SlotFontTests(unittest.TestCase):
           zBag_SHARE=0;zBag_VAR=zBag_LOCAL;assert(zBagKit.SlotNumberFontSize()==14)
           zBag_VAR=zBag_SHARED;assert(zBagKit.SlotNumberFontSize()==9)
         ''')
+
+    def test_slot_number_options_share_rows_and_only_anchor_to_earlier_siblings(self):
+        config = ET.parse(SOURCE / "zBagKit.xml").getroot().find("ui:Frame[@name='zBagKitConfig']", NS)
+        frames = list(config.find("ui:Frames", NS))
+        names = [f.get("name") for f in frames]
+        for i, frame in enumerate(frames):
+            for anchor in frame.iter("{http://www.runewaker.com/}Anchor"):
+                rel = anchor.get("relativeTo")
+                if rel and rel.startswith("$parent") and rel in names:
+                    self.assertLess(names.index(rel), i, frame.get("name") + " anchors to later " + rel)
+        # nothing may anchor to a child frame from the config frame's own layers (they load first)
+        for anchor in config.find("ui:Layers", NS).iter("{http://www.runewaker.com/}Anchor"):
+            self.assertIsNone(anchor.get("relativeTo"))
+        def anchor_of(name):
+            a = frames[names.index(name)].find("ui:Anchors/ui:Anchor", NS)
+            return a.get("relativeTo"), a.find("ui:Offset/ui:AbsDimension", NS).get("y") if a.find("ui:Offset/ui:AbsDimension", NS) is not None else "0"
+        self.assertEqual(anchor_of("$parentSlotHover"), ("$parentBagSlots", "0"))
+        self.assertEqual(anchor_of("$parentSlotFont"), ("$parentBankSlots", "0"))
+        self.assertEqual(anchor_of("$parentReset")[0], "$parentShare")
+        label = frames[names.index("$parentSlotFont")].find(".//ui:FontString[@name='$parentLabel']", NS)
+        self.assertEqual(label.get("text"), "Slot number font size")
 
 
 if __name__ == "__main__":
