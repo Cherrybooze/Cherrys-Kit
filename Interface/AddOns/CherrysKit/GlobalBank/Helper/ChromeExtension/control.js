@@ -388,6 +388,22 @@
       return row;
     }));
   }
+  // A character's note, kept by the helper and shown when you hover the character, here and in the game's window. It
+  // goes through the helper's own note command, which checks it again.
+  const noteProblem = text => (/[\x00-\x1f"~`|\\]/.test(text) ? 'A note can’t hold quotes, backslashes, |, ~ or backticks.'
+    : new TextEncoder().encode(text).length > 80 ? 'Keep it to 80 letters or fewer, fewer with accents.' : '');
+  async function editNote(character) {
+    const text = await ask({
+      title: character.note ? 'Edit note' : 'Add note',
+      hint: `A note for ${character.name}. It shows when you hover the character, here and in the game’s Global Bank window, and the Characters search finds it.`,
+      label: 'Note', value: character.note || '', placeholder: 'bank alt, mats, daily tokens…', clear: character.note ? 'Remove the note' : '',
+      check: noteProblem,
+    });
+    if (text === null || text === (character.note || '')) return;
+    const reply = await terminal.command(`note ${character.name} ${text}`.trim());
+    toast(GBTerminal.recordsText(reply.records) || reply.error || '');
+    if (reply.changed) await bank.reload({ifChanged: true}).catch(() => {});
+  }
   // Right-click, Stop tracking: the helper names exactly who that covers, and asks.
   async function stopTracking(character) {
     const reply = await terminal.command(`erase ${character.base || character.name}`);
@@ -625,6 +641,10 @@
       byId('character-panel').close();
     });
     if (!character.notSaved) {
+      button(character.note ? 'Edit note…' : 'Add note…', false, () => {
+        byId('character-panel').close();
+        editNote(character);
+      });
       button('Stop tracking…', false, () => {
         byId('character-panel').close();
         stopTracking(character);
@@ -721,7 +741,8 @@
     mail: mailLine,
     menu: accounts.openMenu,
     rows: character => characterRows(character),
-    bulk: character => bulkRows(character),
+    // The note first, then what goes for all the characters selected with it
+    bulk: character => [...(character.notSaved ? [] : [{label: character.note ? 'Edit note…' : 'Add note…', run: () => editNote(character)}]), ...bulkRows(character)],
   });
 
   // A small form for one value: a new name, or a server from a list. Resolves to the text, to '' for its Clear
