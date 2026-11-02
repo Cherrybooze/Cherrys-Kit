@@ -7,7 +7,7 @@ local ADDON = "LogNextChar"
 LogNextChar = LogNextChar or {}
 local me = LogNextChar
 
-me.version = "1.3.2"
+me.version = "1.3.3"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.LogNextChar) or "Interface/AddOns/LogNextChar/"
 
 -- Saved: LogNextChar_Settings = { show, lock, position = { x, y } }
@@ -143,6 +143,9 @@ local function ArmAndLogout(mode, target)
     _G.LOGCHAR_FLAG = 1
     _G.LOGCHAR_MODE = mode
     _G.LOGCHAR_TARGET = target
+    -- The login screen starts from this character by name, whatever the client selects first
+    _G.LOGCHAR_FROM = type(UnitName) == "function" and UnitName("player") or nil
+    me.queued = true
 
     if CampOutStart then
         CampOutStart()
@@ -150,6 +153,22 @@ local function ArmAndLogout(mode, target)
         Logout()
     else
         Print("Error: No logout method available")
+    end
+end
+
+-- The client stops a logout that doesn't happen (cancelled, moved, or 20 s without leaving) and then
+-- sends FORCE_DIALOG_HIDE. The queued switch goes with it, so a later logout by hand stays an ordinary one.
+function me.ForgetQueued()
+    if not me.queued then
+        return
+    end
+    me.queued = nil
+    if _G.LOGCHAR_FLAG == 1 then
+        _G.LOGCHAR_FLAG = 0
+        _G.LOGCHAR_MODE = nil
+        _G.LOGCHAR_TARGET = nil
+        _G.LOGCHAR_FROM = nil
+        Print("Logout cancelled, the switch is off.")
     end
 end
 
@@ -286,12 +305,17 @@ function me.OnLoad(bar)
     Paint(LogNextCharBarPrev, "prev", "Prev")
     bar:RegisterEvent("VARIABLES_LOADED")
     bar:RegisterEvent("LOADING_END")
+    bar:RegisterEvent("FORCE_DIALOG_HIDE")
     me.Place()
     me.Refresh()
     me.UpdateEnabled()
 end
 
 function me.OnEvent(event)
+    if event == "FORCE_DIALOG_HIDE" then
+        me.ForgetQueued()
+        return
+    end
     if event == "VARIABLES_LOADED" then
         me.Place()
         me.Refresh()

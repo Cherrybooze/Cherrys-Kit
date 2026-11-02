@@ -20,6 +20,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.1**: mana stones and gear with identical stats stack, with a switch beside the Bank's filters. Slots show the tier, plus, durability above 101 and stack count in their own corners, in colours you can pick. *#clean* and *#dirty* find mana stones without or with stats, in the window and on the page.
 - **1.6.0**: a new Global Bank page and popup, with its pages grouped down the side, an item panel, Transfer stones and an Excluded list on Characters, and a Terminal that runs in the helper itself. Selecting characters only changes the Bank when you press Use in Bank.
 - **1.5.9**: logging in is enough to record a character's bank, also when it is empty. No bank visit needed.
 - **1.5.8**: Steam shows as one more account: characters saved from Steam group together on each server, in the window and on the page.

@@ -717,7 +717,7 @@ GB.TIPS = {
   grip = { "Resize", "Drag to make the window bigger or smaller. /gb size reset puts it back." },
   remove = { "Remove entry", "Hides this character from Global Bank on all your characters (after the helper's next update). It comes back by itself when that character logs in again." },
   group = { "Accounts", "Groups characters by account: the ones the login screen lists together. Click an account to fold it. Click here for one plain list." },
-  search = { "Search", "Finds items, character names and notes. Each server tab shows how many characters match, and the bag or bank lights up the matching slots." },
+  search = { "Search", "Finds items, character names and notes. Each server tab shows how many characters match, and the bag or bank lights up the matching slots. #clean finds mana stones with no stats, #dirty the ones with stats." },
   servermore = { "More servers", "Shows the server tabs that don't fit." },
 }
 

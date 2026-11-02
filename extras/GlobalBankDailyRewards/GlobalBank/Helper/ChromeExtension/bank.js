@@ -11,10 +11,16 @@ const GBBank = (() => {
   const MAX_HOLDERS = 10;
   const TYPES = ['Armour', 'Weapons', 'Jewellery', 'Runes', 'Mana stones', 'Potions', 'Materials', 'Recipes', 'Mounts and pets', 'Other'];
   const EQUIPPABLE = new Set(['Weapons', 'Armour', 'Jewellery']);
-  // Like the game: gear is one of a kind, and so is anything with stats of its own.
-  const DEFAULT_RULES = {on: true, types: new Set(TYPES.filter(type => !EQUIPPABLE.has(type))), stats: 'apart', always: new Set()};
+  // Every type can stack, and anything with stats of its own stacks only with identical copies.
+  const DEFAULT_RULES = {on: true, types: new Set(TYPES), stats: 'match', always: new Set()};
   const NO_STACK = {on: false, types: new Set(), stats: 'apart', always: new Set()};
   const QUALITY = ['Plain', 'Green', 'Blue', 'Purple', 'Orange', 'Gold'];
+  // The HD mark in a slot's corner: durability above this
+  const HIGH_DURABILITY = 101;
+  // The colours of a slot's corner marks, until you pick your own. control.css starts from these too.
+  const MARK_COLORS = {tier: '#ff6b5e', plus: '#ffd75e', hd: '#5fe07a', count: '#ffffff'};
+  // How the game's tooltip names an item's tier in each client language: Tier 18, Grad 18 and so on
+  const TIER_LINE = /^\s*(?:Tier|Grad|Grado|Nivel|Rang|Série|Stopień|Уровень|Aşama|Cấp|등급|階層|阶层|ระดับ|ミスティックレベル|طبقة)\s+(\d+)\s*$/;
   // Bought with real money and shared by an account, so adding them up across characters would count them twice.
   // The game's code says bonus and billdin. Its Item Shop says Rubies and Phirius Tokens, which players call Daily Tokens.
   const SHOP_NAMES = {account: 'Diamonds', bonus: 'Rubies', billdin: 'Daily Tokens'};
@@ -72,6 +78,22 @@ const GBBank = (() => {
     if (!count) return '';
     return bankKnown(character) ? `Transfer stones: ${formatNumber(count)}` : `Transfer stones: at least ${formatNumber(count)}, bank not recorded`;
   }
+  // Mana and fusion stones, by the IDs whose links can hold stats. zBag and the game window use the same ones.
+  function isStone(id) {
+    const number = Number(id) || 0;
+    return (number >= 202840 && number <= 202859) || (number >= 202880 && number <= 202885);
+  }
+  // An item's tier: a mana stone's is in its ID, with 202840 as tier 1, and gear's is on its tooltip. 0 when not known.
+  function tierOf(item) {
+    const number = Number(item.id) || 0;
+    if (number >= 202840 && number <= 202859) return number - 202839;
+    if (!item.gear) return 0;
+    for (const line of item.tip || []) {
+      const found = TIER_LINE.exec(String(line[1] || ''));
+      if (found) return Number(found[1]);
+    }
+    return 0;
+  }
   // Saved data has no item type, so this goes by the game's ID ranges and icon names. A good guess, not a fact.
   function typeOf(id, icon) {
     const number = Number(id) || 0;
@@ -81,7 +103,7 @@ const GBBank = (() => {
     if (/earring|eq_ear|eq_neck|eq_finger|ring_|jewelry\//.test(path) && number >= 220000 && number < 240000) return 'Jewellery';
     if (number >= 210000 && number < 220000) return 'Weapons';
     if (number >= 220000 && number < 240000) return 'Armour';
-    if ((number >= 202840 && number <= 202859) || (number >= 202880 && number <= 202885) || /mana stone|fusnion_stone/.test(path)) return 'Mana stones';
+    if (isStone(number) || /mana stone|fusnion_stone/.test(path)) return 'Mana stones';
     if (/potion/.test(path)) return 'Potions';
     if (/item_ore|item_mat|phantom\/material/.test(path)) return 'Materials';
     if (/mount|charger|pet_|egg/.test(path)) return 'Mounts and pets';
@@ -143,7 +165,7 @@ const GBBank = (() => {
           const stats = gear?.stats || item.stats || [];
           const name = String(item.name || 'Unknown item');
           const color = /^[0-9a-f]{6}$/i.test(gear?.color || '') ? gear.color : /^[0-9a-f]{6}$/i.test(item.tip?.[0]?.[0] || '') ? item.tip[0][0] : '';
-          list.push({id: item.id, name, lower: name.toLowerCase(), icon: item.icon, count: Number(item.count) || 1,
+          list.push({id: item.id, name, lower: name.toLowerCase(), icon: item.icon, count: Number(item.count) || 1, tier: tierOf(item),
             type: typeOf(item.id, item.icon), bound: !!item.bound, gear, stats, stone: !!item.stats, tip: item.tip || null, color, quality: qualityOf(color),
             search: stats.concat(gear?.runes || []).join('\n').toLowerCase(), character: character.name, ch: character, level, place,
             shop: place === 'bank' && Number(item.slot) > SHOP_FROM, slot: Number(item.slot) || 0});
@@ -154,9 +176,20 @@ const GBBank = (() => {
   }
   // The test each item passes to be shown. keep(character) says whether its holder is on the page at all.
   function matcher(filters) {
-    const text = (filters.text || '').toLowerCase();
+    // #clean and #dirty: mana and fusion stones without stats, or with stats, as in zBag. The rest of the search still
+    // applies here, so #dirty wisdom finds stones with wisdom on them.
+    let stones = '';
+    const text = (filters.text || '').toLowerCase().replace(/(^|\s)#(clean|dirty)(?=\s|$)/g, (all, space, word) => {
+      stones = word;
+      return ' ';
+    }).trim();
     const anyStat = names => names.some(name => name.toLowerCase().includes(text));
     return entry => {
+      if (stones) {
+        if (!isStone(entry.id)) return false;
+        // A stone saved before stats were recorded could be either, so it only counts once it says it has some
+        if (stones === 'dirty' ? !entry.stats.length : entry.stats.length || entry.ch?.stale) return false;
+      }
       if (text) {
         if (filters.searchIn === 'items') { if (entry.stone || !anyStat(entry.stats)) return false; }
         else if (filters.searchIn === 'stones') { if (!entry.stone || !anyStat(entry.stats)) return false; }
@@ -209,20 +242,25 @@ const GBBank = (() => {
       settings.excluded.add(key);
     }
   }
-  // What tells two copies of an item apart: a piece of gear's plus, tier, stats and runes, or a stone's stats.
+  // What tells two copies of an item apart: a piece of gear's plus, tier, durability, stats and runes, or a stone's stats,
+  // in whatever order the game listed them.
   function statsSignature(entry) {
-    if (entry.gear) return ['g', entry.gear.plus, entry.gear.tier, entry.gear.stats.join(';'), entry.gear.runes.join(';')].join('/');
-    return 's/' + entry.stats.join(';');
+    const sorted = list => [...list].sort().join(';');
+    if (entry.gear) return ['g', entry.gear.plus, entry.gear.tier, entry.gear.dura, entry.gear.maxDura, sorted(entry.gear.stats), sorted(entry.gear.runes)].join('/');
+    return 's/' + sorted(entry.stats);
   }
-  // Which stack an item joins, or null when it stays on its own. An item you chose to always stack joins every copy
-  // of itself; otherwise its type has to be ticked, and anything with stats stacks only as the rules for stats say.
+  // Which stack an item joins, or null when it stays on its own. An item you chose to always stack joins every copy of
+  // itself. Otherwise its type has to be ticked, and anything with stats of its own stacks only as rules.stats says:
+  // 'match' with identical copies, 'apart' with none, 'all' with every copy.
   function stackKey(entry, rules = DEFAULT_RULES) {
     const key = itemKey(entry);
     if (rules.always?.has(key)) return 'k:' + key;
     if (!rules.on || !rules.types.has(entry.type)) return null;
-    if (!(entry.gear || entry.stats.length) || rules.stats === 'all') return 'k:' + key;
-    if (rules.stats === 'match') return 'k:' + key + '|' + statsSignature(entry);
-    return null;
+    if (rules.stats === 'all') return 'k:' + key;
+    if (entry.gear || entry.stats.length) return rules.stats === 'match' ? 'k:' + key + '|' + statsSignature(entry) : null;
+    // Saved before stats were recorded: nobody can say whether it's identical to anything
+    if (EQUIPPABLE.has(entry.type) || (entry.ch?.stale && isStone(entry.id))) return null;
+    return 'k:' + key;
   }
   function stackable(entry) {
     return stackKey(entry, DEFAULT_RULES) !== null;
@@ -237,7 +275,7 @@ const GBBank = (() => {
       const key = stackKey(entry, rules) ?? '#' + index;
       let cell = found.get(key);
       if (!cell) {
-        cell = {key: itemKey(entry), id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, gear: entry.gear, stats: entry.stats, stone: entry.stone,
+        cell = {key: itemKey(entry), id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, gear: entry.gear, stats: entry.stats, stone: entry.stone, tier: entry.tier || 0,
           tip: entry.tip, color: entry.color || '', quality: entry.quality || 0, bound: entry.bound, total: 0, places: [], mixed: false};
         found.set(key, cell);
         out.push(cell);
@@ -246,6 +284,14 @@ const GBBank = (() => {
       cell.places.push(entry);
     }
     return out;
+  }
+  // What a slot's corners say about a cell, and the same in words for a screen reader
+  function slotMarks(cell) {
+    if (cell.mixed) return {tier: '', durability: '', plus: '', words: []};
+    const tier = cell.tier > 0 ? String(cell.tier) : '';
+    const plus = cell.gear?.plus > 0 ? `+${cell.gear.plus}` : '';
+    const durability = cell.gear?.dura > HIGH_DURABILITY ? 'HD' : '';
+    return {tier, durability, plus, words: [tier && `tier ${tier}`, plus, durability && 'high durability'].filter(Boolean)};
   }
   const SORTS = {
     name: (a, b) => a.name.localeCompare(b.name),
@@ -699,7 +745,7 @@ const GBBank = (() => {
     const roster = options.roster || null;
     const state = {characters: [], entries: [], made: null, total: -1, sort: 'name', cells: [], names: new Map(), loadedAt: 0, layout: 'grid', active: -1};
     const settings = {excluded: new Set(), whitelist: new Set(), excludeBound: false};
-    const rules = {on: true, types: new Set(DEFAULT_RULES.types), stats: 'apart', always: new Set(), favourites: new Map(), quality: true};
+    const rules = {on: true, types: new Set(DEFAULT_RULES.types), stats: DEFAULT_RULES.stats, always: new Set(), favourites: new Map(), quality: true};
     const icons = new Map();
     const requested = new Set();
     const el = id => root.querySelector('#' + id);
@@ -802,14 +848,24 @@ const GBBank = (() => {
       slot.picture = make('img');
       slot.picture.alt = '';
       slot.count = make('span', 'bank-count');
+      slot.tierMark = make('span', 'bank-mark bank-mark-tier');
+      slot.durabilityMark = make('span', 'bank-mark bank-mark-hd');
+      slot.plusMark = make('span', 'bank-mark bank-mark-plus');
       slot.star = make('span', 'bank-star', '★');
       // Only the list shows these
       slot.nameText = make('span', 'bank-slot-text is-name');
       slot.whereText = make('span', 'bank-slot-text is-where');
       slot.quantityText = make('span', 'bank-slot-text is-quantity');
-      slot.append(slot.letters, slot.picture, slot.count, slot.star, slot.nameText, slot.whereText, slot.quantityText);
+      slot.append(slot.letters, slot.picture, slot.count, slot.tierMark, slot.durabilityMark, slot.plusMark, slot.star, slot.nameText, slot.whereText, slot.quantityText);
       grid.append(slot);
       return slot;
+    }
+    // Tier upper left, HD upper right, plus lower left. A stack of different kinds has no one answer, so it shows none.
+    function fillMarks(slot, cell) {
+      const marks = slotMarks(cell);
+      slot.tierMark.textContent = marks.tier;
+      slot.durabilityMark.textContent = marks.durability;
+      slot.plusMark.textContent = marks.plus;
     }
     function fill(slot, cell, index) {
       slot.dataset.index = String(index);
@@ -817,7 +873,7 @@ const GBBank = (() => {
       const favourite = rules.favourites.has(cell.key);
       slot.className = 'bank-slot filled' + (excluded ? ' bank-excluded' : '') + (rules.quality && cell.quality ? ` q${cell.quality}` : '') + (favourite ? ' is-favourite' : '')
         + (index === state.active ? ' is-active' : '') + (sameCell(panelCell, cell) ? ' is-open' : '');
-      slot.setAttribute('aria-label', `${cell.name}, ${formatNumber(cell.total)}`);
+      slot.setAttribute('aria-label', [`${cell.name}, ${formatNumber(cell.total)}`, ...slotMarks(cell).words].join(', '));
       slot.setAttribute('aria-selected', String(index === state.active));
       slot.letters.textContent = cell.name.slice(0, 2);
       if (shape().rows) {
@@ -833,7 +889,8 @@ const GBBank = (() => {
         if (icons.has(cell.icon)) slot.picture.src = icons.get(cell.icon);
         else slot.picture.removeAttribute('src');
       }
-      slot.count.textContent = cell.total > 1 ? (cell.total > 9999 ? `${Math.floor(cell.total / 1000)}k` : String(cell.total)) : cell.gear?.plus > 0 ? `+${cell.gear.plus}` : '';
+      slot.count.textContent = cell.total > 1 ? (cell.total > 9999 ? `${Math.floor(cell.total / 1000)}k` : String(cell.total)) : '';
+      fillMarks(slot, cell);
       slot.hidden = false;
     }
     function layout() {
@@ -985,7 +1042,7 @@ const GBBank = (() => {
       if (options.favouritesChanged) options.favouritesChanged(rules.favourites.size);
       if (storage) {
         storage.set({bankExclusions: {excluded: [...settings.excluded], whitelist: [...settings.whitelist], excludeBound: settings.excludeBound},
-          bankRules: {types: [...rules.types], stats: rules.stats, always: [...rules.always], quality: rules.quality,
+          bankRules: {version: 2, types: [...rules.types], stats: rules.stats, always: [...rules.always], quality: rules.quality,
             favourites: [...rules.favourites].map(([key, item]) => ({key, name: item.name, icon: item.icon}))}}).catch(() => {});
       }
       renderExclusions();
@@ -1016,9 +1073,14 @@ const GBBank = (() => {
     }
     function renderStacking() {
       const summary = el('bank-stacking-summary');
-      if (summary) summary.textContent = el('bank-stack').checked === false ? 'Stacking: off' : `Stacking: ${rules.types.size} of ${TYPES.length} types` + (rules.always.size ? `, ${rules.always.size} always` : '');
+      if (summary) summary.textContent = el('bank-stack').checked === false ? 'Stacking: off' : `Stacking: ${rules.types.size === TYPES.length ? 'all types' : `${rules.types.size} of ${TYPES.length} types`}` + (rules.always.size ? `, ${rules.always.size} always` : '');
       root.querySelectorAll?.('[data-stack-type]')?.forEach(box => { box.checked = rules.types.has(box.dataset.stackType); });
       if (el('bank-stack-stats')) el('bank-stack-stats').value = rules.stats;
+      const identical = el('bank-stack-identical');
+      if (identical) {
+        identical.checked = rules.stats !== 'apart';
+        identical.disabled = el('bank-stack').checked === false;
+      }
       if (el('bank-quality-borders')) el('bank-quality-borders').checked = rules.quality;
       renderList('bank-always-list', rules.always, key => rules.always.delete(key));
     }
@@ -1101,6 +1163,11 @@ const GBBank = (() => {
         picture.src = icons.get(cell.icon);
         slot.append(picture);
       }
+      slot.tierMark = make('span', 'bank-mark bank-mark-tier');
+      slot.durabilityMark = make('span', 'bank-mark bank-mark-hd');
+      slot.plusMark = make('span', 'bank-mark bank-mark-plus');
+      slot.append(slot.tierMark, slot.durabilityMark, slot.plusMark);
+      fillMarks(slot, cell);
       const name = make('h2', '', cell.name);
       if (cell.color) name.style.color = `#${cell.color}`;
       const heading = make('div');
@@ -1404,6 +1471,28 @@ const GBBank = (() => {
     el('bank-exclusion-add').addEventListener('click', () => addFromBox(settings.excluded, settings.whitelist));
     el('bank-whitelist-add').addEventListener('click', () => addFromBox(settings.whitelist, settings.excluded));
     el('bank-stack-stats')?.addEventListener('change', event => { rules.stats = event.target.value; settingsChanged(); });
+    el('bank-stack-identical')?.addEventListener('change', event => { rules.stats = event.target.checked ? 'match' : 'apart'; settingsChanged(); });
+    // The corner marks' colours, kept in this Chrome
+    let markColors = {...MARK_COLORS};
+    const markInputs = () => [...(root.querySelectorAll?.('[data-mark-color]') || [])];
+    function showMarkColors() {
+      for (const input of markInputs()) input.value = markColors[input.dataset.markColor];
+      if (hasDom) for (const [name, color] of Object.entries(markColors)) document.documentElement.style.setProperty(`--mark-${name}`, color);
+      const reset = el('bank-marks-reset');
+      if (reset) reset.hidden = Object.keys(MARK_COLORS).every(name => markColors[name] === MARK_COLORS[name]);
+    }
+    for (const input of markInputs()) {
+      input.addEventListener('input', () => {
+        markColors[input.dataset.markColor] = input.value.toLowerCase();
+        showMarkColors();
+      });
+      input.addEventListener('change', () => { if (storage) storage.set({bankMarkColors: markColors}).catch(() => {}); });
+    }
+    el('bank-marks-reset')?.addEventListener('click', () => {
+      markColors = {...MARK_COLORS};
+      showMarkColors();
+      if (storage) storage.remove('bankMarkColors').catch(() => {});
+    });
     el('bank-quality-borders')?.addEventListener('change', event => { rules.quality = event.target.checked; settingsChanged(); });
     root.querySelectorAll?.('[data-stack-type]')?.forEach(box => box.addEventListener('change', () => {
       if (box.checked) rules.types.add(box.dataset.stackType);
@@ -1523,16 +1612,23 @@ const GBBank = (() => {
       });
     }
     if (storage) {
-      storage.get(['bankExclusions', 'bankRules', 'bankLayout']).then(({bankExclusions: saved, bankRules: kept, bankLayout}) => {
+      storage.get(['bankExclusions', 'bankRules', 'bankLayout', 'bankMarkColors']).then(({bankExclusions: saved, bankRules: kept, bankLayout, bankMarkColors}) => {
         setLayout(bankLayout || 'grid', false);
+        if (bankMarkColors) {
+          for (const name of Object.keys(MARK_COLORS)) if (/^#[0-9a-f]{6}$/i.test(bankMarkColors[name] || '')) markColors[name] = bankMarkColors[name];
+          showMarkColors();
+        }
         if (saved) {
           settings.excluded = new Set(saved.excluded || []);
           settings.whitelist = new Set(saved.whitelist || []);
           settings.excludeBound = !!saved.excludeBound;
         }
         if (kept) {
-          if (Array.isArray(kept.types)) rules.types = new Set(kept.types.filter(type => TYPES.includes(type)));
-          if (['apart', 'match', 'all'].includes(kept.stats)) rules.stats = kept.stats;
+          // Saved before identical items stacked by default, these were the old defaults, so they start over once
+          if (kept.version >= 2) {
+            if (Array.isArray(kept.types)) rules.types = new Set(kept.types.filter(type => TYPES.includes(type)));
+            if (['apart', 'match', 'all'].includes(kept.stats)) rules.stats = kept.stats;
+          }
           rules.always = new Set(Array.isArray(kept.always) ? kept.always : []);
           rules.quality = kept.quality !== false;
           rules.favourites = new Map((Array.isArray(kept.favourites) ? kept.favourites : []).filter(item => item?.key).map(item => [String(item.key), {name: String(item.name || ''), icon: String(item.icon || '')}]));
@@ -1561,5 +1657,5 @@ const GBBank = (() => {
   }
   return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, DEFAULT_RULES,
     formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
-    rosterRows, renderRoster, statTable, renderStats, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, transferStones, transferStonesText, bankKnown};
+    rosterRows, renderRoster, statTable, renderStats, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
 })();

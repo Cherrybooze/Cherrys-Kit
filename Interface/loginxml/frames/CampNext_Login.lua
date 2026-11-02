@@ -3,7 +3,11 @@
 --   LOGCHAR_FLAG = 1
 --   LOGCHAR_MODE = "next" | "prev" | "current" | "index"
 --   LOGCHAR_TARGET = <character index>   (only for "index")
+--   LOGCHAR_FROM = <name of the character being left>
 -- and logs out. This file picks that up on the character select screen.
+-- The client fills the character list one character at a time and only then selects the one last played
+-- (UPDATE_SELECTED_CHARACTER, then UPDATE_CHARACTER_SELECT_LIST). So nothing is picked before that list is
+-- in, and the pick is held until the login starts: a late selection from the client can't undo it.
 local me = {
   armed = 0,
   mode = nil,          -- "next", "prev", "current" or "index"
@@ -14,6 +18,12 @@ local me = {
   retryInterval = 0.5,
   waited = 0,
   timeout = 15,        -- seconds before giving up and leaving the screen to the user
+  from = nil,          -- name of the character the switch started from
+  listIn = false,      -- the client has sent the whole character list since arming
+  listWait = 6,        -- seconds to wait for that list before going on with what is there
+  entering = nil,      -- name of the character about to be logged in
+  enterWait = 0,
+  enterDelay = 1.0,    -- seconds on the target before logging in, so its model shows first
 }
 
 local function log(msg)
@@ -30,6 +40,10 @@ local function reset()
   me.targetIndex = nil
   me.retryTimer = 0
   me.waited = 0
+  me.from = nil
+  me.listIn = false
+  me.entering = nil
+  me.enterWait = 0
 end
 
 local function getPrevIndex(i, count)
@@ -58,12 +72,14 @@ local function getNextIndex(i, count)
   return i + 1
 end
 
--- arms CampNext; usable from the DEBUG command box too ("campnext next")
-function me.activate(mode, target)
+-- arms CampNext; usable from the DEBUG command box too ("campnext next"), where the list is already in
+function me.activate(mode, target, from, listIn)
   reset()
   me.armed = 1
   me.mode = mode or "next"
   me.wanted = tonumber(target)
+  me.from = type(from) == "string" and from ~= "" and from or nil
+  me.listIn = listIn ~= false
   log("Armed mode=" .. tostring(me.mode) .. (me.wanted and (" target=" .. me.wanted) or ""))
 end
 
@@ -76,11 +92,12 @@ end
 
 local function importFlag()
   if _G.LOGCHAR_FLAG == 1 then
-    local mode, target = _G.LOGCHAR_MODE, _G.LOGCHAR_TARGET
+    local mode, target, from = _G.LOGCHAR_MODE, _G.LOGCHAR_TARGET, _G.LOGCHAR_FROM
     _G.LOGCHAR_FLAG = 0
     _G.LOGCHAR_MODE = nil
     _G.LOGCHAR_TARGET = nil
-    me.activate(mode, target)
+    _G.LOGCHAR_FROM = nil
+    me.activate(mode, target, from, false)
   end
 end
 
@@ -97,6 +114,41 @@ local function computeTarget(count)
     end
   end
   return nil
+end
+
+-- Where the switch starts: the character it was asked from, found by name, else the one the client selected
+local function startIndex(selected, count)
+  if me.from then
+    for i = 1, count do
+      if GetCharacterInfo(i) == me.from then
+        return i
+      end
+    end
+  end
+  return selected
+end
+
+-- On the target: wait a moment, putting the selection back if anything moved it, then log in
+local function enter(selected, elapsed)
+  if selected ~= me.targetIndex or GetCharacterInfo(me.targetIndex) ~= me.entering then
+    if GetCharacterInfo(me.targetIndex) ~= me.entering then
+      log("The character list changed, cancelled")
+      reset()
+      return
+    end
+    log("Selection moved to " .. tostring(selected) .. ", back to " .. tostring(me.targetIndex))
+    login.charselect.selected = me.targetIndex
+    SelectCharacter(me.targetIndex)
+    me.enterWait = me.enterDelay
+    return
+  end
+  me.enterWait = me.enterWait - (elapsed or 0)
+  if me.enterWait > 0 then
+    return
+  end
+  log("Logging into " .. tostring(me.targetIndex) .. " (" .. tostring(me.entering) .. ")")
+  reset()
+  login.charselect.login()
 end
 
 local _original_onUpdate = login.charselect.onUpdate
@@ -117,6 +169,19 @@ login.charselect.onUpdate = function(frame, elapsed)
     log("Gave up after " .. me.timeout .. "s, pick a character by hand")
     reset()
     return
+  end
+
+  if me.entering then
+    enter(login.charselect.selected, elapsed)
+    return
+  end
+
+  if not me.listIn then
+    if me.waited < me.listWait then
+      return
+    end
+    log("No character list after " .. me.listWait .. "s, going on with what is there")
+    me.listIn = true
   end
 
   me.retryTimer = me.retryTimer + (elapsed or 0)
@@ -144,7 +209,7 @@ login.charselect.onUpdate = function(frame, elapsed)
   end
 
   if not me.lastIndex then
-    me.lastIndex = selected
+    me.lastIndex = startIndex(selected, count)
     log("Detected last index: " .. tostring(me.lastIndex))
     return
   end
@@ -165,10 +230,8 @@ login.charselect.onUpdate = function(frame, elapsed)
     local name = GetCharacterInfo(me.targetIndex)
 
     if name then
-      log("Logging into " .. tostring(me.targetIndex) .. " (" .. tostring(name) .. ")")
-      login.charselect._locks.loginChar = name
-      login.charselect._locks.loginTime = 1.0
-      reset()
+      me.entering = name
+      me.enterWait = me.enterDelay
     end
 
     return
@@ -177,6 +240,17 @@ login.charselect.onUpdate = function(frame, elapsed)
   log("Force " .. tostring(selected) .. " -> " .. tostring(me.targetIndex))
   login.charselect.selected = me.targetIndex
   SelectCharacter(me.targetIndex)
+end
+
+-- The whole list is in once the client sends this, with the last played character already selected
+local _original_listEvent = login.charselect.UPDATE_CHARACTER_SELECT_LIST
+login.charselect.UPDATE_CHARACTER_SELECT_LIST = function(...)
+  importFlag() -- before the stock auto login looks, so a queued switch keeps the screen
+  _original_listEvent(...)
+  if me.armed == 1 and not me.listIn then
+    me.listIn = true
+    me.waited = 0 -- a slow list (a queue on the server) doesn't eat into the time to switch
+  end
 end
 
 -- Leave the character names (slot order) behind for LogNextChar's tooltips in game

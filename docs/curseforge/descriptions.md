@@ -489,6 +489,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.1**: mana stones and gear with identical stats stack, with a switch beside the Bank's filters. Slots show the tier, plus, durability above 101 and stack count in their own corners, in colours you can pick. *#clean* and *#dirty* find mana stones without or with stats, in the window and on the page.
 - **1.6.0**: a new Global Bank page and popup, with its pages grouped down the side, an item panel, Transfer stones and an Excluded list on Characters, and a Terminal that runs in the helper itself. Selecting characters only changes the Bank when you press Use in Bank.
 - **1.5.9**: logging in is enough to record a character's bank, also when it is empty. No bank visit needed.
 - **1.5.8**: Steam shows as one more account: characters saved from Steam group together on each server, in the window and on the page.
@@ -1112,6 +1113,8 @@ Made for alts. One click, and you are on the next character without touching the
 
 ## Recent changes
 
+- **1.3.3**: Next and Prev no longer stay on the character screen. The login screen waits for the whole character list before it picks, and a logout you cancel drops the queued switch. Run `Install login screen.bat` again after updating.
+- **1.3.2**: the character screen shows each character's Arcane Transmutor charges under its gold.
 - **1.3.1**: the login screen finds each character's gold by server, so same-named characters on different servers no longer mix. Gold saved before servers were recorded shows a question mark.
 - **1.3.0**: Cherry's Loginxml is now part of this addon: one addon, one zip, and one row in the hub. The login screen travels inside the zip, and your saved logins and toggles carry over. Its installer moves the old `CherrysLoginxml` and `CherrysLoginxmlHook` folders to `Interface\offloaded_addons`.
 

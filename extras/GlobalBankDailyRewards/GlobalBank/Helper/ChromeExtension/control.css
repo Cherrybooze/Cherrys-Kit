@@ -161,12 +161,23 @@ button.status-chip:active { transform: none; box-shadow: none; }
 .bank-grid:focus-visible .bank-slot.is-active { outline: 2px solid var(--gb-gold); outline-offset: 1px; }
 .bank-slot.is-open { border-color: var(--gb-gold); box-shadow: 0 0 0 2px var(--gb-gold); z-index: 2; }
 .bank-slot.bank-excluded { opacity: .35; }
-.bank-star { position: absolute; left: 2px; top: 0; display: none; font-size: 11px; color: var(--gb-gold); text-shadow: 1px 1px 1px #000, -1px -1px 1px #000; }
+.bank-star { position: absolute; left: 50%; top: 0; display: none; font-size: 11px; color: var(--gb-gold); text-shadow: 1px 1px 1px #000, -1px -1px 1px #000; transform: translateX(-50%); }
 .bank-slot.is-favourite .bank-star { display: block; }
 .bank-slot img { position: absolute; inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: 3px; }
 .bank-slot img:not([src]) { visibility: hidden; }
 .bank-letters { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #d9b65c; }
-.bank-count { position: absolute; right: 3px; bottom: 1px; font-size: 12px; font-weight: 700; color: #fff; text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000; }
+.bank-count { position: absolute; right: 3px; bottom: 1px; font-size: 12px; font-weight: 700; color: var(--mark-count, #fff); text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000; }
+/* A slot's other corners: tier, durability above 101, plus. Their colours are picked under the grid. */
+.bank-mark { position: absolute; font-size: 11px; font-weight: 700; line-height: 1; text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000; pointer-events: none; }
+.bank-mark-tier { left: 3px; top: 3px; color: var(--mark-tier, #ff6b5e); }
+.bank-mark-hd { right: 3px; top: 3px; font-size: 10px; color: var(--mark-hd, #5fe07a); }
+.bank-mark-plus { left: 3px; bottom: 3px; color: var(--mark-plus, #ffd75e); }
+.bank-grid.is-compact .bank-mark { font-size: 10px; }
+.bank-grid.is-compact .bank-mark-hd { font-size: 9px; }
+.bank-grid.is-list .bank-mark { font-size: 9px; }
+.bank-grid.is-list .bank-mark-tier { left: 8px; top: 6px; }
+.bank-grid.is-list .bank-mark-hd { left: 28px; right: auto; top: 6px; }
+.bank-grid.is-list .bank-mark-plus { left: 8px; bottom: 6px; }
 .bank-grid.is-compact { --slot: 44px; }
 .bank-grid.is-compact .bank-slot img { inset: 2px; width: calc(100% - 4px); height: calc(100% - 4px); }
 .bank-slot-text { display: none; }
@@ -182,6 +193,16 @@ button.status-chip:active { transform: none; box-shadow: none; }
 .bank-slot-text.is-quantity { font-weight: 600; color: #d5dfec; text-align: right; }
 .inventory-footer { display: flex; flex: none; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; padding: 5px 12px; font-size: 11px; color: #a6bad0; background: #0e1925; border-top: 1px solid #223142; }
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 11px; color: #a0b3c8; }
+.mark-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 11px; color: #a0b3c8; }
+.mark-legend label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.mark-legend input[type="color"] { width: 14px; min-height: 14px; height: 14px; padding: 0; cursor: pointer; background: none; border: 1px solid #ffffff55; border-radius: 3px; }
+.mark-legend input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.mark-legend input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 2px; }
+.mark-legend .link-button { font-size: 11px; }
+/* Each filter only as wide as what it says now, so the row keeps to one line */
+.bank-filters .filter-row .filter-select select { field-sizing: content; }
+.bank-switch { display: inline-flex; align-items: center; gap: 7px; min-height: 30px; padding: 0 9px; font-size: 12px; color: #c3d0de; white-space: nowrap; cursor: pointer; background: #172433; border: 1px solid #2c3d50; border-radius: 6px; }
+.bank-switch:hover { border-color: #40516a; }
 .legend span { display: inline-flex; align-items: center; gap: 4px; }
 .legend-dot { width: 7px; height: 7px; background: var(--quality); border-radius: 50%; }
 .attention-bar { display: flex; flex: none; flex-wrap: wrap; gap: 4px 18px; padding: 6px 12px; font-size: 12px; color: #d2dbe5; background: linear-gradient(90deg, #4f41201b, #1a242d); border: 1px solid #534730; border-radius: 8px; }

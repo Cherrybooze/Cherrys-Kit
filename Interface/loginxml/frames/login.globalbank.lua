@@ -45,7 +45,10 @@ function me.read()
     return false
   end
   for _, entry in ipairs(import) do
-    local name, gold, when = string.match(tostring(entry.s), '^GB1~([^~`]*)~[^~`]*~[^~`]*~([^~`]*)~[^~`]*~[^~`]*~[^~`]*~([^~`]*)')
+    local name, gold, when
+    if type(entry) == 'table' then -- anything else in the file is skipped, never an error on the character screen
+      name, gold, when = string.match(tostring(entry.s), '^GB1~([^~`]*)~[^~`]*~[^~`]*~([^~`]*)~[^~`]*~[^~`]*~[^~`]*~([^~`]*)')
+    end
     if name and name ~= '' then
       local server = string.match(tostring(entry.s), '`S~([^`]*)')
       local key = string.lower(name)
