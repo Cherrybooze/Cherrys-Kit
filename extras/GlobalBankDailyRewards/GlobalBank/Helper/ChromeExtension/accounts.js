@@ -529,7 +529,7 @@ const GBAccounts = (() => {
       heatMeasure.font = `11px ${getComputedStyle(document.body).fontFamily}`;
       let widest = 0;
       for (const name of shown) widest = Math.max(widest, heatMeasure.measureText(name).width);
-      return Math.ceil(widest) + 8 + (heatShowsGold(heatLetters) ? 30 : 0) + (mail ? 17 : 0);
+      return Math.ceil(widest) + 8 + (heatShowsGold(heatLetters) ? 30 : 0) + (mail ? 22 : 0);
     }
     // Which servers the map leaves out, and whether each one's region has its name on top. Kept in this Chrome.
     let heatHidden = new Set();
@@ -656,10 +656,13 @@ const GBAccounts = (() => {
         const balance = make('span', 'heat-balance', shortGold(box.total));
         balance.title = `${number(box.total)} gold, ${number(box.fullCaps)} full ${box.fullCaps === 1 ? 'cap' : 'caps'}`;
         head.append(balance);
-        node.append(head);
-        // Each server is a region of its own, its name on top, so a name never turns up halfway down a column
+        // Each server is a region of its own, its name on top, so a name never turns up halfway down a column. A region
+        // asks for a column for each RoM account, and small ones sit side by side.
+        const regions = make('div', 'heat-regions');
+        node.append(head, regions);
         for (const server of box.servers) {
           const region = make('section', 'heat-region');
+          region.style.setProperty('--region-columns', String(Math.max(1, server.roms.length)));
           region.setAttribute('aria-label', `${server.server}: ${number(server.total)} gold`);
           if (heatServerNames) {
             const title = make('h3', 'heat-server');
@@ -670,7 +673,7 @@ const GBAccounts = (() => {
           const flow = make('div', 'heat-flow');
           for (const rom of server.roms) flow.append(block(rom.rom, rom.characters));
           region.append(flow);
-          node.append(region);
+          regions.append(region);
         }
         return node;
       }));

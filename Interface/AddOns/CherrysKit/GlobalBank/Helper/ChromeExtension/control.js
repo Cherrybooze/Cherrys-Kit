@@ -508,15 +508,15 @@
     return section;
   }
   // The game's tooltip for a worn item, inside the details drawer: the page's own tooltip sits below an open dialog
-  function profileTip(container, make) {
+  function profileTip(make) {
     const node = make('div', 'bank-tooltip profile-tip');
     node.hidden = true;
-    container.append(node);
     const place = (x, y) => {
       node.style.left = Math.max(4, Math.min(x + 14, window.innerWidth - node.offsetWidth - 8)) + 'px';
       node.style.top = Math.max(4, Math.min(y + 14, window.innerHeight - node.offsetHeight - 8)) + 'px';
     };
     return {
+      node,
       show(event, item, label, anchor = null) {
         const lines = GBBank.tipLines(item.tip);
         const nodes = [];
@@ -631,7 +631,8 @@
     side.append(hero, metrics, details, actions);
     const body = byId('character-panel-body');
     body.className = 'character-panel-body';
-    body.replaceChildren(characterProfile(character, make, profileTip(body, make)), side);
+    const tip = profileTip(make);
+    body.replaceChildren(characterProfile(character, make, tip), side, tip.node);
     panel.classList.add('has-profile');
     panel.showModal();
   }

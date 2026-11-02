@@ -262,7 +262,7 @@ button.status-chip:active { transform: none; box-shadow: none; }
 .drawer::backdrop { background: #030912a3; }
 /* A character's details open wider, its profile to the left of them */
 .drawer.has-profile { width: 780px; }
-.character-panel-body { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 18px; min-height: 0; overflow-y: auto; }
+.character-panel-body { display: grid; flex: 1 1 auto; grid-template-columns: 330px minmax(0, 1fr); align-items: start; gap: 18px; min-height: 0; overflow-y: auto; }
 .character-details { min-width: 0; }
 .character-profile { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: linear-gradient(160deg, #142130, #0c1621); border: 1px solid #2d4155; border-radius: 10px; }
 .profile-head h3 { font-size: 13px; color: #e0c487; text-transform: uppercase; letter-spacing: 1px; }
@@ -430,15 +430,18 @@ tbody tr:last-child td { border-bottom: 0; }
 .heat-cell:hover { outline: 1px solid #fff; outline-offset: -1px; }
 .heat-cell.is-selected { outline: 2px solid #fff; outline-offset: -2px; }
 /* Each server is a region of its own inside its account, with its name on top */
-.heat-region + .heat-region { margin-top: 3px; }
-.heat-view.no-server-names .heat-region + .heat-region { padding-top: 3px; border-top: 1px dashed #3a4b5e; }
+/* Regions sit side by side, each as wide as its RoM accounts need, and wrap onto a new line when the box is full */
+.heat-regions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 10px; }
+.heat-region { flex: 0 1 calc(var(--region-columns, 1) * (var(--heat-column, 100px) + 3px) - 3px); min-width: min(var(--heat-column, 100px), 100%); }
+.heat-view.no-server-names .heat-region { padding-left: 6px; border-left: 1px dashed #3a4b5e; }
+.heat-view.no-server-names .heat-region:first-child { padding-left: 0; border-left: 0; }
 .heat-server-list { display: flex; flex-direction: column; max-height: 40vh; overflow-y: auto; }
 .heat-server-list label { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
 .heat-server-list .hint { margin-left: auto; }
 /* Gold waiting in the mailbox, after the name, and a ! when some of it goes soon */
 .heat-mail { position: relative; display: inline-flex; flex: none; align-items: center; opacity: .9; }
 .heat-mail svg { width: 12px; height: 12px; stroke-width: 2.2; }
-.heat-mail i { position: absolute; top: -4px; right: -4px; font-size: 9px; font-style: normal; font-weight: 800; line-height: 1; color: #fff; text-shadow: 0 0 2px #b00, 0 0 2px #b00, 0 0 3px #000; }
+.heat-mail i { margin-left: 1px; font-size: 11px; font-style: normal; font-weight: 900; line-height: 1; }
 .heat-view.is-letters .heat-mail { display: none; }
 /* The Mail page */
 .mail-table td { white-space: normal; }
