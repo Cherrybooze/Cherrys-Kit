@@ -21,6 +21,11 @@ None of this has run in the game yet. The tests use a simulated client, and the 
 | S9 | With only the hub and Cherry's Grid installed, run it. | **Dependencies** lists what's missing with what uses it, here Cherry's KittyCombo, and asks once: y, n, or numbers. Whatever you pick installs, with nothing else touched. |
 | S10 | Run it again after answering n to something. | It isn't asked about again, and a grey line names it. Run the setup with `-AskAgain` and it's asked again. |
 | S11 | With Global Bank installed and no Chrome, run it and pick Chrome. | winget installs Chrome, and the Chrome extension step then offers its installer. |
+| S12 | Extract the Full ZIP into Downloads and double-click `!setup_cherryskit.bat` there. | It says it isn't in a game's AddOns folder, lists your Runes of Magic installs with what each has, and after you pick one, copies the kit there and carries on as usual. |
+| S13 | Run it from Downloads again, answer n, then 1, and type a game's Interface folder. | The kit goes into that game's Interface\AddOns, made if it wasn't there. |
+| S14 | Run it from Downloads and choose 2; run it again and choose 3. | Each shows the steps to do it by hand, with your game's AddOns folder and the ZIP's name, and closes without changing anything. |
+| S15 | On a first setup, answer the mailbox question with 2 (zMail). | zMail comes from the release into Interface\AddOns\zmail, Mailbox.txt says zMail, and the next run doesn't ask. In game, Ultimate Mail Mod stays off. |
+| S16 | Run it with `-AskAgain` and answer the mailbox question with 1. | zMail moves to offloaded_addons, and Ultimate Mail Mod runs in game. |
 | I1 | Type `/cinfo`, then `/cq`, and go through the four tabs. | One window. `/cq` opens on Quests. No label is cut off and no row overlaps the buttons at the bottom. |
 | I2 | Tick options on each tab and watch what they change: chat filters, the tooltip's lines, the ID numbers, health numbers over heads. | They apply at once, with no Reload UI. They're still set after a relog. |
 | I3 | Untick **Extended Macro Icons** and Reload UI, then tick it and Reload UI. | The game's macro window comes back, then the extended one. The tick stays as you left it. |

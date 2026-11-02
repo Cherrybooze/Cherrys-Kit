@@ -3,8 +3,8 @@
 ### Install or update in four steps
 
 1. **Download.** The whole kit: the button above. Only some addons: the **Hub** ZIP and the addon ZIPs you want from the [release page](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115). Every addon needs the hub.
-2. **Extract into your game's `Interface\AddOns\` folder**, for example `C:\RunesOfMagic\Interface\AddOns\`. Several ZIPs all hold a `CherrysKit` folder: let Windows merge them. You now have `Interface\AddOns\CherrysKit\` and, from the Full or Hub ZIP, **`Interface\AddOns\!setup_cherryskit.bat`**.
-3. **Double-click `!setup_cherryskit.bat`.** It checks your folders, then asks at most five yes/no questions, such as:
+2. **Extract it**, anywhere you like, such as Downloads, or straight into your game's `Interface\AddOns\` folder, for example `C:\RunesOfMagic\Interface\AddOns\`. Several ZIPs all hold a `CherrysKit` folder: let Windows merge them. Next to that folder, the Full and Hub ZIPs put **`!setup_cherryskit.bat`**.
+3. **Double-click `!setup_cherryskit.bat`.** Away from the game, it lists the Runes of Magic installs it finds, Steam or Gameforge, and asks which to set up. None of them right? Type the folder, or let it show you how to put the files in the game by hand. On a first setup it asks whether the kit uses **Ultimate Mail Mod**, which comes with it, or **zMail**, pyrr's own addon, which the kit only distributes, with pyrr's permission. You can switch later on the Global Bank page. Then it checks your folders and asks at most five yes/no questions, such as:
    - *Update these now?* when GitHub's latest release has newer versions of your addons. Old versions are kept in `Interface\offloaded_addons`.
    - *Install them?* for what your addons can use that's missing, such as another kit addon or Chrome for Global Bank's page. Pick them by number, or none; a no is remembered.
    - *Move these folders into offloaded_addons?* for old separate copies of the kit's addons, which would otherwise keep the kit's versions off. Nothing is deleted.
@@ -102,7 +102,7 @@ Old separate copies of the same addons: **`!setup_cherryskit.bat`** moves them t
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches, minimap button and a clock for other addons. | `/ck`,`/rwa` | 0.4.30 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches, minimap button and a clock for other addons. | `/ck`,`/rwa` | 0.4.31 |
 | [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.18 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays, with short share codes. | `/wa` | 0.9.33 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji, encrypted channels and chat display settings. | `/cchat` | 0.11.2 |
@@ -145,7 +145,7 @@ Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extensi
 3. **A new version for every changed addon.** Change the files and keep the number, and players never get the change. The hub follows the same rule, and every release gets a new `kit_version`, in `CherrysKit.toc` too.
 4. **No player data in addon folders.** An update moves the old folder away. Settings go in saved variables. A file players edit by hand, like `Commands.lua`, must be on the setup's `$script:KeepOnUpdate` list.
 5. **Say what a rename or merge replaces.** Take the old folder's lines out of `CherrysKit.toc`, so the setup moves it out, and list the old folders under `origin.others` in `release-packages.json`, so the new addon comes in for whoever had the old one.
-6. **ZIPs hold only `CherrysKit/...`**, plus the two launchers at the root of the Full and Hub ZIPs. The builder checks this, and the setup refuses anything else.
+6. **ZIPs hold only `CherrysKit/...`**, plus the two launchers at the root of the Full and Hub ZIPs. An addon kept beside the kit, like zMail, fills only its own folder, named by its `install_folder`, and says its version on the first line of `CherrysKit-version.txt`. The builder checks this, and the setup refuses anything else.
 7. **A release is tagged `v<kit version>`, carries every ZIP, `release-versions.json`, `release-manifest.json` and `SHA256SUMS.txt`, and is marked Latest.** The setup only offers the release marked Latest, so a prerelease reaches testers by its link and not through the tool. Never replace a published ZIP's files.
 8. **Try the update before publishing:** build, then run `Setup-CherrysKit.ps1 -ReleaseFolder dist\<kit version>` in a copy of a game folder. Add `-ReinstallAll` to reinstall packages whose version didn't change.
 9. **Say what an addon can use.** The setup's Dependencies step offers the `works_with` addons in `release-packages.json` to anyone who has the addon naming them. A Windows program an addon needs goes in the setup's `Get-Dependencies`.

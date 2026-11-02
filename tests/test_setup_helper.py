@@ -683,6 +683,202 @@ class GuidedSetupTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('Done', result.stdout)
 
+    # ---- From wherever the Full ZIP was extracted. CHERRYSKIT_FIND_INSTALLS stands in for the installs a PC has.
+
+    def downloads_copy(self, inside=None):
+        """The Full ZIP extracted away from the game's AddOns: in a Downloads folder, or somewhere inside the game."""
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        copy = (Path(inside) if inside else Path(temp.name) / 'Downloads') / 'CherrysKit-Full-9.9.9'
+        kit = copy / 'CherrysKit'
+        (kit / 'Setup').mkdir(parents=True)
+        (kit / 'KitLoad').mkdir()
+        shutil.copy2(SCRIPT, kit / 'Setup' / SCRIPT.name)
+        shutil.copy2(LAUNCHER, copy / LAUNCHER.name)
+        shutil.copy2(STUB, copy / STUB.name)
+        shutil.copy2(KIT / 'KitOrigins.lua', kit / 'KitOrigins.lua')
+        (kit / 'CherrysKit.toc').write_text('## Version: 9.9.9\nKitLoad/start.lua\n', encoding='utf-8')
+        (kit / 'README.md').write_text("# Cherry's Kit\n\nVersion **1.0** · Kit release\n", encoding='utf-8')
+        (kit / 'KitLoad/start.lua').write_text('-- kit\n', encoding='utf-8')
+        (kit / 'Mailbox.txt').write_text('-- Which mailbox addon the kit uses\nMailbox = "auto"\n', encoding='utf-8')
+        return copy
+
+    def bare_game(self, name='Game'):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        game = Path(temp.name) / name
+        (game / 'Interface').mkdir(parents=True)
+        (game / 'Client.exe').write_text('stand-in\n', encoding='utf-8')
+        return game
+
+    def run_from(self, copy, answers, games=(), *extra):
+        env = dict(os.environ, CHERRYSKIT_FIND_INSTALLS=';'.join(str(game) for game in games) or 'none')
+        return subprocess.run(
+            [SHELL, '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(copy / 'CherrysKit/Setup' / SCRIPT.name),
+             '-NoUpdateCheck', *extra],
+            input=answers, capture_output=True, text=True, errors='replace', timeout=300, env=env)
+
+    def test_from_anywhere_the_game_found_is_offered_and_set_up(self):
+        game = self.bare_game()
+        copy = self.downloads_copy()
+        result = self.run_from(copy, '\n1\n' + '\n' * 8, [game])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("isn't in a game's Interface\\AddOns folder", result.stdout)
+        self.assertIn('Runes of Magic on this PC', result.stdout)
+        self.assertIn('no Cherry\'s Kit yet', result.stdout)
+        addons = game / 'Interface/AddOns'
+        self.assertTrue((addons / 'CherrysKit/CherrysKit.toc').is_file())
+        self.assertTrue((addons / LAUNCHER.name).is_file())
+        self.assertIn('Mailbox = "UMM"', (addons / 'CherrysKit/Mailbox.txt').read_text(encoding='utf-8'))
+        # Picking the game was the answer: no second question before copying, and the extracted copy stays.
+        self.assertNotIn('(no questions', result.stdout)
+        self.assertTrue((copy / 'CherrysKit/CherrysKit.toc').is_file())
+
+    def test_none_of_them_then_a_typed_interface_folder(self):
+        found, wanted = self.bare_game('Found'), self.bare_game('Wanted')
+        copy = self.downloads_copy()
+        result = self.run_from(copy, f'n\n1\n{wanted / "Interface"}\n1\nn\n' + '\n' * 8, [found])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((wanted / 'Interface/AddOns/CherrysKit/CherrysKit.toc').is_file())
+        self.assertFalse((found / 'Interface/AddOns').exists())
+
+    def test_the_ways_by_hand_explain_and_change_nothing(self):
+        copy = self.downloads_copy()
+        (copy.parent / 'CherrysKit-Full-9.9.9.zip').write_bytes(b'PK\x05\x06' + b'\0' * 18)
+        before = sorted(str(path) for path in copy.parent.rglob('*'))
+        move = self.run_from(copy, '2\n\n')
+        self.assertEqual(move.returncode, 0, move.stdout + move.stderr)
+        self.assertIn('Move the extracted folders into the game yourself', move.stdout)
+        self.assertIn('<your game folder>', move.stdout)
+        extract = self.run_from(copy, '3\n\n')
+        self.assertEqual(extract.returncode, 0, extract.stdout + extract.stderr)
+        self.assertIn('Extract the ZIP again', extract.stdout)
+        self.assertIn('CherrysKit-Full-9.9.9.zip', extract.stdout)
+        self.assertEqual(sorted(str(path) for path in copy.parent.rglob('*')), before)
+
+    def test_a_copy_extracted_inside_the_game_offers_that_game(self):
+        game = self.bare_game()
+        copy = self.downloads_copy(inside=game / 'Interface')
+        result = self.run_from(copy, '\n1\n' + '\n' * 8)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('this copy is inside it', result.stdout)
+        self.assertTrue((game / 'Interface/AddOns/CherrysKit/CherrysKit.toc').is_file())
+
+    # ---- The mailbox addon: Ultimate Mail Mod with the kit, or zMail beside it in Interface\AddOns\zmail.
+
+    def mailbox_game(self):
+        game, addons = self.small_kit('KitLoad/start.lua')
+        (game / 'Client.exe').write_text('stand-in\n', encoding='utf-8')
+        return game, addons
+
+    def run_mailbox(self, addons, *extra, answers=None):
+        command = [SHELL, '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(addons / 'CherrysKit/Setup' / SCRIPT.name), *extra]
+        return subprocess.run(command, input=answers, capture_output=True, text=True, errors='replace', timeout=300)
+
+    def test_choosing_ultimate_mail_mod_moves_zmail_out_and_zmail_brings_it_back(self):
+        game, addons = self.mailbox_game()
+        (addons / 'zmail').mkdir()
+        (addons / 'zmail/core.toc').write_text('## Title: zMail\n', encoding='utf-8')
+        # Copies parked earlier: one Global Bank's page parked in January, and the old version an update kept.
+        parked = game / 'Interface/offloaded_addons'
+        for name, note in (('zmail (offloaded 2026-01-01 000000)', '{"from":"addons","folder":"zmail","title":"zMail","at":"2026-01-01T00:00:00Z"}'),
+                           ('zmail (before update 2026-12-31 235959)', None)):
+            (parked / name).mkdir(parents=True)
+            (parked / name / 'core.toc').write_text(f'-- {name}\n', encoding='utf-8')
+            if note:
+                (parked / name / 'offloaded-by-global-bank.json').write_text(note, encoding='utf-8')
+        first = self.run_mailbox(addons, '-NonInteractive', '-Mailbox', 'UMM')
+        self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+        self.assertFalse((addons / 'zmail').exists())
+        self.assertTrue((parked / 'zmail/core.toc').is_file())
+        # Noted the way Global Bank's Addons page notes what it parks, so the page can put it back.
+        note = json.loads((parked / 'zmail/offloaded-by-global-bank.json').read_text(encoding='utf-8'))
+        self.assertEqual((note['from'], note['folder']), ('addons', 'zmail'))
+        self.assertIn('Mailbox = "UMM"', (addons / 'CherrysKit/Mailbox.txt').read_text(encoding='utf-8'))
+        second = self.run_mailbox(addons, '-NonInteractive', '-Mailbox', 'zMail')
+        self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+        # The one parked last comes back, without its note; the January copy and the old version stay where they are.
+        self.assertEqual((addons / 'zmail/core.toc').read_text(encoding='utf-8'), '## Title: zMail\n')
+        self.assertFalse((addons / 'zmail/offloaded-by-global-bank.json').exists())
+        self.assertTrue((parked / 'zmail (offloaded 2026-01-01 000000)/core.toc').is_file())
+        self.assertTrue((parked / 'zmail (before update 2026-12-31 235959)/core.toc').is_file())
+        self.assertIn('Mailbox = "zMail"', (addons / 'CherrysKit/Mailbox.txt').read_text(encoding='utf-8'))
+
+    def test_the_mailbox_question_comes_once(self):
+        game, addons = self.mailbox_game()
+        (addons / 'CherrysKit/Mailbox.txt').write_text('-- kept\nMailbox = "auto"\n', encoding='utf-8')
+        first = self.run_mailbox(addons, '-NoUpdateCheck', answers='1\n' + '\n' * 8)
+        self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+        self.assertIn('Mailbox addon', first.stdout)
+        self.assertIn('Global Bank page', first.stdout)
+        self.assertIn("pyrr's own mailbox addon", first.stdout)
+        self.assertEqual((addons / 'CherrysKit/Mailbox.txt').read_text(encoding='utf-8'), '-- kept\nMailbox = "UMM"\n')
+        second = self.run_mailbox(addons, '-NoUpdateCheck', answers='\n' * 8)
+        self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+        self.assertNotIn('Mailbox addon', second.stdout)
+        # -AskAgain asks again.
+        again = self.run_mailbox(addons, '-NoUpdateCheck', '-AskAgain', answers='1\n' + '\n' * 8)
+        self.assertEqual(again.returncode, 0, again.stdout + again.stderr)
+        self.assertIn("pyrr's own mailbox addon", again.stdout)
+        # A kit without the file has a hub that doesn't read it: nothing to ask, and no file made.
+        (addons / 'CherrysKit/Mailbox.txt').unlink()
+        older = self.run_mailbox(addons, '-NoUpdateCheck', answers='\n' * 8)
+        self.assertEqual(older.returncode, 0, older.stdout + older.stderr)
+        self.assertNotIn('Mailbox addon', older.stdout)
+        self.assertFalse((addons / 'CherrysKit/Mailbox.txt').exists())
+
+    # As tools/build_release.py lists an addon kept beside the kit.
+    ZMAIL = {'archive_root': 'zmail/', 'install_folder': 'zmail', 'external': True, 'requires_hub': False,
+             'alternative_to': 'UltimateMailMod', 'title': 'zMail'}
+
+    def test_zmail_comes_from_the_release_when_chosen(self):
+        game, addons = self.old_game()
+        # install_folder alone says where it goes.
+        entry = {key: value for key, value in self.ZMAIL.items() if key != 'archive_root'}
+        release = self.fake_release(kit='9.9.9', hub='1.0', zMail=('1.4-ck1', {
+            'zmail/core.toc': '## Title: zMail\n', 'zmail/CherrysKit-version.txt': '1.4-ck1\n'}, entry))
+        result = self.run_update(addons, release, '-Mailbox', 'zMail')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('Installed zMail 1.4-ck1', result.stdout)
+        self.assertEqual((addons / 'zmail/CherrysKit-version.txt').read_text(encoding='utf-8'), '1.4-ck1\n')
+        self.assertIn('Mailbox = "zMail"', (addons / 'CherrysKit/Mailbox.txt').read_text(encoding='utf-8'))
+
+    def test_an_addon_beside_the_kit_updates_in_its_own_folder(self):
+        game, addons = self.old_game()
+        (addons / 'zmail').mkdir()
+        (addons / 'zmail/core.toc').write_text('-- old\n', encoding='utf-8')
+        (addons / 'zmail/CherrysKit-version.txt').write_text("1.3-ck1\nzMail is pyrr's project.\n", encoding='utf-8')
+        release = self.fake_release(kit='9.9.9', hub='1.0', zMail=('1.4-ck1', {
+            'zmail/core.toc': '-- new\n', 'zmail/CherrysKit-version.txt': "1.4-ck1\nzMail is pyrr's project.\n"}, self.ZMAIL))
+        result = self.run_update(addons, release)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertRegex(result.stdout, r'zMail +1\.3-ck1 +-> 1\.4-ck1')
+        self.assertEqual((addons / 'zmail/core.toc').read_text(encoding='utf-8'), '-- new\n')
+        kept = [path for path in (game / 'Interface/offloaded_addons').iterdir() if path.name.startswith('zmail (before update')]
+        self.assertEqual(len(kept), 1)
+        self.assertEqual((kept[0] / 'core.toc').read_text(encoding='utf-8'), '-- old\n')
+        self.assertFalse(any(path.name.startswith('CherrysKit 9.9.9') for path in (game / 'Interface/offloaded_addons').iterdir()))
+        # A copy the kit didn't put there, from CurseForge say, has no version file and stays as it is.
+        game, addons = self.old_game()
+        (addons / 'zmail').mkdir()
+        (addons / 'zmail/core.toc').write_text('-- theirs\n', encoding='utf-8')
+        result = self.run_update(addons, release)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn('zMail', result.stdout.split('Update')[0])
+        self.assertEqual((addons / 'zmail/core.toc').read_text(encoding='utf-8'), '-- theirs\n')
+
+    def test_a_zip_for_an_addon_beside_the_kit_stays_in_its_folder(self):
+        game, addons = self.old_game()
+        (addons / 'zmail').mkdir()
+        (addons / 'zmail/CherrysKit-version.txt').write_text('1.3-ck1\n', encoding='utf-8')
+        release = self.fake_release(kit='9.9.9', hub='1.0', zMail=('1.4-ck1', {
+            'zmail/core.toc': '-- new\n', 'CherrysKit/zBag/evil.lua': '-- no\n'}, self.ZMAIL))
+        result = self.run_update(addons, release)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('holds files outside its own folder', result.stdout)
+        self.assertFalse((addons / 'CherrysKit/zBag/evil.lua').exists())
+        self.assertEqual((addons / 'zmail/CherrysKit-version.txt').read_text(encoding='utf-8'), '1.3-ck1\n')
+
 
 if __name__ == '__main__':
     unittest.main()

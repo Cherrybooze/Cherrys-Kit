@@ -1,7 +1,9 @@
 # Cherry's Kit guided setup and update helper.
 #
 # Run through !setup_cherryskit.bat, or right-click !setup_cherryskit.ps1 and choose Run with PowerShell.
-# Both sit next to the CherrysKit folder at the ZIP root. This window checks where it was extracted, says
+# Both sit next to the CherrysKit folder at the ZIP root, which can be extracted anywhere: away from the game,
+# this window lists the Runes of Magic installs it finds and asks which to set up, or takes a typed folder, or
+# shows how to put the files in the game by hand. It asks which mailbox addon the kit uses, says
 # which addons are out of date against the latest release on GitHub and can update them, maps
 # Interface\AddOns, moves older copies of the kit's addons into Interface\offloaded_addons (nothing is
 # deleted), stops the Global Bank helper during updates, checks the tools and Chrome, and can walk through
@@ -34,20 +36,21 @@ param(
     [string]$AlsoInstall = '',    # another game folder to set up as well, without being asked
     [switch]$OtherInstall,        # set when another run of this script is setting this folder up as its second install
     [switch]$LoginScreenToo,      # with -OtherInstall: that run's player said yes to the login screen
-    [string]$ShareData = ''       # with -OtherInstall: the Gameforge Interface folder a Steam install shares its data with
+    [string]$ShareData = '',      # with -OtherInstall: the Gameforge Interface folder a Steam install shares its data with
+    [string]$Mailbox = ''         # UMM or zMail: the mailbox addon to use, without being asked
 )
 
 $ErrorActionPreference = 'Stop'
 $script:AskBudget = 5
 $script:AskRest = [Math]::Max(0, $script:AskBudget - $QuestionsUsed)
-$script:SetupVersion = '1.1.0'
+$script:SetupVersion = '1.2.0'
 $script:TempFiles = @()
 # Inside CherrysKit, the folders its manifest doesn't name that still belong to it.
 $script:KitOwnFolders = @('KitLoad', 'Media', 'docs', 'Setup')
 # What may sit beside the CherrysKit folder at a ZIP's root.
 $script:RootFiles = @('!setup_cherryskit.bat', '!setup_cherryskit.ps1')
 # Files players edit by hand. An update puts their copy back; docs/RELEASING.md asks new ones to be listed here.
-$script:KeepOnUpdate = @('Commands.lua', 'LoadTimes/Switch.txt')
+$script:KeepOnUpdate = @('Commands.lua', 'LoadTimes/Switch.txt', 'Mailbox.txt')
 $script:ReleaseBase = 'https://github.com/Cherrybooze/Cherrys-Kit/releases'
 $script:SteamAppId = '808290'
 $script:ReleaseTask = $null
@@ -532,12 +535,14 @@ function Set-SharedData([string]$steamInterface, [string]$gameforgeInterface) {
 # --------------------------------------------------------------------------------------------
 
 # The line near the top of every addon's README. A test keeps it equal to release-packages.json.
+# An addon kept in its own folder outside CherrysKit, like zMail, says its version on the first line of CherrysKit-version.txt.
 function Read-InstalledVersion([string]$folder) {
     try {
         foreach ($line in (Get-Content -LiteralPath (Join-Path $folder 'README.md') -TotalCount 12 -ErrorAction Stop)) {
             if ($line -match '^Version \*\*([^*]+)\*\*') { return $Matches[1] }
         }
     } catch { }
+    try { return ([string]@([IO.File]::ReadAllLines((Join-Path $folder 'CherrysKit-version.txt')))[0]).Trim() } catch { }
     return ''
 }
 
@@ -582,6 +587,23 @@ function Get-PackageFolder($package) {
     return [string]$package.package
 }
 
+# The folder a package fills at the top of AddOns when it isn't a kit addon, like zMail's zmail/, or ''.
+# install_folder names it; an older entry without one says it through archive_root.
+function Get-OutsideRoot($package) {
+    $root = if ($package.install_folder) { ([string]$package.install_folder).TrimEnd('/') + '/' } else { [string]$package.archive_root }
+    if (-not $root -or $root.StartsWith('CherrysKit/', [StringComparison]::OrdinalIgnoreCase)) { return '' }
+    # One plain folder name only: a release can't point anywhere else.
+    if ($root -notmatch '^[A-Za-z0-9][A-Za-z0-9 _.!-]*/$') { return '' }
+    return $root
+}
+
+# Where a package's folder sits on this PC: under CherrysKit, or for an addon like zMail, in AddOns itself.
+function Get-PackagePath($package, [string]$addonsFolder) {
+    $outside = Get-OutsideRoot $package
+    if ($outside) { return (Join-Path $addonsFolder $outside.TrimEnd('/')) }
+    return (Join-Path (Join-Path $addonsFolder 'CherrysKit') (Get-PackageFolder $package))
+}
+
 # What this install has against that release. .items are the packages to download.
 function Get-UpdatePlan([string]$kitFolder, $release) {
     $plan = @{ items = @(); newAddons = @(); localKit = (Get-KitVersion $kitFolder); latestKit = [string]$release.kit_version; ahead = $false }
@@ -610,7 +632,16 @@ function Get-UpdatePlan([string]$kitFolder, $release) {
             continue
         }
         $folder = Get-PackageFolder $package
-        $here = Join-Path $kitFolder $folder
+        $here = Get-PackagePath $package (Split-Path -Parent $kitFolder)
+        if (Get-OutsideRoot $package) {
+            # Its own addon beside the kit, like zMail: updated only when the kit put it there. A copy from
+            # elsewhere has no CherrysKit-version.txt and stays as it is; the mailbox step deals with installing one.
+            if (-not (Test-Path -LiteralPath (Join-Path $here 'CherrysKit-version.txt'))) { continue }
+            $from = Read-InstalledVersion $here
+            if ($from -eq [string]$package.version -and -not $ReinstallAll) { continue }
+            $plan.items += @{ package = $package; folder = $folder; path = $here; from = $from; to = [string]$package.version; title = [string]$package.title }
+            continue
+        }
         $from = ''
         if (Test-Path -LiteralPath $here) {
             $from = Read-InstalledVersion $here
@@ -627,7 +658,7 @@ function Get-UpdatePlan([string]$kitFolder, $release) {
                 continue
             }
         }
-        $plan.items += @{ package = $package; folder = $folder; from = $from; to = [string]$package.version; title = [string]$package.title }
+        $plan.items += @{ package = $package; folder = $folder; path = $here; from = $from; to = [string]$package.version; title = [string]$package.title }
     }
     return $plan
 }
@@ -657,15 +688,19 @@ function Show-UpdateStatus($plan, $release) {
     }
 }
 
-# A ZIP may only put files under CherrysKit, plus the launchers beside it. Checked before anything changes.
-function Test-KitZip([string]$zipPath) {
+# A ZIP may only put files under CherrysKit, plus the launchers beside it. A package outside the kit, like
+# zMail, may only fill its own folder. Checked before anything changes.
+function Test-KitZip([string]$zipPath, $package = $null) {
+    $outside = if ($package) { Get-OutsideRoot $package } else { '' }
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $zip = [IO.Compression.ZipFile]::OpenRead($zipPath)
     try {
         foreach ($entry in $zip.Entries) {
             $name = $entry.FullName
             if ($name -match '(^|[/\\])\.\.([/\\]|$)' -or $name -match '^[/\\]' -or $name -match ':') { return $false }
-            if (-not $name.StartsWith('CherrysKit/', [StringComparison]::Ordinal) -and $script:RootFiles -notcontains $name) { return $false }
+            if ($outside) {
+                if (-not $name.StartsWith($outside, [StringComparison]::OrdinalIgnoreCase)) { return $false }
+            } elseif (-not $name.StartsWith('CherrysKit/', [StringComparison]::Ordinal) -and $script:RootFiles -notcontains $name) { return $false }
         }
     } finally { $zip.Dispose() }
     return $true
@@ -708,7 +743,10 @@ function Install-Update($plan, [string]$addonsFolder, [string]$interfaceFolder) 
             if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ine [string]$package.sha256) {
                 throw ($package.filename + ' does not match the checksum in the release')
             }
-            if (-not (Test-KitZip $file)) { throw ($package.filename + ' holds files outside CherrysKit') }
+            if (-not (Test-KitZip $file $package)) {
+                $where = if (Get-OutsideRoot $package) { 'its own folder' } else { 'CherrysKit' }
+                throw ($package.filename + ' holds files outside ' + $where)
+            }
         }
         $ProgressPreference = $saved
 
@@ -723,7 +761,17 @@ function Install-Update($plan, [string]$addonsFolder, [string]$interfaceFolder) 
         $previous = Join-Path (Join-Path $interfaceFolder 'offloaded_addons') ('CherrysKit ' + $plan.localKit + ' (before update ' + $stamp + ')')
         [void][IO.Directory]::CreateDirectory($previous)
         foreach ($item in $plan.items) {
-            if ($item.folder) {
+            if (Get-OutsideRoot $item.package) {
+                # Its own addon beside the kit: the old copy goes to offloaded_addons on its own, ready to move back.
+                $old = Get-PackagePath $item.package $addonsFolder
+                if (Test-Path -LiteralPath $old) {
+                    $name = Split-Path -Leaf $old
+                    $kept = Join-Path (Split-Path -Parent $previous) ($name + ' (before update ' + $stamp + ')')
+                    try { Move-Item -LiteralPath $old -Destination $kept -ErrorAction Stop }
+                    catch { Copy-Item -LiteralPath $old -Destination $kept -Recurse -Force }
+                    Write-Dim ('  The old ' + $item.title + ' is in: ' + $kept)
+                }
+            } elseif ($item.folder) {
                 $old = Join-Path $kitFolder $item.folder
                 if (Test-Path -LiteralPath $old) {
                     try { Move-Item -LiteralPath $old -Destination (Join-Path $previous $item.folder) -ErrorAction Stop }
@@ -820,10 +868,10 @@ function Get-Dependencies([string]$kitFolder, $release) {
             $users = @{}
             foreach ($package in $release.packages) {
                 if (-not $package.works_with) { continue }
-                if (-not (Test-Path -LiteralPath (Join-Path $kitFolder (Get-PackageFolder $package)))) { continue }
+                if (-not (Test-Path -LiteralPath (Get-PackagePath $package (Split-Path -Parent $kitFolder)))) { continue }
                 foreach ($name in $package.works_with) {
                     $wanted = $byName[[string]$name]
-                    if (-not $wanted -or (Test-Path -LiteralPath (Join-Path $kitFolder (Get-PackageFolder $wanted)))) { continue }
+                    if (-not $wanted -or (Get-OutsideRoot $wanted) -or (Test-Path -LiteralPath (Get-PackagePath $wanted (Split-Path -Parent $kitFolder)))) { continue }
                     if (-not $users.ContainsKey($name)) { $users[$name] = @(); $order += $name }
                     $users[$name] += [string]$package.title
                 }
@@ -834,6 +882,98 @@ function Get-Dependencies([string]$kitFolder, $release) {
         }
     }
     return @{ have = $have; missing = $missing }
+}
+
+# CherrysKit\Mailbox.txt is Lua, like LoadTimes\Switch.txt: Mailbox = "auto", "UMM" or "zMail".
+function Read-MailboxChoice([string]$kitFolder) {
+    try {
+        foreach ($line in [IO.File]::ReadAllLines((Join-Path $kitFolder 'Mailbox.txt'))) {
+            if ($line -match '^\s*Mailbox\s*=\s*"([^"]*)"') { return $Matches[1] }
+        }
+    } catch { }
+    return ''
+}
+
+# Only the value line changes; whatever else the file says stays.
+function Write-MailboxChoice([string]$kitFolder, [string]$choice) {
+    $file = Join-Path $kitFolder 'Mailbox.txt'
+    $line = 'Mailbox = "' + $choice + '"'
+    $text = ''
+    try { $text = [IO.File]::ReadAllText($file) } catch { }
+    if ($text -match '(?m)^[ \t]*Mailbox[ \t]*=') {
+        $text = [regex]::Replace($text, '(?m)^[ \t]*Mailbox[ \t]*=[^\r\n]*', $line)
+    } else {
+        $newline = if ($text -match "`n" -and $text -notmatch "`r`n") { "`n" } else { "`r`n" }
+        if (-not $text) { $text = '-- Which mailbox addon Cherry''s Kit uses: "auto", "UMM" or "zMail".' + $newline }
+        elseif (-not $text.EndsWith("`n")) { $text += $newline }
+        $text += $line + $newline
+    }
+    [IO.File]::WriteAllText($file, $text)
+}
+
+# zMail can't be turned off in game, so with Ultimate Mail Mod chosen it waits in offloaded_addons, named and noted
+# the way Global Bank's Addons page does it, so the page can put it back too. With zMail chosen it comes back from
+# there (never from a "before update" copy, which is an older version), or from the other install this run set up
+# from, or from the release.
+$script:OffloadNote = 'offloaded-by-global-bank.json'
+
+# When a parked folder left AddOns, sortable: its note's time, or for one moved by hand, when the folder last changed.
+# Read as text, since PowerShell 7's ConvertFrom-Json turns the time into a date.
+function Get-ParkedTime($folder) {
+    try {
+        if ([IO.File]::ReadAllText((Join-Path $folder.FullName $script:OffloadNote)) -match '"at"\s*:\s*"([^"]+)"') { return $Matches[1] }
+    } catch { }
+    return $folder.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
+}
+
+function Set-MailboxAddon([string]$choice, [string]$addonsFolder, [string]$interfaceFolder, [string]$kitFolder, $release, [string]$fromAddons) {
+    $zmail = Join-Path $addonsFolder 'zmail'
+    $offload = Join-Path $interfaceFolder 'offloaded_addons'
+    if ($choice -eq 'UMM') {
+        if (Test-Path -LiteralPath $zmail) {
+            [void][IO.Directory]::CreateDirectory($offload)
+            $kept = Join-Path $offload 'zmail'
+            if (Test-Path -LiteralPath $kept) { $kept = Join-Path $offload ('zmail (offloaded ' + (Get-Date -Format 'yyyy-MM-dd HHmmss') + ')') }
+            try {
+                Move-Item -LiteralPath $zmail -Destination $kept -ErrorAction Stop
+                $note = @{ from = 'addons'; folder = 'zmail'; title = 'zMail'; at = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture) }
+                try { [IO.File]::WriteAllText((Join-Path $kept $script:OffloadNote), (ConvertTo-Json -InputObject $note -Compress)) } catch { }
+                Write-Dim ('  zMail can''t be turned off in game, so it waits in: ' + $kept)
+            } catch { Write-Warn ('  zMail could not be moved out of AddOns: ' + $_.Exception.Message) }
+        }
+        Write-MailboxChoice $kitFolder 'UMM'
+        Write-Good '  The kit uses Ultimate Mail Mod.'
+        return
+    }
+    if (-not (Test-Path -LiteralPath $zmail)) {
+        $back = @(Get-ChildItem -LiteralPath $offload -Directory -ErrorAction SilentlyContinue |
+            Where-Object { ($_.Name -ieq 'zmail' -or $_.Name -like 'zmail (offloaded *)') -and (Test-Path -LiteralPath (Join-Path $_.FullName 'core.toc')) } |
+            Sort-Object { Get-ParkedTime $_ } -Descending | Select-Object -First 1)
+        if ($back.Count -gt 0) {
+            try {
+                Move-Item -LiteralPath $back[0].FullName -Destination $zmail -ErrorAction Stop
+                Remove-Item -LiteralPath (Join-Path $zmail $script:OffloadNote) -Force -ErrorAction SilentlyContinue
+                Write-Dim ('  zMail is back from: ' + $back[0].FullName)
+            } catch { Write-Warn ('  zMail could not be moved back: ' + $_.Exception.Message) }
+        } elseif ($fromAddons -and (Test-Path -LiteralPath (Join-Path $fromAddons 'zmail\core.toc'))) {
+            Copy-Item -LiteralPath (Join-Path $fromAddons 'zmail') -Destination $zmail -Recurse -Force
+        } elseif ($release) {
+            $package = @($release.packages | Where-Object { [string]$_.alternative_to -eq 'UltimateMailMod' -or [string]$_.package -eq 'zMail' } | Select-Object -First 1)
+            if ($package.Count -gt 0) {
+                $item = @{ package = $package[0]; folder = (Get-PackageFolder $package[0]); path = (Get-PackagePath $package[0] $addonsFolder)
+                    from = 'new'; to = [string]$package[0].version; title = [string]$package[0].title }
+                [void](Install-Update @{ items = @($item); localKit = (Get-KitVersion $kitFolder); latestKit = [string]$release.kit_version } $addonsFolder $interfaceFolder)
+            }
+        }
+    }
+    if (Test-Path -LiteralPath $zmail) {
+        Write-MailboxChoice $kitFolder 'zMail'
+        Write-Good '  The kit uses zMail.'
+    } else {
+        Write-MailboxChoice $kitFolder 'auto'
+        Write-Warn '  zMail isn''t in AddOns and couldn''t be fetched, so the kit keeps Ultimate Mail Mod for now.'
+        Write-Dim '  Put zMail in Interface\AddOns\zmail and it takes over by itself, or run this setup again.'
+    }
 }
 
 function Add-SetupLog([string]$interfaceFolder, [string]$text) {
@@ -875,6 +1015,82 @@ function Show-PlacementHelp([string]$folder) {
     Write-Host ''
     Write-Host ('  This copy is currently at: ' + $folder) -ForegroundColor DarkGray
     Write-Host '  Then double-click !setup_cherryskit.bat again.' -ForegroundColor DarkGray
+}
+
+# The game folder this copy is somewhere inside of, when the ZIP went into the game but not into Interface\AddOns.
+function Get-GameAbove([string]$folder) {
+    $here = $folder
+    for ($i = 0; $i -lt 4 -and $here; $i++) {
+        if (Test-Path -LiteralPath (Join-Path $here 'Client.exe')) { return (Resolve-Path -LiteralPath $here).Path }
+        $here = Split-Path -Parent $here
+    }
+    return $null
+}
+
+# Runes of Magic on this PC: Gameforge's usual folders and uninstall entries, and Steam's libraries. Only folders
+# with the game's Client.exe count. CHERRYSKIT_FIND_INSTALLS replaces the looking, as for other installs, and a
+# run without questions doesn't look.
+function Find-GameInstalls {
+    $candidates = @()
+    if ($env:CHERRYSKIT_FIND_INSTALLS) {
+        if ($env:CHERRYSKIT_FIND_INSTALLS -ne 'none') { $candidates += ($env:CHERRYSKIT_FIND_INSTALLS -split ';') }
+    } elseif (-not $NonInteractive) {
+        $candidates += @(Find-GameforgeInstalls)
+        $candidates += @(Find-SteamInstalls)
+    }
+    $found = @()
+    foreach ($candidate in $candidates) {
+        if (-not $candidate) { continue }
+        $path = ([string]$candidate).Trim().Trim('"').TrimEnd('\')
+        if (-not $path -or -not (Test-Path -LiteralPath (Join-Path $path 'Client.exe'))) { continue }
+        $path = (Resolve-Path -LiteralPath $path).Path
+        if (@($found | Where-Object { $_ -ieq $path }).Count -eq 0) { $found += $path }
+    }
+    return $found
+}
+
+# A typed or pasted place: the game folder, its Interface folder, or Interface\AddOns. Gives the AddOns folder, which
+# may not exist yet when the game has never had addons, and the game folder; $null when there's no such folder.
+function Resolve-GameTarget([string]$raw) {
+    if (-not $raw) { return $null }
+    $path = $raw.Trim().Trim('"').TrimEnd('\')
+    if (-not $path -or -not (Test-Path -LiteralPath $path -PathType Container)) { return $null }
+    $path = (Resolve-Path -LiteralPath $path).Path
+    $leaf = Split-Path -Leaf $path
+    if ($leaf -ieq 'AddOns' -and (Split-Path -Leaf (Split-Path -Parent $path)) -ieq 'Interface') {
+        return @{ addons = $path; game = (Split-Path -Parent (Split-Path -Parent $path)) }
+    }
+    if ($leaf -ieq 'Interface') { return @{ addons = (Join-Path $path 'AddOns'); game = (Split-Path -Parent $path) } }
+    return @{ addons = (Get-AddonsOf $path); game = $path }
+}
+
+function Get-AddonsHints([string[]]$games) {
+    $hints = @($games | Where-Object { $_ } | ForEach-Object { Get-AddonsOf $_ })
+    if ($hints.Count -eq 0) { $hints = @('<your game folder>\Interface\AddOns') }
+    return $hints
+}
+
+function Show-MoveHelp([string]$folder, [string[]]$games) {
+    Write-Host ''
+    Write-Host 'Move the extracted folders into the game yourself:' -ForegroundColor White
+    Write-Host ('  1  Open this folder: ' + $folder) -ForegroundColor Gray
+    Write-Host '  2  Select CherrysKit, !setup_cherryskit.bat and !setup_cherryskit.ps1 together, and move them into:' -ForegroundColor Gray
+    foreach ($hint in (Get-AddonsHints $games)) { Write-Host ('       ' + $hint) -ForegroundColor Cyan }
+    Write-Host '     If Windows asks about files that are already there, replace them.' -ForegroundColor DarkGray
+    Write-Host '  3  Double-click !setup_cherryskit.bat there.' -ForegroundColor Gray
+}
+
+function Show-ExtractHelp([string]$folder, [string[]]$games) {
+    $zip = @(Get-ChildItem -LiteralPath (Split-Path -Parent $folder) -Filter 'CherrysKit-Full-*.zip' -File -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1)
+    Write-Host ''
+    Write-Host 'Extract the ZIP again, straight into the game:' -ForegroundColor White
+    if ($zip.Count -gt 0) { Write-Host ('  1  Right-click ' + $zip[0].FullName + ' and choose Extract All.') -ForegroundColor Gray }
+    else { Write-Host '  1  Right-click the Cherry''s Kit Full ZIP and choose Extract All.' -ForegroundColor Gray }
+    Write-Host '  2  Browse to the game''s AddOns folder, so that the box shows:' -ForegroundColor Gray
+    foreach ($hint in (Get-AddonsHints $games)) { Write-Host ('       ' + $hint) -ForegroundColor Cyan }
+    Write-Host '     Windows adds the ZIP''s own name to the end of that box: take it off.' -ForegroundColor DarkGray
+    Write-Host '  3  Double-click !setup_cherryskit.bat in that folder.' -ForegroundColor Gray
 }
 
 # --------------------------------------------------------------------------------------------
@@ -919,38 +1135,76 @@ if ($Target) {
     }
 }
 
-# Not in a game folder: offer the two ways forward. Anything else is answered with a menu.
-while (-not $addons) {
+# Not in a game's AddOns folder: say where this copy is, offer the Runes of Magic installs this PC has, and
+# otherwise take a typed folder, or show how to put the files in the game by hand.
+$script:TargetChosen = $false
+if (-not $addons) {
+    $games = @()
+    $above = Get-GameAbove $landing
+    if ($above) { $games += $above }
+    foreach ($game in @(Find-GameInstalls)) { if (@($games | Where-Object { $_ -ieq $game }).Count -eq 0) { $games += $game } }
     if ($NonInteractive) {
         Write-Bad 'This setup file does not sit in a game''s Interface\AddOns folder.'
         Show-PlacementHelp $landing
         Stop-Setup ''
     }
     Write-Host ''
-    Write-Host 'This setup file does not sit in a game''s Interface\AddOns folder.' -ForegroundColor Yellow
-    Write-Host ('  This copy is at: ' + $landing) -ForegroundColor DarkGray
-    Write-Host ''
-    Write-Host '  1  Type or paste the game folder path (the one that contains Interface)' -ForegroundColor White
-    Write-Host '  2  Show where to place this folder, then close' -ForegroundColor White
-    Write-Host ''
-    $choice = Read-Line 'Choose 1 or 2 (Ctrl+C stops and closes)'
-    if ($null -eq $choice) { Stop-Setup 'No answer came, so the setup stopped.' }
-    if ($choice -eq '2') {
-        Show-PlacementHelp $landing
+    Write-Host 'This copy of Cherry''s Kit isn''t in a game''s Interface\AddOns folder. It is at:' -ForegroundColor Yellow
+    Write-Host ('  ' + $landing) -ForegroundColor Cyan
+    if ($games.Count -gt 0) {
         Write-Host ''
-        try { [void](Read-Line 'Press Enter to close this window') } catch { }
-        exit 0
+        Write-Host 'Runes of Magic on this PC:' -ForegroundColor White
+        for ($i = 0; $i -lt $games.Count; $i++) {
+            $there = Join-Path (Get-AddonsOf $games[$i]) 'CherrysKit'
+            $has = if (Test-Path -LiteralPath (Join-Path $there 'CherrysKit.toc')) { 'Cherry''s Kit ' + (Get-KitVersion $there) + ' installed' } else { 'no Cherry''s Kit yet' }
+            if ($games[$i] -ieq $above) { $has += ', and this copy is inside it' }
+            Write-Host ('  ' + ($i + 1) + '  ' + $games[$i]) -ForegroundColor White
+            Write-Host ('     ' + (Get-InstallKind $games[$i]) + ', ' + $has) -ForegroundColor DarkGray
+        }
+        $question = if ($games.Count -eq 1) { 'Set up Cherry''s Kit in this game? y, or n if it''s not the right one [y]' } else { 'Which game should it go into? Its number, two numbers for both, or n if none is right [1]' }
+        while (-not $addons) {
+            $answer = Read-Line $question
+            if ($null -eq $answer) { Stop-Setup 'No answer came, so the setup stopped.' }
+            $answer = $answer.Trim()
+            if ($answer -match '^(?i)n(o)?$') { break }
+            if ($answer -eq '' -or ($games.Count -eq 1 -and $answer -match '^(?i)y(es)?$')) { $answer = '1' }
+            $picked = @($answer -split '[,\s]+' | Where-Object { $_ -match '^\d+$' -and [int]$_ -ge 1 -and [int]$_ -le $games.Count } | ForEach-Object { [int]$_ })
+            if ($picked.Count -eq 0) { Write-Warn ('Please type a number from 1 to ' + $games.Count + ', or n.'); continue }
+            $addons = Get-AddonsOf $games[$picked[0] - 1]
+            # The second one is set up after this one, as the other install.
+            if ($picked.Count -gt 1 -and $picked[1] -ne $picked[0] -and -not $AlsoInstall) { $AlsoInstall = $games[$picked[1] - 1] }
+        }
     }
-    if ($choice -ne '1') { Write-Warn 'Please type 1 or 2.'; continue }
-    $pasted = Read-Line 'Paste the game folder path, then press Enter'
-    $resolved = Resolve-AddonsPath $pasted
-    if (-not $resolved) {
-        Write-Warn 'That path was not found, or it does not contain an Interface\AddOns folder. Try again.'
-        continue
+    while (-not $addons) {
+        Write-Host ''
+        Write-Host '  1  Type or paste where the game is: its folder, its Interface folder or Interface\AddOns' -ForegroundColor White
+        Write-Host '  2  Show how to move these extracted folders into the game''s Interface\AddOns, then close' -ForegroundColor White
+        Write-Host '  3  Show how to extract the ZIP again, straight into Interface\AddOns, then close' -ForegroundColor White
+        $choice = Read-Line 'Choose 1, 2 or 3 (Ctrl+C stops and closes)'
+        if ($null -eq $choice) { Stop-Setup 'No answer came, so the setup stopped.' }
+        $choice = $choice.Trim()
+        if ($choice -eq '2' -or $choice -eq '3') {
+            if ($choice -eq '2') { Show-MoveHelp $landing $games } else { Show-ExtractHelp $landing $games }
+            Write-Host ''
+            try { [void](Read-Line 'Press Enter to close this window') } catch { }
+            exit 0
+        }
+        if ($choice -ne '1') { Write-Warn 'Please type 1, 2 or 3.'; continue }
+        $pasted = Read-Line 'Type or paste the folder, then press Enter'
+        if ($null -eq $pasted) { Stop-Setup 'No answer came, so the setup stopped.' }
+        $place = Resolve-GameTarget $pasted
+        if (-not $place) { Write-Warn 'That folder wasn''t found. Try again.'; continue }
+        if (-not (Test-Path -LiteralPath (Join-Path $place.game 'Client.exe'))) {
+            Write-Warn ('There''s no Client.exe in ' + $place.game + ', so it may not be Runes of Magic.')
+            if (-not (Confirm-Step 'Use it anyway?' $false $false)) { continue }
+        }
+        $addons = $place.addons
     }
-    Write-Host ('Found: ' + $resolved) -ForegroundColor Cyan
-    $confirmed = Confirm-Step 'Install Cherry''s Kit into this Interface\AddOns folder?' $true
-    if ($confirmed) { $addons = $resolved; $installMode = $true }
+    try { [void][IO.Directory]::CreateDirectory($addons) } catch { }
+    $addons = (Resolve-Path -LiteralPath $addons).Path
+    Write-Host ('Setting up: ' + $addons) -ForegroundColor Cyan
+    $installMode = $true
+    $script:TargetChosen = $true
 }
 
 # The repository's own layout must never be treated as a game folder.
@@ -997,6 +1251,38 @@ if (@(Get-GameProcesses $gameFolder).Count -gt 0) {
 }
 
 # --------------------------------------------------------------------------------------------
+# Mailbox addon. Ultimate Mail Mod comes with the kit; zMail is its own addon (Interface\AddOns\zmail) that the kit
+# also supports. One runs at a time: CherrysKit\Mailbox.txt says which, and "auto" uses zMail when it's installed.
+# Asked once, at the start, while the file still says "auto"; the Global Bank page changes it later. A kit without
+# the file has a hub that doesn't read it, so there's nothing to ask.
+# --------------------------------------------------------------------------------------------
+$mailboxKit = if (Test-Path -LiteralPath (Join-Path $installedKit 'Mailbox.txt')) { $installedKit } else { $sourceKit }
+$mailboxNow = Read-MailboxChoice $mailboxKit
+$mailboxWanted = ''
+if ($Mailbox) {
+    $mailboxWanted = if ($Mailbox -imatch '^z') { 'zMail' } else { 'UMM' }
+} elseif (-not $NonInteractive -and -not $OtherInstall -and -not $UpdatedFrom -and $mailboxNow -and ($AskAgain -or $mailboxNow -ieq 'auto')) {
+    $hasZMail = Test-Path -LiteralPath (Join-Path $addons 'zmail')
+    $default = if ($mailboxNow -ieq 'zMail' -or ($mailboxNow -ine 'UMM' -and $hasZMail)) { '2' } else { '1' }
+    Write-Head 'Mailbox addon'
+    Write-Host '  Cherry''s Kit works with Ultimate Mail Mod and with zMail. Only one of them runs at a time.' -ForegroundColor Gray
+    Write-Host '    1  Ultimate Mail Mod: comes with the kit, which is built and kept up to date around it' -ForegroundColor White
+    $zNote = if ($hasZMail) { ' It''s in your AddOns folder.' } else { ' The setup fetches it.' }
+    Write-Host '    2  zMail: pyrr''s own mailbox addon. The kit has no connection with it other than distributing it,' -ForegroundColor White
+    Write-Host ('       with pyrr''s permission.' + $zNote) -ForegroundColor White
+    Write-Host '  You can switch at any time on the Global Bank page in Chrome.' -ForegroundColor DarkGray
+    while (-not $mailboxWanted) {
+        $answer = Read-Line ('Which mailbox addon should the kit use? 1 or 2 [' + $default + ']')
+        if ($null -eq $answer) { break }
+        $answer = $answer.Trim()
+        if ($answer -eq '') { $answer = $default }
+        if ($answer -eq '1' -or $answer -imatch '^u') { $mailboxWanted = 'UMM' }
+        elseif ($answer -eq '2' -or $answer -imatch '^z') { $mailboxWanted = 'zMail' }
+        else { Write-Warn 'Please type 1 or 2.' }
+    }
+}
+
+# --------------------------------------------------------------------------------------------
 # Permission check. Windows rights are only asked for when writing to the game folder needs them.
 # --------------------------------------------------------------------------------------------
 $needRights = $false
@@ -1017,6 +1303,7 @@ if ($needRights) {
         }
         # The folder chosen here goes along, so the new window doesn't ask for it again.
         $arguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Landing "{1}" -Target "{2}" -Elevated' -f $PSCommandPath, $landing, $addons
+        if ($mailboxWanted) { $arguments += ' -Mailbox ' + $mailboxWanted }
         Write-Host 'A Windows permission prompt will appear; setup continues in a new window.' -ForegroundColor Yellow
         try {
             Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $arguments -ErrorAction Stop | Out-Null
@@ -1112,7 +1399,7 @@ if ($sourceResolved -ine $installedResolved) {
     if ($installedKitExists -and (Compare-KitVersion (Get-KitVersion $sourceKit) (Get-KitVersion $installedKit)) -lt 0) {
         Write-Warn ('  This copy (' + (Get-KitVersion $sourceKit) + ') is older than the Cherry''s Kit already there (' + (Get-KitVersion $installedKit) + ').')
     }
-    $doInstall = Confirm-Step 'Copy Cherry''s Kit into this folder now?' $true $true
+    $doInstall = $script:TargetChosen -or (Confirm-Step 'Copy Cherry''s Kit into this folder now?' $true $true)
     if ($doInstall) {
         $offload = Join-Path $interfaceFolder 'offloaded_addons'
         New-Item -ItemType Directory -Path $offload -Force | Out-Null
@@ -1143,6 +1430,12 @@ if ($sourceResolved -ine $installedResolved) {
     } else {
         Write-Warn '  Skipped; the older copy stays as it is.'
     }
+}
+
+if ($mailboxWanted -and (Test-Path -LiteralPath (Join-Path $installedKit 'CherrysKit.toc'))) {
+    Write-Head 'Mailbox addon'
+    $fromAddons = if ($OtherInstall) { $landing } else { '' }
+    Set-MailboxAddon $mailboxWanted $addons $interfaceFolder $installedKit $release $fromAddons
 }
 
 # --------------------------------------------------------------------------------------------
@@ -1369,6 +1662,8 @@ if (-not $OtherInstall -and (Test-Path -LiteralPath (Join-Path $installedKit 'Ch
                 $next = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path (Join-Path $installedKit 'Setup') 'Setup-CherrysKit.ps1'),
                     '-Landing', $addons, '-Target', $otherAddons, '-NonInteractive', '-NoUpdateCheck', '-OtherInstall', '-FromBat')
                 if ($wantLogin) { $next += '-LoginScreenToo' }
+                $chosen = Read-MailboxChoice $installedKit
+                if ($chosen -eq 'UMM' -or $chosen -eq 'zMail') { $next += @('-Mailbox', $chosen) }
                 if ($share) { $next += @('-ShareData', $share) }
                 $shell = [Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
                 try { [void][IO.Directory]::CreateDirectory($otherAddons) } catch { }
