@@ -1,6 +1,6 @@
 # Cherry's Addon LoadTimes
 
-Version **1.3.0** · Kit release **0.11.87** · [All addons / hub](../README.md)
+Version **1.3.1** · Kit release **0.11.117** · [All addons / hub](../README.md)
 
 **Find out which addons make your loading screen slow.**
 
@@ -30,6 +30,10 @@ Addons cannot change their own files, so the switch is a small text file you edi
 4. Set it back to `false` when you are done.
 
 While it is off, nothing of it loads except the switch check, and `/ckload` tells you how to turn it on.
+
+## Updated in 1.3.1
+
+The hub dependency, standalone-addon compatibility and installation guidance are refreshed for this kit release. The package gets a new patch version to preserve the exact contents of the already published 1.3.0 download.
 
 ## Updated in 1.3.0
 

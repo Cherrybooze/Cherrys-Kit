@@ -1,10 +1,10 @@
 # Advanced AuctionHouse
 
-Version **6.2.5** · Kit release **0.11.83** · [All addons / hub](../README.md)
+Version **6.2.6** · Kit release **0.11.117** · [All addons / hub](../README.md)
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns and stat ranges.**
 
-Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.4 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.6 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
 
 <!-- requirements: tools/curseforge_pages.py writes this -->
 
@@ -21,6 +21,10 @@ Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2
 > **Other addons:** AddonManager lists it when you have that addon.
 
 <!-- end of requirements -->
+
+## Updated in 6.2.6
+
+The hub dependency, standalone-addon compatibility and installation guidance are refreshed for this kit release. This package has a new patch version so the updated documentation never replaces different contents under the published 6.2.5 version.
 
 ## Updated in 6.2.5
 

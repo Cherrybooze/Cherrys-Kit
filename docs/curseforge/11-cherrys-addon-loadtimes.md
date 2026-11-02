@@ -57,3 +57,5 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/ckload pr
 
 - Written by Cherry for Cherry's Kit, under the **GNU GPL v2**.
 - Full licence text: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
+
+- **1.3.1**: refreshed hub dependency, standalone compatibility and installation documentation; the original 1.3.0 package remains unchanged.

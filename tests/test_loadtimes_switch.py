@@ -93,7 +93,7 @@ class LoadTimesSwitchTests(unittest.TestCase):
         self.switch("true")
         self.load()
         self.assertEqual(self.reads(), [GAME_DIR + "LoadTimes/Switch.txt", GAME_DIR + "LoadTimes/CherrysLoadTimes.lua"])
-        self.assertEqual(self.g.CherrysLoadTimes.version, "1.3.0")
+        self.assertEqual(self.g.CherrysLoadTimes.version, "1.3.1")
         self.assertTrue(self.lua.eval("CherrysKit_Load == CherrysLoadTimes"))
         self.assertIsNotNone(self.lua.eval("getmetatable(_G)"))
         self.lua.execute('CherrysKit_Load.Mark("hub"); someAddonGlobal = 1; CherrysKit_Load.Event("first", "VARIABLES_LOADED")')

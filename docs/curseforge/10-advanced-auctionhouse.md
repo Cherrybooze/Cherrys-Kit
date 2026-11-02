@@ -18,6 +18,7 @@ Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2
 
 ## Recent changes
 
+- **6.2.6**: refreshed hub dependency, standalone compatibility and installation documentation; new patch version preserves the published 6.2.5 package.
 - **6.2.5**: the auction cache drops an item as soon as its auction ends, not only after two days.
 - **6.2.4**: items are read with the addon's own hidden tooltip instead of borrowing the game's skill-upgrade tooltip. This should end a brief black flash some players saw when raising a skill to its maximum, which still needs a check in game.
 - **6.2.3**: bid and sell list clicks select the row you actually clicked after scrolling, and the green, yellow and orange stat filters no longer error on ordinary items.

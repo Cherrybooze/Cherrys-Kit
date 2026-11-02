@@ -12,7 +12,7 @@
 -- RoM keeps Lua globals through Reload UI, so after a reload every addon's globals already exist:
 -- the watcher then sees only the few new ones.
 local reloaded = CherrysLoadTimes ~= nil
-CherrysLoadTimes = { version = "1.3.0", standalone = true, reloaded = reloaded }
+CherrysLoadTimes = { version = "1.3.1", standalone = true, reloaded = reloaded }
 CherrysKit_Load = CherrysLoadTimes
 local L = CherrysLoadTimes
 L.marks = {}     -- kit addons: { name, t, kb }, in load order

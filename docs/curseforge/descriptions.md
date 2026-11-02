@@ -701,6 +701,7 @@ Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2
 
 ## Recent changes
 
+- **6.2.6**: refreshed hub dependency, standalone compatibility and installation documentation; new patch version preserves the published 6.2.5 package.
 - **6.2.5**: the auction cache drops an item as soon as its auction ends, not only after two days.
 - **6.2.4**: items are read with the addon's own hidden tooltip instead of borrowing the game's skill-upgrade tooltip. This should end a brief black flash some players saw when raising a skill to its maximum, which still needs a check in game.
 - **6.2.3**: bid and sell list clicks select the row you actually clicked after scrolling, and the green, yellow and orange stat filters no longer error on ordinary items.
@@ -1123,6 +1124,7 @@ Made for alts. One click, and you are on the next character without touching the
 - **1.3.3**: Next and Prev no longer stay on the character screen. The login screen waits for the whole character list before it picks, and a logout you cancel drops the queued switch. Run `Install login screen.bat` again after updating.
 - **1.3.2**: the character screen shows each character's Arcane Transmutor charges under its gold.
 - **1.3.1**: the login screen finds each character's gold by server, so same-named characters on different servers no longer mix. Gold saved before servers were recorded shows a question mark.
+- **1.3.1**: refreshed hub dependency, standalone compatibility and installation documentation; the original 1.3.0 package remains unchanged.
 - **1.3.0**: Cherry's Loginxml is now part of this addon: one addon, one zip, and one row in the hub. The login screen travels inside the zip, and your saved logins and toggles carry over. Its installer moves the old `CherrysLoginxml` and `CherrysLoginxmlHook` folders to `Interface\offloaded_addons`.
 
 ## Features
