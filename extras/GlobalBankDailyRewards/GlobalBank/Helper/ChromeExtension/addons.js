@@ -49,6 +49,8 @@ const GBAddons = (() => {
         continue;
       }
       const entry = offloaded.get(item.folder);
+      // Replaced and not here: nothing to track, the page names it once below the table instead
+      if (item.state === 'superseded' && !entry) continue;
       rows.push({key: item.folder, title: item.title, folder: item.folder, installed: entry?.version || '', latest: item.latest,
         state: entry && item.state !== 'superseded' ? 'offloaded' : item.state, by: item.by || '', byPackage: item.byPackage || '', package: item.package, bytes: item.bytes,
         offloaded: entry?.id || item.offloaded || ''});
@@ -69,6 +71,31 @@ const GBAddons = (() => {
     const map = list?.replaced || {};
     const key = Object.keys(map).find(name => name.toLowerCase() === String(folder).toLowerCase());
     return key ? map[key] : null;
+  }
+  // Addons the release still lists that the kit has replaced and that aren't here, grouped by what replaced them.
+  function retired(check) {
+    const groups = new Map();
+    for (const item of check?.packages || []) {
+      if (item.state !== 'superseded' || item.external) continue;
+      if (!groups.has(item.by)) groups.set(item.by, []);
+      groups.get(item.by).push(item.title || item.folder);
+    }
+    return [...groups].map(([by, titles]) => `${titles.join(', ')} (now ${by})`).join('; ');
+  }
+  // What the login screen panel says and offers.
+  function loginState(screen) {
+    if (!screen) return null;
+    const action = screen.installer ? (screen.state === 'missing' ? 'Install login screen' : screen.state === 'update' ? 'Update login screen'
+      : screen.state === 'other' ? 'Replace with LogNextChar’s login screen' : '') : '';
+    const text = {
+      missing: `There’s no login screen in Interface\\loginxml. The game only reads one from there, and running the game doesn’t put it there: ${
+        screen.installer ? 'LogNextChar’s installer copies it (the button below, the guided setup, or LogNextChar\\Install login screen.bat), with the game closed.'
+          : 'it comes with LogNextChar, so install LogNextChar first, then its installer copies it.'}`,
+      other: `Interface\\loginxml holds a login screen that isn’t LogNextChar’s${screen.version ? ` (${screen.version})` : ''}.${screen.installer ? ' Replacing it keeps a copy in Interface\\offloaded_addons and keeps your saved logins.' : ''}`,
+      update: `LogNextChar’s login screen ${screen.version} is in Interface\\loginxml; LogNextChar here is ${screen.lncVersion}. Update it with the game closed; saved logins stay.`,
+      current: `LogNextChar’s login screen ${screen.version || ''} is in Interface\\loginxml and matches LogNextChar.`.replace('  ', ' '),
+    }[screen.state] || '';
+    return {text, action, good: screen.state === 'current'};
   }
   const MAIL_NAMES = {UMM: 'Ultimate Mail Mod', zMail: 'zMail'};
   // Which mail addon runs and what the Mail panel offers. "auto" is zMail when it's installed, as the hub decides.
@@ -115,7 +142,7 @@ const GBAddons = (() => {
       const bytes = rows.reduce((total, row) => total + (Number(row.bytes) || 0), 0);
       const names = rows.map(row => `${row.title} ${row.latest}`).join(', ');
       const globalBank = rows.some(row => row.folder === 'GlobalBank') ? ' The Global Bank helper stops while its files change and starts again after.' : '';
-      return window.confirm(`Download and install ${names} (${size(bytes)}) from GitHub? The old versions move to Interface\\offloaded_addons. A window opens to show the progress.${globalBank}`);
+      return window.confirm(`Download and install ${names} (${size(bytes)}) from GitHub? The old versions move to Interface\\offloaded_addons. Windows asks for administrator permission, then a window shows the progress.${globalBank}`);
     }
     async function install(rows) {
       if (!rows.length || !confirmInstall(rows)) return;
@@ -183,6 +210,20 @@ const GBAddons = (() => {
         watchJob();
       } catch (error) { problem(error); }
     }
+    function drawLogin() {
+      const login = loginState(list.loginScreen);
+      byId('addons-login').hidden = !login;
+      if (!login) return;
+      byId('addons-login-text').textContent = login.text;
+      byId('addons-login-text').className = login.good ? '' : 'settings-warning';
+      byId('addons-login-actions').replaceChildren(...(login.action ? [button(login.action, async () => {
+        if (!window.confirm(`${login.action}? LogNextChar’s installer runs in its own window. Close the game first; your saved logins stay, and anything it replaces is copied to Interface\\offloaded_addons.`)) return;
+        try {
+          await send({type: 'addons-loginscreen'});
+          say('The login screen installer is running in its own window. Press Read the folder again when it’s done.');
+        } catch (error) { problem(error); }
+      }, {className: 'gb-button--primary gb-button--sm'})] : []));
+    }
     function drawMail() {
       const box = byId('addons-mailbox');
       const mail = mailState(list.mailbox);
@@ -223,7 +264,7 @@ const GBAddons = (() => {
     }
     function remove(row, where, name) {
       const place = where === 'offloaded' ? 'Interface\\offloaded_addons' : where === 'kit' ? 'Cherry’s Kit' : 'Interface\\AddOns';
-      if (!window.confirm(`Delete ${row.title} (${name}) from ${place}? It goes to the Recycle Bin, and its saved settings stay. Offload keeps it here to bring back instead.`)) return;
+      if (!window.confirm(`Delete ${row.title} (${name}) from ${place}? It goes to the Recycle Bin, and its saved settings stay. Offload keeps it here to bring back instead. Windows asks for administrator permission first.`)) return;
       act('addons-delete', row, where, name);
     }
 
@@ -261,12 +302,18 @@ const GBAddons = (() => {
       byId('addons-job').textContent = !job ? '' : job.state === 'running' || job.state === 'starting' ? 'An install is running in its own window…'
         : `Last install (${when(job.finishedAt || job.startedAt)}): ${job.state === 'stopped' ? 'its window was closed before it finished.' : job.text || job.state}`;
       drawMail();
+      drawLogin();
+      byId('addons-retired').textContent = check && retired(check) ? `No longer separate addons: ${retired(check)}.` : '';
       const rows = kitRows(list, check);
       const updates = updatable(rows);
-      const all = byId('addons-update-all');
-      all.hidden = updates.length < 2;
-      all.textContent = `Update all (${updates.length})`;
-      all.onclick = () => install(updates);
+      // One above the page, one at the top of the table's action column: both do the same.
+      for (const id of ['addons-update-all', 'addons-update-all-table']) {
+        const all = byId(id);
+        if (!all) continue;
+        all.hidden = updates.length < 2;
+        all.textContent = `Update all (${updates.length})`;
+        all.onclick = () => install(updates);
+      }
       byId('addons-kit-rows').replaceChildren(...(rows.length ? rows.map(row => el('tr', {className: ['missing', 'offloaded', 'superseded'].includes(row.state) ? 'is-muted' : ''},
         el('td', {}, el('strong', {textContent: row.title}), row.folder && row.folder !== row.title ? el('div', {className: 'hint', textContent: row.folder}) : null,
           row.note ? el('div', {className: 'hint', textContent: row.note}) : null),
@@ -316,5 +363,5 @@ const GBAddons = (() => {
       },
     };
   }
-  return {create, kitRows, otherOffloaded, updatable, replacedBy, mailState};
+  return {create, kitRows, otherOffloaded, updatable, replacedBy, mailState, retired, loginState};
 })();

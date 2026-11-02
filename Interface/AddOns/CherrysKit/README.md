@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.33** · Kit release **0.11.117** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.34** · Kit release **0.11.117** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Hub 0.4.34
+
+The guided setup asks Windows for administrator rights at the start, so a game folder such as `C:\RunesOfMagic` can't stop a move or an update part way through. Say No and it carries on without them when the folder is writable. It takes your Documents folder along for LogNextChar's login screen, as the administrator can be another Windows user.
 
 ## Kit 0.11.117 playtest
 

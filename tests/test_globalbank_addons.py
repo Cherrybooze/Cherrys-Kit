@@ -46,10 +46,71 @@ class AddonsSourceTests(unittest.TestCase):
         self.assertLess(delete.index('Test-AddonsLink $path'), delete.index('DeleteDirectory'))
         self.assertIn('[IO.Directory]::Delete($path, $false)', delete)
         self.assertNotIn('Remove-Item -LiteralPath $path', delete)
-        # Installs run from a temporary copy, never from the Global Bank folder an update replaces.
+        # Installs run from a copy in GlobalBankHelper, never from the Global Bank folder an update replaces,
+        # in an elevated window; a declined permission prompt leaves a failed result and a clear error.
         start = re.search(r'function Start-AddonsInstall.*?\n\}', source, re.S).group(0)
-        self.assertIn("GetTempPath()", start)
+        self.assertIn("Join-Path $paths.data ('addons-run-'", start)
+        self.assertIn('-Verb RunAs', start)
         self.assertIn('-WorkingDirectory $paths.interface', start)
+        declined = start[start.index('} catch {'):]
+        self.assertIn("state = 'failed'", declined)
+        self.assertIn('administrator permission and it was not given', declined)
+        self.assertIn('throw $text', declined)
+        window = re.search(r'function Invoke-AddonsInstallWindow.*?\n\}', source, re.S).group(0)
+        self.assertIn('Set-Location -LiteralPath $paths.interface', window)
+        # An elevated window leaves the helper restart to the page, which runs as the player.
+        self.assertIn('$status.restartHelper = @($helperModes)', window)
+        read = re.search(r'function Read-AddonsStatus.*?\n\}', source, re.S).group(0)
+        self.assertIn('Start-AddonsHelper $paths $modes -Quiet', read)
+
+    def test_page_file_changes_run_as_administrator(self):
+        source = ADDONS.read_text(encoding='utf-8')
+        self.assertIn("$script:AddonsElevatedTypes = @('addons-offload', 'addons-restore', 'addons-delete', 'addons-mailbox')", source)
+        message = re.search(r'function Invoke-AddonsMessage.*?\n\}', source, re.S).group(0)
+        # The bridge Chrome starts runs as the player: these go to an administrator window; that window does them -Here.
+        self.assertLess(message.index('Invoke-AddonsElevated $paths $message'), message.index('switch ('))
+        elevated = re.search(r'function Invoke-AddonsElevated.*?\n\}', source, re.S).group(0)
+        self.assertIn("Join-Path $paths.data ('addons-run-'", elevated)
+        self.assertIn('-Verb RunAs', elevated)
+        self.assertIn('-Wait -PassThru', elevated)
+        self.assertIn('it was not given, so nothing changed', elevated)
+        self.assertIn('Remove-Item -LiteralPath $work -Recurse', elevated)
+        action = re.search(r'function Invoke-AddonsAction.*?\n\}', source, re.S).group(0)
+        self.assertIn('$script:AddonsElevatedTypes -notcontains', action)
+        self.assertIn('Invoke-AddonsMessage $message $addons -Here', action)
+        login = re.search(r'function Start-AddonsLoginScreen.*?\n\}', source, re.S).group(0)
+        self.assertIn('-Verb RunAs', login)
+        self.assertIn("-Documents '{1}'", login)
+        # Never elevated: the native host Chrome starts, and the helper it talks to.
+        host = (HELPER / 'GlobalBank-NativeHost.ps1').read_text(encoding='utf-8')
+        self.assertNotIn('RunAs', host)
+        self.assertNotIn('RunAs', (HELPER / 'Install Chrome extension.ps1').read_text(encoding='utf-8'))
+
+    def test_setup_and_login_screen_ask_for_administrator_rights(self):
+        setup = SETUP.read_text(encoding='utf-8')
+        self.assertIn('$askAdmin = $onWindows -and -not $NonInteractive -and -not $Elevated -and -not $UpdatedFrom -and -not $OtherInstall -and -not (Test-Admin)', setup)
+        self.assertIn('if ($needRights -or $askAdmin) {', setup)
+        self.assertIn('-Elevated -UserDocuments "{3}"', setup)
+        self.assertIn('& $loginInstaller -Documents $UserDocuments', setup)
+        root = ROOT / 'Interface/AddOns/LogNextChar'
+        install = (root / 'setup' / 'Install.ps1').read_text(encoding='utf-8')
+        self.assertIn('[switch]$Elevate', install)
+        self.assertIn("-Verb RunAs -Wait", install)
+        self.assertIn('exit 3', install)
+        bat = (root / 'Install login screen.bat').read_text(encoding='utf-8')
+        self.assertIn('Install.ps1" -Elevate %*', bat)
+        self.assertIn('if errorlevel 3 exit /b 0', bat)
+
+    def test_action_cells_stay_table_cells_and_update_all_sits_on_the_table(self):
+        css = (EXTENSION / 'control.css').read_text(encoding='utf-8')
+        rule = re.search(r'td\.addons-actions, th\.addons-actions \{([^}]*)\}', css).group(1)
+        # display: flex on a <td> takes it out of the row, so its border no longer lines up with the rest.
+        self.assertNotIn('display', rule)
+        self.assertNotRegex(css, r'(^|\n)\.addons-actions \{[^}]*display')
+        html = (EXTENSION / 'control.html').read_text(encoding='utf-8')
+        self.assertIn('<th class="addons-actions"><button id="addons-update-all-table" type="button" class="gb-button--primary gb-button--sm" hidden>', html)
+        page = (EXTENSION / 'addons.js').read_text(encoding='utf-8')
+        self.assertIn("for (const id of ['addons-update-all', 'addons-update-all-table'])", page)
 
     def test_merged_addons_show_as_replaced(self):
         # The same reading as Get-AddonsReplaced, on the kit's own KitOrigins.lua.
@@ -94,10 +155,10 @@ class AddonsSourceTests(unittest.TestCase):
     def test_own_arguments_survive_loading_the_setup(self):
         # Dot-sourcing the setup binds its parameters here; the window's arguments are copied aside first.
         source = ADDONS.read_text(encoding='utf-8')
-        kept = source.index("$script:AddonsArgs = @{ Install = $Install; AddonsFolder = $AddonsFolder; Offload = $Offload; Mailbox = $Mailbox }")
+        kept = source.index("$script:AddonsArgs = @{ Install = $Install; AddonsFolder = $AddonsFolder; Offload = $Offload; Mailbox = $Mailbox; Action = $Action }")
         self.assertLess(kept, source.index('. $script:AddonsSetupPath -LoadOnly'))
         tail = source[source.index('. $script:AddonsSetupPath -LoadOnly'):]
-        for name in ('$Install', '$AddonsFolder', '$Offload', '$Mailbox'):
+        for name in ('$Install', '$AddonsFolder', '$Offload', '$Mailbox', '$Action'):
             self.assertNotRegex(tail, re.escape(name) + r'(?![A-Za-z])', name)
         setup = re.search(r'param\((.*?)\n\)', SETUP.read_text(encoding='utf-8'), re.S).group(1)
         own = set(re.findall(r'\$([A-Za-z]+)', re.search(r'^param\((.*?)\)$', source, re.M).group(1)))
@@ -156,10 +217,27 @@ assert.equal(rows.filter(row => row.key === 'KittyCombo').length, 1);
 same(updatable(rows).map(row => row.package), ['Hub', 'zBag']);
 same(otherOffloaded(list).map(entry => entry.id), ['Diyce2', 'zBag']);
 const replacedRows = kitRows(list, {packages: [{package: 'pbInfo', folder: 'pbInfo', title: 'pbInfo', latest: '0.60-ck5', state: 'superseded', by: "Cherry's Info"}]});
-const pb = replacedRows.find(row => row.key === 'pbInfo');
-same(pb.state, 'superseded');
-same(pb.by, "Cherry's Info");
+// Replaced and not installed: not a row, but named once below the table
+same(replacedRows.find(row => row.key === 'pbInfo'), undefined);
 same(updatable(replacedRows).length, 0);
+const retiredCheck = {packages: [{package: 'pbInfo', folder: 'pbInfo', title: 'pbInfo', state: 'superseded', by: "Cherry's Info"},
+  {package: 'TooltipIds', folder: 'TooltipIds', title: 'TooltipIds', state: 'superseded', by: "Cherry's Info"},
+  {package: 'CherrysLoginxml', folder: 'CherrysLoginxmlHook', title: "Cherry's Loginxml", state: 'superseded', by: 'LogNextChar'},
+  {package: 'zBag', folder: 'zBag', title: 'zBag', state: 'current'}]};
+same(context.GBAddons.retired(retiredCheck), "pbInfo, TooltipIds (now Cherry's Info); Cherry's Loginxml (now LogNextChar)");
+same(kitRows({hasKit: true, kit: [], offloaded: []}, retiredCheck).map(row => row.key), ['Hub', 'zBag']);
+// A leftover folder of a replaced addon is still a row, with Switch
+const leftover = kitRows({hasKit: true, kit: [{folder: 'pbInfo', title: 'pbInfo', version: '0.60'}], offloaded: [], replaced: {pbInfo: {owner: 'CherrysInfo', title: "Cherry's Info"}}}, null);
+same(leftover.find(row => row.key === 'pbInfo').state, 'superseded');
+const login = context.GBAddons.loginState;
+same(login(null), null);
+assert.match(login({state: 'missing', installer: true}).text, /running the game doesn’t put it there/);
+same(login({state: 'missing', installer: true}).action, 'Install login screen');
+assert.match(login({state: 'missing', installer: false}).text, /install LogNextChar first/);
+same(login({state: 'missing', installer: false}).action, '');
+same(login({state: 'update', installer: true, version: '1.3.2', lncVersion: '1.3.3'}).action, 'Update login screen');
+same(login({state: 'current', installer: true, version: '1.3.3'}).action, '');
+same(login({state: 'other', installer: true}).action, 'Replace with LogNextChar’s login screen');
 same(kitRows({hasKit: false, kit: [], offloaded: []}, null), []);
 ''')
 
@@ -249,6 +327,8 @@ ask({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addon
 same(sent.pop(), {type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addons', name: 'pbInfo'}]});
 assert.notEqual(ask({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'offloaded', name: 'x'}]}).kept, true);
 assert.notEqual(ask({type: 'addons-install', packages: ['CherrysInfo'], offload: 'pbInfo'}).kept, true);
+ask({type: 'addons-loginscreen', name: 'x'});
+same(sent.pop(), {type: 'addons-loginscreen'});
 ask({type: 'addons-mailbox', use: 'zMail', extra: 1});
 same(sent.pop(), {type: 'addons-mailbox', use: 'zMail'});
 assert.notEqual(ask({type: 'addons-mailbox', use: 'auto'}).kept, true);

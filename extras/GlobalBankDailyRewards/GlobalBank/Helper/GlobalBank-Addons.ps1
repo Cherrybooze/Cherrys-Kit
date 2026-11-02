@@ -14,7 +14,8 @@
 # Copyright (C) Cherry. GPL v2 (see LICENSE.txt in Cherry's Kit).
 #
 # Run on its own (a copy in a temporary folder, so nothing it updates is in use) with -Install it is that window.
-param([string]$Install = '', [string]$AddonsFolder = '', [string]$SetupScript = '', [string]$Offload = '', [string]$Mailbox = '')
+# With -Action (a request file) it is an administrator window doing one of the page's file changes, see Invoke-AddonsElevated.
+param([string]$Install = '', [string]$AddonsFolder = '', [string]$SetupScript = '', [string]$Offload = '', [string]$Mailbox = '', [string]$Action = '')
 
 $script:AddonsMarker = 'offloaded-by-global-bank.json'
 # Kit addons go in a folder of their own, so they go back into CherrysKit and not beside it.
@@ -29,7 +30,7 @@ $script:AddonsSetupProblem = ''
 # The guided setup's functions: versions, the release check, the checked download and the move to offloaded_addons.
 # Dot-sourcing the setup sets each of its parameters as a variable here, so this file's own arguments are kept
 # aside first: a setup parameter with the same name would otherwise empty them.
-$script:AddonsArgs = @{ Install = $Install; AddonsFolder = $AddonsFolder; Offload = $Offload; Mailbox = $Mailbox }
+$script:AddonsArgs = @{ Install = $Install; AddonsFolder = $AddonsFolder; Offload = $Offload; Mailbox = $Mailbox; Action = $Action }
 $script:AddonsSetupPath = if ($SetupScript) { $SetupScript } else { Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'Setup\Setup-CherrysKit.ps1' }
 if (Test-Path -LiteralPath $script:AddonsSetupPath) {
     . $script:AddonsSetupPath -LoadOnly
@@ -104,6 +105,8 @@ function Get-AddonsReplaced([string]$kit, $release = $null) {
             }
         }
     } catch { }
+    # Older kit folders KitOrigins doesn't name: Cherry's Loginxml shipped as CherrysKit\CherrysLoginxmlHook.
+    if ($replaced.ContainsKey('CherrysLoginxml') -and -not $replaced.ContainsKey('CherrysLoginxmlHook')) { $replaced['CherrysLoginxmlHook'] = $replaced['CherrysLoginxml'] }
     foreach ($package in @($release.packages)) {
         foreach ($folder in @($package.replaces)) { if ($folder -and $folder -ne $package.package) { $replaced[[string]$folder] = @{ owner = [string]$package.package; title = [string]$package.title } } }
     }
@@ -163,6 +166,42 @@ function Get-AddonsMailbox($paths) {
 
 # Without an install: the chosen one is already here. Leaving zMail means moving its folder out too, since zMail
 # has no switch of its own.
+# LogNextChar's login screen. The game reads a login screen only from Interface\loginxml, outside AddOns, so no
+# package can put it there: LogNextChar\setup\Install.ps1 copies it (the guided setup runs that, or Install login
+# screen.bat). frames\login.lua carries the version; a loginxml without LogNextChar's is someone else's.
+function Get-AddonsLoginScreen($paths) {
+    $lnc = Join-Path $paths.kit 'LogNextChar'
+    $folder = Join-Path $paths.interface 'loginxml'
+    $answer = @{ present = (Test-Path -LiteralPath (Join-Path $folder 'loginxml.toc')); folder = (Test-Path -LiteralPath $folder); version = ''; ours = $false
+        lnc = (Test-Path -LiteralPath $lnc); lncVersion = ''; installer = (Test-Path -LiteralPath (Join-Path $lnc 'setup\Install.ps1')) }
+    if ($answer.lnc) {
+        try { foreach ($line in (Get-Content -LiteralPath (Join-Path $lnc 'LogNextChar.lua') -TotalCount 40 -ErrorAction Stop)) { if ($line -match '^me\.version = "([^"]+)"') { $answer.lncVersion = $Matches[1]; break } } } catch { }
+    }
+    try {
+        $code = [IO.File]::ReadAllText((Join-Path $folder 'frames\login.lua'))
+        if ($code -match 'version = "([^"]+)"') { $answer.version = $Matches[1] }
+        $answer.ours = $code -match 'LogNextChar'
+    } catch { }
+    $answer.state = if (-not $answer.present) { 'missing' } elseif (-not $answer.ours) { 'other' } elseif ($answer.lncVersion -and $answer.version -ne $answer.lncVersion) { 'update' } else { 'current' }
+    return $answer
+}
+
+# Runs LogNextChar's own installer in a window of its own: it prints as it goes, and it keeps saved logins.
+function Start-AddonsLoginScreen($paths) {
+    $installer = Join-Path $paths.kit 'LogNextChar\setup\Install.ps1'
+    if (-not (Test-Path -LiteralPath $installer)) { throw 'LogNextChar is not installed, and its login screen comes with it. Install LogNextChar first.' }
+    if (Test-AddonsGameRunning $paths) { throw 'Close the game first: it reads the login screen when it starts.' }
+    # As administrator, like the page's other file changes. This player's Documents go along: the administrator can be
+    # another Windows user, and the login screen reads this player's SaveVariables.lua.
+    $documents = [Environment]::GetFolderPath('MyDocuments')
+    $command = "try {{ & '{0}' -Documents '{1}' }} catch {{ Write-Host `$_.Exception.Message -ForegroundColor Red }}; Write-Host ''; Write-Host 'This window closes in 20 seconds.'; Start-Sleep -Seconds 20" -f ($installer -replace "'", "''"), ($documents -replace "'", "''")
+    # One argument string: Windows PowerShell's Start-Process joins a list without quoting it.
+    try {
+        Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -Command "{0}"' -f $command) -WorkingDirectory $paths.interface -WindowStyle Normal -ErrorAction Stop | Out-Null
+    } catch { throw 'Windows asked for administrator permission and it was not given, so the login screen was not installed.' }
+    return @{ started = $true }
+}
+
 function Set-AddonsMailbox($paths, [string]$use) {
     $mailbox = Get-AddonsMailbox $paths
     if ($use -eq 'zMail' -and -not $mailbox.zmail) { throw 'zMail is not installed.' }
@@ -189,6 +228,17 @@ function Read-AddonsStatus($paths) {
         $status = [IO.File]::ReadAllText((Join-Path $paths.data $script:AddonsStatusName)) | ConvertFrom-Json
         # A window that was closed part way never wrote its end.
         if ($status.state -eq 'running' -and -not (Get-Process -Id ([int]$status.pid) -ErrorAction SilentlyContinue)) { $status.state = 'stopped' }
+        # The elevated install window leaves the helper for this (the player's own) process to start again.
+        if ($status.state -ne 'running' -and $status.state -ne 'starting' -and @($status.restartHelper | Where-Object { $_ }).Count -gt 0) {
+            try {
+                $modes = @($status.restartHelper | ForEach-Object { [string]$_ })
+                $status.restartHelper = @()
+                $copy = @{}
+                foreach ($property in $status.PSObject.Properties) { $copy[$property.Name] = $property.Value }
+                Write-AddonsStatus $paths $copy
+                if ((Get-Command Get-HelperProcesses -ErrorAction SilentlyContinue) -and @(Get-HelperProcesses $paths.addons).Count -eq 0) { Start-AddonsHelper $paths $modes -Quiet }
+            } catch { }
+        }
         return $status
     } catch { return $null }
 }
@@ -211,7 +261,8 @@ function Get-AddonsList($paths) {
     $own = if ($script:KitOwnFolders) { $script:KitOwnFolders } else { @('KitLoad', 'Media', 'docs', 'Setup') }
     $answer = @{ kit = @(); others = @(); offloaded = @(); kitVersion = ''; hubVersion = ''; hasKit = $false
         gameRunning = (Test-AddonsGameRunning $paths); setupProblem = $script:AddonsSetupProblem; job = (Read-AddonsStatus $paths)
-        replaced = (Get-AddonsReplaced $paths.kit); mailbox = (Get-AddonsMailbox $paths) }
+        replaced = (Get-AddonsReplaced $paths.kit); mailbox = (Get-AddonsMailbox $paths)
+        loginScreen = (Get-AddonsLoginScreen $paths) }
     if (Test-Path -LiteralPath (Join-Path $paths.kit 'CherrysKit.toc')) {
         $answer.hasKit = $true
         if (Get-Command Get-KitVersion -ErrorAction SilentlyContinue) {
@@ -338,7 +389,9 @@ function Start-AddonsInstall($paths, $names, $offload = @(), [string]$mailbox = 
     if ($moves.Count -gt 10) { throw 'Too many folders to switch at once.' }
     if ($status -and $status.state -eq 'running') { throw 'An install is already running in its own window. Let it finish first.' }
     if (Test-AddonsGameRunning $paths) { throw 'Close the game first: it reads addons when it starts, and a folder it has open won''t move.' }
-    $work = Join-Path ([IO.Path]::GetTempPath()) ('CherrysKit-addons-' + [Guid]::NewGuid().ToString('N'))
+    # The window runs as administrator, which can be another Windows user whose Temp can't see this one's,
+    # so the copy sits in GlobalBankHelper: outside the Global Bank folder an update replaces.
+    $work = Join-Path $paths.data ('addons-run-' + [Guid]::NewGuid().ToString('N'))
     [void][IO.Directory]::CreateDirectory($work)
     $runner = Join-Path $work 'GlobalBank-Addons.ps1'
     $setup = Join-Path $work 'Setup-CherrysKit.ps1'
@@ -349,7 +402,15 @@ function Start-AddonsInstall($paths, $names, $offload = @(), [string]$mailbox = 
     # Windows PowerShell drops an empty quoted argument, so -Offload only goes along with something in it.
     if ($moves.Count -gt 0) { $arguments += ' -Offload "{0}"' -f ($moves -join '|') }
     if ($mailbox) { $arguments += ' -Mailbox "{0}"' -f $mailbox }
-    $process = Start-Process -FilePath 'powershell.exe' -ArgumentList $arguments -WorkingDirectory $paths.interface -WindowStyle Normal -PassThru
+    # Elevated: game folders such as C:\RunesOfMagic can refuse a normal user's writes part way through an update.
+    try {
+        $process = Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $arguments -WorkingDirectory $paths.interface -WindowStyle Normal -PassThru -ErrorAction Stop
+    } catch {
+        Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
+        $text = 'Windows asked for administrator permission and it was not given, so nothing was installed or changed. Press the button again and choose Yes to install.'
+        Write-AddonsStatus $paths @{ state = 'failed'; pid = 0; packages = $list; startedAt = [DateTime]::UtcNow.ToString('o'); finishedAt = [DateTime]::UtcNow.ToString('o'); text = $text }
+        throw $text
+    }
     return @{ started = $true; pid = $process.Id }
 }
 
@@ -431,13 +492,69 @@ function Invoke-AddonsDelete($paths, [string]$where, [string]$name) {
     return @{ deleted = $true; recycled = $true; gameRunning = (Test-AddonsGameRunning $paths) }
 }
 
-function Invoke-AddonsMessage($message) {
-    $paths = Get-AddonsPaths
+# The page's file changes (offload, restore, delete, the mailbox switch) run as administrator, like installs, so
+# Windows can't refuse them part way in a game folder such as C:\RunesOfMagic. Chrome starts this bridge as the
+# player and it can't be elevated itself, so it hands the request to a hidden administrator window (one Windows
+# permission prompt) and waits for its answer.
+$script:AddonsElevatedTypes = @('addons-offload', 'addons-restore', 'addons-delete', 'addons-mailbox')
+
+function Test-AddonsAdmin {
+    try { return ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) } catch { return $false }
+}
+
+function Invoke-AddonsElevated($paths, $message) {
+    # In GlobalBankHelper, not Temp: an administrator that is another Windows user can't see this player's Temp.
+    $work = Join-Path $paths.data ('addons-run-' + [Guid]::NewGuid().ToString('N'))
+    [void][IO.Directory]::CreateDirectory($work)
+    try {
+        $runner = Join-Path $work 'GlobalBank-Addons.ps1'
+        $setup = Join-Path $work 'Setup-CherrysKit.ps1'
+        Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'GlobalBank-Addons.ps1') -Destination $runner
+        if (Test-Path -LiteralPath $script:AddonsSetupPath) { Copy-Item -LiteralPath $script:AddonsSetupPath -Destination $setup }
+        $request = Join-Path $work 'request.json'
+        $answerPath = Join-Path $work 'answer.json'
+        $only = @{ type = [string]$message.type; where = [string]$message.where; name = [string]$message.name; use = [string]$message.use }
+        [IO.File]::WriteAllText($request, (ConvertTo-Json -InputObject $only -Compress), (New-Object Text.UTF8Encoding($false)))
+        $arguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Action "{1}" -AddonsFolder "{2}" -SetupScript "{3}"' -f $runner, $request, $paths.addons, $setup
+        try {
+            $process = Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $arguments -WorkingDirectory $paths.interface -WindowStyle Hidden -Wait -PassThru -ErrorAction Stop
+        } catch {
+            throw 'Windows asked for administrator permission and it was not given, so nothing changed.'
+        }
+        if (-not (Test-Path -LiteralPath $answerPath)) { throw ('The administrator window ended without an answer (exit code ' + $process.ExitCode + '). Nothing may have changed; read the folder again.') }
+        $answer = [IO.File]::ReadAllText($answerPath) | ConvertFrom-Json
+        if (-not $answer.ok) { throw [string]$answer.error }
+        return $answer.value
+    } finally {
+        Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# The administrator window's side: one request, one answer file beside it.
+function Invoke-AddonsAction([string]$requestPath, [string]$addons) {
+    $answerPath = Join-Path (Split-Path -Parent $requestPath) 'answer.json'
+    try {
+        $message = [IO.File]::ReadAllText($requestPath) | ConvertFrom-Json
+        if ($script:AddonsElevatedTypes -notcontains [string]$message.type) { throw 'Unknown addons request.' }
+        $answer = @{ ok = $true; value = (Invoke-AddonsMessage $message $addons -Here) }
+    } catch {
+        $answer = @{ ok = $false; error = $_.Exception.Message }
+    }
+    [IO.File]::WriteAllText($answerPath, (ConvertTo-Json -InputObject $answer -Depth 6 -Compress), (New-Object Text.UTF8Encoding($false)))
+}
+
+function Invoke-AddonsMessage($message, [string]$addons = '', [switch]$Here) {
+    $paths = Get-AddonsPaths $addons
+    if (-not $Here -and $script:AddonsElevatedTypes -contains [string]$message.type -and -not (Test-AddonsAdmin)) {
+        if ($script:AddonsSetupProblem) { throw $script:AddonsSetupProblem }
+        return (Invoke-AddonsElevated $paths $message)
+    }
     switch ([string]$message.type) {
         'addons-list' { return (Get-AddonsList $paths) }
         'addons-check' { return (Get-AddonsCheck $paths) }
         'addons-install' { return (Start-AddonsInstall $paths @($message.packages) @($message.offload) ([string]$message.mailbox)) }
         'addons-mailbox' { return (Set-AddonsMailbox $paths ([string]$message.use)) }
+        'addons-loginscreen' { return (Start-AddonsLoginScreen $paths) }
         'addons-offload' { return (Invoke-AddonsOffload $paths ([string]$message.where) ([string]$message.name)) }
         'addons-restore' { return (Invoke-AddonsRestore $paths ([string]$message.name)) }
         'addons-delete' { return (Invoke-AddonsDelete $paths ([string]$message.where) ([string]$message.name)) }
@@ -466,22 +583,25 @@ function Stop-AddonsHelper($paths) {
 }
 
 # The way the setup does it: as it ran before.
-function Start-AddonsHelper($paths, $modes) {
+function Start-AddonsHelper($paths, $modes, [switch]$Quiet) {
     $helper = Join-Path $paths.kit 'GlobalBank\Helper\GlobalBank-Update.ps1'
-    if (-not (Test-Path -LiteralPath $helper)) { Write-Warn '  The helper''s new copy is not there, so it stays stopped.'; return }
+    if (-not (Test-Path -LiteralPath $helper)) { if (-not $Quiet) { Write-Warn '  The helper''s new copy is not there, so it stays stopped.' }; return }
     $hidden = @($modes | Where-Object { $_ -eq 'automatic (background)' }).Count -eq $modes.Count
     $auto = @($modes | Where-Object { $_ -like 'automatic*' }).Count -eq $modes.Count
     try {
         if ($auto -and $hidden) { Start-Process -FilePath 'powershell.exe' -WindowStyle Hidden -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Watch -Auto' -f $helper) }
         elseif ($auto) { Start-Process -FilePath 'powershell.exe' -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Watch -Auto' -f $helper) }
         else { Start-Process -FilePath (Join-Path (Split-Path -Parent $helper) 'Start Global Bank helper.bat') }
-        Write-Good '  The Global Bank helper is starting again the way it ran before.'
-    } catch { Write-Warn ('  Could not start the helper again: ' + $_.Exception.Message) }
+        if (-not $Quiet) { Write-Good '  The Global Bank helper is starting again the way it ran before.' }
+    } catch { if (-not $Quiet) { Write-Warn ('  Could not start the helper again: ' + $_.Exception.Message) } }
 }
 
 function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$offload = '', [string]$mailbox = '') {
     try { $host.UI.RawUI.WindowTitle = "Cherry's Kit - install from Global Bank" } catch { }
     $paths = Get-AddonsPaths $addons
+    # An elevated window starts in System32, whatever folder it was given.
+    try { Set-Location -LiteralPath $paths.interface } catch { }
+    $elevated = Test-AddonsAdmin
     $status = @{ state = 'running'; pid = $PID; packages = @($names -split ','); startedAt = [DateTime]::UtcNow.ToString('o'); text = 'Downloading...'; done = @() }
     Write-AddonsStatus $paths $status
     Write-Host ''
@@ -566,8 +686,17 @@ function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$of
         $status.state = 'failed'
         $status.text = $_.Exception.Message
         Write-Bad ('  ' + $status.text)
+        # Where it stopped, for a bug report.
+        $where = ($_.InvocationInfo.PositionMessage -split "`n")[0]
+        if ($where) { Write-Dim ('  ' + $where.Trim()) }
+        if (Get-Command Add-SetupLog -ErrorAction SilentlyContinue) { Add-SetupLog $paths.interface ('{0}  Global Bank page install failed: {1}  {2}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm'), $status.text, $where) }
     } finally {
-        if ($helperModes.Count -gt 0) { Start-AddonsHelper $paths $helperModes }
+        # A helper started from this administrator window would run as administrator, so the Global Bank page,
+        # which runs as the player, starts it again when it reads this result.
+        if ($helperModes.Count -gt 0) {
+            if ($elevated) { $status.restartHelper = @($helperModes); Write-Dim '  The Global Bank page starts the helper again when it shows this result.' }
+            else { Start-AddonsHelper $paths $helperModes }
+        }
         $status.finishedAt = [DateTime]::UtcNow.ToString('o')
         try { Write-AddonsStatus $paths $status } catch { }
         # This copy and the setup's sit in a folder of their own in Temp.
@@ -576,6 +705,11 @@ function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$of
     Write-Host ''
     Write-Host 'The Global Bank page shows the result. This window closes in 20 seconds.' -ForegroundColor Gray
     Start-Sleep -Seconds 20
+}
+
+if ($script:AddonsArgs.Action) {
+    Invoke-AddonsAction $script:AddonsArgs.Action $script:AddonsArgs.AddonsFolder
+    exit 0
 }
 
 if ($script:AddonsArgs.Install) {

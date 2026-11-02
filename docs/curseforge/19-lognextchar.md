@@ -18,6 +18,7 @@ Made for alts. One click, and you are on the next character without touching the
 
 ## Recent changes
 
+- **1.3.4**: `Install login screen.bat` asks Windows for administrator rights and installs in that window, so a protected game folder can't refuse it.
 - **1.3.3**: Next and Prev no longer stay on the character screen. The login screen waits for the whole character list before it picks, and a logout you cancel drops the queued switch. Run `Install login screen.bat` again after updating.
 - **1.3.2**: the character screen shows each character's Arcane Transmutor charges under its gold.
 - **1.3.1**: the login screen finds each character's gold by server, so same-named characters on different servers no longer mix. Gold saved before servers were recorded shows a question mark.

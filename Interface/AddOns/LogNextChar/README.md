@@ -1,6 +1,6 @@
 # LogNextChar
 
-Version **1.3.3** · Kit release **0.11.115** · [All addons / hub](../CherrysKit/README.md)
+Version **1.3.4** · Kit release **0.11.117** · [All addons / hub](../CherrysKit/README.md)
 
 **Next** and **Prev** buttons in game, plus `/lnc`, log you out and straight into the neighbouring character on the account. It brings its own login screen, which picks the character, and which is a better login screen in its own right.
 
@@ -21,6 +21,10 @@ Without the login screen installed, Next and Prev only log you out, and you pick
 > **After installing:** close the game and run `!setup_cherryskit.bat`, or double-click `Interface\AddOns\CherrysKit\LogNextChar\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there. Until then, Next and Prev only log you out.
 
 <!-- end of requirements -->
+
+## Updated in 1.3.4
+
+`Install login screen.bat` asks Windows for administrator rights and installs the login screen in that window, so a game folder such as `C:\RunesOfMagic` can't refuse to replace its files. Say No and it carries on without them. It reads your own Documents folder even when the administrator is another Windows user.
 
 ## Updated in 1.3.3
 
@@ -51,7 +55,7 @@ Next, Prev and the other switches now close the mailbox and Ultimate Mail Mod's 
 1. Remove any other login addon first. Only one can replace the login screen.
 2. Extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\CherrysKit\LogNextChar\LogNextChar.lua`. If you have an older `Interface\AddOns\LogNextChar` folder, delete it.
 3. Close the game and double-click `Interface\AddOns\CherrysKit\LogNextChar\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, and a package can only fill `Interface\AddOns`, so this copies it across. If you already have a `loginxml`, a copy of it goes to `Interface\offloaded_addons` first, and only the files that differ change. It leaves nothing running.
-4. Start the game. The login screen shows `(LogNextChar 1.3.3)` next to the client version in the top right corner.
+4. Start the game. The login screen shows `(LogNextChar 1.3.4)` next to the client version in the top right corner.
 
 Run the same file again after updating. It never touches your own accounts, passwords or settings. If you forget, the addon tells you in chat.
 

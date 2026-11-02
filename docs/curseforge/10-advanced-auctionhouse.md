@@ -14,7 +14,7 @@
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns, stat ranges, and a Broad search for searches the server cuts short.**
 
-Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.5 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.6 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
 
 ## Recent changes
 

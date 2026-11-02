@@ -6,6 +6,10 @@ It also records your Daily Loyalty Bonus after the Gameforge daily shop page con
 
 The helper now follows Chrome: the extension's button shows whether it is running and for how long, and can stop it or show its terminal window. The helper ends on its own when Chrome or the extension goes away.
 
+## Popup wording in 1.3.5
+
+**Run automatically while Chrome is open** now says what it does: the helper starts in the background instead of a visible terminal window. Addons page updates ask Windows for administrator permission (Global Bank 1.6.5).
+
 ## Reload and release versions in 1.3.4
 
 **Reload extension** rereads the files installed on this PC. It does not download changes from GitHub. Install the new build first, reload the extension, then refresh an already open Global Bank tab. The Addons page checks the **latest published release**, which can be older than a development build on your PC; its hub row now compares the actual hub version.

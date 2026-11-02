@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.4** · Kit release **0.11.117** · [All addons / hub](../README.md)
+Version **1.6.5** · Kit release **0.11.117** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.5
+
+Updates from the Addons page run as administrator: Windows asks for permission first, so a game folder such as `C:\RunesOfMagic` no longer stops an update part way with *Access is denied*. If the permission is declined, nothing changes and the page says so. The page starts the helper again afterwards, so it keeps running as you, not as administrator. Addons whose features moved into Cherry's Info or LogNextChar leave the list once they are gone, the **Login screen** panel shows whether `Interface\loginxml` is in place and can put it there, and the action buttons line up with the table's rows. The popup explains that **Run automatically while Chrome is open** starts the helper in the background (extension 1.3.5).
 
 ## Updated in 1.6.4
 
@@ -90,7 +94,7 @@ A **Macros** tab gathers every macro your characters have into one library, read
 
 In game, the **Import** button in the macro window (Cherry's Info) searches this library by name and group and puts the macro you pick in the slot you chose. It needs no restart, so a macro you just wrote on the page is there when you press **Refresh**. Changes from the page to the library work with the game open. Changes to a character's own save files need it closed.
 
-An **Addons** page in Chrome lists Cherry's Kit's addons, your other addons and what is in `Interface\offloaded_addons`. **Check for updates** compares them with the latest release on GitHub; **Update from GitHub** and **Download and install** fetch that release's files in a window of their own, check each against the release's checksum and keep the old version in `Interface\offloaded_addons`, as the guided setup does. **Offload** moves an addon out of `Interface\AddOns` and **Restore** puts it back; **Delete** asks first and sends it to the Recycle Bin. Addons the kit has taken over say what replaced them: pbInfo, PortraitHP, TooltipIds, Extended Macro Icons and Cherry's Quests are now Cherry's Info, Cherry's Loginxml is part of LogNextChar, and a separate copy of a kit addon is an older one. They offer **Switch with** the new one instead of an install: it installs the new addon if needed, then offloads the old folder, so Restore still brings it back. A **Mail** panel shows whether mail runs with Ultimate Mail Mod or zMail (pyrr's addon, which the kit distributes with his permission in `Interface\AddOns\zmail`) and switches between them: to zMail it installs zMail if needed and chooses it in `CherrysKit\Mailbox.txt`; back to Ultimate Mail Mod it chooses that and offloads the zmail folder, since zMail has no off switch. Reload UI applies the change. These buttons are the only time Global Bank goes online, and only to github.com/Cherrybooze/Cherrys-Kit.
+An **Addons** page in Chrome lists Cherry's Kit's addons, your other addons and what is in `Interface\offloaded_addons`. **Check for updates** compares them with the latest release on GitHub; **Update from GitHub** and **Download and install** fetch that release's files in a window of their own, check each against the release's checksum and keep the old version in `Interface\offloaded_addons`, as the guided setup does. **Offload** moves an addon out of `Interface\AddOns` and **Restore** puts it back; **Delete** asks first and sends it to the Recycle Bin. Addons the kit has taken over say what replaced them: pbInfo, PortraitHP, TooltipIds, Extended Macro Icons and Cherry's Quests are now Cherry's Info, Cherry's Loginxml is part of LogNextChar, and a separate copy of a kit addon is an older one. They offer **Switch with** the new one instead of an install: it installs the new addon if needed, then offloads the old folder, so Restore still brings it back. Replaced addons that aren't on your PC aren't rows, just one line under the table. A **Login screen** panel shows whether `Interface\loginxml` has LogNextChar's login screen and runs LogNextChar's installer to put it there or update it, since running the game doesn't. A **Mail** panel shows whether mail runs with Ultimate Mail Mod or zMail (pyrr's addon, which the kit distributes with his permission in `Interface\AddOns\zmail`) and switches between them: to zMail it installs zMail if needed and chooses it in `CherrysKit\Mailbox.txt`; back to Ultimate Mail Mod it chooses that and offloads the zmail folder, since zMail has no off switch. Reload UI applies the change. These buttons are the only time Global Bank goes online, and only to github.com/Cherrybooze/Cherrys-Kit.
 
 An **Addon settings** tab shows what each addon saved, such as your auras in RoM WeakAuras and your rotations in KittyCombo, for the shared file or one character. It marks what differs from the backups, and puts back one addon's settings or the whole file.
 

@@ -23,6 +23,12 @@ Pick the full kit, or install the hub and just the addons you want. Type **`/ck`
 
 **On this page:** [Addon descriptions](#whats-included) · [Downloads and folder layout](#download-and-install) · [Setup choices](#guided-setup-every-prompt) · [Chrome installation and updates](#optional-chrome-extension) · [Update, offload and restore in Chrome](#manage-addons-from-chrome) · [Troubleshooting](#common-questions) · [Recent changes](#whats-new-in-011117)
 
+## Coming in the next release
+
+- **Addons page updates run as administrator** (Global Bank 1.6.5): Windows asks for permission first, so a game folder such as `C:\RunesOfMagic` no longer stops an update with *Access is denied*. Declining changes nothing. Replaced addons leave the list once they're gone, a **Login screen** panel shows whether `Interface\loginxml` is in place, and the Offload/Delete buttons line up with the table rows.
+- **Setup and the login screen ask for administrator rights** (hub 0.4.34, LogNextChar 1.3.4), and so do the Addons page's offload, restore, delete, mailbox switch and login screen buttons. Install Chrome extension and the Global Bank helper stay as your own Windows user: Chrome registers its bridge per user and has to reach the helper.
+- **Clearer popup** (extension 1.3.5): **Run automatically while Chrome is open** says that it starts the helper in the background instead of a visible terminal window.
+
 ## What's new in 0.11.117
 
 - **All current packages are published together**, so the setup and Chrome Addons page can offer the latest versions. Advanced AuctionHouse **6.2.6** and Addon LoadTimes **1.3.1** give their refreshed documentation new package versions while preserving the older published files.
@@ -87,12 +93,12 @@ The **Full ZIP** contains the hub and every addon in this table. For a smaller i
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | One settings launcher and minimap button for the collection, with an on/off switch for each installed kit addon. Explains when an older separate copy takes precedence and supplies a shared clock to addons that use it. | `/ck`, `/rwa` | 0.4.33 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | One settings launcher and minimap button for the collection, with an on/off switch for each installed kit addon. Explains when an older separate copy takes precedence and supplies a shared clock to addons that use it. | `/ck`, `/rwa` | 0.4.34 |
 | [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | Build priority rotations called **kitties**: each key press checks your conditions and attempts the next action. Edit conditions in plain words, switch modes such as single, AoE or heal, import/export short share codes, and use **Create macro** to put a kitty on your action bar. | `/kc` | 1.7.18 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Make icons, bars, text and alerts for buffs, debuffs, health, resources, cooldowns, casts, threat and more. Start from examples, set triggers and rules, position the display, and share it by code. With KittyCombo, show its next skill or use an aura as a rotation condition. | `/wa` | 0.9.33 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Select and copy chat text, use emoji and encrypted channels, and adjust chat appearance. Say-bubble styles turn unsupported emoji into symbols or readable codes. With Ultimate Mail Mod, Ctrl+click a chat name to fill the mail recipient. | `/cchat` | 0.11.3 |
 | [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | View bags together, search by item or stat, sort, and filter quick selling. Search bags and bank for **stamina**, `#clean` or `#dirty` mana stones, adjust slot numbers, and open Global Bank from the bag when installed. | `/zb` | 5.07-ck20 |
-| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | Search saved bags, banks and gold across characters in game. Its Windows helper collects other characters' saved data; its optional Chrome page adds a combined bank, equipment, mail, currencies, gold overview, macros, settings backups, auction cache and [addon management](#manage-addons-from-chrome). Log characters out to refresh their saved snapshots. | `/gb` | 1.6.4 |
+| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | Search saved bags, banks and gold across characters in game. Its Windows helper collects other characters' saved data; its optional Chrome page adds a combined bank, equipment, mail, currencies, gold overview, macros, settings backups, auction cache and [addon management](#manage-addons-from-chrome). Log characters out to refresh their saved snapshots. | `/gb` | 1.6.5 |
 | [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Read, take and send mail in batches, select attachments with a drag box, choose recipients from history/characters/friends, and reuse gold amounts. Adjust send pacing and use the trace tools if a mass send stalls. This is the Full ZIP's mailbox addon. | `/umm` | 7.0.1-ck12 |
 | [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Search auctions with stat filters, run Broad searches, use price/search history and resize the auction window. With Global Bank's helper, observations from your searches become a browser-searchable auction cache; cached listings may be out of date. | `/aah` | 6.2.6 |
 | [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Diagnose slow loading with time and memory reports for kit addons and the slowest observed spots outside the kit. **Off by default:** change `LoadTimes = false` to `true` in `LoadTimes\Switch.txt`, restart the game and run `/ckload`; set it back to `false` when finished. | `/ckload` | 1.3.1 |
@@ -111,7 +117,7 @@ These are outside the Full ZIP. LogNextChar needs the hub and loads through it; 
 
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next/Prev buttons switch to the neighbouring character; `/lnc 3` selects a character slot and `/lnc settings` configures the buttons. Its login screen handles a stuck server list, saved logins, secondary passwords and keyboard selection; with Global Bank it shows gold, last saves and Arcane Transmutor charges. Extract its ZIP into `Interface\AddOns`, then let setup install the login screen or run `CherrysKit\LogNextChar\Install login screen.bat` with the game closed. | `/lnc`, `/lpc` | 1.3.3 |
+| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next/Prev buttons switch to the neighbouring character; `/lnc 3` selects a character slot and `/lnc settings` configures the buttons. Its login screen handles a stuck server list, saved logins, secondary passwords and keyboard selection; with Global Bank it shows gold, last saves and Arcane Transmutor charges. Extract its ZIP into `Interface\AddOns`, then let setup install the login screen or run `CherrysKit\LogNextChar\Install login screen.bat` with the game closed. | `/lnc`, `/lpc` | 1.3.4 |
 
 Download it from this build: [LogNextChar-1.3.3.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.117/LogNextChar-1.3.3.zip).
 
@@ -384,7 +390,9 @@ The hub and Global Bank do not offer their own Offload/Delete controls on this p
 
 ### Switching old addons and mailboxes
 
-An old separate addon, or a kit addon merged into another, says **Replaced by ...**. **Switch with ...** first makes sure the replacement is installed, downloading it after confirmation if needed, and then offloads the old folder. For example, **Switch with Cherry's Info** retires a separate pbInfo copy after Cherry's Info is available. This keeps the old folder for Restore. If Latest does not yet contain the replacement, install it from the appropriate playtest ZIP first.
+An old separate addon, or a kit addon merged into another, says **Replaced by ...**. **Switch with ...** first makes sure the replacement is installed, downloading it after confirmation if needed, and then offloads the old folder. For example, **Switch with Cherry's Info** retires a separate pbInfo copy after Cherry's Info is available. This keeps the old folder for Restore. If Latest does not yet contain the replacement, install it from the appropriate playtest ZIP first. A replaced addon that isn't on your PC isn't listed as a row; one line under the table names them.
+
+The **Login screen** panel shows `Interface\loginxml`, the only place the game reads a login screen from. Running the game doesn't put one there: LogNextChar's installer copies it, from the panel's button, the guided setup, or `LogNextChar\Install login screen.bat`, with the game closed. It keeps saved logins and copies anything it replaces to `Interface\offloaded_addons`. The panel says when the login screen is missing, older than LogNextChar, or someone else's.
 
 In the **Mail** panel, **Switch to zMail** uses or installs zMail and selects it in `CherrysKit\Mailbox.txt`; Ultimate Mail Mod stays off. **Switch to Ultimate Mail Mod** selects/installs that addon and offloads `Interface\AddOns\zmail`, because zMail cannot be switched off in game. Confirm the named action and Reload UI to apply the choice. zMail remains pyrr's addon, distributed here with his permission.
 

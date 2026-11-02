@@ -771,7 +771,9 @@ tbody tr:last-child td { border-bottom: 0; }
 }
 /* Addons page */
 .addons-heading { margin: 18px 0 8px; font-size: 14px; }
-.addons-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+/* A table cell must stay display: table-cell, or its row's border breaks off. */
+td.addons-actions, th.addons-actions { text-align: right; white-space: nowrap; }
+td.addons-actions > *, th.addons-actions > * { margin: 1px 0 1px 6px; vertical-align: middle; }
 .addons-state { font-size: 12px; white-space: nowrap; }
 .addons-state.is-update, .addons-state.is-missing { color: #e7c27a; }
 .addons-state.is-current { color: #8fd19e; }

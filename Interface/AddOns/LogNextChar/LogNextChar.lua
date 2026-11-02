@@ -7,7 +7,7 @@ local ADDON = "LogNextChar"
 LogNextChar = LogNextChar or {}
 local me = LogNextChar
 
-me.version = "1.3.3"
+me.version = "1.3.4"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.LogNextChar) or "Interface/AddOns/LogNextChar/"
 
 -- Saved: LogNextChar_Settings = { show, lock, position = { x, y } }
