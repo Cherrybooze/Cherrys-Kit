@@ -623,6 +623,7 @@
           <OnEscapePressed>
             this:ClearFocus();
           </OnEscapePressed>
+          <OnEditFocusGained>UMMSelectAllOnFocus(this);</OnEditFocusGained>
           <OnTextChanged>
             this:GetParent():CheckSendStatus();
           </OnTextChanged>
