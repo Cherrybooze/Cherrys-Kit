@@ -566,3 +566,17 @@ The richer editor has a higher fixed cost: the fixture retained approximately 0.
 - TooltipIds (1.0b3-ck3): hover buffs and debuffs — no chat lines; turn the addon off in the kit, reload, and check tooltips no longer add ID lines.
 - ZShop (1.2.0-ck4): click Daily and verify no mark before its valid link arrives. Test missing/failing openers, bad links and a timeout; all remain unmarked. Browser mode marks after a successful native API handoff, native mode only after its linked window shows. Copy mode, Home and Depot must not mark Daily. Check `/zshop unmark` and the clock/reset behavior; this mark never confirms a reward collection.
 - GlobalBank (1.4.6): remove a character in the helper window and confirm it disappears in game after the next import. With the Chrome extension, let one confirmation fail and check the helper is not restarted repeatedly.
+
+## Global Bank Stats page 1.3.3
+
+The automated cases use fixture characters; compare the remaining visual cases with saved tooltips from your own client.
+
+| Check | Action | Expected |
+| --- | --- | --- |
+| GS1 | Open Stats with Stamina I and Ability of the Dreamer in saved tooltips. | The name and effects share one row; Stamina I is green and Ability of the Dreamer yellow, matching the saved game colours. |
+| GS2 | Hover holders with different classes under Who has them. | Each name/count uses the same class colour as its tooltip. |
+| GS3 | Right-click a stat, choose Exclude this stat from showing, then reopen/reload the page and change item/stone filters. | The stat stays hidden only on Stats; saved character/item records are unchanged. |
+| GS4 | Open Excluded stats and restore one, then restore all. Try Shift+F10 on a focused stat. | Entries return, local exclusions are updated, and the keyboard menu offers the same action. |
+| GS5 | Show a stat with no saved tooltip/colour. | No invented orange colour or effect text; exclusions and counts still work. |
+
+Private-data release tests cover mail/tooltips/vaults, backups, temporary files, source tracking outside the addon tree, every ZIP route, and Windows junctions. Local sharing between the player's own Steam/Gameforge clients remains intentional.

@@ -17,9 +17,11 @@ Everything the extension reads or saves stays on your own PC. There is no develo
 
 ## What it keeps, and where
 
-- **Chrome's storage for this extension**, on your PC: your settings, the depot list, and short-lived status text. Only the extension's own pages can read it; scripts on web pages cannot.
+- **Chrome's storage for this extension**, on your PC: your settings, the Stats page's excluded-stat list, the depot list, and short-lived status text. These use local storage, not Chrome Sync. Only the extension's own pages can read local storage; scripts on web pages cannot.
 - **Gameforge accounts page (optional)**: if you use it, the account names, passwords, secondary passwords and notes you type are encrypted with AES-GCM before they are saved. The key comes from a password you choose, which is never stored, mixed with a random key kept in Chrome's storage for this extension (PBKDF2 with SHA-256, 600,000 rounds). The encrypted file is saved in Chrome and as `Interface\GlobalBankHelper\GameforgeAccounts.json` on your PC. Without your password it cannot be opened, and it is never sent anywhere.
 - **The helper folder** `Interface\GlobalBankHelper` in your game folder: the combined character data (`GlobalBank.json`, `GlobalBankDatabase.lua`), the game's tooltips and your characters' mail (`GlobalBankTips.txt`, `GlobalBankMail.txt`), confirmed daily rewards (`DailyRewards.json`: character, server, day and time), the auction cache, the current time for the game's addons (`CherrysClockStamp.lua`) and the helper's logs.
+
+Steam and Gameforge clients on the same PC can use the same local helper folder. This shares data between your own clients only. The folder, character saves, encrypted accounts, backups and terminal records are private: they are excluded from Git and release packages, including temporary copies and saved older helper folders. Distributing Cherry's Kit does not distribute those files. Keep `GlobalBankHelper` outside the addon/source folders when copying or sharing the kit.
 
 ## Permissions
 

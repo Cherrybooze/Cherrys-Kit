@@ -2,6 +2,8 @@
 
 This is a working draft, not a published listing or final privacy policy.
 
+Current listing/version notes are kept in [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md). Version 1.3.3 adds original stat colours, inline effects, class-coloured holders and a locally saved excluded-stat list; permissions are unchanged.
+
 ## Listing description
 
 Global Bank for RoM helps Runes of Magic players collect an available Daily Loyalty Bonus on the Gameforge shop page. Once Gameforge confirms the collection, the extension can record the character, server, reward day and collection time in the local Global Bank helper data for a matching level 100 character.

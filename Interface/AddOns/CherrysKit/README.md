@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.31** · Kit release **0.11.115** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.32** · Kit release **0.11.116** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.116 playtest
+
+Global Bank's Chrome Stats page keeps the game's stat colours, shows effects beside their names, colours holders by class, and has a local excluded-stat list with restore controls. The release builder also checks private helper exports and Git-tracked files. Your own Steam and Gameforge clients keep sharing the same local data; private helper data is never included in the kit.
 
 ## Kit 0.11.115 playtest
 

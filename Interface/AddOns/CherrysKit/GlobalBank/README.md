@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.2** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.6.3** · Kit release **0.11.116** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,14 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.3
+
+**Stats keep their saved game colours** (extension 1.3.3). Stat names and effects now share one row, and **Who has them** uses the same class colours as each character's tooltip. Colours come from the saved tooltip data; unknown data is left neutral.
+
+**Exclude stats from this page:** right-click a stat, or focus it and press Shift+F10, then choose **Exclude this stat from showing**. **Excluded stats** lists hidden names and offers **Restore** and **Restore all excluded stats**. These filters affect only the Stats page, survive reopening it, and stay in local Chrome storage.
+
+**Keep private data private.** Your own local Steam and Gameforge clients can use the same helper database. `Interface\GlobalBankHelper`, your game saves, mail, macros, account vault, backups and terminal files must stay out of distributed kit/source folders. Release checks reject those files, their temporary copies and linked folders; they do not upload character data.
 
 ## Updated in 1.6.2
 

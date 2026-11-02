@@ -9,24 +9,37 @@ Thumbs.db
 /Interface/loginxml/password.lua
 /Interface/loginxml/config.lua
 /Interface/loginxml/savedpath.lua
-SaveVariables.lua
-GlobalBankHelper/
+SaveVariables*.lua*
+GlobalBankHelper*/
 .env
 .env.*
 
 # A player's macros and action bars, and Global Bank's copies of them, must never be committed either.
 *.bsd
-MacroLibrary.json
-GlobalBankMacros.lua
+MacroLibrary*.json*
+GlobalBankMacros*.lua*
 Backups/
+TerminalBridge/
+offloaded_addons/
 
 # Private helper exports must never be committed, even if copied out of their normal folder.
-GlobalBankDatabase.lua
-GlobalBank.json
-ExcludedCharacters.json
-DailyRewards.json
-CharacterLinks.json
-GlobalBankHelperBeat.lua
-GlobalBankHelper*.log
-AAHBroadCache.json
-AAHBroadCache.lua
+GlobalBankDatabase*.lua*
+GlobalBank*.json*
+GlobalBankTips*.txt*
+GlobalBankMail*.txt*
+GameforgeAccounts*.json*
+ExcludedCharacters*.json*
+DailyRewards*.json*
+CharacterLinks*.json*
+GlobalBankHelperBeat*.lua*
+GlobalBankHelper*.log*
+AAHBroadCache*.json*
+AAHBroadCache*.lua*
+TerminalFeed*.json*
+TerminalHeartbeat*.txt*
+CherrysClockStamp*.lua*
+GlobalBankAutoStart*.txt*
+GlobalBankExtensionBeat*.txt*
+GlobalBankHelperAuto*.stop*
+AddonsInstall*.json*
+com.cherryskit.globalbank*.json*

@@ -908,18 +908,19 @@ const GBBank = (() => {
   ];
   // The template a stat is shown on: a tier 6 mana stone, as the game lists one, in its own colours
   const TEMPLATE_STONE = '202845';
-  const STONE_EFFECT = 'f0610d';
   const EFFECT_LINE = /^[+-]\s*\d/;
+  const STAT_EXCLUSIONS = 'excludedStats';
+  const savedColor = value => /^[0-9a-f]{6}$/i.test(value || '') ? String(value).toLowerCase() : '';
   // What each stat does, from the game's own saved tooltips: a stat's name stands beside the first of its effects, and
   // the rest follow on the lines below. The way most items show a stat wins, a mana stone's counting double.
-  // Returns {effects: Map stat -> [effect lines], header: the template stone's first two lines}.
+  // Keep each effect's saved colour as well as its text; green/yellow stats must not become orange.
   function statEffects(list) {
     const seen = new Map();
     let header = null;
     const tally = (stat, lines, weight) => {
       if (!seen.has(stat)) seen.set(stat, new Map());
       const ways = seen.get(stat);
-      const key = lines.join('\n');
+      const key = JSON.stringify(lines);
       ways.set(key, (ways.get(key) || 0) + weight);
     };
     for (const entry of list || []) {
@@ -938,22 +939,73 @@ const GBBank = (() => {
         if (right && names.has(right) && EFFECT_LINE.test(left)) {
           finish();
           current = right;
-          lines = [left];
-        } else if (current && !right && EFFECT_LINE.test(left)) lines.push(left);
+          lines = [[savedColor(line[0]), left]];
+        } else if (current && !right && EFFECT_LINE.test(left)) lines.push([savedColor(line[0]), left]);
         else finish();
       }
       finish();
     }
-    const effects = new Map();
-    for (const [stat, ways] of seen) effects.set(stat, [...ways.entries()].sort((a, b) => b[1] - a[1])[0][0].split('\n'));
-    return {effects, header: header || ['Mana Stone Tier 6', 'Cannot be sold']};
+    const effects = new Map(), colors = new Map();
+    for (const [stat, ways] of seen) {
+      const lines = JSON.parse([...ways.entries()].sort((a, b) => b[1] - a[1])[0][0]);
+      effects.set(stat, lines.map(line => line[1]));
+      colors.set(stat, lines.map(line => line[0]));
+    }
+    return {effects, colors, header: header || ['Mana Stone Tier 6', 'Cannot be sold']};
   }
   // The stat on a tier 6 mana stone, as lines for the page's game tooltip: [colour, left, colour, right]
   function templateTip(stat, known) {
     const lines = known.effects.get(stat);
     if (!lines) return null;
+    const colors = known.colors?.get(stat) || [];
+    const nameColor = colors.find(color => savedColor(color)) || '';
     return [['ffffff', known.header[0]], ['ffffff', known.header[1]],
-      ...lines.map((text, at) => (at === 0 ? [STONE_EFFECT, text, 'ffffff', stat] : [STONE_EFFECT, text]))];
+      ...lines.map((text, at) => (at === 0 ? [colors[at] || '', text, nameColor, stat] : [colors[at] || '', text]))];
+  }
+  function statNameCell(stat, known) {
+    const lines = templateTip(stat, known)?.slice(2) || [];
+    const color = lines[0]?.[0] || '';
+    const style = color ? ` style="color:#${color}"` : '';
+    const effects = lines.map(line => `<span${line[0] ? ` style="color:#${line[0]}"` : ''}>${escapeHtml(line[1])}</span>`).join('<span aria-hidden="true"> · </span>');
+    return `<span class="stat-entry" data-stat="${escapeHtml(stat)}" tabindex="0"><span class="stat-name"${style}>${escapeHtml(stat)}</span>${effects ? `<span class="stat-effects">${effects}</span>` : ''}</span>`;
+  }
+  function excludedStatNames(value) {
+    return new Set((Array.isArray(value) ? value : []).filter(name => typeof name === 'string' && name.length > 0 && name.length <= 200 && !/[\x00-\x1f]/.test(name)).slice(0, 2000));
+  }
+  async function changeStatExclusions(root, names, message) {
+    const status = root.querySelector('#stat-status');
+    if (!root.exclusionsReady) { status.textContent = root.exclusionError || 'Excluded stats are still loading. Try again in a moment.'; return; }
+    root.excludedStats = excludedStatNames(names);
+    root.redraw();
+    status.textContent = message;
+    try {
+      if (root.options.storage?.set) await root.options.storage.set({[STAT_EXCLUSIONS]: [...root.excludedStats]});
+    } catch {
+      status.textContent = `${message} This change could not be saved in Chrome and only applies to this open page.`;
+    }
+  }
+  function renderStatExclusions(root) {
+    const list = root.querySelector('#stat-excluded-list');
+    const names = [...root.excludedStats].sort((a, b) => a.localeCompare(b));
+    root.querySelector('#stat-excluded-title').textContent = `Excluded stats (${formatNumber(names.length)})`;
+    root.querySelector('#stat-excluded-empty').hidden = names.length > 0;
+    root.querySelector('#stat-restore-all').hidden = names.length === 0;
+    list.replaceChildren();
+    for (const name of names) {
+      const row = document.createElement('li');
+      const label = document.createElement('span');
+      label.textContent = name;
+      const color = root.known.colors.get(name)?.find(color => savedColor(color));
+      if (color) label.style.color = `#${color}`;
+      const restore = document.createElement('button');
+      restore.type = 'button';
+      restore.className = 'gb-button--sm';
+      restore.textContent = 'Restore';
+      restore.setAttribute('aria-label', `Restore ${name}`);
+      restore.addEventListener('click', () => changeStatExclusions(root, names.filter(stat => stat !== name), `Restored ${name}.`));
+      row.append(label, restore);
+      list.append(row);
+    }
   }
   // A stat's name, hovered: the stat as the game shows it on a tier 6 mana stone
   function showStatTip(tooltip, event, stat, known) {
@@ -989,14 +1041,46 @@ const GBBank = (() => {
     tooltip.style.top = Math.max(4, Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 8)) + 'px';
   }
   // options: {data: {entries}} from the Bank tab, so the stats count the same characters it shows; all: every entry,
-  // whose tooltips say what each stat does; tooltip: the element hovering a stat shows it in
+  // whose tooltips say what each stat does; tooltip: the element hovering a stat shows it in;
+  // classColor: the character tooltip's colour resolver; menu: the page's context menu; storage: local preferences.
   function renderStats(root, characters, options = {}) {
     root.sorting = root.sorting || {key: 'total', descending: true};
     root.collapsed = root.collapsed || new Set();
     if (!root.listening) {
       root.listening = true;
+      root.excludedStats = new Set();
+      root.exclusionsReady = !options.storage?.get;
+      if (!root.exclusionsReady) {
+        const loadExclusions = async () => {
+          try {
+            const stored = await options.storage.get(STAT_EXCLUSIONS);
+            root.excludedStats = excludedStatNames(stored?.[STAT_EXCLUSIONS]);
+            root.exclusionsReady = true;
+            root.redraw();
+          } catch {
+            root.exclusionError = 'Could not read your excluded stats from Chrome. Reload this page to try again.';
+            root.querySelector('#stat-status').textContent = root.exclusionError;
+          }
+        };
+        loadExclusions();
+      }
       for (const id of ['stat-search', 'stat-kind']) root.querySelector('#' + id).addEventListener('input', () => renderStats(root, root.characters, root.options));
+      root.querySelector('#stat-restore-all').addEventListener('click', () => changeStatExclusions(root, [], 'Restored all excluded stats.'));
       const table = root.querySelector('table');
+      const statMenu = event => {
+        const cell = event.target?.closest?.('[data-stat]');
+        if (!cell || !root.options?.menu) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (root.options.tooltip) root.options.tooltip.hidden = true;
+        const rect = cell.getBoundingClientRect();
+        const position = {preventDefault: () => event.preventDefault(), clientX: Number.isFinite(event.clientX) ? event.clientX : rect.left,
+          clientY: Number.isFinite(event.clientY) ? event.clientY : rect.bottom};
+        root.options.menu(position, [{label: 'Exclude this stat from showing', run: () => changeStatExclusions(root,
+          [...root.excludedStats, cell.dataset.stat], `Excluded ${cell.dataset.stat}. Restore it under Excluded stats.`)}], []);
+      };
+      table.addEventListener('contextmenu', statMenu);
+      table.addEventListener('keydown', event => { if (event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey)) statMenu(event); });
       let hovered = null;
       table.addEventListener('mouseover', event => {
         const cell = event.target?.closest?.('[data-stat]');
@@ -1018,21 +1102,36 @@ const GBBank = (() => {
     root.characters = characters;
     root.options = options;
     // Worked out again only when the data is new
-    if (root.knownFrom !== options.all) {
-      root.knownFrom = options.all;
-      root.known = statEffects(options.all || options.data?.entries || []);
+    const tips = options.all || options.data?.entries || [];
+    if (!root.known || root.knownFrom !== tips) {
+      root.knownFrom = tips;
+      root.known = statEffects(tips);
     }
     root.redraw = () => renderStats(root, root.characters, root.options);
-    const rows = statTable(options.data || characters, root.querySelector('#stat-kind').value, root.querySelector('#stat-search').value.trim(), root.sorting.key, root.sorting.descending);
-    const owners = row => row.owners.slice(0, 12).map(owner => `<span class="owner" ${owner.key ? `data-char="${escapeHtml(owner.key)}"` : ''}>${escapeHtml(owner.name)} ${escapeHtml(formatNumber(owner.count))}</span>`).join(', ')
+    const rows = statTable(options.data || characters, root.querySelector('#stat-kind').value, root.querySelector('#stat-search').value.trim(), root.sorting.key, root.sorting.descending)
+      .filter(row => !root.excludedStats.has(row.stat));
+    const ownerCharacters = new Map();
+    for (const character of [...characters, ...tips.map(entry => entry.ch).filter(Boolean)]) {
+      if (character.key) ownerCharacters.set(character.key, character);
+      ownerCharacters.set(character.name, character);
+    }
+    const ownerCell = owner => {
+      const character = ownerCharacters.get(owner.key || owner.name);
+      const color = character && options.classColor?.(character);
+      const style = /^#[0-9a-f]{6}$/i.test(color || '') ? ` style="color:${color}"` : '';
+      return `<span class="owner"${style} ${owner.key ? `data-char="${escapeHtml(owner.key)}"` : ''}>${escapeHtml(owner.name)} ${escapeHtml(formatNumber(owner.count))}</span>`;
+    };
+    const owners = row => row.owners.slice(0, 12).map(ownerCell).join(', ')
       + (row.owners.length > 12 ? ` <span class="hint">and ${formatNumber(row.owners.length - 12)} more</span>` : '');
     groupedTable(root, {
       columns: [...STAT_COLUMNS.map(column => ({...column, number: !column.text,
-        cell: row => (column.text ? `<span class="stat-name" data-stat="${escapeHtml(row.stat)}" tabindex="0">${escapeHtml(row.stat)}</span>` : escapeHtml(formatNumber(row[column.key])))})),
+        cell: row => (column.text ? statNameCell(row.stat, root.known) : escapeHtml(formatNumber(row[column.key])))})),
         {key: 'breakdown', name: 'Who has them', text: true, cell: owners}],
       groups: [{key: '', title: null, sub: '', rows}],
-      empty: 'No stats saved yet. Stats appear once a character has logged in and out on the current build.',
+      empty: root.excludedStats.size ? 'No matching stats are shown. Check the filters or restore stats under Excluded stats.'
+        : 'No matching stats. Check the filters, or log in and out with Global Bank enabled to save them.',
     });
+    renderStatExclusions(root);
     root.querySelector('#stat-total').textContent = `${formatNumber(rows.length)} different stats`;
   }
 

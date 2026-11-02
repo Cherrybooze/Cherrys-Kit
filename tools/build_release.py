@@ -8,6 +8,7 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import re
+import stat
 import subprocess
 from urllib.parse import unquote, urlsplit
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
@@ -37,7 +38,7 @@ def sha256(data: bytes) -> str:
 
 def git_output(*args: str) -> str | None:
     result = subprocess.run(
-        ["git", "-C", str(ROOT), *args], capture_output=True, text=True, check=False
+        ["git", "-C", str(ROOT), *args], capture_output=True, text=True, encoding="utf-8", check=False
     )
     return result.stdout.strip() if result.returncode == 0 else None
 
@@ -71,12 +72,13 @@ def write_zip(path: Path, files: dict[str, bytes], root: str = "CherrysKit",
     for name, data in (root_files or {}).items():
         expected[name] = data
     expected = dict(sorted(expected.items()))
+    # Check every package route, including the store ZIP's root_files, before writing any bytes.
+    for name in expected:
+        require(not PurePosixPath(name).is_absolute() and ".." not in PurePosixPath(name).parts,
+                f"Unsafe archive path: {name}")
+        require(not is_private_release_path(PurePosixPath(name)), f"Private game data must not be packaged: {name}")
     with ZipFile(path, "w", compression=ZIP_DEFLATED, compresslevel=9) as archive:
         for name, data in expected.items():
-            require(
-                not PurePosixPath(name).is_absolute() and ".." not in PurePosixPath(name).parts,
-                f"Unsafe archive path: {name}",
-            )
             entry = ZipInfo(name, ZIP_TIME)
             entry.create_system = 3
             entry.external_attr = 0o100644 << 16
@@ -99,27 +101,58 @@ def write_zip(path: Path, files: dict[str, bytes], root: str = "CherrysKit",
 
 
 PRIVATE_DATA_NAMES = frozenset(name.casefold() for name in (
-    "SaveVariables.lua", "GlobalBankDatabase.lua", "GlobalBank.json", "GlobalBankTips.txt", "GameforgeAccounts.json", "ExcludedCharacters.json",
+    "SaveVariables.lua", "GlobalBankDatabase.lua", "GlobalBank.json", "GlobalBankTips.txt", "GlobalBankMail.txt", "GameforgeAccounts.json", "ExcludedCharacters.json",
     "DailyRewards.json", "CharacterLinks.json", "GlobalBankHelperBeat.lua",
     "GlobalBankHelper.log", "GlobalBankHelper-errors.log", "AAHBroadCache.json", "AAHBroadCache.lua",
-    "MacroLibrary.json", "GlobalBankMacros.lua", "TerminalFeed.json",
+    "MacroLibrary.json", "GlobalBankMacros.lua", "TerminalFeed.json", "TerminalHeartbeat.txt",
+    "CherrysClockStamp.lua", "GlobalBankAutoStart.txt", "GlobalBankExtensionBeat.txt", "GlobalBankHelperAuto.stop",
+    "AddonsInstall.json", "com.cherryskit.globalbank.json",
 ))
 # Global Bank's copies of a player's save files.
-PRIVATE_FOLDER_NAMES = frozenset(("globalbankhelper", "backups"))
+PRIVATE_FOLDER_NAMES = frozenset(("globalbankhelper", "backups", "terminalbridge", "offloaded_addons"))
+
+
+def is_private_data_name(name: str) -> bool:
+    for private in PRIVATE_DATA_NAMES:
+        if name.startswith(private):
+            return True
+        stem, dot, extension = private.rpartition(".")
+        if dot and name.startswith((stem + " (", stem + " - ")) and "." + extension in name[len(stem):]:
+            return True  # Windows copies such as "GlobalBankMail - Copy.txt" or "GameforgeAccounts (2).json".
+    return False
 
 
 def is_private_release_path(path: Path) -> bool:
+    path = PurePosixPath(str(path).replace("\\", "/"))
     name = path.name.casefold()
     # Every .bsd is the game's own per-character save: macros, action bars and chat windows.
     return (any(part.casefold() in PRIVATE_FOLDER_NAMES for part in path.parts)
+            or any(part.casefold().startswith("globalbankhelper (") for part in path.parts)
+            or (name in LOGIN_PERSONAL and path.parent.name.casefold() == "loginxml")
             or name.endswith(".bsd")
-            or any(name == private or name.startswith(private + ".") for private in PRIVATE_DATA_NAMES))
+            or is_private_data_name(name))
+
+
+def is_release_link(path: Path) -> bool:
+    """A Windows junction can expose private files just like a symlink."""
+    return path.is_symlink() or bool(getattr(path.lstat(), "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+
+
+def validate_tracked_private_files() -> int:
+    """Keep private data out of GitHub's source ZIP as well as the install packages."""
+    tracked = git_output("ls-files", "-z")
+    if tracked is None:  # Source archives lack Git metadata; package inputs are still checked.
+        return 0
+    paths = [name for name in tracked.split("\0") if name]
+    for name in paths:
+        require(not is_private_release_path(PurePosixPath(name)), f"Private game data must not be tracked: {name}")
+    return len(paths)
 
 
 def tree_files(folder: Path) -> dict[str, bytes]:
     files = {}
     for path in sorted(folder.rglob("*")):
-        require(not path.is_symlink(), f"Symlinks are not release inputs: {path}")
+        require(not is_release_link(path), f"Links are not release inputs: {path}")
         if path.is_file() and "__pycache__" not in path.parts:
             require(not is_private_release_path(path.relative_to(folder)), f"Private game data must not be packaged: {path}")
             files[path.relative_to(folder).as_posix()] = path.read_bytes()
@@ -192,6 +225,7 @@ def write_external_packages(output: Path, metadata: dict) -> list[dict]:
 
 
 def build(output: Path) -> None:
+    validate_tracked_private_files()
     require(not output.is_relative_to(KIT), "Build output must be outside the installed addon tree.")
     metadata = json.loads((ROOT / "release-packages.json").read_text(encoding="utf-8"))
     version = metadata["kit_version"]
@@ -203,7 +237,7 @@ def build(output: Path) -> None:
 
     sources = {}
     for path in sorted(KIT.rglob("*")):
-        require(not path.is_symlink(), f"Symlinks are not release inputs: {path}")
+        require(not is_release_link(path), f"Links are not release inputs: {path}")
         if path.is_file():
             require(not is_private_release_path(path.relative_to(KIT)), f"Private game data must not be packaged: {path}")
             sources[path.relative_to(KIT).as_posix()] = path.read_bytes()
@@ -294,7 +328,7 @@ def build(output: Path) -> None:
     require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", extension_version) is not None, "Unsafe extension version.")
     extension_files = {}
     for path in sorted((extension_root / "GlobalBank").rglob("*")):
-        require(not path.is_symlink(), f"Symlinks are not release inputs: {path}")
+        require(not is_release_link(path), f"Links are not release inputs: {path}")
         if path.is_file():
             relative = path.relative_to(extension_root)
             require(not is_private_release_path(relative), f"Private game data must not be packaged: {path}")
