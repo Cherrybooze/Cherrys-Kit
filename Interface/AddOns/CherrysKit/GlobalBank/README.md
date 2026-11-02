@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.4** · Kit release **0.11.117** · [All addons / hub](../README.md)
+Version **1.6.5** · Kit release **0.11.117** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.5
+
+Updates from the Addons page run as administrator: Windows asks for permission first, so a game folder such as `C:\RunesOfMagic` no longer stops an update part way with *Access is denied*. If the permission is declined, nothing changes and the page says so. The page starts the helper again afterwards, so it keeps running as you, not as administrator. Addons whose features moved into Cherry's Info or LogNextChar leave the list once they are gone, the **Login screen** panel shows whether `Interface\loginxml` is in place and can put it there, and the action buttons line up with the table's rows. The popup explains that **Run automatically while Chrome is open** starts the helper in the background (extension 1.3.5).
 
 ## Updated in 1.6.4
 

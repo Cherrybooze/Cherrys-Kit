@@ -46,10 +46,33 @@ class AddonsSourceTests(unittest.TestCase):
         self.assertLess(delete.index('Test-AddonsLink $path'), delete.index('DeleteDirectory'))
         self.assertIn('[IO.Directory]::Delete($path, $false)', delete)
         self.assertNotIn('Remove-Item -LiteralPath $path', delete)
-        # Installs run from a temporary copy, never from the Global Bank folder an update replaces.
+        # Installs run from a copy in GlobalBankHelper, never from the Global Bank folder an update replaces,
+        # in an elevated window; a declined permission prompt leaves a failed result and a clear error.
         start = re.search(r'function Start-AddonsInstall.*?\n\}', source, re.S).group(0)
-        self.assertIn("GetTempPath()", start)
+        self.assertIn("Join-Path $paths.data ('addons-run-'", start)
+        self.assertIn('-Verb RunAs', start)
         self.assertIn('-WorkingDirectory $paths.interface', start)
+        declined = start[start.index('} catch {'):]
+        self.assertIn("state = 'failed'", declined)
+        self.assertIn('administrator permission and it was not given', declined)
+        self.assertIn('throw $text', declined)
+        window = re.search(r'function Invoke-AddonsInstallWindow.*?\n\}', source, re.S).group(0)
+        self.assertIn('Set-Location -LiteralPath $paths.interface', window)
+        # An elevated window leaves the helper restart to the page, which runs as the player.
+        self.assertIn('$status.restartHelper = @($helperModes)', window)
+        read = re.search(r'function Read-AddonsStatus.*?\n\}', source, re.S).group(0)
+        self.assertIn('Start-AddonsHelper $paths $modes -Quiet', read)
+
+    def test_action_cells_stay_table_cells_and_update_all_sits_on_the_table(self):
+        css = (EXTENSION / 'control.css').read_text(encoding='utf-8')
+        rule = re.search(r'td\.addons-actions, th\.addons-actions \{([^}]*)\}', css).group(1)
+        # display: flex on a <td> takes it out of the row, so its border no longer lines up with the rest.
+        self.assertNotIn('display', rule)
+        self.assertNotRegex(css, r'(^|\n)\.addons-actions \{[^}]*display')
+        html = (EXTENSION / 'control.html').read_text(encoding='utf-8')
+        self.assertIn('<th class="addons-actions"><button id="addons-update-all-table" type="button" class="gb-button--primary gb-button--sm" hidden>', html)
+        page = (EXTENSION / 'addons.js').read_text(encoding='utf-8')
+        self.assertIn("for (const id of ['addons-update-all', 'addons-update-all-table'])", page)
 
     def test_merged_addons_show_as_replaced(self):
         # The same reading as Get-AddonsReplaced, on the kit's own KitOrigins.lua.

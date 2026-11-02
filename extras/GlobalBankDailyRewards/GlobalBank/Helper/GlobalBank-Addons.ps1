@@ -222,6 +222,17 @@ function Read-AddonsStatus($paths) {
         $status = [IO.File]::ReadAllText((Join-Path $paths.data $script:AddonsStatusName)) | ConvertFrom-Json
         # A window that was closed part way never wrote its end.
         if ($status.state -eq 'running' -and -not (Get-Process -Id ([int]$status.pid) -ErrorAction SilentlyContinue)) { $status.state = 'stopped' }
+        # The elevated install window leaves the helper for this (the player's own) process to start again.
+        if ($status.state -ne 'running' -and $status.state -ne 'starting' -and @($status.restartHelper | Where-Object { $_ }).Count -gt 0) {
+            try {
+                $modes = @($status.restartHelper | ForEach-Object { [string]$_ })
+                $status.restartHelper = @()
+                $copy = @{}
+                foreach ($property in $status.PSObject.Properties) { $copy[$property.Name] = $property.Value }
+                Write-AddonsStatus $paths $copy
+                if ((Get-Command Get-HelperProcesses -ErrorAction SilentlyContinue) -and @(Get-HelperProcesses $paths.addons).Count -eq 0) { Start-AddonsHelper $paths $modes -Quiet }
+            } catch { }
+        }
         return $status
     } catch { return $null }
 }
@@ -372,7 +383,9 @@ function Start-AddonsInstall($paths, $names, $offload = @(), [string]$mailbox = 
     if ($moves.Count -gt 10) { throw 'Too many folders to switch at once.' }
     if ($status -and $status.state -eq 'running') { throw 'An install is already running in its own window. Let it finish first.' }
     if (Test-AddonsGameRunning $paths) { throw 'Close the game first: it reads addons when it starts, and a folder it has open won''t move.' }
-    $work = Join-Path ([IO.Path]::GetTempPath()) ('CherrysKit-addons-' + [Guid]::NewGuid().ToString('N'))
+    # The window runs as administrator, which can be another Windows user whose Temp can't see this one's,
+    # so the copy sits in GlobalBankHelper: outside the Global Bank folder an update replaces.
+    $work = Join-Path $paths.data ('addons-run-' + [Guid]::NewGuid().ToString('N'))
     [void][IO.Directory]::CreateDirectory($work)
     $runner = Join-Path $work 'GlobalBank-Addons.ps1'
     $setup = Join-Path $work 'Setup-CherrysKit.ps1'
@@ -383,7 +396,15 @@ function Start-AddonsInstall($paths, $names, $offload = @(), [string]$mailbox = 
     # Windows PowerShell drops an empty quoted argument, so -Offload only goes along with something in it.
     if ($moves.Count -gt 0) { $arguments += ' -Offload "{0}"' -f ($moves -join '|') }
     if ($mailbox) { $arguments += ' -Mailbox "{0}"' -f $mailbox }
-    $process = Start-Process -FilePath 'powershell.exe' -ArgumentList $arguments -WorkingDirectory $paths.interface -WindowStyle Normal -PassThru
+    # Elevated: game folders such as C:\RunesOfMagic can refuse a normal user's writes part way through an update.
+    try {
+        $process = Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $arguments -WorkingDirectory $paths.interface -WindowStyle Normal -PassThru -ErrorAction Stop
+    } catch {
+        Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
+        $text = 'Windows asked for administrator permission and it was not given, so nothing was installed or changed. Press the button again and choose Yes to install.'
+        Write-AddonsStatus $paths @{ state = 'failed'; pid = 0; packages = $list; startedAt = [DateTime]::UtcNow.ToString('o'); finishedAt = [DateTime]::UtcNow.ToString('o'); text = $text }
+        throw $text
+    }
     return @{ started = $true; pid = $process.Id }
 }
 
@@ -501,22 +522,25 @@ function Stop-AddonsHelper($paths) {
 }
 
 # The way the setup does it: as it ran before.
-function Start-AddonsHelper($paths, $modes) {
+function Start-AddonsHelper($paths, $modes, [switch]$Quiet) {
     $helper = Join-Path $paths.kit 'GlobalBank\Helper\GlobalBank-Update.ps1'
-    if (-not (Test-Path -LiteralPath $helper)) { Write-Warn '  The helper''s new copy is not there, so it stays stopped.'; return }
+    if (-not (Test-Path -LiteralPath $helper)) { if (-not $Quiet) { Write-Warn '  The helper''s new copy is not there, so it stays stopped.' }; return }
     $hidden = @($modes | Where-Object { $_ -eq 'automatic (background)' }).Count -eq $modes.Count
     $auto = @($modes | Where-Object { $_ -like 'automatic*' }).Count -eq $modes.Count
     try {
         if ($auto -and $hidden) { Start-Process -FilePath 'powershell.exe' -WindowStyle Hidden -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Watch -Auto' -f $helper) }
         elseif ($auto) { Start-Process -FilePath 'powershell.exe' -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Watch -Auto' -f $helper) }
         else { Start-Process -FilePath (Join-Path (Split-Path -Parent $helper) 'Start Global Bank helper.bat') }
-        Write-Good '  The Global Bank helper is starting again the way it ran before.'
-    } catch { Write-Warn ('  Could not start the helper again: ' + $_.Exception.Message) }
+        if (-not $Quiet) { Write-Good '  The Global Bank helper is starting again the way it ran before.' }
+    } catch { if (-not $Quiet) { Write-Warn ('  Could not start the helper again: ' + $_.Exception.Message) } }
 }
 
 function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$offload = '', [string]$mailbox = '') {
     try { $host.UI.RawUI.WindowTitle = "Cherry's Kit - install from Global Bank" } catch { }
     $paths = Get-AddonsPaths $addons
+    # An elevated window starts in System32, whatever folder it was given.
+    try { Set-Location -LiteralPath $paths.interface } catch { }
+    $elevated = [bool]((Get-Command Test-Admin -ErrorAction SilentlyContinue) -and (Test-Admin))
     $status = @{ state = 'running'; pid = $PID; packages = @($names -split ','); startedAt = [DateTime]::UtcNow.ToString('o'); text = 'Downloading...'; done = @() }
     Write-AddonsStatus $paths $status
     Write-Host ''
@@ -601,8 +625,17 @@ function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$of
         $status.state = 'failed'
         $status.text = $_.Exception.Message
         Write-Bad ('  ' + $status.text)
+        # Where it stopped, for a bug report.
+        $where = ($_.InvocationInfo.PositionMessage -split "`n")[0]
+        if ($where) { Write-Dim ('  ' + $where.Trim()) }
+        if (Get-Command Add-SetupLog -ErrorAction SilentlyContinue) { Add-SetupLog $paths.interface ('{0}  Global Bank page install failed: {1}  {2}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm'), $status.text, $where) }
     } finally {
-        if ($helperModes.Count -gt 0) { Start-AddonsHelper $paths $helperModes }
+        # A helper started from this administrator window would run as administrator, so the Global Bank page,
+        # which runs as the player, starts it again when it reads this result.
+        if ($helperModes.Count -gt 0) {
+            if ($elevated) { $status.restartHelper = @($helperModes); Write-Dim '  The Global Bank page starts the helper again when it shows this result.' }
+            else { Start-AddonsHelper $paths $helperModes }
+        }
         $status.finishedAt = [DateTime]::UtcNow.ToString('o')
         try { Write-AddonsStatus $paths $status } catch { }
         # This copy and the setup's sit in a folder of their own in Temp.

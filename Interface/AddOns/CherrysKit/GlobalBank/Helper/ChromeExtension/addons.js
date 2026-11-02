@@ -142,7 +142,7 @@ const GBAddons = (() => {
       const bytes = rows.reduce((total, row) => total + (Number(row.bytes) || 0), 0);
       const names = rows.map(row => `${row.title} ${row.latest}`).join(', ');
       const globalBank = rows.some(row => row.folder === 'GlobalBank') ? ' The Global Bank helper stops while its files change and starts again after.' : '';
-      return window.confirm(`Download and install ${names} (${size(bytes)}) from GitHub? The old versions move to Interface\\offloaded_addons. A window opens to show the progress.${globalBank}`);
+      return window.confirm(`Download and install ${names} (${size(bytes)}) from GitHub? The old versions move to Interface\\offloaded_addons. Windows asks for administrator permission, then a window shows the progress.${globalBank}`);
     }
     async function install(rows) {
       if (!rows.length || !confirmInstall(rows)) return;
@@ -306,10 +306,14 @@ const GBAddons = (() => {
       byId('addons-retired').textContent = check && retired(check) ? `No longer separate addons: ${retired(check)}.` : '';
       const rows = kitRows(list, check);
       const updates = updatable(rows);
-      const all = byId('addons-update-all');
-      all.hidden = updates.length < 2;
-      all.textContent = `Update all (${updates.length})`;
-      all.onclick = () => install(updates);
+      // One above the page, one at the top of the table's action column: both do the same.
+      for (const id of ['addons-update-all', 'addons-update-all-table']) {
+        const all = byId(id);
+        if (!all) continue;
+        all.hidden = updates.length < 2;
+        all.textContent = `Update all (${updates.length})`;
+        all.onclick = () => install(updates);
+      }
       byId('addons-kit-rows').replaceChildren(...(rows.length ? rows.map(row => el('tr', {className: ['missing', 'offloaded', 'superseded'].includes(row.state) ? 'is-muted' : ''},
         el('td', {}, el('strong', {textContent: row.title}), row.folder && row.folder !== row.title ? el('div', {className: 'hint', textContent: row.folder}) : null,
           row.note ? el('div', {className: 'hint', textContent: row.note}) : null),
