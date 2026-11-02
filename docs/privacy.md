@@ -1,12 +1,12 @@
 # Global Bank for RoM: privacy policy
 
-Applies to the Chrome extension **Global Bank for RoM** and its local helper, part of [Cherry's Kit](https://github.com/Cherrybooze/Cherrys-Kit) for Runes of Magic. Last updated 1 November 2026.
+Applies to the Chrome extension **Global Bank for RoM** and its local helper, part of [Cherry's Kit](https://github.com/Cherrybooze/Cherrys-Kit) for Runes of Magic. Last updated 2 November 2026.
 
 It is an independent community tool, not made by or affiliated with Gameforge.
 
 ## The short version
 
-Everything the extension reads or saves stays on your own PC. There is no developer server, no account with us, no analytics and no advertising. Nothing is sold, shared or sent to the developer or anyone else. The only website it works on is Gameforge's own Runes of Magic item shop, in the tab you opened.
+Everything the extension reads or saves stays on your own PC. There is no developer server, no account with us, no analytics and no advertising. Nothing is sold, shared or sent to the developer or anyone else. The only website it works on is Gameforge's own Runes of Magic item shop, in the tab you opened. When you press **Check for updates** or an install button on the Addons page, the local helper downloads Cherry's Kit's release files from GitHub, like any download, and sends nothing about you.
 
 ## What it reads
 
@@ -26,6 +26,7 @@ Everything the extension reads or saves stays on your own PC. There is no develo
 - **storage**: settings and the encrypted accounts copy, as above.
 - **alarms**: a signal once a minute to the local helper, so it knows Chrome is still open.
 - **nativeMessaging**: talks to the Global Bank helper, a PowerShell script on your own PC, which reads the save files and writes the helper folder. It is installed separately by `Install Chrome extension.bat` and runs only on your computer.
+- **Changing your addons**: only when you press a button on the Addons page. Updates keep the old version in `Interface\offloaded_addons`, and Delete asks first and uses the Recycle Bin.
 - **Changing your save files**: only when you press a button on the Macros or Addon settings page. The helper keeps a copy of the file it replaces first.
 - **Macro library**: every macro your characters have, and your groups, stay in the helper folder (`MacroLibrary.json`, and `GlobalBankMacros.lua` for the game's macro window). The helper reads the list of the game's macro icons from the game's `interface.fdb`.
 - **Gameforge shop pages**: the extension's scripts run only on the daily loyalty and item depot pages, and check the exact address before doing anything.

@@ -1,4 +1,4 @@
-# Chrome native messaging host. Accepts confirmed rewards and fixed local queries, and the page's own backup requests; never receives shop URLs.
+# Chrome native messaging host. Accepts confirmed rewards and fixed local queries, and the page's own backup and addons requests; never receives shop URLs.
 # Stdout carries only length-prefixed JSON frames: nothing here may print, and helper scripts run in their own process.
 # A terminal-* message keeps this process open for more of them, until Chrome closes the port (or, for a one-shot message, stdin).
 # Each message also writes Windows' time for the game's addons (CherrysClock), which have no clock of their own.
@@ -209,6 +209,14 @@ try {
     if (([string]$message.type) -match '^(backup|macro)-') {
         . (Join-Path $PSScriptRoot 'GlobalBank-Backups.ps1')
         $answer = if ($message.type -like 'backup-*') { Invoke-BackupMessage $message (Get-HelperDataDirectory) } else { Invoke-MacroMessage $message (Get-HelperDataDirectory) }
+        $answer.ok = $true
+        Send-Response $answer
+        exit 0
+    }
+    # The Addons page: list, check GitHub, install in a window of its own, offload, restore, delete.
+    if (([string]$message.type) -like 'addons-*') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Addons.ps1')
+        $answer = Invoke-AddonsMessage $message
         $answer.ok = $true
         Send-Response $answer
         exit 0

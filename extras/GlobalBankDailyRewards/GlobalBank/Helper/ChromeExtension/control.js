@@ -295,6 +295,9 @@
   });
   views.macros = () => { backups.showMacros(); };
   views.settings = () => { backups.showSettings(); };
+  const addonsPage = GBAddons.create(send, {toast: text => toast(text)});
+  views.addons = () => { addonsPage.show(); };
+  selfTracking.add('addons');
   // Characters and Currencies: a search, and groups by server or account
   const tables = {characters: ['roster', 'roster-view'], currencies: ['currency', 'currency-view']};
   const tableOptions = prefix => ({

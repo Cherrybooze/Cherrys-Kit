@@ -4,6 +4,22 @@ The automated tests run production Lua 5.1 modules and XML handlers with simulat
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck12 requires **0.4.17** for its History files. Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
 
+## Global Bank Addons page (not yet released)
+
+Not run on Windows yet: the tests check the page in Node and the bridge's offload and restore in PowerShell where it is installed. Use a game folder you can afford to change, with the game closed unless a row says otherwise.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| AD1 | Open the Global Bank page and click **Addons** in the sidebar. | Three lists: Cherry's Kit (hub first, with versions), Other addons, Offloaded. Older copies the setup moved show under Offloaded. |
+| AD2 | Press **Check for updates**. | A line names the latest release. Each kit addon says Up to date, Update available or Not installed, with the version on GitHub. |
+| AD3 | With an addon out of date, press **Update from GitHub** and say yes. | A PowerShell window opens, downloads, says what it updated, and closes after 20 seconds. The page then shows the new version, and the old folder is in `Interface\offloaded_addons\CherrysKit <version> (before update ...)`. |
+| AD4 | Press **Download and install** on an addon that isn't installed. | It installs the same way and shows Up to date. |
+| AD5 | Update Global Bank itself while the helper runs. | The window stops the helper, updates, and starts it again the way it ran. The page keeps working. |
+| AD6 | **Offload** a kit addon and an addon of your own, start the game. | Both are gone from `Interface\AddOns` (kit ones under `offloaded_addons\CherrysKit addons`) and don't load. **Restore** puts each back, and they load again. |
+| AD7 | **Delete** something under Offloaded, answer Cancel, then OK. | Cancel changes nothing. OK sends it to the Recycle Bin, from where it can be restored. |
+| AD8 | Press an install button with the game running. | The page says to close the game first and nothing changes. |
+| AD9 | Unplug the network and press **Check for updates**. | One line says it couldn't read the release; the lists still work. |
+
 ## 0.11.115 Guided setup and Cherry's Info
 
 None of this has run in the game yet. The tests use a simulated client, and the setup has run on throwaway game folders.
