@@ -1,0 +1,217 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+    <CheckButton name="ZMailAutoSendFrameCheckTemplate" inherits="UIPanelCheckButtonTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="26" y="26" />
+        </Size>
+        <Layers>
+            <Layer>
+                <FontString name="$parentLabel" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP" text="CHECK">
+                    <Size>
+                        <AbsDimension x="210" y="45" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
+                            <Offset>
+                                <AbsDimension x="4" y="7"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnClick>
+                zmail.autosend.settings.OnCheckClick(this)
+            </OnClick>
+            <OnEnter>
+                zmail.autosend.settings.OnCheckEnter(this)
+            </OnEnter>
+            <OnLeave>
+                GameTooltip:Hide()
+            </OnLeave>
+        </Scripts>
+    </CheckButton>
+    <Frame name="ZMailAutoSendSettingsTemplate" inherits="ZMailFrameBackdropTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="338" y="450" />
+        </Size>
+        <Frames>
+            <CheckButton name="$parentDisabled" inherits="ZMailAutoSendFrameCheckTemplate" checked="true" id="1">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="12" y="16"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </CheckButton>
+            <CheckButton name="$parentBlacklisted" inherits="ZMailAutoSendFrameCheckTemplate" checked="true" id="2">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentDisabled" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </CheckButton>
+        </Frames>
+    </Frame>
+    <Frame name="ZMailFrameAutoSendListEntryTemplate" enableMouse="true" virtual="true">
+        <Backdrop tile="true" bgFile="Interface\ChatFrame\ChatMessageFrame-bg">
+            <TileSize>
+                <AbsValue val="8"/>
+            </TileSize>
+        </Backdrop>
+        <Size>
+            <AbsDimension x="420" y="25" />
+        </Size>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentHighlight"  file="Interface\Buttons\ListItemHighlight" hidden="true" alphaMode="ADD"/>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString name="$parentName" inherits="GameTitleFont" text=">" justifyH="LEFT" justifyV="MIDDLE">
+                    <Size>
+                        <AbsDimension x="214" y="25" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset>
+                                <AbsDimension x="30" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <CheckButton name="$parentEnabled" inherits="UIPanelCheckButtonTemplate">
+                <Size>
+                    <AbsDimension x="24" y="24" />
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnEnter>
+                        zmail.autosend.ListOnEnter(this:GetParent())
+                    </OnEnter>
+                    <OnLeave>
+                        zmail.autosend.ListOnLeave(this:GetParent())
+                    </OnLeave>
+                    <OnClick>
+                        zmail.autosend.ListOnClick(this:GetParent(), key)
+                    </OnClick>
+                    <OnMouseWheel>
+                        zmail.autosend.ListOnMouseWheel(this:GetParent(), delta)
+                    </OnMouseWheel>
+                </Scripts>
+            </CheckButton>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                this:RegisterForClicks("LeftButton", "RightButton")
+            </OnLoad>
+            <OnEnter>
+                zmail.autosend.ListOnEnter(this)
+            </OnEnter>
+            <OnLeave>
+                zmail.autosend.ListOnLeave(this)
+            </OnLeave>
+            <OnClick>
+                zmail.autosend.ListOnClick(this, key)
+            </OnClick>
+            <OnMouseWheel>
+                zmail.autosend.ListOnMouseWheel(this, delta)
+            </OnMouseWheel>
+        </Scripts>
+    </Frame>
+    <Frame name="ZMailFrameAutoSendListTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="448" y="490" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="5" y="5"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Frames>
+            <Frame name="$parent1" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent2" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent3" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent4" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent5" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent6" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent7" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent8" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent9" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent10" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent11" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent12" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent13" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent14" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent15" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent16" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent17" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent18" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Frame name="$parent19" inherits="ZMailFrameAutoSendListEntryTemplate" />
+            <Slider name="$parentScroll" inherits="UIPanelScrollBarTemplate" >
+                <Anchors>
+                    <Anchor point="TOPRIGHT" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="-5" y="26"/>
+                        </Offset>
+                    </Anchor>
+                    <Anchor point="BOTTOMRIGHT" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="-5" y="-22"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetValueStepMode("INT");
+                    </OnLoad>
+                    <OnValueChanged>
+                        UIPanelScrollBar_OnValueChanged(this, arg1);
+                        zmail.autosend.ListUpdate()
+                    </OnValueChanged>
+                </Scripts>
+            </Slider>
+        </Frames>
+    </Frame>
+    <Frame name="ZMailAutoSendTemplate" virtual="true" id="4">
+        <Size>
+            <AbsDimension x="780" y="470" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT"/>
+        </Anchors>
+        <Frames>
+            <Frame name="$parentList" inherits="ZMailFrameAutoSendListTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT"/>
+                </Anchors>
+            </Frame>
+            <Frame name="$parentSettings" inherits="ZMailAutoSendSettingsTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentList"/>
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                zmail.RegisterFrame(this)
+            </OnLoad>
+            <OnShow>
+                zmail.autosend.OnShow(this);
+            </OnShow>
+        </Scripts>
+    </Frame>
+</Ui>

@@ -4,6 +4,17 @@ The automated tests run production Lua 5.1 modules and XML handlers with simulat
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck12 requires **0.4.17** for its History files. Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
 
+## zMail as the mailbox (zMail 1.4-ck1, hub Mailbox.txt, Global Bank mailbox record)
+
+Not run in the game yet: the tests use a simulated client.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| ZM1 | Install zMail-1.4-ck1.zip into `Interface/AddOns` (it creates `zmail`), leave `CherrysKit/Mailbox.txt` on `"auto"` and log in. Open a mailbox. | zMail's window opens, Ultimate Mail Mod's doesn't. `/ck` shows Ultimate Mail Mod off with "zMail is your mailbox (Mailbox.txt)"; `/umm` says so in chat. |
+| ZM2 | With gold close to the 999,999,999 cap, have a few mails with gold and one with an item. Select all and take. | The item is taken, each gold mail gives the "can't take" line, and the gold mails stay unread with their days left unchanged (30, not 3). |
+| ZM3 | Set `Mailbox = "UMM"` with `zmail` still installed, Reload UI. Then move `zmail` out of AddOns and Reload UI again. | With both loaded, both react to the mailbox (zMail hides Ultimate Mail Mod's window when it opens; note what you see). That's why the setup moves `zmail` out when you pick Ultimate Mail Mod. After moving it out, only Ultimate Mail Mod runs. |
+| ZM4 | With zMail, open the mailbox, wait 3 seconds, log out, then check Global Bank's `GlobalBank_Char` in `SaveVariables.lua`. | It has a `P~mails~gold~itemMails~days~time` record matching the inbox. No mail was opened by Global Bank. |
+
 ## 0.11.115 Guided setup and Cherry's Info
 
 None of this has run in the game yet. The tests use a simulated client, and the setup has run on throwaway game folders.

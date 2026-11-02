@@ -89,8 +89,11 @@ class AddonMapTest(unittest.TestCase):
             self.assertEqual(top, data.get("install_folder", package))
 
     def test_nothing_under_addons_has_its_own_manifest_except_the_hub(self):
+        # External packages (zMail) are other authors' addons in folders of their own, with their own toc.
+        external = tuple(item["install_folder"] + "/" for item in DATA.get("external_packages", []))
         tocs = [path.relative_to(ADDONS).as_posix() for path in ADDONS.rglob("*.toc")]
-        self.assertEqual(tocs, ["CherrysKit/CherrysKit.toc"])
+        self.assertEqual([toc for toc in tocs if not toc.startswith(external)], ["CherrysKit/CherrysKit.toc"])
+        self.assertEqual([toc for toc in tocs if toc.startswith(external)], ["zmail/core.toc"])
 
     def test_the_hub_manifest_loads_the_separate_packages(self):
         toc = (KIT / "CherrysKit.toc").read_text(encoding="utf-8-sig")

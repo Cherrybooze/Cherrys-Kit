@@ -1,0 +1,130 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+    <RadioButton name="ZMailFrameOptionButtonTemplate" inherits="UIPanelRadioButtonTemplate" virtual="true">
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentLabel" inherits="GameFontHighlight" text="">
+                    <Anchors>
+                        <Anchor point="LEFT" relativePoint="RIGHT">
+                            <Offset>
+                                <AbsDimension x="6" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+    </RadioButton>
+    <Button name="ZMailFrameTabTemplate" inherits="UIPanelTopTabTemplate" frameStrata="HIGH" virtual="true">
+        <Scripts>
+            <OnClick>
+                zmail.SelectTab(this:GetID())
+			</OnClick>
+        </Scripts>
+    </Button>
+    <Frame name="ZMailFrameMoneyFrameTemplate" virtual="true">
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentAmount" text="" inherits="GameTitleFont">
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                    <Size>
+                        <AbsDimension x="16" y="16" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentAmount" relativePoint="RIGHT">
+                            <Offset>
+                                <AbsDimension x="2" y="0" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>
+                zmail.MoneyFrameTemplateOnLoad(this)
+            </OnLoad>
+        </Scripts>
+    </Frame>
+    <Frame name="ZMailFrameSmallRightAlignedMoneyFrameTemplate" virtual="true">
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                    <Size>
+                        <AbsDimension x="12" y="12" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="RIGHT">
+                            <Offset>
+                                <AbsDimension x="0" y="0" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                </Texture>
+                <FontString name="$parentAmount" text="" inherits="GameFontNormal">
+                    <Anchors>
+                        <Anchor point="RIGHT" relativeTo="$parentGoldCoin" relativePoint="LEFT">
+                            <Offset>
+                                <AbsDimension x="-2" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>
+                zmail.MoneyFrameTemplateOnLoad(this)
+            </OnLoad>
+        </Scripts>
+    </Frame>
+    <Frame name="ZMailFrameSmallMoneyFrameTemplate" virtual="true">
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                    <Size>
+                        <AbsDimension x="12" y="12" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="BOTTOMRIGHT">
+                            <Offset>
+                                <AbsDimension x="0" y="0" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                </Texture>
+                <FontString name="$parentAmount" text="" inherits="GameFontNormal">
+                    <Anchors>
+                        <Anchor point="RIGHT" relativeTo="$parentGoldCoin" relativePoint="LEFT">
+                            <Offset>
+                                <AbsDimension x="-2" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>
+                zmail.MoneyFrameTemplateOnLoad(this)
+            </OnLoad>
+        </Scripts>
+    </Frame>
+    <Frame name="ZMailFrameBackdropTemplate" inherits="UIPanelBackdropFrame" virtual="true">
+        <Scripts>
+            <OnLoad>
+                UIPanelBackdropFrame_SetTexture(this, "Interface/Common/PanelCommonBorder", 40, 40);
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

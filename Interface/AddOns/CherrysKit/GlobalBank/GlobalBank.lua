@@ -26,6 +26,9 @@
 --   T~token    its main class, the same in every client language
 --   R~a;b;c    everyone the login screen listed with it: its account, on this server
 --   L~steam    it was last saved from Steam
+--   P~mails~gold~itemMails~days~time   its mailbox as zMail last listed it: mails, gold waiting (not C.O.D.),
+--              mails with items, days until the first mail holding gold or items expires (-1 for none),
+--              and when. Read from zMail's own list, so no mail is opened (opening cuts it to 3 days).
 
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
@@ -132,6 +135,10 @@ function GB.Serialize(c)
   if c.steam then
     parts[#parts + 1] = "L~steam"
   end
+  if c.mail then
+    local m = c.mail
+    parts[#parts + 1] = table.concat({ "P", tostring(m.mails), tostring(m.gold), tostring(m.items), tostring(m.days), clean(m.when) }, "~")
+  end
   for _, money in ipairs(c.currencies or {}) do
     parts[#parts + 1] = table.concat({ "M", clean(money.key), tostring(money.amount), clean(money.name) }, "~")
   end
@@ -207,6 +214,9 @@ function GB.Parse(text)
     end
     if f[1] == "L" and f[2] == "steam" then
       c.steam = true
+    end
+    if f[1] == "P" and tonumber(f[2]) then
+      c.mail = { mails = tonumber(f[2]), gold = tonumber(f[3]) or 0, items = tonumber(f[4]) or 0, days = tonumber(f[5]) or -1, when = f[6] or "" }
     end
     if f[1] == "M" and f[2] and f[2] ~= "" and tonumber(f[3]) then
       c.currencies[#c.currencies + 1] = { key = f[2], amount = tonumber(f[3]), name = f[4] or "" }
@@ -557,6 +567,36 @@ function GB.SettleServer()
   GlobalBank_Others = #order > 0 and table.concat(order, "`") or nil
 end
 
+-- The mailbox as zMail (Interface\AddOns\zmail) last listed it, once a mailbox was open this session;
+-- nil otherwise. Only zMail's table is read: GetInboxItem would open a mail and cut it to 3 days.
+function GB.ReadMailbox()
+  local z = GB.mailSeen and rawget(_G, "zmail")
+  local list = type(z) == "table" and type(z.inbox) == "table" and z.inbox.data
+  if type(list) ~= "table" then
+    return nil
+  end
+  local m = { mails = 0, gold = 0, items = 0, days = -1 }
+  for _, mail in pairs(list) do
+    if type(mail) == "table" then
+      m.mails = m.mails + 1
+      local money, items, days = tonumber(mail.money) or 0, tonumber(mail.items) or 0, tonumber(mail.daysLeft)
+      if money > 0 and not mail.cod then
+        m.gold = m.gold + money
+      end
+      if items > 0 then
+        m.items = m.items + 1
+      end
+      if days and (money > 0 or items > 0) and (m.days < 0 or days < m.days) then
+        m.days = days
+      end
+    end
+  end
+  if m.days >= 0 then
+    m.days = math.floor(m.days * 10 + 0.5) / 10
+  end
+  return m
+end
+
 function GB.Snapshot(withBank, authoritative)
   local name = GB.PlayerName()
   if not name then
@@ -585,6 +625,11 @@ function GB.Snapshot(withBank, authoritative)
   c.roster = GB.ReadRoster(name) or c.roster
   c.steam = CherrysKit and CherrysKit.IsSteam and CherrysKit.IsSteam() or nil
   c.bag, c.bagMax = GB.ReadBag()
+  local mail = GB.ReadMailbox()
+  if mail then
+    mail.when = now()
+    c.mail = mail
+  end
   if withBank then
     local bank, max = GB.ReadBank()
     if authoritative or #bank > 0 or (tonumber(max) or 0) > 0 then
@@ -1105,7 +1150,7 @@ end
 ---------------------------------------------------------------------------
 
 GB.EVENTS = { "VARIABLES_LOADED", "LOADING_END", "BAG_ITEM_UPDATE", "PLAYER_BAG_CHANGED", "PLAYER_MONEY",
-  "BANK_OPEN", "BANK_CLOSE", "BANK_UPDATE", "UNIT_LEVEL", "EXCHANGECLASS_SUCCESS" }
+  "BANK_OPEN", "BANK_CLOSE", "BANK_UPDATE", "UNIT_LEVEL", "EXCHANGECLASS_SUCCESS", "MAIL_INBOX_UPDATE" }
 
 function GB.OnLoad(frame)
   GB.registered = {}
@@ -1182,6 +1227,12 @@ function GB.OnEvent(event)
       timer, timerBank, timerAuth = nil, false, false
     end
     GB.bankOpen = false
+  elseif event == "MAIL_INBOX_UPDATE" then
+    -- zMail fills its list on the same event: read it once the mailbox has been quiet a moment.
+    if rawget(_G, "zmail") then
+      GB.mailSeen = true
+      schedule(GB.QUIET, GB.bankOpen, GB.bankOpen, true)
+    end
   elseif event == "PLAYER_MONEY" then
     GB.UpdateMoney() -- right away: gold often changes just before logging out (mail, trade)
   else -- bags changed

@@ -1,0 +1,339 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+    <Frame name="ZMailRecipientListEntryTemplate" virtual="true" enableMouse="true">
+        <Size>
+            <AbsDimension x="1" y="1" />
+        </Size>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentHover" file="interface/Buttons/listitemhighlight" alphaMode="BLEND" hidden="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT"/>
+                        <Anchor point="BOTTOMRIGHT"/>
+                    </Anchors>
+                    <TexCoords top="0" left="0" bottom="1" right="1"></TexCoords>
+                </Texture>
+                
+                <Texture name="$parentSelected" file="interface/Buttons/listitemhighlight" alphaMode="BLEND" hidden="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT"/>
+                        <Anchor point="BOTTOMRIGHT"/>
+                    </Anchors>
+                    <TexCoords top="0" left="0" bottom="1" right="1"></TexCoords>
+                </Texture>
+            </Layer>			
+            <Layer level="ARTWORK">
+                <FontString name="$parentName" inherits="GameFontNormal" justifyH="LEFT" justifyV="MIDDLE" text="> Name">
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="4" y="0"/>
+                            </Offset>
+                        </Anchor>
+                        <Anchor point="BOTTOMRIGHT"/>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>
+                this.SetText = zmail.charlist.frame.ListSetEntryText
+            </OnLoad>
+            <OnEnter>
+                _G[this:GetName().."Hover"]:Show()
+            </OnEnter>
+            <OnClick>
+                zmail.charlist.frame.ListEntryOnClick(this)
+            </OnClick>
+            <OnLeave>
+                _G[this:GetName().."Hover"]:Hide()
+            </OnLeave>
+            <OnMouseWheel>
+                local s = _G[this:GetParent():GetName().."Scroll"]
+                s:SetValue(s:GetValue()-delta/120)
+            </OnMouseWheel>
+        </Scripts>
+    </Frame>
+    
+    <Frame name="ZMailRecipientListTemplate" virtual="true" hidden="true">
+        <Frames>
+            <EditBox name="$parentSearch" inherits="UIPanelEditBoxTemplate" historylines="0" letters="64">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPLEFT"/>
+                    <Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="0" y="20"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentTitle" inherits="GameFontNormal" justifyH="CENTER" justifyV="MIDDLE" text="> TITLE">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativePoint="TOPLEFT"/>
+                                <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentIcon" file="interface\SocialFrame\tab_party_situation">
+							<Size>
+								<AbsDimension x="30" y="16"/>
+							</Size>
+							<Anchors>
+								<Anchor point="TOPRIGHT">
+									<Offset>
+										<AbsDimension x="0" y="1"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnTextChanged>
+                        if this:GetText():len() == 0 then
+                            _G[this:GetName().."Title"]:Show()
+                            _G[this:GetName().."Icon"]:Show()
+                        else
+                            _G[this:GetName().."Title"]:Hide()
+                            _G[this:GetName().."Icon"]:Hide()
+                        end
+                        this:GetParent():Update(true);
+                    </OnTextChanged>
+                </Scripts>
+            </EditBox>
+            <Frame name="$parentList" inherits="ZMailFrameBackdropTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSearch" relativePoint="BOTTOMLEFT"/>
+                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT"/>
+                </Anchors>
+                <Frames>
+                    <Frame name="$parent1" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent2" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent3" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent4" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent5" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent6" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent8" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent7" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent9" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent10" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent11" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent12" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent13" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent14" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent15" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent16" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent17" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent18" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent19" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent20" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent21" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent22" inherits="ZMailRecipientListEntryTemplate" />
+                    <Frame name="$parent23" inherits="ZMailRecipientListEntryTemplate" />
+                    <Slider name="$parentScroll" inherits="UIPanelScrollBarTemplate">
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeTo="$parent">
+                                <Offset>
+                                    <AbsDimension x="2" y="24"/>
+                                </Offset>
+                            </Anchor>
+                            <Anchor point="BOTTOMRIGHT" relativeTo="$parent">
+                                <Offset>
+                                    <AbsDimension x="2" y="-26"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnLoad>
+                                this:SetValueStepMode("INT");
+                            </OnLoad>
+                            <OnValueChanged>
+                                UIPanelScrollBar_OnValueChanged(this, arg1);
+                                this:GetParent():GetParent():Update();
+                            </OnValueChanged>
+                        </Scripts>
+                    </Slider>
+                </Frames>
+            </Frame>
+        </Frames>
+    </Frame>
+
+    <Frame name="ZMailRecipientFrameTemplate" inherits="ZMailFrameBackdropTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="105" y="440" />
+        </Size>
+        <Frames>
+            <Button name="$parentOk" inherits="UIPanelButtonTemplate" text="> ok">
+                <Size>
+                    <AbsDimension x="70" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="-10" y="12"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        this:GetParent():OK()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentCancel" inherits="UIPanelButtonTemplate" text="> Cancel">
+                <Size>
+                    <AbsDimension x="70" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentOk">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        this:GetParent():Cancel()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <EditBox name="$parentManual" inherits="UIPanelEditBoxTemplate" historylines="0" letters="64">
+                <Size>
+                    <AbsDimension x="122" y="20" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="8" y="15"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentTitle" inherits="GameFontNormal" justifyH="CENTER" justifyV="MIDDLE" text="> TITLE">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativePoint="TOPLEFT"/>
+                                <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnTextChanged>
+                        if this:GetText():len() == 0 then
+                            _G[this:GetName().."Title"]:Show()
+                        else
+                            _G[this:GetName().."Title"]:Hide()
+                        end
+                    </OnTextChanged>
+                    <OnEnterPressed>
+                        if this:GetParent():Select(this:GetText()) then
+                            this:SetText("")
+                            this:ClearFocus()
+                        end
+                    </OnEnterPressed>
+                </Scripts>
+            </EditBox>
+            <Button name="$parentAdd" inherits="UIPanelButtonTemplate" text="> Add">
+                <Size>
+                    <AbsDimension x="70" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentManual">
+                        <Offset>
+                            <AbsDimension x="5" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        local frame = this:GetParent()
+                        local edit = _G[frame:GetName().."Manual"]
+                        if frame:Select(edit:GetText()) then
+                            edit:SetText("")
+                            edit:ClearFocus()
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentReset" inherits="UIPanelButtonTemplate" text="> Reset">
+                <Size>
+                    <AbsDimension x="80" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentAdd">
+                        <Offset>
+                            <AbsDimension x="5" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        this:GetParent():Reset()
+                    </OnClick>
+                </Scripts>
+            </Button>
+
+            <Frame name="$parentLists">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="5" y="40"/>
+                        </Offset>
+                    </Anchor>
+                    <Anchor point="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="-5" y="-5"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <Frame name="$parentSelected" inherits="ZMailRecipientListTemplate" id="1">
+                        <Size>
+                            <AbsDimension x="1" y="1" />
+                        </Size>
+                    </Frame>
+                    <Frame name="$parentAll" inherits="ZMailRecipientListTemplate" id="2">
+                        <Size>
+                            <AbsDimension x="1" y="1" />
+                        </Size>
+                    </Frame>
+                    <Frame name="$parentPrivate" inherits="ZMailRecipientListTemplate" id="3">
+                        <Size>
+                            <AbsDimension x="1" y="1" />
+                        </Size>
+                    </Frame>
+                    <Frame name="$parentFriend" inherits="ZMailRecipientListTemplate" id="4">
+                        <Size>
+                            <AbsDimension x="1" y="1" />
+                        </Size>
+                    </Frame>
+                    <Frame name="$parentGuild" inherits="ZMailRecipientListTemplate" id="5">
+                        <Size>
+                            <AbsDimension x="1" y="1" />
+                        </Size>
+                    </Frame>
+                    <Frame name="$parentParty" inherits="ZMailRecipientListTemplate" id="6">
+                        <Size>
+                            <AbsDimension x="1" y="1" />
+                        </Size>
+                    </Frame>
+                    <Frame name="$parentChannel" inherits="ZMailRecipientListTemplate" id="7">
+                        <Size>
+                            <AbsDimension x="1" y="1" />
+                        </Size>
+                    </Frame>
+                </Frames>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnHide>
+                zmail.charlist.frame.FrameOnHide(this)
+            </OnHide>
+            <OnShow>
+                zmail.charlist.frame.FrameOnShow(this)
+            </OnShow>
+        </Scripts>
+    </Frame>
+</Ui>
