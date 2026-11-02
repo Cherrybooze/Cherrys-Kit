@@ -26,7 +26,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Updated in 1.6.5
 
-Updates from the Addons page run as administrator: Windows asks for permission first, so a game folder such as `C:\RunesOfMagic` no longer stops an update part way with *Access is denied*. If the permission is declined, nothing changes and the page says so. The page starts the helper again afterwards, so it keeps running as you, not as administrator. Addons whose features moved into Cherry's Info or LogNextChar leave the list once they are gone, the **Login screen** panel shows whether `Interface\loginxml` is in place and can put it there, and the action buttons line up with the table's rows. The popup explains that **Run automatically while Chrome is open** starts the helper in the background (extension 1.3.5).
+Updates from the Addons page run as administrator: Windows asks for permission first, so a game folder such as `C:\RunesOfMagic` no longer stops an update part way with *Access is denied*. If the permission is declined, nothing changes and the page says so. The page starts the helper again afterwards, so it keeps running as you, not as administrator. Addons whose features moved into Cherry's Info or LogNextChar leave the list once they are gone, the **Login screen** panel shows whether `Interface\loginxml` is in place and can put it there, and the action buttons line up with the table's rows. The popup explains that **Run automatically while Chrome is open** starts the helper in the background (extension 1.3.5). The Stats page always shows a stat's own value: tooltips from high-durability (HD) gear, up to +20%, no longer inflate it.
 
 ## Updated in 1.6.4
 

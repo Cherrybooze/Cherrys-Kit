@@ -8,7 +8,7 @@ The helper now follows Chrome: the extension's button shows whether it is runnin
 
 ## Popup wording in 1.3.5
 
-**Run automatically while Chrome is open** now says what it does: the helper starts in the background instead of a visible terminal window. Addons page updates ask Windows for administrator permission (Global Bank 1.6.5).
+**Run automatically while Chrome is open** now says what it does: the helper starts in the background instead of a visible terminal window. Addons page updates ask Windows for administrator permission, and the Stats page shows stat values without the HD bonus (Global Bank 1.6.5).
 
 ## Reload and release versions in 1.3.4
 

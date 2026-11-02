@@ -914,6 +914,20 @@ const GBBank = (() => {
   // What each stat does, from the game's own saved tooltips: a stat's name stands beside the first of its effects, and
   // the rest follow on the lines below. The way most items show a stat wins, a mana stone's counting double.
   // Keep each effect's saved colour as well as its text; green/yellow stats must not become orange.
+  // Gear above 100 durability (HD) shows its stats raised, up to +20% at 120, and the Stats page always shows a
+  // stat's own value. Such a tooltip's numbers are divided back by its durability (current, else maximum) when that
+  // gives the whole numbers stats have, and it counts for little, so an ordinary item's way of showing the stat wins.
+  const EFFECT_NUMBER = /^([+-]\s*)(\d+(?:\.\d+)?)/;
+  function boostOf(gear, lines) {
+    const numbers = lines.map(([, text]) => Number(EFFECT_NUMBER.exec(text)?.[2])).filter(value => value > 0);
+    for (const dura of [Number(gear?.dura) || 0, Number(gear?.maxDura) || 0]) {
+      if (dura <= 100 || dura > 120 || !numbers.length) continue;
+      const scale = dura / 100;
+      if (numbers.every(value => Math.abs(value / scale - Math.round(value / scale)) < 0.051)) return scale;
+    }
+    return 1;
+  }
+  const unboosted = (text, scale) => scale === 1 ? text : text.replace(EFFECT_NUMBER, (all, sign, number) => sign + String(Math.round(Number(number) / scale)));
   function statEffects(list) {
     const seen = new Map();
     let header = null;
@@ -928,9 +942,13 @@ const GBBank = (() => {
       if (!header && String(entry.id) === TEMPLATE_STONE && entry.tip.length >= 2) header = entry.tip.slice(0, 2).map(line => String(line[1] || ''));
       if (!entry.stats?.length) continue;
       const names = new Set(entry.stats);
+      const high = (Number(entry.gear?.dura) || 0) > 100 || (Number(entry.gear?.maxDura) || 0) > 100;
       let current = null, lines = [];
       const finish = () => {
-        if (current && lines.length) tally(current, lines, entry.stone ? 2 : 1);
+        if (current && lines.length) {
+          const scale = high ? boostOf(entry.gear, lines) : 1;
+          tally(current, lines.map(([color, text]) => [color, unboosted(text, scale)]), high ? 0.01 : entry.stone ? 2 : 1);
+        }
         current = null;
         lines = [];
       };
