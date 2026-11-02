@@ -47,6 +47,15 @@ default("UMM_MSI_RECENT_HELP", "Use this recipient for Mass Send Items. Selected
 default("UMM_MSI_SELECT_TITLE", "Item selection");
 default("UMM_MSI_SELECT_HELP", "Drag a box to select items. Ctrl/Shift-drag adds; Esc cancels. Ctrl-click toggles matching stacks.");
 
+-- ### To fields ###
+-- Clicking into a To field that holds a name selects all of it, so typing replaces it; a second
+-- click (the field already has focus) places the cursor as usual.
+function UMMSelectAllOnFocus(box)
+  if (box and box.HighlightText and (box:GetText() or "") ~= "") then
+    box:HighlightText();
+  end
+end
+
 -- ### Send pacing ###
 -- Defaults are deliberately gentle: the old 0.2 s spacing with no pauses is what ran into
 -- trouble around 60 mails. Change them with /umm delay, /umm batch and /umm retries.

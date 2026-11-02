@@ -57,6 +57,7 @@
                 this:ClearFocus();
                 getglobal(this:GetParent():GetName().."Subject"):SetFocus();
               </OnTabPressed>
+              <OnEditFocusGained>UMMSelectAllOnFocus(this);</OnEditFocusGained>
               <OnTextChanged>
                 this:GetParent():GetParent():CheckSendStatus();
               </OnTextChanged>

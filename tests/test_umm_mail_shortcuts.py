@@ -436,6 +436,43 @@ class MailShortcutsTests(unittest.TestCase):
         ''')
 
 
+    def test_to_keeps_its_name_across_tabs_until_reset_or_erased(self):
+        composer = self.compose()
+        author = self.g.UMMFrameTab2ComposerHeaderAuthor
+        subject = self.g.UMMFrameTab2ComposerHeaderSubject
+        author.SetText(author, "Coralbanka")
+        subject.SetText(subject, "Mats")
+        def visit(tab):
+            # the client sends the child composer its own hide and show with the tab
+            self.g.UMMMenuSelectTab(tab)
+            self.script(composer.name, "OnHide")
+            self.compose()
+        for tab in (1, 3, 4):
+            visit(tab)
+            self.assertEqual(author.text, "Coralbanka")
+        self.assertEqual(subject.text, "", "only the name is kept")
+        self.assertTrue(subject.focus)
+        self.g.UMMComposeMailTemplateButton_OnClick(self.g.UMMFrameTab2ComposerReset, "reset")
+        self.assertEqual(author.text, "")
+        author.SetText(author, "Other")
+        author.SetText(author, "")
+        visit(1)
+        self.assertEqual(author.text, "")
+        self.assertTrue(author.focus)
+
+    def test_clicking_into_a_filled_to_field_selects_the_whole_name(self):
+        self.compose()
+        author = self.g.UMMFrameTab2ComposerHeaderAuthor
+        author.SetText(author, "Coralbanka")
+        author.caret = 3
+        self.script(author.name, "OnEditFocusGained")
+        self.assertEqual((author.selStart, author.caret), (0, len("Coralbanka")))
+        author.SetText(author, "")
+        author.selStart = None
+        self.script(author.name, "OnEditFocusGained")
+        self.assertIsNone(author.selStart)
+
+
 class ComposeRecentColumnTests(MailShortcutsTests):
     recipient_lists = True
 
