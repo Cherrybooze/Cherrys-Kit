@@ -1,5 +1,7 @@
 [![Download the full kit install ZIP. Run !setup_cherryskit.bat after extracting.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)
 
+**[Read the setup walkthrough and flowchart ↓](#guided-setup-every-prompt)**
+
 # Cherry's Kit
 
 **Runes of Magic addons that work together, with one small control hub.**
