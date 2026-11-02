@@ -37,7 +37,9 @@ param(
     [switch]$OtherInstall,        # set when another run of this script is setting this folder up as its second install
     [switch]$LoginScreenToo,      # with -OtherInstall: that run's player said yes to the login screen
     [string]$ShareData = '',      # with -OtherInstall: the Gameforge Interface folder a Steam install shares its data with
-    [string]$Mailbox = ''         # UMM or zMail: the mailbox addon to use, without being asked
+    # UMM or zMail: the mailbox addon to use, without being asked. Not -Mailbox: Global Bank's Addons page dot-sources
+    # this script, which sets every parameter here as a variable of the page's own, and the page has a $Mailbox.
+    [string]$MailboxAddon = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -1259,8 +1261,8 @@ if (@(Get-GameProcesses $gameFolder).Count -gt 0) {
 $mailboxKit = if (Test-Path -LiteralPath (Join-Path $installedKit 'Mailbox.txt')) { $installedKit } else { $sourceKit }
 $mailboxNow = Read-MailboxChoice $mailboxKit
 $mailboxWanted = ''
-if ($Mailbox) {
-    $mailboxWanted = if ($Mailbox -imatch '^z') { 'zMail' } else { 'UMM' }
+if ($MailboxAddon) {
+    $mailboxWanted = if ($MailboxAddon -imatch '^z') { 'zMail' } else { 'UMM' }
 } elseif (-not $NonInteractive -and -not $OtherInstall -and -not $UpdatedFrom -and $mailboxNow -and ($AskAgain -or $mailboxNow -ieq 'auto')) {
     $hasZMail = Test-Path -LiteralPath (Join-Path $addons 'zmail')
     $default = if ($mailboxNow -ieq 'zMail' -or ($mailboxNow -ine 'UMM' -and $hasZMail)) { '2' } else { '1' }
@@ -1303,7 +1305,7 @@ if ($needRights) {
         }
         # The folder chosen here goes along, so the new window doesn't ask for it again.
         $arguments = '-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Landing "{1}" -Target "{2}" -Elevated' -f $PSCommandPath, $landing, $addons
-        if ($mailboxWanted) { $arguments += ' -Mailbox ' + $mailboxWanted }
+        if ($mailboxWanted) { $arguments += ' -MailboxAddon ' + $mailboxWanted }
         Write-Host 'A Windows permission prompt will appear; setup continues in a new window.' -ForegroundColor Yellow
         try {
             Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList $arguments -ErrorAction Stop | Out-Null
@@ -1663,7 +1665,7 @@ if (-not $OtherInstall -and (Test-Path -LiteralPath (Join-Path $installedKit 'Ch
                     '-Landing', $addons, '-Target', $otherAddons, '-NonInteractive', '-NoUpdateCheck', '-OtherInstall', '-FromBat')
                 if ($wantLogin) { $next += '-LoginScreenToo' }
                 $chosen = Read-MailboxChoice $installedKit
-                if ($chosen -eq 'UMM' -or $chosen -eq 'zMail') { $next += @('-Mailbox', $chosen) }
+                if ($chosen -eq 'UMM' -or $chosen -eq 'zMail') { $next += @('-MailboxAddon', $chosen) }
                 if ($share) { $next += @('-ShareData', $share) }
                 $shell = [Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
                 try { [void][IO.Directory]::CreateDirectory($otherAddons) } catch { }

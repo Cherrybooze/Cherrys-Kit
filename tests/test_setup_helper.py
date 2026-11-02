@@ -787,7 +787,7 @@ class GuidedSetupTests(unittest.TestCase):
             (parked / name / 'core.toc').write_text(f'-- {name}\n', encoding='utf-8')
             if note:
                 (parked / name / 'offloaded-by-global-bank.json').write_text(note, encoding='utf-8')
-        first = self.run_mailbox(addons, '-NonInteractive', '-Mailbox', 'UMM')
+        first = self.run_mailbox(addons, '-NonInteractive', '-MailboxAddon', 'UMM')
         self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
         self.assertFalse((addons / 'zmail').exists())
         self.assertTrue((parked / 'zmail/core.toc').is_file())
@@ -795,7 +795,7 @@ class GuidedSetupTests(unittest.TestCase):
         note = json.loads((parked / 'zmail/offloaded-by-global-bank.json').read_text(encoding='utf-8'))
         self.assertEqual((note['from'], note['folder']), ('addons', 'zmail'))
         self.assertIn('Mailbox = "UMM"', (addons / 'CherrysKit/Mailbox.txt').read_text(encoding='utf-8'))
-        second = self.run_mailbox(addons, '-NonInteractive', '-Mailbox', 'zMail')
+        second = self.run_mailbox(addons, '-NonInteractive', '-MailboxAddon', 'zMail')
         self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
         # The one parked last comes back, without its note; the January copy and the old version stay where they are.
         self.assertEqual((addons / 'zmail/core.toc').read_text(encoding='utf-8'), '## Title: zMail\n')
@@ -837,7 +837,7 @@ class GuidedSetupTests(unittest.TestCase):
         entry = {key: value for key, value in self.ZMAIL.items() if key != 'archive_root'}
         release = self.fake_release(kit='9.9.9', hub='1.0', zMail=('1.4-ck1', {
             'zmail/core.toc': '## Title: zMail\n', 'zmail/CherrysKit-version.txt': '1.4-ck1\n'}, entry))
-        result = self.run_update(addons, release, '-Mailbox', 'zMail')
+        result = self.run_update(addons, release, '-MailboxAddon', 'zMail')
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('Installed zMail 1.4-ck1', result.stdout)
         self.assertEqual((addons / 'zmail/CherrysKit-version.txt').read_text(encoding='utf-8'), '1.4-ck1\n')
