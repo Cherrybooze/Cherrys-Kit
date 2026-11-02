@@ -34,7 +34,8 @@ param(
     [string]$AlsoInstall = '',    # another game folder to set up as well, without being asked
     [switch]$OtherInstall,        # set when another run of this script is setting this folder up as its second install
     [switch]$LoginScreenToo,      # with -OtherInstall: that run's player said yes to the login screen
-    [string]$ShareData = ''       # with -OtherInstall: the Gameforge Interface folder a Steam install shares its data with
+    [string]$ShareData = '',      # with -OtherInstall: the Gameforge Interface folder a Steam install shares its data with
+    [switch]$LoadOnly             # dot-sourced by the Global Bank helper's Addons page: define the functions, then stop
 )
 
 $ErrorActionPreference = 'Stop'
@@ -55,7 +56,7 @@ $script:ReleaseClient = $null
 $script:ReleaseProblem = ''
 
 # Asked for at once and read when it's needed, so the window never waits on GitHub to open.
-if (-not $NoUpdateCheck -and -not $NonInteractive -and -not $ReleaseFolder) {
+if (-not $NoUpdateCheck -and -not $NonInteractive -and -not $ReleaseFolder -and -not $LoadOnly) {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
         $script:ReleaseClient = New-Object Net.WebClient
@@ -876,6 +877,9 @@ function Show-PlacementHelp([string]$folder) {
     Write-Host ('  This copy is currently at: ' + $folder) -ForegroundColor DarkGray
     Write-Host '  Then double-click !setup_cherryskit.bat again.' -ForegroundColor DarkGray
 }
+
+# The Addons page has what it needs: everything above only defines functions and settings.
+if ($LoadOnly) { return }
 
 # --------------------------------------------------------------------------------------------
 # Console title and opening banner.

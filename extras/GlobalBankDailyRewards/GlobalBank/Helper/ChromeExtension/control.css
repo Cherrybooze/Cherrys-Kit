@@ -764,3 +764,10 @@ tbody tr:last-child td { border-bottom: 0; }
   .macro-icon-grid { grid-template-columns: repeat(auto-fill, 42px); }
   .macro-dialog form, .macro-icon-picker { width: 100%; }
 }
+/* Addons page */
+.addons-heading { margin: 18px 0 8px; font-size: 14px; }
+.addons-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.addons-state { font-size: 12px; white-space: nowrap; }
+.addons-state.is-update, .addons-state.is-missing { color: #e7c27a; }
+.addons-state.is-current { color: #8fd19e; }
+tr.is-muted td { color: #8d9cad; }

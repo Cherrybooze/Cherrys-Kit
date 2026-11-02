@@ -17,6 +17,7 @@
   <script defer src="bank.js"></script>
   <script defer src="accounts.js"></script>
   <script defer src="backups.js"></script>
+  <script defer src="addons.js"></script>
   <script defer src="terminal.js"></script>
   <script defer src="control.js"></script>
 </head>
@@ -53,6 +54,7 @@
           <button type="button" class="nav-item" data-tab="terminal" title="Terminal"><span class="ico" data-ui-icon="terminal"></span><span class="nav-text">Terminal</span></button>
           <button type="button" class="nav-item" data-tab="macros" title="Macros"><span class="ico" data-ui-icon="sparkles"></span><span class="nav-text">Macros</span></button>
           <button type="button" class="nav-item" data-tab="settings" title="Addon settings"><span class="ico" data-ui-icon="filter"></span><span class="nav-text">Addon settings</span></button>
+          <button type="button" class="nav-item" data-tab="addons" title="Addons"><span class="ico" data-ui-icon="download"></span><span class="nav-text">Addons</span></button>
           <button type="button" class="nav-item" data-tab="auctions" title="Auctions"><span class="ico" data-ui-icon="auction"></span><span class="nav-text">Auctions</span></button>
         </div>
       </nav>
@@ -499,6 +501,37 @@
         <label class="filter-select">Show <select id="settings-value-from"><option value="now">What the game has now</option><option value="newest">The newest backup</option><option value="earlier">About a day ago</option></select></label>
         <p id="settings-auras" class="hint"></p>
         <pre id="settings-value"></pre>
+      </section>
+    </div>
+
+    <div id="tab-addons" class="tab-panel" hidden>
+      <h1 class="page-title" id="addons-title">Addons</h1>
+      <section class="panel" aria-labelledby="addons-title">
+        <details class="help-note"><summary>How this works</summary><p class="hint">Check for updates reads the latest Cherry’s Kit release on GitHub. Update and Download and install fetch that release’s files in a window of their own, check each one against the release’s checksum, and move the old version to Interface\offloaded_addons first, the same way the guided setup does. Offload moves an addon to Interface\offloaded_addons, where the game doesn’t load it, and Restore puts it back. Delete sends it to the Recycle Bin. Saved settings are kept either way. Close the game before installing.</p></details>
+        <div class="bank-menu-buttons">
+          <button id="addons-check" type="button" class="gb-button--primary"><span class="ico" data-ui-icon="sync"></span>Check for updates</button>
+          <button id="addons-update-all" type="button" hidden></button>
+          <button id="addons-refresh" type="button" class="gb-button--ghost">Read the folder again</button>
+        </div>
+        <p id="addons-status" class="hint" role="status"></p>
+        <p id="addons-game" class="settings-warning" role="alert"></p>
+        <p id="addons-setup" class="settings-warning" role="alert"></p>
+        <p id="addons-job" class="hint"></p>
+        <h2 class="addons-heading">Cherry’s Kit</h2>
+        <div class="table-panel table-scroll"><table>
+          <thead><tr><th>Addon</th><th>Installed</th><th>On GitHub</th><th>Status</th><th></th></tr></thead>
+          <tbody id="addons-kit-rows"></tbody>
+        </table></div>
+        <h2 class="addons-heading">Other addons</h2>
+        <div class="table-panel table-scroll"><table>
+          <thead><tr><th>Addon</th><th>Version</th><th></th></tr></thead>
+          <tbody id="addons-other-rows"></tbody>
+        </table></div>
+        <h2 class="addons-heading">Offloaded</h2>
+        <div class="table-panel table-scroll"><table>
+          <thead><tr><th>Folder</th><th>Version</th><th>Since</th><th></th></tr></thead>
+          <tbody id="addons-offloaded-rows"></tbody>
+        </table></div>
       </section>
     </div>
 
