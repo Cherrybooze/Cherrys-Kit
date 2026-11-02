@@ -1578,9 +1578,23 @@ const kinds = [{name: 'Zircon Ring', id: '230500', icon: 'eq_finger_01', type: '
   {name: 'Hammer', id: '207795', icon: 'x', type: 'Other'}, {name: 'Healing Potion', id: '200001', icon: 'item_potion_01', type: 'Potions'},
   {name: 'Ore', id: '200300', icon: 'item_ore', type: 'Materials'}, {name: 'Charm', id: '230501', icon: 'eq_neck', type: 'Jewellery'},
   {name: 'Angel Wings', id: '231000', icon: 'eq_wing_01', type: 'Armour'}, {name: 'Odd Thing', id: '200900', icon: 'x', type: 'Other'}].map(cell => ({...cell, total: 1, quality: 0, places: []}));
-const sorted = bank.sortByType(kinds, bank.SORTS.name, new Set(['207795']));
-assert.deepEqual([...sorted.map(cell => cell.name)], ['Axe', 'Charm', 'Zircon Ring', 'Robe', 'Angel Wings', 'Mana Stone Tier 6', 'Universal Jewel', 'Healing Potion', 'Firework', 'Hammer', 'Ore', 'Odd Thing']);
-assert.deepEqual([...sorted.map(cell => cell.group)].slice(0, 9), ['Weapons', 'Jewellery', 'Jewellery', 'Armour', 'Wings', 'Mana stones', 'Plus jewels', 'Consumables', 'Item shop']);
+const more = [{name: 'Wrath X', id: '520810', icon: 'runes_stone08_01', type: 'Runes'}, {name: 'Wrath IX', id: '520809', icon: 'runes_stone08_01', type: 'Runes'},
+  {name: 'Wrath VIII', id: '520808', icon: 'runes_stone08_01', type: 'Runes'}, {name: 'Mind X', id: '520070', icon: 'run_leg_010', type: 'Runes'},
+  {name: 'Accuracy VII', id: '521337', icon: 'power_stone139', type: 'Runes'}, {name: 'Odd Rune', id: '520001', icon: 'x', type: 'Runes'},
+  {name: 'Backpack Ticket VI (30 Days)', id: '205541', icon: 'interface/Icons/reci_alc_001', type: 'Other'},
+  {name: 'Steadfast Ore', id: '200501', icon: 'item_ore', type: 'Materials'}, {name: 'Dynamic Wood', id: '200502', icon: 'item_mat', type: 'Materials'},
+  {name: 'Mystical Herb', id: '200503', icon: 'item_mat', type: 'Materials'}, {name: 'Dynamic Ore', id: '200504', icon: 'item_ore', type: 'Materials'}]
+  .map(cell => ({...cell, total: 1, quality: 0, places: []}));
+const sorted = bank.sortByType(kinds.concat(more), bank.SORTS.name, new Set(['207795']));
+assert.deepEqual([...sorted.map(cell => cell.name)], ['Axe', 'Charm', 'Zircon Ring', 'Robe', 'Angel Wings', 'Mana Stone Tier 6',
+  'Mind X', 'Accuracy VII', 'Wrath VIII', 'Wrath IX', 'Wrath X', 'Odd Rune', 'Healing Potion', 'Universal Jewel', 'Backpack Ticket VI (30 Days)', 'Firework', 'Hammer',
+  'Dynamic Ore', 'Dynamic Wood', 'Mystical Herb', 'Steadfast Ore', 'Ore', 'Odd Thing']);
+assert.deepEqual([...sorted.map(cell => [cell.group, cell.part].filter(Boolean).join(': '))].slice(6, 21), ['Runes: Rank 0', 'Runes: Rank 4', 'Runes: Unranked', 'Runes: Unranked',
+  'Runes: Unranked', 'Runes: Other runes', 'Consumables', 'Item shop: Plus jewels', 'Item shop: Backpack tickets', 'Item shop: Other item shop items',
+  'Item shop: Other item shop items', 'Crafting materials: Dynamic', 'Crafting materials: Dynamic', 'Crafting materials: Mystical', 'Crafting materials: Steadfast']);
+// Plus jewels share the fusion stones' pictures, but aren't mana stones
+assert.equal(bank.typeOf('244477', 'interface/Icons/fusnion_stone/uv_lv1_100_3'), 'Other');
+assert.equal(bank.typeOf('202881', 'interface/Icons/power stone09'), 'Mana stones');
 // A stone's way of showing a stat beats gear's
 const geared = bank.statEffects([{stats: ['Keeper'], stone: false, tip: [['', 'Sword'], ['', '+1 Stamina', '', 'Keeper']]}, ...list]);
 assert.deepEqual([...geared.effects.get('Keeper')], ['+442 Stamina']);

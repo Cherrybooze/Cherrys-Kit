@@ -112,7 +112,8 @@ const GBBank = (() => {
     if (/earring|eq_ear|eq_neck|eq_finger|ring_|jewelry\//.test(path) && number >= 220000 && number < 240000) return 'Jewellery';
     if (number >= 210000 && number < 220000) return 'Weapons';
     if (number >= 220000 && number < 240000) return 'Armour';
-    if (isStone(number) || /mana stone|fusnion_stone/.test(path)) return 'Mana stones';
+    // Plus jewels share the fusion stones' pictures, but aren't stones
+    if (isStone(number) || (/mana stone|fusnion_stone/.test(path) && !/fusnion_stone\/(uv|fi)_/.test(path))) return 'Mana stones';
     if (/potion/.test(path)) return 'Potions';
     if (/item_ore|item_mat|phantom\/material/.test(path)) return 'Materials';
     if (/mount|charger|pet_|egg/.test(path)) return 'Mounts and pets';
@@ -359,36 +360,81 @@ const GBBank = (() => {
     const durability = cell.gear?.dura > HIGH_DURABILITY ? 'HD' : '';
     return {tier, durability, plus, words: [tier && `tier ${cell.tier}`, plus, durability && 'high durability'].filter(Boolean)};
   }
+  // By name, with a numeral at the end counted, so Wrath VIII comes before Wrath IX and Wrath X
+  const ROMAN_END = /^(.*\S)\s+([IVXLC]+)$/;
+  const ROMAN = {I: 1, V: 5, X: 10, L: 50, C: 100};
+  function romanValue(text) {
+    let total = 0, highest = 0;
+    for (const letter of [...text].reverse()) {
+      const value = ROMAN[letter];
+      total += value < highest ? -value : value;
+      highest = Math.max(highest, value);
+    }
+    return total;
+  }
+  function byName(a, b) {
+    const x = ROMAN_END.exec(a.name), y = ROMAN_END.exec(b.name);
+    if (x && y && x[1] === y[1]) return romanValue(x[2]) - romanValue(y[2]);
+    return a.name.localeCompare(b.name);
+  }
   const SORTS = {
-    name: (a, b) => a.name.localeCompare(b.name),
-    count: (a, b) => b.total - a.total || a.name.localeCompare(b.name),
-    type: (a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
-    quality: (a, b) => b.quality - a.quality || a.name.localeCompare(b.name),
-    id: (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0) || a.name.localeCompare(b.name),
+    name: byName,
+    count: (a, b) => b.total - a.total || byName(a, b),
+    type: (a, b) => a.type.localeCompare(b.type) || byName(a, b),
+    quality: (a, b) => b.quality - a.quality || byName(a, b),
+    id: (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0) || byName(a, b),
   };
   // Sorting by type: what can be worn first, as the character window goes (weapons, jewellery, armour, wings), then the
-  // rest, each kind together and in the chosen order inside it. A good guess from IDs, icons and names, like typeOf.
-  const SORT_GROUPS = ['Weapons', 'Jewellery', 'Armour', 'Wings', 'Mana stones', 'Plus jewels', 'Runes', 'Consumables', 'Item shop', 'Materials',
+  // rest, each kind together and in the chosen order inside it, some kinds in parts of their own: runes by rank, the
+  // item shop's plus jewels and backpack tickets, and the Dynamic, Mystical and Steadfast crafting materials. A good
+  // guess from IDs, icons and names, like typeOf.
+  const SORT_GROUPS = ['Weapons', 'Jewellery', 'Armour', 'Wings', 'Mana stones', 'Runes', 'Consumables', 'Item shop', 'Crafting materials', 'Materials',
     'Recipes', 'Mounts and pets', 'Other'];
-  // shopIds: the items someone keeps in the item shop tab, which only takes what was bought there
+  // The parts some kinds have, in their order. A part not listed comes last.
+  const SORT_PARTS = {
+    Runes: ['Rank 0', 'Rank 1', 'Rank 2', 'Rank 3', 'Rank 4', 'Rank 5', 'Rank 6', 'Unranked', 'Other runes'],
+    'Item shop': ['Plus jewels', 'Backpack tickets', 'Other item shop items'],
+    'Crafting materials': ['Dynamic', 'Mystical', 'Steadfast'],
+  };
+  // Each rune's rank, by its name without its numeral
+  const RUNE_RANKS = new Map(Object.entries({
+    'Rank 0': 'Defense Endurance Harm Magic Mind Quickness Resistance Shell Strike Vigor Vitality',
+    'Rank 1': 'Atonement Charm Cruelty Dexterity Excite Guts Intellect Life Payback Rouse Safeguard Savage Spell Spirit Stamina Triumph Ward',
+    'Rank 2': 'Anger Barrier Capability Comprehension Devil Ferocity Grasp Keenness Mayhem Resistor',
+    'Rank 3': 'Dauntlessness Destruction Enchantment Fearless Fountain Madness Passion Potential',
+    'Rank 4': 'Accuracy Agile Curse Enlightenment Might Raid Sorcery',
+    'Rank 5': 'Advance Aggression Assassin Block Revolution Sage Shield Tyrant',
+    'Rank 6': 'Enigma Experience Hatred Judge Loot Massacre Reconciliation',
+    Unranked: 'Burst Fatal Miracle Wrath',
+  }).flatMap(([rank, names]) => names.split(' ').map(name => [name.toLowerCase(), rank])));
+  // shopIds: the items someone keeps in the item shop tab, which only takes what was bought there. Returns [group, part].
   function sortGroupOf(cell, shopIds = null) {
     const path = String(cell.icon || '').toLowerCase();
     const name = String(cell.name || '').toLowerCase();
     const worn = cell.places?.find(place => place.place === 'worn');
-    if (worn?.where === 'Adornment' || /wing|adorn|back_ornament/.test(path)) return 'Wings';
-    if (cell.type === 'Weapons' || cell.type === 'Jewellery' || cell.type === 'Armour' || cell.type === 'Mana stones' || cell.type === 'Runes') return cell.type;
-    if (/fusnion_stone\/(uv|fi)_|jewel/.test(path + ' ' + name)) return 'Plus jewels';
-    if (/power stone|mana stone/.test(path)) return 'Mana stones';
-    if (shopIds?.has(String(cell.id)) || /shop_goods|shop key|firework|ticket/.test(path + ' ' + name)) return 'Item shop';
-    if (cell.type === 'Potions' || /potion|food|cook|dish|scroll|elixir/.test(path)) return 'Consumables';
-    if (cell.type === 'Materials' || cell.type === 'Recipes' || cell.type === 'Mounts and pets') return cell.type;
-    return 'Other';
+    if (worn?.where === 'Adornment' || /wing|adorn|back_ornament/.test(path)) return ['Wings', ''];
+    if (cell.type === 'Runes') return ['Runes', RUNE_RANKS.get((ROMAN_END.exec(cell.name)?.[1] || cell.name).toLowerCase()) || 'Other runes'];
+    if (/fusnion_stone\/(uv|fi)_|\bjewel\b/.test(path + ' ' + name)) return ['Item shop', 'Plus jewels'];
+    if (/backpack ticket/.test(name)) return ['Item shop', 'Backpack tickets'];
+    if (cell.type === 'Weapons' || cell.type === 'Jewellery' || cell.type === 'Armour' || cell.type === 'Mana stones') return [cell.type, ''];
+    if (/power stone|mana stone/.test(path)) return ['Mana stones', ''];
+    const family = /^(dynamic|mystical|steadfast)\b/.exec(name);
+    if (family) return ['Crafting materials', family[1][0].toUpperCase() + family[1].slice(1)];
+    if (shopIds?.has(String(cell.id)) || /shop_goods|shop key|firework|ticket/.test(path + ' ' + name)) return ['Item shop', 'Other item shop items'];
+    if (cell.type === 'Potions' || /potion|food|cook|dish|scroll|elixir/.test(path)) return ['Consumables', ''];
+    if (cell.type === 'Materials' || cell.type === 'Recipes' || cell.type === 'Mounts and pets') return [cell.type, ''];
+    return ['Other', ''];
   }
-  // The cells in type order, each type sorted as asked inside it
+  // The cells in type order, then in each kind's parts, each sorted as asked inside
   function sortByType(list, order, shopIds) {
     const rank = new Map(SORT_GROUPS.map((group, at) => [group, at]));
-    for (const cell of list) cell.group = sortGroupOf(cell, shopIds);
-    return list.sort((a, b) => rank.get(a.group) - rank.get(b.group) || order(a, b));
+    const partRank = (group, part) => {
+      const parts = SORT_PARTS[group];
+      const at = parts ? parts.indexOf(part) : 0;
+      return at < 0 ? parts.length : at;
+    };
+    for (const cell of list) [cell.group, cell.part] = sortGroupOf(cell, shopIds);
+    return list.sort((a, b) => rank.get(a.group) - rank.get(b.group) || partRank(a.group, a.part) - partRank(b.group, b.part) || order(a, b));
   }
   // A piece of gear's details, one line each, for the tooltip
   function gearLines(gear) {
@@ -1153,7 +1199,7 @@ const GBBank = (() => {
       slot.letters.textContent = cell.name.slice(0, 2);
       if (shape().rows) {
         const who = new Set(cell.places.map(place => place.ch?.key || place.character));
-        slot.nameText.replaceChildren(cell.name, make('small', '', [state.byType && cell.group ? cell.group : cell.type, cell.quality ? QUALITY[cell.quality] : ''].filter(Boolean).join(' · ')));
+        slot.nameText.replaceChildren(cell.name, make('small', '', [state.byType && cell.group ? [cell.group, cell.part].filter(Boolean).join(': ') : cell.type, cell.quality ? QUALITY[cell.quality] : ''].filter(Boolean).join(' · ')));
         slot.nameText.style.color = cell.color ? `#${cell.color}` : '';
         slot.whereText.replaceChildren(who.size === 1 ? cell.places[0].character : `${formatNumber(who.size)} characters`,
           make('small', '', [...new Set(cell.places.map(place => PLACE[place.shop ? 'shop' : place.place]))].join(' + ')));
