@@ -33,6 +33,10 @@ main { position: relative; flex: 1 1 auto; min-height: 0; padding: 12px 18px 12p
 .brand-name { font-size: 15px; font-weight: 750; letter-spacing: .8px; line-height: 1.1; }
 .brand-name b { color: var(--gb-gold); }
 .brand-tagline { margin-top: 4px; font-size: 11px; color: #9aadc0; }
+/* The logo leads back to the Bank, as it first opens */
+a.brand { color: inherit; text-decoration: none; border-radius: 8px; }
+a.brand:hover .brand-name, a.brand:focus-visible .brand-name { color: #fff; }
+a.brand:focus-visible { outline: 2px solid var(--gb-gold); outline-offset: 2px; }
 .sidebar-nav { flex: 1 1 auto; }
 .nav-group { margin-bottom: 14px; }
 .nav-label { display: block; margin-bottom: 4px; padding: 0 10px; font-size: 10px; font-weight: 750; color: #91a4b9; text-transform: uppercase; letter-spacing: 1.6px; }
@@ -47,6 +51,7 @@ main { position: relative; flex: 1 1 auto; min-height: 0; padding: 12px 18px 12p
 .nav-text { flex: 1 1 auto; min-width: 0; }
 .nav-count { padding: 0 6px; font-size: 11px; line-height: 17px; color: #b0bfd0; background: #223142; border-radius: 4px; }
 .nav-count:empty { display: none; }
+.nav-count.is-urgent { color: #fff; background: #a3342b; }
 .nav-item[aria-current="page"] .nav-count { color: #d9bb80; background: #6d583330; }
 .sidebar-bottom { flex: none; padding-top: 8px; border-top: 1px solid #223142; }
 .connection-dot, .status-dot { flex: none; width: 7px; height: 7px; background: #8292a6; border-radius: 50%; }
@@ -121,6 +126,22 @@ button.status-chip:active { transform: none; box-shadow: none; }
 .summary-icon.is-teal { color: #8acbbf; background: #507e7922; }
 .summary-item strong { display: block; font-size: 15px; font-weight: 650; line-height: 1.15; letter-spacing: -.2px; }
 .summary-item span:not(.ico) { display: block; font-size: 11px; line-height: 1.2; color: #a5b7cb; }
+.summary-icon.is-blue { color: #93b8e6; background: #4f72a022; }
+/* The server quick selector: a summary tile that opens a list of servers */
+.server-pick { position: relative; }
+.server-pick > summary { display: flex; align-items: center; gap: 8px; padding: 1px 6px 1px 0; list-style: none; cursor: pointer; border-radius: 7px; }
+.server-pick > summary::-webkit-details-marker { display: none; }
+.server-pick > summary:hover strong, .server-pick[open] > summary strong { color: var(--gb-gold); }
+.server-pick-arrow svg { width: 13px !important; height: 13px !important; color: #9db1c7; }
+.server-pick[open] { z-index: 9; }
+.server-pick-panel { width: 260px; padding: 6px; }
+.server-pick-panel button { display: flex; justify-content: space-between; width: 100%; min-height: 26px; padding: 2px 8px; font-size: 12px; text-align: left; background: none; border: 1px solid transparent; border-radius: 5px; box-shadow: none; }
+.server-pick-panel button:hover { background: #1b2838; filter: none; }
+.server-pick-panel button[aria-pressed="true"] { color: var(--gb-gold); border-color: #6a5940; }
+.server-pick-panel .server-pick-all { font-weight: 600; }
+.server-pick-panel .server-pick-region { margin-top: 6px; font-size: 11px; font-weight: 600; color: #e0c487; text-transform: uppercase; letter-spacing: .5px; }
+.server-pick-panel span.server-pick-region { display: block; padding: 2px 8px; }
+.server-pick-panel .server-pick-server { padding-left: 18px; }
 .bank-filters { position: relative; z-index: 5; display: flex; flex: none; flex-direction: column; gap: 7px; }
 #bank-status:empty { display: none; }
 .bank-empty { grid-column: 1 / -1; color: #a7b7c9; }
@@ -199,6 +220,7 @@ button.status-chip:active { transform: none; box-shadow: none; }
 .mark-legend input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 .mark-legend input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 2px; }
 .mark-legend .link-button { font-size: 11px; }
+.mark-legend .mark-from select { min-height: 20px; padding: 0 4px; font-size: 11px; }
 /* Each filter only as wide as what it says now, so the row keeps to one line */
 .bank-filters .filter-row .filter-select select { field-sizing: content; }
 .bank-switch { display: inline-flex; align-items: center; gap: 7px; min-height: 30px; padding: 0 9px; font-size: 12px; color: #c3d0de; white-space: nowrap; cursor: pointer; background: #172433; border: 1px solid #2c3d50; border-radius: 6px; }
@@ -209,6 +231,7 @@ button.status-chip:active { transform: none; box-shadow: none; }
 .attention-item { display: flex; align-items: center; gap: 7px; }
 .attention-item .ico { color: #c5a568; }
 .attention-item .ico svg { width: 15px; height: 15px; }
+.attention-item.is-urgent .ico { color: #ff7a6b; }
 .link-button { min-height: 0; padding: 0; font-weight: 500; color: var(--gb-gold); white-space: normal; text-align: left; text-decoration: underline; background: none; border: 0; box-shadow: none; }
 .link-button:hover { filter: none; color: #ffe1a1; }
 .link-button:active { transform: none; box-shadow: none; }
@@ -237,6 +260,29 @@ button.status-chip:active { transform: none; box-shadow: none; }
 /* Panels that slide in from the side */
 .drawer { width: 420px; max-width: calc(100vw - 24px); height: 100vh; max-height: 100vh; margin: 0 0 0 auto; padding: 18px; color: var(--gb-text); background: linear-gradient(145deg, #192838, #101c29); border: 0; border-left: 1px solid #43546a; box-shadow: -15px 0 60px #0005; }
 .drawer::backdrop { background: #030912a3; }
+/* A character's details open wider, its profile to the left of them */
+.drawer.has-profile { width: 780px; }
+.character-panel-body { display: grid; flex: 1 1 auto; grid-template-columns: 330px minmax(0, 1fr); align-items: start; gap: 18px; min-height: 0; overflow-y: auto; }
+.character-details { min-width: 0; }
+.character-profile { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: linear-gradient(160deg, #142130, #0c1621); border: 1px solid #2d4155; border-radius: 10px; }
+.profile-head h3 { font-size: 13px; color: #e0c487; text-transform: uppercase; letter-spacing: 1px; }
+.profile-classes { padding: 4px 8px; font-size: 12px; font-weight: 600; color: #d6e0ea; text-align: center; background: #0a131d; border: 1px solid #2a3b4f; border-radius: 6px; }
+.profile-doll { --slot: 38px; display: grid; grid-template-columns: var(--slot) minmax(0, 1fr) var(--slot); gap: 6px 10px; }
+.profile-top { display: flex; grid-column: 1 / -1; justify-content: center; gap: 4px; }
+.profile-column { display: flex; flex-direction: column; gap: 4px; }
+.profile-middle { position: relative; display: grid; grid-template-rows: 1fr auto; min-height: 0; background: radial-gradient(ellipse at 50% 40%, #233447, #0c1521 75%); border: 1px solid #263a4f; border-radius: 8px; }
+.profile-figure { --class-color: #8fb6cf; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; }
+.profile-initial { display: grid; place-items: center; width: 64px; height: 64px; font-size: 30px; font-weight: 700; color: var(--class-color); background: color-mix(in srgb, var(--class-color), #0c1521 80%); border: 1px solid color-mix(in srgb, var(--class-color), transparent 55%); border-radius: 50%; }
+.profile-name { max-width: 100%; font-size: 12px; color: #c6d3e0; overflow-wrap: anywhere; text-align: center; }
+.profile-talismans { position: absolute; top: 6px; right: 6px; display: flex; flex-direction: column; gap: 4px; }
+.profile-ammo { position: absolute; bottom: 6px; left: 6px; }
+.profile-slot { padding: 0; }
+.profile-slot.is-empty { cursor: default; background: #0b141e; border-style: dashed; border-color: #2b3c50; box-shadow: none; }
+.profile-slot-name { position: absolute; inset: 0; display: grid; place-items: center; font-size: 9px; color: #6f8399; text-transform: uppercase; letter-spacing: .3px; }
+.profile-slot .bank-mark { font-size: 9px; }
+.profile-slot .bank-letters { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; color: #9fb3c7; }
+.profile-summary { margin: 0; font-size: 12px; color: #d3dfeb; text-align: center; }
+.profile-tip { z-index: 2; }
 .drawer[open] { display: flex; flex-direction: column; gap: 14px; }
 .drawer-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .drawer-kicker { font-size: 11px; font-weight: 600; color: #a1b5c9; text-transform: uppercase; letter-spacing: 1.2px; }
@@ -383,6 +429,28 @@ tbody tr:last-child td { border-bottom: 0; }
 .heat-view.is-letters .heat-name { flex: 0 1 auto; }
 .heat-cell:hover { outline: 1px solid #fff; outline-offset: -1px; }
 .heat-cell.is-selected { outline: 2px solid #fff; outline-offset: -2px; }
+/* Each server is a region of its own inside its account, with its name on top */
+/* Regions sit side by side, each as wide as its RoM accounts need, and wrap onto a new line when the box is full */
+.heat-regions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 10px; }
+.heat-region { flex: 0 1 calc(var(--region-columns, 1) * (var(--heat-column, 100px) + 3px) - 3px); min-width: min(var(--heat-column, 100px), 100%); }
+.heat-view.no-server-names .heat-region { padding-left: 6px; border-left: 1px dashed #3a4b5e; }
+.heat-view.no-server-names .heat-region:first-child { padding-left: 0; border-left: 0; }
+.heat-server-list { display: flex; flex-direction: column; max-height: 40vh; overflow-y: auto; }
+.heat-server-list label { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+.heat-server-list .hint { margin-left: auto; }
+/* Gold waiting in the mailbox, after the name, and a ! when some of it goes soon */
+.heat-mail { position: relative; display: inline-flex; flex: none; align-items: center; opacity: .9; }
+.heat-mail svg { width: 12px; height: 12px; stroke-width: 2.2; }
+.heat-mail i { margin-left: 1px; font-size: 11px; font-style: normal; font-weight: 900; line-height: 1; }
+.heat-view.is-letters .heat-mail { display: none; }
+/* The Mail page */
+.mail-table td { white-space: normal; }
+.mail-table tr.is-soon td { background: #5b1f1a33; }
+.mail-soon { font-weight: 800; color: #ff7a6b; }
+.currency-card.is-warn { border-color: #7a3a32; }
+.currency-card.is-warn .currency-value { color: #ff9a8b; }
+/* A stat's name: hover it for the stat on a tier 6 mana stone */
+.stat-name { cursor: help; border-bottom: 1px dotted #6b7f95; }
 
 /* Who is who: the picker, servers and hover cards */
 .view-servers { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
@@ -691,7 +759,15 @@ tbody tr:last-child td { border-bottom: 0; }
   .bank-grid.is-list .bank-slot { grid-template-columns: minmax(0, 1fr) 58px; }
   .bank-grid.is-list .bank-slot-text.is-where { display: none; }
   .drawer { width: 100%; max-width: 100%; }
+  .character-panel-body { grid-template-columns: minmax(0, 1fr); }
   .macro-slots { grid-template-columns: repeat(auto-fill, 40px); width: auto; }
   .macro-icon-grid { grid-template-columns: repeat(auto-fill, 42px); }
   .macro-dialog form, .macro-icon-picker { width: 100%; }
 }
+/* Addons page */
+.addons-heading { margin: 18px 0 8px; font-size: 14px; }
+.addons-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.addons-state { font-size: 12px; white-space: nowrap; }
+.addons-state.is-update, .addons-state.is-missing { color: #e7c27a; }
+.addons-state.is-current { color: #8fd19e; }
+tr.is-muted td { color: #8d9cad; }

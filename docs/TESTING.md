@@ -4,6 +4,37 @@ The automated tests run production Lua 5.1 modules and XML handlers with simulat
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck12 requires **0.4.17** for its History files. Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
 
+## Global Bank Addons page (not yet released)
+
+Not run on Windows yet: the tests check the page in Node and the bridge's offload and restore in PowerShell where it is installed. Use a game folder you can afford to change, with the game closed unless a row says otherwise.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| AD1 | Open the Global Bank page and click **Addons** in the sidebar. | Three lists: Cherry's Kit (hub first, with versions), Other addons, Offloaded. Older copies the setup moved show under Offloaded. |
+| AD2 | Press **Check for updates**. | A line names the latest release. Each kit addon says Up to date, Update available or Not installed, with the version on GitHub. pbInfo, PortraitHP, TooltipIds, Extended Macro Icons and Cherry's Quests say Replaced by Cherry's Info, and Cherry's Loginxml says Replaced by LogNextChar, with no install button. |
+| AD3 | With an addon out of date, press **Update from GitHub** and say yes. | A PowerShell window opens, downloads, says what it updated, and closes after 20 seconds. The page then shows the new version, and the old folder is in `Interface\offloaded_addons\CherrysKit <version> (before update ...)`. |
+| AD4 | Press **Download and install** on an addon that isn't installed. | It installs the same way and shows Up to date. |
+| AD5 | Update Global Bank itself while the helper runs. | The window stops the helper, updates, and starts it again the way it ran. The page keeps working. |
+| AD6 | **Offload** a kit addon and an addon of your own, start the game. | Both are gone from `Interface\AddOns` (kit ones under `offloaded_addons\CherrysKit addons`) and don't load. **Restore** puts each back, and they load again. |
+| AD7 | **Delete** something under Offloaded, answer Cancel, then OK. | Cancel changes nothing. OK sends it to the Recycle Bin, from where it can be restored. |
+| AD8 | Press an install button with the game running. | The page says to close the game first and nothing changes. |
+| AD10 | Put an old `pbInfo` folder in `Interface\AddOns`, with Cherry's Info installed, and press **Switch with Cherry's Info**. | It asks once, then `pbInfo` is in `Interface\offloaded_addons` and Cherry's Info stays. Restore brings `pbInfo` back. |
+| AD11 | Offload Cherry's Info, keep the old `pbInfo` folder, and press **Switch with Cherry's Info**. | The install window installs Cherry's Info from GitHub, then offloads `pbInfo`. If the latest release has no Cherry's Info, the page says so and nothing moves. |
+| AD12 | With Ultimate Mail Mod in use and no zMail, press **Switch to zMail** on the Mail panel, then Reload UI. | The install window installs zMail into `Interface\AddOns\zmail` and `CherrysKit\Mailbox.txt` says `Mailbox = "zMail"`, comments kept. In game, zMail opens at the mailbox and Ultimate Mail Mod stays out of the way. |
+| AD13 | Press **Switch to Ultimate Mail Mod**, then Reload UI. | `Mailbox.txt` says `"UMM"`, the zmail folder is in `Interface\offloaded_addons`, and Ultimate Mail Mod is back at the mailbox. Switching to zMail again restores nothing by itself: it installs zMail anew, or use Restore first. |
+| AD9 | Unplug the network and press **Check for updates**. | One line says it couldn't read the release; the lists still work. |
+
+## zMail as the mailbox (zMail 1.4-ck1, hub Mailbox.txt, Global Bank mailbox record)
+
+Not run in the game yet: the tests use a simulated client.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| ZM1 | Install zMail-1.4-ck1.zip into `Interface/AddOns` (it creates `zmail`), leave `CherrysKit/Mailbox.txt` on `"auto"` and log in. Open a mailbox. | zMail's window opens, Ultimate Mail Mod's doesn't. `/ck` shows Ultimate Mail Mod off with "zMail is your mailbox (Mailbox.txt)"; `/umm` says so in chat. |
+| ZM2 | With gold close to the 999,999,999 cap, have a few mails with gold and one with an item. Select all and take. | The item is taken, each gold mail gives the "can't take" line, and the gold mails stay unread with their days left unchanged (30, not 3). |
+| ZM3 | Set `Mailbox = "UMM"` with `zmail` still installed, Reload UI. Then move `zmail` out of AddOns and Reload UI again. | With both loaded, both react to the mailbox (zMail hides Ultimate Mail Mod's window when it opens; note what you see). That's why the setup moves `zmail` out when you pick Ultimate Mail Mod. After moving it out, only Ultimate Mail Mod runs. |
+| ZM4 | With zMail, open the mailbox, wait 3 seconds, log out, then check Global Bank's `GlobalBank_Char` in `SaveVariables.lua`. | It has a `P~mails~gold~itemMails~days~time` record matching the inbox. No mail was opened by Global Bank. |
+
 ## 0.11.115 Guided setup and Cherry's Info
 
 None of this has run in the game yet. The tests use a simulated client, and the setup has run on throwaway game folders.
@@ -21,6 +52,11 @@ None of this has run in the game yet. The tests use a simulated client, and the 
 | S9 | With only the hub and Cherry's Grid installed, run it. | **Dependencies** lists what's missing with what uses it, here Cherry's KittyCombo, and asks once: y, n, or numbers. Whatever you pick installs, with nothing else touched. |
 | S10 | Run it again after answering n to something. | It isn't asked about again, and a grey line names it. Run the setup with `-AskAgain` and it's asked again. |
 | S11 | With Global Bank installed and no Chrome, run it and pick Chrome. | winget installs Chrome, and the Chrome extension step then offers its installer. |
+| S12 | Extract the Full ZIP into Downloads and double-click `!setup_cherryskit.bat` there. | It says it isn't in a game's AddOns folder, lists your Runes of Magic installs with what each has, and after you pick one, copies the kit there and carries on as usual. |
+| S13 | Run it from Downloads again, answer n, then 1, and type a game's Interface folder. | The kit goes into that game's Interface\AddOns, made if it wasn't there. |
+| S14 | Run it from Downloads and choose 2; run it again and choose 3. | Each shows the steps to do it by hand, with your game's AddOns folder and the ZIP's name, and closes without changing anything. |
+| S15 | On a first setup, answer the mailbox question with 2 (zMail). | zMail comes from the release into Interface\AddOns\zmail, Mailbox.txt says zMail, and the next run doesn't ask. In game, Ultimate Mail Mod stays off. |
+| S16 | Run it with `-AskAgain` and answer the mailbox question with 1. | zMail moves to offloaded_addons, and Ultimate Mail Mod runs in game. |
 | I1 | Type `/cinfo`, then `/cq`, and go through the four tabs. | One window. `/cq` opens on Quests. No label is cut off and no row overlaps the buttons at the bottom. |
 | I2 | Tick options on each tab and watch what they change: chat filters, the tooltip's lines, the ID numbers, health numbers over heads. | They apply at once, with no Reload UI. They're still set after a relog. |
 | I3 | Untick **Extended Macro Icons** and Reload UI, then tick it and Reload UI. | The game's macro window comes back, then the extended one. The tick stays as you left it. |
@@ -174,6 +210,20 @@ This runs in Chrome. Checked so far: the page and popup driven in a headless Chr
 | R31 | Stack two pieces of gear that match in every way, then one that differs in plus or durability. | The matching ones share a slot; the different one stays apart. |
 | R32 | Look at a piece of gear with a tier, a plus and durability above 101, and a stack of it if you have one. | Tier upper left, HD upper right, plus lower left, stack count lower right. A mana stone shows its tier. Click the colour squares under the grid: the marks follow, stay after reloading, and **Reset** brings the colours back. |
 | R33 | Search *#clean*, then *#dirty*, on the page and in the game window. Try *#dirty wisdom* on the page. | Only mana and fusion stones without stats, then with stats, as zBag lights them up. The page also narrows to stones with wisdom on them. |
+| R34 | Open a mailbox in game with a character that has mail, log out, and open **Mail**. | Each mail with gold or items is listed under that character with the time the game gives it. Mail that goes within 48 hours has a red **!**, and the Bank's bottom line counts the mail and the gold. |
+| R35 | Send gold to another of your characters, once with the game's own mail window and once with UltimateMailMod, then log out. | Both show under **Sent**, with the gold. The other character's mailbox lists them as sent since its mailbox was open, and the Gold overview shows a mailbox after its name. Sending works as before. |
+| R36 | Log in with the receiving character, open its mailbox, take one mail, log out. | The mail taken is gone from **Mail**, and the rest show as in its mailbox. |
+| R37 | Log in and out with a character, then open its details from **Characters**. | The **Character profile** shows what it wears in the game's places. Hovering a slot shows the game's tooltip; clicking it finds the item on the Bank page. A character not logged in since shows the slots empty, saying so. |
+| R38 | On the **Bank**, look at **Where** and search *#equipped*, *#equipped=false*, *#+1>*, *#t10>* and *#+1>, #t10>, #equipped=false*. | Everywhere includes what's worn, marked Worn in its tooltip. Each filter keeps only what it says; a plain item name with a comma still finds that item. |
+| R39 | Change **from T7** under the grid to T1, then T12, and reload. | Slots show the tier as T6, T18 and so on, only from the tier picked, and the choice stays. |
+| R40 | Use the **Server** tile: pick a server, then a region, then **All servers**. Then pick a server and click the logo. | The Bank, the top bar's server ticks and every page follow. The logo goes back to the Bank with nothing selected, no filters and every server of the region. |
+| R41 | Look at **Gold overview**, then untick a server under **Servers**, and the names. | Each server is a region with its name on top, never halfway down a column. The server unticked leaves this map only; without names the regions still sit apart. |
+| R42 | On **Stats**, hover a stat's name, for mana stones and for items. | A tooltip as on a tier 6 mana stone, with the stat's effects in the game's wording. A stat no saved tooltip has says so. |
+| R43 | Select three characters and right-click one of them. | Lines for all three come first: view their bank, copy their names separated by commas or one a line, select the rest of their RoM accounts, link them, unselect. |
+| R44 | In game, type `/gb probe`. | It lists SendMail among the hooks, and says how many mails the mailbox had when last open and how many sent are kept. |
+| R45 | On **Characters**, search *#level>=100*, *#classes>3*, *#dailytokens>5k*, *#charges>10k*, *#gold<1m, #class=mage* and *#bagfree>10*. Try one on **Currencies**. | Each keeps only the characters it says, also combined. k and m work; a plain name still finds the character, and a note with a comma in it still matches. |
+| R46 | On the **Bank**, turn on **Sort by type**, then pick **Count** beside it, and reload the page. | Weapons, then jewellery, armour and wings, then mana stones, runes by rank, consumables, item shop items (plus jewels, then backpack tickets, then the rest), and the Dynamic, Mystical and Steadfast materials each together, A to Z with Wrath VIII before Wrath IX, then by count inside each. The choice stays after reloading. |
+| R47 | Right-click a character, choose **Add note…**, type one and save; hover the character; then **Edit note…** and **Remove the note**. Try a note with a quote in it. | Add note is the menu's first line. The note shows on hover at once, in the details and in the game window after Refresh. A quote is refused with a reason. |
 | R20 | Open **Stats**, **Servers**, **Gameforge accounts**, **Macros**, **Addon settings**, **Item Depot** and **Auctions**. | Each works as before in the new look. Icons on Macros show as before. |
 | R21 | Open the page twice. | The warning about two tabs shows. |
 | R22 | Make the window narrow. | The side folds to its icons, filters wrap, and wide tables scroll inside their own box. Nothing makes the whole page scroll sideways. |

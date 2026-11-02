@@ -133,6 +133,7 @@
     romName: character => roster.romName(character),
     romFirst: () => roster.view.romFirst,
     linksChanged: () => changed(['currencies', 'characters', 'servers']),
+    mailbox: key => mailboxes().get(key),
   });
   // A group's Select button selects all of it, or, when all of it is selected already, none of it
   function selectKeys(keys) {
@@ -228,15 +229,7 @@
   });
   byId('selection-clear').addEventListener('click', () => roster.clearSelection());
   byId('select-stale').addEventListener('click', () => roster.setSelection(roster.shown().filter(character => character.stale).map(character => character.key)));
-  byId('selection-copy').addEventListener('click', async () => {
-    const names = roster.selectedAll().map(character => character.name);
-    try {
-      await navigator.clipboard.writeText(names.join('\n'));
-      byId('selection-note').textContent = `Copied ${number(names.length)} names, one a line.`;
-    } catch (error) {
-      byId('selection-note').textContent = 'Could not copy: ' + String(error.message || error);
-    }
-  });
+  byId('selection-copy').addEventListener('click', () => copyNames(roster.selectedAll(), ', ', byId('selection-note')));
 
   // The Bank tab
   const bankStatus = text => { byId('bank-status').textContent = text; };
@@ -266,13 +259,37 @@
       return GBFolders.answer(message);
     }
   }
-  const bank = GBBank.create(byId('tab-bank'), bankSend, bankStatus, (totals, made, characters) => {
+  // Every mailbox now, worked out again for new data, and once a minute, since mail runs out with time
+  let mailCache = null;
+  function mailboxes() {
+    const loaded = bank ? bank.loadedAt() : 0;
+    if (!mailCache || mailCache.loaded !== loaded || Date.now() - mailCache.at > 60000) {
+      mailCache = {loaded, at: Date.now(), boxes: GBMail.mailboxes(roster.characters())};
+    }
+    return mailCache.boxes;
+  }
+  // The line a character's hover card and details give its mailbox, or null when nothing waits
+  function mailLine(character) {
+    const box = mailboxes().get(character.key);
+    const text = GBMail.summary(box, Date.now() / 1000, GBBank.formatCompact);
+    return text ? {text: `Mailbox: ${text}`, soon: box.expiring > 0} : null;
+  }
+  function renderMailCount() {
+    const sum = GBMail.totals(mailboxes(), roster.shown());
+    const node = byId('nav-count-mail');
+    node.textContent = sum.mails ? number(sum.mails) : '';
+    node.classList.toggle('is-urgent', sum.expiring > 0);
+    node.title = sum.expiring ? `${number(sum.expiring)} expire within 48 hours` : '';
+  }
+  let bank = null;
+  bank = GBBank.create(byId('tab-bank'), bankSend, bankStatus, (totals, made, characters) => {
     accounts.setCharacters(characters);
     renderViewBar();
     renderSelectionBar();
     savedMade = made;
     renderSavedData();
-    changed(['favourites', 'currencies', 'stats', 'heatmap', 'characters', 'accounts', 'servers']);
+    renderMailCount();
+    changed(['favourites', 'currencies', 'stats', 'heatmap', 'characters', 'accounts', 'servers', 'mail']);
   }, accounts.openMenu, {
     roster,
     favouritesRoot: byId('tab-favourites'),
@@ -280,7 +297,8 @@
     visible: () => currentTab === 'bank',
     tooltip: byId('bank-tooltip'),
     favouritesChanged: count => { byId('nav-count-favourites').textContent = count ? number(count) : ''; },
-    review: kind => setRosterFilter(kind, true),
+    review: kind => (kind === 'mail' ? showTab('mail') : setRosterFilter(kind, true)),
+    mailboxes,
   });
   // Macros and addon settings come from the save folders, whose names are the characters' names.
   // A folder the page has no character for always shows, like a character whose server isn't known.
@@ -295,6 +313,9 @@
   });
   views.macros = () => { backups.showMacros(); };
   views.settings = () => { backups.showSettings(); };
+  const addonsPage = GBAddons.create(send, {toast: text => toast(text)});
+  views.addons = () => { addonsPage.show(); };
+  selfTracking.add('addons');
   // Characters and Currencies: a search, and groups by server or account
   const tables = {characters: ['roster', 'roster-view'], currencies: ['currency', 'currency-view']};
   const tableOptions = prefix => ({
@@ -308,6 +329,7 @@
     openCharacter,
     summary: prefix === 'currency' ? byId('currency-summary') : null,
     selectKeys,
+    mailbox: key => mailboxes().get(key),
   });
   // Which characters the Characters page lists. Needs login and Bank not recorded mean different things and can
   // overlap. Excluded characters aren't in the saved data at all: the helper keeps that list.
@@ -366,6 +388,22 @@
       return row;
     }));
   }
+  // A character's note, kept by the helper and shown when you hover the character, here and in the game's window. It
+  // goes through the helper's own note command, which checks it again.
+  const noteProblem = text => (/[\x00-\x1f"~`|\\]/.test(text) ? 'A note can’t hold quotes, backslashes, |, ~ or backticks.'
+    : new TextEncoder().encode(text).length > 80 ? 'Keep it to 80 letters or fewer, fewer with accents.' : '');
+  async function editNote(character) {
+    const text = await ask({
+      title: character.note ? 'Edit note' : 'Add note',
+      hint: `A note for ${character.name}. It shows when you hover the character, here and in the game’s Global Bank window, and the Characters search finds it.`,
+      label: 'Note', value: character.note || '', placeholder: 'bank alt, mats, daily tokens…', clear: character.note ? 'Remove the note' : '',
+      check: noteProblem,
+    });
+    if (text === null || text === (character.note || '')) return;
+    const reply = await terminal.command(`note ${character.name} ${text}`.trim());
+    toast(GBTerminal.recordsText(reply.records) || reply.error || '');
+    if (reply.changed) await bank.reload({ifChanged: true}).catch(() => {});
+  }
   // Right-click, Stop tracking: the helper names exactly who that covers, and asks.
   async function stopTracking(character) {
     const reply = await terminal.command(`erase ${character.base || character.name}`);
@@ -384,6 +422,155 @@
     }
     if (rosterFilter === 'excluded') drawExcluded();
     else terminal.catalogue(true).then(fresh => { if (fresh.ok) byId('roster-count-excluded').textContent = number((fresh.excluded || []).length); });
+  }
+  // What a character wears, laid out like the game's character window: rings, earrings and the necklace on top, a column
+  // either side of the figure, talismans beside it and the ammunition under it. Each slot shows the game's own tooltip.
+  const PROFILE_LEFT = ['Head', 'Chest', 'Waist', 'Legs', 'MainHand', 'Ranged'];
+  const PROFILE_RIGHT = ['Shoulder', 'Hands', 'Feet', 'Back', 'SecondaryHand', 'Adornment'];
+  const PROFILE_TOP = ['Ring0', 'Ring1', 'Earring0', 'Earring1', 'Necklace'];
+  const PROFILE_TALISMANS = ['Talisman0', 'Talisman1', 'Talisman2'];
+  const PROFILE_SHORT = {Head: 'Head', Chest: 'Chest', Waist: 'Waist', Legs: 'Legs', MainHand: 'Main', Ranged: 'Range', Shoulder: 'Shldr', Hands: 'Hands',
+    Feet: 'Feet', Back: 'Back', SecondaryHand: 'Off', Adornment: 'Orn', Ring0: 'Ring', Ring1: 'Ring', Earring0: 'Ear', Earring1: 'Ear', Necklace: 'Neck',
+    Talisman0: 'Tal', Talisman1: 'Tal', Talisman2: 'Tal', Ammo: 'Ammo'};
+  function characterProfile(character, make, tip) {
+    const worn = new Map((Array.isArray(character.equip) ? character.equip : []).map(item => [String(item.where), item]));
+    const section = make('section', 'character-profile');
+    section.setAttribute('aria-label', 'Character profile');
+    const head = make('div', 'profile-head');
+    head.append(make('h3', '', 'Character profile'));
+    section.append(head);
+    const classes = (character.classes || []).filter(item => item.name).map(item => `${item.name} ${item.level}`);
+    section.append(make('div', 'profile-classes', classes.length ? classes.join(' / ') : [character.class, character.level ? `Level ${number(character.level)}` : ''].filter(Boolean).join(' · ') || 'Class not recorded'));
+    const icons = [];
+    const marksOf = item => {
+      const gear = GBBank.wornGear(item);
+      return GBBank.slotMarks({tier: GBBank.tierOf({...item, gear}), gear}, bank.tierFrom());
+    };
+    const slot = where => {
+      const item = worn.get(where);
+      const node = make('button', 'bank-slot profile-slot' + (item ? ' filled' : ' is-empty'));
+      node.type = 'button';
+      node.dataset.where = where;
+      const label = GBBank.slotLabel(where);
+      if (!item) {
+        node.append(make('span', 'profile-slot-name', PROFILE_SHORT[where] || label));
+        node.setAttribute('aria-label', `${label}: empty`);
+        node.disabled = !Array.isArray(character.equip);
+        node.title = Array.isArray(character.equip) ? `${label}: nothing worn` : label;
+        return node;
+      }
+      if (item.quality > 0) node.classList.add(`q${Math.min(5, item.quality)}`);
+      node.append(make('span', 'bank-letters', String(item.name || '?').slice(0, 2)));
+      const picture = make('img');
+      picture.alt = '';
+      picture.dataset.icon = item.icon || '';
+      if (item.icon) icons.push(item.icon);
+      node.append(picture);
+      const marks = marksOf(item);
+      node.append(make('span', 'bank-mark bank-mark-tier', marks.tier), make('span', 'bank-mark bank-mark-hd', marks.durability), make('span', 'bank-mark bank-mark-plus', marks.plus));
+      if (item.count > 1) node.append(make('span', 'bank-count', String(item.count)));
+      node.setAttribute('aria-label', [`${label}: ${item.name}`, ...marks.words].join(', '));
+      node.addEventListener('mouseenter', event => tip.show(event, item, label));
+      node.addEventListener('mousemove', event => tip.move(event));
+      node.addEventListener('mouseleave', () => tip.hide());
+      node.addEventListener('focus', () => tip.show(null, item, label, node));
+      node.addEventListener('blur', () => tip.hide());
+      node.addEventListener('click', () => {
+        byId('character-panel').close();
+        roster.setScope([character.key]);
+        bank.find(item.name);
+        showTab('bank');
+      });
+      return node;
+    };
+    const doll = make('div', 'profile-doll');
+    const top = make('div', 'profile-top');
+    top.append(...PROFILE_TOP.map(slot));
+    const left = make('div', 'profile-column');
+    left.append(...PROFILE_LEFT.map(slot));
+    const right = make('div', 'profile-column');
+    right.append(...PROFILE_RIGHT.map(slot));
+    const middle = make('div', 'profile-middle');
+    const figure = make('div', 'profile-figure');
+    const color = GBAccounts.classColor(character);
+    if (color) figure.style.setProperty('--class-color', color);
+    figure.append(make('span', 'profile-initial', String(character.class || '?').slice(0, 1).toUpperCase()), make('span', 'profile-name', character.base || character.name));
+    const talismans = make('div', 'profile-talismans');
+    talismans.append(...PROFILE_TALISMANS.map(slot));
+    const ammo = make('div', 'profile-ammo');
+    ammo.append(slot('Ammo'));
+    middle.append(talismans, figure, ammo);
+    doll.append(top, left, middle, right);
+    section.append(doll);
+    // A line about it all: how much is worn, the highest plus, the tiers and how many are HD
+    if (!Array.isArray(character.equip)) {
+      section.append(make('p', 'hint', character.notSaved ? 'Nothing saved for this character yet.' : 'What it wears isn’t recorded yet: log in once with it on Global Bank 1.6.2 or newer.'));
+    } else {
+      const gear = [...worn.values()].map(item => {
+        const shaped = GBBank.wornGear(item);
+        return {plus: shaped.plus, tier: GBBank.tierOf({...item, gear: shaped}), hd: shaped.dura > 101};
+      });
+      const tiers = gear.map(item => item.tier).filter(Boolean);
+      const parts = [`${number(worn.size)} ${worn.size === 1 ? 'slot' : 'slots'} worn`];
+      const plus = Math.max(0, ...gear.map(item => item.plus));
+      if (plus) parts.push(`up to +${plus}`);
+      if (tiers.length) parts.push(Math.min(...tiers) === Math.max(...tiers) ? `T${tiers[0]}` : `T${Math.min(...tiers)} to T${Math.max(...tiers)}`);
+      const hd = gear.filter(item => item.hd).length;
+      if (hd) parts.push(`${number(hd)} HD`);
+      section.append(make('p', 'profile-summary', parts.join(' · ')));
+      section.append(make('p', 'hint', 'Hover a slot for the game’s own tooltip, as last saved. Click one to find it on the Bank page.'));
+    }
+    if (icons.length && typeof GBIcons !== 'undefined') {
+      GBIcons.load(icons, bankSend, (name, url) => {
+        for (const picture of section.querySelectorAll('img[data-icon]')) if (picture.dataset.icon === name) picture.src = url;
+      }).catch(() => {});
+    }
+    return section;
+  }
+  // The game's tooltip for a worn item, inside the details drawer: the page's own tooltip sits below an open dialog
+  function profileTip(make) {
+    const node = make('div', 'bank-tooltip profile-tip');
+    node.hidden = true;
+    const place = (x, y) => {
+      node.style.left = Math.max(4, Math.min(x + 14, window.innerWidth - node.offsetWidth - 8)) + 'px';
+      node.style.top = Math.max(4, Math.min(y + 14, window.innerHeight - node.offsetHeight - 8)) + 'px';
+    };
+    return {
+      node,
+      show(event, item, label, anchor = null) {
+        const lines = GBBank.tipLines(item.tip);
+        const nodes = [];
+        if (lines.length) {
+          const game = make('div', 'game-tip');
+          for (const line of lines) {
+            const row = make('div', 'game-tip-line');
+            const left = make('span', 'game-tip-left', line.left);
+            if (line.leftColor) left.style.color = line.leftColor;
+            row.append(left);
+            if (line.right) {
+              const right = make('span', 'game-tip-right', line.right);
+              if (line.rightColor) right.style.color = line.rightColor;
+              row.append(right);
+            }
+            game.append(row);
+          }
+          nodes.push(game);
+        } else {
+          nodes.push(make('strong', '', item.name));
+          if (item.maxDura) nodes.push(make('span', 'bank-tip-plain', `Durability ${number(item.dura)} / ${number(item.maxDura)}`));
+        }
+        nodes.push(make('span', 'bank-tip-hint', `${label} · click to find it on the Bank page`));
+        node.replaceChildren(...nodes);
+        node.hidden = false;
+        if (event) place(event.clientX, event.clientY);
+        else if (anchor) {
+          const box = anchor.getBoundingClientRect();
+          place(box.right, box.top);
+        }
+      },
+      move(event) { if (!node.hidden) place(event.clientX, event.clientY); },
+      hide() { node.hidden = true; },
+    };
   }
   // One character's details, from the arrow on its row or its right-click menu
   function openCharacter(key) {
@@ -423,7 +610,17 @@
     if (!roster.view.hideGameforge) add('Gameforge account', accounts.accountNameOf(character) || (accounts.locked() ? 'Locked' : 'Not linked'));
     if (!roster.view.hideRom) add('RoM account', roster.romTitle(character) || 'Not known yet');
     const taken = Date.parse(character.dailyLogin?.collectedAt || '');
-    add('Last daily reward', Number.isFinite(taken) ? `Day ${character.dailyLogin.day || '?'}, ${new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'}).format(taken)}` : 'Not recorded');
+    const clock = new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'});
+    add('Last daily reward', Number.isFinite(taken) ? `Day ${character.dailyLogin.day || '?'}, ${clock.format(taken)}` : 'Not recorded');
+    // Its mailbox as last open, with what was sent to it since; and what it sent
+    if (!character.notSaved) {
+      const box = mailboxes().get(character.key);
+      const waiting = GBMail.summary(box, Date.now() / 1000, GBBank.formatCompact);
+      add('Mailbox', waiting || (box?.recorded ? 'Nothing waiting' : character.mail ? 'Not open yet on this version: nothing known' : 'Not recorded: open its mailbox once on Global Bank 1.6.2 or newer'));
+      if (box?.read) add('Mailbox last open', clock.format(box.read * 1000));
+      const sent = Array.isArray(character.mail?.sent) ? character.mail.sent : [];
+      if (sent.length) add('Mail sent', `${number(sent.length)} kept, the last ${clock.format((Number(sent.at(-1).at) || 0) * 1000)}`);
+    }
     if (character.note) add('Note', character.note);
     const actions = make('div', 'detail-actions');
     const button = (label, primary, run) => {
@@ -444,13 +641,24 @@
       byId('character-panel').close();
     });
     if (!character.notSaved) {
+      button(character.note ? 'Edit note…' : 'Add note…', false, () => {
+        byId('character-panel').close();
+        editNote(character);
+      });
       button('Stop tracking…', false, () => {
         byId('character-panel').close();
         stopTracking(character);
       });
     }
-    byId('character-panel-body').replaceChildren(hero, metrics, details, actions);
-    byId('character-panel').showModal();
+    const panel = byId('character-panel');
+    const side = make('div', 'character-details');
+    side.append(hero, metrics, details, actions);
+    const body = byId('character-panel-body');
+    body.className = 'character-panel-body';
+    const tip = profileTip(make);
+    body.replaceChildren(characterProfile(character, make, tip), side, tip.node);
+    panel.classList.add('has-profile');
+    panel.showModal();
   }
   Object.assign(views, {
     bank: () => bank.show(),
@@ -461,10 +669,30 @@
       if (rosterFilter === 'excluded') drawExcluded();
       else GBBank.renderRoster(byId('roster-view'), rosterShown(), tableOptions('roster'));
     },
-    stats: () => GBBank.renderStats(byId('tab-stats'), roster.shown(), {data: {entries: bank.shownEntries()}}),
+    stats: () => GBBank.renderStats(byId('tab-stats'), roster.shown(), {data: {entries: bank.shownEntries()}, all: bank.entries(), tooltip: byId('bank-tooltip')}),
     heatmap: () => accounts.refresh('heatmap'),
     accounts: () => accounts.refresh('accounts'),
     servers: () => renderServers(),
+    mail: () => {
+      renderMailCount();
+      GBMail.render(byId('tab-mail'), roster.shown(), {search: byId('mail-search').value, gold: GBBank.formatCompact});
+    },
+  });
+  let mailTyping = 0;
+  byId('mail-search').addEventListener('input', () => {
+    clearTimeout(mailTyping);
+    mailTyping = setTimeout(() => changed(['mail']), 150);
+  });
+  // The logo: back to the Bank as it first opens, with no characters selected, no scope and no filters. The region
+  // stays, and every one of its servers shows again.
+  byId('brand-home').addEventListener('click', event => {
+    event.preventDefault();
+    roster.clearSelection();
+    roster.clearScope();
+    if (roster.view.serversOff.size) roster.setView(roster.view.region);
+    bank.resetFilters();
+    bank.closePanel();
+    showTab('bank');
   });
   for (const [tab, [prefix, view]] of Object.entries(tables)) {
     let typing = 0;
@@ -486,8 +714,9 @@
     if (what === 'view') {
       renderViewBar();
       renderSavedData();
+      renderMailCount();
       accounts.redraw();
-      changed(['favourites', 'currencies', 'stats', 'characters', 'servers']);
+      changed(['favourites', 'currencies', 'stats', 'characters', 'servers', 'mail']);
     } else if (what === 'assigned') {
       // A server set by hand moves characters, and so their keys: prepared again, the selection kept on them
       roster.rekey(() => bank.reprepare());
@@ -509,8 +738,11 @@
     rom: character => roster.romTitle(character),
     currencyName: GBBank.currencyName,
     stones: GBBank.transferStonesText,
+    mail: mailLine,
     menu: accounts.openMenu,
     rows: character => characterRows(character),
+    // The note first, then what goes for all the characters selected with it
+    bulk: character => [...(character.notSaved ? [] : [{label: character.note ? 'Edit note…' : 'Add note…', run: () => editNote(character)}]), ...bulkRows(character)],
   });
 
   // A small form for one value: a new name, or a server from a list. Resolves to the text, to '' for its Clear
@@ -569,6 +801,41 @@
   // Escape, or anything else that closes it
   dialog.addEventListener('close', () => { if (answer) answer(null); });
 
+  // Names copied for pasting elsewhere: "A, B, C", or one a line
+  async function copyNames(list, separator, note = null) {
+    const names = [...new Set(list.map(character => character.name))];
+    const how = separator === '\n' ? 'one a line' : 'comma separated';
+    try {
+      await navigator.clipboard.writeText(names.join(separator));
+      (note ? text => { note.textContent = text; } : toast)(`Copied ${number(names.length)} ${names.length === 1 ? 'name' : 'names'}, ${how}.`);
+    } catch (error) {
+      (note ? text => { note.textContent = text; } : toast)('Could not copy: ' + String(error.message || error));
+    }
+  }
+  // Right-click on one of several selected characters, above its logins: the same for all of them
+  function bulkRows(character) {
+    const picked = roster.selectedAll();
+    if (!roster.isSelected(character.key) || picked.length < 2) return [];
+    const count = number(picked.length);
+    const saved = picked.filter(member => !member.notSaved);
+    const rows = [];
+    if (saved.length) {
+      rows.push({label: `View these ${number(saved.length)} characters’ bank`, run: () => {
+        roster.setScope(saved.map(member => member.key));
+        showTab('bank');
+        toast(`The Bank now shows these ${number(saved.length)} characters’ items.`);
+      }});
+    }
+    rows.push({label: `Copy the ${count} names, comma separated`, run: () => copyNames(picked, ', ')});
+    rows.push({label: `Copy the ${count} names, one a line`, run: () => copyNames(picked, '\n')});
+    const accountKeys = new Set();
+    for (const member of picked) for (const other of roster.romAccount(member)?.characters || []) if (other.key) accountKeys.add(other.key);
+    const more = [...accountKeys].filter(key => !roster.isSelected(key));
+    if (more.length) rows.push({label: `Select the rest of their RoM accounts (${number(more.length)} more)`, run: () => roster.setSelection([...roster.selection, ...more])});
+    rows.push({label: `Link the ${count} to a Gameforge account…`, run: () => showTab('accounts')});
+    rows.push({label: `Unselect all ${count}`, run: () => roster.clearSelection()});
+    return rows;
+  }
   // Right-click on a character, below its logins: its RoM account, its Gameforge account, and its server
   function characterRows(character) {
     const rows = [{label: 'Details…', run: () => openCharacter(character.key)}];
@@ -1037,15 +1304,15 @@
   });
   // A menu closes when you click anywhere else, or press Escape
   document.addEventListener('click', event => {
-    for (const menu of document.querySelectorAll('.bank-menu[open]')) if (!menu.contains(event.target)) menu.open = false;
+    for (const menu of document.querySelectorAll('.bank-menu[open], .server-pick[open]')) if (!menu.contains(event.target)) menu.open = false;
   });
   // / goes to the open page's search. Escape closes what's open.
   const SEARCHES = {bank: 'bank-search', currencies: 'currency-search', stats: 'stat-search', characters: 'roster-search', accounts: 'gf-filter', servers: 'server-search',
-    macros: 'macro-search', depot: 'depot-search', auctions: 'auction-search', terminal: 'term-input'};
+    macros: 'macro-search', depot: 'depot-search', auctions: 'auction-search', terminal: 'term-input', mail: 'mail-search'};
   document.addEventListener('keydown', event => {
     if (document.querySelector('dialog[open]')) return;
     if (event.key === 'Escape') {
-      const menu = document.querySelector('.bank-menu[open]');
+      const menu = document.querySelector('.bank-menu[open], .server-pick[open]');
       if (menu) {
         menu.open = false;
         menu.querySelector('summary')?.focus();

@@ -8,7 +8,7 @@
 CherrysKit = CherrysKit or {}
 local Kit = CherrysKit
 
-Kit.version = "0.4.30"
+Kit.version = "0.4.31"
 Kit.MAX_ROWS = 14
 
 if SaveVariables then
@@ -356,9 +356,39 @@ local function originWords(folder)
   return "the original " .. origin.name .. " in " .. where
 end
 
+-- Which mailbox addon runs: Ultimate Mail Mod in the kit, or zMail in its own Interface\AddOns\zmail
+-- folder. Mailbox.txt says Mailbox = "auto", "UMM" or "zMail" (the guided setup and Global Bank's
+-- Addons page write it; addons can't). "auto" picks zMail when it is loaded. Read once per load.
+local mailboxChoice
+local function readMailbox()
+  local choice = "auto"
+  local chunk = type(loadfile) == "function" and loadfile("Interface/AddOns/CherrysKit/Mailbox.txt")
+  if type(chunk) == "function" and type(setfenv) == "function" then
+    local found = {}
+    setfenv(chunk, found)
+    if pcall(chunk) and type(found.Mailbox) == "string" then
+      choice = string.lower(found.Mailbox)
+    end
+  end
+  return choice
+end
+
+function Kit.Mailbox()
+  mailboxChoice = mailboxChoice or readMailbox()
+  if mailboxChoice == "zmail" then
+    return "zMail"
+  elseif mailboxChoice == "umm" then
+    return "UMM"
+  end
+  return rawget(_G, "zmail") ~= nil and "zMail" or "UMM"
+end
+
 -- What an addon in the kit checks at load. Addons not in the kit are always on. A kit addon whose
 -- original or separate copy is installed too stays off.
 function Kit.IsEnabled(folder)
+  if folder == "UltimateMailMod" and Kit.Mailbox() == "zMail" then
+    return false
+  end
   return not db().disabled[folder] and not Kit.OriginTakesPrecedence(folder)
 end
 
@@ -444,7 +474,9 @@ function Kit.Refresh()
         label = label .. "  |cffff6060(off)|r"
       end
       setText(name, label)
+      local mailbox = entry.folder == "UltimateMailMod" and Kit.Mailbox() == "zMail"
       setText(_G["CherrysKit_Row" .. i .. "Cmd"], old and ("|cffff6060AddOns\\" .. (Kit.foundOrigin[entry.folder] or Kit.ORIGINS[entry.folder]).folder .. " takes precedence|r")
+        or (mailbox and "|cffaaaaaazMail is your mailbox (Mailbox.txt)|r")
         or ("|cffaaaaaa" .. Kit.CommandText(entry.folder) .. "|r"))
       setText(open, "Settings")
       setText(toggle, enabled and "Turn off" or "Turn on")
@@ -709,6 +741,8 @@ function Kit.OpenWindow(window)
     print((Kit.WINDOW_TITLES[window] or tostring(window)) .. " is not installed")
   elseif Kit.OriginTakesPrecedence(window) then
     print(entry.title .. " from the kit is off: " .. originWords(window) .. " takes precedence.")
+  elseif window == "UltimateMailMod" and Kit.Mailbox() == "zMail" then
+    print(entry.title .. " is off: zMail is your mailbox. To switch, use !setup_cherryskit.bat or Global Bank's Addons page.")
   elseif not Kit.IsEnabled(window) then
     print(entry.title .. " is turned off. Turn it on here and Reload UI.")
     Kit.Toggle()

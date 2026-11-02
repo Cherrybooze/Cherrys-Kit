@@ -1,0 +1,1112 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+    <CheckButton name="ZMailInboxFrameCheckTemplate" inherits="UIPanelCheckButtonTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="26" y="26" />
+        </Size>
+        <Layers>
+            <Layer>
+                <FontString name="$parentLabel" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP" text="CHECK">
+                    <Size>
+                        <AbsDimension x="210" y="45" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
+                            <Offset>
+                                <AbsDimension x="4" y="7"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnClick>
+                zmail.inbox.settings.OnCheckClick(this)
+            </OnClick>
+            <OnEnter>
+                zmail.inbox.settings.OnCheckEnter(this)
+            </OnEnter>
+            <OnLeave>
+                GameTooltip:Hide()
+            </OnLeave>
+        </Scripts>
+    </CheckButton>
+    <EditBox name="ZMailInboxFrameNumberInputTemplate" inherits="UIPanelEditBoxTemplate" historylines="0" numeric="true" virtual="true">
+        <Size>
+            <AbsDimension x="88" y="22"/>
+        </Size>
+        <Layers>
+            <Layer>
+                <FontString name="$parentLabel" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP" text="ZMailInboxFrameNumberInputTemplate">
+                    <Size>
+                        <AbsDimension x="210" y="45" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
+                            <Offset>
+                                <AbsDimension x="4" y="5"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnEscapePressed>
+                this:ClearFocus()
+            </OnEscapePressed>
+            <OnEnterPressed>
+                this:ClearFocus();
+            </OnEnterPressed>
+            <OnTextChanged>
+                zmail.inbox.settings.NumberOnTextChanged(this)
+            </OnTextChanged>
+            <OnEnter>
+                zmail.inbox.settings.NumberOnEnter(this)
+            </OnEnter>
+            <OnLeave>
+                GameTooltip:Hide()
+            </OnLeave>
+        </Scripts>
+        <TextInsets>
+            <AbsInset top="4" left="4" bottom="0" right="4"/>
+        </TextInsets>
+        <FontString inherits="GameEditFont" spacing="1"/>
+    </EditBox>
+    <Button name="ZMailFrameInboxButtonTemplate" virtual="true">
+        <Backdrop tile="true" bgFile="Interface\ChatFrame\ChatMessageFrame-bg">
+            <TileSize>
+                <AbsValue val="8"/>
+            </TileSize>
+        </Backdrop>
+        <Size>
+            <AbsDimension x="420" y="25" />
+        </Size>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentHighlight"  file="Interface\Buttons\ListItemHighlight" hidden="true" alphaMode="ADD"/>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString name="$parentAuthor" inherits="GameTitleFont" text=">">
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset>
+                                <AbsDimension x="28" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentSubject" inherits="GameTitleFont" text=">" justifyH="LEFT" justifyV="MIDDLE">
+                    <Size>
+                        <AbsDimension x="214" y="25" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset>
+                                <AbsDimension x="148" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentSubjectHigh" inherits="GameTitleFont" text=">" justifyH="LEFT" justifyV="TOP">
+                    <Size>
+                        <AbsDimension x="245" y="25" />
+                    </Size>
+                    <FontHeight>
+                        <AbsValue val="11"/>
+                    </FontHeight>
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset>
+                                <AbsDimension x="130" y="2"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentDaysLeft" inherits="GameFontNormal" text="">
+                    <Anchors>
+                        <Anchor point="RIGHT">
+                            <Offset>
+                                <AbsDimension x="-3" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentIcon">
+                <Size>
+                    <AbsDimension x="20" y="20" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="4" y="2" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture name="$parentBorder" file="Interface\Buttons\QuickSlot-Normal">
+                            <Size>
+                                <AbsDimension x="36" y="36"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER"/>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="BORDER">
+                        <Texture name="$parentIcon">
+                            <Size>
+                                <AbsDimension x="18" y="18"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER"/>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <PushedTexture file="Interface\Buttons\QuickSlot-Depress">
+                    <Size>
+                        <AbsDimension x="36" y="36"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="CENTER"/>
+                    </Anchors>
+                </PushedTexture>
+                <HighlightTexture file="Interface\Buttons\QuickSlot-Highlight" alphaMode="ADD"/>
+                <Scripts>
+                    <OnLoad>
+                        this:RegisterForClicks("LeftButton", "RightButton")
+                    </OnLoad>
+                    <OnEnter>
+                        zmail.inbox.ListAttachmentOnEnter(this)
+                    </OnEnter>
+                    <OnLeave>
+                        zmail.inbox.ListAttachmentOnLeave(this)
+                    </OnLeave>
+                    <OnClick>
+                        zmail.inbox.ListOnClick(this:GetParent(), key)
+                    </OnClick>
+                    <OnMouseWheel>
+                        zmail.inbox.ListOnMouseWheel(this:GetParent(), delta)
+                    </OnMouseWheel>
+                </Scripts>
+            </Button>
+            <Frame name="$parentMoney" inherits="ZMailFrameSmallMoneyFrameTemplate" hidden="true">
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="-58" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:RegisterForClicks("LeftButton", "RightButton")
+                        zmail.MoneyFrameTemplateOnLoad(this)
+                    </OnLoad>
+                    <OnEnter>
+                        zmail.inbox.ListOnEnter(this:GetParent())
+                    </OnEnter>
+                    <OnLeave>
+                        zmail.inbox.ListOnLeave(this:GetParent())
+                    </OnLeave>
+                    <OnClick>
+                        zmail.inbox.ListOnClick(this:GetParent(), key)
+                    </OnClick>
+                    <OnDragStart>
+                        zmail.inbox.ListOnMouseDown(this:GetParent(), key)
+                    </OnDragStart>
+                    <OnDragStop>
+                        zmail.inbox.ListOnMouseUp(this:GetParent(), key)
+                    </OnDragStop>
+                    <OnMouseWheel>
+                        zmail.inbox.ListOnMouseWheel(this:GetParent(), delta)
+                    </OnMouseWheel>
+                </Scripts>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                this:RegisterForClicks("LeftButton", "RightButton")
+            </OnLoad>
+            <OnEnter>
+                zmail.inbox.ListOnEnter(this)
+            </OnEnter>
+            <OnLeave>
+                zmail.inbox.ListOnLeave(this)
+            </OnLeave>
+            <OnClick>
+                zmail.inbox.ListOnClick(this, key)
+            </OnClick>
+            <OnMouseDown>
+                zmail.inbox.ListOnMouseDown(this, key)
+            </OnMouseDown>
+            <OnMouseUp>
+                zmail.inbox.ListOnMouseUp(this, key)
+            </OnMouseUp>
+            <OnMouseWheel>
+                zmail.inbox.ListOnMouseWheel(this, delta)
+            </OnMouseWheel>
+        </Scripts>
+    </Button>
+    <Frame name="ZMailFrameInboxListTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="448" y="490" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="5" y="5"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentInfoLabel" inherits="GameTitleFont" justifyH="CENTER" justifyV="MIDDLE" text="> test">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" />
+                        <Anchor point="BOTTOMRIGHT" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parent1" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent2" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent3" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent4" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent5" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent6" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent7" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent8" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent9" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent10" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent11" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent12" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent13" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent14" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent15" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent16" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent17" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent18" inherits="ZMailFrameInboxButtonTemplate" />
+            <Button name="$parent19" inherits="ZMailFrameInboxButtonTemplate" />
+            <Slider name="$parentScroll" inherits="UIPanelScrollBarTemplate" >
+                <Anchors>
+                    <Anchor point="TOPRIGHT" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="-5" y="26"/>
+                        </Offset>
+                    </Anchor>
+                    <Anchor point="BOTTOMRIGHT" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="-5" y="-22"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:SetValueStepMode("INT");
+                    </OnLoad>
+                    <OnValueChanged>
+                        UIPanelScrollBar_OnValueChanged(this, arg1);
+                        zmail.inbox.ListUpdate()
+                    </OnValueChanged>
+                </Scripts>
+            </Slider>
+        </Frames>
+    </Frame>
+    <Frame name="ZMailFrameInboxToolsTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="338" y="490" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentTotalMoneyLabel" inherits="GameFontHighlight" text="> savsrbsb">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT">
+                            <Offset>
+                                <AbsDimension x="6" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame name="$parentMassTake" inherits="ZMailFrameBackdropTemplate" hidden="false">
+                <Size>
+                    <AbsDimension x="338" y="132" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <Button name="$parentButtonTake" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="90" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" >
+                                <Offset>
+                                    <AbsDimension x="-14" y="6"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.take()
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentButtonReturn" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="90" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentButtonTake" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="18"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.returnSelected()
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentButtonDelete" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="90" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOP" relativeTo="$parentButtonReturn" relativePoint="BOTTOM">
+                                <Offset>
+                                    <AbsDimension x="0" y="4"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.deleteSelected()
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <CheckButton name="$parentCheckTakeDeleteEmpty" inherits="ZMailInboxFrameCheckTemplate" checked="true" id="1">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="12" y="16"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton name="$parentCheckTakeAndTryAgain" inherits="ZMailInboxFrameCheckTemplate" checked="true" id="2">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentCheckTakeDeleteEmpty" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="-1"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton name="$parentCheckAutoTakeCOD" inherits="ZMailInboxFrameCheckTemplate" checked="true" id="3">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentCheckTakeAndTryAgain" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="-1"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </CheckButton>
+                    <EditBox name="$parentAutoCODMax" inherits="ZMailInboxFrameNumberInputTemplate" letters="9" id="2">
+                        <Size>
+                            <AbsDimension x="98" y="22"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentCheckAutoTakeCOD" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="4" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnEditFocusLost>
+                                this:Hide()
+                                local formatted = _G[this:GetName().."Formatted"]
+                                formatted:Show()
+                                formatted:SetText(zmail.FormatNumber(this:GetText()))
+                            </OnEditFocusLost>
+                        </Scripts>
+                    </EditBox>
+                    <EditBox name="$parentAutoCODMaxFormatted" inherits="ZMailInboxFrameNumberInputTemplate" letters="11" numeric="false" id="2" text="123.456.789">
+                        <Size>
+                            <AbsDimension x="98" y="22"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="CENTER" relativeTo="$parentAutoCODMax" relativePoint="CENTER"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnEditFocusGained>
+                                local money = _G[this:GetName():gsub("Formatted","")]
+                                this:Hide()
+                                money:Show()
+                                money:SetFocus()
+                            </OnEditFocusGained>
+                            <OnTextChanged>
+                            </OnTextChanged>
+                        </Scripts>
+                    </EditBox>
+                    <EditBox name="$parentMinFreeSlots" inherits="ZMailInboxFrameNumberInputTemplate" letters="3" id="1">
+                        <Size>
+                            <AbsDimension x="35" y="22"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="16" y="-14"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </EditBox>
+                </Frames>
+            </Frame>
+            <Frame name="$parentMassTag" inherits="ZMailFrameBackdropTemplate" hidden="false">
+                <Size>
+                    <AbsDimension x="338" y="168" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentMassTake">
+                        <Offset>
+                            <AbsDimension x="0" y="12" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentLabel" inherits="GameFontHighlight" text="">
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT">
+                                    <Offset>
+                                        <AbsDimension x="16" y="-72"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button name="$parentButtonTagReset" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="90" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="$parent">
+                                <Offset>
+                                    <AbsDimension x="-14" y="6"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.Reset()
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentButtonTagChars" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="100" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentLabel" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="5"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.select('private')
+                            </OnClick>
+                            <OnEnter>
+                                GameTooltip:SetText(zmail.GetLocaString("TTchars"))
+                                GameTooltip:SetOwner(this:GetParent(), "ANCHOR_RIGHT", 0, 29)
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentButtonTagFriends" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="100" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentButtonTagChars" relativePoint="TOPRIGHT">
+                                <Offset>
+                                    <AbsDimension x="6" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.select('friend')
+                            </OnClick>
+                            <OnEnter>
+                                GameTooltip:SetText(zmail.GetLocaString("TTfriends"))
+                                GameTooltip:SetOwner(this:GetParent(), "ANCHOR_RIGHT", 0, 29)
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentButtonTagGuildies" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="100" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentButtonTagFriends" relativePoint="TOPRIGHT">
+                                <Offset>
+                                    <AbsDimension x="6" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.select('guild')
+                            </OnClick>
+                            <OnEnter>
+                                GameTooltip:SetText(zmail.GetLocaString("TTguild"))
+                                GameTooltip:SetOwner(this:GetParent(), "ANCHOR_RIGHT", 0, 29)
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentButtonTagEmpty" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="100" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentButtonTagChars" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="6"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.select('empty')
+                            </OnClick>
+                            <OnEnter>
+                                GameTooltip:SetText(zmail.GetLocaString("TTempty"))
+                                GameTooltip:SetOwner(this:GetParent(), "ANCHOR_RIGHT", 0, 29)
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button>   
+                    <Button name="$parentButtonTagAuction" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="100" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentButtonTagEmpty" relativePoint="TOPRIGHT">
+                                <Offset>
+                                    <AbsDimension x="6" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.select('auction')
+                            </OnClick>
+                            <OnEnter>
+                                GameTooltip:SetText(zmail.GetLocaString("TTauction"))
+                                GameTooltip:SetOwner(this:GetParent(), "ANCHOR_RIGHT", 0, 29)
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button> 
+                    <Button name="$parentButtonTagOther" inherits="UIPanelButtonTemplate" text="">
+                        <Size>
+                            <AbsDimension x="100" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentButtonTagAuction" relativePoint="TOPRIGHT">
+                                <Offset>
+                                    <AbsDimension x="6" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.select('other')
+                            </OnClick>
+                            <OnEnter>
+                                GameTooltip:SetText(zmail.GetLocaString("TTother"))
+                                GameTooltip:SetOwner(this:GetParent(), "ANCHOR_RIGHT", 0, 29)
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button>
+                    <RadioButton name="$parentTakeAll" groupId="1" id="1" checked="true" inherits="ZMailFrameOptionButtonTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent">
+                                <Offset>
+                                    <AbsDimension x="16" y="16" />
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.settings.OnRadioClick(this)
+                            </OnClick>
+                        </Scripts>
+                    </RadioButton>
+                    <RadioButton name="$parentTakeItem" groupId="1" id="2" inherits="ZMailFrameOptionButtonTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentTakeAll" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="2" />
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.settings.OnRadioClick(this)
+                            </OnClick>
+                        </Scripts>
+                    </RadioButton>
+                    <RadioButton name="$parentTakeGold" groupId="1" id="3" inherits="ZMailFrameOptionButtonTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentTakeItem" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="2" />
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.inbox.settings.OnRadioClick(this)
+                            </OnClick>
+                        </Scripts>
+                    </RadioButton>
+                </Frames>
+            </Frame>
+            <Frame name="$parentRefresh" inherits="ZMailFrameBackdropTemplate" hidden="false">
+                <Size>
+                    <AbsDimension x="338" y="82" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentMassTag">
+                        <Offset>
+                            <AbsDimension x="0" y="12" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <Button name="$parentButtonRefresh" inherits="UIPanelButtonTemplate" text="> Refresh">
+                        <Size>
+                            <AbsDimension x="90" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="$parent">
+                                <Offset>
+                                    <AbsDimension x="-14" y="6"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.Open(false, IsCtrlKeyDown())
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <CheckButton name="$parentCheckAutoRefresh" inherits="ZMailInboxFrameCheckTemplate" checked="true" id="4">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="12" y="16"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton name="$parentCheckContinueAfterReload" inherits="ZMailInboxFrameCheckTemplate" checked="true" id="5">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentCheckAutoRefresh" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="-1"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </CheckButton>
+                </Frames>
+            </Frame>
+            <Frame name="$parentTotalMoney" inherits="ZMailFrameSmallRightAlignedMoneyFrameTemplate" hidden="false">
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentTotalMoneyLabel" relativePoint="LEFT">
+                        <Offset>
+                            <AbsDimension x="-18" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnShow>
+                _G[this:GetParent():GetName().."Viewer"]:Hide()
+            </OnShow>
+        </Scripts>
+    </Frame>
+    <Frame name="ZMailFrameInboxViewerTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="338" y="490" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Frames>
+            <!-- Header frame containing sender and subject -->
+            <Frame name="$parentHeader" inherits="ZMailFrameBackdropTemplate">
+                <Size>
+                    <AbsDimension x="338" y="55" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentAuthorLabel" inherits="GameTitleFont" text="AuthorLabel">
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="10" y="15"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentAuthor" inherits="GameTitleFont" justifyH="LEFT" justifyV="MIDDLE" text="Author">
+                            <Size>
+                                <AbsDimension x="240" y="15" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="74" y="15"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentSubjectLabel" inherits="GameTitleFont" text="SubjectLabel">
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="10" y="30"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentSubject" inherits="GameTitleFont" justifyH="LEFT" justifyV="MIDDLE" text="Subject">
+                            <Size>
+                                <AbsDimension x="240" y="15" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="74" y="30"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+            <!-- Action buttons for this mail -->
+            <Button name="$parentReply" inherits="UIPanelButtonTemplate" text="MAIL_REPLY">
+                <Size>
+                    <AbsDimension x="90" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentHeader" relativePoint="BOTTOMLEFT">
+                        <Offset>
+                            <AbsDimension x="2" y="2"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.inbox.Reply(this:GetParent():GetID())
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentReturn" inherits="UIPanelButtonTemplate" text="> Return">
+                <Size>
+                    <AbsDimension x="90" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentReply" relativePoint="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="2" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.inbox.Return(this:GetParent():GetID())
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentDelete" inherits="UIPanelButtonTemplate" text="> Delete">
+                <Size>
+                    <AbsDimension x="90" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentReturn" relativePoint="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="2" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.inbox.Delete(this:GetParent():GetID())
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentClose" inherits="UIPanelButtonTemplate" text="> Close">
+                <Size>
+                    <AbsDimension x="90" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="-14" y="6"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.inbox.SetDetail(nil)
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <!-- Body panel displaying the mail contents -->
+            <Frame name="$parentBody" inherits="ZMailFrameBackdropTemplate">
+                <Size>
+                    <AbsDimension x="338" y="320" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentHeader" relativePoint="BOTTOMLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="25" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <EditBox name="$parentInput" inherits="UIMultiEditBoxTemplate" letters="5000" text="> Booty" >
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="10" y="10"/>
+                                </Offset>
+                            </Anchor>
+                            <Anchor point="BOTTOMRIGHT">
+                                <Offset>
+                                    <AbsDimension x="-20" y="-10"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnEscapePressed>
+                                this:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
+                        <TextInsets>
+                            <AbsInset top="4" left="4" bottom="0" right="4"/>
+                        </TextInsets>
+                        <FontString inherits="GameEditFont" spacing="1"/>
+                    </EditBox>
+                </Frames>
+            </Frame>
+            <!-- Footer frame for attachments -->
+            <Frame name="$parentFooter" inherits="ZMailFrameBackdropTemplate">
+                <Size>
+                    <AbsDimension x="338" y="70" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentBody" relativePoint="BOTTOMLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="5" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentAttachmentLabel" inherits="GameTitleFont" text="> AttachmentLabel" hidden="true">
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="16" y="16"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button name="$parentAttachment" id="1" inherits="ItemButtonTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="16" y="16" />
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnLoad>
+                                this:RegisterForClicks("LeftButton");
+                            </OnLoad>
+                            <OnEnter>
+                                zmail.inbox.DetailAttachmentOnEnter(this)
+                            </OnEnter>
+                            <OnClick>
+                                zmail.inbox.DetailAttachmentOnClick(this)
+                            </OnClick>
+                            <OnLeave>
+                                zmail.inbox.DetailAttachmentOnLeave(this)
+                            </OnLeave>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentTake" inherits="UIPanelButtonTemplate" text="MAIL_GET_ITEM">
+                        <Size>
+                            <AbsDimension x="90" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPRIGHT">
+                                <Offset>
+                                    <AbsDimension x="-14" y="6"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnLoad>
+                                this:RegisterForClicks("LeftButton")
+                            </OnLoad>
+                            <OnClick>
+                                zmail.inbox.DetailAttachmentOnClick(this)
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <CheckButton name="$parentAcceptCODCheck" inherits="UIPanelCheckButtonTemplate">
+                        <Size>
+                            <AbsDimension x="26" y="26" />
+                        </Size>
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentAttachment" relativePoint="RIGHT">
+                                <Offset>
+                                    <AbsDimension x="4" y="-8"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Layers>
+                            <Layer>
+                                <FontString name="$parentLabel" text=">: CODLabel" inherits="GameFontNormal" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="LEFT" relativePoint="RIGHT">
+                                            <Offset>
+                                                <AbsDimension x="0" y="0"/>
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEnter>
+                                GameTooltip:SetOwner(this, "ANCHOR_LEFT", 0, 0)
+                                GameTooltip:SetText(COD_ACCOUNT_CONFIRMATION:gsub("\n.*", ""))
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </CheckButton>
+                    <Frame name="$parentMoney" inherits="ZMailFrameMoneyFrameTemplate">
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentAttachment" relativePoint="RIGHT">
+                                <Offset>
+                                    <AbsDimension x="10" y="0" />
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </Frame>
+                </Frames>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+            </OnLoad>
+            <OnShow>
+                _G[this:GetParent():GetName().."Tools"]:Hide()
+            </OnShow>
+            <OnHide>
+                this:SetID(0)
+            </OnHide>
+        </Scripts>
+    </Frame>
+    <Frame name="ZMailFrameInboxTemplate" virtual="true" id="1">
+        <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Frames>
+            <Frame name="$parentMails" inherits="ZMailFrameInboxListTemplate" />
+            <Frame name="$parentTools" inherits="ZMailFrameInboxToolsTemplate" hidden="false" />
+            <Frame name="$parentViewer" inherits="ZMailFrameInboxViewerTemplate" hidden="true">
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                zmail.RegisterFrame(this)
+            </OnLoad>
+            <OnShow>
+                _G[this:GetName().."Tools"]:Show()
+                zmail.inbox.OnShow()
+            </OnShow>
+        </Scripts>
+    </Frame>
+</Ui>

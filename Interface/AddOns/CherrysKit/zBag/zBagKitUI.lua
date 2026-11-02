@@ -718,7 +718,7 @@ K.TOOLTIPS = {
   settings = { "zBag settings", "Bag layout (individual bags, one bag or Cherry's bags), slot numbers, search and more." },
   slothover = { "Numbers on mouseover only", "Show a bag or bank slot's number only while the mouse is over that slot. Untick to see every slot's number all the time. With the game's own bag and bank window the number comes with the game's tooltip, so a slot that shows no tooltip shows no number." },
   bankslots = { "Bank slot numbers", "Show the slot number in a see-through mark on every bank slot." },
-  slotfont = { "Slot number font size", "Size of bag and bank slot labels, from 6 to 20. Default 8 is about 40% smaller than the old 13-point labels. Classic bag/bank item scales also apply. Stack counts keep their normal size." },
+  slotfont = { "Slot number font size", "Size of the bag and bank slot numbers, from 6 to 20 (default 8). Click - or + to change it; open bags update straight away. The one-bag and one-bank scales also apply. Stack counts keep their normal size." },
 }
 
 function K.ShowTooltip(owner, what)

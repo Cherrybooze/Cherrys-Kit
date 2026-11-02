@@ -1,0 +1,843 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+    <CheckButton name="ZMailSendFrameCheckTemplate" inherits="UIPanelCheckButtonTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="26" y="26" />
+        </Size>
+        <Layers>
+            <Layer>
+                <FontString name="$parentLabel" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP" text="CHECK">
+                    <Size>
+                        <AbsDimension x="210" y="45" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
+                            <Offset>
+                                <AbsDimension x="4" y="7"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnClick>
+                zmail.send.settings.OnCheckClick(this)
+            </OnClick>
+            <OnEnter>
+                zmail.send.settings.OnCheckEnter(this)
+            </OnEnter>
+            <OnLeave>
+                GameTooltip:Hide()
+            </OnLeave>
+        </Scripts>
+    </CheckButton>
+    <EditBox name="ZMailSendFrameNumberInputTemplate" inherits="UIPanelEditBoxTemplate" historylines="0" numeric="true" virtual="true">
+        <Size>
+            <AbsDimension x="88" y="22"/>
+        </Size>
+        <Layers>
+            <Layer>
+                <FontString name="$parentLabel" inherits="GameFontHighlight" justifyH="LEFT" justifyV="TOP" text="ZMailFrameInboxNumberInputTemplate">
+                    <Size>
+                        <AbsDimension x="210" y="45" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
+                            <Offset>
+                                <AbsDimension x="4" y="5"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnEscapePressed>
+                this:ClearFocus()
+            </OnEscapePressed>
+            <OnEnterPressed>
+                this:ClearFocus()
+            </OnEnterPressed>
+            <OnTextChanged>
+                zmail.send.settings.NumberOnTextChanged(this, true)
+            </OnTextChanged>
+            <OnEnter>
+                zmail.send.settings.NumberOnEnter(this)
+            </OnEnter>
+            <OnLeave>
+                GameTooltip:Hide()
+            </OnLeave>
+        </Scripts>
+        <TextInsets>
+            <AbsInset top="4" left="4" bottom="0" right="4"/>
+        </TextInsets>
+        <FontString inherits="GameEditFont" spacing="1"/>
+    </EditBox>
+    <Frame name="ZMailComposeMailTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="338" y="450" />
+        </Size>
+        <Frames>
+            <!-- Header frame containing sender and subject -->
+            <Frame name="$parentHeader" inherits="ZMailFrameBackdropTemplate">
+                <Size>
+                    <AbsDimension x="338" y="76" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentSubjectLabel" inherits="GameTitleFont" text="">
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="16" y="44"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button name="$parentRecipientButton" inherits="UIPanelButtonTemplate" text="> To">
+                        <Size>
+                            <AbsDimension x="60" y="24"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="14" y="16"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                local recipient = _G[this:GetParent():GetName().."Recipient"]
+                                local function x(val) recipient:SetText(val) end 
+                                zmail.ShowRecipientSelection(x, recipient:GetText())
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <EditBox name="$parentRecipient" inherits="UIPanelEditBoxTemplate" historylines="0" letters="1024">
+                        <Size>
+                            <AbsDimension x="245" y="25"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentRecipientButton">
+                                <Offset>
+                                    <AbsDimension x="2" y="0" />
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnEscapePressed>
+                                this:ClearFocus();
+                            </OnEscapePressed>
+                            <OnTabPressed>
+                                _G[this:GetParent():GetName().."Subject"]:SetFocus();
+                            </OnTabPressed>
+                            <OnTextChanged>
+                                zmail.send.check()
+                                zmail.send.OptionCheckRecipients()
+                            </OnTextChanged>
+                        </Scripts>
+                        <TextInsets>
+                            <AbsInset top="4" left="4" bottom="0" right="4"/>
+                        </TextInsets>
+                        <FontString inherits="GameEditFont" spacing="1"/>
+                    </EditBox>
+                    <EditBox name="$parentSubject" inherits="UIPanelEditBoxTemplate" historylines="0" letters="31">
+                        <Size>
+                            <AbsDimension x="245" y="25"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentSubjectLabel" relativePoint="LEFT">
+                                <Offset>
+                                    <AbsDimension x="60" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnEscapePressed>
+                                this:ClearFocus();
+                            </OnEscapePressed>
+                            <OnTabPressed>
+                                _G[this:GetParent():GetParent():GetName().."BodyFrameInput"]:SetFocus();
+                            </OnTabPressed>
+                            <OnTextChanged>
+                                zmail.send.check()
+                            </OnTextChanged>
+                        </Scripts>
+                        <TextInsets>
+                            <AbsInset top="4" left="4" bottom="0" right="4"/>
+                        </TextInsets>
+                        <FontString inherits="GameEditFont" spacing="1"/>
+                    </EditBox>
+                </Frames>
+            </Frame>
+            <!-- Action buttons for this mail -->
+            <Button name="$parentReset" inherits="UIPanelButtonTemplate" text="> Reset">
+                <Size>
+                    <AbsDimension x="70" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentHeader" relativePoint="BOTTOMLEFT">
+                        <Offset>
+                            <AbsDimension x="8" y="2"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.send.reset()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentSend" inherits="UIPanelButtonTemplate" text="> Send">
+                <Size>
+                    <AbsDimension x="70" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPRIGHT" relativeTo="$parentHeader" relativePoint="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="-4" y="2"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.send.send()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <!-- Body panel displaying the mail contents -->
+            <Frame name="$parentBodyFrame" inherits="ZMailFrameBackdropTemplate">
+                <Size>
+                    <AbsDimension x="338" y="300" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentHeader" relativePoint="BOTTOMLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="27" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <EditBox name="$parentInput" inherits="UIMultiEditBoxTemplate" letters="2048" >
+                        <Size>
+                            <AbsDimension x="295" y="280"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="10" y="10"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnEscapePressed>
+                                this:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
+                        <TextInsets>
+                            <AbsInset top="4" left="4" bottom="0" right="4"/>
+                        </TextInsets>
+                        <FontString inherits="GameEditFont" spacing="1"/>
+                    </EditBox>
+                </Frames>
+            </Frame>
+            <!-- Footer frame for attachments -->
+            <Frame name="$parentFooter" inherits="ZMailFrameBackdropTemplate" hidden="false">
+                <Size>
+                    <AbsDimension x="338" y="92" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentBodyFrame" relativePoint="BOTTOMLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="6" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentAttachmentLabel" inherits="GameTitleFont" text="">
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="16" y="16"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button name="$parentAttachment" inherits="ItemButtonTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="20" y="38"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnLoad>
+                                this:RegisterForClicks("LeftButton", "RightButton");
+                            </OnLoad>
+                            <OnEnter>
+                                if this:GetID() ~= 0 then
+                                    GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT", 0, 0);
+                                    GameTooltip:SetBagItem(this:GetID());
+                                end
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                            <OnReceiveDrag>
+                                zmail.send.AttachmentButtonOnRecvDrag()
+                            </OnReceiveDrag>
+                            <OnClick>
+                                zmail.send.AttachmentButtonOnClick(key)
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <RadioButton name="$parentOptionMoney" inherits="ZMailFrameOptionButtonTemplate" id="1">
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="64" y="38"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.send.OptionOnClick(this:GetID())
+                            </OnClick>
+                        </Scripts>
+                    </RadioButton>
+                    <EditBox name="$parentMoney" inherits="MoneyEditBoxTemplate" letters="9" historylines="0" numeric="true" hidden="true">
+                        <Size>
+                            <AbsDimension x="90" y="20"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="218" y="35"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString name="$parentLabel" inherits="GameFontHighlight" text="Jeweils:">
+                                    <Anchors>
+                                        <Anchor point="RIGHT" relativePoint="LEFT">
+                                            <Offset>
+                                                <AbsDimension x="-10" y="0"/>
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                </FontString>
+                                <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                                    <Size>
+                                        <AbsDimension x="16" y="16" />
+                                    </Size>
+                                    <Anchors>
+                                        <Anchor point="LEFT" relativePoint="RIGHT">
+                                            <Offset>
+                                                <AbsDimension x="2" y="0" />
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                    <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEscapePressed>
+                                this:ClearFocus()
+                            </OnEscapePressed>
+                            <OnTextChanged>
+                                local txt = this:GetText()
+                                if txt and txt ~= "" and not tonumber(txt) then
+                                    this:SetText("")
+                                end
+                                if this ~= zmail.send.MoneyFocus then return end
+                                zmail.send.UpdateEachandAll()
+                                zmail.send.SetSubject(true)
+                            </OnTextChanged>
+                            <OnEditFocusGained>
+                                zmail.send.MoneyFocus = this
+                            </OnEditFocusGained>
+                            <OnEditFocusLost>
+                                this:Hide()
+                                local moneyformatted = _G[this:GetParent():GetName().."MoneyFormatted"]
+                                moneyformatted:Show()
+                                moneyformatted:SetText(zmail.FormatNumber(this:GetText()))
+                            </OnEditFocusLost>
+                        </Scripts>
+                        <TexCoords top="0" left="0" bottom="0" right="0.03125"/>
+                        <FontString inherits="NumberFontNormal" spacing="1"/>
+                    </EditBox>
+                    <EditBox name="$parentMoneyFormatted" inherits="MoneyEditBoxTemplate" letters="11" historylines="0" text="0">
+                        <Size>
+                            <AbsDimension x="90" y="20"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="218" y="35"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString name="$parentLabel" inherits="GameFontHighlight" text="Jeweils:">
+                                    <Anchors>
+                                        <Anchor point="RIGHT" relativePoint="LEFT">
+                                            <Offset>
+                                                <AbsDimension x="-10" y="0"/>
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                </FontString>
+                                <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                                    <Size>
+                                        <AbsDimension x="16" y="16" />
+                                    </Size>
+                                    <Anchors>
+                                        <Anchor point="LEFT" relativePoint="RIGHT">
+                                            <Offset>
+                                                <AbsDimension x="2" y="0" />
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                    <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEditFocusGained>
+                                local money = _G[this:GetParent():GetName().."Money"]
+                                this:Hide()
+                                money:Show()
+                                money:SetFocus()
+                            </OnEditFocusGained>
+                        </Scripts>
+                        <TexCoords top="0" left="0" bottom="0" right="0.03125"/>
+                        <FontString inherits="NumberFontNormal" spacing="1"/>
+                    </EditBox>
+                    <EditBox name="$parentMoneyTotal" inherits="MoneyEditBoxTemplate" letters="9" historylines="0" numeric="true" hidden="true">
+                        <Size>
+                            <AbsDimension x="90" y="20"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="218" y="15"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString name="$parentLabel" inherits="GameFontHighlight" text="Gesamt:">
+                                    <Anchors>
+                                        <Anchor point="RIGHT" relativePoint="LEFT">
+                                            <Offset>
+                                                <AbsDimension x="-10" y="0"/>
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                </FontString>
+                                <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                                    <Size>
+                                        <AbsDimension x="16" y="16" />
+                                    </Size>
+                                    <Anchors>
+                                        <Anchor point="LEFT" relativePoint="RIGHT">
+                                            <Offset>
+                                                <AbsDimension x="2" y="0" />
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                    <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEscapePressed>
+                                this:ClearFocus()
+                            </OnEscapePressed>
+                            <OnTextChanged>
+                                local txt = this:GetText()
+                                if txt and txt ~= "" and not tonumber(txt) then
+                                    this:SetText("")
+                                end
+                                if this ~= zmail.send.MoneyFocus then return end
+                                zmail.send.UpdateEachandAll()
+                                zmail.send.SetSubject(true)
+                            </OnTextChanged>
+                            <OnEditFocusGained>
+                                zmail.send.MoneyFocus = this
+                            </OnEditFocusGained>
+                            <OnEditFocusLost>
+                                this:Hide()
+                                local moneyformatted = _G[this:GetParent():GetName().."MoneyTotalFormatted"]
+                                moneyformatted:Show()
+                                moneyformatted:SetText(zmail.FormatNumber(this:GetText()))
+                            </OnEditFocusLost>
+                        </Scripts>
+                        <TexCoords top="0" left="0" bottom="0" right="0.03125"/>
+                        <FontString inherits="NumberFontNormal" spacing="1"/>
+                    </EditBox>
+                    <EditBox name="$parentMoneyTotalFormatted" inherits="MoneyEditBoxTemplate" letters="11" historylines="0" text="0">
+                        <Size>
+                            <AbsDimension x="90" y="20"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="218" y="15"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString name="$parentLabel" inherits="GameFontHighlight" text="Gesamt:">
+                                    <Anchors>
+                                        <Anchor point="RIGHT" relativePoint="LEFT">
+                                            <Offset>
+                                                <AbsDimension x="-10" y="0"/>
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                </FontString>
+                                <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                                    <Size>
+                                        <AbsDimension x="16" y="16" />
+                                    </Size>
+                                    <Anchors>
+                                        <Anchor point="LEFT" relativePoint="RIGHT">
+                                            <Offset>
+                                                <AbsDimension x="2" y="0" />
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                    <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEditFocusGained>
+                                local money = _G[this:GetParent():GetName().."MoneyTotal"]
+                                this:Hide()
+                                money:Show()
+                                money:SetFocus()
+                            </OnEditFocusGained>
+                        </Scripts>
+                        <TexCoords top="0" left="0" bottom="0" right="0.03125"/>
+                        <FontString inherits="NumberFontNormal" spacing="1"/>
+                    </EditBox>
+                    <RadioButton name="$parentOptionCOD" inherits="ZMailFrameOptionButtonTemplate" id="2">
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="64" y="58"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                zmail.send.OptionOnClick(this:GetID())
+                            </OnClick>
+                        </Scripts>
+                    </RadioButton>
+                    <EditBox name="$parentCOD" inherits="MoneyEditBoxTemplate" letters="9" historylines="0" numeric="true">
+                        <Size>
+                            <AbsDimension x="90" y="20"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="218" y="55"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                                    <Size>
+                                        <AbsDimension x="16" y="16" />
+                                    </Size>
+                                    <Anchors>
+                                        <Anchor point="LEFT" relativePoint="RIGHT">
+                                            <Offset>
+                                                <AbsDimension x="2" y="0" />
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                    <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEscapePressed>
+                                this:ClearFocus();
+                            </OnEscapePressed>
+                            <OnTextChanged>
+                                zmail.send.check()
+                                zmail.send.SetSubject(true)
+                            </OnTextChanged>
+                            <OnEditFocusLost>
+                                this:Hide()
+                                local moneyformatted = _G[this:GetParent():GetName().."CODFormatted"]
+                                moneyformatted:Show()
+                                moneyformatted:SetText(zmail.FormatNumber(this:GetText()))
+                            </OnEditFocusLost>
+                        </Scripts>
+                        <TexCoords top="0" left="0" bottom="0" right="0.03125"/>
+                        <FontString inherits="NumberFontNormal" spacing="1"/>
+                    </EditBox>
+                    <EditBox name="$parentCODFormatted" inherits="MoneyEditBoxTemplate" letters="11" historylines="0" text="0">
+                        <Size>
+                            <AbsDimension x="90" y="20"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="218" y="55"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                                    <Size>
+                                        <AbsDimension x="16" y="16" />
+                                    </Size>
+                                    <Anchors>
+                                        <Anchor point="LEFT" relativePoint="RIGHT">
+                                            <Offset>
+                                                <AbsDimension x="2" y="0" />
+                                            </Offset>
+                                        </Anchor>
+                                    </Anchors>
+                                    <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEditFocusGained>
+                                local money = _G[this:GetParent():GetName().."COD"]
+                                this:Hide()
+                                money:Show()
+                                money:SetFocus()
+                            </OnEditFocusGained>
+                        </Scripts>
+                        <TexCoords top="0" left="0" bottom="0" right="0.03125"/>
+                        <FontString inherits="NumberFontNormal" spacing="1"/>
+                    </EditBox>
+                </Frames>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnShow>
+               zmail.send.OnShow()
+            </OnShow>
+        </Scripts>
+    </Frame>
+    <Frame name="ZMailComposeToolsTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="440" y="490" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentTotalMoneyLabel" inherits="GameFontHighlight" text="BULLETINBOARD_REWARD_MONEY">
+                    <Anchors>
+                        <Anchor point="BOTTOM">
+                            <Offset>
+                                <AbsDimension x="70" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame name="$parentOptions" inherits="ZMailFrameBackdropTemplate" hidden="false">
+                <Size>
+                    <AbsDimension x="338" y="82" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="107" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <CheckButton name="$parentCheckAutoSelectRecipients" inherits="ZMailSendFrameCheckTemplate" checked="true" id="1">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="12" y="16"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton name="$parentCheckOnlyWhenEmpty" inherits="ZMailSendFrameCheckTemplate" checked="true" id="2">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentCheckAutoSelectRecipients" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="-1"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </CheckButton>
+                </Frames>
+            </Frame>
+            <Frame name="$parentMoneySplit" inherits="ZMailFrameBackdropTemplate" hidden="false">
+                <Size>
+                    <AbsDimension x="338" y="82" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentOptions">
+                        <Offset>
+                            <AbsDimension x="0" y="12" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <CheckButton name="$parentCheckIgnoreSelf" inherits="ZMailSendFrameCheckTemplate" checked="true" id="3">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="12" y="16"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </CheckButton>
+                    <EditBox name="$parentWithholdMoney" inherits="ZMailSendFrameNumberInputTemplate" letters="9" id="1">
+                        <Size>
+                            <AbsDimension x="98" y="22"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentCheckIgnoreSelf" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="4" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnEditFocusLost>
+                                this:Hide()
+                                local formatted = _G[this:GetName().."Formatted"]
+                                formatted:Show()
+                                formatted:SetText(zmail.FormatNumber(this:GetText()))
+                            </OnEditFocusLost>
+                        </Scripts>
+                    </EditBox>
+                    <EditBox name="$parentWithholdMoneyFormatted" inherits="ZMailSendFrameNumberInputTemplate" letters="11" numeric="false" id="1" text="123.456.789">
+                        <Size>
+                            <AbsDimension x="98" y="22"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="CENTER" relativeTo="$parentWithholdMoney" relativePoint="CENTER"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnEditFocusGained>
+                                local money = _G[this:GetName():gsub("Formatted","")]
+                                this:Hide()
+                                money:Show()
+                                money:SetFocus()
+                            </OnEditFocusGained>
+                            <OnTextChanged>
+                            </OnTextChanged>
+                        </Scripts>
+                    </EditBox>
+                    <Button name="$parentGenerateText" inherits="UIPanelButtonTemplate" text="> Generate" hidden="true">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentWithholdMoney" relativePoint="BOTTOMLEFT">
+                                <Offset>
+                                    <AbsDimension x="0" y="6"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Size>
+                            <AbsDimension x="102" y="22"/>
+                        </Size>
+                        <Scripts>
+                            <OnClick>
+                                zmail.send.GenerateText_OnClick(this)
+                            </OnClick>
+                            <OnEnter>
+                                zmail.send.GenerateText_OnEnter(this)
+                            </OnEnter>
+                            <OnLeave>
+                                GameTooltip:Hide()
+                            </OnLeave>
+                        </Scripts>
+                    </Button>
+                </Frames>
+            </Frame>
+            <Frame name="$parentTotalMoney" inherits="ZMailFrameSmallRightAlignedMoneyFrameTemplate" hidden="false">
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentTotalMoneyLabel" relativePoint="LEFT">
+                        <Offset>
+                            <AbsDimension x="-284" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnShow>
+                zmail.send.UpdateTotalMoney()
+            </OnShow>
+        </Scripts>
+    </Frame>
+    <Frame name="ZMailSendTemplate" virtual="true" id="2">
+        <Size>
+            <AbsDimension x="780" y="470" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Frames>
+            <Frame name="$parentComposer" inherits="ZMailComposeMailTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </Frame>
+            <Frame name="$parentTools" inherits="ZMailComposeToolsTemplate">
+                <Anchors>
+                    <Anchor point="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                zmail.RegisterFrame(this)
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

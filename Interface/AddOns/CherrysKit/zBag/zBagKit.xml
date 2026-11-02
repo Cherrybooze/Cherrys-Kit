@@ -20,26 +20,9 @@
 				<FontString name="$parentHint" inherits="GameFontHighlight" text="">
 					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="222"/></Offset></Anchor></Anchors>
 				</FontString>
-				<FontString name="$parentSlotFontLabel" inherits="GameFontLabelYellow" text="Font size">
-					<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="300" y="6"/></Offset></Anchor></Anchors>
-				</FontString>
-				<FontString name="$parentSlotFontValue" inherits="GameFontHighlight" text="8" justifyH="CENTER">
-					<Size><AbsDimension x="24" y="22"/></Size>
-					<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="380" y="2"/></Offset></Anchor></Anchors>
-				</FontString>
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="$parentSlotFontMinus" inherits="UIPanelButtonTemplate" text="-">
-				<Size><AbsDimension x="22" y="22"/></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="356" y="2"/></Offset></Anchor></Anchors>
-				<Scripts><OnClick>zBagKit.StepSlotFontSize(-1);</OnClick><OnEnter>zBagKit.ShowTooltip(this, "slotfont");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
-			</Button>
-			<Button name="$parentSlotFontPlus" inherits="UIPanelButtonTemplate" text="+">
-				<Size><AbsDimension x="22" y="22"/></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="406" y="2"/></Offset></Anchor></Anchors>
-				<Scripts><OnClick>zBagKit.StepSlotFontSize(1);</OnClick><OnEnter>zBagKit.ShowTooltip(this, "slotfont");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
-			</Button>
 			<CheckButton name="$parentIndividual">
 				<Size><AbsDimension x="24" y="24"/></Size>
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentTitle" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="2"/></Offset></Anchor></Anchors>
@@ -172,6 +155,33 @@
 					<OnLeave>GameTooltip:Hide();</OnLeave>
 				</Scripts>
 			</CheckButton>
+			<Frame name="$parentSlotFont">
+				<Size><AbsDimension x="240" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBankSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="230" y="0"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="$parentLabel" inherits="GameFontLabelYellow" text="Slot number font size">
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="4" y="6"/></Offset></Anchor></Anchors>
+						</FontString>
+						<FontString name="$parentValue" inherits="GameFontHighlight" text="8" justifyH="CENTER">
+							<Size><AbsDimension x="24" y="22"/></Size>
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="184" y="1"/></Offset></Anchor></Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="$parentMinus" inherits="UIPanelButtonTemplate" text="-">
+						<Size><AbsDimension x="22" y="22"/></Size>
+						<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="160" y="1"/></Offset></Anchor></Anchors>
+						<Scripts><OnClick>zBagKit.StepSlotFontSize(-1);</OnClick><OnEnter>zBagKit.ShowTooltip(this, "slotfont");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+					</Button>
+					<Button name="$parentPlus" inherits="UIPanelButtonTemplate" text="+">
+						<Size><AbsDimension x="22" y="22"/></Size>
+						<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="210" y="1"/></Offset></Anchor></Anchors>
+						<Scripts><OnClick>zBagKit.StepSlotFontSize(1);</OnClick><OnEnter>zBagKit.ShowTooltip(this, "slotfont");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+					</Button>
+				</Frames>
+			</Frame>
 			<CheckButton name="$parentHideBackpack">
 				<Size><AbsDimension x="24" y="24"/></Size>
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBankSlots" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
@@ -227,7 +237,7 @@
 			</CheckButton>
 			<CheckButton name="$parentSlotHover">
 				<Size><AbsDimension x="24" y="24"/></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentShare" relativePoint="TOPLEFT"><Offset><AbsDimension x="300" y="0"/></Offset></Anchor></Anchors>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBagSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="230" y="0"/></Offset></Anchor></Anchors>
 				<HitRectInsets><AbsInset top="0" left="8" bottom="8" right="0"/></HitRectInsets>
 				<Layers><Layer level="OVERLAY"><FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Numbers on mouseover only"><Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="6"/></Offset></Anchor></Anchors></FontString></Layer></Layers>
 				<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/><PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
@@ -245,7 +255,7 @@
 			</CheckButton>
 			<Button name="$parentReset" inherits="UIPanelButtonTemplate" text="Reset bag positions">
 				<Size><AbsDimension x="140" y="22"/></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentBankSlots" relativePoint="TOPLEFT"><Offset><AbsDimension x="300" y="0"/></Offset></Anchor></Anchors>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentShare" relativePoint="TOPLEFT"><Offset><AbsDimension x="300" y="0"/></Offset></Anchor></Anchors>
 				<Scripts>
 					<OnClick>zBagKit.OnConfigClick("resetpos");</OnClick>
 					<OnEnter>zBagKit.ShowTooltip(this, "resetpos");</OnEnter>

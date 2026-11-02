@@ -55,8 +55,18 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
     $steam = $false
     $bag = New-Object 'System.Collections.Generic.List[object]'
     $bank = New-Object 'System.Collections.Generic.List[object]'
+    # What's worn, once a version that reads it has saved: W~count, then E~slot~count~slotName~name~icon~dura~maxDura~quality
+    $equip = $null
     for ($i = 1; $i -lt $records.Count; $i++) {
         $f = $records[$i].Split([char]'~')
+        if ($f[0] -ceq 'W') { if ($null -eq $equip) { $equip = New-Object 'System.Collections.Generic.List[object]' }; continue }
+        if ($f[0] -ceq 'E') {
+            if ($null -ne $equip -and $f.Count -ge 9) {
+                $equip.Add([pscustomobject]@{ Slot = ConvertTo-GBNumber $f[1]; Count = [Math]::Max([int64]1, (ConvertTo-GBNumber $f[2])); Where = $f[3]
+                    Name = ConvertTo-GBText $f[4]; Icon = $f[5]; Dura = ConvertTo-GBNumber $f[6]; MaxDura = ConvertTo-GBNumber $f[7]; Quality = ConvertTo-GBNumber $f[8] })
+            }
+            continue
+        }
         if ($f.Count -ge 3 -and $f[0] -eq 'C' -and $f[1] -and (ConvertTo-GBNumber $f[2]) -gt 0) {
             $classes.Add([pscustomobject]@{ Name = ConvertTo-GBText $f[1]; Level = ConvertTo-GBNumber $f[2] })
             continue
@@ -118,6 +128,7 @@ function ConvertFrom-GBSnapshot([string]$snapshot, [string]$saved) {
         Items     = $bag.Count + $bank.Count
         Bag       = $bag
         Bank      = $bank
+        Equip     = $(if ($null -ne $equip) { ,@($equip.ToArray()) } else { $null })
     }
 }
 
@@ -290,6 +301,35 @@ function ConvertTo-GBTipTable([string]$records) {
     return $table
 }
 
+# One character's GlobalBank_Mail as JSON: what its mailbox held when last open, and the mail it sent, oldest first.
+# {"read": time or 0, "inbox": [{"from","subject","gold","diamonds","cod","items","minutes","unread","returned"}] or null,
+#  "sent": [{"at","to","subject","gold","diamonds","cod","items"}]}. Times are seconds since 1970; minutes are what the
+# game said was left when the mailbox was read.
+function ConvertTo-GBMailJson([string]$records) {
+    if (-not $records) { return 'null' }
+    $read = '0'
+    $inbox = $null
+    $sent = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($record in $records.Split([char]'`')) {
+        $f = $record.Split([char]'~')
+        if ($f[0] -ceq 'I' -and $f.Count -ge 2) {
+            $read = [string](ConvertTo-GBNumber $f[1])
+            $inbox = New-Object 'System.Collections.Generic.List[string]'
+        } elseif ($f[0] -ceq 'N' -and $f.Count -ge 9 -and $null -ne $inbox) {
+            $inbox.Add('{"from":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[1])) + ',"subject":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[2])) +
+                ',"gold":' + (ConvertTo-GBNumber $f[3]) + ',"diamonds":' + (ConvertTo-GBNumber $f[4]) + ',"cod":' + (ConvertTo-GBNumber $f[5]) +
+                ',"items":' + (ConvertTo-GBNumber $f[6]) + ',"minutes":' + (ConvertTo-GBNumber $f[7]) +
+                ',"unread":' + $(if ($f[8].Contains('u')) { 'true' } else { 'false' }) + ',"returned":' + $(if ($f[8].Contains('r')) { 'true' } else { 'false' }) + '}')
+        } elseif ($f[0] -ceq 'O' -and $f.Count -ge 8) {
+            $sent.Add('{"at":' + (ConvertTo-GBNumber $f[1]) + ',"to":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[2])) + ',"subject":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[3])) +
+                ',"gold":' + (ConvertTo-GBNumber $f[4]) + ',"diamonds":' + (ConvertTo-GBNumber $f[5]) + ',"cod":' + (ConvertTo-GBNumber $f[6]) +
+                ',"items":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[7])) + '}')
+        }
+    }
+    $box = if ($null -ne $inbox) { '[' + ($inbox -join ',') + ']' } else { 'null' }
+    return '{"read":' + $read + ',"inbox":' + $box + ',"sent":[' + ($sent -join ',') + ']}'
+}
+
 function Export-GBJson($chars, [string]$path, [string]$made) {
     $rewardsPath = Join-Path (Split-Path -Parent $path) 'DailyRewards.json'
     $rewards = @()
@@ -308,6 +348,10 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
     $tips = @{}
     $savedTips = Read-GBTips (Join-Path (Split-Path -Parent $path) 'GlobalBankTips.txt')
     foreach ($key in $savedTips.Keys) { $tips[(ConvertTo-GBText $key)] = $savedTips[$key] }
+    # Mail is kept the same way: one line for each character
+    $mail = @{}
+    $savedMail = Read-GBTips (Join-Path (Split-Path -Parent $path) 'GlobalBankMail.txt')
+    foreach ($key in $savedMail.Keys) { $mail[(ConvertTo-GBText $key)] = $savedMail[$key] }
     # Looked up by name once, so thousands of characters don't each search every list.
     $rewardsByName = @{}; foreach ($reward in $rewards) { $rewardsByName[[string]$reward.name] = @($rewardsByName[[string]$reward.name]) + @($reward) }
     $linksByName = @{}; foreach ($link in $links) { $linksByName[[string]$link.name] = @($linksByName[[string]$link.name]) + @($link) }
@@ -384,6 +428,24 @@ function Export-GBJson($chars, [string]$path, [string]$made) {
             }
             [void]$sb.Append(']')
         }
+        # What's worn: null until a version that reads it saves this character
+        if ($null -eq $c.Equip) { [void]$sb.Append(',"equip":null') }
+        else {
+            [void]$sb.Append(',"equip":[')
+            $firstWorn = $true
+            foreach ($it in $c.Equip) {
+                if (-not $firstWorn) { [void]$sb.Append(',') }
+                $firstWorn = $false
+                [void]$sb.Append('{"slot":').Append($it.Slot).Append(',"where":').Append((ConvertTo-GBJsonString $it.Where)).Append(',"count":').Append($it.Count)
+                [void]$sb.Append(',"name":').Append((ConvertTo-GBJsonString $it.Name)).Append(',"icon":').Append((ConvertTo-GBJsonString $it.Icon))
+                [void]$sb.Append(',"dura":').Append($it.Dura).Append(',"maxDura":').Append($it.MaxDura).Append(',"quality":').Append($it.Quality)
+                $tip = $tipTable["E" + $it.Slot]
+                if ($tip) { [void]$sb.Append(',"tip":').Append($tip) }
+                [void]$sb.Append('}')
+            }
+            [void]$sb.Append(']')
+        }
+        [void]$sb.Append(',"mail":').Append((ConvertTo-GBMailJson ([string]$(if ($mail.ContainsKey([string]$c.Key)) { $mail[[string]$c.Key] } else { $mail[[string]$c.Name] }))))
         [void]$sb.Append('}')
     }
     [void]$sb.Append("`r`n]}`r`n")

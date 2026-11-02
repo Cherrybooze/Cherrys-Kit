@@ -69,7 +69,8 @@ helper with a visible message; correct its cause and start the helper again.
 
 What it does: it reads Documents\Runes of Magic\<Name>\SaveVariables.lua (written by the game when
 a character logs out) and writes the Global Bank lines from them to Interface\GlobalBankHelper,
-which it creates next to Interface\AddOns. It needs no admin rights and does not use the internet. Character snapshots are read;
+which it creates next to Interface\AddOns. It needs no admin rights and does not use the internet (only the Chrome
+page's Addons buttons do, to read and download Cherry's Kit releases from GitHub). Character snapshots are read;
 only acknowledged AAH outbox assignments are removed with the guards described below.
 
 For your own tools: Interface\GlobalBankHelper\GlobalBank.json holds every character's bags, bank
