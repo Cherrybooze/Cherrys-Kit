@@ -200,6 +200,12 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       const packages = message.packages;
       if (!Array.isArray(packages) || !packages.length || packages.length > 30 || packages.some(name => typeof name !== 'string' || !/^[A-Za-z0-9!_-]{1,64}$/.test(name))) return;
       request.packages = packages;
+      // Switch: the folders the new addon replaces, offloaded once it is installed
+      if (message.offload !== undefined) {
+        const offload = message.offload;
+        if (!Array.isArray(offload) || offload.length > 10 || offload.some(entry => !['kit', 'addons'].includes(entry?.where) || typeof entry.name !== 'string' || !entry.name || entry.name.length > 200)) return;
+        request.offload = offload.map(({where, name}) => ({where, name}));
+      }
     }
     if (['addons-offload', 'addons-restore', 'addons-delete'].includes(message.type)) {
       if (typeof message.name !== 'string' || !message.name || message.name.length > 200) return;

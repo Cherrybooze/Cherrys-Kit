@@ -4,7 +4,7 @@ Written by `tools/curseforge_pages.py` from `release-packages.json`. Run it afte
 
 Every addon needs the hub and lives under `Interface\AddOns\CherrysKit`, because the hub's manifest is what loads it. Each one runs with only the hub: what's listed under **Works with** is missing until you add that addon, and nothing else is. `tests/test_addons_alone.py` runs each one that way on a simulated client, and `tests/test_addon_map.py` fails if an addon reaches for another one that isn't listed here.
 
-If an addon's original, or an older separate copy, is in its own folder in `Interface\AddOns`, that one takes precedence: the kit's version stays off and the hub says so, one line for each, in chat and in its window. Both still load, because the game can't skip a file in a manifest. `!setup_cherryskit.bat` offers to move such folders to `Interface\offloaded_addons`, but only when the kit's own copy is installed.
+If an addon's original, or an older separate copy, is in its own folder in `Interface\AddOns`, that one takes precedence: the kit's version stays off and the hub says so, one line for each, in chat and in its window. Both still load, because the game can't skip a file in a manifest. `!setup_cherryskit.bat` offers to move such folders to `Interface\offloaded_addons`, but only when the kit's own copy is installed. The Global Bank page's Addons page marks them too, with a **Switch with** button that installs the kit's addon if needed and then offloads the old folder.
 
 ## Why everything lives under CherrysKit
 

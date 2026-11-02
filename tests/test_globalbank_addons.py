@@ -51,6 +51,36 @@ class AddonsSourceTests(unittest.TestCase):
         self.assertIn("GetTempPath()", start)
         self.assertIn('-WorkingDirectory $paths.interface', start)
 
+    def test_merged_addons_show_as_replaced(self):
+        # The same reading as Get-AddonsReplaced, on the kit's own KitOrigins.lua.
+        source = ADDONS.read_text(encoding='utf-8')
+        self.assertIn("if ($line -notmatch '^\\s*([A-Za-z0-9_]+) = \\{') { continue }", source)
+        self.assertIn("$owner = if ($line -match 'kit_file = \"([^\"/]+)/') { $Matches[1] } else { $key }", source)
+        self.assertIn("[regex]::Matches($line, 'folder = \"([^\"]+)\"')", source)
+        replaced = {}
+        for line in (ROOT / 'Interface/AddOns/CherrysKit/KitOrigins.lua').read_text(encoding='utf-8').splitlines():
+            key = re.match(r'^\s*([A-Za-z0-9_]+) = \{', line)
+            if key:
+                kit_file = re.search(r'kit_file = "([^"/]+)/', line)
+                owner = kit_file.group(1) if kit_file else key.group(1)
+                for folder in re.findall(r'folder = "([^"]+)"', line):
+                    replaced[folder] = owner
+        for folder in ('pbInfo', 'PortraitHP', 'TooltipIds', 'ExtendedMacroIcons', 'CherrysQuests'):
+            self.assertEqual(replaced.get(folder), 'CherrysInfo', folder)
+        self.assertEqual(replaced.get('CherrysLoginxml'), 'LogNextChar')
+        self.assertEqual(replaced.get('!CherrysLoadTimes'), 'LoadTimes')
+        # A separate copy under the kit's own name is an older one: switching it keeps the kit's.
+        self.assertEqual(replaced.get('zBag'), 'zBag')
+        # Every owner is a kit folder the release can install.
+        kit = ROOT / 'Interface/AddOns/CherrysKit'
+        for owner in set(replaced.values()):
+            # LogNextChar's source sits beside the kit and installs into CherrysKit/LogNextChar.
+            self.assertTrue((kit / owner).is_dir() or (ROOT / 'Interface/AddOns' / owner).is_dir(), owner)
+        # A switch only offloads once the new addon is in place, and never when it was skipped.
+        window = re.search(r'function Invoke-AddonsInstallWindow.*?\n\}', source, re.S).group(0)
+        self.assertLess(window.index('Install-Update $plan'), window.index('Invoke-AddonsOffload'))
+        self.assertIn("if ($offload -and $skipped -gt 0) {", window)
+
     def test_page_is_listed_once_and_loads_its_script(self):
         page = (EXTENSION / 'control.html').read_text(encoding='utf-8')
         self.assertEqual(page.count('data-tab="addons"'), 1)
@@ -102,6 +132,11 @@ assert.equal(by.CherrysGrid.state, 'missing');
 assert.equal(rows.filter(row => row.key === 'KittyCombo').length, 1);
 same(updatable(rows).map(row => row.package), ['Hub', 'zBag']);
 same(otherOffloaded(list).map(entry => entry.id), ['Diyce2', 'zBag']);
+const replacedRows = kitRows(list, {packages: [{package: 'pbInfo', folder: 'pbInfo', title: 'pbInfo', latest: '0.60-ck5', state: 'superseded', by: "Cherry's Info"}]});
+const pb = replacedRows.find(row => row.key === 'pbInfo');
+same(pb.state, 'superseded');
+same(pb.by, "Cherry's Info");
+same(updatable(replacedRows).length, 0);
 same(kitRows({hasKit: false, kit: [], offloaded: []}, null), []);
 ''')
 
@@ -128,6 +163,10 @@ for (const bad of [{type: 'addons-install', packages: ['..\\x']}, {type: 'addons
   assert.notEqual(ask(bad).kept, true, JSON.stringify(bad));
 }
 assert.equal(sent.length, 0);
+ask({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addons', name: 'pbInfo', extra: 1}]});
+same(sent.pop(), {type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addons', name: 'pbInfo'}]});
+assert.notEqual(ask({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'offloaded', name: 'x'}]}).kept, true);
+assert.notEqual(ask({type: 'addons-install', packages: ['CherrysInfo'], offload: 'pbInfo'}).kept, true);
 ask({type: 'addons-delete', where: 'offloaded', name: 'CherrysKit addons/zBag', extra: 'dropped'});
 same(sent.pop(), {type: 'addons-delete', name: 'CherrysKit addons/zBag', where: 'offloaded'});
 ask({type: 'addons-restore', name: 'zBag', where: 'kit'});
@@ -193,6 +232,22 @@ const buttons = item => typeof item === 'string' ? [] : [...(item.tag === 'butto
   buttons(ids['addons-other-rows'].children[0]).find(b => b.textContent === 'Offload').listeners.click({isTrusted: true});
   await flush();
   assert.equal(JSON.stringify(sent.find(m => m.type === 'addons-offload')), JSON.stringify({type: 'addons-offload', where: 'addons', name: 'Diyce'}));
+  // Switch: a separate pbInfo with Cherry's Info installed only moves; with it missing, it installs first.
+  answers['addons-list'] = {...answers['addons-list'], others: [{folder: 'pbInfo', title: 'pbInfo', version: '0.60'}],
+    replaced: {pbInfo: {owner: 'CherrysInfo', title: "Cherry's Info"}}, kit: [{folder: 'zBag', title: 'zBag', version: '5.07-ck18'}, {folder: 'CherrysInfo', title: "Cherry's Info", version: '1.0.3'}]};
+  await ids['addons-refresh'].listeners.click({isTrusted: true});
+  await flush();
+  assert.match(text(ids['addons-other-rows']), /Replaced by Cherry's Info/);
+  buttons(ids['addons-other-rows'].children[0]).find(b => b.textContent === "Switch with Cherry's Info").listeners.click({isTrusted: true});
+  await flush();
+  assert.equal(JSON.stringify(sent.filter(m => m.type !== 'addons-list').at(-1)), JSON.stringify({type: 'addons-offload', where: 'addons', name: 'pbInfo'}));
+  answers['addons-list'].kit = [{folder: 'zBag', title: 'zBag', version: '5.07-ck18'}];
+  answers['addons-check'].packages.push({package: 'CherrysInfo', folder: 'CherrysInfo', title: "Cherry's Info", latest: '1.0.3', state: 'missing', bytes: 1024});
+  await ids['addons-refresh'].listeners.click({isTrusted: true});
+  await flush();
+  buttons(ids['addons-other-rows'].children[0]).find(b => b.textContent === "Switch with Cherry's Info").listeners.click({isTrusted: true});
+  await flush();
+  assert.equal(JSON.stringify(sent.at(-1)), JSON.stringify({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addons', name: 'pbInfo'}]}));
   answers['addons-list'] = {ok: false};
   const failing = context.GBAddons.create(async () => { throw new Error('Invalid reward record'); });
   failing.show();

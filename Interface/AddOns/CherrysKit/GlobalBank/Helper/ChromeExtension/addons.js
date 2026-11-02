@@ -4,7 +4,8 @@
 // The bridge does the work; installs and updates run in a window of their own with the guided setup's checks.
 const GBAddons = (() => {
   const STATE_TEXT = {current: 'Up to date', update: 'Update available', missing: 'Not installed', offloaded: 'Offloaded',
-    newer: 'Newer than the release', unknown: 'Not checked yet', extra: 'Not in the release'};
+    newer: 'Newer than the release', unknown: 'Not checked yet', extra: 'Not in the release', superseded: 'Replaced'};
+  const stateText = row => row.state === 'superseded' && row.by ? `Replaced by ${row.by}` : STATE_TEXT[row.state] || row.state;
   const OLD_BRIDGE = /Invalid reward record|Unknown addons request/;
 
   function el(tag, properties = {}, ...children) {
@@ -31,6 +32,9 @@ const GBAddons = (() => {
     for (const addon of list?.kit || []) {
       const row = {key: addon.folder, title: addon.title || addon.folder, folder: addon.folder, installed: addon.version || '', latest: '',
         state: check ? 'extra' : 'unknown', keep: addon.keep || '', where: 'kit'};
+      // A leftover folder of an addon that was merged into another one
+      const by = replacedBy(list, addon.folder);
+      if (by && by.owner !== addon.folder) Object.assign(row, {state: 'superseded', by: by.title, byPackage: by.owner});
       rows.push(row);
       byFolder.set(addon.folder, row);
     }
@@ -39,12 +43,14 @@ const GBAddons = (() => {
       if (item.package === 'Hub') continue;
       const row = byFolder.get(item.folder);
       if (row) {
-        Object.assign(row, {latest: item.latest, state: item.state, package: item.package, bytes: item.bytes, title: item.title || row.title});
+        Object.assign(row, {latest: item.latest, state: row.state === 'superseded' ? 'superseded' : item.state, by: item.by || row.by || '',
+          byPackage: item.byPackage || row.byPackage || '', package: item.package, bytes: item.bytes, title: item.title || row.title});
         continue;
       }
       const entry = offloaded.get(item.folder);
       rows.push({key: item.folder, title: item.title, folder: item.folder, installed: entry?.version || '', latest: item.latest,
-        state: entry ? 'offloaded' : item.state, package: item.package, bytes: item.bytes, offloaded: entry?.id || item.offloaded || ''});
+        state: entry && item.state !== 'superseded' ? 'offloaded' : item.state, by: item.by || '', byPackage: item.byPackage || '', package: item.package, bytes: item.bytes,
+        offloaded: entry?.id || item.offloaded || ''});
       offloaded.delete(item.folder);
     }
     // Offloaded with no release to compare against yet
@@ -57,6 +63,12 @@ const GBAddons = (() => {
   }
   // What sits in offloaded_addons that isn't a kit addon Global Bank moved there: older copies the setup moved, other addons.
   const otherOffloaded = list => (list?.offloaded || []).filter(entry => entry.from !== 'kit');
+  // What replaced a folder, from the kit's own origin list: {owner: kit folder, title}. Windows names ignore case.
+  function replacedBy(list, folder) {
+    const map = list?.replaced || {};
+    const key = Object.keys(map).find(name => name.toLowerCase() === String(folder).toLowerCase());
+    return key ? map[key] : null;
+  }
   const updatable = rows => rows.filter(row => row.state === 'update' && row.package);
 
   function create(send, {toast = () => {}} = {}) {
@@ -105,6 +117,32 @@ const GBAddons = (() => {
         watchJob();
       } catch (error) { problem(error); }
     }
+    // Switch [old] with [new]: the new one installs first if it isn't here, and only then does the old one move
+    // to offloaded_addons, where Restore brings it back.
+    async function switchTo(row, where, name, owner, title) {
+      if ((list?.kit || []).some(addon => addon.folder === owner)) {
+        if (!window.confirm(`Switch ${name} with ${title}? ${title} is already installed, so ${name} just moves to Interface\\offloaded_addons. Restore brings it back.`)) return;
+        try {
+          await send({type: 'addons-offload', where, name});
+          say(`Switched ${name} with ${title}.${list.gameRunning ? ' The game is running: Reload UI for this to take effect.' : ''}`);
+          await load();
+        } catch (error) { problem(error); }
+        return;
+      }
+      if (!check) await checkNow();
+      if (!check) return;
+      const item = check.packages.find(entry => entry.package === owner && entry.state !== 'superseded');
+      if (!item) {
+        say(`${title} isn’t in the latest release on GitHub (${check.latestKit}) yet, so it can’t be installed from here. Install it from the full kit ZIP, then switch.`);
+        return;
+      }
+      if (!window.confirm(`Switch ${name} with ${title}? This downloads ${title} ${item.latest} (${size(Number(item.bytes) || 0)}) from GitHub in its own window. Once it is installed, ${name} moves to Interface\\offloaded_addons, and Restore brings it back.`)) return;
+      try {
+        await send({type: 'addons-install', packages: [owner], offload: [{where, name}]});
+        say(`Switching ${name} with ${title} in its own window…`);
+        watchJob();
+      } catch (error) { problem(error); }
+    }
     // The install window writes how it went; the page asks until it's done.
     function watchJob() {
       clearTimeout(polling);
@@ -142,6 +180,9 @@ const GBAddons = (() => {
     function kitActions(row) {
       const cell = el('td', {className: 'addons-actions'});
       if (row.state === 'update' && row.package) cell.append(button('Update from GitHub', () => install([row]), {className: 'gb-button--primary gb-button--sm'}));
+      if (row.state === 'superseded' && row.where === 'kit' && row.byPackage) {
+        cell.append(button(`Switch with ${row.by}`, () => switchTo(row, 'kit', row.folder, row.byPackage, row.by), {className: 'gb-button--primary gb-button--sm'}));
+      }
       if (row.state === 'missing' && row.package) cell.append(button('Download and install', () => install([row]), {className: 'gb-button--primary gb-button--sm'}));
       if (row.state === 'offloaded' && row.offloaded) {
         cell.append(button('Restore', () => act('addons-restore', row, 'offloaded', row.offloaded)));
@@ -169,19 +210,22 @@ const GBAddons = (() => {
       all.hidden = updates.length < 2;
       all.textContent = `Update all (${updates.length})`;
       all.onclick = () => install(updates);
-      byId('addons-kit-rows').replaceChildren(...(rows.length ? rows.map(row => el('tr', {className: row.state === 'missing' || row.state === 'offloaded' ? 'is-muted' : ''},
+      byId('addons-kit-rows').replaceChildren(...(rows.length ? rows.map(row => el('tr', {className: ['missing', 'offloaded', 'superseded'].includes(row.state) ? 'is-muted' : ''},
         el('td', {}, el('strong', {textContent: row.title}), row.folder && row.folder !== row.title ? el('div', {className: 'hint', textContent: row.folder}) : null,
           row.note ? el('div', {className: 'hint', textContent: row.note}) : null),
         versionCell(row.installed), versionCell(row.latest),
-        el('td', {}, el('span', {className: `addons-state is-${row.state}`, textContent: STATE_TEXT[row.state] || row.state})),
+        el('td', {}, el('span', {className: `addons-state is-${row.state}`, textContent: stateText(row)})),
         kitActions(row))) : [el('tr', {}, el('td', {colSpan: 5, className: 'hint', textContent: 'Cherry’s Kit is not in this AddOns folder.'}))]));
       const others = list.others || [];
       byId('addons-other-rows').replaceChildren(...(others.length ? others.map(addon => {
         const row = {title: addon.title || addon.folder};
+        const by = replacedBy(list, addon.folder);
         return el('tr', {},
-          el('td', {}, el('strong', {textContent: row.title}), addon.title && addon.title !== addon.folder ? el('div', {className: 'hint', textContent: addon.folder}) : null),
+          el('td', {}, el('strong', {textContent: row.title}), addon.title && addon.title !== addon.folder ? el('div', {className: 'hint', textContent: addon.folder}) : null,
+            by ? el('div', {className: 'addons-state is-update', textContent: `Replaced by ${by.title} in Cherry’s Kit`}) : null),
           versionCell(addon.version),
           el('td', {className: 'addons-actions'},
+            by ? button(`Switch with ${by.title}`, () => switchTo(row, 'addons', addon.folder, by.owner, by.title), {className: 'gb-button--primary gb-button--sm'}) : null,
             button('Offload', () => act('addons-offload', row, 'addons', addon.folder), {title: 'Moves it to Interface\\offloaded_addons; Restore brings it back'}),
             button(addon.link ? 'Remove link' : 'Delete', () => remove(row, 'addons', addon.folder), {className: 'gb-button--ghost gb-button--sm'})));
       }) : [el('tr', {}, el('td', {colSpan: 3, className: 'hint', textContent: 'No other addons.'}))]));
@@ -214,5 +258,5 @@ const GBAddons = (() => {
       },
     };
   }
-  return {create, kitRows, otherOffloaded, updatable};
+  return {create, kitRows, otherOffloaded, updatable, replacedBy};
 })();
