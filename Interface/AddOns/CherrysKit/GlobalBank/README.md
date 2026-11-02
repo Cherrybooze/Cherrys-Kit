@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.1** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.6.2** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,16 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.2
+
+**What each character wears** is recorded at every login and logout (extension 1.3.2). The game gives no link for a worn item, so Global Bank reads each slot's tooltip, as the character window shows it. Worn items join the Bank: **Where** is now **Everywhere** by default, with **Bag and bank** and **Worn** to pick. A character's details open wider, with a **Character profile** laid out like the game's character window: hover a slot for the game's own tooltip, click it to find the item on the Bank page.
+
+**Mail.** Opening a mailbox records what it holds, and every mail a character sends is kept, the newest 360. A new **Mail** page lists the mail waiting in each mailbox, soonest gone first, with a red **!** on mail that goes within 48 hours, and the mail sent. Mail sent to one of your characters after its mailbox was last open counts as on its way, so the gold in mailboxes is an estimate until that mailbox is opened again. The Bank's bottom line says how many mails wait and about how much gold is in them, and the **Gold overview** shows a mailbox after a character's name when gold waits for it.
+
+**Quick filters** in the Bank's search, with commas or spaces between them: *#+1>* finds gear with a plus above 1, *#t10>* a tier above 10, and *#equipped=false* what nobody wears. A slot's tier now reads **T18**, and shows from **T7** up, or the tier you pick under the grid.
+
+**A server picker** after the Characters tile shows all servers, a region, or one server, on every page. The **Gold overview** gives each server a region of its own with its name on top, and **Servers** there leaves a server, or the names, off that map. Hovering a stat's name on **Stats** shows what it does, as on a tier 6 mana stone, from the game's own saved tooltips. Several selected characters get their own lines on the right-click menu: view their bank, copy their names separated by commas, and more. **Copy names** separates them with commas too. Clicking the logo goes back to the Bank with nothing selected or filtered.
 
 ## Updated in 1.6.1
 

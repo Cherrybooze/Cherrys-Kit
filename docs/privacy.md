@@ -12,14 +12,14 @@ Everything the extension reads or saves stays on your own PC. There is no develo
 
 - **The shop's daily loyalty page** (`https://<server>-shop-runesofmagic.gameforge.com/dailies/display/5`): the character name and server shown on the page, and the state of the reward chests. If you tick **Collect the daily reward automatically** in the popup (off by default), it also clicks the available reward for you.
 - **The shop's item depot page**, while you have it open: the item names, counts and picture addresses listed there. It never keeps the page's address, which holds a private sign-in token.
-- **Your game's save files**, through the local helper or through folders you choose on the page: each character's macros and addon settings (shown on the page, and copied to the helper folder as backups), and its bags, bank, gold, currencies and the list of characters on an account, which Global Bank writes into `Documents\Runes of Magic`.
+- **Your game's save files**, through the local helper or through folders you choose on the page: each character's macros and addon settings (shown on the page, and copied to the helper folder as backups), and its bags, bank, gold, currencies, what it wears, what its mailbox held when last open, the mail it sent (recipient, subject, gold and items, the newest 360) and the list of characters on an account, which Global Bank writes into `Documents\Runes of Magic`.
 - **The helper's auction cache**: auction results Advanced AuctionHouse saved while you searched in game.
 
 ## What it keeps, and where
 
 - **Chrome's storage for this extension**, on your PC: your settings, the depot list, and short-lived status text. Only the extension's own pages can read it; scripts on web pages cannot.
 - **Gameforge accounts page (optional)**: if you use it, the account names, passwords, secondary passwords and notes you type are encrypted with AES-GCM before they are saved. The key comes from a password you choose, which is never stored, mixed with a random key kept in Chrome's storage for this extension (PBKDF2 with SHA-256, 600,000 rounds). The encrypted file is saved in Chrome and as `Interface\GlobalBankHelper\GameforgeAccounts.json` on your PC. Without your password it cannot be opened, and it is never sent anywhere.
-- **The helper folder** `Interface\GlobalBankHelper` in your game folder: the combined character data (`GlobalBank.json`, `GlobalBankDatabase.lua`), confirmed daily rewards (`DailyRewards.json`: character, server, day and time), the auction cache, the current time for the game's addons (`CherrysClockStamp.lua`) and the helper's logs.
+- **The helper folder** `Interface\GlobalBankHelper` in your game folder: the combined character data (`GlobalBank.json`, `GlobalBankDatabase.lua`), the game's tooltips and your characters' mail (`GlobalBankTips.txt`, `GlobalBankMail.txt`), confirmed daily rewards (`DailyRewards.json`: character, server, day and time), the auction cache, the current time for the game's addons (`CherrysClockStamp.lua`) and the helper's logs.
 
 ## Permissions
 
