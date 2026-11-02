@@ -24,6 +24,17 @@ Not run on Windows yet: the tests check the page in Node and the bridge's offloa
 | AD13 | Press **Switch to Ultimate Mail Mod**, then Reload UI. | `Mailbox.txt` says `"UMM"`, the zmail folder is in `Interface\offloaded_addons`, and Ultimate Mail Mod is back at the mailbox. Switching to zMail again restores nothing by itself: it installs zMail anew, or use Restore first. |
 | AD9 | Unplug the network and press **Check for updates**. | One line says it couldn't read the release; the lists still work. |
 
+## zMail as the mailbox (zMail 1.4-ck1, hub Mailbox.txt, Global Bank mailbox record)
+
+Not run in the game yet: the tests use a simulated client.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| ZM1 | Install zMail-1.4-ck1.zip into `Interface/AddOns` (it creates `zmail`), leave `CherrysKit/Mailbox.txt` on `"auto"` and log in. Open a mailbox. | zMail's window opens, Ultimate Mail Mod's doesn't. `/ck` shows Ultimate Mail Mod off with "zMail is your mailbox (Mailbox.txt)"; `/umm` says so in chat. |
+| ZM2 | With gold close to the 999,999,999 cap, have a few mails with gold and one with an item. Select all and take. | The item is taken, each gold mail gives the "can't take" line, and the gold mails stay unread with their days left unchanged (30, not 3). |
+| ZM3 | Set `Mailbox = "UMM"` with `zmail` still installed, Reload UI. Then move `zmail` out of AddOns and Reload UI again. | With both loaded, both react to the mailbox (zMail hides Ultimate Mail Mod's window when it opens; note what you see). That's why the setup moves `zmail` out when you pick Ultimate Mail Mod. After moving it out, only Ultimate Mail Mod runs. |
+| ZM4 | With zMail, open the mailbox, wait 3 seconds, log out, then check Global Bank's `GlobalBank_Char` in `SaveVariables.lua`. | It has a `P~mails~gold~itemMails~days~time` record matching the inbox. No mail was opened by Global Bank. |
+
 ## 0.11.115 Guided setup and Cherry's Info
 
 None of this has run in the game yet. The tests use a simulated client, and the setup has run on throwaway game folders.

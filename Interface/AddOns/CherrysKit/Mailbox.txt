@@ -1,0 +1,10 @@
+-- Which mailbox addon Cherry's Kit uses.
+--
+-- "UMM"   Ultimate Mail Mod, the one in the kit (CherrysKit\UltimateMailMod).
+-- "zMail" zMail, in its own folder Interface\AddOns\zmail. Ultimate Mail Mod then stays off.
+-- "auto"  zMail when it is installed, otherwise Ultimate Mail Mod.
+--
+-- !setup_cherryskit.bat and Global Bank's Addons page set this for you. Edited by hand, it applies
+-- after Reload UI. Updates keep your choice.
+
+Mailbox = "auto"

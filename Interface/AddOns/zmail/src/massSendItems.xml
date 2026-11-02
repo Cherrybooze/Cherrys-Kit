@@ -1,0 +1,968 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+    <Frame name="ZMailMassSendItemsTopTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="290" y="26" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="15" y="5" />
+                </Offset>
+            </Anchor>
+            <Anchor point="TOPRIGHT">
+                <Offset>
+                    <AbsDimension x="-20" y="30" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Frames>
+            <Button name="$parentRecipientButton" inherits="UIPanelButtonTemplate" text="> To">
+                <Size>
+                    <AbsDimension x="67" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT">
+                        <Offset>
+                            <AbsDimension x="-4" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        local recipient = _G[this:GetParent():GetName().."Recipient"]
+                        local function x(val) recipient:SetText(val) end 
+                        zmail.ShowRecipientSelection(x, recipient:GetText())
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <EditBox name="$parentRecipient" inherits="UIPanelEditBoxTemplate" historylines="0" letters="1024">
+                <Size>
+                    <AbsDimension x="180" y="25"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentRecipientButton">
+                        <Offset>
+                            <AbsDimension x="2" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnEscapePressed>
+                        this:ClearFocus();
+                    </OnEscapePressed>
+                    <OnTextChanged>
+                        zmail.massSendItems.check()
+                    </OnTextChanged>
+                </Scripts>
+                <TextInsets>
+                    <AbsInset top="4" left="4" bottom="0" right="4"/>
+                </TextInsets>
+                <FontString inherits="GameEditFont" spacing="1"/>
+            </EditBox>
+            <Button name="$parentReset" inherits="UIPanelButtonTemplate" text="> Reset">
+                <Size>
+                    <AbsDimension x="80" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentRecipient">
+                        <Offset>
+                            <AbsDimension x="3" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.massSendItems.reset()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentSend" inherits="UIPanelButtonTemplate" text="x: Send">
+                <Size>
+                    <AbsDimension x="70" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="RIGHT">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.massSendItems.send()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentCOD" inherits="UIPanelButtonTemplate" text="> COD">
+                <Size>
+                    <AbsDimension x="120" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentSend">
+                        <Offset>
+                            <AbsDimension x="-3" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        local bags = ZMailFrameBodyMassSendItemsBags
+                        local extra = ZMailFrameBodyMassSendItemsExtra
+                        if bags:IsVisible() then
+                            bags:Hide()
+                            extra:Show()
+                            this:SetText(GCF_TEXT_BAG)
+                        else
+                            extra:Hide()
+                            bags:Show()
+                            this:SetText(zmail.GetLocaString("CODButton"))
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Frame>
+    <!-- Mass Send Items Templates -->
+    <Button name="ZMailMassSendItemsSlotTemplate" virtual="true" inherits="ItemButtonTemplate">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentQuality" file="Interface\Buttons\QuickSlot-QualityBorder01" hidden="true" alphaMode="ADD">
+					<Size>
+						<AbsDimension x="64" y="64"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture name="$parentInvalid" file="Interface\Buttons\QuickSlot-Red" hidden="true"/>
+			</Layer>
+             <Layer level="ARTWORK">
+                <Texture name="$parentMarkBorder" file="Interface/Addons/ZMail/res/ItemTaggedBorder.tga" alphaMode="BLEND" hidden="true">
+                <Size>
+                    <AbsDimension x="43" y="43"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="CENTER"/>
+                </Anchors>
+                </Texture>
+            </Layer>
+		</Layers>
+        <Scripts>
+            <OnLoad>
+                this:RegisterForClicks("LeftButton", "RightButton");
+            </OnLoad>
+            <OnClick>
+                zmail.massSendItems.bag.SlotOnClick(this, key);
+            </OnClick>
+            <OnEnter>
+                zmail.massSendItems.bag.SlotOnEnter(this)
+            </OnEnter>
+            <OnDragStart>
+                zmail.massSendItems.bag.SlotOnMouseDown(this, key)
+            </OnDragStart>
+            <OnDragStop>
+                zmail.massSendItems.bag.SlotOnMouseUp(this, key)
+            </OnDragStop>
+            <OnLeave>
+				GameTooltip:Hide();
+				GameTooltip1:Hide();
+				GameTooltip2:Hide();
+            </OnLeave>
+        </Scripts>
+    </Button>
+    <Frame name="ZMailMassSendItemsBagTemplate" inherits="UIPanelBackdropFrame" virtual="true">
+        <Size>
+            <AbsDimension x="250" y="210" />
+        </Size>
+        <Frames>
+            <Button name="$parentSlot1" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot2" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot3" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot4" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot5" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot6" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot7" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot8" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot9" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot10" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot11" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot12" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot13" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot14" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot15" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot16" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot17" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot18" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot19" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot20" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot21" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot22" inherits="ZMailMassSendItemsSlotTemplate"/>
+            <Button name="$parentSlot23" inherits="ZMailMassSendItemsSlotTemplate"/>
+            <Button name="$parentSlot24" inherits="ZMailMassSendItemsSlotTemplate"  />
+            <Button name="$parentSlot25" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot26" inherits="ZMailMassSendItemsSlotTemplate"/>
+            <Button name="$parentSlot27" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot28" inherits="ZMailMassSendItemsSlotTemplate" />
+            <Button name="$parentSlot29" inherits="ZMailMassSendItemsSlotTemplate"  />
+            <Button name="$parentSlot30" inherits="ZMailMassSendItemsSlotTemplate"  />
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                UIPanelBackdropFrame_SetTexture(this, "Interface/Common/PanelCommonBorder", 40, 40);
+            </OnLoad>
+        </Scripts>
+    </Frame>
+    <Frame name="ZMailMassSendItemsBagsTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="780" y="470" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="5" y="25" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Frames>
+            <Frame name="$parentBag1" id="1" inherits="ZMailMassSendItemsBagTemplate" />
+            <Frame name="$parentBag2" id="2" inherits="ZMailMassSendItemsBagTemplate" />
+            <Frame name="$parentBag3" id="3" inherits="ZMailMassSendItemsBagTemplate" />
+            <Frame name="$parentBag4" id="4" inherits="ZMailMassSendItemsBagTemplate" />
+            <Frame name="$parentBag5" id="5" inherits="ZMailMassSendItemsBagTemplate" />
+            <Frame name="$parentBag6" id="6" inherits="ZMailMassSendItemsBagTemplate" />
+        </Frames>
+        <Scripts>
+            <OnLoad>
+               zmail.massSendItems.bag.OnLoad(this);
+            </OnLoad>
+        </Scripts>
+    </Frame>
+    <!-- Item Mark Buttons -->
+    <Button name="ZMailMassSendItemsMarkButtonTemplate" inherits="UIPanelButtonTemplate" hidden="true" virtual="true">
+        <Size>
+            <AbsDimension x="69" y="22"/>
+        </Size>
+        <NormalText inherits="GameFontNormal">
+			<Size>
+				<AbsDimension x="65" y="16"/>
+			</Size>
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="-1" y="-1"/>
+					</Offset>					
+				</Anchor>
+			</Anchors>
+		</NormalText>
+        <DisabledText inherits="GameFontDisable">
+			<Size>
+				<AbsDimension x="65" y="16"/>
+			</Size>
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="-1" y="-1"/>
+					</Offset>					
+				</Anchor>
+			</Anchors>
+		</DisabledText>
+		<HighlightText inherits="GameFontHighlight">
+			<Size>
+				<AbsDimension x="65" y="16"/>
+			</Size>
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="-1" y="0"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</HighlightText>
+        <Scripts>
+            <OnLoad>
+                this:RegisterForClicks("LeftButton", "RightButton")
+            </OnLoad>
+            <OnClick>
+                zmail.massSendItems.mark.OnClick(this, key);
+            </OnClick>
+            <OnEnter>
+                zmail.massSendItems.mark.OnEnter(this);
+            </OnEnter>
+            <OnLeave>
+                GameTooltip:Hide()
+            </OnLeave>
+            <OnMouseWheel>
+                zmail.massSendItems.mark.OnMouseWheel(this, delta);
+            </OnMouseWheel>
+        </Scripts>
+    </Button>
+    <Frame name="ZMailMassSendItemsMarkButtonsTemplate" enableMouse="true" virtual="true">
+        <Size>
+            <AbsDimension x="760" y="43" />
+        </Size>
+        <Anchors>
+            <Anchor point="BOTTOMLEFT">
+                <Offset>
+                    <AbsDimension x="10" y="-5" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentLabel" inherits="GameTitleFont" text="" justifyH="CENTER" justifyV="MIDDLE">
+                    <Size>
+                        <AbsDimension x="50" y="30" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset>
+                                <AbsDimension x="-12" y="-1" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentUp" id="-1">
+                <Size>
+                    <AbsDimension x="16" y="16" />
+                </Size>
+                <Anchors>
+                    <Anchor point="RIGHT">
+                        <Offset>
+                            <AbsDimension x="-10" y="-12" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+		        <NormalTexture file="interface\chatframe\chatframe-scrollbar-buttonup"/>
+                <Scripts>
+                    <OnClick>
+                        zmail.massSendItems.mark.UpDown_OnClick(this)
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentDown"  id="1">
+                <Size>
+                    <AbsDimension x="16" y="16" />
+                </Size>
+                <Anchors>
+                    <Anchor point="RIGHT">
+                        <Offset>
+                            <AbsDimension x="-10" y="10" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+		        <NormalTexture file="interface\chatframe\chatframe-scrollbar-buttondown"/>
+                <Scripts>
+                    <OnClick>
+                        zmail.massSendItems.mark.UpDown_OnClick(this)
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentButton1" inherits="ZMailMassSendItemsMarkButtonTemplate" id="1" />
+            <Button name="$parentButton2" inherits="ZMailMassSendItemsMarkButtonTemplate" id="2" />
+            <Button name="$parentButton3" inherits="ZMailMassSendItemsMarkButtonTemplate" id="3" />
+            <Button name="$parentButton4" inherits="ZMailMassSendItemsMarkButtonTemplate" id="4" />
+            <Button name="$parentButton5" inherits="ZMailMassSendItemsMarkButtonTemplate" id="5" />
+            <Button name="$parentButton6" inherits="ZMailMassSendItemsMarkButtonTemplate" id="6" />
+            <Button name="$parentButton7" inherits="ZMailMassSendItemsMarkButtonTemplate" id="7" />
+            <Button name="$parentButton8" inherits="ZMailMassSendItemsMarkButtonTemplate" id="8" />
+            <Button name="$parentButton9" inherits="ZMailMassSendItemsMarkButtonTemplate" id="9" />
+            <Button name="$parentButton10" inherits="ZMailMassSendItemsMarkButtonTemplate" id="10" />
+            <Button name="$parentButton11" inherits="ZMailMassSendItemsMarkButtonTemplate" id="11" />
+            <Button name="$parentButton12" inherits="ZMailMassSendItemsMarkButtonTemplate" id="12" />
+            <Button name="$parentButton13" inherits="ZMailMassSendItemsMarkButtonTemplate" id="13" />
+            <Button name="$parentButton14" inherits="ZMailMassSendItemsMarkButtonTemplate" id="14" />
+            <Button name="$parentButton15" inherits="ZMailMassSendItemsMarkButtonTemplate" id="15" />
+            <Button name="$parentButton16" inherits="ZMailMassSendItemsMarkButtonTemplate" id="16" />
+            <Button name="$parentButton17" inherits="ZMailMassSendItemsMarkButtonTemplate" id="17" />
+            <Button name="$parentButton18" inherits="ZMailMassSendItemsMarkButtonTemplate" id="18" />
+            <Button name="$parentButton19" inherits="ZMailMassSendItemsMarkButtonTemplate" id="19" />
+            <Button name="$parentButton20" inherits="ZMailMassSendItemsMarkButtonTemplate" id="20" />
+            <Frame name="$parentDropdown" inherits="UIDropDownMenuTemplate" hidden="true"/>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                zmail.massSendItems.mark.ButtonsOnLoad(this);
+            </OnLoad>
+            <OnMouseWheel>
+                zmail.massSendItems.mark.OnMouseWheel(this, delta);
+            </OnMouseWheel>
+        </Scripts>
+    </Frame>
+    <!-- COD Frame -->
+    <Button name="ZMailFrameCODButtonTemplate" virtual="true">
+        <Backdrop tile="true" bgFile="Interface\ChatFrame\ChatMessageFrame-bg">
+            <TileSize>
+                <AbsValue val="8"/>
+            </TileSize>
+        </Backdrop>
+        <Size>
+            <AbsDimension x="410" y="25" />
+        </Size>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentHighlight"  file="Interface\Buttons\ListItemHighlight" hidden="true" alphaMode="ADD"/>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString name="$parentItem" inherits="GameTitleFont" text="">
+                    <FontHeight>
+                        <AbsValue val="13"/>
+                    </FontHeight>
+                    <Anchors>
+                        <Anchor point="LEFT">
+                            <Offset>
+                                <AbsDimension x="30" y="0"/>
+                            </Offset>
+                        </Anchor>
+                        <Anchor point="RIGHT">
+                            <Offset>
+                                <AbsDimension x="-115" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentIcon">
+                <Size>
+                    <AbsDimension x="22" y="22" />
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT">
+                        <Offset>
+                            <AbsDimension x="2" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\Buttons\QuickSlot-Normal">
+                            <Size>
+                                <AbsDimension x="44" y="44"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER"/>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="BORDER">
+                        <Texture name="$parentIcon">
+                            <Size>
+                                <AbsDimension x="22" y="22"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER"/>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="OVERLAY">
+                        <Texture name="$parentQuality" file="Interface\Buttons\QuickSlot-QualityBorder01" hidden="true" alphaMode="ADD">
+                            <Size>
+                                <AbsDimension x="44" y="44"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="CENTER"/>
+                            </Anchors>
+                        </Texture>
+                        <FontString name="$parentCount" inherits="NumberFontNormal" justifyH="RIGHT" hidden="true">
+                            <FontHeight>
+                                <AbsValue val="12"/>
+                            </FontHeight>
+                            <Anchors>
+                                <Anchor point="BOTTOMRIGHT">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+		        <HighlightTexture file="Interface\Buttons\QuickSlot-Highlight" alphaMode="ADD"/>
+                <Scripts>
+                    <OnEnter>
+                        zmail.massSendItems.cod.ItemOnEnter(this)
+                        _G[this:GetParent():GetName().."Highlight"]:Show()
+                    </OnEnter>
+                    <OnLeave>
+                        _G[this:GetParent():GetName().."Highlight"]:Hide()
+                        GameTooltip:Hide()
+                    </OnLeave>
+                    <OnMouseWheel>
+                        zmail.massSendItems.cod.OnMouseWheel(delta)
+                    </OnMouseWheel>
+                    <OnClick>
+                        _G[this:GetParent():GetName().."Money"]:SetFocus()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <EditBox name="$parentMoney" inherits="MoneyEditBoxTemplate" letters="9" historylines="0" numeric="true" hidden="true">
+                <Size>
+                    <AbsDimension x="90" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="RIGHT">
+                        <Offset>
+                            <AbsDimension x="-20" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                            <Size>
+                                <AbsDimension x="16" y="16" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="RIGHT">
+                                    <Offset>
+                                        <AbsDimension x="2" y="0" />
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEnter>
+                        _G[this:GetParent():GetName().."Highlight"]:Show()
+                    </OnEnter>
+                    <OnLeave>
+                        _G[this:GetParent():GetName().."Highlight"]:Hide()
+                    </OnLeave>
+                    <OnEscapePressed>
+                        this:ClearFocus();
+                    </OnEscapePressed>
+                    <OnEnterPressed>
+                        this:ClearFocus();
+                    </OnEnterPressed>
+                    <OnEditFocusLost>
+                        this:Hide()
+                        local moneyformatted = _G[this:GetParent():GetName().."MoneyFormatted"]
+                        moneyformatted:Show()
+                        moneyformatted:SetText(zmail.FormatNumber(this:GetText()))
+                    </OnEditFocusLost>
+                    <OnTextChanged>
+                        zmail.massSendItems.cod.assign(this:GetParent():GetID(), tonumber(this:GetText()) or 0)
+                    </OnTextChanged>
+                </Scripts>
+                <TextInsets>
+                    <AbsInset top="4" left="4" bottom="4" right="4"/>
+                </TextInsets>
+                <FontString inherits="NumberFontNormal" spacing="1"/>
+            </EditBox>
+            <EditBox name="$parentMoneyFormatted" inherits="MoneyEditBoxTemplate" letters="11" historylines="0" text="0">
+                <Size>
+                    <AbsDimension x="90" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="RIGHT">
+                        <Offset>
+                            <AbsDimension x="-20" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                            <Size>
+                                <AbsDimension x="16" y="16" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="RIGHT">
+                                    <Offset>
+                                        <AbsDimension x="2" y="0" />
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEditFocusGained>
+                        local money = _G[this:GetParent():GetName().."Money"]
+                        this:Hide()
+                        money:Show()
+                        money:SetFocus()
+                    </OnEditFocusGained>
+                </Scripts>
+                <TextInsets>
+                    <AbsInset top="4" left="4" bottom="4" right="4"/>
+                </TextInsets>
+                <FontString inherits="NumberFontNormal" spacing="1"/>
+            </EditBox>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                this:RegisterForClicks("LeftButton", "RightButton")
+            </OnLoad>
+            <OnClick>
+                if key == "RBUTTON" then
+                    _G[this:GetName().."Money"]:SetText("0")
+                else
+                    _G[this:GetName().."Money"]:SetFocus()
+                end
+            </OnClick>
+            <OnMouseWheel>
+                zmail.massSendItems.cod.OnMouseWheel(delta)
+            </OnMouseWheel>
+            <OnEnter>
+                _G[this:GetName().."Highlight"]:Show()
+            </OnEnter>
+            <OnLeave>
+                _G[this:GetName().."Highlight"]:Hide()
+            </OnLeave>
+        </Scripts>
+    </Button>
+    <Frame name="ZMailMassSendItemsCODTemplate" inherits="ZMailFrameBackdropTemplate" enableMouse="true" virtual="true">
+        <Size>
+            <AbsDimension x="435" y="490" />
+        </Size>
+        <Frames>
+            <EditBox name="$parentMoney" inherits="MoneyEditBoxTemplate" letters="9" historylines="0" numeric="true">
+                <Size>
+                    <AbsDimension x="90" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="15" y="15"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                            <Size>
+                                <AbsDimension x="16" y="16" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="RIGHT">
+                                    <Offset>
+                                        <AbsDimension x="2" y="0" />
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEscapePressed>
+                        this:ClearFocus();
+                    </OnEscapePressed>
+                    <OnEnterPressed>
+                        this:ClearFocus();
+                        zmail.massSendItems.cod.MulitAssignOnClick()
+                    </OnEnterPressed>
+                    <OnEditFocusLost>
+                        this:Hide()
+                        local moneyformatted = _G[this:GetParent():GetName().."MoneyFormatted"]
+                        moneyformatted:Show()
+                        moneyformatted:SetText(zmail.FormatNumber(this:GetText()))
+                    </OnEditFocusLost>
+                </Scripts>
+                <TextInsets>
+                    <AbsInset top="4" left="4" bottom="4" right="4"/>
+                </TextInsets>
+                <FontString inherits="NumberFontNormal" spacing="1"/>
+            </EditBox>
+            <EditBox name="$parentMoneyFormatted" inherits="MoneyEditBoxTemplate" letters="11" historylines="0" text="0">
+                <Size>
+                    <AbsDimension x="90" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="15" y="15"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentGoldCoin" file="interface/moneyframe/moneyicons.tga">
+                            <Size>
+                                <AbsDimension x="16" y="16" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="RIGHT">
+                                    <Offset>
+                                        <AbsDimension x="2" y="0" />
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                            <TexCoords top="0" left="0" bottom="1" right="0.03125"></TexCoords>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEditFocusGained>
+                        local money = _G[this:GetParent():GetName().."Money"]
+                        this:Hide()
+                        money:Show()
+                        money:SetFocus()
+                    </OnEditFocusGained>
+                </Scripts>
+                <TextInsets>
+                    <AbsInset top="4" left="4" bottom="4" right="4"/>
+                </TextInsets>
+                <FontString inherits="NumberFontNormal" spacing="1"/>
+            </EditBox>
+            <Button name="$parentMultiAssign" inherits="UIPanelButtonTemplate" text="x: Assign">
+                <Size>
+                    <AbsDimension x="80" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentMoney">
+                        <Offset>
+                            <AbsDimension x="24" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.massSendItems.cod.MulitAssignOnClick()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentReset" inherits="UIPanelButtonTemplate" text="x: Reset">
+                <Size>
+                    <AbsDimension x="80" y="24"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentMultiAssign">
+                        <Offset>
+                            <AbsDimension x="5" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        zmail.massSendItems.cod.multiAssign(0)
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Frame name="$parentList">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="0" y="30" />
+                        </Offset>
+                    </Anchor>
+                    <Anchor point="BOTTOMRIGHT"/>
+                </Anchors>
+                <Frames>
+                    <Button name="$parent1" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent2" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent3" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent4" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent5" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent6" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent7" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent8" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent9" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent10" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent11" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent12" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent13" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent14" inherits="ZMailFrameCODButtonTemplate" />
+                    <Button name="$parent15" inherits="ZMailFrameCODButtonTemplate" />
+                    <Slider name="$parentScroll" inherits="UIPanelScrollBarTemplate" >
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeTo="$parent">
+                                <Offset>
+                                    <AbsDimension x="-7" y="26"/>
+                                </Offset>
+                            </Anchor>
+                            <Anchor point="BOTTOMRIGHT" relativeTo="$parent">
+                                <Offset>
+                                    <AbsDimension x="-7" y="-32"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnLoad>
+                                this:SetValueStepMode("INT");
+                            </OnLoad>
+                            
+                            <OnValueChanged>
+                                UIPanelScrollBar_OnValueChanged(this, arg1);
+                                zmail.massSendItems.cod.Update();
+                            </OnValueChanged>
+                        </Scripts>
+                    </Slider>
+                </Frames>
+            </Frame>
+        </Frames>
+    </Frame>
+ 
+    <Frame name="ZMailMassSendItemsExtraTemplate" virtual="true">
+        <Size>
+            <AbsDimension x="780" y="470" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="10" y="30" />
+                </Offset>
+            </Anchor>
+            <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT">
+                <Offset>
+                    <AbsDimension x="-15" y="-55" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Frames>
+            <Frame name="$parentOther">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parent"/>
+                    <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="-50" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <Frame name="$parentTransmutor" inherits="ZMailFrameBackdropTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parent"/>
+                            <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT">
+                                <Offset>
+                                    <AbsDimension x="0" y="110" />
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Frames>
+                            <Button name="$parentSlot1" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot2" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot3" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot4" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot5" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot6" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot7" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot8" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot9" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot10" inherits="ZMailMassSendItemsSlotTemplate" />
+                        </Frames>
+                    </Frame>
+                    <Frame name="$parentItemshop" inherits="ZMailFrameBackdropTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parent">
+                                <Offset>
+                                    <AbsDimension x="0" y="110" />
+                                </Offset>
+                            </Anchor>
+                            <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"/>
+                        </Anchors>
+                        <Frames>
+                            <Button name="$parentSlot1" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot2" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot3" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot4" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot5" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot6" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot7" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot8" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot9" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot10" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot11" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot12" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot13" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot14" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot15" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot16" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot17" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot18" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot19" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot20" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot21" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot22" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot23" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot24" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot25" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot26" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot27" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot28" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot29" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot30" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot31" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot32" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot33" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot34" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot35" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot36" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot37" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot38" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot39" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot40" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot41" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot42" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot43" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot44" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot45" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot46" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot47" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot48" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot49" inherits="ZMailMassSendItemsSlotTemplate" />
+                            <Button name="$parentSlot50" inherits="ZMailMassSendItemsSlotTemplate" />
+                        </Frames>
+                    </Frame>
+                </Frames>
+            </Frame>
+            <Frame name="$parentCOD" inherits="ZMailMassSendItemsCODTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOP">
+                        <Offset>
+                            <AbsDimension x="-50" y="0" />
+                        </Offset>
+                    </Anchor>
+                    <Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"/>
+                </Anchors>
+            </Frame>
+        </Frames>
+    </Frame>
+    <!-- Main Mass Send Items Template -->
+    <Frame name="ZMailMassSendItemsTemplate" virtual="true" id="3">
+        <Anchors>
+            <Anchor point="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="5" y="0" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Frames>
+            <Frame name="$parentTop" inherits="ZMailMassSendItemsTopTemplate"/>
+            <Frame name="$parentBags" inherits="ZMailMassSendItemsBagsTemplate">
+                <Scripts>
+                    <OnShow>
+                        _G[this:GetParent():GetName().."Extra"]:Hide()
+                    </OnShow>
+                </Scripts>
+            </Frame>
+            <Frame name="$parentMark" inherits="ZMailMassSendItemsMarkButtonsTemplate"/>
+            <Frame name="$parentExtra"  inherits="ZMailMassSendItemsExtraTemplate" hidden="true">
+                <Scripts>
+                    <OnShow>
+                        _G[this:GetParent():GetName().."Bags"]:Hide()
+                    </OnShow>
+                </Scripts>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                zmail.RegisterFrame(this)
+                ZMailFrameBodyMassSendItemsBags:Show()
+            </OnLoad>
+            <OnShow>
+                zmail.massSendItems.OnShow(this);
+            </OnShow>
+        </Scripts>
+    </Frame>
+</Ui>

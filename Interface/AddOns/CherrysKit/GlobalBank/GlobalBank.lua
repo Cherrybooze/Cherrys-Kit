@@ -31,6 +31,9 @@
 --   L~steam    it was last saved from Steam
 --   W~count    its equipment was read, and this many slots hold something; each is then
 --   E~slot~count~slotName~name~icon~durability~maxDurability~quality   (the game gives no link for what's worn)
+--   P~mails~gold~itemMails~days~time   its mailbox as last read: mails, gold waiting (not C.O.D.), mails with
+--              items, days until the first mail holding gold or items expires (-1 for none), and when. Only the
+--              mail list's headers are read, with any mail addon, so no mail is opened (opening cuts it to 3 days).
 
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
@@ -139,6 +142,10 @@ function GB.Serialize(c)
   if c.steam then
     parts[#parts + 1] = "L~steam"
   end
+  if c.mail then
+    local m = c.mail
+    parts[#parts + 1] = table.concat({ "P", tostring(m.mails), tostring(m.gold), tostring(m.items), tostring(m.days), clean(m.when) }, "~")
+  end
   for _, money in ipairs(c.currencies or {}) do
     parts[#parts + 1] = table.concat({ "M", clean(money.key), tostring(money.amount), clean(money.name) }, "~")
   end
@@ -221,6 +228,9 @@ function GB.Parse(text)
     end
     if f[1] == "L" and f[2] == "steam" then
       c.steam = true
+    end
+    if f[1] == "P" and tonumber(f[2]) then
+      c.mail = { mails = tonumber(f[2]), gold = tonumber(f[3]) or 0, items = tonumber(f[4]) or 0, days = tonumber(f[5]) or -1, when = f[6] or "" }
     end
     if f[1] == "M" and f[2] and f[2] ~= "" and tonumber(f[3]) then
       c.currencies[#c.currencies + 1] = { key = f[2], amount = tonumber(f[3]), name = f[4] or "" }
@@ -665,6 +675,7 @@ function GB.Snapshot(withBank, authoritative)
   c.steam = CherrysKit and CherrysKit.IsSteam and CherrysKit.IsSteam() or nil
   c.bag, c.bagMax = GB.ReadBag()
   c.equip = GB.ReadEquipment() or c.equip
+  c.mail = GB.MailboxSummary() or c.mail
   if withBank then
     local bank, max = GB.ReadBank()
     if authoritative or #bank > 0 or (tonumber(max) or 0) > 0 then
@@ -1284,6 +1295,31 @@ function GB.ReadMailbox()
   end
   GB.mailbox = { time = clock(), list = list }
   GB.SaveMail()
+end
+
+-- The mailbox as last read, in short, for the snapshot's P record: mails, gold waiting (not C.O.D.), mails with items,
+-- and days until the first mail holding gold or items expires (-1 for none). nil before any mailbox was read.
+function GB.MailboxSummary()
+  if not GB.mailbox then
+    return nil
+  end
+  local m = { mails = #GB.mailbox.list, gold = 0, items = 0, days = -1 }
+  for _, mail in ipairs(GB.mailbox.list) do
+    m.gold = m.gold + (mail.gold or 0)
+    if (mail.items or 0) > 0 then
+      m.items = m.items + 1
+    end
+    local days = (mail.minutes or 0) / 1440
+    if ((mail.gold or 0) > 0 or (mail.diamonds or 0) > 0 or (mail.items or 0) > 0) and (m.days < 0 or days < m.days) then
+      m.days = days
+    end
+  end
+  if m.days >= 0 then
+    m.days = math.floor(m.days * 10 + 0.5) / 10
+  end
+  local ok, when = pcall(os.date, "%Y-%m-%d %H:%M", GB.mailbox.time)
+  m.when = ok and type(when) == "string" and when or ""
+  return m
 end
 
 -- SendMail itself carries no money: the game's window and mail addons set it just before.
