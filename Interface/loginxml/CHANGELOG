@@ -1,3 +1,7 @@
+LogNextChar 1.3.3
+- Next and Prev wait for the whole character list before picking, start from the character left by name, and hold the pick until the login starts, so the game's own late selection can't leave you on the character screen.
+- A cancelled logout drops the queued switch in game.
+
 LogNextChar 1.3.2
 - The character screen shows Arcane Transmutor charges under gold, as Charges: #, from Global Bank's data.
 

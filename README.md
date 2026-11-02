@@ -124,9 +124,9 @@ This one isn't in the full kit: extract it into `Interface/AddOns/` as usual. It
 
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character, with its own login screen: gets past a stuck server list, saved logins, keyboard controls, and each character's gold with Global Bank. The guided setup puts the login screen in place, or run its `Install login screen.bat` once. | `/lnc` | 1.3.2 |
+| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character, with its own login screen: gets past a stuck server list, saved logins, keyboard controls, and each character's gold with Global Bank. The guided setup puts the login screen in place, or run its `Install login screen.bat` once. | `/lnc` | 1.3.3 |
 
-Download it from this build: [LogNextChar-1.3.2.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/LogNextChar-1.3.2.zip).
+Download it from this build: [LogNextChar-1.3.3.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/LogNextChar-1.3.3.zip).
 
 ## Optional Chrome extension
 

@@ -8,15 +8,96 @@ from lupa.lua51 import LuaRuntime
 from lua_env import ROOT, login_screen, lua_list, run_file
 
 
+def tick(lua, seconds, step=0.25):
+    for _ in range(int(round(seconds / step))):
+        lua.execute(f"login.charselect.onUpdate({{}}, {step})")
+
+
 class CampNextTest(unittest.TestCase):
+    # As the client does it on the way back: the last played character selected, then the list event
     def relog(self, mode, start, target="nil", seconds=10):
         lua = login_screen()
-        lua.execute("login.charselect.updateCharacterList()")
-        lua.execute(f"login.charselect.UPDATE_SELECTED_CHARACTER({start})")
         lua.execute(f'LOGCHAR_FLAG = 1; LOGCHAR_MODE = "{mode}"; LOGCHAR_TARGET = {target}')
-        for _ in range(int(seconds / 0.25)):
-            lua.execute("login.charselect.onUpdate({}, 0.25)")
+        tick(lua, 0.5)
+        lua.execute(f"login.charselect.UPDATE_SELECTED_CHARACTER({start})")
+        lua.execute("login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, seconds)
         return lua, lua_list(lua.eval("entered"))
+
+    def test_waits_for_the_whole_list_before_picking(self):
+        # The screen still holds an older selection (1), and the client adds characters
+        # one at a time before it selects the last played one (3) and sends the list.
+        lua = login_screen()
+        lua.execute("full = chars; chars = {full[1], full[2]}; login.charselect.selected = 1")
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"')
+        tick(lua, 2)
+        self.assertEqual(lua.eval("login.campnext.targetIndex"), None)
+        lua.execute("chars = full; login.charselect.UPDATE_SELECTED_CHARACTER(3)")
+        lua.execute("login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, 5)
+        self.assertEqual(lua_list(lua.eval("entered")), [1])  # after 3 comes 1
+
+    def test_a_late_selection_from_the_client_does_not_stop_the_login(self):
+        lua = login_screen()
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"')
+        lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(1); login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, 2)
+        self.assertEqual(lua.eval("login.campnext.entering"), "Bb")
+        lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(1)")  # the client selecting on its own
+        tick(lua, 3)
+        self.assertEqual(lua_list(lua.eval("entered")), [2])
+        self.assertEqual(lua.eval("login.campnext.armed"), 0)
+
+    def test_starts_from_the_character_it_left_by_name(self):
+        lua = login_screen()
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "prev"; LOGCHAR_FROM = "Cc"')
+        lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(1); login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, 5)
+        self.assertEqual(lua_list(lua.eval("entered")), [2])
+        self.assertIsNone(lua.eval("LOGCHAR_FROM"))
+
+    def test_an_unknown_name_falls_back_to_the_selection(self):
+        lua = login_screen()
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"; LOGCHAR_FROM = "Gone"')
+        lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(2); login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, 5)
+        self.assertEqual(lua_list(lua.eval("entered")), [3])
+
+    def test_goes_on_without_the_list_event(self):
+        lua = login_screen()
+        lua.execute("login.charselect.updateCharacterList(); login.charselect.UPDATE_SELECTED_CHARACTER(1)")
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"')
+        tick(lua, 5)
+        self.assertEqual(lua_list(lua.eval("entered")), [])
+        tick(lua, 5)
+        self.assertEqual(lua_list(lua.eval("entered")), [2])
+
+    def test_a_slow_list_still_leaves_time_to_switch(self):
+        lua = login_screen()
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"; chars_backup = chars; chars = {}')
+        tick(lua, 5.5)
+        lua.execute("chars = chars_backup")
+        lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(2); login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, 9)
+        self.assertEqual(lua_list(lua.eval("entered")), [3])
+
+    def test_a_click_while_it_waits_to_log_in_wins(self):
+        lua = login_screen()
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"')
+        lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(1); login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, 2)
+        lua.execute("login.charselect.charactersOnClick(LoginCharSelectFrame_chars, false, 3)")
+        tick(lua, 3)
+        self.assertEqual(lua_list(lua.eval("entered")), [])
+        self.assertEqual(lua.eval("login.charselect.selected"), lua.eval("login.charselect.charlist[3].index"))
+        self.assertEqual(lua.eval("login.campnext.armed"), 0)
+
+    def test_the_debug_command_needs_no_list_event(self):
+        lua = login_screen()
+        lua.execute("login.charselect.updateCharacterList(); login.charselect.UPDATE_SELECTED_CHARACTER(3)")
+        lua.execute('login.campnext.activate("prev")')
+        tick(lua, 3)
+        self.assertEqual(lua_list(lua.eval("entered")), [2])
 
     def test_next_and_prev_wrap_around(self):
         self.assertEqual(self.relog("next", 2)[1], [3])
@@ -212,6 +293,16 @@ class GlobalBankOnLoginScreenTest(unittest.TestCase):
         lua = self.screen()
         lua.execute("FILES['interface/GlobalBankHelper/GlobalBankDatabase.lua'] = function() error('broken') end")
         self.assertFalse(lua.eval("login.globalbank.read()"))
+
+    def test_odd_entries_are_skipped(self):
+        lua = self.screen()
+        lua.execute("""
+          FILES['interface/GlobalBankHelper/GlobalBankDatabase.lua'] = function()
+            GlobalBank_Import = {7, "text", {s = "GB1~Aa~Warrior~10~1234~0~0~0~today`S~Server"}}
+          end
+        """)
+        self.assertTrue(lua.eval("login.globalbank.read()"))
+        self.assertEqual(lua.eval("login.globalbank.character('Aa').gold"), 1234)
 
 
 class ServerListRetryTest(unittest.TestCase):

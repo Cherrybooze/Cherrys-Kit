@@ -127,6 +127,27 @@ class ButtonTest(unittest.TestCase):
         press(lua, "LogNextCharBarPrev")
         self.assertEqual(lua.eval("LOGCHAR_MODE"), "prev")
 
+    def test_says_which_character_it_left(self):
+        lua = in_game('function UnitName(unit) return unit == "player" and "Bb" or nil end')
+        press(lua, "LogNextCharBarNext")
+        self.assertEqual(lua.eval("LOGCHAR_FROM"), "Bb")
+
+    def test_a_cancelled_logout_drops_the_switch(self):
+        lua = in_game()
+        press(lua, "LogNextCharBarPrev")
+        lua.execute('LogNextChar.OnEvent("FORCE_DIALOG_HIDE")')  # cancelled, moved, or the client's 20 s
+        self.assertEqual((lua.eval("LOGCHAR_FLAG"), lua.eval("LOGCHAR_MODE")), (0, None))
+        self.assertIn("cancelled", lua_list(lua.eval("chat"))[-1])
+        press(lua, "LogNextCharBarNext")
+        self.assertEqual((lua.eval("LOGCHAR_FLAG"), lua.eval("LOGCHAR_MODE"), lua.eval("logouts")), (1, "next", 2))
+
+    def test_other_dialogs_closing_leave_it_alone(self):
+        lua = in_game()
+        before = len(lua_list(lua.eval("chat")))
+        lua.execute('LogNextChar.OnEvent("FORCE_DIALOG_HIDE")')
+        self.assertEqual(len(lua_list(lua.eval("chat"))), before)
+        self.assertNotEqual(lua.eval("LOGCHAR_FLAG"), 1)
+
     def test_locked_by_default(self):
         lua = in_game()
         press(lua, "LogNextCharBarNext", "RBUTTON", move=200)
