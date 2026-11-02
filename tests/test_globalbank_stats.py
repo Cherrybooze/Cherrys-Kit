@@ -67,6 +67,18 @@ class StatsPageTests(unittest.TestCase):
 })().catch(error => { console.error(error); process.exit(1); });
 ''')
 
+    def test_high_durability_gear_shows_the_stats_own_value(self):
+        self.run_js(r"""
+const hd = dura => ({stats: ['Demon of the Minotaurs'], stone: false, gear: {dura, maxDura: dura},
+  tip: [['', 'Staff'], ['ffff00', '+' + (393 * dura / 100) + ' Intelligence', 'ffff00', 'Demon of the Minotaurs'], ['ffff00', '+' + (982 * dura / 100) + ' Magical Attack']]});
+// Only on gear at 120 durability: the +20% comes off.
+let known = bank.statEffects([hd(120)]);
+assert.deepEqual([...known.effects.get('Demon of the Minotaurs')], ['+393 Intelligence', '+982 Magical Attack']);
+// Many at 120, one ordinary: the ordinary tooltip wins.
+known = bank.statEffects([hd(120), hd(120), hd(110), {...hd(100), gear: {dura: 100, maxDura: 100}}]);
+assert.deepEqual([...known.effects.get('Demon of the Minotaurs')], ['+393 Intelligence', '+982 Magical Attack']);
+""")
+
     def test_who_has_them_uses_the_same_class_resolver_as_the_tooltip(self):
         self.run_js(r'''
 const root = rootOf();

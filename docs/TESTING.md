@@ -29,6 +29,7 @@ Not run on Windows yet: the tests check the page in Node and the bridge's offloa
 | AD18 | On the Addons page, Offload an addon, Restore it, then Delete an offloaded copy, choosing **Yes** each time Windows asks. Then try one and choose **No**. | Each Yes does its change with no window left open, and the page refreshes. No says administrator permission wasn't given and nothing changed. |
 | AD19 | Run `!setup_cherryskit.bat` as a normal user with the game in `C:\RunesOfMagic`. | It asks once for administrator rights and continues in a new window. Saying No carries on without them when the folder is writable. The login screen step reads your own Documents (savedpath.lua points at your `Documents\Runes of Magic`). |
 | AD20 | Double-click `LogNextChar\Install login screen.bat`. | Windows asks for administrator rights; the login screen installs in the new window, which waits for Enter, and the first window closes by itself. Choosing No installs in the first window as before. |
+| GS6 | Open the Stats page with high-durability (HD, durability above 100) gear saved, such as Demon of the Minotaurs on an HD item. | Each stat shows its own value (e.g. +393 Intelligence, not +471.6), the same as on an ordinary item or a mana stone, in the row and in the hover tooltip. |
 | AD9 | Unplug the network and press **Check for updates**. | One line says it couldn't read the release; the lists still work. |
 
 ## zMail as the mailbox (zMail 1.4-ck1, hub Mailbox.txt, Global Bank mailbox record)
