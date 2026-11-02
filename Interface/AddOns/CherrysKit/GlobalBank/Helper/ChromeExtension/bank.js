@@ -6,7 +6,16 @@
 const GBBank = (() => {
   // The game's own pages: 30 bag slots, 40 bank slots. Bank slots after 200 are the item shop's tab.
   const PER_PAGE = {bag: 30, bank: 40};
-  const PLACE = {bag: 'Bag', bank: 'Bank', shop: 'Item shop tab'};
+  const PLACE = {bag: 'Bag', bank: 'Bank', shop: 'Item shop tab', worn: 'Worn'};
+  // What a character wears, by the slot names the game's character window uses
+  const SLOT_LABELS = {Head: 'Head', Shoulder: 'Shoulders', Chest: 'Chest', Hands: 'Hands', Waist: 'Waist', Feet: 'Feet', Legs: 'Legs', Back: 'Back',
+    MainHand: 'Main hand', SecondaryHand: 'Off hand', Ranged: 'Ranged weapon', Ammo: 'Ammunition', Necklace: 'Necklace', Earring0: 'Earring', Earring1: 'Earring',
+    Ring0: 'Ring', Ring1: 'Ring', Talisman0: 'Talisman', Talisman1: 'Talisman', Talisman2: 'Talisman', Adornment: 'Adornment'};
+  const WORN_TYPES = {MainHand: 'Weapons', SecondaryHand: 'Weapons', Ranged: 'Weapons', Ammo: 'Weapons', Necklace: 'Jewellery', Earring0: 'Jewellery',
+    Earring1: 'Jewellery', Ring0: 'Jewellery', Ring1: 'Jewellery', Talisman0: 'Jewellery', Talisman1: 'Jewellery', Talisman2: 'Jewellery'};
+  const slotLabel = where => SLOT_LABELS[where] || String(where || 'Worn');
+  // A slot's tier mark shows from this tier up, until you pick another
+  const TIER_FROM = 7;
   const SHOP_FROM = 200;
   const MAX_HOLDERS = 10;
   const TYPES = ['Armour', 'Weapons', 'Jewellery', 'Runes', 'Mana stones', 'Potions', 'Materials', 'Recipes', 'Mounts and pets', 'Other'];
@@ -131,11 +140,11 @@ const GBBank = (() => {
     if (hours < 24) return `${hours} h ${minutes % 60} min`;
     return `${Math.floor(hours / 24)} days ${hours % 24} h`;
   }
-  // Characters, stacks and items in all, for the page's status line
+  // Characters, stacks and items in all, for the page's status line, with what they wear
   function totals(characters) {
     let stacks = 0, items = 0;
     for (const character of characters) {
-      for (const place of ['bag', 'bank']) {
+      for (const place of ['bag', 'bank', 'equip']) {
         for (const item of character[place] || []) {
           stacks++;
           items += Number(item.count) || 1;
@@ -144,8 +153,9 @@ const GBBank = (() => {
     }
     return {characters: characters.length, stacks, items};
   }
-  // Bank 45 (page 2, slot 5)
-  function locationLabel(place, slot) {
+  // Bank 45 (page 2, slot 5), or Worn (Main hand)
+  function locationLabel(place, slot, where) {
+    if (place === 'worn') return `Worn (${slotLabel(where)})`;
     if (place === 'bank' && slot > SHOP_FROM) return `Bank ${slot} (item shop tab, slot ${slot - SHOP_FROM})`;
     const perPage = PER_PAGE[place];
     const page = Math.floor((slot - 1) / perPage) + 1;
@@ -154,37 +164,93 @@ const GBBank = (() => {
   function itemKey(entry) {
     return String(entry.id || entry.name);
   }
-  // One row for each stack on each character, with what a search and the filters need worked out once.
+  // A worn item has no link, so what a link would say comes from its tooltip, as the game's character window shows it:
+  // the plus on the first line ("Staff + 12"), a stat's name beside the first line of its effects, and its durability.
+  function wornGear(item) {
+    const tip = Array.isArray(item.tip) ? item.tip : [];
+    const plus = Number(/\+\s*(\d+)\s*$/.exec(String(tip[0]?.[1] || ''))?.[1]) || 0;
+    const stats = tip.filter(line => line[3] && /^[+-]\s*\d/.test(String(line[1] || ''))).map(line => String(line[3]));
+    return {dura: Number(item.dura) || 0, maxDura: Number(item.maxDura) || 0, plus, tier: 0, freeSlots: 0, stats, runes: [],
+      color: /^[0-9a-f]{6}$/i.test(tip[0]?.[0] || '') ? tip[0][0] : '', worn: true};
+  }
+  // One row for each stack on each character, and for each thing it wears, with what a search and the filters need
+  // worked out once. A worn item's ID comes from the same item in someone's bag or bank, when there is one.
   function entries(characters) {
     const list = [];
+    const worn = [];
+    const ids = new Map();
     for (const character of characters) {
       const level = Number(character.level) || 0;
-      for (const place of ['bag', 'bank']) {
+      for (const place of ['bag', 'bank', 'equip']) {
         for (const item of character[place] || []) {
-          const gear = item.gear || null;
+          const onBody = place === 'equip';
+          const gear = onBody ? wornGear(item) : item.gear || null;
           const stats = gear?.stats || item.stats || [];
           const name = String(item.name || 'Unknown item');
           const color = /^[0-9a-f]{6}$/i.test(gear?.color || '') ? gear.color : /^[0-9a-f]{6}$/i.test(item.tip?.[0]?.[0] || '') ? item.tip[0][0] : '';
-          list.push({id: item.id, name, lower: name.toLowerCase(), icon: item.icon, count: Number(item.count) || 1, tier: tierOf(item),
-            type: typeOf(item.id, item.icon), bound: !!item.bound, gear, stats, stone: !!item.stats, tip: item.tip || null, color, quality: qualityOf(color),
-            search: stats.concat(gear?.runes || []).join('\n').toLowerCase(), character: character.name, ch: character, level, place,
-            shop: place === 'bank' && Number(item.slot) > SHOP_FROM, slot: Number(item.slot) || 0});
+          const entry = {id: item.id, name, lower: name.toLowerCase(), icon: item.icon, count: Number(item.count) || 1, tier: tierOf(onBody ? {...item, gear} : item),
+            type: onBody ? WORN_TYPES[item.where] || 'Armour' : typeOf(item.id, item.icon), bound: onBody || !!item.bound, gear, stats, stone: !!item.stats,
+            tip: item.tip || null, color, quality: qualityOf(color), search: stats.concat(gear?.runes || []).join('\n').toLowerCase(), character: character.name,
+            ch: character, level, place: onBody ? 'worn' : place, where: onBody ? String(item.where || '') : '',
+            shop: place === 'bank' && Number(item.slot) > SHOP_FROM, slot: Number(item.slot) || 0};
+          if (onBody) worn.push(entry);
+          else if (/^\d+$/.test(String(item.id || '')) && !ids.has(entry.lower)) ids.set(entry.lower, String(item.id));
+          list.push(entry);
         }
       }
     }
+    for (const entry of worn) entry.id = ids.get(entry.lower) || `n:${entry.name}`;
     return list;
+  }
+  // The plus on a piece of gear, from its link or, for a worn one, its tooltip
+  const plusOf = entry => Number(entry.gear?.plus) || 0;
+  // The quick filters a search can hold, each one word: #+5> (a plus above 5), #+5< and #+5 (exactly), the same with
+  // #t for the tier, and #equipped=true or false (worn by a character, or not). A plus works without its # too. Only
+  // gear has a plus, and only gear and mana stones a tier, so the rest never matches those.
+  const QUICK = /^(?:#?\+(\d{1,2})|#t(\d{1,2}))(>=|<=|>|<|=)?$/i;
+  function quickFilters(text) {
+    const tests = [];
+    const words = [];
+    const all = String(text || '');
+    // Only a search with a quick filter in it is split at its commas: an item's name can have one
+    if (!/(^|[\s,])(#?\+\d|#t\d|#equipped|#worn)/i.test(all)) return {tests, text: all};
+    for (const word of all.split(/[\s,]+/)) {
+      if (!word) continue;
+      const found = QUICK.exec(word);
+      if (found) {
+        const limit = Number(found[1] ?? found[2]);
+        const plus = found[1] !== undefined;
+        const how = found[3] || '=';
+        tests.push(entry => {
+          if (plus ? !entry.gear : !(entry.tier > 0)) return false;
+          const have = plus ? plusOf(entry) : entry.tier;
+          return how === '>' ? have > limit : how === '<' ? have < limit : how === '>=' ? have >= limit : how === '<=' ? have <= limit : have === limit;
+        });
+        continue;
+      }
+      const worn = /^#(?:equipped|worn)(?:=(true|false|yes|no))?$/i.exec(word);
+      if (worn) {
+        const on = !worn[1] || /^(true|yes)$/i.test(worn[1]);
+        tests.push(entry => (entry.place === 'worn') === on);
+        continue;
+      }
+      words.push(word);
+    }
+    return {tests, text: words.join(' ')};
   }
   // The test each item passes to be shown. keep(character) says whether its holder is on the page at all.
   function matcher(filters) {
-    // #clean and #dirty: mana and fusion stones without stats, or with stats, as in zBag. The rest of the search still
-    // applies here, so #dirty wisdom finds stones with wisdom on them.
+    // The quick filters first, then #clean and #dirty: mana and fusion stones without stats, or with stats, as in zBag.
+    // The rest of the search still applies here, so #dirty wisdom finds stones with wisdom on them.
+    const quick = quickFilters(filters.text);
     let stones = '';
-    const text = (filters.text || '').toLowerCase().replace(/(^|\s)#(clean|dirty)(?=\s|$)/g, (all, space, word) => {
+    const text = quick.text.toLowerCase().replace(/(^|[\s,])#(clean|dirty)(?=[\s,]|$)/g, (all, space, word) => {
       stones = word;
       return ' ';
     }).trim();
     const anyStat = names => names.some(name => name.toLowerCase().includes(text));
     return entry => {
+      for (const test of quick.tests) if (!test(entry)) return false;
       if (stones) {
         if (!isStone(entry.id)) return false;
         // A stone saved before stats were recorded could be either, so it only counts once it says it has some
@@ -196,7 +262,8 @@ const GBBank = (() => {
         else if (!(entry.lower ?? entry.name.toLowerCase()).includes(text) && !(entry.search ?? '').includes(text) && !anyStat(entry.stats) && !anyStat(entry.gear?.runes || [])) return false;
       }
       if (filters.type && entry.type !== filters.type) return false;
-      if (filters.place === 'shop' ? !entry.shop : filters.place && entry.place !== filters.place) return false;
+      // '' is everywhere, 'stored' the bag and the bank without what's worn
+      if (filters.place === 'shop' ? !entry.shop : filters.place === 'stored' ? entry.place === 'worn' : filters.place && entry.place !== filters.place) return false;
       if (filters.hidden && filters.hidden.has(entry.character)) return false;
       if (filters.keep && entry.ch && !filters.keep(entry.ch)) return false;
       if (filters.minLevel && entry.level < filters.minLevel) return false;
@@ -285,13 +352,13 @@ const GBBank = (() => {
     }
     return out;
   }
-  // What a slot's corners say about a cell, and the same in words for a screen reader
-  function slotMarks(cell) {
+  // What a slot's corners say about a cell, and the same in words for a screen reader. The tier shows from tierFrom up.
+  function slotMarks(cell, tierFrom = TIER_FROM) {
     if (cell.mixed) return {tier: '', durability: '', plus: '', words: []};
-    const tier = cell.tier > 0 ? String(cell.tier) : '';
+    const tier = cell.tier > 0 && cell.tier >= tierFrom ? `T${cell.tier}` : '';
     const plus = cell.gear?.plus > 0 ? `+${cell.gear.plus}` : '';
     const durability = cell.gear?.dura > HIGH_DURABILITY ? 'HD' : '';
-    return {tier, durability, plus, words: [tier && `tier ${tier}`, plus, durability && 'high durability'].filter(Boolean)};
+    return {tier, durability, plus, words: [tier && `tier ${cell.tier}`, plus, durability && 'high durability'].filter(Boolean)};
   }
   const SORTS = {
     name: (a, b) => a.name.localeCompare(b.name),
@@ -345,19 +412,19 @@ const GBBank = (() => {
     const found = new Map();
     for (const entry of places) {
       const id = entry.ch?.key || entry.character;
-      if (!found.has(id)) found.set(id, {name: entry.character, key: entry.ch?.key || '', server: entry.ch?.shownServer || '', count: 0, at: {bag: [], bank: [], shop: []}});
+      if (!found.has(id)) found.set(id, {name: entry.character, key: entry.ch?.key || '', server: entry.ch?.shownServer || '', count: 0, at: {worn: [], bag: [], bank: [], shop: []}});
       const row = found.get(id);
       row.count += entry.count;
       row.at[entry.shop ? 'shop' : entry.place].push(entry);
     }
     return [...found.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).map(row => {
       const parts = [];
-      for (const place of ['bag', 'bank', 'shop']) {
+      for (const place of ['worn', 'bag', 'bank', 'shop']) {
         const list = row.at[place];
         if (!list.length) continue;
         const count = list.reduce((sum, entry) => sum + entry.count, 0);
-        parts.push(list.length === 1 ? locationLabel(list[0].place, list[0].slot) + (count > 1 ? ` × ${formatNumber(count)}` : '')
-          : `${PLACE[place]} × ${formatNumber(count)} in ${list.length} slots`);
+        parts.push(list.length === 1 ? locationLabel(list[0].place, list[0].slot, list[0].where) + (count > 1 ? ` × ${formatNumber(count)}` : '')
+          : place === 'worn' ? `Worn (${list.map(entry => slotLabel(entry.where)).join(', ')})` : `${PLACE[place]} × ${formatNumber(count)} in ${list.length} slots`);
       }
       return {name: row.name, key: row.key, server: row.server, count: row.count, parts};
     });
@@ -700,22 +767,129 @@ const GBBank = (() => {
     {key: 'total', name: 'How many'},
     {key: 'characters', name: 'Characters'},
   ];
-  // options: {data: {entries}} from the Bank tab, so the stats count the same characters it shows
+  // The template a stat is shown on: a tier 6 mana stone, as the game lists one, in its own colours
+  const TEMPLATE_STONE = '202845';
+  const STONE_EFFECT = 'f0610d';
+  const EFFECT_LINE = /^[+-]\s*\d/;
+  // What each stat does, from the game's own saved tooltips: a stat's name stands beside the first of its effects, and
+  // the rest follow on the lines below. The way most items show a stat wins, a mana stone's counting double.
+  // Returns {effects: Map stat -> [effect lines], header: the template stone's first two lines}.
+  function statEffects(list) {
+    const seen = new Map();
+    let header = null;
+    const tally = (stat, lines, weight) => {
+      if (!seen.has(stat)) seen.set(stat, new Map());
+      const ways = seen.get(stat);
+      const key = lines.join('\n');
+      ways.set(key, (ways.get(key) || 0) + weight);
+    };
+    for (const entry of list || []) {
+      if (!Array.isArray(entry.tip)) continue;
+      if (!header && String(entry.id) === TEMPLATE_STONE && entry.tip.length >= 2) header = entry.tip.slice(0, 2).map(line => String(line[1] || ''));
+      if (!entry.stats?.length) continue;
+      const names = new Set(entry.stats);
+      let current = null, lines = [];
+      const finish = () => {
+        if (current && lines.length) tally(current, lines, entry.stone ? 2 : 1);
+        current = null;
+        lines = [];
+      };
+      for (const line of entry.tip) {
+        const left = String(line[1] || ''), right = String(line[3] || '');
+        if (right && names.has(right) && EFFECT_LINE.test(left)) {
+          finish();
+          current = right;
+          lines = [left];
+        } else if (current && !right && EFFECT_LINE.test(left)) lines.push(left);
+        else finish();
+      }
+      finish();
+    }
+    const effects = new Map();
+    for (const [stat, ways] of seen) effects.set(stat, [...ways.entries()].sort((a, b) => b[1] - a[1])[0][0].split('\n'));
+    return {effects, header: header || ['Mana Stone Tier 6', 'Cannot be sold']};
+  }
+  // The stat on a tier 6 mana stone, as lines for the page's game tooltip: [colour, left, colour, right]
+  function templateTip(stat, known) {
+    const lines = known.effects.get(stat);
+    if (!lines) return null;
+    return [['ffffff', known.header[0]], ['ffffff', known.header[1]],
+      ...lines.map((text, at) => (at === 0 ? [STONE_EFFECT, text, 'ffffff', stat] : [STONE_EFFECT, text]))];
+  }
+  // A stat's name, hovered: the stat as the game shows it on a tier 6 mana stone
+  function showStatTip(tooltip, event, stat, known) {
+    const make = (tag, className, text) => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    };
+    const lines = tipLines(templateTip(stat, known));
+    const nodes = [];
+    if (lines.length) {
+      const game = make('div', 'game-tip');
+      for (const line of lines) {
+        const row = make('div', 'game-tip-line');
+        const left = make('span', 'game-tip-left', line.left);
+        if (line.leftColor) left.style.color = line.leftColor;
+        row.append(left);
+        if (line.right) {
+          const right = make('span', 'game-tip-right', line.right);
+          if (line.rightColor) right.style.color = line.rightColor;
+          row.append(right);
+        }
+        game.append(row);
+      }
+      nodes.push(game, make('span', 'bank-tip-hint', 'As it shows on a tier 6 mana stone, from the game’s own tooltips.'));
+    } else {
+      nodes.push(make('strong', '', stat), make('span', 'bank-tip-type', 'What it does isn’t known yet: it comes from the game’s tooltip of an item that has it, which one login with its holder on the current version saves.'));
+    }
+    tooltip.replaceChildren(...nodes);
+    tooltip.hidden = false;
+    tooltip.style.left = Math.max(4, Math.min(event.clientX + 14, window.innerWidth - tooltip.offsetWidth - 8)) + 'px';
+    tooltip.style.top = Math.max(4, Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 8)) + 'px';
+  }
+  // options: {data: {entries}} from the Bank tab, so the stats count the same characters it shows; all: every entry,
+  // whose tooltips say what each stat does; tooltip: the element hovering a stat shows it in
   function renderStats(root, characters, options = {}) {
     root.sorting = root.sorting || {key: 'total', descending: true};
     root.collapsed = root.collapsed || new Set();
     if (!root.listening) {
       root.listening = true;
       for (const id of ['stat-search', 'stat-kind']) root.querySelector('#' + id).addEventListener('input', () => renderStats(root, root.characters, root.options));
+      const table = root.querySelector('table');
+      let hovered = null;
+      table.addEventListener('mouseover', event => {
+        const cell = event.target?.closest?.('[data-stat]');
+        const tooltip = root.options?.tooltip;
+        if (!tooltip) return;
+        if (!cell) { if (hovered) { hovered = null; tooltip.hidden = true; } return; }
+        if (cell === hovered) return;
+        hovered = cell;
+        showStatTip(tooltip, event, cell.dataset.stat, root.known);
+      });
+      table.addEventListener('mousemove', event => {
+        const tooltip = root.options?.tooltip;
+        if (!hovered || !tooltip || tooltip.hidden) return;
+        tooltip.style.left = Math.max(4, Math.min(event.clientX + 14, window.innerWidth - tooltip.offsetWidth - 8)) + 'px';
+        tooltip.style.top = Math.max(4, Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 8)) + 'px';
+      }, {passive: true});
+      table.addEventListener('mouseleave', () => { hovered = null; if (root.options?.tooltip) root.options.tooltip.hidden = true; });
     }
     root.characters = characters;
     root.options = options;
+    // Worked out again only when the data is new
+    if (root.knownFrom !== options.all) {
+      root.knownFrom = options.all;
+      root.known = statEffects(options.all || options.data?.entries || []);
+    }
     root.redraw = () => renderStats(root, root.characters, root.options);
     const rows = statTable(options.data || characters, root.querySelector('#stat-kind').value, root.querySelector('#stat-search').value.trim(), root.sorting.key, root.sorting.descending);
     const owners = row => row.owners.slice(0, 12).map(owner => `<span class="owner" ${owner.key ? `data-char="${escapeHtml(owner.key)}"` : ''}>${escapeHtml(owner.name)} ${escapeHtml(formatNumber(owner.count))}</span>`).join(', ')
       + (row.owners.length > 12 ? ` <span class="hint">and ${formatNumber(row.owners.length - 12)} more</span>` : '');
     groupedTable(root, {
-      columns: [...STAT_COLUMNS.map(column => ({...column, number: !column.text, cell: row => escapeHtml(column.text ? row.stat : formatNumber(row[column.key]))})),
+      columns: [...STAT_COLUMNS.map(column => ({...column, number: !column.text,
+        cell: row => (column.text ? `<span class="stat-name" data-stat="${escapeHtml(row.stat)}" tabindex="0">${escapeHtml(row.stat)}</span>` : escapeHtml(formatNumber(row[column.key])))})),
         {key: 'breakdown', name: 'Who has them', text: true, cell: owners}],
       groups: [{key: '', title: null, sub: '', rows}],
       empty: 'No stats saved yet. Stats appear once a character has logged in and out on the current build.',
@@ -754,6 +928,8 @@ const GBBank = (() => {
     const hasDom = typeof window !== 'undefined' && !!grid?.appendChild;
     const storage = typeof chrome !== 'undefined' && chrome.storage ? chrome.storage.local : null;
     let columns = 1, rows = 0, frame = 0, space = null, typingTimer = 0, gridDirty = false, gridFrame = 0, loading = null, panelCell = null;
+    // The lowest tier a slot's corner shows, kept in this Chrome
+    let tierFrom = TIER_FROM;
     const pool = [];
     const shape = () => LAYOUTS[state.layout];
     // The same item again after the grid was drawn anew: cells are made each time, the saved entries aren't
@@ -862,7 +1038,7 @@ const GBBank = (() => {
     }
     // Tier upper left, HD upper right, plus lower left. A stack of different kinds has no one answer, so it shows none.
     function fillMarks(slot, cell) {
-      const marks = slotMarks(cell);
+      const marks = slotMarks(cell, tierFrom);
       slot.tierMark.textContent = marks.tier;
       slot.durabilityMark.textContent = marks.durability;
       slot.plusMark.textContent = marks.plus;
@@ -873,7 +1049,7 @@ const GBBank = (() => {
       const favourite = rules.favourites.has(cell.key);
       slot.className = 'bank-slot filled' + (excluded ? ' bank-excluded' : '') + (rules.quality && cell.quality ? ` q${cell.quality}` : '') + (favourite ? ' is-favourite' : '')
         + (index === state.active ? ' is-active' : '') + (sameCell(panelCell, cell) ? ' is-open' : '');
-      slot.setAttribute('aria-label', [`${cell.name}, ${formatNumber(cell.total)}`, ...slotMarks(cell).words].join(', '));
+      slot.setAttribute('aria-label', [`${cell.name}, ${formatNumber(cell.total)}`, ...slotMarks(cell, tierFrom).words].join(', '));
       slot.setAttribute('aria-selected', String(index === state.active));
       slot.letters.textContent = cell.name.slice(0, 2);
       if (shape().rows) {
@@ -988,9 +1164,51 @@ const GBBank = (() => {
       const unseen = shown.filter(character => !bankKnown(character)).length;
       el('coverage-login').hidden = !stale;
       el('coverage-bank').hidden = !unseen;
-      el('bank-coverage').hidden = !stale && !unseen;
       el('coverage-login-text').textContent = stale === 1 ? '1 character needs a login on the current version' : `${formatNumber(stale)} characters need a login on the current version`;
       el('coverage-bank-text').textContent = unseen === 1 ? '1 bank not recorded: log in once with that character' : `${formatNumber(unseen)} banks not recorded: log in once with each`;
+      // Mail waiting to be collected, and the gold in it: as each mailbox was when last open, with the mail sent since
+      const boxes = options.mailboxes ? options.mailboxes() : null;
+      const mail = boxes && typeof GBMail !== 'undefined' ? GBMail.totals(boxes, shown) : null;
+      el('coverage-mail').hidden = !mail?.mails;
+      el('coverage-mail-gold').hidden = !mail?.gold;
+      if (mail?.mails) {
+        el('coverage-mail-text').textContent = `${counted(mail.mails, 'mail')} waiting in ${formatNumber(mail.characters)} ${mail.characters === 1 ? 'mailbox' : 'mailboxes'}`
+          + (mail.expiring ? ` · ${formatNumber(mail.expiring)} ${mail.expiring === 1 ? 'expires' : 'expire'} within 48 hours` : '');
+        el('coverage-mail').classList.toggle('is-urgent', mail.expiring > 0);
+        el('coverage-mail-gold-text').textContent = `${mail.estimated ? 'About ' : ''}${formatCompact(mail.gold)} gold waiting in mailboxes`;
+        el('coverage-mail-gold-text').title = `${formatNumber(mail.gold)} gold` + (mail.estimated ? `, counting ${counted(mail.estimated, 'mail')} sent since the mailbox was last open` : ', as each mailbox was when last open');
+      }
+      el('bank-coverage').hidden = !stale && !unseen && !mail?.mails;
+      renderServerPick();
+    }
+    // The server to show, picked in two clicks: all of them, a region's, or one server. It sets the same view as the
+    // region and the server ticks at the top, so every page follows it.
+    function renderServerPick() {
+      const label = el('bank-server-label');
+      if (!label || !roster || typeof GBRoster === 'undefined') return;
+      const view = roster.view;
+      const servers = GBRoster.serverList(roster.characters(), {...view, region: 'all', serversOff: new Set()}).filter(server => server.count > 0);
+      const inView = servers.filter(server => (view.region === 'all' || !server.region || server.region === view.region) && !view.serversOff.has(server.key));
+      const regionName = id => GBRoster.REGIONS[id]?.name || 'Other servers';
+      label.textContent = inView.length === servers.length ? 'All' : inView.length === 1 ? inView[0].name
+        : !view.serversOff.size && view.region !== 'all' ? regionName(view.region) : `${formatNumber(inView.length)} servers`;
+      const list = el('bank-server-list');
+      if (!list || !el('bank-server-pick')?.open) return;
+      const pressed = on => ` aria-pressed="${on}"`;
+      const parts = [`<button type="button" class="server-pick-all" data-pick-region="all"${pressed(inView.length === servers.length)}>All servers <span class="hint">${formatNumber(servers.reduce((sum, server) => sum + server.count, 0))}</span></button>`];
+      for (const id of [...Object.keys(GBRoster.REGIONS), '']) {
+        const members = servers.filter(server => (server.region || '') === id);
+        if (!members.length) continue;
+        const whole = id && view.region === id && !view.serversOff.size;
+        parts.push(id ? `<button type="button" class="server-pick-region" data-pick-region="${escapeHtml(id)}"${pressed(!!whole)}>${escapeHtml(regionName(id))}</button>`
+          : `<span class="server-pick-region">${escapeHtml(regionName(id))}</span>`);
+        for (const server of members) {
+          const only = inView.length === 1 && inView[0].key === server.key;
+          parts.push(`<button type="button" class="server-pick-server" data-pick-server="${escapeHtml(server.key)}" data-pick-in="${escapeHtml(server.region || 'all')}"${pressed(only)}>`
+            + `${escapeHtml(server.name)} <span class="hint">${formatNumber(server.count)}</span></button>`);
+        }
+      }
+      list.innerHTML = parts.join('');
     }
     // Every filter that narrows what's listed, apart from the characters, which have their own reset
     function filtersActive() {
@@ -1502,6 +1720,23 @@ const GBBank = (() => {
     el('bank-reset-filters').addEventListener('click', resetFilters);
     el('coverage-login-review').addEventListener('click', () => options.review?.('login'));
     el('coverage-bank-review').addEventListener('click', () => options.review?.('bank'));
+    el('coverage-mail-review')?.addEventListener('click', () => options.review?.('mail'));
+    el('coverage-mail-gold-review')?.addEventListener('click', () => options.review?.('mail'));
+    el('bank-server-pick')?.addEventListener('toggle', renderServerPick);
+    el('bank-server-list')?.addEventListener('click', event => {
+      const button = event.target?.closest?.('[data-pick-region], [data-pick-server]');
+      if (!button || !roster?.setView) return;
+      if (button.dataset.pickServer !== undefined) roster.setView(button.dataset.pickIn, [button.dataset.pickServer]);
+      else roster.setView(button.dataset.pickRegion);
+      el('bank-server-pick').open = false;
+    });
+    // The lowest tier a corner shows
+    el('bank-tier-from')?.addEventListener('change', event => {
+      tierFrom = Number(event.target.value) || TIER_FROM;
+      repaint();
+      if (panelCell) drawPanel();
+      if (storage) storage.set({bankTierFrom: tierFrom}).catch(() => {});
+    });
     el('bank-select-clear')?.addEventListener('click', () => roster?.clearScope());
     el('bank-select-use')?.addEventListener('click', () => roster?.useSelection());
     el('bank-select-shown')?.addEventListener('click', () => {
@@ -1612,8 +1847,12 @@ const GBBank = (() => {
       });
     }
     if (storage) {
-      storage.get(['bankExclusions', 'bankRules', 'bankLayout', 'bankMarkColors']).then(({bankExclusions: saved, bankRules: kept, bankLayout, bankMarkColors}) => {
+      storage.get(['bankExclusions', 'bankRules', 'bankLayout', 'bankMarkColors', 'bankTierFrom']).then(({bankExclusions: saved, bankRules: kept, bankLayout, bankMarkColors, bankTierFrom}) => {
         setLayout(bankLayout || 'grid', false);
+        if (Number.isInteger(bankTierFrom) && bankTierFrom >= 1 && bankTierFrom <= 30) {
+          tierFrom = bankTierFrom;
+          if (el('bank-tier-from')) el('bank-tier-from').value = String(tierFrom);
+        }
         if (bankMarkColors) {
           for (const name of Object.keys(MARK_COLORS)) if (/^#[0-9a-f]{6}$/i.test(bankMarkColors[name] || '')) markColors[name] = bankMarkColors[name];
           showMarkColors();
@@ -1641,7 +1880,14 @@ const GBBank = (() => {
       }).catch(() => {});
     }
     return {
-      reload, update, renderGrid, renderFavourites, closePanel,
+      reload, update, renderGrid, renderFavourites, closePanel, resetFilters,
+      tierFrom: () => tierFrom,
+      // A search on the Bank page, from elsewhere: an item's name, shown at once
+      find(text) {
+        el('bank-search').value = String(text || '');
+        el('bank-search-in').value = '';
+        renderGrid(true);
+      },
       // The same characters prepared again: a server set by hand moves them
       reprepare() { if (state.characters.length) apply(state.characters, state.made); },
       // The Bank tab was opened: draw what changed while it was hidden
@@ -1656,6 +1902,7 @@ const GBBank = (() => {
     };
   }
   return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, DEFAULT_RULES,
+    quickFilters, wornGear, plusOf, slotLabel, SLOT_LABELS, TIER_FROM, statEffects, templateTip,
     formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
     rosterRows, renderRoster, statTable, renderStats, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
 })();

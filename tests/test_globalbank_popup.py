@@ -1409,11 +1409,17 @@ const marks = (gearOver, item = {}) => {
   return bank.slotMarks(cell);
 };
 const seen = marks({plus: 14, dura: 102});
-assert.deepEqual([seen.tier, seen.durability, seen.plus], ['18', 'HD', '+14']);
+assert.deepEqual([seen.tier, seen.durability, seen.plus], ['T18', 'HD', '+14']);
 assert.equal(marks({dura: 101}).durability, '');
 assert.equal(marks({plus: 0}).plus, '');
 assert.equal(marks({}, {tip: null}).tier, '');
 assert.deepEqual([...seen.words], ['tier 18', '+14', 'high durability']);
+// The tier shows from tier 7 up, or from the tier you pick
+assert.equal(bank.TIER_FROM, 7);
+assert.equal(bank.slotMarks({tier: 6, gear: null}).tier, '');
+assert.equal(bank.slotMarks({tier: 7, gear: null}).tier, 'T7');
+assert.equal(bank.slotMarks({tier: 6, gear: null}, 1).tier, 'T6');
+assert.deepEqual([...bank.slotMarks({tier: 18, gear: null}, 19).words], []);
 assert.equal(bank.tierOf({id: '211000', gear, tip: [['', 'Grad 5']]}), 5);
 assert.equal(bank.tierOf({id: '211000', gear, tip: [['', '\u00a0 \u0637\u0628\u0642\u0629 7']]}), 7);
 assert.equal(bank.tierOf({id: '202845'}), 6);
@@ -1499,6 +1505,123 @@ const bank = context.GBBank.create(root, send, () => {}, (totals) => { told++; c
   await new Promise(resolve => setTimeout(resolve, 200));
   assert.equal(told, 2);
 })().catch(error => { console.error(error); process.exit(1); });
+""")
+
+    def test_worn_items_quick_filters_and_stat_templates(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+const bank = context.GBBank;
+const stoneTip = [['ffffff', 'Mana Stone Tier 6'], ['ffffff', 'Cannot be sold'], ['f0610d', '+378 Wisdom', 'ffffff', 'Wise'], ['f0610d', '+2457 Maximum HP'],
+  ['f0610d', '+442 Stamina', 'ffffff', 'Keeper']];
+const ann = {name: 'Ann', level: 100,
+  bag: [{slot: 1, count: 1, id: '211000', name: 'Staff', gear: {dura: 90, maxDura: 100, plus: 3, tier: 0, freeSlots: 0, stats: [], runes: [], color: ''}, tip: [['', 'Staff + 3'], ['', 'Tier 11']]},
+        {slot: 2, count: 1, id: '202845', name: 'Mana Stone Tier 6', stats: ['Wise', 'Keeper'], tip: stoneTip},
+        {slot: 3, count: 4, id: '200000', name: 'Herb, Fresh'}],
+  equip: [{slot: 15, where: 'MainHand', count: 1, name: 'Staff', icon: 'i/staff', dura: 118, maxDura: 120, quality: 4,
+           tip: [['c805f8', 'Staff + 12'], ['ffffff', 'Tier 12', 'ffffff', 'Durability 118/120'], ['00ff00', '+19 Dexterity', 'ffffff', 'Storm VII'], ['ffff00', '+30 Magical Attack']]},
+          {slot: 8, where: 'Necklace', count: 1, name: 'Odd Charm', icon: 'i/neck', dura: 50, maxDura: 50, quality: 2, tip: [['3f8cff', 'Odd Charm'], ['ffffff', 'Tier 8']]}]};
+const list = bank.entries([ann]);
+const worn = list.filter(e => e.place === 'worn');
+assert.equal(worn.length, 2);
+// A worn item's ID comes from the same item in a bag, its plus, tier and stats from its tooltip
+assert.equal(worn[0].id, '211000');
+assert.equal(worn[1].id, 'n:Odd Charm');
+assert.equal(worn[0].type, 'Weapons');
+assert.equal(worn[1].type, 'Jewellery');
+assert.equal(worn[0].gear.plus, 12);
+assert.equal(worn[0].tier, 12);
+assert.deepEqual([...worn[0].stats], ['Storm VII']);
+assert.equal(worn[0].bound, true);
+assert.equal(bank.totals([ann]).stacks, 5);
+assert.equal(bank.locationLabel('worn', 15, 'MainHand'), 'Worn (Main hand)');
+assert.deepEqual([...bank.holders(bank.cells(list.filter(e => e.name === 'Staff'), false).flatMap(c => c.places))[0].parts], ['Worn (Main hand)', 'Bag 1 (page 1, slot 1)']);
+const names = filters => [...bank.applyFilters(list, filters).map(e => `${e.place}:${e.name}`)];
+// #+1>, #t10> and #equipped=false, with commas or spaces, and a name besides
+assert.deepEqual(names({text: '#+1>, #t10>, #equipped=false'}), ['bag:Staff']);
+assert.deepEqual(names({text: '+5>'}), ['worn:Staff']);
+assert.deepEqual(names({text: '#+3'}), ['bag:Staff']);
+assert.deepEqual(names({text: '#+12<='}), ['bag:Staff', 'worn:Staff', 'worn:Odd Charm']);
+// Only gear has a plus, and only gear and stones a tier
+assert.deepEqual(names({text: '#+0'}), ['worn:Odd Charm']);
+assert.deepEqual(names({text: '#t20<'}), ['bag:Staff', 'bag:Mana Stone Tier 6', 'worn:Staff', 'worn:Odd Charm']);
+assert.deepEqual(names({text: '#t9< #equipped=true'}), ['worn:Odd Charm']);
+assert.deepEqual(names({text: '#equipped, charm'}), ['worn:Odd Charm']);
+assert.deepEqual(names({text: '#worn=no #t6'}), ['bag:Mana Stone Tier 6']);
+// An item's own comma stays part of a plain search
+assert.deepEqual(names({text: 'herb, fresh'}), ['bag:Herb, Fresh']);
+// Where: everywhere, the bag and bank only, or what's worn
+assert.equal(names({place: ''}).length, 5);
+assert.deepEqual(names({place: 'stored'}).filter(name => name.startsWith('worn')), []);
+assert.deepEqual(names({place: 'worn'}), ['worn:Staff', 'worn:Odd Charm']);
+// A stat as the game shows it on a tier 6 mana stone, from the saved tooltips
+const known = bank.statEffects(list);
+assert.deepEqual([...known.effects.get('Wise')], ['+378 Wisdom', '+2457 Maximum HP']);
+assert.deepEqual([...known.effects.get('Keeper')], ['+442 Stamina']);
+assert.deepEqual([...known.effects.get('Storm VII')], ['+19 Dexterity', '+30 Magical Attack']);
+assert.deepEqual(JSON.parse(JSON.stringify(bank.templateTip('Wise', known))), [['ffffff', 'Mana Stone Tier 6'], ['ffffff', 'Cannot be sold'],
+  ['f0610d', '+378 Wisdom', 'ffffff', 'Wise'], ['f0610d', '+2457 Maximum HP']]);
+assert.equal(bank.templateTip('Nobody has it', known), null);
+// A stone's way of showing a stat beats gear's
+const geared = bank.statEffects([{stats: ['Keeper'], stone: false, tip: [['', 'Sword'], ['', '+1 Stamina', '', 'Keeper']]}, ...list]);
+assert.deepEqual([...geared.effects.get('Keeper')], ['+442 Stamina']);
+""")
+
+    def test_mailboxes_sent_mail_and_the_gold_overview_regions(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console, Intl});
+for (const [file, name] of [['roster.js', 'GBRoster'], ['mail.js', 'GBMail'], ['accounts.js', 'GBAccounts']]) vm.runInContext(fs.readFileSync(path.join(process.argv[1], file), 'utf8') + `;this.${name} = ${name};`, context);
+const mail = context.GBMail, gb = context.GBAccounts, roster = context.GBRoster;
+const now = 1800000000;
+const people = [
+  {name: 'Bank', server: 'Aynara', gold: 5, mail: {read: now - 3600, inbox: [
+    {from: 'Alt', subject: 'Gold', gold: 5000, diamonds: 0, cod: 0, items: 0, minutes: 30 * 60, unread: false, returned: false},
+    {from: 'Shop', subject: 'Letter', gold: 0, diamonds: 0, cod: 0, items: 0, minutes: 99, unread: true, returned: false},
+    {from: 'Trader', subject: 'Pay me', gold: 0, diamonds: 0, cod: 900, items: 1, minutes: 5 * 24 * 60, unread: false, returned: false},
+    {from: 'Gone', subject: 'Old', gold: 7, diamonds: 0, cod: 0, items: 0, minutes: 10, unread: false, returned: false}], sent: []}},
+  {name: 'Alt', server: 'Aynara', gold: 9, mail: {read: 0, inbox: null, sent: [
+    {at: now - 7200, to: 'Bank', subject: 'Before', gold: 111, diamonds: 0, cod: 0, items: ''},
+    {at: now - 60, to: 'bank', subject: 'Since', gold: 250000, diamonds: 0, cod: 0, items: 'Herb x3'},
+    {at: now - 60, to: 'Stranger', subject: 'Away', gold: 1, diamonds: 0, cod: 0, items: ''},
+    {at: now - 31 * 86400, to: 'Bank', subject: 'Too old', gold: 2, diamonds: 0, cod: 0, items: ''}]}},
+  {name: 'Bank', server: 'Kerub', gold: 1, mail: null},
+];
+roster.prepare(people, null, null);
+const boxes = mail.mailboxes(people, now);
+const bank = boxes.get(people[0].key);
+// What the mailbox held, less what ran out, plus what was sent since it was open
+assert.deepEqual([...bank.waiting.map(m => m.subject)], ['Gold', 'Pay me', 'Since']);
+assert.equal(bank.gold, 255000);
+assert.equal(bank.count, 3);
+assert.equal(bank.estimated, 1);
+assert.equal(bank.expiring, 1);
+assert.equal(bank.unread, 1);
+assert.equal(bank.soonest, now - 3600 + 30 * 3600);
+// Same name, other server: mail never crosses servers
+assert.equal(boxes.get(people[2].key).count, 0);
+assert.equal(boxes.get(people[2].key).recorded, false);
+const sum = mail.totals(boxes, people);
+assert.deepEqual([sum.mails, sum.gold, sum.expiring, sum.characters, sum.read], [3, 255000, 1, 1, 1]);
+const sent = mail.sentLog(people);
+assert.deepEqual([...sent.map(m => m.subject)], ['Since', 'Away', 'Before', 'Too old']);
+assert.equal(sent[0].toKey, people[0].key);
+assert.equal(sent[1].toKey, '');
+assert.equal(mail.timeLeft(now + 3 * 86400, now), '3 days');
+assert.equal(mail.timeLeft(now + 5 * 3600, now), '5 h');
+assert.equal(mail.timeLeft(now - 1, now), 'gone');
+assert.equal(mail.summary(bank, now), '3 mails waiting · 255,000 gold · one expires in 29 h');
+assert.equal(mail.summary(boxes.get(people[2].key), now), '');
+// The Gold overview: a server can be left off, and every server is a region of its own
+const state = gb.emptyState();
+const all = gb.heatBoxes(people, state);
+assert.deepEqual([...all[0].servers.map(s => s.server)], ['Aynara', 'Kerub']);
+const some = gb.heatBoxes(people, state, 'Not linked', null, new Set([gb.heatServerKey('Kerub')]));
+assert.deepEqual([...some[0].servers.map(s => s.server)], ['Aynara']);
+assert.equal(some[0].count, 2);
+assert.equal(some[0].total, 14);
+assert.deepEqual([...gb.heatServers(people).map(s => `${s.name}:${s.count}`)], ['Aynara:2', 'Kerub:1']);
 """)
 
     def test_every_element_the_page_scripts_use_is_on_the_page(self):

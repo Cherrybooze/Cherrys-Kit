@@ -18,6 +18,8 @@ const GBAccounts = (() => {
   // Below this many, a tile leaves out its gold too, and hovering still says it.
   const HEAT_LETTERS = 'gbHeatLetters';
   const HEAT_GOLD_FROM = 5;
+  // The servers the Gold overview leaves out, and whether their names head their regions
+  const HEAT_SERVERS = 'gbHeatServers';
   // Tiles on a line under an account: 8, 4, 2 or 1, so a full login screen's list is always a neat block, and as many
   // as fit this wide
   const HEAT_WIDEST_COLUMN = 200;
@@ -230,13 +232,29 @@ const GBAccounts = (() => {
     }
     return {found: [...found], missing};
   }
+  const heatServerKey = name => String(name || '').replace(/\s*\(.*\)\s*$/, '').trim().toLowerCase();
+  // The servers the Gold overview could show, with how many characters each has: {key, name, count}
+  function heatServers(characters) {
+    const known = accountGroups(characters);
+    const found = new Map();
+    for (const character of characters) {
+      const name = character.shownServer || serverOf(character, known);
+      const key = heatServerKey(name);
+      if (!found.has(key)) found.set(key, {key, name, count: 0});
+      found.get(key).count++;
+    }
+    return [...found.values()].sort((a, b) => Number(a.name === NO_SERVER) - Number(b.name === NO_SERVER) || b.count - a.count || a.name.localeCompare(b.name));
+  }
   // A box for each Gameforge account, then one for the characters not linked to any. In a box its servers, and on a
   // server its RoM accounts, the characters one login screen lists, richest first, so that a full account shows as a
   // block of green. romTitle(character): the name to show for its RoM account. unlinked: the last box's name.
-  function heatBoxes(characters, state, unlinked = NOT_LINKED, romTitle = null) {
+  // hidden: the servers, by key, the Gold overview leaves out
+  function heatBoxes(characters, state, unlinked = NOT_LINKED, romTitle = null, hidden = null) {
     const boxes = new Map();
     const known = accountGroups(characters);
     for (const character of characters) {
+      const serverName = character.shownServer || serverOf(character, known);
+      if (hidden?.has(heatServerKey(serverName))) continue;
       const linked = accountFor(state, character)?.name || '';
       if (!boxes.has(linked)) boxes.set(linked, {account: linked || unlinked, linked: !!linked, total: 0, count: 0, fullCaps: 0, servers: new Map()});
       const box = boxes.get(linked);
@@ -244,7 +262,6 @@ const GBAccounts = (() => {
       box.total += gold;
       box.count++;
       if (gold >= FULL_CAP) box.fullCaps++;
-      const serverName = character.shownServer || serverOf(character, known);
       if (!box.servers.has(serverName)) box.servers.set(serverName, {server: serverName, total: 0, roms: new Map()});
       const server = box.servers.get(serverName);
       server.total += gold;
@@ -486,14 +503,54 @@ const GBAccounts = (() => {
       renderHeat();
       chrome.storage.local.set({[HEAT_LETTERS]: heatLetters}).catch(() => {});
     });
-    // The widest tile the names need. Tiles are measured, so a whole name is never cut.
+    // Servers to leave off this map, and their names on top of their regions
+    byId('heat-server-list')?.addEventListener('change', event => {
+      const box = event.target.closest?.('[data-heat-server]');
+      if (!box) return;
+      if (box.checked) heatHidden.delete(box.dataset.heatServer);
+      else heatHidden.add(box.dataset.heatServer);
+      keepHeatServers();
+      renderHeat();
+    });
+    byId('heat-server-names')?.addEventListener('change', event => {
+      heatServerNames = event.target.checked;
+      keepHeatServers();
+      renderHeat();
+    });
+    byId('heat-servers-all')?.addEventListener('click', () => {
+      heatHidden = new Set();
+      keepHeatServers();
+      renderHeat();
+    });
+    // The widest tile the names need. Tiles are measured, so a whole name is never cut. A mailbox mark takes a little more.
     let heatMeasure = null;
-    function heatTileWidth(shown) {
+    function heatTileWidth(shown, mail) {
       heatMeasure = heatMeasure || document.createElement('canvas').getContext('2d');
       heatMeasure.font = `11px ${getComputedStyle(document.body).fontFamily}`;
       let widest = 0;
       for (const name of shown) widest = Math.max(widest, heatMeasure.measureText(name).width);
-      return Math.ceil(widest) + 8 + (heatShowsGold(heatLetters) ? 30 : 0);
+      return Math.ceil(widest) + 8 + (heatShowsGold(heatLetters) ? 30 : 0) + (mail ? 17 : 0);
+    }
+    // Which servers the map leaves out, and whether each one's region has its name on top. Kept in this Chrome.
+    let heatHidden = new Set();
+    let heatServerNames = true;
+    const keepHeatServers = () => chrome.storage.local.set({[HEAT_SERVERS]: {hidden: [...heatHidden], names: heatServerNames}}).catch(() => {});
+    function renderHeatServers(list) {
+      const panel = byId('heat-server-list');
+      const summary = byId('heat-servers-summary');
+      if (!panel || !summary) return;
+      const shown = list.filter(server => !heatHidden.has(server.key)).length;
+      summary.textContent = shown === list.length ? (heatServerNames ? 'All servers' : 'All servers, no names') : `${number(shown)} of ${number(list.length)} servers`;
+      panel.replaceChildren(...list.map(server => {
+        const row = make('label', 'bank-check');
+        const box = make('input');
+        box.type = 'checkbox';
+        box.checked = !heatHidden.has(server.key);
+        box.dataset.heatServer = server.key;
+        row.append(box, ` ${server.name} `, make('span', 'hint', number(server.count)));
+        return row;
+      }));
+      byId('heat-server-names').checked = heatServerNames;
     }
 
     // Boxes share the width by how many lines they take, so they come out about the same height. How much width a box
@@ -525,15 +582,27 @@ const GBAccounts = (() => {
 
     function renderHeat() {
       heatDirty = false;
+      // Gold waiting in a mailbox shows as a mailbox after the name, with a ! when some of it goes within 48 hours
+      const mailOf = cell => {
+        const box = cell.key && options.mailbox ? options.mailbox(cell.key) : null;
+        return box && (box.gold > 0 || box.expiring > 0) ? box : null;
+      };
       // The page's hover card, click and right-click work from data-char, for every cell at once
       const cellFor = cell => {
         const color = heatColor(cell.gold, heatColors);
         const node = make('div', 'heat-cell');
         node.append(make('span', 'heat-name', cell.shown));
+        const mail = mailOf(cell);
+        if (mail) {
+          const mark = make('span', 'heat-mail' + (mail.expiring ? ' is-soon' : ''));
+          mark.innerHTML = window.GB_ICONS?.mail || '';
+          if (mail.expiring) mark.append(make('i', '', '!'));
+          node.append(mark);
+        }
         if (heatShowsGold(heatLetters)) node.append(make('b', '', color.kind === 'full' ? 'MAX' : tinyGold(cell.gold)));
         node.style.background = color.css;
         node.style.color = color.text;
-        node.setAttribute('aria-label', `${cell.name}, ${number(cell.gold)} gold`);
+        node.setAttribute('aria-label', `${cell.name}, ${number(cell.gold)} gold` + (mail ? `, ${number(mail.gold)} gold in its mailbox${mail.expiring ? ', some of it expiring within 48 hours' : ''}` : ''));
         if (cell.key) node.dataset.char = cell.key;
         return node;
       };
@@ -547,18 +616,22 @@ const GBAccounts = (() => {
         box.append(head, ...cells.map(cellFor));
         return box;
       };
-      const boxes = heatBoxes(characters.filter(shows), state, !fileKey && sealedFile ? 'Accounts locked' : NOT_LINKED, options.romTitle || null);
+      const inView = characters.filter(shows);
+      renderHeatServers(heatServers(inView));
+      const boxes = heatBoxes(inView, state, !fileKey && sealedFile ? 'Accounts locked' : NOT_LINKED, options.romTitle || null, heatHidden);
       const shown = [];
+      let anyMail = false;
       for (const server of boxes.flatMap(box => box.servers)) {
         for (const rom of server.roms) {
           const names = rom.characters.map(cell => ownName(cell, server.server));
           rom.characters.forEach((cell, at) => {
             cell.shown = heatName(names[at], heatLetters, names);
             shown.push(cell.shown);
+            anyMail = anyMail || !!mailOf(cell);
           });
         }
       }
-      const tile = heatTileWidth(shown);
+      const tile = heatTileWidth(shown, anyMail);
       const perLine = [8, 4, 2].find(count => count * (tile + 1) - 1 <= HEAT_WIDEST_COLUMN) || 1;
       const column = perLine * (tile + 1) - 1;
       byId('heat-view').style.setProperty('--heat-per-line', perLine);
@@ -573,29 +646,37 @@ const GBAccounts = (() => {
       total.title = `${number(allGold)} gold`;
       total.append(make('span', 'soft-count', `${number(allCaps)} full ${allCaps === 1 ? 'cap' : 'caps'}`));
       const fit = [];
+      byId('heat-view').classList.toggle('no-server-names', !heatServerNames);
       byId('heat-view').replaceChildren(...boxes.map(box => {
         const node = make('section', 'heat-column');
-        fit.push({node, lines: box.servers.reduce((sum, server) => sum + 1 + server.roms.reduce((rows, rom) => rows + 1 + Math.ceil(rom.characters.length / perLine), 0), 1)});
+        fit.push({node, lines: box.servers.reduce((sum, server) => sum + (heatServerNames ? 1 : 0) + server.roms.reduce((rows, rom) => rows + 1 + Math.ceil(rom.characters.length / perLine), 0), 1)});
         node.style.flex = `${fit.at(-1).lines} 1 ${Math.max(column + 16, Math.round(fit.at(-1).lines * column / 21))}px`;
         const head = make('div', 'heat-column-head');
         head.append(make('h2', '', box.account), make('span', 'heat-column-sub', `${number(box.count)} ${box.count === 1 ? 'character' : 'characters'}`));
         const balance = make('span', 'heat-balance', shortGold(box.total));
         balance.title = `${number(box.total)} gold, ${number(box.fullCaps)} full ${box.fullCaps === 1 ? 'cap' : 'caps'}`;
         head.append(balance);
-        const flow = make('div', 'heat-flow');
+        node.append(head);
+        // Each server is a region of its own, its name on top, so a name never turns up halfway down a column
         for (const server of box.servers) {
-          const title = make('h3', 'heat-server');
-          title.title = `${server.server}: ${number(server.total)} gold`;
-          title.append(make('span', '', server.server), make('span', '', shortGold(server.total)));
-          flow.append(title);
+          const region = make('section', 'heat-region');
+          region.setAttribute('aria-label', `${server.server}: ${number(server.total)} gold`);
+          if (heatServerNames) {
+            const title = make('h3', 'heat-server');
+            title.title = `${server.server}: ${number(server.total)} gold`;
+            title.append(make('span', '', server.server), make('span', '', shortGold(server.total)));
+            region.append(title);
+          }
+          const flow = make('div', 'heat-flow');
           for (const rom of server.roms) flow.append(block(rom.rom, rom.characters));
+          region.append(flow);
+          node.append(region);
         }
-        node.append(head, flow);
         return node;
       }));
       heatFit = {column, boxes: fit, tiles: boxes.reduce((sum, box) => sum + box.count, 0)};
       fitHeat();
-      if (!boxes.length) byId('heat-view').append(make('p', 'hint', characters.length ? 'No characters on the servers ticked at the top.' : 'No characters saved yet.'));
+      if (!boxes.length) byId('heat-view').append(make('p', 'hint', !characters.length ? 'No characters saved yet.' : inView.length ? 'Every server is hidden on this map: tick one under Servers.' : 'No characters on the servers ticked at the top.'));
     }
 
     function renderAccounts() {
@@ -943,9 +1024,14 @@ const GBAccounts = (() => {
 
     // Whichever copy was saved last, and a copy left in the helper's folder is what a new PC starts from.
     (async () => {
-      const stored = await chrome.storage.local.get([KEY_STORE, FILE_STORE, HEAT_STORE, HEAT_LETTERS]);
+      const stored = await chrome.storage.local.get([KEY_STORE, FILE_STORE, HEAT_STORE, HEAT_LETTERS, HEAT_SERVERS]);
       key = stored[KEY_STORE] || null;
       if (validHeatColors(stored[HEAT_STORE])) heatColors = stored[HEAT_STORE];
+      const servers = stored[HEAT_SERVERS];
+      if (servers && typeof servers === 'object') {
+        heatHidden = new Set(Array.isArray(servers.hidden) ? servers.hidden.filter(item => typeof item === 'string') : []);
+        heatServerNames = servers.names !== false;
+      }
       const letters = Math.floor(Number(stored[HEAT_LETTERS]));
       const choice = [...byId('heat-letters').options].find(option => Number(option.value) === letters);
       if (choice) {
@@ -1002,5 +1088,5 @@ const GBAccounts = (() => {
     };
   }
   return {create, heatColor, heatName, heatShowsGold, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
-    newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor};
+    newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor, heatServers, heatServerKey};
 })();
