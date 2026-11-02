@@ -644,7 +644,9 @@ function GB.Snapshot(withBank, authoritative)
   c.name, c.live = name, true
   c.cls = call(UnitClass, "player") or c.cls or ""
   c.lvl = call(UnitLevel, "player") or c.lvl or 0
-  local count = tonumber(call(GetPlayerNumClasses))
+  -- Classes learned, and the most there can be: only the first. Passed whole, the second became tonumber's base, and a
+  -- character with as many classes as it can have, or two, saved none.
+  local count = tonumber((call(GetPlayerNumClasses)))
   if count and count > 0 then
     local classes = {}
     for i = 1, count do

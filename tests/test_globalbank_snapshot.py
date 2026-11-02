@@ -27,6 +27,25 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         lua.execute('playerLevel=62; GlobalBank.Flush()')
         self.assertEqual(lua.eval('GlobalBank.Parse(GlobalBank_Char).classes[1].level'), 62)
 
+    def test_every_class_is_saved_whatever_the_most_allowed(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          UnitName=function() return 'Example' end
+          UnitClass=function() return 'Mage' end
+          UnitLevel=function() return 100 end
+          CLASSES={{'Mage', 'MAGE', 100}, {'Priest', 'AUGUR', 100}, {'Druid', 'DRUID', 72}}
+          -- The game gives the classes learned, then the most there can be, as its character window shows them
+          GetPlayerNumClasses=function() return #CLASSES, most end
+          GetPlayerClassInfo=function(i) return unpack(CLASSES[i]) end
+          GlobalBank.ReadBag=function() return {}, 0 end
+          GlobalBank.ReadMoney=function() return 0 end
+        """)
+        for most in (3, 2, 10):
+            lua.execute(f'most={most}; GlobalBank.chars={{}}; GlobalBank.Snapshot(false,false)')
+            self.assertEqual(lua.eval('#GlobalBank.Parse(GlobalBank_Char).classes'), 3, most)
+        self.assertEqual(lua.eval('GlobalBank.Parse(GlobalBank_Char).classes[3].level'), 72)
+
     def test_currencies_and_bound_items_round_trip(self):
         lua = LuaRuntime(unpack_returned_tuples=True)
         lua.execute(SOURCE.read_text(encoding='utf-8'))
