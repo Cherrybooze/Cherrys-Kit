@@ -1,6 +1,6 @@
 # Cherry's Kit
 
-Version **0.4.30** · Kit release **0.11.115** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.31** · Kit release **0.11.115** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
@@ -8,7 +8,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Kit 0.11.115 playtest
 
-- **The guided setup:** after extracting the Full or Hub ZIP, and any time you want to update, double-click `!setup_cherryskit.bat` next to the `CherrysKit` folder. It says which addons are out of date against the latest release on GitHub and updates them, with the old versions kept, and asks before installing anything your addons can use that's missing. It checks the install, maps `Interface\AddOns`, moves older copies of the kit's addons into `Interface\offloaded_addons` (nothing is deleted), stops the Global Bank helper during updates, checks Chrome and can walk through the Chrome extension steps. The same file is the update route for later versions.
+- **The guided setup:** after extracting the Full or Hub ZIP, anywhere, and any time you want to update, double-click `!setup_cherryskit.bat` next to the `CherrysKit` folder. Away from the game it lists the Runes of Magic installs it finds and asks which to set up, and on a first setup it asks whether the kit uses Ultimate Mail Mod or zMail. It says which addons are out of date against the latest release on GitHub and updates them, with the old versions kept, and asks before installing anything your addons can use that's missing. It checks the install, maps `Interface\AddOns`, moves older copies of the kit's addons into `Interface\offloaded_addons` (nothing is deleted), stops the Global Bank helper during updates, checks Chrome and can walk through the Chrome extension steps. The same file is the update route for later versions.
 - **Global Bank's helper lives with Chrome:** the extension's button shows whether the helper is running and for how long, stops it in one press, and a tick runs the background helper in a real terminal window. The helper ends on its own when Chrome or the extension goes away. (`/gb`)
 - **Cherry's Info 1.0** (`/cinfo`, `/cq`) replaces Cherry's Quests, pbInfo, TooltipIds, PortraitHP and Extended Macro Icons: one addon, one switch and one window with four tabs. Saved settings carry over.
 - **LogNextChar 1.3.1** now includes Cherry's Loginxml and lives under the kit's folder; it still works without the login screen (Next and Prev then just log you out). **Global Bank 1.4.16** keeps same-named characters on different servers apart.

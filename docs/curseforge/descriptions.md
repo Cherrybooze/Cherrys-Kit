@@ -42,8 +42,8 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Recent changes
 
+- **0.4.31**: the guided setup runs from wherever the ZIP was extracted: it lists the Runes of Magic installs it finds, Steam or Gameforge, and asks which to set up, or takes a typed folder, or shows how to put the files in the game by hand. On a first setup it asks whether the kit uses Ultimate Mail Mod or zMail. The hub reads that choice from `CherrysKit\Mailbox.txt`, and with zMail it keeps Ultimate Mail Mod off and says why in `/ck`.
 - **0.4.30**: Steam and Gameforge installs side by side. The setup finds both, or asks where the other one is, and puts the kit in each. They share one Global Bank data folder, and the Chrome extension stays with the Gameforge install.
-- **0.4.29**: its manifest loads zBag's new stat search file.
 - **Guided setup**: the Hub zip carries `!setup_cherryskit.bat`. Double-click it after extracting, and any time you want to update: it says which addons are out of date against the latest release on GitHub and updates them with the old versions kept, asks before installing anything your addons can use that's missing, moves older copies out of the way, puts the login screen in place and walks you through the Chrome extension.
 
 ## Features
@@ -272,6 +272,7 @@ In Cherry's Kit, `/wa` opens rom weakauras (`/rwa` alone opens the kit hub; `/rw
 - `/rwa size 60-160`: window size in percent (also the - and + buttons)
 - `/rwa volume 0-100`, `/rwa loud`: aura sound volume
 - `/rwa soundtest`, `/rwa soundext wav|mp3|ogg`, `/rwa channeltest`, `/rwa channel interface|effects|both`: sound checks
+- `/rwa layer under|over`: draw auras under (default) or over your bags, bank and other windows
 - `/rwa hits`, `/rwa hits reset`: what the Past second trigger has counted
 - `/rwa kitty [name]`: what the Kitty tracker sees for a kitty
 - `/rwa threat`: what the Threat trigger reads from your target's hate list
