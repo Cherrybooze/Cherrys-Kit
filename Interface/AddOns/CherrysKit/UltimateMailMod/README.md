@@ -25,6 +25,8 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 ## Updated in 7.0.1-ck13
 
 - **Compose** shows your recently sent recipients as the first name column, before **Characters** and **Friends**, newest first. Click a name to put it in To. It updates as soon as a mail goes out. In a guild, the window gets a little wider on Compose so **Guildies** fit as a fourth column.
+- **Mass Send Items** gets the same **Use last** button as Compose, right of **Reset**. Like the **Recently sent** names, it fills To and leaves your marked items marked. It hides when mail shortcuts are off in the settings, and waits while mails are going out.
+- Marked items no longer lose their marks when the game updates your bags, for example right before you click a recently sent name. A changed item link used to count as a new item.
 
 ## Updated in 7.0.1-ck12
 

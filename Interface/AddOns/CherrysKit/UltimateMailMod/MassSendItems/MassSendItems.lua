@@ -1158,11 +1158,8 @@ function UMMMassRecent_OnLoad(this)
   UMMHistory_Refresh();
 end
 
-function UMMMassRecent_Select(index)
-  local pane = getglobal("UMMFrameTab3Recent");
-  if (not pane or not pane:IsVisible() or pane.priv_Blocked or UMMMailShortcutsBusy()) then return; end
-  local recipient = UMMSettings:History()[index];
-  if (not recipient) then return; end
+-- Puts a name in the mass-send To field. Marked items stay marked; the picker closes.
+local function useMassRecipient(recipient)
   UMMCancelMassSelection();
   local chooser = getglobal("UMMFrameTab3Recipient");
   if (not UMMFrameTab3Bags:IsVisible()) then chooser:ShowBody(); end
@@ -1170,6 +1167,34 @@ function UMMMassRecent_Select(index)
   field:SetText(recipient);
   field:SetFocus();
   getglobal("UMMFrameTab3Action"):CheckStatus();
+end
+
+local function massShortcutsBlocked()
+  local pane = getglobal("UMMFrameTab3Recent");
+  return (pane and pane.priv_Blocked) or UMMMailShortcutsBusy();
+end
+
+function UMMMassRecent_Select(index)
+  local pane = getglobal("UMMFrameTab3Recent");
+  if (not pane or not pane:IsVisible() or massShortcutsBlocked()) then return; end
+  local recipient = UMMSettings:History()[index];
+  if (not recipient) then return; end
+  useMassRecipient(recipient);
+end
+
+-- "Use last" beside the mass-send To field, the same button as on Compose
+function UMMMassUseLast()
+  if (not UMMSettings:ShortcutsEnabled() or massShortcutsBlocked()) then return; end
+  local recipient = UMMSettings:LastRecipient();
+  if (recipient) then useMassRecipient(recipient); end
+end
+
+function UMMMassUseLast_Refresh()
+  local button = getglobal("UMMFrameTab3RecipientUseLast");
+  if (not button) then return; end
+  button:SetText(UMM_COMPOSER_USELAST);
+  if (UMMSettings:ShortcutsEnabled()) then button:Show(); else button:Hide(); end
+  if (UMMSettings:LastRecipient() and not massShortcutsBlocked()) then button:Enable(); else button:Disable(); end
 end
 
 function UMMMassSendItemsTemplate_OnShow(this)
