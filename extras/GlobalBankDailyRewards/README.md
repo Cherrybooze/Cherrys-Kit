@@ -6,6 +6,12 @@ It also records your Daily Loyalty Bonus after the Gameforge daily shop page con
 
 The helper now follows Chrome: the extension's button shows whether it is running and for how long, and can stop it or show its terminal window. The helper ends on its own when Chrome or the extension goes away.
 
+## Stats page in 1.3.3
+
+Stat names and their effects appear on the same row in the colours saved from the game. **Who has them** uses each holder's class colour, matching its tooltip. Right-click a stat and choose **Exclude this stat from showing**; **Excluded stats** on the same page restores individual stats or all of them. Exclusions stay on this PC in Chrome's local storage and only filter this page.
+
+Your Steam and Gameforge clients can use the same private local database. Never include `Interface\GlobalBankHelper`, character saves, account files or backups when distributing the kit.
+
 ## Install on Windows
 
 **Updating?** Chrome keeps loading the extension from the addon folder, so once the new files are there, click the extension's button and then **Reload extension**, or its Reload arrow on `chrome://extensions`. You don't load it again, and it keeps its settings.
@@ -13,7 +19,7 @@ The helper now follows Chrome: the extension's button shows whether it is runnin
 **You need:** Google Chrome and Cherry's Kit with Global Bank installed. You do **not** need Python for the addons, the Global Bank helper, or this extension.
 
 1. Install the [full kit, or the hub plus Global Bank](../../README.md#download-and-install), into your game's `Interface/AddOns/` folder. Check that `Interface/AddOns/CherrysKit/CherrysKit.toc` exists.
-2. For a separate extension release, download the [Global Bank for RoM installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-GlobalBankDailyRewards-1.3.2.zip). Extract it into the **same** `Interface/AddOns/` and merge `CherrysKit/`. Keep the installed files in their final location. GitHub's automatic source ZIP is a repository snapshot, not this installer.
+2. For a separate extension release, download the [Global Bank for RoM installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.116/CherrysKit-GlobalBankDailyRewards-1.3.3.zip). Extract it into the **same** `Interface/AddOns/` and merge `CherrysKit/`. Keep the installed files in their final location. GitHub's automatic source ZIP is a repository snapshot, not this installer.
 3. Say yes to the Chrome installer in `!setup_cherryskit.bat`, or open `Interface/AddOns/CherrysKit/GlobalBank/Helper/` and double-click **Install Chrome extension.bat** as your normal Windows user. It registers that user's local bridge and opens Chrome's extensions page, with a small setup window on top. Chrome still needs the next steps.
 4. If the extensions page did not open, type **`chrome://extensions/`** into Chrome's address bar. Turn on **Developer mode** at the top right, then click **Load unpacked** at the top left.
 5. The setup window tries to fill in and select the folder for you. If it cannot, select **`<game>\Interface\AddOns\CherrysKit\GlobalBank\Helper\ChromeExtension`** manually: this is the folder directly containing **`manifest.json`**. If the setup window says it copied the path, use **Ctrl+V**, then **Enter**, in the folder picker. Do not select the ZIP or the parent Helper folder.

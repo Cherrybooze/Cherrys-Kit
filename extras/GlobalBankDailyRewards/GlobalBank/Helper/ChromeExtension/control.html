@@ -253,7 +253,14 @@
         <label class="filter-select"><span class="gb-sr-only">Look at</span><select id="stat-kind"><option value="items">Stats on items</option><option value="stones">Stats on mana stones</option></select></label>
         <span id="stat-total" class="panel-meta"></span>
       </div>
-      <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it. Stats appear once a character has logged in and out on the current version. Mana stones include fusion stones. The counts follow the region and the server ticks at the top. Click a name to select that character.</p></details>
+      <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it. Stat names and effects use the colours saved from the game's tooltips. Mana stones include fusion stones. The counts follow the region and the server ticks at the top. Click a character to select it. Right-click a stat, or focus it and press Shift+F10, to exclude it. Exclusions apply to this Stats page and are saved only in this Chrome profile.</p></details>
+      <details id="stat-excluded" class="help-note">
+        <summary id="stat-excluded-title">Excluded stats (0)</summary>
+        <p id="stat-excluded-empty" class="hint">No stats are excluded. Right-click a stat to hide it from this page.</p>
+        <ul id="stat-excluded-list" class="stat-excluded-list"></ul>
+        <button id="stat-restore-all" type="button" class="gb-button--sm" hidden>Restore all excluded stats</button>
+      </details>
+      <p id="stat-status" class="hint" role="status" aria-live="polite"></p>
       <div class="table-panel table-scroll is-grow"><table class="currency-table stat-table"><thead></thead><tbody></tbody></table></div>
     </div>
 

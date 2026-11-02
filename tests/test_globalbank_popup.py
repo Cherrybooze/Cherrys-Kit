@@ -1569,7 +1569,7 @@ assert.deepEqual([...known.effects.get('Wise')], ['+378 Wisdom', '+2457 Maximum 
 assert.deepEqual([...known.effects.get('Keeper')], ['+442 Stamina']);
 assert.deepEqual([...known.effects.get('Storm VII')], ['+19 Dexterity', '+30 Magical Attack']);
 assert.deepEqual(JSON.parse(JSON.stringify(bank.templateTip('Wise', known))), [['ffffff', 'Mana Stone Tier 6'], ['ffffff', 'Cannot be sold'],
-  ['f0610d', '+378 Wisdom', 'ffffff', 'Wise'], ['f0610d', '+2457 Maximum HP']]);
+  ['f0610d', '+378 Wisdom', 'f0610d', 'Wise'], ['f0610d', '+2457 Maximum HP']]);
 assert.equal(bank.templateTip('Nobody has it', known), null);
 // Sorted by type: what's worn in the character window's order first, then each kind together, A to Z inside
 const kinds = [{name: 'Zircon Ring', id: '230500', icon: 'eq_finger_01', type: 'Jewellery'}, {name: 'Axe', id: '211000', icon: 'wp_axe', type: 'Weapons'},

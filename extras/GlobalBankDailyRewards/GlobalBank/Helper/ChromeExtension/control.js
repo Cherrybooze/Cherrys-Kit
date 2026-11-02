@@ -669,7 +669,8 @@
       if (rosterFilter === 'excluded') drawExcluded();
       else GBBank.renderRoster(byId('roster-view'), rosterShown(), tableOptions('roster'));
     },
-    stats: () => GBBank.renderStats(byId('tab-stats'), roster.shown(), {data: {entries: bank.shownEntries()}, all: bank.entries(), tooltip: byId('bank-tooltip')}),
+    stats: () => GBBank.renderStats(byId('tab-stats'), roster.shown(), {data: {entries: bank.shownEntries()}, all: bank.entries(), tooltip: byId('bank-tooltip'),
+      classColor: GBAccounts.classColor, menu: accounts.openMenu, storage: chrome.storage.local}),
     heatmap: () => accounts.refresh('heatmap'),
     accounts: () => accounts.refresh('accounts'),
     servers: () => renderServers(),

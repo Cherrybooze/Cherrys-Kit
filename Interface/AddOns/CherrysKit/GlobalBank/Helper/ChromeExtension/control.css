@@ -451,6 +451,11 @@ tbody tr:last-child td { border-bottom: 0; }
 .currency-card.is-warn .currency-value { color: #ff9a8b; }
 /* A stat's name: hover it for the stat on a tier 6 mana stone */
 .stat-name { cursor: help; border-bottom: 1px dotted #6b7f95; }
+.stat-entry { display: inline-flex; align-items: baseline; gap: 14px; }
+.stat-effects { display: inline-flex; align-items: baseline; gap: 5px; }
+.stat-excluded-list { display: flex; flex-wrap: wrap; gap: 6px 16px; max-height: 180px; overflow: auto; margin: 8px 0; padding: 0; list-style: none; }
+.stat-excluded-list li { display: inline-flex; align-items: center; gap: 8px; }
+#stat-status:empty { display: none; }
 
 /* Who is who: the picker, servers and hover cards */
 .view-servers { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
