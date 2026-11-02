@@ -51,6 +51,46 @@ class AddonsSourceTests(unittest.TestCase):
         self.assertIn("GetTempPath()", start)
         self.assertIn('-WorkingDirectory $paths.interface', start)
 
+    def test_merged_addons_show_as_replaced(self):
+        # The same reading as Get-AddonsReplaced, on the kit's own KitOrigins.lua.
+        source = ADDONS.read_text(encoding='utf-8')
+        self.assertIn("if ($line -notmatch '^\\s*([A-Za-z0-9_]+) = \\{') { continue }", source)
+        self.assertIn("$owner = if ($line -match 'kit_file = \"([^\"/]+)/') { $Matches[1] } else { $key }", source)
+        self.assertIn("[regex]::Matches($line, 'folder = \"([^\"]+)\"')", source)
+        replaced = {}
+        for line in (ROOT / 'Interface/AddOns/CherrysKit/KitOrigins.lua').read_text(encoding='utf-8').splitlines():
+            key = re.match(r'^\s*([A-Za-z0-9_]+) = \{', line)
+            if key:
+                kit_file = re.search(r'kit_file = "([^"/]+)/', line)
+                owner = kit_file.group(1) if kit_file else key.group(1)
+                for folder in re.findall(r'folder = "([^"]+)"', line):
+                    replaced[folder] = owner
+        for folder in ('pbInfo', 'PortraitHP', 'TooltipIds', 'ExtendedMacroIcons', 'CherrysQuests'):
+            self.assertEqual(replaced.get(folder), 'CherrysInfo', folder)
+        self.assertEqual(replaced.get('CherrysLoginxml'), 'LogNextChar')
+        self.assertEqual(replaced.get('!CherrysLoadTimes'), 'LoadTimes')
+        # A separate copy under the kit's own name is an older one: switching it keeps the kit's.
+        self.assertEqual(replaced.get('zBag'), 'zBag')
+        # Every owner is a kit folder the release can install.
+        kit = ROOT / 'Interface/AddOns/CherrysKit'
+        for owner in set(replaced.values()):
+            # LogNextChar's source sits beside the kit and installs into CherrysKit/LogNextChar.
+            self.assertTrue((kit / owner).is_dir() or (ROOT / 'Interface/AddOns' / owner).is_dir(), owner)
+        # A switch only offloads once the new addon is in place, and never when it was skipped.
+        window = re.search(r'function Invoke-AddonsInstallWindow.*?\n\}', source, re.S).group(0)
+        self.assertLess(window.index('Install-Update $plan'), window.index('Invoke-AddonsOffload'))
+        self.assertIn("if (($offload -or $mailbox) -and $skipped -gt 0) {", window)
+
+    def test_mailbox_file_keeps_its_comments_and_crlf(self):
+        source = ADDONS.read_text(encoding='utf-8')
+        write = re.search(r'function Write-AddonsMailbox.*?\n\}', source, re.S).group(0)
+        self.assertIn("-match '^Mailbox\\s*='", write)
+        self.assertIn('-join "`r`n") + "`r`n"), [Text.Encoding]::ASCII)', write)
+        # Leaving zMail moves its folder out, since it has no switch of its own.
+        switch = re.search(r'function Set-AddonsMailbox.*?\n\}', source, re.S).group(0)
+        self.assertIn("Invoke-AddonsOffload $paths 'addons' 'zmail'", switch)
+        self.assertLess(switch.index('Write-AddonsMailbox'), switch.index('Invoke-AddonsOffload'))
+
     def test_page_is_listed_once_and_loads_its_script(self):
         page = (EXTENSION / 'control.html').read_text(encoding='utf-8')
         self.assertEqual(page.count('data-tab="addons"'), 1)
@@ -102,8 +142,72 @@ assert.equal(by.CherrysGrid.state, 'missing');
 assert.equal(rows.filter(row => row.key === 'KittyCombo').length, 1);
 same(updatable(rows).map(row => row.package), ['Hub', 'zBag']);
 same(otherOffloaded(list).map(entry => entry.id), ['Diyce2', 'zBag']);
+const replacedRows = kitRows(list, {packages: [{package: 'pbInfo', folder: 'pbInfo', title: 'pbInfo', latest: '0.60-ck5', state: 'superseded', by: "Cherry's Info"}]});
+const pb = replacedRows.find(row => row.key === 'pbInfo');
+same(pb.state, 'superseded');
+same(pb.by, "Cherry's Info");
+same(updatable(replacedRows).length, 0);
 same(kitRows({hasKit: false, kit: [], offloaded: []}, null), []);
 ''')
+
+    def test_mail_switch(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const same = (actual, expected) => assert.equal(JSON.stringify(actual), JSON.stringify(expected));
+function node(tag) {
+  return {tag, children: [], hidden: false, disabled: false, textContent: '', className: '', listeners: {},
+    append(...kids) { this.children.push(...kids); }, replaceChildren(...kids) { this.children = kids; },
+    addEventListener(type, callback) { this.listeners[type] = callback; }};
+}
+const ids = {};
+const document = {createElement: node, getElementById: id => (ids[id] ||= node('div'))};
+const sent = [];
+const base = {ok: true, hasKit: true, kitVersion: '0.11.116', hubVersion: '0.4.31', kit: [{folder: 'UltimateMailMod', title: 'Ultimate Mail Mod', version: '7.0.1-ck12'}],
+  others: [{folder: 'zmail', title: 'zMail', version: ''}], offloaded: [], job: null};
+const answers = {'addons-list': {...base, mailbox: {known: true, setting: 'auto', umm: true, zmail: false, running: 'UMM'}},
+  'addons-check': {ok: true, latestKit: '0.11.116', packages: [{package: 'zMail', folder: 'zmail', title: 'zMail', latest: '1.4-ck1', state: 'missing', bytes: 3072, external: true, alternativeTo: 'UltimateMailMod'}]}};
+const send = async message => { sent.push(message); return answers[message.type] || {ok: true}; };
+const context = {document, console, window: {confirm: () => true}, setTimeout: () => 0, clearTimeout() {}, Date};
+vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'addons.js'), 'utf8') + ';this.GBAddons = GBAddons;', context);
+const {mailState, kitRows} = context.GBAddons;
+same(mailState(null), null);
+same(mailState({known: false, zmail: false}), null);
+same(mailState({known: true, setting: 'auto', zmail: true, umm: true, running: 'zMail'}).offers, ['UMM']);
+// zMail is on the Mail panel, not in the kit's table
+same(kitRows(answers['addons-list'], answers['addons-check']).map(row => row.key), ['Hub', 'UltimateMailMod']);
+const flush = async () => { for (let i = 0; i < 20; i++) await new Promise(resolve => setImmediate(resolve)); };
+const buttons = item => typeof item === 'string' ? [] : [...(item.tag === 'button' ? [item] : []), ...(item.children || []).flatMap(buttons)];
+(async () => {
+  const page = context.GBAddons.create(send);
+  page.show();
+  await flush();
+  assert.equal(ids['addons-mailbox'].hidden, false);
+  assert.match(ids['addons-mail-text'].textContent, /Ultimate Mail Mod, chosen automatically/);
+  // With the Mail panel showing zmail, the other addons list leaves it out
+  assert.equal(ids['addons-other-rows'].children.length, 1);
+  assert.doesNotMatch(JSON.stringify(ids['addons-other-rows'].children[0].children.map(c => c.textContent)), /zMail/);
+  // zMail isn't here: the switch installs it and picks it
+  buttons(ids['addons-mail-actions']).find(b => b.textContent === 'Switch to zMail').listeners.click({isTrusted: true});
+  await flush();
+  same(sent.filter(m => !['addons-list', 'addons-check'].includes(m.type)).at(-1), {type: 'addons-install', packages: ['zMail'], mailbox: 'zMail'});
+  // zMail running: back to Ultimate Mail Mod is a setting change, and the bridge moves zmail out
+  answers['addons-list'] = {...base, mailbox: {known: true, setting: 'zMail', umm: true, zmail: true, zmailVersion: '1.4-ck1', running: 'zMail'}};
+  await ids['addons-refresh'].listeners.click({isTrusted: true});
+  await flush();
+  assert.match(ids['addons-mail-text'].textContent, /zMail 1\.4-ck1 is in/);
+  buttons(ids['addons-mail-actions']).find(b => b.textContent === 'Switch to Ultimate Mail Mod').listeners.click({isTrusted: true});
+  await flush();
+  same(sent.filter(m => m.type === 'addons-mailbox').at(-1), {type: 'addons-mailbox', use: 'UMM'});
+  // Without Ultimate Mail Mod, it installs first and offloads zmail after
+  answers['addons-list'] = {...base, kit: [], mailbox: {known: true, setting: 'zMail', umm: false, zmail: true, running: 'zMail'}};
+  answers['addons-check'].packages.push({package: 'UltimateMailMod', folder: 'UltimateMailMod', title: 'Ultimate Mail Mod', latest: '7.0.1-ck12', state: 'missing', bytes: 1024});
+  await ids['addons-refresh'].listeners.click({isTrusted: true});
+  await flush();
+  buttons(ids['addons-mail-actions']).find(b => b.textContent === 'Switch to Ultimate Mail Mod').listeners.click({isTrusted: true});
+  await flush();
+  same(sent.at(-1), {type: 'addons-install', packages: ['UltimateMailMod'], mailbox: 'UMM', offload: [{where: 'addons', name: 'zmail'}]});
+})().catch(error => { console.error(error); process.exitCode = 1; });
+""")
 
     def test_background_passes_only_well_formed_addons_requests(self):
         self.run_js(r'''
@@ -128,6 +232,16 @@ for (const bad of [{type: 'addons-install', packages: ['..\\x']}, {type: 'addons
   assert.notEqual(ask(bad).kept, true, JSON.stringify(bad));
 }
 assert.equal(sent.length, 0);
+ask({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addons', name: 'pbInfo', extra: 1}]});
+same(sent.pop(), {type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addons', name: 'pbInfo'}]});
+assert.notEqual(ask({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'offloaded', name: 'x'}]}).kept, true);
+assert.notEqual(ask({type: 'addons-install', packages: ['CherrysInfo'], offload: 'pbInfo'}).kept, true);
+ask({type: 'addons-mailbox', use: 'zMail', extra: 1});
+same(sent.pop(), {type: 'addons-mailbox', use: 'zMail'});
+assert.notEqual(ask({type: 'addons-mailbox', use: 'auto'}).kept, true);
+ask({type: 'addons-install', packages: ['zMail'], mailbox: 'zMail'});
+same(sent.pop(), {type: 'addons-install', packages: ['zMail'], mailbox: 'zMail'});
+assert.notEqual(ask({type: 'addons-install', packages: ['zMail'], mailbox: 'x'}).kept, true);
 ask({type: 'addons-delete', where: 'offloaded', name: 'CherrysKit addons/zBag', extra: 'dropped'});
 same(sent.pop(), {type: 'addons-delete', name: 'CherrysKit addons/zBag', where: 'offloaded'});
 ask({type: 'addons-restore', name: 'zBag', where: 'kit'});
@@ -193,6 +307,22 @@ const buttons = item => typeof item === 'string' ? [] : [...(item.tag === 'butto
   buttons(ids['addons-other-rows'].children[0]).find(b => b.textContent === 'Offload').listeners.click({isTrusted: true});
   await flush();
   assert.equal(JSON.stringify(sent.find(m => m.type === 'addons-offload')), JSON.stringify({type: 'addons-offload', where: 'addons', name: 'Diyce'}));
+  // Switch: a separate pbInfo with Cherry's Info installed only moves; with it missing, it installs first.
+  answers['addons-list'] = {...answers['addons-list'], others: [{folder: 'pbInfo', title: 'pbInfo', version: '0.60'}],
+    replaced: {pbInfo: {owner: 'CherrysInfo', title: "Cherry's Info"}}, kit: [{folder: 'zBag', title: 'zBag', version: '5.07-ck18'}, {folder: 'CherrysInfo', title: "Cherry's Info", version: '1.0.3'}]};
+  await ids['addons-refresh'].listeners.click({isTrusted: true});
+  await flush();
+  assert.match(text(ids['addons-other-rows']), /Replaced by Cherry's Info/);
+  buttons(ids['addons-other-rows'].children[0]).find(b => b.textContent === "Switch with Cherry's Info").listeners.click({isTrusted: true});
+  await flush();
+  assert.equal(JSON.stringify(sent.filter(m => m.type !== 'addons-list').at(-1)), JSON.stringify({type: 'addons-offload', where: 'addons', name: 'pbInfo'}));
+  answers['addons-list'].kit = [{folder: 'zBag', title: 'zBag', version: '5.07-ck18'}];
+  answers['addons-check'].packages.push({package: 'CherrysInfo', folder: 'CherrysInfo', title: "Cherry's Info", latest: '1.0.3', state: 'missing', bytes: 1024});
+  await ids['addons-refresh'].listeners.click({isTrusted: true});
+  await flush();
+  buttons(ids['addons-other-rows'].children[0]).find(b => b.textContent === "Switch with Cherry's Info").listeners.click({isTrusted: true});
+  await flush();
+  assert.equal(JSON.stringify(sent.at(-1)), JSON.stringify({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addons', name: 'pbInfo'}]}));
   answers['addons-list'] = {ok: false};
   const failing = context.GBAddons.create(async () => { throw new Error('Invalid reward record'); });
   failing.show();
@@ -241,6 +371,17 @@ ConvertTo-Json -Compress -Depth 5 -InputObject @{ kit = @($list.kit | ForEach-Ob
         self.assertTrue((self.addons / 'CherrysKit' / 'zBag' / 'README.md').exists())
         self.assertFalse((self.addons / 'CherrysKit' / 'zBag' / 'offloaded-by-global-bank.json').exists())
         self.assertTrue((self.addons / 'Diyce' / 'Diyce.toc').exists())
+
+    def test_mailbox_switch_round_trip(self):
+        kit = self.addons / 'CherrysKit'
+        (kit / 'UltimateMailMod').mkdir()
+        (kit / 'Mailbox.txt').write_bytes(b'-- Which mailbox addon\r\n--\r\n\r\nMailbox = "auto"\r\n')
+        (self.addons / 'zmail').mkdir()
+        (self.addons / 'zmail' / 'CherrysKit-version.txt').write_bytes(b'1.4-ck1\r\n')
+        out = self.run_ps("(Get-AddonsMailbox $paths).running; [void](Set-AddonsMailbox $paths 'UMM'); (Get-AddonsMailbox $paths).running")
+        self.assertEqual(out.splitlines()[-2:], ['zMail', 'UMM'])
+        self.assertEqual((kit / 'Mailbox.txt').read_bytes(), b'-- Which mailbox addon\r\n--\r\n\r\nMailbox = "UMM"\r\n')
+        self.assertFalse((self.addons / 'zmail').exists())
 
     def test_refuses_paths_outside_its_folders_and_its_own_folders(self):
         (self.addons / 'CherrysKit' / 'GlobalBank').mkdir()

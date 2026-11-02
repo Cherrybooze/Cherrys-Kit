@@ -508,7 +508,7 @@
     <div id="tab-addons" class="tab-panel" hidden>
       <h1 class="page-title" id="addons-title">Addons</h1>
       <section class="panel" aria-labelledby="addons-title">
-        <details class="help-note"><summary>How this works</summary><p class="hint">Check for updates reads the latest Cherry’s Kit release on GitHub. Update and Download and install fetch that release’s files in a window of their own, check each one against the release’s checksum, and move the old version to Interface\offloaded_addons first, the same way the guided setup does. Offload moves an addon to Interface\offloaded_addons, where the game doesn’t load it, and Restore puts it back. Delete sends it to the Recycle Bin. Saved settings are kept either way. Close the game before installing.</p></details>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Check for updates reads the latest Cherry’s Kit release on GitHub. Update and Download and install fetch that release’s files in a window of their own, check each one against the release’s checksum, and move the old version to Interface\offloaded_addons first, the same way the guided setup does. Offload moves an addon to Interface\offloaded_addons, where the game doesn’t load it, and Restore puts it back. Delete sends it to the Recycle Bin. Saved settings are kept either way. An addon the kit has taken over, such as pbInfo or TooltipIds (now Cherry’s Info) or Cherry’s Loginxml (now part of LogNextChar), says what replaced it and offers Switch: the new addon installs if it isn’t here, then the old folder is offloaded. Close the game before installing.</p></details>
         <div class="bank-menu-buttons">
           <button id="addons-check" type="button" class="gb-button--primary"><span class="ico" data-ui-icon="sync"></span>Check for updates</button>
           <button id="addons-update-all" type="button" hidden></button>
@@ -518,6 +518,12 @@
         <p id="addons-game" class="settings-warning" role="alert"></p>
         <p id="addons-setup" class="settings-warning" role="alert"></p>
         <p id="addons-job" class="hint"></p>
+        <div id="addons-mailbox" hidden>
+          <h2 class="addons-heading">Mail</h2>
+          <p class="hint">Cherry’s Kit runs one mailbox addon: Ultimate Mail Mod, which is part of the kit, or zMail, pyrr’s addon, which the kit distributes with his permission in its own folder, Interface\AddOns\zmail.</p>
+          <p id="addons-mail-text"></p>
+          <div id="addons-mail-actions" class="bank-menu-buttons"></div>
+        </div>
         <h2 class="addons-heading">Cherry’s Kit</h2>
         <div class="table-panel table-scroll"><table>
           <thead><tr><th>Addon</th><th>Installed</th><th>On GitHub</th><th>Status</th><th></th></tr></thead>

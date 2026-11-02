@@ -11,13 +11,17 @@ Not run on Windows yet: the tests check the page in Node and the bridge's offloa
 | # | Do this | Expected |
 | --- | --- | --- |
 | AD1 | Open the Global Bank page and click **Addons** in the sidebar. | Three lists: Cherry's Kit (hub first, with versions), Other addons, Offloaded. Older copies the setup moved show under Offloaded. |
-| AD2 | Press **Check for updates**. | A line names the latest release. Each kit addon says Up to date, Update available or Not installed, with the version on GitHub. |
+| AD2 | Press **Check for updates**. | A line names the latest release. Each kit addon says Up to date, Update available or Not installed, with the version on GitHub. pbInfo, PortraitHP, TooltipIds, Extended Macro Icons and Cherry's Quests say Replaced by Cherry's Info, and Cherry's Loginxml says Replaced by LogNextChar, with no install button. |
 | AD3 | With an addon out of date, press **Update from GitHub** and say yes. | A PowerShell window opens, downloads, says what it updated, and closes after 20 seconds. The page then shows the new version, and the old folder is in `Interface\offloaded_addons\CherrysKit <version> (before update ...)`. |
 | AD4 | Press **Download and install** on an addon that isn't installed. | It installs the same way and shows Up to date. |
 | AD5 | Update Global Bank itself while the helper runs. | The window stops the helper, updates, and starts it again the way it ran. The page keeps working. |
 | AD6 | **Offload** a kit addon and an addon of your own, start the game. | Both are gone from `Interface\AddOns` (kit ones under `offloaded_addons\CherrysKit addons`) and don't load. **Restore** puts each back, and they load again. |
 | AD7 | **Delete** something under Offloaded, answer Cancel, then OK. | Cancel changes nothing. OK sends it to the Recycle Bin, from where it can be restored. |
 | AD8 | Press an install button with the game running. | The page says to close the game first and nothing changes. |
+| AD10 | Put an old `pbInfo` folder in `Interface\AddOns`, with Cherry's Info installed, and press **Switch with Cherry's Info**. | It asks once, then `pbInfo` is in `Interface\offloaded_addons` and Cherry's Info stays. Restore brings `pbInfo` back. |
+| AD11 | Offload Cherry's Info, keep the old `pbInfo` folder, and press **Switch with Cherry's Info**. | The install window installs Cherry's Info from GitHub, then offloads `pbInfo`. If the latest release has no Cherry's Info, the page says so and nothing moves. |
+| AD12 | With Ultimate Mail Mod in use and no zMail, press **Switch to zMail** on the Mail panel, then Reload UI. | The install window installs zMail into `Interface\AddOns\zmail` and `CherrysKit\Mailbox.txt` says `Mailbox = "zMail"`, comments kept. In game, zMail opens at the mailbox and Ultimate Mail Mod stays out of the way. |
+| AD13 | Press **Switch to Ultimate Mail Mod**, then Reload UI. | `Mailbox.txt` says `"UMM"`, the zmail folder is in `Interface\offloaded_addons`, and Ultimate Mail Mod is back at the mailbox. Switching to zMail again restores nothing by itself: it installs zMail anew, or use Restore first. |
 | AD9 | Unplug the network and press **Check for updates**. | One line says it couldn't read the release; the lists still work. |
 
 ## 0.11.115 Guided setup and Cherry's Info

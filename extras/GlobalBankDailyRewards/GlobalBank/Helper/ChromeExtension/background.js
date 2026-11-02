@@ -6,7 +6,7 @@ chrome.storage?.local?.setAccessLevel?.({accessLevel: 'TRUSTED_CONTEXTS'})?.catc
 // heartbeat the helper watches: while this extension is alive, the helper keeps running.
 const BACKUP_REQUESTS = new Set(['backup-overview', 'backup-macros', 'backup-settings', 'backup-value', 'backup-restore-settings', 'backup-restore-macros', 'backup-macro-set',
   'macro-save', 'macro-groups', 'macro-delete', 'macro-group-list', 'macro-icons', 'macro-icon-list']);
-const ADDON_REQUESTS = new Set(['addons-list', 'addons-check', 'addons-install', 'addons-offload', 'addons-restore', 'addons-delete']);
+const ADDON_REQUESTS = new Set(['addons-list', 'addons-check', 'addons-install', 'addons-offload', 'addons-restore', 'addons-delete', 'addons-mailbox']);
 // The clock also tells the helper's folder the automatic-start choice, which only this extension knows,
 // so the helper's exit message can say what happens next.
 let autoHelperChoice;
@@ -200,6 +200,21 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       const packages = message.packages;
       if (!Array.isArray(packages) || !packages.length || packages.length > 30 || packages.some(name => typeof name !== 'string' || !/^[A-Za-z0-9!_-]{1,64}$/.test(name))) return;
       request.packages = packages;
+      // Switch: the folders the new addon replaces, offloaded once it is installed
+      if (message.offload !== undefined) {
+        const offload = message.offload;
+        if (!Array.isArray(offload) || offload.length > 10 || offload.some(entry => !['kit', 'addons'].includes(entry?.where) || typeof entry.name !== 'string' || !entry.name || entry.name.length > 200)) return;
+        request.offload = offload.map(({where, name}) => ({where, name}));
+      }
+      // The mail switch: which mailbox addon to use once the install is done
+      if (message.mailbox !== undefined) {
+        if (!['UMM', 'zMail'].includes(message.mailbox)) return;
+        request.mailbox = message.mailbox;
+      }
+    }
+    if (message.type === 'addons-mailbox') {
+      if (!['UMM', 'zMail'].includes(message.use)) return;
+      request.use = message.use;
     }
     if (['addons-offload', 'addons-restore', 'addons-delete'].includes(message.type)) {
       if (typeof message.name !== 'string' || !message.name || message.name.length > 200) return;
