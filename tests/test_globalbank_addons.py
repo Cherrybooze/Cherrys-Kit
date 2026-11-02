@@ -91,6 +91,19 @@ class AddonsSourceTests(unittest.TestCase):
         self.assertIn("Invoke-AddonsOffload $paths 'addons' 'zmail'", switch)
         self.assertLess(switch.index('Write-AddonsMailbox'), switch.index('Invoke-AddonsOffload'))
 
+    def test_own_arguments_survive_loading_the_setup(self):
+        # Dot-sourcing the setup binds its parameters here; the window's arguments are copied aside first.
+        source = ADDONS.read_text(encoding='utf-8')
+        kept = source.index("$script:AddonsArgs = @{ Install = $Install; AddonsFolder = $AddonsFolder; Offload = $Offload; Mailbox = $Mailbox }")
+        self.assertLess(kept, source.index('. $script:AddonsSetupPath -LoadOnly'))
+        tail = source[source.index('. $script:AddonsSetupPath -LoadOnly'):]
+        for name in ('$Install', '$AddonsFolder', '$Offload', '$Mailbox'):
+            self.assertNotRegex(tail, re.escape(name) + r'(?![A-Za-z])', name)
+        setup = re.search(r'param\((.*?)\n\)', SETUP.read_text(encoding='utf-8'), re.S).group(1)
+        own = set(re.findall(r'\$([A-Za-z]+)', re.search(r'^param\((.*?)\)$', source, re.M).group(1)))
+        clash = own & set(re.findall(r'\]\$([A-Za-z]+)', setup))
+        self.assertEqual(clash, set(), 'setup parameters that would overwrite this file\'s own')
+
     def test_page_is_listed_once_and_loads_its_script(self):
         page = (EXTENSION / 'control.html').read_text(encoding='utf-8')
         self.assertEqual(page.count('data-tab="addons"'), 1)

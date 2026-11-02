@@ -27,6 +27,9 @@ $script:AddonsKeep = @{ GlobalBank = 'Global Bank runs this page, so it can''t r
 $script:AddonsSetupProblem = ''
 
 # The guided setup's functions: versions, the release check, the checked download and the move to offloaded_addons.
+# Dot-sourcing the setup sets each of its parameters as a variable here, so this file's own arguments are kept
+# aside first: a setup parameter with the same name would otherwise empty them.
+$script:AddonsArgs = @{ Install = $Install; AddonsFolder = $AddonsFolder; Offload = $Offload; Mailbox = $Mailbox }
 $script:AddonsSetupPath = if ($SetupScript) { $SetupScript } else { Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'Setup\Setup-CherrysKit.ps1' }
 if (Test-Path -LiteralPath $script:AddonsSetupPath) {
     . $script:AddonsSetupPath -LoadOnly
@@ -571,7 +574,7 @@ function Invoke-AddonsInstallWindow([string]$names, [string]$addons, [string]$of
     Start-Sleep -Seconds 20
 }
 
-if ($Install) {
-    Invoke-AddonsInstallWindow $Install $AddonsFolder $Offload $Mailbox
+if ($script:AddonsArgs.Install) {
+    Invoke-AddonsInstallWindow $script:AddonsArgs.Install $script:AddonsArgs.AddonsFolder $script:AddonsArgs.Offload $script:AddonsArgs.Mailbox
     exit 0
 }
