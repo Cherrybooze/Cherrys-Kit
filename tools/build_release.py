@@ -179,7 +179,7 @@ def write_external_packages(output: Path, metadata: dict) -> list[dict]:
         require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", folder) is not None and folder != "CherrysKit",
                 f"Unsafe install folder: {folder}")
         files = tree_files(ROOT / "Interface" / "AddOns" / folder)
-        marker = files.get("CherrysKit-version.txt", b"").decode("ascii").strip()
+        marker = (files.get("CherrysKit-version.txt", b"").decode("ascii").splitlines() or [""])[0].strip()
         require(marker == item["version"], f"{folder}/CherrysKit-version.txt differs from release-packages.json.")
         result = write_zip(output / f"{item['folder']}-{item['version']}.zip", files, folder)
         result.update({"package": item["folder"], "title": item["title"], "version": item["version"],

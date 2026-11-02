@@ -67,7 +67,7 @@ class ZMailInboxFix(unittest.TestCase):
     def test_only_the_fix_differs_from_upstream_layout(self):
         toc = (ZMAIL / "core.toc").read_text(encoding="utf-8")
         self.assertIn("src/inbox.lua", toc)
-        self.assertEqual((ZMAIL / "CherrysKit-version.txt").read_text().strip(),
+        self.assertEqual((ZMAIL / "CherrysKit-version.txt").read_text().splitlines()[0].strip(),
                          next(p for p in json.loads((ROOT / "release-packages.json").read_text())["external_packages"]
                               if p["folder"] == "zMail")["version"])
         self.assertNotIn("ainz", "".join(p.read_text(encoding="utf-8", errors="ignore").lower()

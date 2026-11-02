@@ -490,7 +490,7 @@
       "version": "1.4-ck1",
       "summary": "pyrr's mailbox addon, as an alternative to Ultimate Mail Mod. Its own folder Interface\\AddOns\\zmail, unchanged except one fix: mails with gold it can't take (gold cap) are no longer opened, so they keep their 30 days instead of 3.",
       "alternative_to": "UltimateMailMod",
-      "upstream": "zMail 1.4 by pyrr (CurseForge)",
+      "upstream": "zMail 1.4 by pyrr (CurseForge). zMail is pyrr's project; Cherry's Kit has no connection with it other than distributing it, with pyrr's permission.",
       "changes": [
         "src/inbox.lua: only read the attached item's count for mails without gold (data.money == 0), so mails with gold beyond the cap aren't opened.",
         "data/chars.lua: shipped empty (the original listed test characters).",

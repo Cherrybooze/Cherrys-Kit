@@ -130,7 +130,7 @@ Download it from this build: [LogNextChar-1.3.2.zip](https://github.com/Cherrybo
 
 ### zMail, the other mailbox
 
-The kit works with Ultimate Mail Mod (in the kit, and the one the kit is built and maintained with) or zMail by pyrr (on CurseForge). zMail stays in its own folder, `Interface/AddOns/zmail`, so pyrr's own releases can replace it. The kit's copy, **zMail-1.4-ck1.zip** (not in the Full ZIP), is zMail 1.4 with one fix: taking all mail no longer opens mails with gold it can't take because of the gold cap, so they keep their 30 days instead of 3.
+The kit works with Ultimate Mail Mod (in the kit, and the one the kit is built and maintained with) or zMail by pyrr (on CurseForge). zMail is pyrr's project: Cherry's Kit has no connection with it other than distributing it, with pyrr's permission. zMail stays in its own folder, `Interface/AddOns/zmail`, so pyrr's own releases can replace it. The kit's copy, **zMail-1.4-ck1.zip** (not in the Full ZIP), is zMail 1.4 with one fix: taking all mail no longer opens mails with gold it can't take because of the gold cap, so they keep their 30 days instead of 3.
 
 Which one runs is set in `CherrysKit/Mailbox.txt`: `Mailbox = "auto"` (zMail when it is installed, otherwise Ultimate Mail Mod), `"UMM"` or `"zMail"`. The guided setup and Global Bank's Addons page set it for you. With zMail chosen, Ultimate Mail Mod stays off and the hub says so; zMail can't be switched off from the kit, so choosing Ultimate Mail Mod moves the `zmail` folder to `Interface\offloaded_addons`. With zMail, Global Bank also records each character's mailbox from zMail's own list: how many mails, gold waiting, mails with items and when the first of them expires.
 
