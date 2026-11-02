@@ -204,10 +204,10 @@ const GBBank = (() => {
   }
   // The plus on a piece of gear, from its link or, for a worn one, its tooltip
   const plusOf = entry => Number(entry.gear?.plus) || 0;
-  // The quick filters a search can hold, each one word: #+5> (a plus above 5), #+5< and #+5 (exactly), the same with
+  // The quick filters a search can hold, each one word: #+5> (a plus above 5), #+5< (below), #+5>= and #+5 or #+5= (exactly +5), the same with
   // #t for the tier, and #equipped=true or false (worn by a character, or not). A plus works without its # too. Only
   // gear has a plus, and only gear and mana stones a tier, so the rest never matches those.
-  const QUICK = /^(?:#?\+(\d{1,2})|#t(\d{1,2}))(>=|<=|>|<|=)?$/i;
+  const QUICK = /^(?:#?\+(\d{1,2})|#t(\d{1,2}))(>=|=>|<=|=<|!=|>|<|=)?$/i;
   function quickFilters(text) {
     const tests = [];
     const words = [];
@@ -223,8 +223,7 @@ const GBBank = (() => {
         const how = found[3] || '=';
         tests.push(entry => {
           if (plus ? !entry.gear : !(entry.tier > 0)) return false;
-          const have = plus ? plusOf(entry) : entry.tier;
-          return how === '>' ? have > limit : how === '<' ? have < limit : how === '>=' ? have >= limit : how === '<=' ? have <= limit : have === limit;
+          return compare(plus ? plusOf(entry) : entry.tier, how, limit);
         });
         continue;
       }
@@ -614,12 +613,82 @@ const GBBank = (() => {
     if (linked) return `${linked} › ${rom}`;
     return loginScreen(row).steam ? rom : `${rom}, ${locked && locked() ? 'accounts locked' : 'not linked'}`;
   };
-  function searchRows(rows, text) {
-    const wanted = String(text || '').trim().toLowerCase();
-    if (!wanted) return rows;
-    return rows.filter(row => row.name.toLowerCase().includes(wanted) || String(row.server || '').toLowerCase().includes(wanted)
-      || String(row.account || '').toLowerCase().includes(wanted) || String(row.rom || '').toLowerCase().includes(wanted) || String(row.class || '').toLowerCase().includes(wanted)
-      || String(row.character?.note || '').toLowerCase().includes(wanted));
+  // The Characters and Currencies searches' filters, each one word: #level>=100, #classes>3, #dailytokens>5k,
+  // #charges>10k, #gold<1m, #class=mage and so on, with k, m and b for thousands, millions and billions. A word on its
+  // own, such as #charges, means more than none. extra.mailbox(key): its mailbox, for #mail and #mailgold.
+  const AMOUNT = /^(\d+(?:\.\d+)?)([kmb]?)$/i;
+  const SCALE = {'': 1, k: 1e3, m: 1e6, b: 1e9};
+  const ownMoney = key => character => Number((character.currencies || []).find(item => item.key === key)?.amount) || 0;
+  const CHARACTER_FILTERS = {
+    level: character => Number(character.level) || 0,
+    classes: character => (character.classes || []).filter(item => Number(item.level) > 0).length,
+    classlevels: character => (character.classes || []).reduce((sum, item) => sum + (Number(item.level) || 0), 0),
+    gold: character => Number(character.gold) || 0,
+    dailytokens: ownMoney('billdin'),
+    charges: ownMoney('transmutor'),
+    diamonds: ownMoney('account'),
+    rubies: ownMoney('bonus'),
+    stones: character => transferStones(character),
+    bag: character => (character.bag || []).length,
+    bank: character => (character.bank || []).length,
+    bagfree: character => Math.max(0, (Number(character.bagSlots) || 0) - (character.bag || []).length),
+    bankfree: character => Math.max(0, (Number(character.bankSlots) || 0) - (character.bank || []).length),
+    worn: character => (Array.isArray(character.equip) ? character.equip.length : 0),
+    mail: (character, extra) => extra?.mailbox?.(character.key)?.count || 0,
+    mailgold: (character, extra) => extra?.mailbox?.(character.key)?.gold || 0,
+  };
+  const FILTER_NAMES = {lvl: 'level', classtotal: 'classes', class_total: 'classes', dailytoken: 'dailytokens', tokens: 'dailytokens', token: 'dailytokens',
+    charge: 'charges', transmutor: 'charges', diamond: 'diamonds', ruby: 'rubies', transferstones: 'stones', stone: 'stones', transfer: 'stones', mails: 'mail'};
+  // Yes or no, with no number
+  const CHARACTER_FLAGS = {needslogin: character => !!character.stale, steam: character => !!character.steam,
+    nobank: character => !bankKnown(character), linked: (character, extra, row) => !!row?.account};
+  const lettersOf = text => String(text || '').toLowerCase().replace(/[^a-zÀ-￿]/g, '');
+  function compare(have, how, limit) {
+    return how === '>' ? have > limit : how === '<' ? have < limit : how === '>=' || how === '=>' ? have >= limit
+      : how === '<=' || how === '=<' ? have <= limit : how === '!=' ? have !== limit : have === limit;
+  }
+  function characterFilters(text, extra) {
+    const tests = [];
+    const words = [];
+    const all = String(text || '');
+    // Only a search with a filter in it is split at its commas and spaces: a note can hold either
+    if (!/(^|[\s,])#[a-z]/i.test(all)) return {tests, text: all.trim()};
+    for (const word of all.split(/[\s,]+/)) {
+      if (!word) continue;
+      const found = /^#([a-z_]+)(?:(>=|=>|<=|=<|!=|>|<|=)(.*))?$/i.exec(word);
+      if (!found) { words.push(word); continue; }
+      const name = FILTER_NAMES[found[1].toLowerCase()] || found[1].toLowerCase();
+      const [, , how, value = ''] = found;
+      if (CHARACTER_FLAGS[name] && !how) {
+        tests.push((character, row) => CHARACTER_FLAGS[name](character, extra, row));
+        continue;
+      }
+      if (name === 'class' && (how === '=' || how === '!=') && value) {
+        const wanted = value.toLowerCase();
+        const has = character => [character.class, ...(character.classes || []).map(item => item.name)].some(item => String(item || '').toLowerCase().startsWith(wanted));
+        tests.push(character => has(character) === (how === '='));
+        continue;
+      }
+      // A number, or any currency by the start of its name: #honor>1000
+      const field = CHARACTER_FILTERS[name] || (name.length >= 3 ? character => {
+        const money = (character.currencies || []).find(item => lettersOf(currencyName(item)).startsWith(name));
+        return Number(money?.amount) || 0;
+      } : null);
+      const amount = how ? AMOUNT.exec(value) : null;
+      if (!field || (how && !amount)) { words.push(word); continue; }
+      const limit = amount ? Number(amount[1]) * SCALE[amount[2].toLowerCase()] : 0;
+      tests.push(character => compare(field(character, extra), how || '>', limit));
+    }
+    return {tests, text: words.join(' ')};
+  }
+  function searchRows(rows, text, extra = null) {
+    const filters = characterFilters(text, extra);
+    const wanted = filters.text.toLowerCase();
+    if (!wanted && !filters.tests.length) return rows;
+    return rows.filter(row => filters.tests.every(test => test(row.character || {}, row)) && (!wanted || row.name.toLowerCase().includes(wanted)
+      || String(row.server || '').toLowerCase().includes(wanted) || String(row.account || '').toLowerCase().includes(wanted)
+      || String(row.rom || '').toLowerCase().includes(wanted) || String(row.class || '').toLowerCase().includes(wanted)
+      || String(row.character?.note || '').toLowerCase().includes(wanted)));
   }
   // Diamonds and Rubies belong to an account, and every character on it saved the same balance, so each account counts
   // once, as of the newest save on it. A character no login screen has listed could be on any account: it isn't counted,
@@ -674,7 +743,7 @@ const GBBank = (() => {
     root.last = {characters, options};
     const how = options.how || 'server';
     const table = currencyTable(characters, root.sorting.key, root.sorting.descending);
-    const rows = searchRows(table.rows, options.search);
+    const rows = searchRows(table.rows, options.search, options);
     const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
     for (const group of groups) {
       group.totals = {};
@@ -716,7 +785,7 @@ const GBBank = (() => {
     root.last = {characters, options};
     root.openCharacter = options.openCharacter;
     const how = options.how || 'server';
-    const rows = searchRows(rosterRows(characters, root.sorting.key, root.sorting.descending, options.accountName, options.romTitle), options.search);
+    const rows = searchRows(rosterRows(characters, root.sorting.key, root.sorting.descending, options.accountName, options.romTitle), options.search, options);
     const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
     // A heading that names the accounts says them for every line under it
     const showAccounts = how !== 'account';
@@ -1904,5 +1973,5 @@ const GBBank = (() => {
   return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, DEFAULT_RULES,
     quickFilters, wornGear, plusOf, slotLabel, SLOT_LABELS, TIER_FROM, statEffects, templateTip,
     formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
-    rosterRows, renderRoster, statTable, renderStats, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
+    rosterRows, renderRoster, statTable, renderStats, searchRows, characterFilters, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
 })();

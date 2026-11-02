@@ -329,6 +329,7 @@
     openCharacter,
     summary: prefix === 'currency' ? byId('currency-summary') : null,
     selectKeys,
+    mailbox: key => mailboxes().get(key),
   });
   // Which characters the Characters page lists. Needs login and Bank not recorded mean different things and can
   // overlap. Excluded characters aren't in the saved data at all: the helper keeps that list.

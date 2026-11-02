@@ -201,6 +201,7 @@ This runs in Chrome. Checked so far: the page and popup driven in a headless Chr
 | R42 | On **Stats**, hover a stat's name, for mana stones and for items. | A tooltip as on a tier 6 mana stone, with the stat's effects in the game's wording. A stat no saved tooltip has says so. |
 | R43 | Select three characters and right-click one of them. | Lines for all three come first: view their bank, copy their names separated by commas or one a line, select the rest of their RoM accounts, link them, unselect. |
 | R44 | In game, type `/gb probe`. | It lists SendMail among the hooks, and says how many mails the mailbox had when last open and how many sent are kept. |
+| R45 | On **Characters**, search *#level>=100*, *#classes>3*, *#dailytokens>5k*, *#charges>10k*, *#gold<1m, #class=mage* and *#bagfree>10*. Try one on **Currencies**. | Each keeps only the characters it says, also combined. k and m work; a plain name still finds the character, and a note with a comma in it still matches. |
 | R20 | Open **Stats**, **Servers**, **Gameforge accounts**, **Macros**, **Addon settings**, **Item Depot** and **Auctions**. | Each works as before in the new look. Icons on Macros show as before. |
 | R21 | Open the page twice. | The warning about two tabs shows. |
 | R22 | Make the window narrow. | The side folds to its icons, filters wrap, and wide tables scroll inside their own box. Nothing makes the whole page scroll sideways. |

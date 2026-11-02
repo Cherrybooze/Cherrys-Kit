@@ -1542,6 +1542,14 @@ const names = filters => [...bank.applyFilters(list, filters).map(e => `${e.plac
 assert.deepEqual(names({text: '#+1>, #t10>, #equipped=false'}), ['bag:Staff']);
 assert.deepEqual(names({text: '+5>'}), ['worn:Staff']);
 assert.deepEqual(names({text: '#+3'}), ['bag:Staff']);
+// A plus with no sign is that plus exactly, as with =; > is above it
+assert.deepEqual(names({text: '#+3='}), ['bag:Staff']);
+assert.deepEqual(names({text: '#+30'}), []);
+assert.deepEqual(names({text: '#+12'}), ['worn:Staff']);
+assert.deepEqual(names({text: '#+3>'}), ['worn:Staff']);
+assert.deepEqual(names({text: '#+12=>'}), ['worn:Staff']);
+assert.deepEqual(names({text: '#+12!='}), ['bag:Staff', 'worn:Odd Charm']);
+assert.deepEqual(names({text: '#t12'}), ['worn:Staff']);
 assert.deepEqual(names({text: '#+12<='}), ['bag:Staff', 'worn:Staff', 'worn:Odd Charm']);
 // Only gear has a plus, and only gear and stones a tier
 assert.deepEqual(names({text: '#+0'}), ['worn:Odd Charm']);
@@ -1622,6 +1630,54 @@ assert.deepEqual([...some[0].servers.map(s => s.server)], ['Aynara']);
 assert.equal(some[0].count, 2);
 assert.equal(some[0].total, 14);
 assert.deepEqual([...gb.heatServers(people).map(s => `${s.name}:${s.count}`)], ['Aynara:2', 'Kerub:1']);
+""")
+
+    def test_characters_search_takes_filters(self):
+        self.run_js(r"""
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const context = vm.createContext({console, Intl});
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'bank.js'), 'utf8') + ';this.GBBank = GBBank;', context);
+const bank = context.GBBank;
+const people = [
+  {name: 'Ann', key: 'a', class: 'Mage', level: 100, gold: 999999999, bagSlots: 60, bag: [{}, {}], bankSeen: true, bank: [], note: 'main, bank alt',
+   classes: [{name: 'Mage', level: 100}, {name: 'Priest', level: 100}, {name: 'Druid', level: 90}, {name: 'Warden', level: 80}],
+   currencies: [{key: 'billdin', amount: 6000, name: ''}, {key: 'transmutor', amount: 12000, name: ''}, {key: '4', amount: 2500, name: 'Honor Points'}], equip: [{}, {}], steam: true},
+  {name: 'Bob', key: 'b', class: 'Warrior', level: 60, gold: 500000, bagSlots: 60, bag: Array(55).fill({}), bank: [], stale: true,
+   classes: [{name: 'Warrior', level: 60}, {name: 'Mage', level: 20}], currencies: [{key: 'billdin', amount: 4000, name: ''}]},
+  {name: 'Cid', key: 'c', class: 'Scout', level: 100, gold: 0, bagSlots: 30, bag: [], bankSeen: true, bank: [{id: '244657', count: 3, name: 'Server Transfer Stone'}],
+   classes: [{name: 'Scout', level: 100}], currencies: []},
+];
+const rows = bank.rosterRows(people, 'name', false, name => (name === 'Ann' ? 'GF one' : ''), null);
+const names = (text, extra = null) => [...bank.searchRows(rows, text, extra).map(row => row.name)];
+assert.deepEqual(names('#level>=100'), ['Ann', 'Cid']);
+assert.deepEqual(names('#level=>100'), ['Ann', 'Cid']);
+assert.deepEqual(names('#classtotal>3'), ['Ann']);
+assert.deepEqual(names('#classes=2'), ['Bob']);
+assert.deepEqual(names('#classlevels>300'), ['Ann']);
+assert.deepEqual(names('#dailytoken>5k'), ['Ann']);
+assert.deepEqual(names('#dailytokens>=4k, #level<100'), ['Bob']);
+assert.deepEqual(names('#charges>10k'), ['Ann']);
+assert.deepEqual(names('#charges'), ['Ann']);
+assert.deepEqual(names('#gold>=1.5m'), ['Ann']);
+assert.deepEqual(names('#gold<1m #level=60'), ['Bob']);
+assert.deepEqual(names('#honor>1000'), ['Ann']);
+assert.deepEqual(names('#class=mage'), ['Ann', 'Bob']);
+assert.deepEqual(names('#class!=mage'), ['Cid']);
+assert.deepEqual(names('#stones'), ['Cid']);
+assert.deepEqual(names('#bagfree>10'), ['Ann', 'Cid']);
+assert.deepEqual(names('#worn'), ['Ann']);
+assert.deepEqual(names('#needslogin'), ['Bob']);
+assert.deepEqual(names('#nobank'), ['Bob']);
+assert.deepEqual(names('#steam'), ['Ann']);
+assert.deepEqual(names('#linked'), ['Ann']);
+// Mail needs to know the mailboxes
+assert.deepEqual(names('#mail', {mailbox: key => (key === 'c' ? {count: 2, gold: 3000000} : null)}), ['Cid']);
+assert.deepEqual(names('#mailgold>1m', {mailbox: key => (key === 'c' ? {count: 2, gold: 3000000} : null)}), ['Cid']);
+// Filters and words together; a note with a comma still matches a plain search
+assert.deepEqual(names('#level>=100 ann'), ['Ann']);
+assert.deepEqual(names('main, bank'), ['Ann']);
+assert.deepEqual(names('#nonsense>1'), []);
+assert.deepEqual(names(''), ['Ann', 'Bob', 'Cid']);
 """)
 
     def test_every_element_the_page_scripts_use_is_on_the_page(self):
