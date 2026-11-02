@@ -104,6 +104,8 @@ function Get-AddonsReplaced([string]$kit, $release = $null) {
             }
         }
     } catch { }
+    # Older kit folders KitOrigins doesn't name: Cherry's Loginxml shipped as CherrysKit\CherrysLoginxmlHook.
+    if ($replaced.ContainsKey('CherrysLoginxml') -and -not $replaced.ContainsKey('CherrysLoginxmlHook')) { $replaced['CherrysLoginxmlHook'] = $replaced['CherrysLoginxml'] }
     foreach ($package in @($release.packages)) {
         foreach ($folder in @($package.replaces)) { if ($folder -and $folder -ne $package.package) { $replaced[[string]$folder] = @{ owner = [string]$package.package; title = [string]$package.title } } }
     }
@@ -163,6 +165,37 @@ function Get-AddonsMailbox($paths) {
 
 # Without an install: the chosen one is already here. Leaving zMail means moving its folder out too, since zMail
 # has no switch of its own.
+# LogNextChar's login screen. The game reads a login screen only from Interface\loginxml, outside AddOns, so no
+# package can put it there: LogNextChar\setup\Install.ps1 copies it (the guided setup runs that, or Install login
+# screen.bat). frames\login.lua carries the version; a loginxml without LogNextChar's is someone else's.
+function Get-AddonsLoginScreen($paths) {
+    $lnc = Join-Path $paths.kit 'LogNextChar'
+    $folder = Join-Path $paths.interface 'loginxml'
+    $answer = @{ present = (Test-Path -LiteralPath (Join-Path $folder 'loginxml.toc')); folder = (Test-Path -LiteralPath $folder); version = ''; ours = $false
+        lnc = (Test-Path -LiteralPath $lnc); lncVersion = ''; installer = (Test-Path -LiteralPath (Join-Path $lnc 'setup\Install.ps1')) }
+    if ($answer.lnc) {
+        try { foreach ($line in (Get-Content -LiteralPath (Join-Path $lnc 'LogNextChar.lua') -TotalCount 40 -ErrorAction Stop)) { if ($line -match '^me\.version = "([^"]+)"') { $answer.lncVersion = $Matches[1]; break } } } catch { }
+    }
+    try {
+        $code = [IO.File]::ReadAllText((Join-Path $folder 'frames\login.lua'))
+        if ($code -match 'version = "([^"]+)"') { $answer.version = $Matches[1] }
+        $answer.ours = $code -match 'LogNextChar'
+    } catch { }
+    $answer.state = if (-not $answer.present) { 'missing' } elseif (-not $answer.ours) { 'other' } elseif ($answer.lncVersion -and $answer.version -ne $answer.lncVersion) { 'update' } else { 'current' }
+    return $answer
+}
+
+# Runs LogNextChar's own installer in a window of its own: it prints as it goes, and it keeps saved logins.
+function Start-AddonsLoginScreen($paths) {
+    $installer = Join-Path $paths.kit 'LogNextChar\setup\Install.ps1'
+    if (-not (Test-Path -LiteralPath $installer)) { throw 'LogNextChar is not installed, and its login screen comes with it. Install LogNextChar first.' }
+    if (Test-AddonsGameRunning $paths) { throw 'Close the game first: it reads the login screen when it starts.' }
+    $command = "& '{0}'; Write-Host ''; Write-Host 'This window closes in 20 seconds.'; Start-Sleep -Seconds 20" -f ($installer -replace "'", "''")
+    # One argument string: Windows PowerShell's Start-Process joins a list without quoting it.
+    Start-Process -FilePath 'powershell.exe' -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -Command "{0}"' -f $command) -WorkingDirectory $paths.interface -WindowStyle Normal | Out-Null
+    return @{ started = $true }
+}
+
 function Set-AddonsMailbox($paths, [string]$use) {
     $mailbox = Get-AddonsMailbox $paths
     if ($use -eq 'zMail' -and -not $mailbox.zmail) { throw 'zMail is not installed.' }
@@ -211,7 +244,8 @@ function Get-AddonsList($paths) {
     $own = if ($script:KitOwnFolders) { $script:KitOwnFolders } else { @('KitLoad', 'Media', 'docs', 'Setup') }
     $answer = @{ kit = @(); others = @(); offloaded = @(); kitVersion = ''; hubVersion = ''; hasKit = $false
         gameRunning = (Test-AddonsGameRunning $paths); setupProblem = $script:AddonsSetupProblem; job = (Read-AddonsStatus $paths)
-        replaced = (Get-AddonsReplaced $paths.kit); mailbox = (Get-AddonsMailbox $paths) }
+        replaced = (Get-AddonsReplaced $paths.kit); mailbox = (Get-AddonsMailbox $paths)
+        loginScreen = (Get-AddonsLoginScreen $paths) }
     if (Test-Path -LiteralPath (Join-Path $paths.kit 'CherrysKit.toc')) {
         $answer.hasKit = $true
         if (Get-Command Get-KitVersion -ErrorAction SilentlyContinue) {
@@ -438,6 +472,7 @@ function Invoke-AddonsMessage($message) {
         'addons-check' { return (Get-AddonsCheck $paths) }
         'addons-install' { return (Start-AddonsInstall $paths @($message.packages) @($message.offload) ([string]$message.mailbox)) }
         'addons-mailbox' { return (Set-AddonsMailbox $paths ([string]$message.use)) }
+        'addons-loginscreen' { return (Start-AddonsLoginScreen $paths) }
         'addons-offload' { return (Invoke-AddonsOffload $paths ([string]$message.where) ([string]$message.name)) }
         'addons-restore' { return (Invoke-AddonsRestore $paths ([string]$message.name)) }
         'addons-delete' { return (Invoke-AddonsDelete $paths ([string]$message.where) ([string]$message.name)) }

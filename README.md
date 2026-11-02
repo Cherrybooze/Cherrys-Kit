@@ -384,7 +384,9 @@ The hub and Global Bank do not offer their own Offload/Delete controls on this p
 
 ### Switching old addons and mailboxes
 
-An old separate addon, or a kit addon merged into another, says **Replaced by ...**. **Switch with ...** first makes sure the replacement is installed, downloading it after confirmation if needed, and then offloads the old folder. For example, **Switch with Cherry's Info** retires a separate pbInfo copy after Cherry's Info is available. This keeps the old folder for Restore. If Latest does not yet contain the replacement, install it from the appropriate playtest ZIP first.
+An old separate addon, or a kit addon merged into another, says **Replaced by ...**. **Switch with ...** first makes sure the replacement is installed, downloading it after confirmation if needed, and then offloads the old folder. For example, **Switch with Cherry's Info** retires a separate pbInfo copy after Cherry's Info is available. This keeps the old folder for Restore. If Latest does not yet contain the replacement, install it from the appropriate playtest ZIP first. A replaced addon that isn't on your PC isn't listed as a row; one line under the table names them.
+
+The **Login screen** panel shows `Interface\loginxml`, the only place the game reads a login screen from. Running the game doesn't put one there: LogNextChar's installer copies it, from the panel's button, the guided setup, or `LogNextChar\Install login screen.bat`, with the game closed. It keeps saved logins and copies anything it replaces to `Interface\offloaded_addons`. The panel says when the login screen is missing, older than LogNextChar, or someone else's.
 
 In the **Mail** panel, **Switch to zMail** uses or installs zMail and selects it in `CherrysKit\Mailbox.txt`; Ultimate Mail Mod stays off. **Switch to Ultimate Mail Mod** selects/installs that addon and offloads `Interface\AddOns\zmail`, because zMail cannot be switched off in game. Confirm the named action and Reload UI to apply the choice. zMail remains pyrr's addon, distributed here with his permission.
 

@@ -156,10 +156,27 @@ assert.equal(rows.filter(row => row.key === 'KittyCombo').length, 1);
 same(updatable(rows).map(row => row.package), ['Hub', 'zBag']);
 same(otherOffloaded(list).map(entry => entry.id), ['Diyce2', 'zBag']);
 const replacedRows = kitRows(list, {packages: [{package: 'pbInfo', folder: 'pbInfo', title: 'pbInfo', latest: '0.60-ck5', state: 'superseded', by: "Cherry's Info"}]});
-const pb = replacedRows.find(row => row.key === 'pbInfo');
-same(pb.state, 'superseded');
-same(pb.by, "Cherry's Info");
+// Replaced and not installed: not a row, but named once below the table
+same(replacedRows.find(row => row.key === 'pbInfo'), undefined);
 same(updatable(replacedRows).length, 0);
+const retiredCheck = {packages: [{package: 'pbInfo', folder: 'pbInfo', title: 'pbInfo', state: 'superseded', by: "Cherry's Info"},
+  {package: 'TooltipIds', folder: 'TooltipIds', title: 'TooltipIds', state: 'superseded', by: "Cherry's Info"},
+  {package: 'CherrysLoginxml', folder: 'CherrysLoginxmlHook', title: "Cherry's Loginxml", state: 'superseded', by: 'LogNextChar'},
+  {package: 'zBag', folder: 'zBag', title: 'zBag', state: 'current'}]};
+same(context.GBAddons.retired(retiredCheck), "pbInfo, TooltipIds (now Cherry's Info); Cherry's Loginxml (now LogNextChar)");
+same(kitRows({hasKit: true, kit: [], offloaded: []}, retiredCheck).map(row => row.key), ['Hub', 'zBag']);
+// A leftover folder of a replaced addon is still a row, with Switch
+const leftover = kitRows({hasKit: true, kit: [{folder: 'pbInfo', title: 'pbInfo', version: '0.60'}], offloaded: [], replaced: {pbInfo: {owner: 'CherrysInfo', title: "Cherry's Info"}}}, null);
+same(leftover.find(row => row.key === 'pbInfo').state, 'superseded');
+const login = context.GBAddons.loginState;
+same(login(null), null);
+assert.match(login({state: 'missing', installer: true}).text, /running the game doesn’t put it there/);
+same(login({state: 'missing', installer: true}).action, 'Install login screen');
+assert.match(login({state: 'missing', installer: false}).text, /install LogNextChar first/);
+same(login({state: 'missing', installer: false}).action, '');
+same(login({state: 'update', installer: true, version: '1.3.2', lncVersion: '1.3.3'}).action, 'Update login screen');
+same(login({state: 'current', installer: true, version: '1.3.3'}).action, '');
+same(login({state: 'other', installer: true}).action, 'Replace with LogNextChar’s login screen');
 same(kitRows({hasKit: false, kit: [], offloaded: []}, null), []);
 ''')
 
@@ -249,6 +266,8 @@ ask({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addon
 same(sent.pop(), {type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'addons', name: 'pbInfo'}]});
 assert.notEqual(ask({type: 'addons-install', packages: ['CherrysInfo'], offload: [{where: 'offloaded', name: 'x'}]}).kept, true);
 assert.notEqual(ask({type: 'addons-install', packages: ['CherrysInfo'], offload: 'pbInfo'}).kept, true);
+ask({type: 'addons-loginscreen', name: 'x'});
+same(sent.pop(), {type: 'addons-loginscreen'});
 ask({type: 'addons-mailbox', use: 'zMail', extra: 1});
 same(sent.pop(), {type: 'addons-mailbox', use: 'zMail'});
 assert.notEqual(ask({type: 'addons-mailbox', use: 'auto'}).kept, true);

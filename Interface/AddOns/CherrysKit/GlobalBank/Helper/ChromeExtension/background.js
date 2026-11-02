@@ -6,7 +6,7 @@ chrome.storage?.local?.setAccessLevel?.({accessLevel: 'TRUSTED_CONTEXTS'})?.catc
 // heartbeat the helper watches: while this extension is alive, the helper keeps running.
 const BACKUP_REQUESTS = new Set(['backup-overview', 'backup-macros', 'backup-settings', 'backup-value', 'backup-restore-settings', 'backup-restore-macros', 'backup-macro-set',
   'macro-save', 'macro-groups', 'macro-delete', 'macro-group-list', 'macro-icons', 'macro-icon-list']);
-const ADDON_REQUESTS = new Set(['addons-list', 'addons-check', 'addons-install', 'addons-offload', 'addons-restore', 'addons-delete', 'addons-mailbox']);
+const ADDON_REQUESTS = new Set(['addons-list', 'addons-check', 'addons-install', 'addons-offload', 'addons-restore', 'addons-delete', 'addons-mailbox', 'addons-loginscreen']);
 // The clock also tells the helper's folder the automatic-start choice, which only this extension knows,
 // so the helper's exit message can say what happens next.
 let autoHelperChoice;

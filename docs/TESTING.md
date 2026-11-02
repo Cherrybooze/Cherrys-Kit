@@ -11,7 +11,7 @@ Not run on Windows yet: the tests check the page in Node and the bridge's offloa
 | # | Do this | Expected |
 | --- | --- | --- |
 | AD1 | Open the Global Bank page and click **Addons** in the sidebar. | Three lists: Cherry's Kit (hub first, with versions), Other addons, Offloaded. Older copies the setup moved show under Offloaded. |
-| AD2 | Press **Check for updates**. | A line names the latest release. Each kit addon says Up to date, Update available or Not installed, with the version on GitHub. pbInfo, PortraitHP, TooltipIds, Extended Macro Icons and Cherry's Quests say Replaced by Cherry's Info, and Cherry's Loginxml says Replaced by LogNextChar, with no install button. |
+| AD2 | Press **Check for updates**. | A line names the latest release. Each kit addon says Up to date, Update available or Not installed, with the version on GitHub. pbInfo, PortraitHP, TooltipIds, Extended Macro Icons, Cherry's Quests and Cherry's Loginxml are not rows unless their folder is on this PC; one line under the table names them as now Cherry's Info or LogNextChar. |
 | AD3 | With an addon out of date, press **Update from GitHub** and say yes. | A PowerShell window opens, downloads, says what it updated, and closes after 20 seconds. The page then shows the new version, and the old folder is in `Interface\offloaded_addons\CherrysKit <version> (before update ...)`. |
 | AD4 | Press **Download and install** on an addon that isn't installed. | It installs the same way and shows Up to date. |
 | AD5 | Update Global Bank itself while the helper runs. | The window stops the helper, updates, and starts it again the way it ran. The page keeps working. |
@@ -22,6 +22,7 @@ Not run on Windows yet: the tests check the page in Node and the bridge's offloa
 | AD11 | Offload Cherry's Info, keep the old `pbInfo` folder, and press **Switch with Cherry's Info**. | The install window installs Cherry's Info from GitHub, then offloads `pbInfo`. If the latest release has no Cherry's Info, the page says so and nothing moves. |
 | AD12 | With Ultimate Mail Mod in use and no zMail, press **Switch to zMail** on the Mail panel, then Reload UI. | The install window installs zMail into `Interface\AddOns\zmail` and `CherrysKit\Mailbox.txt` says `Mailbox = "zMail"`, comments kept. In game, zMail opens at the mailbox and Ultimate Mail Mod stays out of the way. |
 | AD13 | Press **Switch to Ultimate Mail Mod**, then Reload UI. | `Mailbox.txt` says `"UMM"`, the zmail folder is in `Interface\offloaded_addons`, and Ultimate Mail Mod is back at the mailbox. Switching to zMail again restores nothing by itself: it installs zMail anew, or use Restore first. |
+| AD14 | Rename `Interface\loginxml` away, open the Addons page. | The Login screen panel says it's missing and that running the game doesn't put it there. **Install login screen** opens a window that copies it; after **Read the folder again** it says it matches LogNextChar. Put your own folder back afterwards if you need its saved logins. |
 | AD9 | Unplug the network and press **Check for updates**. | One line says it couldn't read the release; the lists still work. |
 
 ## zMail as the mailbox (zMail 1.4-ck1, hub Mailbox.txt, Global Bank mailbox record)
