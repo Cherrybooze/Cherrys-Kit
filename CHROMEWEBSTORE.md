@@ -1,6 +1,6 @@
 # Chrome Web Store listing — Global Bank for RoM
 
-Last updated: 2026-11-02. Working metadata for extension **1.3.3**; this file does not publish a store listing.
+Last updated: 2026-11-02. Working metadata for extension **1.3.4**; this file does not publish a store listing.
 
 ## Store listing
 
@@ -57,12 +57,13 @@ Data is not sold, used for unrelated purposes, or used for credit decisions. See
 - **Support:** [repository issues](https://github.com/Cherrybooze/Cherrys-Kit/issues).
 - **Homepage:** [Cherry's Kit](https://github.com/Cherrybooze/Cherrys-Kit).
 - **Privacy policy:** [repository policy](https://github.com/Cherrybooze/Cherrys-Kit/blob/main/docs/privacy.md); confirm the listing's public policy URL before submission.
-- **Upload:** use the generated `CherrysKit-GlobalBankDailyRewards-ChromeWebStore-1.3.3.zip`. The build removes the unpacked extension's `key`. Confirm the store-assigned ID in the native-host allowlist.
+- **Upload:** use the generated `CherrysKit-GlobalBankDailyRewards-ChromeWebStore-1.3.4.zip`. The build removes the unpacked extension's `key`. Confirm the store-assigned ID in the native-host allowlist.
 
 ## Version history
 
 | Version | Date | Changes | Status |
 | --- | --- | --- | --- |
+| 1.3.4 | 2026-11-02 | Correct hub-version comparison; clarify published releases versus reloading installed files. No permission/storage changes. | Draft |
 | 1.3.3 | 2026-11-02 | Original stat colours, inline effects, class-coloured holders and local excluded-stat controls. Private-data packaging guards strengthened. | Draft |
 | 1.3.2 | 2026-11-02 | Equipment/mail views and addon management; see the repository's release notes. | Prior build; publication status to confirm. |
 

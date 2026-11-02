@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.32** · Kit release **0.11.116** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.33** · Kit release **0.11.117** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Kit 0.11.117 playtest
+
+Global Bank now compares the hub with the published hub version rather than the kit ZIP number. The Addons page and Chrome popup distinguish published release updates from reloading the files already installed on this PC.
 
 ## Kit 0.11.116 playtest
 

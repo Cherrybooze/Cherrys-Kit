@@ -42,6 +42,7 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Recent changes
 
+- **0.4.33**: kit 0.11.117 clarifies published releases and reloading installed files, and corrects the hub version comparison.
 - **0.4.32**: kit 0.11.116 adds the Global Bank Stats-page fixes and stronger private-data release checks.
 - **0.4.31**: the guided setup runs from wherever the ZIP was extracted: it lists the Runes of Magic installs it finds, Steam or Gameforge, and asks which to set up, or takes a typed folder, or shows how to put the files in the game by hand. On a first setup it asks whether the kit uses Ultimate Mail Mod or zMail. The hub reads that choice from `CherrysKit\Mailbox.txt`, and with zMail it keeps Ultimate Mail Mod off and says why in `/ck`.
 - **0.4.30**: Steam and Gameforge installs side by side. The setup finds both, or asks where the other one is, and puts the kit in each. They share one Global Bank data folder, and the Chrome extension stays with the Gameforge install.
@@ -492,6 +493,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.4**: the hub is compared with its actual published version, and the page/popup explain that reload reads installed files instead of downloading an update.
 - **1.6.3**: the Chrome Stats page keeps the game's colours, shows effects beside stat names, colours holders by class, and has an excluded-stat list with restore controls. Private helper data remains outside the distributed kit.
 - **1.6.2**: records what each character wears, shown in the Bank and in a character profile like the game's, and its mailbox and the mail it sends, on a new Mail page with mail about to expire marked. Quick filters such as *#+1>*, *#t10>* and *#equipped=false* on the Bank, and *#level>=100*, *#classes>3* or *#dailytokens>5k* on Characters, a server picker, server regions on the Gold overview, and a stat's effects on hover.
 - **1.6.1**: mana stones and gear with identical stats stack, with a switch beside the Bank's filters. Slots show the tier, plus, durability above 101 and stack count in their own corners, in colours you can pick. *#clean* and *#dirty* find mana stones without or with stats, in the window and on the page.

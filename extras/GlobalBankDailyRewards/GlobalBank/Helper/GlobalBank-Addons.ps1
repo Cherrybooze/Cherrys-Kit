@@ -256,14 +256,17 @@ function Get-AddonsList($paths) {
 }
 
 # The latest release against this install, one row per package the page can act on.
-function Get-AddonsCheck($paths) {
+function Get-AddonsCheck($paths, $release = $null) {
     if ($script:AddonsSetupProblem) { throw $script:AddonsSetupProblem }
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    $client = New-Object Net.WebClient
-    $client.Encoding = [Text.Encoding]::UTF8
-    $client.Headers['User-Agent'] = 'CherrysKit-globalbank'
-    $script:ReleaseTask = $client.DownloadStringTaskAsync(($script:ReleaseBase + '/latest/download/release-versions.json'))
-    $release = Get-LatestRelease
+    # A supplied release is used by offline checks; normal page requests always fetch Latest.
+    if (-not $release) {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+        $client = New-Object Net.WebClient
+        $client.Encoding = [Text.Encoding]::UTF8
+        $client.Headers['User-Agent'] = 'CherrysKit-globalbank'
+        $script:ReleaseTask = $client.DownloadStringTaskAsync(($script:ReleaseBase + '/latest/download/release-versions.json'))
+        $release = Get-LatestRelease
+    }
     if (-not $release) { throw ('Could not read the latest release from GitHub: ' + $script:ReleaseProblem) }
     $localKit = Get-KitVersion $paths.kit
     $answer = @{ latestKit = [string]$release.kit_version; latestHub = [string]$release.hub_version; localKit = $localKit
@@ -283,6 +286,7 @@ function Get-AddonsCheck($paths) {
         if ($package.package -eq 'Hub') {
             $row.installed = Read-InstalledVersion $paths.kit
             $row.title = "Cherry's Kit hub"
+            $row.latest = [string]$release.hub_version
             $row.state = if ($row.installed -eq $row.latest -and $localKit -eq $answer.latestKit) { 'current' } elseif ($answer.ahead) { 'newer' } else { 'update' }
         } else {
             $row.folder = Get-PackageFolder $package
