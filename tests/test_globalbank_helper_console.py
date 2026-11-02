@@ -157,6 +157,40 @@ $SaveFolder=Join-Path $fixture 'Saves'
         self.assertIn('GB1~Old~Mage~60~6~', database)
         self.assertNotIn('GB1~Old~Mage~60~5~', database)
 
+    def test_what_is_worn_and_the_mail_reach_the_page(self):
+        import json
+        helper_dir = self.root / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
+        helper_dir.mkdir(parents=True)
+        for name in HELPER_FILES:
+            shutil.copy2(HELPER.parent / name, helper_dir / name)
+        saves = self.root / 'saves'
+        for name in ('Worn', 'Older'):
+            (saves / name).mkdir(parents=True)
+        (saves / 'Worn' / 'SaveVariables.lua').write_text(
+            'GlobalBank_Char = "GB1~Worn~Mage~100~5~0~0~0~x`S~Aynara`W~2`E~0~1~Head~Hood~icon/head~118~120~2`E~15~1~MainHand~Staff~icon/staff~90~100~4"\n'
+            'GlobalBank_Tips = "E15~c805f8=Staff + 12^ffffff=Tier 9"\n'
+            'GlobalBank_Mail = "I~1800000000~1`N~Alt~Gold~5000~0~0~0~2160~u`O~1799990000~Older~Some gold~250000~0~0~Herb x3"\n', encoding='utf-8')
+        (saves / 'Older' / 'SaveVariables.lua').write_text('GlobalBank_Char = "GB1~Older~Mage~60~5~0~0~0~x`S~Aynara"\n', encoding='utf-8')
+        result = subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(helper_dir / 'GlobalBank-Update.ps1'),
+                                 '-SaveFolder', str(saves), '-Command', 'update'], capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        data = self.root / 'Interface/GlobalBankHelper'
+        characters = {c['name']: c for c in json.loads((data / 'GlobalBank.json').read_text(encoding='utf-8'))['characters']}
+        worn = characters['Worn']['equip']
+        self.assertEqual([item['where'] for item in worn], ['Head', 'MainHand'])
+        self.assertEqual(worn[1], dict(slot=15, where='MainHand', count=1, name='Staff', icon='icon/staff', dura=90, maxDura=100, quality=4,
+                                       tip=[['c805f8', 'Staff + 12'], ['ffffff', 'Tier 9']]))
+        self.assertNotIn('tip', worn[0])
+        self.assertEqual(characters['Worn']['mail'], dict(read=1800000000,
+            inbox=[dict(**{'from': 'Alt'}, subject='Gold', gold=5000, diamonds=0, cod=0, items=0, minutes=2160, unread=True, returned=False)],
+            sent=[dict(at=1799990000, to='Older', subject='Some gold', gold=250000, diamonds=0, cod=0, items='Herb x3')]))
+        # Saved before either was read: neither is known, which isn't the same as none
+        self.assertIsNone(characters['Older']['equip'])
+        self.assertIsNone(characters['Older']['mail'])
+        # The mail stays out of what the game loads
+        self.assertNotIn('Some gold', (data / 'GlobalBankDatabase.lua').read_text(encoding='latin1'))
+        self.assertIn('Worn (Aynara)\tI~1800000000', (data / 'GlobalBankMail.txt').read_text(encoding='latin1'))
+
     def test_binary_toggle_keeps_file_beat_and_typed_prompt_without_scroll_redraw(self):
         output = self.check_ps('''
 Invoke-GBCommand 'heartbeat 0'

@@ -97,6 +97,7 @@ $log = Join-Path $data "GlobalBankHelper.log"
 $errorLog = Join-Path $data "GlobalBankHelper-errors.log"
 $json = Join-Path $data "GlobalBank.json"
 $tipsFile = Join-Path $data "GlobalBankTips.txt"
+$mailFile = Join-Path $data "GlobalBankMail.txt"
 $rewards = Join-Path $data "DailyRewards.json"
 $links = Join-Path $data "CharacterLinks.json"
 $excludedPath = Join-Path $data "ExcludedCharacters.json"
@@ -112,6 +113,7 @@ $removedPattern = [regex]'(?m)^GlobalBank_Removed = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 $notesPattern = [regex]'(?m)^GlobalBank_Notes = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 $othersPattern = [regex]'(?m)^GlobalBank_Others = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 $tipsPattern = [regex]'(?m)^GlobalBank_Tips = "((?:[^"\\\r\n]|\\.)*)"\s*$'
+$mailPattern = [regex]'(?m)^GlobalBank_Mail = "((?:[^"\\\r\n]|\\.)*)"\s*$'
 
 $script:Excluded = @{}
 $script:Entries = @{}      # character key -> @{ name; folder; saved; s; line }, as in the database file
@@ -331,8 +333,9 @@ function Update-Database {
     $previous = Read-GBDatabaseEntries $out
     $previousByFolder = @{}
     foreach ($old in $previous.Values) { $previousByFolder[$old.folder] = @($previousByFolder[$old.folder]) + @($old) | Where-Object { $_ } }
-    # Read from each save below; a busy file keeps the tooltips it had.
+    # Read from each save below; a busy file keeps the tooltips and mail it had.
     $tips = Read-GBTips $tipsFile
+    $mails = Read-GBTips $mailFile
     # Notes: the highest version of each name wins (versions only grow), a tie goes to the newest
     # save file. The database's own notes are the starting point, so a busy file loses nothing.
     $notes = @{}
@@ -382,6 +385,10 @@ function Update-Database {
             if ($entry) {
                 if ($t.Success -and $t.Groups[1].Value) { $tips[$entry.name] = $t.Groups[1].Value }
                 else { $tips.Remove($entry.name) }
+                # So is its mail: the mailbox when it was last open, and what it sent
+                $ml = $mailPattern.Match($text)
+                if ($ml.Success -and $ml.Groups[1].Value) { $mails[$entry.name] = $ml.Groups[1].Value }
+                else { $mails.Remove($entry.name) }
             }
             $n = $notesPattern.Match($text)
             if ($n.Success) {
@@ -432,6 +439,9 @@ function Update-Database {
     $keptTips = @{}
     foreach ($e in $entries) { if ($tips.ContainsKey($e.name)) { $keptTips[$e.name] = $tips[$e.name] } }
     try { Write-GBTips $keptTips $tipsFile } catch { Write-HelperError $_ 'Write game tooltips' }
+    $keptMail = @{}
+    foreach ($e in $entries) { if ($mails.ContainsKey($e.name)) { $keptMail[$e.name] = $mails[$e.name] } }
+    try { Write-GBTips $keptMail $mailFile } catch { Write-HelperError $_ 'Write mail' }
     $made = (Get-Date).ToString("yyyy-MM-dd HH:mm")
     $lines = @(
         "-- Written by the Global Bank helper on $made. It replaces this file whenever a character logs out.",
