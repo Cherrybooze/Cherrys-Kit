@@ -650,6 +650,15 @@
           </OnClick>
         </Scripts>
       </Button>
+      <Button name="$parentUseLast" inherits="UIPanelButtonTemplate" text="">
+        <Size><AbsDimension x="86" y="24"/></Size>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentReset" relativePoint="RIGHT"><Offset><AbsDimension x="6" y="0"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>UMMMassUseLast();</OnClick>
+          <OnEnter>UMMComposeShortcutTooltip(this, "last");</OnEnter>
+          <OnLeave>GameTooltip:Hide();</OnLeave>
+        </Scripts>
+      </Button>
     </Frames>
     <Scripts>
       <OnLoad>

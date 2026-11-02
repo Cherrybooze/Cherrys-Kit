@@ -606,7 +606,7 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 
 ## Recent changes
 
-- **7.0.1-ck13**: **Compose** shows your recently sent recipients as the first name column, before **Characters** and **Friends**. In a guild, the window widens a little on Compose so **Guildies** fit too.
+- **7.0.1-ck13**: **Compose** shows your recently sent recipients as the first name column, before **Characters** and **Friends**. In a guild, the window widens a little on Compose so **Guildies** fit too. **Mass Send Items** gets **Use last** too, and marked items keep their marks when the game updates your bags.
 - **7.0.1-ck12**: mass send no longer stops with "no longer in that bag slot" on an item that never moved, such as one you just bought. **/umm trace** shows both links of any mail it skips.
 - **7.0.1-ck11**: on **Mass Send Items**, the recipient picker shows **History** first (your last 20 recipients, newest first), then **Characters**, then **Friends**. Click a name to put it in To. In a guild, **Guildies** take the place of the **Recently sent** panel until you pick a name. The **History** tab stays as it is.
 - **7.0.1-ck10**: with the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To**. On **Mass Send Items** it fills the mass-send To field and your marked items stay marked; from the inbox or **History** it opens Compose with that name.
