@@ -493,6 +493,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.5**: Addons page updates ask Windows for administrator permission, so protected game folders no longer stop them with *Access is denied*; replaced addons leave the list once gone, a Login screen panel shows `Interface\loginxml`, and the action buttons line up with the rows.
 - **1.6.4**: the hub is compared with its actual published version, and the page/popup explain that reload reads installed files instead of downloading an update.
 - **1.6.3**: the Chrome Stats page keeps the game's colours, shows effects beside stat names, colours holders by class, and has an excluded-stat list with restore controls. Private helper data remains outside the distributed kit.
 - **1.6.2**: records what each character wears, shown in the Bank and in a character profile like the game's, and its mailbox and the mail it sends, on a new Mail page with mail about to expire marked. Quick filters such as *#+1>*, *#t10>* and *#equipped=false* on the Bank, and *#level>=100*, *#classes>3* or *#dailytokens>5k* on Characters, a server picker, server regions on the Gold overview, and a stat's effects on hover.
@@ -697,7 +698,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 **A bigger, smarter auction house: resizable window, an added-stats column, six filter dropdowns, stat ranges, and a Broad search for searches the server cuts short.**
 
-Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.5 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
+Advanced AuctionHouse 6.0.2 by Mavoc, TellTod, Noguai and Graves, updated to 6.2.6 for Cherry's Kit. Saved searches, price history and settings carry over from 6.0.2.
 
 ## Recent changes
 
@@ -771,6 +772,10 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/aah probe
 **Find out which addons make your loading screen slow.**
 
 A small report of how long each addon took while the loading screen was up, and how much memory it added. It is a troubleshooting tool, so it comes switched off and then uses no memory at all.
+
+## New in 1.3.1
+
+Refreshed hub dependency, standalone compatibility and installation documentation. The published 1.3.0 package stays unchanged.
 
 ## New in 1.3.0
 
@@ -1124,7 +1129,6 @@ Made for alts. One click, and you are on the next character without touching the
 - **1.3.3**: Next and Prev no longer stay on the character screen. The login screen waits for the whole character list before it picks, and a logout you cancel drops the queued switch. Run `Install login screen.bat` again after updating.
 - **1.3.2**: the character screen shows each character's Arcane Transmutor charges under its gold.
 - **1.3.1**: the login screen finds each character's gold by server, so same-named characters on different servers no longer mix. Gold saved before servers were recorded shows a question mark.
-- **1.3.1**: refreshed hub dependency, standalone compatibility and installation documentation; the original 1.3.0 package remains unchanged.
 - **1.3.0**: Cherry's Loginxml is now part of this addon: one addon, one zip, and one row in the hub. The login screen travels inside the zip, and your saved logins and toggles carry over. Its installer moves the old `CherrysLoginxml` and `CherrysLoginxmlHook` folders to `Interface\offloaded_addons`.
 
 ## Features

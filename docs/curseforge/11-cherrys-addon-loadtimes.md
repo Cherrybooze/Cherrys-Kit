@@ -14,6 +14,10 @@
 
 A small report of how long each addon took while the loading screen was up, and how much memory it added. It is a troubleshooting tool, so it comes switched off and then uses no memory at all.
 
+## New in 1.3.1
+
+Refreshed hub dependency, standalone compatibility and installation documentation. The published 1.3.0 package stays unchanged.
+
 ## New in 1.3.0
 
 LoadTimes is a troubleshooting addon now: it stays off, using no memory, until `Switch.txt` turns it on (see below). It's its own download instead of part of the hub, and needs hub 0.4.22 or later.
@@ -57,5 +61,3 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/ckload pr
 
 - Written by Cherry for Cherry's Kit, under the **GNU GPL v2**.
 - Full licence text: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
-
-- **1.3.1**: refreshed hub dependency, standalone compatibility and installation documentation; the original 1.3.0 package remains unchanged.
