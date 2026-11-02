@@ -20,6 +20,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.4**: the hub is compared with its actual published version, and the page/popup explain that reload reads installed files instead of downloading an update.
 - **1.6.3**: the Chrome Stats page keeps the game's colours, shows effects beside stat names, colours holders by class, and has an excluded-stat list with restore controls. Private helper data remains outside the distributed kit.
 - **1.6.2**: records what each character wears, shown in the Bank and in a character profile like the game's, and its mailbox and the mail it sends, on a new Mail page with mail about to expire marked. Quick filters such as *#+1>*, *#t10>* and *#equipped=false* on the Bank, and *#level>=100*, *#classes>3* or *#dailytokens>5k* on Characters, a server picker, server regions on the Gold overview, and a stat's effects on hover.
 - **1.6.1**: mana stones and gear with identical stats stack, with a switch beside the Bank's filters. Slots show the tier, plus, durability above 101 and stack count in their own corners, in colours you can pick. *#clean* and *#dirty* find mana stones without or with stats, in the window and on the page.

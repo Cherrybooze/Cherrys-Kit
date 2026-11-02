@@ -580,3 +580,11 @@ The automated cases use fixture characters; compare the remaining visual cases w
 | GS5 | Show a stat with no saved tooltip/colour. | No invented orange colour or effect text; exclusions and counts still work. |
 
 Private-data release tests cover mail/tooltips/vaults, backups, temporary files, source tracking outside the addon tree, every ZIP route, and Windows junctions. Local sharing between the player's own Steam/Gameforge clients remains intentional.
+
+## Published versions and reload controls (extension 1.3.4)
+
+| Check | Action | Expected |
+| --- | --- | --- |
+| UV1 | Compare a hub with matching, newer and older release metadata. | Latest release uses hub_version, such as 0.4.33, rather than the kit ZIP number. A matching hub/kit is Up to date. Offline fixture regression covers all three states. |
+| UV2 | Install newer extension files, click Reload extension, then refresh an existing bank tab. | The footer matches the installed manifest (1.3.4 for this build); stat colours, inline effects and Excluded stats are present. Reload does not download files. |
+| UV3 | Check for updates on a development build newer than the published release. | The published kit is identified separately. Newer local files are retained and the page explains the difference. |

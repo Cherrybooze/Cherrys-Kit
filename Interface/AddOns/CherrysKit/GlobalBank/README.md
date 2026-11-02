@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.3** · Kit release **0.11.116** · [All addons / hub](../README.md)
+Version **1.6.4** · Kit release **0.11.117** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.4
+
+The Addons page's hub comparison now uses the release's **hub version**, not the kit ZIP's version. Matching hub versions show **Up to date** when the kit also matches. **Latest release** means a published release; merging a PR does not install its files on your PC. The Chrome popup explains that **Reload extension** rereads the installed files and does not download an update (extension 1.3.4).
 
 ## Updated in 1.6.3
 

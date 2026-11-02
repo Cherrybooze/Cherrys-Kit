@@ -2,7 +2,7 @@
 
 This is a working draft, not a published listing or final privacy policy.
 
-Current listing/version notes are kept in [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md). Version 1.3.3 adds original stat colours, inline effects, class-coloured holders and a locally saved excluded-stat list; permissions are unchanged.
+Current listing/version notes are kept in [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md). Version 1.3.3 adds original stat colours, inline effects, class-coloured holders and a locally saved excluded-stat list; permissions are unchanged. Version 1.3.4 also corrects hub-version comparison and explains published releases versus reloading installed files.
 
 ## Listing description
 

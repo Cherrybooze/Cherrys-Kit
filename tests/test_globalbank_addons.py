@@ -396,6 +396,23 @@ ConvertTo-Json -Compress -Depth 5 -InputObject @{ kit = @($list.kit | ForEach-Ob
         self.assertEqual((kit / 'Mailbox.txt').read_bytes(), b'-- Which mailbox addon\r\n--\r\n\r\nMailbox = "UMM"\r\n')
         self.assertFalse((self.addons / 'zmail').exists())
 
+    def test_hub_comparison_uses_hub_version_instead_of_the_kit_zip_version(self):
+        output = self.run_ps("""
+$rows = @()
+foreach ($case in @(@{ kit = '0.11.115'; hub = '0.4.30' }, @{ kit = '0.11.116'; hub = '0.4.31' }, @{ kit = '0.11.114'; hub = '0.4.29' })) {
+    $release = @{ kit_version = $case.kit; hub_version = $case.hub; packages = @(@{ package = 'Hub'; version = $case.kit; title = 'Hub'; bytes = 1 }) }
+    $check = Get-AddonsCheck $paths $release
+    $row = $check.packages[0]
+    $rows += @{ installed = $row.installed; latest = $row.latest; state = $row.state }
+}
+ConvertTo-Json -InputObject $rows -Compress
+""")
+        self.assertEqual(json.loads(output), [
+            {'installed': '0.4.30', 'latest': '0.4.30', 'state': 'current'},
+            {'installed': '0.4.30', 'latest': '0.4.31', 'state': 'update'},
+            {'installed': '0.4.30', 'latest': '0.4.29', 'state': 'newer'},
+        ])
+
     def test_refuses_paths_outside_its_folders_and_its_own_folders(self):
         (self.addons / 'CherrysKit' / 'GlobalBank').mkdir()
         out = self.run_ps("""
