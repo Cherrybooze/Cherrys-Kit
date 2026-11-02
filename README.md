@@ -1,39 +1,34 @@
-[![Download the full kit install ZIP. Extract into Interface/AddOns.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)
-
-### Install or update in four steps
-
-1. **Download.** The whole kit: the button above. Only some addons: the **Hub** ZIP and the addon ZIPs you want from the [release page](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115). Every addon needs the hub.
-2. **Extract it**, anywhere you like, such as Downloads, or straight into your game's `Interface\AddOns\` folder, for example `C:\RunesOfMagic\Interface\AddOns\`. Several ZIPs all hold a `CherrysKit` folder: let Windows merge them. Next to that folder, the Full and Hub ZIPs put **`!setup_cherryskit.bat`**.
-3. **Double-click `!setup_cherryskit.bat`.** Away from the game, it lists the Runes of Magic installs it finds, Steam or Gameforge, and asks which to set up. None of them right? Type the folder, or let it show you how to put the files in the game by hand. On a first setup it asks whether the kit uses **Ultimate Mail Mod**, which comes with it, or **zMail**, pyrr's own addon, which the kit only distributes, with pyrr's permission. You can switch later on the Global Bank page. Then it checks your folders and asks at most five yes/no questions, such as:
-   - *Update these now?* when GitHub's latest release has newer versions of your addons. Old versions are kept in `Interface\offloaded_addons`.
-   - *Install them?* for what your addons can use that's missing, such as another kit addon or Chrome for Global Bank's page. Pick them by number, or none; a no is remembered.
-   - *Move these folders into offloaded_addons?* for old separate copies of the kit's addons, which would otherwise keep the kit's versions off. Nothing is deleted.
-   - *Install or update the login screen?* for LogNextChar, and *Run the Chrome extension installer?* for Global Bank's optional Chrome page.
-
-   Press Enter for the suggested answer. Anything you say no to is left alone.
-4. **Start the game, or Reload UI, and type `/ck`.** Every installed addon has a row there, with its settings and an on/off switch.
-
-**Steam and Gameforge?** Run it in either game folder: it finds the other install, or asks where it is, and sets up both. **To update later,** close the game and run `!setup_cherryskit.bat` again. **On CurseForge,** pick the addons you want: the app installs the hub with them. Run `!setup_cherryskit.bat` once afterwards if you had old separate copies.
-
-**Single addons or the whole kit?** Every addon works on its own with just the hub. A few features link two addons, for example running a kitty by clicking a raid frame needs both Cherry's Grid and Cherry's KittyCombo; those are missing until you have both. Each addon's guide lists them under **Alone or in the full kit**, and the [addon map](docs/ADDON_MAP.md) has them all.
-
-> **Use the button above, not GitHub's green Code → Download ZIP.** That downloads the source, inside an extra `Cherrys-Kit-main` folder, and the game won't load it from there.
+[![Download the full kit install ZIP. Run !setup_cherryskit.bat after extracting.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)
 
 # Cherry's Kit
 
-> Playtest build: kit **0.11.115**. Native-client checks are listed in [TESTING.md](docs/TESTING.md). The [latest stable build](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) is available separately.
-
 **Runes of Magic addons that work together, with one small control hub.**
 
-Current playtest build: **0.11.115** · [Release notes and all downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115)
+Cherry's Kit combines original addons, rewrites and fixes to older favourites: one-key rotations, custom combat displays, chat, bags, mail, auctions, raid frames, information bars, tooltips and a quest tracker. Global Bank adds a view across your characters in game and, optionally, in Chrome. LogNextChar is a separate download for switching characters and replacing the login screen.
 
-Cherry's Kit combines original addons, rewrites and fixes to older favourites into a single collection: chat, bags and the shared bank view, an auction house, tooltips, one-key rotations, on-screen bars and displays, a quest tracker, and a replacement login screen. Pick the full kit, or install the hub and the addons you want. The hub opens their settings, turns them on or off after Reload UI, and gives them one place on your minimap.
+Pick the full kit, or install the hub and just the addons you want. Type **`/ck`** to open their settings from one window, switch kit addons on or off after Reload UI, and keep one button on your minimap. Every kit addon works with the hub alone; installing other addons adds the connections described below.
+
+> **Playtest build: 0.11.115.** This guide describes the source in this branch, including the newer setup and Global Bank Addons page. A published ZIP can be behind it; check its [release notes](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115). Setup and the Addons page download the release marked [Latest](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest), which can differ from this playtest. Native-client checks are listed in [TESTING.md](docs/TESTING.md).
+
+### Install or update in four steps
+
+1. **Choose your download.** Use the full-kit button above, or get the **Hub** ZIP and the addon ZIPs you want from the [release page](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115). [Compare the packages](#download-and-install) and [see what each addon does](#whats-included).
+2. **Close the game and extract the ZIPs.** Downloads is fine; your game's `Interface\AddOns\` is fine too. Let Windows merge their `CherrysKit` folders. The Full and Hub ZIPs put **`!setup_cherryskit.bat`** beside that folder. Keep them together.
+3. **Double-click `!setup_cherryskit.bat`.** Select your game folder if asked, choose a mailbox addon on first setup, and review updates, optional extras and older addon copies. The [prompt-by-prompt walkthrough and flowchart](#guided-setup-every-prompt) explain the inputs and their results. Chrome has a few [one-time steps of its own](#first-installation-in-chrome).
+4. **Start the game and type `/ck`.** Open the settings of the addons you installed. Later, close the game and rerun the same setup file to update, or use [Addons in the Chrome extension](#manage-addons-from-chrome).
+
+**Already using CurseForge?** Pick the addons you want; the app installs the hub with them. Run the guided setup afterwards to deal with old separate copies, LogNextChar's login screen or Chrome. **Already on 0.11.114 or older?** Extract a current Full or Hub ZIP once to get the setup launchers.
+
+**On this page:** [Addon descriptions](#whats-included) · [Downloads and folder layout](#download-and-install) · [Setup choices](#guided-setup-every-prompt) · [Chrome installation and updates](#optional-chrome-extension) · [Update, offload and restore in Chrome](#manage-addons-from-chrome) · [Troubleshooting](#common-questions) · [Recent changes](#whats-new-in-011115)
+
+<details>
+<summary><strong>Recent changes: 0.11.115 and earlier</strong></summary>
 
 ## What's new in 0.11.115
 
 - **Cherry's Info 1.0** (`/cinfo`, `/cq`) replaces **Cherry's Quests**, **pbInfo**, **TooltipIds**, **PortraitHP** and **Extended Macro Icons**: one addon, one switch in `/ck` and one window with four tabs. Your saved settings carry over, and their commands still work.
 - **LogNextChar 1.3.3** now includes Cherry's Loginxml: one addon, one ZIP, with its login screen inside. Its installer moves old folders to `Interface\offloaded_addons` instead of deleting them, and copies your old `loginxml` there first when anything would change. Next and Prev now wait for the whole character list, so they no longer stay on the character screen, and the character screen shows Arcane Transmutor charges.
-- **The guided setup** (`!setup_cherryskit.bat`, in the Full and Hub ZIPs) for installs and updates. It tells you which addons are out of date against GitHub and updates them for you, with the old versions kept. It knows hub-only installs, so your own copy of an addon only moves when the kit's copy is there to replace it.
+- **Guided setup 1.2.0** (`!setup_cherryskit.bat`, in the Full and Hub ZIPs) runs from wherever you extracted the release: choose detected games, paste a destination, or get manual-placement instructions. It asks which mailbox addon to use, checks GitHub for updates and keeps older versions. It knows hub-only installs, so your separate addon only moves when the kit's replacement is installed.
 - **Steam support:** the setup finds your Steam and Gameforge installs, or asks for the other one, and installs into both, with one Global Bank data folder and the Chrome extension in the Gameforge one. On Steam, ZShop's daily button skips Steam's browser (ZShop 1.2.0-ck6), and Steam's characters show as a Steam account in Global Bank (1.5.8, extension 1.2.6).
 - **A new Global Bank page and popup** (Global Bank 1.6.2, extension 1.3.2): grouped pages down the side, the search and filters at the top of the Bank, a panel saying who holds an item and where, large, small or list layouts, what each character wears, a Mail page with the mail waiting in each mailbox, an Addons page that checks GitHub for updates, one tight line for each character with Transfer stones and an Excluded list, a Gold overview that fits 200+ characters on one screen by Gameforge account, server and RoM account, and a new logo. The page's Terminal now runs in the helper itself, with the same commands and wording as its window. Mana stones and gear with identical stats stack, with a switch to turn that off, a slot's corners show tier, plus, HD and stack count in colours you pick, and `#clean` and `#dirty` find mana stones without or with stats, on the page and in the game window.
 - **Global Bank 1.5.7** has a refreshed in-game window: server tabs, characters grouped by account, and a search that lights up the matching bag and bank slots.
@@ -63,68 +58,45 @@ Cherry's Kit combines original addons, rewrites and fixes to older favourites in
 
 Older changes are in each addon's guide and in the [release notes](https://github.com/Cherrybooze/Cherrys-Kit/releases). Some features still need confirmation in the game client; the guides say which.
 
+</details>
+
 ## Why this project exists
 
 Runes of Magic has plenty of useful addons, but many were made years ago and have different interfaces, overlapping features or rough edges on the current client. This project brings the addons I use into one place, fixes problems I run into, and connects them where it helps: raid-frame clicks can run a KittyCombo rotation, and rom weakauras can display what that rotation will do next.
 
 It is a personal hobby project, shared so other players can use it, learn from it and improve it. It is not a promise to maintain every old addon or support every client and server setup.
 
-## Download and install
-
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115)
-
-- **Full kit:** the install ZIP above includes the hub and every addon.
-- **Choose your addons:** download the Hub ZIP and whichever addon ZIPs you want from the release assets. Updating one addon? Update the hub too.
-- **Updating:** double-click `!setup_cherryskit.bat` in `Interface/AddOns/`. [It finds and installs what's out of date](#keeping-addons-updateable). Don't have that file yet (0.11.114 or older)? Extract the Full or Hub ZIP over your `Interface/AddOns/` once, then run it.
-
-Extract the selected ZIPs into your game's **`Interface/AddOns/`** folder. They all contain a top-level `CherrysKit/` folder: merge those folders, keeping `CherrysKit.toc` directly inside `CherrysKit/`. Start the game or Reload UI, then type **`/ck`** (or **`/rwa`**).
-
-The resulting layout should be:
-
-```text
-Interface/
-  AddOns/
-    CherrysKit/
-      CherrysKit.toc
-      CherrysKit.lua
-      KittyCombo/
-      RomWeakAuras/
-      ...
-```
-
-If you already downloaded `Cherrys-Kit-main.zip`, use the install ZIP linked above instead. If Windows offers an extraction folder named after the ZIP, change that destination to your existing `Interface/AddOns/` folder. If it's already extracted that way inside `AddOns`, run the setup from there: it installs the kit properly and moves that extra folder out, because the game would otherwise load both.
-
-Old separate copies of the same addons: **`!setup_cherryskit.bat`** moves them to `Interface\offloaded_addons`, but only for addons the kit's copy is installed for. Until one is moved, the hub keeps its own copy of that addon off and says which folder takes precedence. Your saved settings live outside the addon folders. The [hub README](Interface/AddOns/CherrysKit/README.md) explains this in more detail, and the [addon map](docs/ADDON_MAP.md) lists what each addon works with.
-
-**Addon LoadTimes** is a troubleshooting addon with its own ZIP. It comes switched off in its `LoadTimes/Switch.txt` and then uses no memory. Every individual addon ZIP requires the hub.
-
 ## What's included
+
+The **Full ZIP** contains the hub and every addon in this table. For a smaller install, take the **Hub ZIP** and the individual addons you want. Click an addon's name for its full guide, controls, credits and current testing limits.
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | Shared settings launcher, on/off switches, minimap button and a clock for other addons. | `/ck`,`/rwa` | 0.4.31 |
-| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | One-key priority combos and shared rotation codes. | `/kc` | 1.7.18 |
-| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Custom buff, debuff, cooldown, cast and status displays, with short share codes. | `/wa` | 0.9.33 |
-| [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Selectable chat, copying, emoji, encrypted channels and chat display settings. | `/cchat` | 0.11.3 |
-| [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | Bags, searching, sorting, quick sell and an All bags view. | `/zb` | 5.07-ck20 |
-| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | A searchable view of your characters' bags, banks and gold, in game and in Chrome. | `/gb` | 1.6.2 |
-| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Mail management, drag-box selection, shared recipients, gold presets and mass sending. | `/umm` | 7.0.1-ck12 |
-| [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Auction searching, stat filters, Broad search, history and a resizable window. | `/aah` | 6.2.5 |
-| [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Troubleshooting: loading times and memory use, off until its Switch.txt turns it on. | `/ckload` | 1.3.0 |
-| [ZShop](Interface/AddOns/CherrysKit/ZShop/README.md) | Item-shop access and a daily loyalty reward shortcut. | `/zshop` | 1.2.0-ck6 |
-| [Cherry's Info](Interface/AddOns/CherrysKit/CherrysInfo/README.md) | Quest tracker with Ctrl+click NPCs, richer tooltips with IDs, target health on its portrait, chat filters and 10,500+ macro icons. | `/cinfo`,`/cq` | 1.0.3 |
-| [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Party and raid frames, with KittyCombo actions on click and Mouse 4. | `/grid` | 1.1.6 |
-| [Cherry's Bar](Interface/AddOns/CherrysKit/CherrysBar/README.md) | Information bars at the top, bottom or both, with displays set per bar. | `/cbar` | 1.1.10 |
+| [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | One settings launcher and minimap button for the collection, with an on/off switch for each installed kit addon. Explains when an older separate copy takes precedence and supplies a shared clock to addons that use it. | `/ck`, `/rwa` | 0.4.31 |
+| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | Build priority rotations called **kitties**: each key press checks your conditions and attempts the next action. Edit conditions in plain words, switch modes such as single, AoE or heal, import/export short share codes, and use **Create macro** to put a kitty on your action bar. | `/kc` | 1.7.18 |
+| [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Make icons, bars, text and alerts for buffs, debuffs, health, resources, cooldowns, casts, threat and more. Start from examples, set triggers and rules, position the display, and share it by code. With KittyCombo, show its next skill or use an aura as a rotation condition. | `/wa` | 0.9.33 |
+| [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Select and copy chat text, use emoji and encrypted channels, and adjust chat appearance. Say-bubble styles turn unsupported emoji into symbols or readable codes. With Ultimate Mail Mod, Ctrl+click a chat name to fill the mail recipient. | `/cchat` | 0.11.3 |
+| [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | View bags together, search by item or stat, sort, and filter quick selling. Search bags and bank for **stamina**, `#clean` or `#dirty` mana stones, adjust slot numbers, and open Global Bank from the bag when installed. | `/zb` | 5.07-ck20 |
+| [Global Bank](Interface/AddOns/CherrysKit/GlobalBank/README.md) | Search saved bags, banks and gold across characters in game. Its Windows helper collects other characters' saved data; its optional Chrome page adds a combined bank, equipment, mail, currencies, gold overview, macros, settings backups, auction cache and [addon management](#manage-addons-from-chrome). Log characters out to refresh their saved snapshots. | `/gb` | 1.6.2 |
+| [Ultimate Mail Mod](Interface/AddOns/CherrysKit/UltimateMailMod/README.md) | Read, take and send mail in batches, select attachments with a drag box, choose recipients from history/characters/friends, and reuse gold amounts. Adjust send pacing and use the trace tools if a mass send stalls. This is the Full ZIP's mailbox addon. | `/umm` | 7.0.1-ck12 |
+| [Advanced AuctionHouse](Interface/AddOns/CherrysKit/AdvancedAuctionHouse/README.md) | Search auctions with stat filters, run Broad searches, use price/search history and resize the auction window. With Global Bank's helper, observations from your searches become a browser-searchable auction cache; cached listings may be out of date. | `/aah` | 6.2.5 |
+| [Cherry's Addon LoadTimes](Interface/AddOns/CherrysKit/LoadTimes/README.md) | Diagnose slow loading with time and memory reports for kit addons and the slowest observed spots outside the kit. **Off by default:** change `LoadTimes = false` to `true` in `LoadTimes\Switch.txt`, restart the game and run `/ckload`; set it back to `false` when finished. | `/ckload` | 1.3.0 |
+| [ZShop](Interface/AddOns/CherrysKit/ZShop/README.md) | Open the item shop in a browser or game window, go straight to daily loyalty rewards or the item depot, and keep a movable daily shortcut on screen. Its mark means the page was opened; the Chrome extension can record a confirmed collection. | `/zshop` | 1.2.0-ck6 |
+| [Cherry's Info](Interface/AddOns/CherrysKit/CherrysInfo/README.md) | One window for the quest tracker and Ctrl+click NPC selection, richer tooltips and IDs, target health/cast options, chat filters, and about 10,500 extra macro icons. Replaces Cherry's Quests, pbInfo, TooltipIds, PortraitHP and Extended Macro Icons while carrying their saved settings forward. | `/cinfo`, `/cq` | 1.0.3 |
+| [Cherry's Grid](Interface/AddOns/CherrysKit/CherrysGrid/README.md) | Compact party/raid frames with class colours, health, buffs, debuffs and configurable indicators. Bind mouse buttons, modifiers and wheel actions to spells, macros or KittyCombo rotations; keep layouts for solo, party and raid. Use `/grid test` to arrange frames without a group. | `/grid` | 1.1.6 |
+| [Cherry's Bar](Interface/AddOns/CherrysKit/CherrysBar/README.md) | Put information on a top bar, bottom bar or both: bags, gold, currencies, mail, experience, location/coordinates, performance and other displays. Drag displays between bars, edit their text and styles, or show KittyCombo's active mode and Global Bank's real-time clock. | `/cbar` | 1.1.10 |
 
-Some integrations need both addons: for example, running a kitty from Grid needs KittyCombo. Each addon's README lists its requirements and current limits. Features still being tested are labelled there.
+**Useful combinations:** Grid + KittyCombo for a rotation on the member you click; KittyCombo + rom weakauras for next-skill displays and aura conditions; Global Bank + Advanced AuctionHouse for a saved auction cache; Global Bank + LogNextChar for gold and last-save details on the character screen. These connections need both addons. Each guide's **Alone or in the full kit** section and the [addon map](docs/ADDON_MAP.md) explain exactly what is added.
+
+`/rwa` on its own opens the kit hub; **`/wa`** opens rom weakauras. Kit switches take effect after **Reload UI**. They leave files installed; [Offload in Chrome](#offload-restore-or-delete) physically moves them out of the loading path.
 
 ## Separate packages
 
-This one isn't in the full kit: extract it into `Interface/AddOns/` as usual. It needs the hub, goes into `CherrysKit\` and loads through it like any kit addon.
+These are outside the Full ZIP. LogNextChar needs the hub and loads through it; zMail is a separate addon beside the kit. The Chrome extension is described [below](#optional-chrome-extension).
 
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next and Prev buttons that log you straight into the neighbouring character, with its own login screen: gets past a stuck server list, saved logins, keyboard controls, and each character's gold with Global Bank. The guided setup puts the login screen in place, or run its `Install login screen.bat` once. | `/lnc` | 1.3.3 |
+| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next/Prev buttons switch to the neighbouring character; `/lnc 3` selects a character slot and `/lnc settings` configures the buttons. Its login screen handles a stuck server list, saved logins, secondary passwords and keyboard selection; with Global Bank it shows gold, last saves and Arcane Transmutor charges. Extract its ZIP into `Interface\AddOns`, then let setup install the login screen or run `CherrysKit\LogNextChar\Install login screen.bat` with the game closed. | `/lnc`, `/lpc` | 1.3.3 |
 
 Download it from this build: [LogNextChar-1.3.3.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/LogNextChar-1.3.3.zip).
 
@@ -134,15 +106,290 @@ The kit works with Ultimate Mail Mod (in the kit, and the one the kit is built a
 
 Which one runs is set in `CherrysKit/Mailbox.txt`: `Mailbox = "auto"` (zMail when it is installed, otherwise Ultimate Mail Mod), `"UMM"` or `"zMail"`. The guided setup and Global Bank's Addons page set it for you. With zMail chosen, Ultimate Mail Mod stays off and the hub says so; zMail can't be switched off from the kit, so choosing Ultimate Mail Mod moves the `zmail` folder to `Interface\offloaded_addons`. With zMail, Global Bank also records each character's mailbox from zMail's own list: how many mails, gold waiting, mails with items and when the first of them expires.
 
+## Download and install
+
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-Full-0.11.115.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.115)
+
+| What you want | What to download | What to expect |
+| --- | --- | --- |
+| The complete collection | **CherrysKit-Full-0.11.115.zip** | The hub, the addons in [What's included](#whats-included), and both setup launchers. LoadTimes is included but switched off. |
+| Only selected addons | **CherrysKit-Hub-0.11.115.zip** plus their individual ZIPs | The same hub and setup, with only the addons you choose. Every individual kit addon needs the hub; keep the hub current when updating one. |
+| Character switching and the login screen | **LogNextChar-1.3.3.zip**, plus the hub if you do not have it | A separate package, outside the Full ZIP. Setup can install its login screen after you extract the addon. |
+| Global Bank in Chrome | Global Bank and the hub, plus the optional **Global Bank for RoM** extension package when needed | A Windows helper and Chrome extension. Having the files does not load the extension into Chrome: finish the [Chrome steps](#first-installation-in-chrome). |
+| zMail instead of Ultimate Mail Mod | Choose **zMail** in setup, or use the separate zMail ZIP | pyrr's mailbox addon stays in `Interface\AddOns\zmail`. It is outside the Full ZIP and can also be managed with pyrr's own releases. |
+
+**For guided installation, extract the selected ZIPs together and run `!setup_cherryskit.bat`.** You can extract them outside the game and let setup copy them to the chosen install. You can also extract straight into the game's **`Interface\AddOns\`**, for example `C:\RunesOfMagic\Interface\AddOns\`, and run setup there. With multiple ZIPs, merge their `CherrysKit` folders; individual addon ZIPs do not include the two launchers.
+
+The installed layout should be:
+
+```text
+<your Runes of Magic folder>/
+  Client.exe
+  Interface/
+    AddOns/
+      !setup_cherryskit.bat
+      !setup_cherryskit.ps1
+      CherrysKit/
+        CherrysKit.toc
+        CherrysKit.lua
+        Setup/
+        KittyCombo/       (if installed)
+        GlobalBank/       (if installed)
+        LogNextChar/      (separate download, if installed)
+        ...
+      zmail/              (only if you choose zMail)
+    offloaded_addons/     (older or parked addon folders, created when needed)
+    GlobalBankHelper/     (your local Global Bank data, created when needed)
+    loginxml/             (only after installing LogNextChar's login screen)
+```
+
+**Installing by hand:** extract the Full ZIP, or Hub plus your selected addon ZIPs, into `Interface\AddOns\`. Keep `CherrysKit.toc` directly inside `CherrysKit`, deal with [older separate copies](#7-review-the-folder-map-and-offload-old-copies), then start the game and type `/ck`. LogNextChar's login screen and Chrome still need their own installation steps.
+
+> **Use the release install ZIPs.** GitHub's green **Code → Download ZIP** gives you a source snapshot such as `Cherrys-Kit-main.zip`. Use the full-kit download above for installation. If Windows put a release ZIP inside an extra folder under `AddOns`, run its setup: it offers to install the kit at the correct level and move the extra folder to `offloaded_addons`, where the game will not load it twice.
+
+## Guided setup: every prompt
+
+The batch file starts the [PowerShell setup](Interface/AddOns/CherrysKit/Setup/Setup-CherrysKit.ps1) in the same window. Close the game first. You need Windows PowerShell to run it; **Python is only for building and testing the project**, and Chrome is only needed for the optional browser tools. There is no GitHub sign-in.
+
+The steps below follow the script's order. A step appears only when it applies: an existing install usually skips the folder selection, a saved mailbox choice skips that question, and an already registered Chrome extension only needs reloading.
+
+### How to read the questions
+
+| What the prompt shows | What you can type | What Enter means |
+| --- | --- | --- |
+| `[Y/n]` | `y` / `yes` to proceed, `n` / `no` to skip that action | **Yes**, the capital letter. |
+| `[y/N]` | The same yes/no answers | **No**, the capital letter. |
+| A numbered menu, such as `1 or 2 [1]` | The number of your choice | The number in brackets. A menu with no bracketed default needs an explicit choice. |
+| `y = all, n = none, or numbers like 1 3 [y/N]` | `y` for everything listed; `1 3` or `1,3` for just those entries; `n` for none | **Install none** of the optional extras. |
+| `Paste its game folder, or press Enter if not` | An existing game folder, such as `D:\Games\RunesOfMagic` | You do not have another install to add. |
+
+**Ctrl+C stops setup.** Work already completed stays completed; stopping does not undo earlier steps. A no skips the action named by that question: for example, declining a backup does not cancel the following copy.
+
+Setup limits its confirmation and optional-extra questions to **five per run**. The initial game-selection menu, manual-placement menu and mailbox menu are separate from that limit. If the limit is reached, the console prints what it does without asking: it skips online updates, extra downloads and Chrome setup, but can still copy a selected install, keep a backup, move older duplicates and restart a helper it stopped. The login screen is skipped unless already requested for the second install. Read those messages as well as the prompts; this is not a five-question preview with every later action cancelled.
+
+### Setup at a glance
+
+This is the short choice map. After the mailbox choice, setup offers **updates → optional extras → offloading older copies → login screen → other game install → Chrome**, where applicable. Follow the answer branch for each offer; the walkthrough below gives its exact effect, defaults and exceptions.
+
+```mermaid
+flowchart TD
+    Start["Run !setup_cherryskit.bat"] --> Target{"Choose destination"}
+    Target -->|"Game found or path chosen"| Mailbox{"Mailbox, if asked"}
+    Target -->|"2 or 3: manual help"| Manual["Read placement guide; close; rerun setup"]
+    Mailbox -->|"1"| UMM["Ultimate Mail Mod"]
+    Mailbox -->|"2"| ZMail["zMail"]
+    Mailbox -->|Already saved| Offer{"Each displayed offer"}
+    UMM --> Offer
+    ZMail --> Offer
+    Offer -->|"y / selected extra numbers"| Apply["Do the named action; continue"]
+    Offer -->|"n / no extras"| Skip["Skip that action; continue"]
+    Apply --> Done["After the last step: Done; start game; /ck"]
+    Skip --> Done
+```
+
+### 1. Select the game to install into
+
+If the launcher already sits in `<game>\Interface\AddOns\` and setup finds that game's `Client.exe`, it uses that folder immediately. Otherwise, use the matching case below.
+
+| What setup finds or asks | Your input and its meaning |
+| --- | --- |
+| **Use this as your game's Interface\AddOns folder?** `[Y/n]` | Shown for an AddOns folder whose game cannot be verified. `y` uses the displayed folder; `n` opens the game-selection route. |
+| The ZIP has an extra folder inside `AddOns` | **Install Cherry's Kit into that AddOns folder, and move this extra folder to offloaded_addons?** `[Y/n]`: `y` selects the correct parent folder and lets setup put this extra copy out of the game's loading path. `n` proceeds to choose a different target. |
+| One detected game: **Set up Cherry's Kit in this game?** `[y]` | Enter or `y` selects it. `n` opens the manual-location menu. |
+| Several detected games: **Which game should it go into?** `[1]` | Type `1` for the first displayed install, or `1 2` / `1,2` for both of those installs. The first is set up first; the second is handled later. `n` means none is right and opens the manual-location menu. |
+| No suitable game, or you answered `n` | At **Choose 1, 2 or 3**, `1` lets you type/paste a path; `2` shows how to move the extracted files by hand; `3` shows how to extract the ZIP straight into the game. **2 and 3 show instructions and close without installing.** |
+| You choose `1` in that manual-location menu | Paste the **game folder**, its **Interface folder**, or **Interface\AddOns**. Setup accepts any of those and works out the AddOns destination. An unknown folder is rejected so you can try again. |
+| **Use it anyway?** `[y/N]` | The typed folder exists but no `Client.exe` was found. Enter/`n` returns to folder selection; `y` uses it despite that failed check. |
+
+Check the displayed **Setting up** / **Game folder** path before continuing. The installed/latest version lines are information; they do not install an update yet.
+
+### 2. Choose which mailbox addon runs
+
+On first setup, when `CherrysKit\Mailbox.txt` still says `auto`, the prompt is **Which mailbox addon should the kit use? 1 or 2**. A later run normally keeps your saved choice; `-AskAgain` reopens this choice.
+
+| Input | Result |
+| --- | --- |
+| **`1` — Ultimate Mail Mod** | Uses the kit's maintained mailbox addon. If `Interface\AddOns\zmail` is present, setup parks that folder in `Interface\offloaded_addons` because zMail has no in-game off switch. A hub-only install still needs the Ultimate Mail Mod package to use it. |
+| **`2` — zMail** | Uses pyrr's mailbox addon. Setup uses the installed copy, restores a previously parked copy, or tries to download the kit's separate zMail package from the Latest release. Ultimate Mail Mod stays off. If zMail cannot be obtained, the setting remains `auto`, using Ultimate Mail Mod when available. |
+| **Enter** | Takes the displayed default: normally `1`; `2` when an existing zMail copy is the automatic choice. |
+
+The kit distributes zMail with pyrr's permission; it is pyrr's project. You can [switch mailbox addons later in Chrome](#switching-old-addons-and-mailboxes).
+
+### 3. Give write access and pause the helper, if needed
+
+| Prompt | Yes / Enter | No |
+| --- | --- | --- |
+| **Ask Windows for administrator rights now?** `[Y/n]` | Opens Windows' permission prompt and continues in a new setup window with your chosen destination. Only asked if the game folders are not writable. | Stops setup because it cannot write there. |
+| **Stop the Global Bank helper now (it restarts after the setup)?** `[Y/n]` | Asks this install's running helper to stop before its files change. Setup remembers how it was running. | Leaves it running; close it yourself if it prevents files from moving. |
+| **Force-stop it now?** `[Y/n]` | Offered only if the helper did not stop within about 20 seconds. Ends that helper process. | Leaves it running and continues with a warning. |
+
+The helper is the Windows program that collects saved character data; it is separate from the in-game addon. Neither its data folder nor your character saves are removed by this pause.
+
+### 4. Copy the extracted kit into the game, if needed
+
+When you selected a destination from the game list or pasted a path, that selection already authorizes the copy. Some other placement routes ask **Copy Cherry's Kit into this folder now?** `[Y/n]`: `y` copies the extracted kit; `n` skips that copy. If no installed kit exists to continue with, setup stops.
+
+If a kit is already there, **Keep a copy of the existing Cherry's Kit in offloaded_addons first?** `[Y/n]` means exactly that: `y` saves a dated copy before replacing files; `n` skips this extra backup and the copy still proceeds. The script preserves your existing `Commands.lua`, `LoadTimes\Switch.txt` and `Mailbox.txt` when copying over them.
+
+### 5. Review and install available updates
+
+**Update these now (... MB)? The old versions move to offloaded_addons.** `[Y/n]` appears when installed packages differ from the release marked **Latest** and the game is closed.
+
+- **`y` / Enter:** downloads the listed packages, checks their SHA-256 checksums and allowed ZIP paths, then keeps old versions in a dated folder under `Interface\offloaded_addons` and installs the new files. It preserves the editable files named above. Setup may restart itself using its new version and continue the remaining checks.
+- **`n`:** keeps the installed versions and continues the local setup checks.
+- **Game running:** downloads are deferred; close the game and run setup again.
+- **No internet or GitHub check fails:** the console reports that it could not check; local setup can still continue. A playtest newer than Latest is left alone.
+
+A partial install stays selective: this is not a request to install every missing addon. A full install can also receive newly added kit addons; integrations you do not have are considered in the next step.
+
+### 6. Choose optional extras under Dependencies
+
+The list explains **why** each entry is offered. **Install it?** / **Install them?** defaults to **no**. Type `y` for all entries, `n` or Enter for none, or the displayed numbers such as `1 3` for only those entries.
+
+- **Google Chrome** is for Global Bank's optional browser page. The in-game addon can be used without it.
+- **Python 3** is for this repository's build and test tools. Players do not need it for addons, the helper or the extension.
+- **Other kit addons** unlock the specific integration named beside them. For example, Grid's kitty actions need KittyCombo; Grid's other features still work without it. These offers depend on the kit being current with Latest.
+
+Program installs use Windows' **winget**, which accepts the program/source licence agreements as part of the install. If winget is missing or fails, setup prints the download link. An unselected extra is remembered so it is not offered on every run; use `-AskAgain` to reconsider it.
+
+### 7. Review the folder map and offload old copies
+
+Setup prints **Interface\AddOns as it is now**. Its labels mean:
+
+| Label | Meaning |
+| --- | --- |
+| `[kit]` | This install's `CherrysKit` folder, loaded through the hub. |
+| `[move]` | An older separate copy, duplicate extracted kit, or retired folder inside the kit. The proposed move gets it out of the game's addon search path. |
+| `[keep]` | A file/folder left where it is. This includes your separate addon when the kit's replacement is not installed. |
+
+**Move these folders into offloaded_addons now?** `[Y/n]` applies to the displayed move list. **`y` / Enter** moves those folders into `Interface\offloaded_addons`; it does not delete them. **`n`** leaves them in place, and the hub keeps the corresponding kit addon off while the old separate copy has precedence. Other addons and your saved settings stay in place.
+
+Moving an old copy back can make it take precedence again. [Chrome's Offload and Restore](#offload-restore-or-delete) has a separate, explicit way to park and bring back addons.
+
+### 8. Install LogNextChar's login screen, if installed
+
+**Install or update the login screen now?** `[Y/n]` only appears when the separate LogNextChar package is installed. **`y` / Enter** runs its installer: the game needs these files in `Interface\loginxml`, so extracting the addon ZIP alone is not enough. If files would change, it copies the previous login screen into `offloaded_addons` first and preserves your saved logins.
+
+**`n`** skips the login screen. To do it later, close the game and run `Interface\AddOns\CherrysKit\LogNextChar\Install login screen.bat`. **Restart the game** to see a changed login screen; Reload UI alone does not reload it.
+
+### 9. Set up a second Steam or Gameforge install, if wanted
+
+Setup checks for other game installs. If none is found, **Do you have one too? Paste its game folder, or press Enter if not** takes the other game's root folder (the one containing `Client.exe`). Enter means no other install; that answer is remembered. `-AskAgain` lets you provide it later.
+
+For a detected install that needs the kit, **Install Cherry's Kit ... there too?** `[Y/n]` means **`y` / Enter** copies the selected kit there and runs its local setup without repeating the whole interview; **`n`** skips that copy. A second game selected at the first menu is also processed here. A matching, fully configured install needs no new copy.
+
+With Steam and Gameforge together, Global Bank shares a data folder between them, with the data and Chrome extension kept with the Gameforge install. Steam is marked so the addons can use its browser behavior and group its saved characters as a Steam account. The second install receives the mailbox choice and, if requested, the login screen too.
+
+### 10. Finish Chrome setup and resume the helper
+
+**Run the Chrome extension installer now?** `[Y/n]` is optional and only offered when Global Bank's installer and Chrome are available and the local bridge is not already registered for this folder. **`y` / Enter** registers that bridge for your normal Windows user and opens Chrome; you still complete the [Chrome clicks below](#first-installation-in-chrome). **`n`** skips it, and you can run `Install Chrome extension.bat` later. If already registered, setup gives Reload instructions instead of installing it again.
+
+**Start the Global Bank helper again now?** `[Y/n]` appears if setup stopped it and can restart it as your normal user. **`y` / Enter** resumes its previous visible/background mode; **`n`** leaves it stopped until you start it in Chrome or with `Start Global Bank helper.bat`. An elevated setup gives those manual restart instructions instead.
+
+Read **Done** for the installed path and the folder holding older copies. Setup records its results in `Interface\CherrysKit-setup.log`. Press Enter to close, start the game and type `/ck`.
+
+To revisit remembered choices, open a terminal in the installed `Interface\AddOns` folder and run:
+
+```powershell
+.\!setup_cherryskit.bat -AskAgain
+```
+
+For local setup without the GitHub update check:
+
+```powershell
+.\!setup_cherryskit.bat -NoUpdateCheck
+```
+
+That also prevents release downloads needed for missing addons; extract the packages you want beforehand.
+
 ## Optional Chrome extension
 
-[Download the Global Bank for RoM extension for Chrome, 1.3.2](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-GlobalBankDailyRewards-1.3.2.zip): an optional, separate Windows package for Chrome, for Global Bank. Its page shows every character's bank in one grid, with currencies, stats, a gold overview, the item depot, encrypted Gameforge accounts and the helper's terminal and auction cache. It records daily rewards when the Gameforge daily shop page confirms them, can collect them for you if you tick that in its popup, can keep the helper running while Chrome is open, and tells the kit the time.
+[**Download Global Bank for RoM for Chrome, 1.3.2**](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.115/CherrysKit-GlobalBankDailyRewards-1.3.2.zip) · [Detailed extension guide](extras/GlobalBankDailyRewards/README.md)
 
-Extract the extension ZIP into `Interface/AddOns/`, run **Install Chrome extension.bat** from `CherrysKit/GlobalBank/Helper/`, and follow the [step-by-step setup guide](extras/GlobalBankDailyRewards/README.md). Chrome requires a one-time **Load unpacked** step, and after that an update only needs **Reload** on the extension. Automatic page processing is limited to the Gameforge daily shop and item depot pages; the extension does not send your local data to the developer.
+This optional Windows extension opens Global Bank in a Chrome tab: a searchable bank across your characters, equipment and mail, currencies, gold, favourites, item depot, locally encrypted Gameforge accounts, macros and addon-settings backups, plus the helper's terminal and auction cache. The [Addons page](#manage-addons-from-chrome) manages installed folders and kit updates. The extension can keep the helper running while Chrome is open and supplies the kit's clock.
+
+The in-game Global Bank addon, Windows helper and Chrome extension are three separate parts. Installing the addon files makes `/gb` available in game. The helper reads character files after the game saves them. Chrome must load the extension once before its browser page can use the local bridge. **You need Windows, Chrome, the hub and Global Bank; no Python is needed.**
+
+### First installation in Chrome
+
+1. **Put the files in their final game folder.** Install Global Bank with the hub. If you are using the separate extension download above, extract it into the same `Interface\AddOns\` and merge `CherrysKit`. Do not load an extension copy from Downloads that you intend to move later.
+2. **Run the bridge installer.** Say yes to **Run the Chrome extension installer now?** in guided setup, or double-click `Interface\AddOns\CherrysKit\GlobalBank\Helper\Install Chrome extension.bat`. Run it as your normal Windows user. It registers the local connection for that user and opens Chrome with a small setup window. This step does not itself enable the extension in Chrome.
+3. **Open Chrome's extensions page.** If it did not open automatically, type **`chrome://extensions/`** into Chrome's address bar and press Enter. You can also use Chrome's puzzle-piece **Extensions → Manage extensions** menu.
+4. **Turn on Developer mode**, at the top right of that page. This exposes the button for loading the downloaded extension from disk.
+5. **Click Load unpacked**, at the top left. The small setup window tries to select the correct folder automatically. If it does not, choose **`<game>\Interface\AddOns\CherrysKit\GlobalBank\Helper\ChromeExtension`** yourself and confirm the selection. Select the folder that directly contains **`manifest.json`**, not the ZIP, `Helper` or the whole `CherrysKit` folder. If the setup window says it copied the path, paste it into the folder picker with **Ctrl+V**, then press Enter.
+6. **Check the extension card.** **Global Bank for RoM** should be listed and enabled; the small setup window reports that it connected and closes. To keep its button visible, open Chrome's puzzle-piece **Extensions** menu and pin **Global Bank for RoM** to the toolbar.
+7. **Open your bank.** Click its toolbar/menu button, then **Open Global Bank**. The popup and the page show the local connection/helper status. If you want the helper to keep collecting saved data, use **Start helper** or the popup's **Run automatically while Chrome is open** option; **Connection** on the full page contains the same controls. **Show the helper's terminal window** makes an automatic helper visible. You can also run `Start Global Bank helper.bat` in the Helper folder.
+8. **Populate the data.** Log in to a character with Global Bank enabled, then log out so the game writes its save file. Repeat for the characters you want to see. Use **Update now** on the Bank page to read saved data; that button refreshes character data, not addon software. Empty or old snapshots usually mean a character has not saved with the updated addon yet.
+
+Chrome's [official unpacked-extension instructions](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked) also show Developer mode, Load unpacked, pinning and reloading. The downloaded extension uses this local installation route; the kit does not automatically add it to Chrome for you.
+
+**Steam and Gameforge together:** use the Gameforge copy's `GlobalBank\Helper\ChromeExtension` folder once setup has configured both installs. Chrome and its bridge should point to the same copy. Keep that folder in place; if you move the game, rerun the bridge installer from its new location and select the extension's new folder in Chrome.
+
+### Updating the extension
+
+An unpacked extension reads its files from the folder you selected above. Updating those files and telling Chrome to reload them are separate steps.
+
+1. **Close the game and update the addon/helper files** with `!setup_cherryskit.bat` or [Global Bank's Addons page](#update-or-add-kit-addons). For a separately released extension ZIP, extract that ZIP over the same installed `Interface\AddOns\` too. Check that you updated the copy Chrome actually loads.
+2. **Reload the extension.** Click its button and **Reload extension**, or type `chrome://extensions/` and click the circular **Reload** arrow on its **Global Bank for RoM** card. Enable Developer mode if Chrome is hiding that control. **Load unpacked is only needed for a first load or a changed folder.**
+3. **Reopen the popup and Global Bank page.** If a Gameforge daily/depot page was already open, reload that page too so its page script is current. Check the connection/helper status again. An addon update that replaces a running helper stops and resumes it; if it remains stopped, use **Start helper**.
+4. **Rerun Install Chrome extension.bat only when needed:** after moving the installation, if the local bridge has never been registered, or if the popup reports older/missing helper files. Updating files in the same registered folder normally only needs Reload. Keep the existing Chrome entry for ordinary updates so its local settings remain associated with it.
+
+Automatic page processing is limited to the Gameforge daily shop and item depot pages. On the daily page, the extension records a reward after Gameforge confirms it; collecting automatically is an optional popup setting, off by default. Your local bank, macros and settings are not sent to the developer. See the [extension guide](extras/GlobalBankDailyRewards/README.md) and [privacy policy](docs/privacy.md) for details.
+
+## Manage addons from Chrome
+
+Open **Global Bank for RoM → Open Global Bank → Addons**. This is the kit's addon manager inside the extension; it is separate from Chrome's own `chrome://extensions/` page. It reads the game install associated with your registered local bridge. With two game installs, confirm the game folder shown by the install-progress window and use guided setup when you want to synchronize both.
+
+The page has **Cherry's Kit**, **Other addons** and **Offloaded** lists, plus a **Mail** panel when mailbox selection is supported. **Read the folder again** rescans local folders; **Check for updates** contacts this repository's Latest release. Opening the page or rescanning does not install an update. Addons managed elsewhere can be listed here without becoming GitHub-updateable kit packages.
+
+### Update or add kit addons
+
+1. **Close Runes of Magic.** The page refuses installs/updates while the game is running; retry the action after closing it.
+2. Click **Check for updates**. Compare **Installed**, **Latest** and the state on each row: **Update available**, **Up to date**, **Not installed**, **Offloaded**, **Replaced**, or **Newer than the release**. A local playtest can be ahead of Latest; a feature/package absent from Latest cannot be downloaded from that release yet.
+3. Click **Update from GitHub** on an outdated row, or **Update all (N)** when several updates are available. To add a missing kit addon, click **Download and install**. Keep the hub current too. The confirmation names the selected downloads and their total size; cancel leaves them unchanged.
+4. Confirm and **let the separate progress window finish**. It downloads from GitHub, verifies the release checksums and allowed archive paths, keeps previous files in `Interface\offloaded_addons`, then installs. Global Bank's helper stops while its own files change and restarts afterwards. The page shows the last install's result; if the window was closed early or the job failed, read that result and retry.
+5. Start the game to load the changes. If Global Bank/extension files changed, [reload the Chrome extension](#updating-the-extension) and reopen the page. If LogNextChar changed, also rerun guided setup's login-screen step or its **Install login screen.bat** with the game closed.
+
+These downloads target this repository's published kit packages. A **CurseForge copy** of zMail remains managed through CurseForge; the kit only offers its own zMail updates for copies it installed.
+
+### Offload, restore or delete
+
+| Action | What happens | How to reverse it |
+| --- | --- | --- |
+| **Switch off in `/ck`** | Leaves the kit addon's files installed and disables its behavior after Reload UI. | Switch it back on and Reload UI. |
+| **Offload** on an installed addon | Moves the addon folder out of the loading path into `Interface\offloaded_addons`. Kit addons go under its `CherrysKit addons` subfolder; other addons remain separately listed. Saved variables stay in the game's save folders. | Find its **Offloaded** row and click **Restore**. |
+| **Restore** on a folder parked by this page | Moves it back to its recorded original location, inside `CherrysKit` or beside it in `AddOns`. It does not overwrite an existing folder of the same name. | Offload it again if wanted. If another copy occupies the destination, move/offload that copy first. |
+| **Delete** | After confirmation, sends the selected ordinary folder to the Windows Recycle Bin. Saved settings are left in place. **Remove link** only removes a linked folder's link. | Use the Recycle Bin for an ordinary deleted folder; this differs from the page's Restore action. |
+
+**To park an addon:** find it under **Cherry's Kit** or **Other addons**, click **Offload**, and check the resulting row. To bring it back, click **Restore** there, then start the game or Reload UI. If you did this while the game was open, its already loaded addon keeps running until Reload UI/restart; a file in use may prevent the move, so close the game and retry if it fails.
+
+**Not every backup has a Restore button.** Folders moved by guided setup or saved **before update** may have no record of their original location. They remain visible under Offloaded but need to be moved back with File Explorer. For an old kit-addon backup, restore the relevant addon into `Interface\AddOns\CherrysKit\`, not as a new loose addon beside the kit. Keep duplicate `.toc` files out of `AddOns`; use the [folder layout](#download-and-install) as a reference. Linked folders also need manual handling when no Restore action is offered.
+
+The hub and Global Bank do not offer their own Offload/Delete controls on this page: the page depends on them. Use the guided setup or File Explorer for those folders.
+
+### Switching old addons and mailboxes
+
+An old separate addon, or a kit addon merged into another, says **Replaced by ...**. **Switch with ...** first makes sure the replacement is installed, downloading it after confirmation if needed, and then offloads the old folder. For example, **Switch with Cherry's Info** retires a separate pbInfo copy after Cherry's Info is available. This keeps the old folder for Restore. If Latest does not yet contain the replacement, install it from the appropriate playtest ZIP first.
+
+In the **Mail** panel, **Switch to zMail** uses or installs zMail and selects it in `CherrysKit\Mailbox.txt`; Ultimate Mail Mod stays off. **Switch to Ultimate Mail Mod** selects/installs that addon and offloads `Interface\AddOns\zmail`, because zMail cannot be switched off in game. Confirm the named action and Reload UI to apply the choice. zMail remains pyrr's addon, distributed here with his permission.
+
+## Common questions
+
+| What you see | What to do |
+| --- | --- |
+| Double-clicking setup says its PowerShell file is missing | Extract the whole Full/Hub ZIP. The launchers must sit beside `CherrysKit`, with `CherrysKit\Setup\Setup-CherrysKit.ps1` inside it. Do not run just a batch file copied out of the archive. |
+| `/ck` does nothing, or an addon is absent | Check `Interface\AddOns\CherrysKit\CherrysKit.toc`, install the hub, then restart/Reload UI. Confirm you extracted into the game install you actually launch. |
+| The hub says an old addon takes precedence | Read the named folder, run setup's folder-map/offload step or use **Switch with** in Chrome, then Reload UI. A hub-only install does not supply replacements for every old addon. |
+| Setup does not offer a declined extra or another game again | Run `.\!setup_cherryskit.bat -AskAgain` from the installed AddOns folder. |
+| Chrome says it cannot find `manifest.json` | Load the installed `GlobalBank\Helper\ChromeExtension` folder directly, rather than a ZIP or its parent folder. |
+| Chrome cannot connect, or the helper is older than the page | Update the installed Global Bank/helper files, rerun **Install Chrome extension.bat** from that install as your normal Windows user, then **Reload extension**. Keep Chrome pointed at that same folder. |
+| Chrome has no **Addons** page yet | This page needs the newer Global Bank and extension files described here. Check the release notes, update those files and reload the extension; a ZIP older than this branch will not contain every feature. |
+| Bank data is empty or stale | Enable Global Bank in game, log each character out to save, and use **Update now** / start the helper. Reading a save does not log characters in for you. |
+| You want to undo an offload | Use **Restore** if offered. Otherwise move the saved folder back to its original location with File Explorer while the game is closed. An older separate copy can make the kit's copy give way again. |
 
 ## Keeping addons updateable
 
-**Players:** double-click **`!setup_cherryskit.bat`** in `Interface/AddOns/`, or right-click **`!setup_cherryskit.ps1`** beside it and choose **Run with PowerShell**. The window opens at once, and within a couple of seconds says which addons are out of date against the release marked Latest here. Say yes and it downloads only those, checks each file against the release's checksums, moves the old versions to `Interface\offloaded_addons` and puts the new ones in place, keeping any changes you made to `Commands.lua`. It also lists what your addons can use that isn't there, such as Chrome for Global Bank's extension or an addon yours works with, and asks yes or no before installing any of it. All it contacts is this repository's release files, with no account, and `-NoUpdateCheck` turns that off. Press **Reload** on the Chrome extension afterwards if Global Bank changed.
+**Players:** close the game and use the [guided setup](#guided-setup-every-prompt), or [check and update from Chrome](#update-or-add-kit-addons). Right-clicking `!setup_cherryskit.ps1` and choosing **Run with PowerShell** is another way to start the same setup. Both update routes use the release marked Latest, verify downloads and keep old versions in `Interface\offloaded_addons`. They preserve `Commands.lua`, `LoadTimes\Switch.txt` and `Mailbox.txt`; character settings live outside addon folders. Reload the extension after its files change, and reinstall LogNextChar's login screen after that package changes.
 
 **Developers:** the tool only works while every addon and release keeps to these rules. A change that breaks one isn't ready to merge.
 
@@ -168,7 +415,7 @@ Bug reports are welcome as well: say which addon and kit version you use, what y
 
 ## Inside this repository
 
-- [`Interface/AddOns/CherrysKit/`](Interface/AddOns/CherrysKit/) holds the installed addon tree, with a README in the hub and every addon folder. LogNextChar sits beside it, in [`Interface/AddOns/LogNextChar/`](Interface/AddOns/LogNextChar/), with the login screen itself in [`Interface/loginxml/`](Interface/loginxml/).
+- [`Interface/AddOns/CherrysKit/`](Interface/AddOns/CherrysKit/) holds the main addon source tree, with a README in the hub and every addon folder. The separate LogNextChar package's source sits in [`Interface/AddOns/LogNextChar/`](Interface/AddOns/LogNextChar/), with its login screen source in [`Interface/loginxml/`](Interface/loginxml/). The release builder packages them together under `CherrysKit/LogNextChar/`; its installer then puts the login screen into the game's `Interface/loginxml/`.
 - [`docs/curseforge/`](docs/curseforge/README.md) contains the copy-and-paste CurseForge descriptions and publishing notes.
 - [`docs/ADDON_MAP.md`](docs/ADDON_MAP.md) lists what each addon works with, and [`docs/TESTING.md`](docs/TESTING.md) the checks that need the real game client.
 - [`docs/RELEASING.md`](docs/RELEASING.md) explains packaging, installation layouts and publishing a version.
@@ -185,7 +432,7 @@ Python 3.10 or later is enough to build; there are no Python package dependencie
 python tools/build_release.py
 ```
 
-This creates sixteen ZIPs in `dist/<kit version>/` (the full kit, the hub, twelve addons, LogNextChar and the optional Chrome extension), plus a release manifest, checksums and release notes. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
+This creates release ZIPs in `dist/<kit version>/`: the full kit, the hub, one per included addon, separate LogNextChar and zMail packages, and the optional Chrome extension, plus a release manifest, checksums and release notes. It also builds the extension's separate Chrome Web Store upload archive. The same check runs on pushes and pull requests. It verifies the packaged source, file references, archive structure and local documentation links.
 
 The tests run the addons on Lua 5.1 against a simulated client: install `tests/requirements.txt`, then run `python -m unittest discover -s tests -p 'test_*.py' -v`. Native drawing, input, sound and event timing still need in-game checks, listed in [TESTING.md](docs/TESTING.md).
 
