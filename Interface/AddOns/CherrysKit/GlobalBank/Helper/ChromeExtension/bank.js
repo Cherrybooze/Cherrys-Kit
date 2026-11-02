@@ -366,6 +366,30 @@ const GBBank = (() => {
     quality: (a, b) => b.quality - a.quality || a.name.localeCompare(b.name),
     id: (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0) || a.name.localeCompare(b.name),
   };
+  // Sorting by type: what can be worn first, as the character window goes (weapons, jewellery, armour, wings), then the
+  // rest, each kind together and in the chosen order inside it. A good guess from IDs, icons and names, like typeOf.
+  const SORT_GROUPS = ['Weapons', 'Jewellery', 'Armour', 'Wings', 'Mana stones', 'Plus jewels', 'Runes', 'Consumables', 'Item shop', 'Materials',
+    'Recipes', 'Mounts and pets', 'Other'];
+  // shopIds: the items someone keeps in the item shop tab, which only takes what was bought there
+  function sortGroupOf(cell, shopIds = null) {
+    const path = String(cell.icon || '').toLowerCase();
+    const name = String(cell.name || '').toLowerCase();
+    const worn = cell.places?.find(place => place.place === 'worn');
+    if (worn?.where === 'Adornment' || /wing|adorn|back_ornament/.test(path)) return 'Wings';
+    if (cell.type === 'Weapons' || cell.type === 'Jewellery' || cell.type === 'Armour' || cell.type === 'Mana stones' || cell.type === 'Runes') return cell.type;
+    if (/fusnion_stone\/(uv|fi)_|jewel/.test(path + ' ' + name)) return 'Plus jewels';
+    if (/power stone|mana stone/.test(path)) return 'Mana stones';
+    if (shopIds?.has(String(cell.id)) || /shop_goods|shop key|firework|ticket/.test(path + ' ' + name)) return 'Item shop';
+    if (cell.type === 'Potions' || /potion|food|cook|dish|scroll|elixir/.test(path)) return 'Consumables';
+    if (cell.type === 'Materials' || cell.type === 'Recipes' || cell.type === 'Mounts and pets') return cell.type;
+    return 'Other';
+  }
+  // The cells in type order, each type sorted as asked inside it
+  function sortByType(list, order, shopIds) {
+    const rank = new Map(SORT_GROUPS.map((group, at) => [group, at]));
+    for (const cell of list) cell.group = sortGroupOf(cell, shopIds);
+    return list.sort((a, b) => rank.get(a.group) - rank.get(b.group) || order(a, b));
+  }
   // A piece of gear's details, one line each, for the tooltip
   function gearLines(gear) {
     const lines = [`Durability ${formatNumber(gear.dura)} / ${formatNumber(gear.maxDura)}`];
@@ -986,7 +1010,13 @@ const GBBank = (() => {
   // tooltip's element, review(kind): open the Characters page on 'login' or 'bank', favouritesChanged(count)}
   function create(root, send, status, onData, menu, options = {}) {
     const roster = options.roster || null;
-    const state = {characters: [], entries: [], made: null, total: -1, sort: 'name', cells: [], names: new Map(), loadedAt: 0, layout: 'grid', active: -1};
+    const state = {characters: [], entries: [], made: null, total: -1, sort: 'name', byType: false, cells: [], names: new Map(), loadedAt: 0, layout: 'grid', active: -1};
+    // The items someone keeps in the item shop tab, worked out once for each load
+    let shopKnown = null;
+    function shopIds() {
+      if (!shopKnown || shopKnown.entries !== state.entries) shopKnown = {entries: state.entries, ids: new Set(state.entries.filter(entry => entry.shop).map(entry => String(entry.id)))};
+      return shopKnown.ids;
+    }
     const settings = {excluded: new Set(), whitelist: new Set(), excludeBound: false};
     const rules = {on: true, types: new Set(DEFAULT_RULES.types), stats: DEFAULT_RULES.stats, always: new Set(), favourites: new Map(), quality: true};
     const icons = new Map();
@@ -1123,7 +1153,7 @@ const GBBank = (() => {
       slot.letters.textContent = cell.name.slice(0, 2);
       if (shape().rows) {
         const who = new Set(cell.places.map(place => place.ch?.key || place.character));
-        slot.nameText.replaceChildren(cell.name, make('small', '', [cell.type, cell.quality ? QUALITY[cell.quality] : ''].filter(Boolean).join(' · ')));
+        slot.nameText.replaceChildren(cell.name, make('small', '', [state.byType && cell.group ? cell.group : cell.type, cell.quality ? QUALITY[cell.quality] : ''].filter(Boolean).join(' · ')));
         slot.nameText.style.color = cell.color ? `#${cell.color}` : '';
         slot.whereText.replaceChildren(who.size === 1 ? cell.places[0].character : `${formatNumber(who.size)} characters`,
           make('small', '', [...new Set(cell.places.map(place => PLACE[place.shop ? 'shop' : place.place]))].join(' + ')));
@@ -1195,7 +1225,8 @@ const GBBank = (() => {
       const test = matcher(filters());
       const list = [];
       for (const entry of state.entries) if (test(entry) && (showHidden || !isHidden(entry, settings))) list.push(entry);
-      state.cells = cells(list, currentRules()).sort(SORTS[state.sort] || SORTS.name);
+      const order = SORTS[state.sort] || SORTS.name;
+      state.cells = state.byType ? sortByType(cells(list, currentRules()), order, shopIds()) : cells(list, currentRules()).sort(order);
       if (state.active >= state.cells.length || fromTop) state.active = -1;
       if (hasDom) {
         layout();
@@ -1752,7 +1783,10 @@ const GBBank = (() => {
       el(id)?.addEventListener('change', () => renderGrid(true));
     }
     el('bank-stack').addEventListener('change', () => { renderStacking(); renderGrid(); });
-    el('bank-sort').addEventListener('change', event => { state.sort = event.target.value; renderGrid(true); });
+    // The order, and whether each type keeps together, kept in this Chrome
+    const keepSort = () => { if (storage) storage.set({bankSort: {by: state.sort, type: state.byType}}).catch(() => {}); };
+    el('bank-sort').addEventListener('change', event => { state.sort = event.target.value; keepSort(); renderGrid(true); });
+    el('bank-sort-type')?.addEventListener('change', event => { state.byType = event.target.checked; keepSort(); renderGrid(true); });
     el('bank-update').addEventListener('click', update);
     el('bank-exclude-bound').addEventListener('change', event => { settings.excludeBound = event.target.checked; settingsChanged(); });
     el('bank-exclusion-add').addEventListener('click', () => addFromBox(settings.excluded, settings.whitelist));
@@ -1916,8 +1950,14 @@ const GBBank = (() => {
       });
     }
     if (storage) {
-      storage.get(['bankExclusions', 'bankRules', 'bankLayout', 'bankMarkColors', 'bankTierFrom']).then(({bankExclusions: saved, bankRules: kept, bankLayout, bankMarkColors, bankTierFrom}) => {
+      storage.get(['bankExclusions', 'bankRules', 'bankLayout', 'bankMarkColors', 'bankTierFrom', 'bankSort']).then(({bankExclusions: saved, bankRules: kept, bankLayout, bankMarkColors, bankTierFrom, bankSort}) => {
         setLayout(bankLayout || 'grid', false);
+        if (bankSort && SORTS[bankSort.by]) {
+          state.sort = bankSort.by;
+          state.byType = bankSort.type === true;
+          if (el('bank-sort')) el('bank-sort').value = state.sort;
+          if (el('bank-sort-type')) el('bank-sort-type').checked = state.byType;
+        }
         if (Number.isInteger(bankTierFrom) && bankTierFrom >= 1 && bankTierFrom <= 30) {
           tierFrom = bankTierFrom;
           if (el('bank-tier-from')) el('bank-tier-from').value = String(tierFrom);
@@ -1971,7 +2011,7 @@ const GBBank = (() => {
     };
   }
   return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, DEFAULT_RULES,
-    quickFilters, wornGear, plusOf, slotLabel, SLOT_LABELS, TIER_FROM, statEffects, templateTip,
+    quickFilters, wornGear, plusOf, slotLabel, SLOT_LABELS, TIER_FROM, statEffects, templateTip, SORT_GROUPS, sortGroupOf, sortByType, SORTS,
     formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
     rosterRows, renderRoster, statTable, renderStats, searchRows, characterFilters, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
 })();

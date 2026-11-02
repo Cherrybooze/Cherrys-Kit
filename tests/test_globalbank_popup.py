@@ -1571,6 +1571,16 @@ assert.deepEqual([...known.effects.get('Storm VII')], ['+19 Dexterity', '+30 Mag
 assert.deepEqual(JSON.parse(JSON.stringify(bank.templateTip('Wise', known))), [['ffffff', 'Mana Stone Tier 6'], ['ffffff', 'Cannot be sold'],
   ['f0610d', '+378 Wisdom', 'ffffff', 'Wise'], ['f0610d', '+2457 Maximum HP']]);
 assert.equal(bank.templateTip('Nobody has it', known), null);
+// Sorted by type: what's worn in the character window's order first, then each kind together, A to Z inside
+const kinds = [{name: 'Zircon Ring', id: '230500', icon: 'eq_finger_01', type: 'Jewellery'}, {name: 'Axe', id: '211000', icon: 'wp_axe', type: 'Weapons'},
+  {name: 'Robe', id: '220100', icon: 'eq_torso', type: 'Armour'}, {name: 'Universal Jewel', id: '244477', icon: 'interface/Icons/fusnion_stone/uv_lv1_100_3', type: 'Other'},
+  {name: 'Mana Stone Tier 6', id: '202845', icon: 'mana stone', type: 'Mana stones'}, {name: 'Firework', id: '203291', icon: 'interface/Icons/firework', type: 'Other'},
+  {name: 'Hammer', id: '207795', icon: 'x', type: 'Other'}, {name: 'Healing Potion', id: '200001', icon: 'item_potion_01', type: 'Potions'},
+  {name: 'Ore', id: '200300', icon: 'item_ore', type: 'Materials'}, {name: 'Charm', id: '230501', icon: 'eq_neck', type: 'Jewellery'},
+  {name: 'Angel Wings', id: '231000', icon: 'eq_wing_01', type: 'Armour'}, {name: 'Odd Thing', id: '200900', icon: 'x', type: 'Other'}].map(cell => ({...cell, total: 1, quality: 0, places: []}));
+const sorted = bank.sortByType(kinds, bank.SORTS.name, new Set(['207795']));
+assert.deepEqual([...sorted.map(cell => cell.name)], ['Axe', 'Charm', 'Zircon Ring', 'Robe', 'Angel Wings', 'Mana Stone Tier 6', 'Universal Jewel', 'Healing Potion', 'Firework', 'Hammer', 'Ore', 'Odd Thing']);
+assert.deepEqual([...sorted.map(cell => cell.group)].slice(0, 9), ['Weapons', 'Jewellery', 'Jewellery', 'Armour', 'Wings', 'Mana stones', 'Plus jewels', 'Consumables', 'Item shop']);
 // A stone's way of showing a stat beats gear's
 const geared = bank.statEffects([{stats: ['Keeper'], stone: false, tip: [['', 'Sword'], ['', '+1 Stamina', '', 'Keeper']]}, ...list]);
 assert.deepEqual([...geared.effects.get('Keeper')], ['+442 Stamina']);

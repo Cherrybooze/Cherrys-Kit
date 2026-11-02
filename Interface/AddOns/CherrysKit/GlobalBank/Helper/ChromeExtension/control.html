@@ -196,7 +196,8 @@
             <div class="panel-title">Items <span id="bank-shown" class="soft-count"></span></div>
             <span id="bank-total" class="panel-meta"></span>
             <span class="push"></span>
-            <label class="filter-select"><span class="gb-sr-only">Sort by</span><select id="bank-sort"><option value="name">Name A–Z</option><option value="count">Count</option><option value="type">Type</option><option value="quality">Quality</option><option value="id">Item ID</option></select></label>
+            <label class="bank-switch" title="Keeps each kind of item together: weapons, jewellery, armour and wings first, then mana stones, plus jewels, runes, consumables, item shop items, materials, recipes, mounts and pets, and the rest. Inside each, the order picked beside it."><span class="gb-switch"><input id="bank-sort-type" type="checkbox"><span aria-hidden="true"></span></span>Sort by type</label>
+            <label class="filter-select"><span class="gb-sr-only">Sort by</span><select id="bank-sort"><option value="name">Name A–Z</option><option value="count">Count</option><option value="quality">Quality</option><option value="id">Item ID</option></select></label>
             <div class="view-toggle" role="group" aria-label="Item layout">
               <button type="button" data-bank-layout="grid" title="Large slots" aria-label="Large slots" aria-pressed="true"><span class="ico" data-ui-icon="grid"></span></button>
               <button type="button" data-bank-layout="compact" title="Small slots" aria-label="Small slots" aria-pressed="false"><span class="ico" data-ui-icon="compact"></span></button>
