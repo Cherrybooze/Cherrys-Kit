@@ -32,6 +32,7 @@ Pick the full kit, or install the hub and just the addons you want. Type **`/ck`
 - **Setup and the login screen ask for administrator rights** (hub 0.4.34, LogNextChar 1.3.4), and so do the Addons page's offload, restore, delete, mailbox switch and login screen buttons. Install Chrome extension and the Global Bank helper stay as your own Windows user: Chrome registers its bridge per user and has to reach the helper.
 - **Clearer popup** (extension 1.3.5): **Run automatically while Chrome is open** says that it starts the helper in the background instead of a visible terminal window.
 - **A modern login screen** (LogNextChar 1.4.0): flat dark panels in the style of rom weakauras and Cherry's Bar, gold beside a coin on the character screen, lists as long as what is in them, server rows with flags and a character count, grouped settings toggles and new check boxes, buttons and sliders. **Modern look** in the settings panel switches back to the game's own look at once.
+- **Next and Prev show the slot they log into** (LogNextChar 1.4.0), big under their name in cyan: playing slot 4, Next shows 5 and Prev 3.
 
 ## What's new in 0.11.117
 

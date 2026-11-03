@@ -40,6 +40,58 @@ class LayoutTest(unittest.TestCase):
         size = bar.find(f"{ns}Size/{ns}AbsDimension")
         self.assertGreater(int(size.get("y")), int(size.get("x")))
 
+    def test_slot_number_drawn_behind_the_name(self):
+        # Within a layer the client draws in the order listed, so the number comes before the name
+        path = os.path.join(ROOT, "AddOns", "LogNextChar", "LogNextChar.xml")
+        ns = "{http://www.runewaker.com/}"
+        template = next(f for f in ET.parse(path).getroot() if f.get("name") == "LogNextCharButtonTemplate")
+        overlay = next(layer for layer in template.iter(f"{ns}Layer") if layer.get("level") == "OVERLAY")
+        texts = [s.get("name") for s in overlay.findall(f"{ns}FontString")]
+        self.assertEqual(texts, ["$parentNumber", "$parentLetters"])
+        height = {s.get("name"): int(s.find(f"{ns}FontHeight/{ns}AbsValue").get("val"))
+                  for s in overlay.findall(f"{ns}FontString")}
+        self.assertGreater(height["$parentNumber"], height["$parentLetters"])
+
+
+class SlotNumberTest(unittest.TestCase):
+    def numbers(self, lua):
+        return lua.eval("LogNextCharBarNextNumber.text"), lua.eval("LogNextCharBarPrevNumber.text")
+
+    def name_spot(self, lua, button):
+        return lua.eval(f"LogNextCharBar{button}Letters.anchor[1]")
+
+    def test_next_and_prev_show_the_slots_they_log_into(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C", "D", "E", "F", "G", "H"}; CHARACTER_SELECT = {selectedIndex = 4}')
+        self.assertEqual(self.numbers(lua), ("5", "3"))
+        self.assertEqual((self.name_spot(lua, "Next"), self.name_spot(lua, "Prev")), ("TOP", "TOP"))
+
+    def test_the_number_has_its_own_colour(self):
+        lua = in_game()
+        color = lua_list(lua.eval("LogNextCharBarNextNumber.color"))
+        self.assertEqual(color, lua_list(lua.eval("LogNextChar.NUMBER_COLOR")))
+        self.assertIsNone(lua.eval("LogNextCharBarNextLetters.color"))  # the name keeps its font's colour
+
+    def test_numbers_go_round_like_the_switch(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C"}; CHARACTER_SELECT = {selectedIndex = 3}')
+        self.assertEqual(self.numbers(lua), ("1", "2"))
+        lua.execute('CHARACTER_SELECT.selectedIndex = 1; LogNextChar.OnEvent("LOADING_END")')
+        self.assertEqual(self.numbers(lua), ("2", "3"))
+
+    def test_name_alone_in_the_middle_without_a_list_or_with_one_character(self):
+        lua = in_game()
+        self.assertEqual(self.numbers(lua), ("", ""))
+        self.assertEqual(self.name_spot(lua, "Next"), "CENTER")
+        lua.execute('LOGCHAR_ROSTER = {"A"}; CHARACTER_SELECT = {selectedIndex = 1}; LogNextChar.OnEvent("LOADING_END")')
+        self.assertEqual(self.numbers(lua), ("", ""))
+        self.assertEqual(self.name_spot(lua, "Prev"), "CENTER")
+
+    def test_a_list_that_arrives_later_shows_on_hover(self):
+        lua = in_game()
+        lua.execute('LOGCHAR_ROSTER = {"A", "B"}; CHARACTER_SELECT = {selectedIndex = 1}')
+        lua.execute("LogNextChar.OnEnter(LogNextCharBarNext)")
+        self.assertEqual(self.numbers(lua), ("2", "2"))
+        self.assertEqual(self.name_spot(lua, "Next"), "TOP")
+
 
 class DefaultSpotTest(unittest.TestCase):
     def anchor(self, lua):

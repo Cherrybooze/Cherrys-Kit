@@ -24,6 +24,8 @@ Without the login screen installed, Next and Prev only log you out, and you pick
 
 ## Updated in 1.4.0
 
+Next and Prev show the slot they log into, big under their name in cyan: playing the character in slot 4, Next shows 5 and Prev shows 3. They take the slots from the login screen's character list, so without the login screen, or with one character, the buttons only show their names.
+
 The login screen has a new look, in the style of rom weakauras and Cherry's Bar: flat dark panels with a thin border, cyan for what you have selected, and gold for the main button. Gold on the character screen is gold, beside a coin, with the charges and the last save under it. The character, channel and server lists are as long as what is in them, the server rows show the flag and how many characters you have there beside a helmet, and the settings panel groups its toggles under headings, with new check boxes. Buttons, edit boxes and the sliders on the character creation screen match.
 
 **Modern look**, the first toggle in the settings panel on the server screen, switches back to the game's own look at once, and the game remembers it like the other toggles. `modern_ui = false` in `config.lua` does the same. Run `Install login screen.bat` again after updating.
@@ -67,7 +69,7 @@ Run the same file again after updating. It never touches your own accounts, pass
 
 ## The buttons
 
-Next sits on top and Prev under it, the same way round as the character list, just below the minimap. They follow the minimap at any UI scale or resolution. Hover a button to see which character it will log in. Both grey out when the account has only one character on that server.
+Next sits on top and Prev under it, the same way round as the character list, just below the minimap. They follow the minimap at any UI scale or resolution. Each shows the slot it will log in, big under its name, and hovering it names that character. Both grey out when the account has only one character on that server.
 
 The buttons are locked until you unlock them: open **Settings** in the hub or type `/lnc settings`, choose **Unlock login next char buttons**, then right-drag (or Shift+drag) them. The same window can hide them or put them back in their default spot.
 

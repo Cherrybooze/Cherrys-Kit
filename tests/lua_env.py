@@ -107,7 +107,16 @@ local function button(name)
   _G[name] = {GetName = function() return name end, GetHighlightTexture = function() return glow end,
     SetAlpha = function(self, a) self.alpha = a end, glow = glow}
   _G[name .. "Icon"] = {SetTexture = function(self, path) self.path = path end}
-  _G[name .. "Letters"] = {SetText = function(self, text) self.text = text end}
+  local function fontString()
+    return {SetText = function(self, text) self.text = text end,
+      SetTextColor = function(self, r, g, b) self.color = {r, g, b} end,
+      ClearAllAnchors = function(self) self.anchor = nil end,
+      SetAnchor = function(self, point, relativePoint, relativeTo, x, y)
+        self.anchor = {point, relativePoint, relativeTo, x, y}
+      end}
+  end
+  _G[name .. "Letters"] = fontString()
+  _G[name .. "Number"] = fontString()
 end
 button("LogNextCharBarPrev")
 button("LogNextCharBarNext")
