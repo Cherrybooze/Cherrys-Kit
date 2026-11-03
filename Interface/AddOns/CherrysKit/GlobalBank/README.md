@@ -26,7 +26,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Updated in 1.6.5
 
-Updates from the Addons page run as administrator: Windows asks for permission first, so a game folder such as `C:\RunesOfMagic` no longer stops an update part way with *Access is denied*. If the permission is declined, nothing changes and the page says so. The page starts the helper again afterwards, so it keeps running as you, not as administrator. Addons whose features moved into Cherry's Info or LogNextChar leave the list once they are gone, the **Login screen** panel shows whether `Interface\loginxml` is in place and can put it there, and the action buttons line up with the table's rows. The popup explains that **Run automatically while Chrome is open** starts the helper in the background (extension 1.3.5). The Stats page always shows a stat's own value: tooltips from high-durability (HD) gear, up to +20%, no longer inflate it.
+Updates from the Addons page run as administrator: Windows asks for permission first, so a game folder such as `C:\RunesOfMagic` no longer stops an update part way with *Access is denied*. If the permission is declined, nothing changes and the page says so. The page starts the helper again afterwards, so it keeps running as you, not as administrator. Addons whose features moved into Cherry's Info or LogNextChar leave the list once they are gone, the **Login screen** panel shows whether `Interface\loginxml` is in place and can put it there, and the action buttons line up with the table's rows. The popup explains that **Run automatically while Chrome is open** starts the helper in the background (extension 1.3.5). The Stats page always shows a stat's own value: tooltips from high-durability (HD) gear, up to +20%, no longer inflate it. **Stack items with identical stats** now stacks gear whatever its durability, and hovering such a stack lists each copy on its own line: durability, name, count, character and slot, the most worn first.
 
 ## Updated in 1.6.4
 
@@ -56,7 +56,7 @@ The Addons page's hub comparison now uses the release's **hub version**, not the
 
 ## Updated in 1.6.1
 
-**Mana stones with identical stats stack**, and so does anything else with stats of its own, gear included (extension 1.3.1). Copies have to match exactly: the same stats, and on gear the same plus, tier, runes and durability. **Stack items with identical stats**, beside the Bank's filters, turns this off to keep each one apart, and **Stacking** still says which types stack at all.
+**Mana stones with identical stats stack**, and so does anything else with stats of its own, gear included (extension 1.3.1). Copies have to match exactly: the same stats, and on gear the same plus, tier and runes. Durability doesn't keep them apart (1.6.5): the stack's tooltip lists each copy with its durability, holder and slot. **Stack items with identical stats**, beside the Bank's filters, turns this off to keep each one apart, and **Stacking** still says which types stack at all.
 
 **A slot's corners say more.** The tier is in the upper left, **HD** in the upper right when durability is above 101, the plus in the lower left, and the stack count in the lower right, so a +14 can't be mistaken for 14 of something. Click the colour squares under the grid to pick each one's colour. A mana stone's tier shows too.
 

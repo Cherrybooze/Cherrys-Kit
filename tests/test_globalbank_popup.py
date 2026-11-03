@@ -1378,12 +1378,25 @@ assert.equal(count(rules({stats: 'match', types: noGear})), 6);
 assert.equal(count(rules({stats: 'all', types: noGear})), 5);
 // An item you chose stacks every copy, even gear
 assert.equal(count(rules({types: noGear, always: new Set(['211000'])})), 5);
-// Identical means the same in every way: stats in any order, and plus, tier, durability and runes on gear
-const copy = (over = {}, item = {}) => bank.entries([{name: 'A', level: 1, bag: [{slot: 1, count: 1, id: '211000', name: 'Sword', gear: {...gear, ...over}, ...item}]}])[0];
+// Identical means the same stats in any order, and the same plus, tier and runes on gear. Durability never keeps copies apart.
+const copy = (over = {}, item = {}, holder = 'A') => bank.entries([{name: holder, level: 1, bag: [{slot: 1, count: 1, id: '211000', name: 'Sword', gear: {...gear, ...over}, ...item}]}])[0];
 const same = (a, b) => bank.cells([a, b], true).length === 1;
 assert.ok(same(copy(), copy()));
 assert.ok(same(copy({stats: ['Monk V', 'Dark I']}), copy({stats: ['Dark I', 'Monk V']})));
-for (const over of [{plus: 9}, {tier: 9}, {dura: 9}, {maxDura: 9}, {stats: ['Dark I']}, {runes: ['Dark I']}]) assert.ok(!same(copy(), copy(over)), JSON.stringify(over));
+for (const over of [{plus: 9}, {tier: 9}, {stats: ['Dark I']}, {runes: ['Dark I']}]) assert.ok(!same(copy(), copy(over)), JSON.stringify(over));
+for (const over of [{dura: 9}, {maxDura: 9}, {dura: 118, maxDura: 120}]) assert.ok(same(copy(), copy(over)), JSON.stringify(over));
+// A stack whose copies differ only in durability isn't mixed: its tooltip lists each copy, worn down first
+const worn = bank.cells([copy({dura: 120, maxDura: 120}, {slot: 35}, 'Bob'), copy({dura: 80, maxDura: 120}, {count: 1, slot: 4}, 'Ann')], true)[0];
+assert.equal(worn.mixed, false);
+assert.equal(worn.duraMixed, true);
+assert.deepEqual(plain(bank.instanceLines(worn).map(c => [c.dura, c.name, c.count, c.character, c.where])),
+  [['80/120', 'Sword', 1, 'Ann', 'Bag 4 (p1)'], ['120/120', 'Sword', 1, 'Bob', 'Bag 35 (p2)']]);
+assert.ok(bank.itemLines(worn).some(l => l.text === 'Durability 80–120 / 120, each copy below'), plain(bank.itemLines(worn)));
+// HD shows only when every copy is HD
+assert.equal(bank.slotMarks(worn).durability, '');
+assert.equal(bank.slotMarks(bank.cells([copy({dura: 110}), copy({dura: 120})], true)[0]).durability, 'HD');
+// A single copy has nothing to break down
+assert.deepEqual(plain(bank.instanceLines(bank.cells([copy()], true)[0])), []);
 const stoneWith = stats => bank.entries([{name: 'A', level: 1, bag: [{slot: 1, count: 1, id: '202845', name: 'Stone', stats}]}])[0];
 assert.ok(same(stoneWith(['Monk V', 'Dark I']), stoneWith(['Dark I', 'Monk V'])));
 assert.ok(!same(stoneWith(['Monk V']), stoneWith(['Dark I'])));
