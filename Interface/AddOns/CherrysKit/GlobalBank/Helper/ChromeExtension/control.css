@@ -374,6 +374,11 @@ tbody tr:last-child td { border-bottom: 0; }
 .gf-actions { white-space: nowrap; }
 .gf-actions button, .gf-actions input { margin-right: 4px; }
 .gf-actions button { min-height: 24px; padding: 0 7px; font-size: 11px; }
+.gf-copy { transition: border-color .45s ease, box-shadow .45s ease, color .45s ease, filter var(--gb-fast), transform var(--gb-fast); }
+.gf-copy-done { display: inline-block; max-width: 0; overflow: hidden; vertical-align: bottom; white-space: pre; opacity: 0; transition: opacity .45s ease, max-width 0s .45s; }
+/* Copied: green until another field is copied, then the green and ": copied" fade out together */
+.gf-copy.is-copied { color: #eafff3; border-color: #4fae7d; box-shadow: inset 0 0 0 100px #2c6e4c; }
+.gf-copy.is-copied .gf-copy-done { max-width: 8em; opacity: 1; transition: opacity .15s ease; }
 .gf-notes { max-width: 220px; }
 .section-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
 .section-tab { min-height: 28px; padding: 0 10px; font-size: 12px; font-weight: 500; color: #a9bdd2; background: none; border-color: transparent; box-shadow: none; }

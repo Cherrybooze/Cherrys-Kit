@@ -31,6 +31,7 @@ Pick the full kit, or install the hub and just the addons you want. Type **`/ck`
 - **Addons page updates run as administrator** (Global Bank 1.6.5): Windows asks for permission first, so a game folder such as `C:\RunesOfMagic` no longer stops an update with *Access is denied*. Declining changes nothing. Replaced addons leave the list once they're gone, a **Login screen** panel shows whether `Interface\loginxml` is in place, and the Offload/Delete buttons line up with the table rows. The **Stats** page shows each stat's own value, without high-durability gear's up to +20%. Gear with identical stats stacks whatever its durability, and hovering the stack lists each copy's durability, character and slot.
 - **Setup and the login screen ask for administrator rights** (hub 0.4.34, LogNextChar 1.3.4), and so do the Addons page's offload, restore, delete, mailbox switch and login screen buttons. Install Chrome extension and the Global Bank helper stay as your own Windows user: Chrome registers its bridge per user and has to reach the helper.
 - **Clearer popup** (extension 1.3.5): **Run automatically while Chrome is open** says that it starts the helper in the background instead of a visible terminal window.
+- **Gameforge accounts copy buttons** (extension 1.3.5): a copy button turns green with *copied* after its label, on the page and in the right-click menu, and stays that way until you copy another field, which fades the previous one out.
 
 ## What's new in 0.11.117
 
