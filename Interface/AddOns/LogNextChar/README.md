@@ -28,6 +28,8 @@ The character screen numbers your characters from 1, and Next and Prev show the 
 
 **Edit character order**, a new toggle with the character settings, puts an up and a down arrow on each row of the character screen. Click one, or hold Shift and press Up or Down, to move a character, and the numbers follow. Next, Prev and `/lnc <number>` go by your order. It is kept for each server and saved with the toggles; untick the toggle when you're done and the order stays. Characters on another account on the same server keep their own places. With Modern look off, the numbers only show while you edit.
 
+Fixed: Next, Prev and `/lnc` sometimes left you on the character screen, or logged in the wrong character, when the way back from the game took more than a few seconds. After you log out, the game waits 3 seconds, connects again and loads your character list one character at a time, and the switch went ahead before that list was in. It now waits for the whole list, for up to 2 minutes, however slow the server or the second password. If it ever can't switch, you pick the character yourself, and once you're in, chat says why; `/lnc probe` lists what the login screen did.
+
 On the server screen, the settings now sit at the left edge and the server list at the right edge. The top right corner says `Loginxml 1.4.0` under the client version when the game has no account name to show there: a Gameforge launcher login only gives it `TNTLogin`.
 
 The login screen has a new look, in the style of rom weakauras and Cherry's Bar: flat dark panels with a thin border, cyan for what you have selected, and gold for the main button. Gold on the character screen is gold, beside a coin, with the charges and the last save under it. The character, channel and server lists are as long as what is in them, the server rows show the flag and how many characters you have there beside a helmet, and the settings panel groups its toggles under headings, with new check boxes. Buttons, edit boxes and the sliders on the character creation screen match.
@@ -89,7 +91,7 @@ The buttons are locked until you unlock them: open **Settings** in the hub or ty
 | `/lnc show`, `/lnc hide` | Show or hide the buttons |
 | `/lnc lock`, `/lnc unlock` | Stop or allow moving them |
 | `/lnc reset` | Put them back in their default spot |
-| `/lnc probe` | Show positions and state, for a bug report |
+| `/lnc probe` | Show positions and state, and the login screen's steps in the last switch, for a bug report |
 
 Clicking a character, or using the arrow keys, on the character select screen cancels a pending switch. If a switch can't finish within 15 seconds, it gives up and leaves the choice to you.
 
