@@ -78,13 +78,23 @@ end
 function me.SHOW_LOGIN()
   LoginParent:Show();
 end
+-- The second line in the top right corner: the account name, or this login screen's name and version when
+-- the game has no account name of its own (a Gameforge launcher login hands it "TNTLogin")
+function me.accountLabel()
+  local account = GetAccountName() or ''
+  if account == '' or string.lower(account) == 'tntlogin' then
+    return 'Loginxml ' .. me.version
+  end
+  return account
+end
+
 function me.SET_LOGIN_SCREEN(arg1, arg2)
   if arg1 == 'login' then
     me.GOTO('account', nil, true)
-    LoginAccount:SetText(GetAccountName())
+    LoginAccount:SetText(me.accountLabel())
     AcceptUserAgreement();
   elseif arg1 == 'charselect' then
-    LoginAccount:SetText(GetAccountName())
+    LoginAccount:SetText(me.accountLabel())
     me.GOTO('charselect')
     me.pw_helper = {num = 1}
   end

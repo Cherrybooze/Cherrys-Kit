@@ -28,7 +28,7 @@ The character screen numbers your characters from 1, and Next and Prev show the 
 
 **Edit character order**, a new toggle with the character settings, puts an up and a down arrow on each row of the character screen. Click one, or hold Shift and press Up or Down, to move a character, and the numbers follow. Next, Prev and `/lnc <number>` go by your order. It is kept for each server and saved with the toggles; untick the toggle when you're done and the order stays. Characters on another account on the same server keep their own places. With Modern look off, the numbers only show while you edit.
 
-On the server screen, the settings now sit at the left edge and the server list at the right edge.
+On the server screen, the settings now sit at the left edge with the server list beside them, tops level, and **Settings**, **Back** and **Exit Game** sit at the bottom left, under the settings. The top right corner says `Loginxml 1.4.0` under the client version when the game has no account name to show there: a Gameforge launcher login only gives it `TNTLogin`.
 
 The login screen has a new look, in the style of rom weakauras and Cherry's Bar: flat dark panels with a thin border, cyan for what you have selected, and gold for the main button. Gold on the character screen is gold, beside a coin, with the charges and the last save under it. The character, channel and server lists are as long as what is in them, the server rows show the flag and how many characters you have there beside a helmet, and the settings panel groups its toggles under headings, with new check boxes. Buttons, edit boxes and the sliders on the character creation screen match.
 
@@ -124,7 +124,7 @@ The on/off settings are toggle buttons on the server screen, at its left edge (t
 | Show empty account lists | `account_force_show` | off | |
 | Account page slider | `account_use_slider` | on | Slider to switch between pages of lists |
 | Account page list | `account_use_list` | on | List to switch between pages of lists |
-| Show the account name | `show_account_info` | on | In the top right corner |
+| Show the account name | `show_account_info` | on | In the top right corner, or `Loginxml` and its version when the game has none (launcher logins) |
 | DEBUG button and log | `debug` | off | |
 
 These have no toggle and are set in `config.lua`:

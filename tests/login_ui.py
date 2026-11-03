@@ -192,8 +192,27 @@ end
 function UI.state(o) return S[o] end
 function UI.set(o, key, value) S[o][key] = value end
 function UI.setPart(o, part, child) S[o].parts[part] = child end
+-- The client re-anchors everything anchored to an object whenever it moves, recursively
+-- (CUiLayout::ResetAnchors over m_relative), so an object anchored to one that is anchored back to it,
+-- even for a moment between two SetAnchor calls, recurses until the game crashes.
+local function leadsTo(o, target, seen)
+  if o == target then return true end
+  local s = S[o]
+  if not s or seen[o] then return false end
+  seen[o] = true
+  for _, a in ipairs(s.anchors) do
+    local rel = UI.relative(s, a)
+    if rel and leadsTo(rel, target, seen) then return true end
+  end
+  return false
+end
 function UI.addAnchor(o, point, relativePoint, relativeTo, x, y)
-  table.insert(S[o].anchors, {point = point, relativePoint = relativePoint, relativeTo = relativeTo, x = x or 0, y = y or 0})
+  local anchor = {point = point, relativePoint = relativePoint, relativeTo = relativeTo, x = x or 0, y = y or 0}
+  local rel = UI.relative(S[o], anchor)
+  if rel and rel ~= o and leadsTo(rel, o, {}) then
+    table.insert(UI.errors, 'anchor loop: ' .. tostring(S[o].name) .. ' to ' .. tostring(S[rel] and S[rel].name))
+  end
+  table.insert(S[o].anchors, anchor)
 end
 function UI.setScript(o, handler, body, chunk)
   local fn, err = loadstring(body, chunk)
