@@ -787,7 +787,12 @@ local function tabLocked(id)
 end
 
 function UMMUseClickedName(name)
-  if (type(name) ~= "string" or name == "" or not UMMFrame or not UMMFrame:IsVisible()) then return false; end
+  if (type(name) ~= "string" or name == "") then return false; end
+  if (UMMModernFrame and UMMModernFrame:IsVisible()) then
+    -- the modern window: Mass Send's To while that page shows, else Compose's To
+    return UMMModern ~= nil and UMMModern.UseName ~= nil and UMMModern.UseName(name) and true or false;
+  end
+  if (not UMMFrame or not UMMFrame:IsVisible()) then return false; end
   if (UMMMailShortcutsBusy()) then UMMPrompt(UMM_ERROR_STILLSENDING);return true; end
   if (UMMComposeConfirm:IsVisible()) then return false; end
   if (UMMFrameTab3:IsVisible()) then
@@ -850,7 +855,7 @@ local function wrapNameClicks(key)
   local original = _G[key];
   if (type(original) ~= "function" or UMMNameClickWrappers[original]) then return; end
   local wrapper = function(...)
-    if (modifierDown() and UMMFrame and UMMFrame:IsVisible()) then
+    if (modifierDown() and UMMMailWindowShown()) then
       local name = clickedName(...);
       if (name and UMMUseClickedName(name)) then return; end
     end

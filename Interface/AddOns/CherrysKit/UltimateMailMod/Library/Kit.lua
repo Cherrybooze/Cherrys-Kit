@@ -46,6 +46,34 @@ default("UMM_MSI_RECENT_TITLE", "Recently sent");
 default("UMM_MSI_RECENT_HELP", "Use this recipient for Mass Send Items. Selected items stay selected; sending still uses Send or C.O.D.");
 default("UMM_MSI_SELECT_TITLE", "Item selection");
 default("UMM_MSI_SELECT_HELP", "Drag a box to select items. Ctrl/Shift-drag adds; Esc cancels. Ctrl-click toggles matching stacks.");
+default("UMM_SETTINGS_CLASSICUI", "Classic mail window");
+default("UMM_SETTINGS_TIP_CLASSICUI", "Off (the default): the modern mail window opens at a mailbox. On: the classic Ultimate Mail Mod window. The change shows the next time you open a mailbox; no Reload UI needed. Also /umm ui modern|classic.");
+default("UMM_UI_NOW", "Mail window: %s. It shows the next time you open a mailbox.");
+default("UMM_UI_MODERN", "modern");
+default("UMM_UI_CLASSIC", "classic");
+
+-- ### Which mail window ###
+-- Both windows' frames exist (the game builds every XML frame while loading, before saved
+-- settings are read); only the chosen one is ever shown or updated. The modern window's Lua is
+-- read the first time it opens (Modern/Loader.lua).
+
+function UMMUIStyle()
+  local style = UMMSettings and UMMSettings:Get("UIStyle");
+  if (style == "classic") then return "classic"; end
+  return "modern";
+end
+
+function UMMSetUIStyle(style)
+  style = (style == "classic") and "classic" or "modern";
+  UMMSettings:Set("UIStyle", style);
+  return style;
+end
+
+-- Is either mail window open?
+function UMMMailWindowShown()
+  if (UMMFrame and UMMFrame:IsVisible()) then return true; end
+  return (UMMModernFrame ~= nil and UMMModernFrame:IsVisible()) and true or false;
+end
 
 -- ### To fields ###
 -- Clicking into a To field that holds a name selects all of it, so typing replaces it; a second

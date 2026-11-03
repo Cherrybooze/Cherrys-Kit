@@ -57,6 +57,7 @@ UMMMailManager = {
       newMail.AttachedItems = 0;
       newMail.AttachedMoney = 0;
       newMail.AttachedDiamonds = 0;
+      newMail.MoneyMode = moneyMode;
       newMail.Tagged = false;
       if (wasRead) then
         newMail.WasRead = true;
@@ -259,7 +260,7 @@ UMMMailManager = {
         self.Mails[mailIndex].AttachedMoney = 0;
         self.Mails[mailIndex].AttachedDiamonds = 0;
         self.Mails[mailIndex].CODAmount = 0;
-        getglobal("UMMFrameTab1TOC"):RefreshTOC();
+        self:View():RefreshTOC();
         return true;
       else
         UMMPrompt("|r|cff"..UMMColor.Red..UMM_VIEWER_ATTACHMENT_NOT_ACCEPTED);
@@ -285,7 +286,7 @@ UMMMailManager = {
       self.Mails[mailIndex].AttachedItems = 0;
       self.Mails[mailIndex].AttachedMoney = 0;
       self.Mails[mailIndex].AttachedDiamonds = 0;
-      getglobal("UMMFrameTab1TOC"):RefreshTOC();
+      self:View():RefreshTOC();
       return true;
     end
   end;
@@ -307,10 +308,7 @@ UMMMailManager = {
   end;
   
   ReplyToMail = function(self, mailIndex)
-    local mailObject = self.Mails[mailIndex];
-    UMMMenuSelectTab(2);
-    UMMFrameTab2Viewer:Display("UMMFrameTab2Composer", mailIndex, mailObject);
-    UMMFrameTab2Composer:SetReply(mailObject.Author, mailObject.Subject);
+    self:View():Reply(mailIndex, self.Mails[mailIndex]);
   end;
   
   ReturnMail = function(self, mailIndex)
@@ -350,7 +348,7 @@ UMMMailManager = {
       self:RemoveInboxTOCItem(mailIndex);
       DeleteInboxItem(mailIndex);
       self:InboxRefresh();
-      getglobal("UMMFrameTab1TOC"):RefreshTOC();
+      self:View():RefreshTOC();
       result = true;
     end
     
@@ -360,15 +358,11 @@ UMMMailManager = {
   -- ### Automation ###
   
   AutoDisableTabs = function(self)
-    for i = 1, 3 do
-      getglobal("UMMFrameTab"..i.."Button"):Disable();
-    end
+    self:View():DisableTabs();
   end;
   
   AutoEnableTabs = function(self)
-    for i = 1, 3 do
-      getglobal("UMMFrameTab"..i.."Button"):Enable();
-    end
+    self:View():EnableTabs();
   end;
   
   ClearAutomationLock = function(self)
@@ -392,10 +386,11 @@ UMMMailManager = {
     self:ClearAutomationLock();
     self:AutoEnableTabs();
     if (forced) then
-      getglobal("UMMFrameTab1TOC"):UnLock();
-      UMMNormalBar:SetStatus("");
-      UMMNormalBar:Show();
-      UMMFrameTab1TOC:ShowInboxStatus();
+      local view = self:View();
+      view:UnLock();
+      view:SetStatus("");
+      view:ShowBar();
+      view:ShowInboxStatus();
     end
   end;
   
@@ -443,12 +438,7 @@ UMMMailManager = {
     if (self.priv_AutoRunning) then
       self:UnTagAll();
       if (self.priv_Shown) then
-        local filter = 0;
-        for i = 1, 4 do
-          if (getglobal("UMMFrameTab1ToolsOption"..i):IsChecked()) then
-            filter = i;
-          end
-        end
+        local filter = self:View():TakeFilter();
         if (filter > 0) then
           for mi = 1, self.MailCount do
             self.Mails[mi].Tagged = false;
@@ -579,15 +569,13 @@ UMMMailManager = {
           self:RemoveInboxTOCItem(mailIndex);
           DeleteInboxItem(mailIndex);
           self:InboxRefresh();
-          getglobal("UMMFrameTab1TOC"):RefreshTOC();
+          self:View():RefreshTOC();
           UMMSetGlobalTimeout("UMMMailManager", true);
         end
       else
         -- We'r done
         self:StopAutomation();
-        getglobal("UMMFrameTab1TOC"):UnLock();
-        UMMNormalBar:Show();
-        UMMFrameTab1TOC:ShowInboxStatus();
+        self:AutomationDone();
       end
     end
   end;
@@ -625,9 +613,7 @@ UMMMailManager = {
       else
         -- We'r done
         self:StopAutomation();
-        getglobal("UMMFrameTab1TOC"):UnLock();
-        UMMNormalBar:Show();
-        UMMFrameTab1TOC:ShowInboxStatus();
+        self:AutomationDone();
       end
     end
   end;
@@ -712,7 +698,7 @@ UMMMailManager = {
                 return;
               end
             end
-            getglobal("UMMFrameTab1TOC"):RefreshTOC();
+            self:View():RefreshTOC();
             UMMSetGlobalFailTimeout("UMMMailManager");
           else
             UMMPrompt("|r|cff"..UMMColor.Red..UMM_ERROR_CANTTAKE);
@@ -727,16 +713,14 @@ UMMMailManager = {
       else
         if (self.priv_TakeAutoDelete) then
           -- We'r done taking everything - now let's delete the mails we just emptied
-          UMMNormalBar:SetStatus(UMM_INBOX_STATUS_PREPARETAKEDELETE);
+          self:View():SetStatus(UMM_INBOX_STATUS_PREPARETAKEDELETE);
           UMMGlobalTimeoutCallFunction = "UMMMailManager";
           UMMGlobalTimeout = UMM_GLOBAL_AUTOMATION_WAITTIME * 2;
           self.priv_TakeDeleteIndex = -1;
         else
           -- We'r done
           self:StopAutomation();
-          getglobal("UMMFrameTab1TOC"):UnLock();
-          UMMNormalBar:Show();
-          UMMFrameTab1TOC:ShowInboxStatus();
+          self:AutomationDone();
         end
       end
     end
@@ -745,23 +729,18 @@ UMMMailManager = {
   StartAutomation = function(self, action)
     self.priv_AutoRunning = true;
     self:AutoDisableTabs();
+    local view = self:View();
     if (string.lower(action) == "take") then
       if (self:GetTagCount() == 0) then
         self:TagMailsByTakeOptions();
-        UMMFrameTab1TOC:RefreshTOC();
+        view:RefreshTOC();
       end
-      local filter = 0;
-      for i = 1, 4 do
-        if (getglobal("UMMFrameTab1ToolsOption"..i):IsChecked()) then
-          filter = i;
-        end
-      end
-      self.priv_AutoTakeFilter = filter;
+      self.priv_AutoTakeFilter = view:TakeFilter();
       if (self:GetTagCount() > 0) then
-        getglobal("UMMFrameTab1TOC"):Lock();
-        UMMNormalBar:Hide();
-        UMMNormalBar:SetStatus(UMM_INBOX_STATUS_TAKEALLTAGGED);
-        if (getglobal("UMMFrameTab1ToolsCheckTakeDeleteEmpty"):IsChecked()) then
+        view:Lock();
+        view:HideBar();
+        view:SetStatus(UMM_INBOX_STATUS_TAKEALLTAGGED);
+        if (view:TakeDeleteEmpty()) then
           self.priv_TakeAutoDelete = true;
         else
           self.priv_TakeAutoDelete = nil;
@@ -776,9 +755,9 @@ UMMMailManager = {
       end
     elseif (string.lower(action) == "return") then
       if (self:GetTagCount() > 0) then
-        getglobal("UMMFrameTab1TOC"):Lock();
-        UMMNormalBar:Hide();
-        UMMNormalBar:SetStatus(UMM_INBOX_STATUS_RETURNTAGGED);
+        view:Lock();
+        view:HideBar();
+        view:SetStatus(UMM_INBOX_STATUS_RETURNTAGGED);
         self:CopyTagTable();
         self.priv_AutoType = "Return";
         self:AutoReturnMail();
@@ -789,9 +768,9 @@ UMMMailManager = {
       end
     elseif (string.lower(action) == "delete") then
       if (self:GetTagCount() > 0) then
-        getglobal("UMMFrameTab1TOC"):Lock();
-        UMMNormalBar:Hide();
-        UMMNormalBar:SetStatus(UMM_INBOX_STATUS_DELETETAGGED);
+        view:Lock();
+        view:HideBar();
+        view:SetStatus(UMM_INBOX_STATUS_DELETETAGGED);
         self:CopyTagTable();
         self.priv_AutoType = "Delete";
         self:AutoDeleteMail();
@@ -809,7 +788,7 @@ UMMMailManager = {
   
   AttachmentSucceeded = function(self)
     if (self.priv_AutoRunning) then
-      getglobal("UMMFrameTab1TOC"):RefreshTOC();
+      self:View():RefreshTOC();
       UMMSetGlobalTimeout("UMMMailManager");
     end
   end;
@@ -817,7 +796,7 @@ UMMMailManager = {
   AttachmentFailed = function(self)
     if (self.priv_AutoRunning) then
       self:StopAutomation(true);
-      getglobal("UMMFrameTab1TOC"):RefreshTOC();
+      self:View():RefreshTOC();
     end
   end;
   
@@ -842,7 +821,7 @@ UMMMailManager = {
           getglobal(self.priv_LockReturnFrame):ReturnUnLocked();
         end
         if (self.priv_LockFrame == nil and self.priv_LockReturnFrame == nil) then
-          getglobal("UMMFrameTab1TOC"):RefreshTOC();
+          self:View():RefreshTOC();
           UMMSetGlobalTimeout("UMMMailManager");
         end
         self:ClearAutomationLock();
@@ -860,31 +839,49 @@ UMMMailManager = {
   
   TimeOutFailed = function(self)
     self:StopAutomation(true);
-    getglobal("UMMFrameTab1TOC"):RefreshTOC();
+    self:View():RefreshTOC();
   end;
   
   TimeOut = function(self)
     if (self.priv_AutoRunning) then
       if (self.priv_AutoType == "Take" and self.priv_TakeDeleteIndex == -1) then
         self:StopAutomation();
-        getglobal("UMMFrameTab1TOC"):UnLock();
-        UMMNormalBar:Show();
+        local view = self:View();
+        view:UnLock();
+        view:ShowBar();
         self:StartAutomation("Delete");
       else
         if (self.priv_AutoType == "Take") then
-          getglobal("UMMFrameTab1TOC"):RefreshTOC();
+          self:View():RefreshTOC();
           self:AutoTakeMail();
         elseif (self.priv_AutoType == "Return") then
-          getglobal("UMMFrameTab1TOC"):RefreshTOC();
+          self:View():RefreshTOC();
           self:AutoReturnMail();
         elseif (self.priv_AutoType == "Delete") then
-          getglobal("UMMFrameTab1TOC"):RefreshTOC();
+          self:View():RefreshTOC();
           self:AutoDeleteMail();
         end
       end
     end
   end;
   
+  -- Cherry's Kit: the window the inbox is shown in (classic or modern, see UMMClassicMailView
+  -- below and Modern/Inbox.lua). Automation talks to it only through these calls.
+  View = function(self)
+    return UMMMailView or UMMClassicMailView;
+  end;
+
+  AutomationDone = function(self)
+    local view = self:View();
+    view:UnLock();
+    view:ShowBar();
+    view:ShowInboxStatus();
+  end;
+
+  IsAutomating = function(self)
+    return self.priv_AutoRunning and true or false;
+  end;
+
   Clear = function(self)
     self.MailCount = 0;
     self.InboxOffset = 0;
@@ -913,3 +910,40 @@ UMMMailManager = {
   end;
   
 }; -- MailManager
+
+-- ### The classic window's side of the inbox ###
+-- What the automation above shows and reads in Ultimate Mail Mod's classic window.
+
+local function classicTake(i) return getglobal("UMMFrameTab1ToolsOption"..i); end
+
+UMMClassicMailView = {
+  RefreshTOC = function(self) UMMFrameTab1TOC:RefreshTOC(); end;
+  ShowInboxStatus = function(self) UMMFrameTab1TOC:ShowInboxStatus(); end;
+  Lock = function(self) UMMFrameTab1TOC:Lock(); end;
+  UnLock = function(self) UMMFrameTab1TOC:UnLock(); end;
+  SetStatus = function(self, text) UMMNormalBar:SetStatus(text); end;
+  ShowBar = function(self) UMMNormalBar:Show(); end;
+  HideBar = function(self) UMMNormalBar:Hide(); end;
+  DisableTabs = function(self)
+    for i = 1, 3 do getglobal("UMMFrameTab"..i.."Button"):Disable(); end
+  end;
+  EnableTabs = function(self)
+    for i = 1, 3 do getglobal("UMMFrameTab"..i.."Button"):Enable(); end
+  end;
+  -- 1 everything, 2 items, 3 money, 4 diamonds (the classic option buttons)
+  TakeFilter = function(self)
+    local filter = 0;
+    for i = 1, 4 do
+      if (classicTake(i):IsChecked()) then filter = i; end
+    end
+    return filter;
+  end;
+  TakeDeleteEmpty = function(self)
+    return getglobal("UMMFrameTab1ToolsCheckTakeDeleteEmpty"):IsChecked() and true or false;
+  end;
+  Reply = function(self, mailIndex, mailObject)
+    UMMMenuSelectTab(2);
+    UMMFrameTab2Viewer:Display("UMMFrameTab2Composer", mailIndex, mailObject);
+    UMMFrameTab2Composer:SetReply(mailObject.Author, mailObject.Subject);
+  end;
+};

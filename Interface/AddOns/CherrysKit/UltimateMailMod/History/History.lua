@@ -34,6 +34,7 @@ function UMMHistory_Refresh()
   if (column and column.SetupList and column:IsVisible()) then
     column:SetupList("history");
   end
+  if (UMMModern and UMMModern.HistoryChanged) then UMMModern.HistoryChanged(); end
 end
 
 function UMMHistory_Select(index)

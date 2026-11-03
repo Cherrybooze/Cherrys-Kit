@@ -1,0 +1,990 @@
+"""Ultimate Mail Mod's modern mail window against a simulated mailbox.
+
+The real UMM Lua (master frame, mail manager, composer, bag manager), the real Modern.xml frames and
+the modern window's own Lua run. Only the game's side is simulated: the inbox and the server's
+answers, bags, cursor, send slot, gold, and the frame clock.
+"""
+import importlib.util
+from pathlib import Path
+import unittest
+import xml.etree.ElementTree as ET
+
+import test_umm_mail_shortcuts as support
+
+UMM = support.UMM
+ROOT = support.ROOT
+CAP = 999_999_999
+MODERN_FILES = ["Core.lua", "Plan.lua", "Queue.lua", "Picker.lua", "Inbox.lua", "Compose.lua", "Mass.lua",
+                "Activity.lua"]
+
+GAME = r'''
+-- ### The game's side: clock, gold, bags, cursor, send slot, inbox and the server's answers ###
+ummNow, ummMoney, ummMaxMoney = 0, 0, 0
+ummInbox, ummReads, ummTakes, ummDeletes, ummReturns, ummTips, ummDofiles = {}, {}, {}, {}, {}, {}, {}
+ummSent, ummDelivered, ummShownPanels = {}, {}, {}
+ummServer = {}
+ummCursor, ummSlot = nil, nil
+ummAttachMoney, ummAttachCOD = 0, 0
+ummFailSends = 0
+ummReply, ummTakeLag, ummMoneyLag = 0.05, 0.05, 0
+ummBagSlots, ummCategories = {}, {}
+cursorX, cursorY, ctrl, shift = 0, 0, false, false
+
+local function later(delay, fn) table.insert(ummServer, { at = ummNow + delay, fn = fn }) end
+local function event(name, ...) UMMMasterFrame_OnEvent(name, ...) end
+local function setMoney(value)
+  ummMoney = value
+  if value > ummMaxMoney then ummMaxMoney = value end
+end
+function ummSetMoney(value) ummMoney, ummMaxMoney = value, value end
+
+function GetTime() return ummNow end
+function GetPlayerMoney() return ummMoney end
+function GetCursorPos() return cursorX, cursorY end
+function IsCtrlKeyDown() return ctrl end
+function IsShiftKeyDown() return shift end
+-- the classic window's own OnShow needs its inbox frames, which these tests do not build
+function ShowUIPanel(frame) table.insert(ummShownPanels, frame:GetName()); frame.visible = true end
+function HideUIPanel(frame) if frame then frame:Hide() end end
+
+-- bags: slot 1-180, inventory index = slot + 1000; two stacks of one item share its id
+local ids, nextId = {}, 0x10000
+function ummItem(slot, name, count)
+  if not ids[name] then nextId = nextId + 1; ids[name] = nextId end
+  local item = { name = name, count = count or 1, icon = "Icons/"..name,
+    link = "|cffffffff|Hitem:"..string.format("%x", ids[name]).."|h["..name.."]|h|r" }
+  ummBagSlots[slot] = item
+  return item
+end
+function GetBagItemInfo(slot)
+  local item = ummBagSlots[slot]
+  if item then return slot + 1000, item.icon, item.name, item.count end
+  return slot + 1000, nil, nil, 0
+end
+function GetBagItemLink(index) local item = ummBagSlots[index - 1000]; return item and item.link end
+
+-- cursor and the game's send slot
+function CursorHasItem() return ummCursor ~= nil end
+function GetCursorItemInfo() return ummCursor end
+function PickupBagItem(index)
+  if ummCursor then ummCursor = nil            -- put back where it came from
+  elseif ummBagSlots[index - 1000] then ummCursor = index end
+end
+function ItemClipboard_Clear() ummCursor = nil end
+function ClickSendMailItemButton()
+  if ummCursor then ummSlot, ummCursor = ummCursor, nil
+  elseif ummSlot then ummCursor, ummSlot = ummSlot, nil end
+  later(ummReply, function() event("MAIL_SEND_INFO_UPDATE") end)
+end
+function GetSendMailItem()
+  local item = ummSlot and ummBagSlots[ummSlot - 1000]
+  if item then return item.name, item.icon, item.count end
+end
+function SetSendMailMoney(gold) ummAttachMoney = gold end
+function SetSendMailCOD(gold) ummAttachCOD = gold end
+function SendMail(to, subject, body)
+  local item = ummSlot and ummBagSlots[ummSlot - 1000]
+  local mail = { recipient = to, subject = subject, body = body, money = ummAttachMoney or 0,
+    cod = ummAttachCOD or 0, slot = ummSlot, item = item and item.name }
+  ummAttachMoney, ummAttachCOD = 0, 0
+  table.insert(ummSent, mail)
+  later(ummReply, function()
+    if ummFailSends > 0 then
+      ummFailSends = ummFailSends - 1
+      event("MAIL_FAILED")
+      return
+    end
+    if mail.slot then ummBagSlots[mail.slot - 1000] = nil; ummSlot = nil end
+    table.insert(ummDelivered, mail)
+    event("MAIL_SEND_SUCCESS")
+    if mail.slot then event("PLAYER_BAG_CHANGED") end
+    if mail.money > 0 then
+      -- the gold leaving is its own message from the server, and can come late
+      later(ummMoneyLag, function() setMoney(ummMoney - mail.money); event("PLAYER_MONEY") end)
+    end
+  end)
+end
+
+-- the inbox: { sender, subject, body, money, mode, cod, items = {{ name, icon, count }}, read, returned, system, days }
+function ummMail(sender, money, fields)
+  local m = fields or {}
+  m.sender, m.money = sender, money or 0
+  m.subject = m.subject or ("Mail "..(#ummInbox + 1))
+  m.days = m.days or 29.5
+  table.insert(ummInbox, m)
+  return m
+end
+function GetInboxNumItems() return #ummInbox end
+function GetInboxHeaderInfo(i)
+  local m = ummInbox[i]
+  if not m then return nil end
+  local items = m.items and #m.items or 0
+  local icon = (m.items and m.items[1] and m.items[1].icon) or ""
+  return icon, m.sender, m.subject, m.cod ~= nil, m.mode or "copper", m.cod or m.money, m.days, 1, items,
+    m.read == true, m.returned == true, m.system ~= true
+end
+-- reading a mail marks it read and cuts its time to 3 days (the game's rule)
+local function readMail(i)
+  local m = ummInbox[i]
+  if not m then return nil end
+  table.insert(ummReads, m.subject)
+  if not m.read then
+    m.read = true
+    if m.days > 4319 / 1440 then m.days = 4319 / 1440 end
+  end
+  return m
+end
+function GetInboxText(i) local m = readMail(i); if m then return m.body or "", "", true, false end end
+function GetInboxItem(i, pos)
+  local m = readMail(i)
+  local item = m and m.items and m.items[pos or 1]
+  if item then return item.name, item.icon, item.count or 1 end
+end
+function InboxItemCanDelete(i)
+  local m = ummInbox[i]
+  return m ~= nil and (m.money or 0) == 0 and m.cod == nil and not (m.items and #m.items > 0)
+end
+function DeleteInboxItem(i) local m = table.remove(ummInbox, i); table.insert(ummDeletes, m and m.subject or "?") end
+function ReturnInboxItem(i) local m = table.remove(ummInbox, i); table.insert(ummReturns, m and m.subject or "?") end
+function TakeInboxItem(i)
+  local m = ummInbox[i]
+  table.insert(ummTakes, m and m.subject or "?")
+  if not m then return end
+  later(ummTakeLag, function()
+    local money, items = m.money or 0, m.items or {}
+    if m.cod and ummMoney < m.cod then return end
+    if money > 0 and ummMoney + money > 999999999 then return end   -- nothing arrives, and nothing says so
+    local free = {}
+    for slot = 1, 60 do
+      if #free >= #items then break end
+      if not ummBagSlots[slot] then table.insert(free, slot) end
+    end
+    if #free < #items then return end
+    local paid = m.cod
+    if paid then setMoney(ummMoney - paid); m.cod = nil end
+    for k, item in ipairs(items) do ummItem(free[k], item.name, item.count) end
+    m.items, m.money = nil, 0
+    if #items > 0 then event("PLAYER_BAG_CHANGED") end
+    if money > 0 then setMoney(ummMoney + money) end
+    if money > 0 or paid then event("PLAYER_MONEY") end
+    event("MAIL_INBOX_UPDATE")
+  end)
+end
+
+-- ### Frames the game makes and the frame clock ###
+local W = getmetatable(UIParent)
+function W:SetLayers(level, obj) obj.layer = level end
+function W:SetTexture(path) self.texture = path end
+function W:SetFont(path, size) self.font, self.fontSize = path, size end
+function W:SetJustifyHType(how) self.justify = how end
+function W:SetVertexColor(r, g, b) self.color = { r, g, b } end
+local focused = nil
+function W:SetFocus()
+  if focused == self then return end
+  if focused then focused:ClearFocus() end
+  focused, self.focus = self, true
+  UMMFixtureDispatch(self.name, "OnEditFocusGained")
+end
+function W:ClearFocus()
+  self.focus = false
+  if focused ~= self then return end
+  focused = nil
+  UMMFixtureDispatch(self.name, "OnEditFocusLost")
+end
+function ummFocused() return focused and focused.name end
+function CreateUIComponent(kind, name, parent) return UMMFixtureWidget(kind, name, parent) end
+GameTooltip.SetInboxItem = function(self, index, pos) table.insert(ummTips, { index = index, pos = pos }) end
+
+local realDofile = dofile
+ummBreak = nil
+function dofile(path)
+  table.insert(ummDofiles, path)
+  if ummBreak and string.find(path, ummBreak, 1, true) then error("broken on purpose") end
+  return realDofile(path)
+end
+
+local updaters = { "UMMModernLater", "UMMModernMover", "UMMModernMassHover" }
+function ummStep(dt)
+  dt = dt or 0.05
+  ummNow = ummNow + dt
+  local i = 1
+  while i <= #ummServer do
+    local job = ummServer[i]
+    if job.at <= ummNow + 1e-9 then table.remove(ummServer, i); job.fn() else i = i + 1 end
+  end
+  elapsedTime = dt
+  UMMMasterFrame_OnUpdate(nil, dt)
+  for _, name in ipairs(updaters) do
+    local f = _G[name]
+    if f and f:IsVisible() then UMMFixtureDispatch(name, "OnUpdate") end
+  end
+end
+function ummRun(seconds)
+  for i = 1, math.floor(seconds / 0.05 + 0.5) do ummStep(0.05) end
+end
+function ummRunUntil(cond, limit)
+  local t = 0
+  while not cond() do
+    if t > limit then return false end
+    ummStep(0.05)
+    t = t + 0.05
+  end
+  return true
+end
+
+-- visible label texts under a frame, for checking what the window says
+function ummTexts(root)
+  local out = {}
+  for _, w in pairs(ummWidgets) do
+    if w.kind == "FontString" and w.text ~= "" and w:IsVisible() then
+      local p = w
+      while p do
+        if p.name == root then table.insert(out, w.text); break end
+        p = p.parent and _G[p.parent] or nil
+      end
+    end
+  end
+  table.sort(out)
+  return out
+end
+function ummWidgetCount() local n = 0; for _ in pairs(ummWidgets) do n = n + 1 end; return n end
+
+-- the rest of the UMM window that these tests do not build
+UMMNewMailButton = { CheckStatus = function() end }
+UIPanelBackdropFrame_SetTexture = function() end
+UMMNormalBar = { Hide = function() end, Show = function() end, SetStatus = function() end, Init = function() end }
+UMMTooltip = { SetHyperLink = function() end, Hide = function() end }
+UMMItemDB = { GetTypeByID = function(_, id) return "Type"..id end,
+  IsItem = function(_, kind, link) return ummCategories[kind] ~= nil and ummCategories[kind][link] == true end }
+UMMFixtureWidget("Frame", "MailFrame", "UIParent").visible = false
+UMMFixtureWidget("Frame", "UMMFrameTab1Tools", "UMMFrameTab1")
+local toc = UMMFixtureWidget("Frame", "UMMFrameTab1TOC", "UMMFrameTab1")
+for _, name in ipairs({ "HideTOC", "RefreshTOC", "ShowInboxStatus", "Lock", "UnLock" }) do toc[name] = function() end end
+'''
+
+
+class ModernWindowFixture:
+    def setUp(self):
+        self.h = support.MailShortcutsTests()
+        self.h.recipient_lists = True
+        self.h.setUp()
+        self.lua, self.g = self.h.lua, self.h.g
+        self.lua.execute(GAME)
+        self.h.load("Library/BagManager.lua")
+        self.h.load("Library/MailManager.lua")
+        self.h.load("MassSendItems/MassSendItems.lua")
+        self.h.load_xml("MassSendItems/MassSendItems.xml")
+        self.h.instantiate(ET.fromstring(
+            '<Frame xmlns="http://www.runewaker.com/" name="UMMFrameTab3" parent="UMMFrameBody" '
+            'inherits="UMMMassSendItemsTemplate" hidden="true"/>'), "UMMFrameBody")
+        self.g.UMMPath = str(UMM) + "/"
+        self.h.load("Modern/Loader.lua")
+        self.h.load_xml("Modern/Modern.xml")
+        self.g.UMMFrame.visible = False
+        self.lua.execute('UMMConfig.Characters = { "Alt1", "Alt2", "Alt3" }; UMMMasterFrame_OnEvent("VARIABLES_LOADED")')
+
+    # ### driving the game ###
+
+    def step(self, seconds=0.05):
+        self.g.ummRun(seconds)
+
+    def until(self, condition, limit=120):
+        done = self.lua.eval(f"ummRunUntil(function() return {condition} end, {limit})")
+        self.assertTrue(done, f"still waiting for: {condition}")
+
+    def open(self):
+        self.lua.execute('MailFrame:Show(); UMMMasterFrame_OnEvent("MAIL_SHOW"); UMMMasterFrame_OnEvent("MAIL_INBOX_UPDATE")')
+        self.step(0.1)
+
+    def close(self):
+        self.lua.execute("MailFrame:Hide()")
+        self.step(0.1)
+
+    def click(self, name, key="LBUTTON"):
+        self.g.key = key
+        self.h.script(name, "OnClick")
+        self.step()
+
+    def event(self, name, event):
+        self.h.script(name, event)
+
+    def type(self, name, text):
+        box = self.g[name]
+        box.SetFocus(box)
+        box.SetText(box, text)
+        self.step()
+
+    def page(self, number):
+        self.click(f"UMMModernTab{number}")
+
+    # ### reading the window ###
+
+    def shown(self, name):
+        frame = self.g[name]
+        return bool(frame.IsVisible(frame))
+
+    def label(self, button):
+        return self.g[button].umm.label.text
+
+    def texts(self, root):
+        return list(self.g.ummTexts(root).values())
+
+    def status(self):
+        return self.g.UMMModern.status.text
+
+    def lua_list(self, name):
+        return list(self.lua.eval(name).values())
+
+    def delivered(self, *fields):
+        return [tuple(mail[f] for f in fields) for mail in self.lua_list("ummDelivered")]
+
+    def chat(self):
+        return self.lua_list("ummMessages")
+
+    def load_errors(self):
+        return [text for text in self.chat() if "Ultimate Mail Mod:" in text]
+
+    def inbox(self):
+        return [mail.subject for mail in self.lua_list("ummInbox")]
+
+
+class OpeningTests(ModernWindowFixture, unittest.TestCase):
+    def test_mailbox_opens_the_modern_window_and_reads_its_lua_only_once(self):
+        self.assertIsNone(self.g.UMMModern)
+        self.assertEqual(self.lua_list("ummDofiles"), [])
+        self.open()
+        self.assertTrue(self.shown("UMMModernFrame"))
+        self.assertTrue(self.shown("UMMModernInbox"))
+        self.assertFalse(self.shown("UMMFrame"))
+        self.assertTrue(self.lua.eval("UMMMailView == UMMModern.View"))
+        self.assertEqual([Path(p).name for p in self.lua_list("ummDofiles")], MODERN_FILES)
+        self.assertEqual(self.load_errors(), [])
+        self.assertEqual(self.g.UMMModern_Status(), "open")
+        widgets = self.g.ummWidgetCount()
+
+        self.close()
+        self.assertFalse(self.shown("UMMModernFrame"))
+        self.assertEqual(self.g.UMMModern_Status(), "loaded")
+        self.open()
+        self.assertEqual(len(self.lua_list("ummDofiles")), len(MODERN_FILES))
+        self.assertEqual(self.g.ummWidgetCount(), widgets, "opening again makes nothing new")
+        self.assertEqual(self.load_errors(), [])
+
+    def test_the_bag_grid_is_made_the_first_time_mass_send_opens(self):
+        self.open()
+        before = self.g.ummWidgetCount()
+        self.page(3)
+        made = self.g.ummWidgetCount() - before
+        self.assertEqual(made, 180 * 5 + 1, "5 textures and labels per bag slot and the selection box")
+        self.page(1)
+        self.page(3)
+        self.assertEqual(self.g.ummWidgetCount() - before, made)
+
+    def test_classic_choice_opens_the_classic_window_without_reading_the_modern_lua(self):
+        self.g.SlashCmdList["UMM"](None, "ui classic")
+        self.assertEqual(self.g.UMMUIStyle(), "classic")
+        self.open()
+        self.assertEqual(self.lua_list("ummShownPanels"), ["UMMFrame"])
+        self.assertFalse(self.shown("UMMModernFrame"))
+        self.assertEqual(self.lua_list("ummDofiles"), [])
+        self.assertIsNone(self.g.UMMMailView)
+
+        # the settings window's check box switches back
+        self.g.UMMSettingsUI_Refresh()
+        self.assertTrue(self.g.UMMSettingsFrameCheck5.checked)
+        self.h.click("UMMSettingsFrameCheck5")
+        self.assertEqual(self.g.UMMUIStyle(), "modern")
+        self.assertIn("Mail window: modern. It shows the next time you open a mailbox.", self.chat()[-1])
+
+    def test_a_window_that_fails_to_load_falls_back_to_classic_and_says_so_once(self):
+        self.g.ummBreak = "Mass.lua"
+        self.open()
+        self.assertEqual(self.lua_list("ummShownPanels"), ["UMMFrame"])
+        self.assertFalse(self.shown("UMMModernFrame"))
+        self.assertIsNone(self.g.UMMModern)
+        self.assertIsNone(self.g.UMMMailView)
+        errors = self.load_errors()
+        self.assertEqual(len(errors), 1)
+        self.assertIn("could not load (Mass.lua:", errors[0])
+        self.assertTrue(self.g.UMMModern_Status().startswith("failed (Mass.lua"))
+
+        self.g.UMMFrame.visible = False
+        self.open()
+        self.assertEqual(self.lua_list("ummShownPanels"), ["UMMFrame", "UMMFrame"])
+        self.assertEqual(len(self.load_errors()), 1, "said once, not at every mailbox")
+        self.assertEqual(len(self.lua_list("ummDofiles")), MODERN_FILES.index("Mass.lua") + 1, "not read again")
+
+    def test_reload_ui_builds_the_window_again_on_the_new_frames(self):
+        self.open()
+        self.close()
+        # Reload UI runs every addon file again in the same Lua state, and the game makes new frames
+        self.h.load("Modern/Loader.lua")
+        self.assertIsNone(self.g.UMMModern)
+        self.assertIsNone(self.g.UMMQueue)
+        self.h.load_xml("Modern/Modern.xml")
+        self.assertIsNone(self.g.UMMModernInboxTake.umm)
+        self.open()
+        self.assertTrue(self.shown("UMMModernFrame"))
+        self.assertEqual(len(self.lua_list("ummDofiles")), 2 * len(MODERN_FILES))
+        self.assertIsNotNone(self.g.UMMModernInboxTake.umm)
+        self.assertEqual(self.load_errors(), [])
+
+    def test_a_name_clicked_in_chat_goes_to_compose_or_to_mass_send(self):
+        self.open()
+        self.assertTrue(self.g.UMMUseClickedName("Pal"))
+        self.assertTrue(self.shown("UMMModernCompose"))
+        self.assertEqual(self.g.UMMModernComposeTo.text, "Pal")
+        self.page(3)
+        self.assertTrue(self.g.UMMUseClickedName("Buddy"))
+        self.assertTrue(self.shown("UMMModernMass"))
+        self.assertEqual(self.g.UMMModernMassTo.text, "Buddy")
+        self.assertEqual(self.g.UMMModernComposeTo.text, "Pal")
+
+
+class InboxTests(ModernWindowFixture, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.lua.execute('''
+          ummMail("Alt1", 5000000, { subject = "Gold for you" })
+          ummMail("Pal", 0, { subject = "Stuff", body = "Here you go",
+            items = { { name = "Herb", icon = "Icons/Herb", count = 5 }, { name = "Ore", icon = "Icons/Ore", count = 2 } } })
+          ummMail("Stranger", 0, { subject = "Hello", body = "Hi there", read = true })
+        ''')
+
+    def row(self, i):
+        row = self.g[f"UMMModernInboxRow{i}"]
+        if not row.IsVisible(row):
+            return None
+        return row.ummFrom.text, row.ummSubject.text, row.ummMoney.text, row.ummCount.text
+
+    def test_the_list_shows_headers_and_reads_no_mail(self):
+        self.open()
+        self.assertEqual(self.row(1), ("Alt1", "Gold for you", "5,000,000", ""))
+        self.assertEqual(self.row(2), ("Pal", "Stuff", "", "2"))
+        self.assertEqual(self.row(3), ("Stranger", "Hello", "", ""))
+        self.assertIsNone(self.row(4))
+        self.assertIn("3 mails  ·  2 unread  ·  5,000,000 gold", self.texts("UMMModernInbox"))
+        self.assertEqual([self.label(f"UMMModernInboxFilter{i}") for i in range(1, 6)],
+                         ["All  3", "Gold  1", "Items  1", "Diamonds  0", "Unread  2"])
+        self.assertEqual(self.label("UMMModernTab1"), "Inbox  3")
+        self.assertEqual(self.status(), "Ready.")
+
+        # an item's tooltip comes from the header: still nothing read
+        self.event("UMMModernInboxRow2", "OnEnter")
+        self.assertEqual([(tip.index, tip.pos) for tip in self.lua_list("ummTips")], [(2, None)])
+        self.assertEqual(self.lua_list("ummReads"), [])
+
+    def test_the_reader_reads_a_mail_only_when_asked(self):
+        self.open()
+        self.click("UMMModernInboxRow2")
+        self.assertTrue(self.shown("UMMModernReaderShow"))
+        self.assertFalse(self.shown("UMMModernReaderBody"))
+        reader = self.texts("UMMModernReader")
+        self.assertIn("Not read yet. The text shows once you read it.", reader)
+        self.assertIn("2 items", reader)
+        self.assertEqual(self.g.UMMModernReaderItem1.ummIcon.texture, "Icons/Herb")
+        self.assertEqual(self.lua_list("ummReads"), [])
+        self.assertEqual(self.g.ummInbox[2].days, 29.5)
+
+        self.click("UMMModernReaderShow")
+        self.assertIn("Stuff", self.lua_list("ummReads"))
+        self.assertLessEqual(self.g.ummInbox[2].days, 3)
+        self.assertFalse(self.shown("UMMModernReaderShow"))
+        self.assertTrue(self.shown("UMMModernReaderBody"))
+        self.assertEqual(self.g.UMMModernReaderBody.text, "Here you go")
+        self.assertTrue(self.shown("UMMModernReaderItem2"))
+        self.assertEqual(self.g.UMMModernReaderItem2.ummCount.text, "2")
+        self.assertEqual(self.g.UMMModernInboxRow2.ummDays.text, "3d")
+        self.assertEqual(self.label("UMMModernInboxFilter5"), "Unread  1")
+
+    def test_search_and_who_from_narrow_the_list(self):
+        self.open()
+        self.type("UMMModernInboxSearch", "pal")
+        self.assertEqual(self.row(1)[0], "Pal")
+        self.assertIsNone(self.row(2))
+        self.type("UMMModernInboxSearch", "")
+        self.assertEqual(self.label("UMMModernInboxFrom"), "From: anyone")
+        self.click("UMMModernInboxFrom")
+        self.assertEqual(self.label("UMMModernInboxFrom"), "From: mine")
+        self.assertEqual(self.row(1)[0], "Alt1")
+        self.assertIsNone(self.row(2))
+        self.click("UMMModernInboxFrom")
+        self.assertEqual(self.label("UMMModernInboxFrom"), "From: friends")
+        self.assertEqual(self.row(1)[0], "Pal")
+        self.assertIsNone(self.row(2))
+
+    def test_reader_take_brings_the_gold_and_keeps_the_emptied_mail_in_view(self):
+        self.open()
+        self.click("UMMModernInboxRow1")
+        self.click("UMMModernReaderTake")
+        self.step(0.3)
+        self.assertEqual(self.g.ummMoney, 5_000_000)
+        self.assertEqual(self.g.UMMModern.gold.text, "5,000,000")
+        self.assertIn("Gold for you", self.texts("UMMModernReader"))
+        self.assertIn("Nothing attached.", self.texts("UMMModernReader"))
+        self.assertTrue(self.g.UMMModernReaderDelete.umm.enabled)
+        self.click("UMMModernReaderDelete")
+        self.assertEqual(self.inbox(), ["Stuff", "Hello"])
+        self.assertIn("Stuff", self.texts("UMMModernReader"), "the next mail moves into the reader")
+
+    def test_reader_take_refuses_gold_past_the_carry_limit(self):
+        self.g.ummSetMoney(CAP - 1_000_000)
+        self.open()
+        self.click("UMMModernInboxRow1")
+        self.click("UMMModernReaderTake")
+        self.step(0.3)
+        self.assertEqual(self.lua_list("ummTakes"), [])
+        self.assertEqual(self.status(), "Taking 5,000,000 gold would take this character past 999,999,999.")
+
+    def test_ticked_mails_go_back_and_empty_read_ones_go_away(self):
+        self.lua.execute('ummMail("Old", 0, { subject = "Empty", read = true }); ummMail("New", 0, { subject = "Unread empty" })')
+        self.open()
+        self.assertEqual(self.label("UMMModernInboxDelete"), "Delete 2")
+        self.assertEqual(self.label("UMMModernInboxReturn"), "Return 0")
+        self.assertFalse(self.g.UMMModernInboxReturn.umm.enabled)
+        self.click("UMMModernInboxDelete")
+        self.until("not UMMMailManager:IsAutomating()")
+        self.assertEqual(self.lua_list("ummDeletes"), ["Hello", "Empty"])
+        self.assertEqual(self.status(), "Done.")
+
+        self.click("UMMModernInboxRow2Check")
+        self.assertEqual(self.label("UMMModernInboxSelect"), "Untick 1")
+        self.assertEqual(self.label("UMMModernInboxReturn"), "Return 1")
+        self.click("UMMModernInboxReturn")
+        self.until("not UMMMailManager:IsAutomating()")
+        self.assertEqual(self.lua_list("ummReturns"), ["Stuff"])
+        self.assertEqual(self.inbox(), ["Gold for you", "Unread empty"])
+
+    def test_take_all_leaves_cod_mails_and_gold_past_the_carry_limit(self):
+        self.lua.execute('''
+          ummInbox = {}
+          ummSetMoney(900000000)
+          ummMail("Alt1", 50000000, { subject = "A" })
+          ummMail("Alt2", 80000000, { subject = "B" })
+          ummMail("Pal", 0, { subject = "C", cod = 1000, items = { { name = "Sword", icon = "Icons/Sword" } } })
+          ummMail("Pal", 0, { subject = "D", items = { { name = "Herb", icon = "Icons/Herb", count = 3 } } })
+          ummMail("Alt3", 30000000, { subject = "E" })
+        ''')
+        self.open()
+        self.assertEqual(self.label("UMMModernInboxTake"), "Take all 3")
+        self.click("UMMModernInboxTake")
+        self.assertTrue(self.shown("UMMModernStop"))
+        self.until("not UMMMailManager:IsAutomating()")
+        self.assertEqual(self.lua_list("ummTakes"), ["A", "D", "E"])
+        self.assertEqual(self.g.ummMoney, 980_000_000)
+        self.assertLessEqual(self.g.ummMaxMoney, CAP)
+        self.assertEqual(self.inbox(), ["B", "C"], "the emptied mails were deleted")
+        chat = " ".join(self.chat())
+        self.assertIn("1 gold mails stay in the inbox: taking them would take this character past 999,999,999 gold.", chat)
+        self.assertIn("1 C.O.D. mails stay in the inbox", chat)
+        self.assertEqual(self.status(), "Done.")
+        self.assertFalse(self.shown("UMMModernStop"))
+        self.assertEqual(self.label("UMMModernInboxTake"), "Take all 0")
+
+
+class ComposeTests(ModernWindowFixture, unittest.TestCase):
+    def review_lines(self):
+        return self.texts("UMMModernReviewList")
+
+    def test_seven_inbox_gold_caps_go_to_seven_characters_without_passing_the_limit(self):
+        self.lua.execute('ummSetMoney(50000000); for i = 1, 7 do ummMail("Bank", 999999999, { subject = "Cap "..i }) end')
+        self.open()
+        self.page(2)
+        gold = self.texts("UMMModernGold")
+        self.assertIn("50,000,000", gold)
+        self.assertIn("6,999,999,993 in 7 mails", gold)
+        self.assertIn("999,999,999 ×7", gold)
+
+        self.click("UMMModernGoldFill")
+        for i in range(1, 8):
+            self.assertEqual(self.g[f"UMMModernGoldRow{i}Amount"].text, "999,999,999")
+            self.type(f"UMMModernGoldRow{i}To", f"Alt{i}")
+        self.assertFalse(self.shown("UMMModernGoldRow8"))
+        self.assertEqual(self.label("UMMModernComposeSend"), "Send 8 mails")
+        compose = self.texts("UMMModernCompose")
+        self.assertIn("8 gold mails, 6,999,999,993 gold", compose)
+        self.assertIn("First takes the gold of 7 inbox mails, one at a time.", compose)
+        self.assertIn("Total 6,999,999,993 gold in 8 mails", compose)
+
+        self.click("UMMModernComposeSend")
+        self.assertTrue(self.shown("UMMModernReview"))
+        lines = self.review_lines()
+        self.assertIn("1.  50,000,000 gold to Alt7", lines)
+        self.assertIn("2.  Take 999,999,999 gold from Bank's mail", lines)
+        self.assertIn("3.  999,999,999 gold to Alt1", lines)
+        self.assertEqual(self.label("UMMModernReviewGo"), "Send 8 mails")
+        self.assertEqual(self.lua_list("ummSent"), [], "nothing goes before Send in the list")
+
+        self.click("UMMModernReviewGo")
+        self.assertFalse(self.shown("UMMModernReview"))
+        self.until("not UMMQueue:Busy()", 120)
+        self.assertEqual(self.delivered("recipient", "money"),
+                         [("Alt7", 50_000_000)] + [(f"Alt{i}", CAP) for i in range(1, 7)] + [("Alt7", 949_999_999)])
+        self.assertEqual(len(self.lua_list("ummTakes")), 7)
+        self.assertEqual(self.g.ummMoney, 50_000_000)
+        self.assertLessEqual(self.g.ummMaxMoney, CAP)
+        self.assertEqual(self.inbox(), [], "the emptied gold mails were deleted")
+        self.assertEqual(self.status(), "Done: 8 of 8 mails sent.")
+        self.assertFalse(self.shown("UMMModernGoldRow1"), "the rows went out, so they are gone")
+
+        self.page(4)
+        self.assertIn("This session: 8 sent  ·  6,999,999,993 gold sent  ·  7 gold mails taken",
+                      self.texts("UMMModernActivity"))
+
+    def test_gold_rows_group_digits_and_say_which_row_is_short(self):
+        self.g.ummSetMoney(1_000_000)
+        self.open()
+        self.page(2)
+        self.click("UMMModernGoldAdd")
+        self.assertEqual(self.g.ummFocused(), "UMMModernGoldRow1To")
+        self.type("UMMModernGoldRow1To", "Alt1")
+        self.type("UMMModernGoldRow1Amount", "2500000")
+        self.step()
+        self.assertEqual(self.g.UMMModernGoldRow1Amount.text, "2,500,000")
+        compose = self.texts("UMMModernCompose")
+        self.assertIn("Row 1 is 1,500,000 short", compose)
+        self.assertIn("Not enough gold: 1,500,000 short, counting this character and the inbox.", compose)
+        self.assertFalse(self.g.UMMModernComposeSend.umm.enabled)
+
+        self.type("UMMModernGoldRow1Amount", "400000")
+        self.step()
+        self.assertEqual(self.g.UMMModernGoldRow1Amount.text, "400,000")
+        self.assertTrue(self.g.UMMModernComposeSend.umm.enabled)
+        self.click("UMMModernComposeSend")
+        self.assertTrue(self.shown("UMMModernReview"), "gold always shows the list first")
+        self.click("UMMModernReviewGo")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("recipient", "subject", "money"), [("Alt1", "Money: 400,000", 400_000)])
+
+    def test_items_and_long_text_go_as_numbered_mails_to_one_name(self):
+        self.lua.execute('ummItem(1, "Herb", 5); ummItem(2, "Ore", 1)')
+        text = " ".join(f"line{i:04d}" for i in range(500))
+        self.open()
+        self.page(2)
+        self.g.ummCursor = 1001
+        self.click("UMMModernComposeAdd")
+        self.assertIsNone(self.g.ummCursor, "the item goes back into its bag slot")
+        self.g.ummCursor = 1002
+        self.event("UMMModernComposeAdd", "OnReceiveDrag")
+        self.step()
+        self.assertTrue(self.shown("UMMModernComposeSlot2"))
+        self.assertEqual(self.g.UMMModernComposeSlot1.ummCount.text, "5")
+
+        self.type("UMMModernComposeTo", "Alt1")
+        self.type("UMMModernComposeSubject", "Hello")
+        self.type("UMMModernComposeBody", text)
+        compose = self.texts("UMMModernCompose")
+        self.assertIn("4,499 letters: 3 mails, numbered in the subject", compose)
+        self.assertIn("3 mails to Alt1 (2 with an item, text in 3 parts)", compose)
+        self.assertIn("your character", compose)
+
+        self.click("UMMModernComposeSend")
+        lines = self.review_lines()
+        self.assertEqual(lines, ["1.  Herb (5) to Alt1  + text 1/3", "2.  Ore to Alt1  + text 2/3",
+                                 "3.  Text part 3/3 to Alt1"])
+        self.click("UMMModernReviewGo")
+        self.until("not UMMQueue:Busy()")
+        sent = self.delivered("recipient", "subject", "item")
+        self.assertEqual(sent, [("Alt1", "Hello (1/3)", "Herb"), ("Alt1", "Hello (2/3)", "Ore"), ("Alt1", "Hello (3/3)", None)])
+        bodies = [body for (body,) in self.delivered("body")]
+        self.assertTrue(all(len(body.encode()) <= 2000 for body in bodies))
+        self.assertEqual(" ".join(bodies), text)
+        self.assertEqual(self.g.UMMModernComposeTo.text, "Alt1", "To stays for the next mail")
+        self.assertEqual(self.g.UMMModernComposeBody.text, "")
+        self.assertFalse(self.shown("UMMModernComposeSlot1"))
+        self.assertEqual(self.g.UMMSettings.LastRecipient(self.g.UMMSettings), "Alt1")
+
+    def test_a_click_that_drops_an_item_adds_it_once_and_a_plain_click_takes_it_out(self):
+        self.lua.execute('ummItem(1, "Herb", 5); ummItem(2, "Ore", 1)')
+        self.open()
+        self.page(2)
+
+        def press(name):
+            self.g.key = "LBUTTON"
+            for event in ("OnMouseDown", "OnMouseUp", "OnClick"):
+                self.event(name, event)
+            self.step()
+
+        self.g.ummCursor = 1001
+        press("UMMModernComposeAdd")
+        self.assertTrue(self.shown("UMMModernComposeSlot1"))
+        self.assertFalse(self.shown("UMMModernComposeSlot2"))
+        self.assertIsNone(self.g.ummCursor)
+        self.g.ummCursor = 1002
+        press("UMMModernComposeSlot1")   # a carried item clicked onto an item takes its place
+        self.assertEqual(self.g.UMMModernComposeSlot1.ummIcon.texture, "Icons/Ore")
+        self.assertFalse(self.shown("UMMModernComposeSlot2"))
+        self.assertIsNone(self.g.ummCursor)
+        press("UMMModernComposeSlot1")
+        self.assertFalse(self.shown("UMMModernComposeSlot1"))
+        self.assertIn("Write a mail, drop items on +, or add gold on the right.", self.texts("UMMModernCompose"))
+
+    def test_one_plain_mail_goes_without_the_list(self):
+        self.open()
+        self.page(2)
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeTo", "an empty To gets the cursor")
+        self.assertTrue(self.shown("UMMModernPicker"))
+        self.type("UMMModernComposeTo", "Pa")
+        self.assertEqual(self.g.UMMModernPickerRow1.ummName.text, "Pal")
+        self.h.script("UMMModernComposeTo", "OnEnterPressed")
+        self.step()
+        self.assertEqual(self.g.UMMModernComposeTo.text, "Pal")
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeSubject")
+        self.type("UMMModernComposeSubject", "Hi")
+        self.type("UMMModernComposeBody", "See you tonight")
+        self.assertEqual(self.label("UMMModernComposeSend"), "Send")
+        self.click("UMMModernComposeSend")
+        self.assertFalse(self.shown("UMMModernReview"))
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("recipient", "subject", "body"), [("Pal", "Hi", "See you tonight")])
+
+    def test_sending_to_this_character_is_stopped_before_it_starts(self):
+        self.open()
+        self.page(2)
+        self.type("UMMModernComposeTo", "SenderOne")
+        self.type("UMMModernComposeSubject", "Me")
+        self.assertIn("that is you", self.texts("UMMModernCompose"))
+        self.assertIn("You can't send mail to yourself (SenderOne).", self.texts("UMMModernCompose"))
+        self.assertFalse(self.g.UMMModernComposeSend.umm.enabled)
+
+    def test_closing_the_mailbox_mid_run_gives_the_item_back_and_keeps_what_was_not_sent(self):
+        self.lua.execute('ummItem(1, "Herb", 5); ummItem(2, "Ore", 1); ummItem(3, "Gem", 1)')
+        self.open()
+        self.page(2)
+        self.type("UMMModernComposeTo", "Alt1")
+        for slot in (1001, 1002, 1003):
+            self.g.ummCursor = slot
+            self.click("UMMModernComposeAdd")
+        self.click("UMMModernComposeSend")
+        self.click("UMMModernReviewGo")
+        self.until("#ummDelivered == 1")
+        self.until("ummSlot ~= nil")   # the second item sits in the game's send slot
+        self.close()
+        self.assertFalse(self.g.UMMQueue.Busy(self.g.UMMQueue))
+        self.assertIsNone(self.g.ummSlot)
+        self.assertIsNone(self.g.ummCursor)
+        self.step(1)
+        self.assertEqual(len(self.lua_list("ummDelivered")), 1)
+        self.open()
+        self.page(2)
+        self.assertTrue(self.shown("UMMModernComposeSlot2"))
+        self.assertFalse(self.shown("UMMModernComposeSlot3"))
+        self.assertEqual(self.g.UMMModernComposeTo.text, "Alt1")
+
+    def test_takes_wait_for_gold_the_game_reports_late(self):
+        # the gold of a sent mail leaves this character a second after the server said "sent"
+        self.lua.execute('ummMoneyLag = 1.0; ummSetMoney(50000000); for i = 1, 3 do ummMail("Bank", 999999999, { subject = "Cap "..i }) end')
+        self.open()
+        self.page(2)
+        self.click("UMMModernGoldFill")
+        for i in range(1, 4):
+            self.type(f"UMMModernGoldRow{i}To", f"Alt{i}")
+        self.click("UMMModernComposeSend")
+        self.click("UMMModernReviewGo")
+        self.until("not UMMQueue:Busy()", 120)
+        self.step(2)
+        self.assertEqual(self.status(), "Done: 4 of 4 mails sent.")
+        self.assertEqual(self.g.ummMoney, 50_000_000)
+        self.assertLessEqual(self.g.ummMaxMoney, CAP)
+
+    def test_a_take_counts_from_gold_that_left_while_it_was_on_its_way(self):
+        # the gold of the mail before the take leaves after the take started, before its gold came
+        self.lua.execute('ummMoneyLag = 0.8; ummTakeLag = 0.5; ummSetMoney(100000000); ummMail("Bank", 500000000, { subject = "Big" })')
+        self.open()
+        self.page(2)
+        self.click("UMMModernGoldAdd")
+        self.type("UMMModernGoldRow1To", "Alt1")
+        self.type("UMMModernGoldRow1Amount", "100000000")
+        self.click("UMMModernGoldAdd")
+        self.type("UMMModernGoldRow2To", "Alt2")
+        self.type("UMMModernGoldRow2Amount", "500000000")
+        self.step()
+        self.click("UMMModernComposeSend")
+        self.assertIn("2.  Take 500,000,000 gold from Bank's mail", self.review_lines())
+        self.click("UMMModernReviewGo")
+        self.until("not UMMQueue:Busy()", 60)
+        self.assertEqual(self.status(), "Done: 2 of 2 mails sent.")
+        self.assertEqual(self.delivered("recipient", "money"), [("Alt1", 100_000_000), ("Alt2", 500_000_000)])
+
+
+class MassSendTests(ModernWindowFixture, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.lua.execute('''
+          ummItem(1, "Herb", 5); ummItem(2, "Herb", 3); ummItem(3, "Ore", 1); ummItem(4, "Gem", 1)
+          ummItem(7, "Herb", 2); ummItem(8, "Ring", 1)
+        ''')
+        self.open()
+        self.page(3)
+        self.grid = self.g.UMMModernMassGrid
+
+    def point(self, slot, dx=14, dy=14):
+        x, y = self.g.UMMModern.pages.mass.CellPos(slot)
+        left, top = self.grid.GetPos(self.grid)
+        return left + x + dx, top + y + dy
+
+    def press(self, slot, *, ctrl=False, to=None, dx=14, dy=14):
+        self.g.ctrl = ctrl
+        self.g.cursorX, self.g.cursorY = self.point(slot, dx, dy)
+        self.g.key = "LBUTTON"
+        self.event("UMMModernMassGrid", "OnMouseDown")
+        self.step()
+        if to is not None:
+            self.g.cursorX, self.g.cursorY = self.point(*to)
+            self.step()
+        self.event("UMMModernMassGrid", "OnMouseUp")
+        self.g.ctrl = False
+        self.step()
+
+    def marked(self):
+        return {i for i, item in self.g.UMMBagManager.ItemList.items() if item.Marked}
+
+    def test_click_ctrl_click_and_send_one_mail_per_item(self):
+        self.press(3)
+        self.assertEqual(self.marked(), {3})
+        self.press(1, ctrl=True)
+        self.assertEqual(self.marked(), {1, 2, 3, 7})
+        self.assertEqual(self.g.UMMModernMassMarkedRow1.ummName.text, "Herb")
+        self.assertEqual(self.g.UMMModernMassMarkedRow1.ummCount.text, "×3  10")
+        self.assertIn("4 marked: enter a name in To.", self.texts("UMMModernMass"))
+        self.type("UMMModernMassTo", "Alt1")
+        self.assertIn("4 marked: 4 mails to Alt1", self.texts("UMMModernMass"))
+        self.assertEqual(self.label("UMMModernMassSend"), "Send 4")
+        self.assertFalse(self.shown("UMMModernMassFast"))
+
+        self.click("UMMModernMassSend")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("recipient", "subject", "item"),
+                         [("Alt1", "Herb (5)", "Herb"), ("Alt1", "Herb (3)", "Herb"), ("Alt1", "Ore", "Ore"),
+                          ("Alt1", "Herb (2)", "Herb")])
+        self.step(0.5)
+        self.assertEqual(self.marked(), set())
+        self.assertEqual(self.status(), "Done: 4 of 4 mails sent.")
+        self.assertIn("Nothing marked. Click items, drag a box, or pick a category.", self.texts("UMMModernMass"))
+
+    def test_a_box_marks_what_it_covers_and_a_click_on_marked_unmarks(self):
+        self.press(1, dx=4, dy=4, to=(8, 4, 4))
+        self.assertEqual(self.marked(), {1, 2, 7, 8})
+        self.assertFalse(self.g.UMMModern.Dragging())
+        self.press(2)
+        self.assertEqual(self.marked(), {1, 7, 8})
+        self.click("UMMModernMassMarkedRow1")   # the Herb group: unmarks every Herb
+        self.assertEqual(self.marked(), {8})
+
+    def test_a_category_marks_its_items_and_search_with_enter_marks_by_name(self):
+        self.lua.execute('ummCategories.Type5 = { [ummBagSlots[4].link] = true }')
+        self.click("UMMModernMassCatRow5")
+        self.assertEqual(self.marked(), {4})
+        self.type("UMMModernMassSearch", "her")
+        self.assertEqual(self.g.UMMModernMassMarkedRow1.ummName.text, "Gem")
+        self.h.script("UMMModernMassSearch", "OnEnterPressed")
+        self.step()
+        self.assertEqual(self.marked(), {1, 2, 4, 7})
+
+    def test_forty_or_more_offers_safe_and_fast(self):
+        self.lua.execute('for slot = 10, 54 do ummItem(slot, "Arrow", 99) end; UMMMasterFrame_OnEvent("PLAYER_BAG_CHANGED")')
+        self.step(0.3)
+        self.assertEqual(self.g.UMMModernMassGrid and self.g.UMMBagManager.ItemList[54].Name, "Arrow")
+        self.press(10, ctrl=True)
+        self.type("UMMModernMassTo", "Alt2")
+        self.assertEqual(self.label("UMMModernMassSend"), "Send safely 45")
+        self.assertTrue(self.shown("UMMModernMassFast"))
+        self.assertTrue(self.g.UMMModernMassFast.umm.enabled)
+
+
+class PlanTests(ModernWindowFixture, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.assertTrue(self.g.UMMModern_Load())
+        self.P = self.g.UMMModern.Plan
+
+    def parts(self, text, limit=None):
+        return list(self.P.SplitBody(text, limit).values())
+
+    def test_long_text_splits_at_spaces_and_lines_and_never_inside_a_letter(self):
+        text = " ".join(f"line{i:04d}" for i in range(500))
+        parts = self.parts(text)
+        self.assertEqual(len(parts), 3)
+        self.assertTrue(all(len(part) <= 2000 for part in parts))
+        self.assertEqual(" ".join(parts), text)
+
+        lines = "\n".join("x" * 99 for _ in range(30))   # 2999 bytes in lines of 100
+        parts = self.parts(lines)
+        self.assertEqual("\n".join(parts), lines)
+        self.assertTrue(all(not part.startswith("\n") and len(part) <= 2000 for part in parts))
+
+        accents = "é" * 1500   # 3000 bytes, no space anywhere
+        raw = self.P.SplitBody(accents)
+        pieces = [raw[i] for i in range(1, len(raw) + 1)]
+        self.assertTrue(all(len(piece.encode("utf-8")) <= 2000 for piece in pieces))
+        self.assertEqual("".join(pieces), accents)
+        self.assertEqual(self.parts(""), [""])
+
+    def test_gold_rows_use_gold_on_hand_first_when_it_blocks_every_inbox_mail(self):
+        steps, short, hand = self.lua.eval('''
+          (function()
+            local rows, pool = {}, {}
+            for i = 1, 3 do rows[i] = { to = "Alt"..i, amount = 999999999 } end
+            for i = 1, 3 do pool[i] = { sender = "Bank", money = 999999999, subject = "Cap "..i } end
+            return UMMModern.Plan.Gold(rows, 50000000, pool)
+          end)()''')
+        kinds = [(s.kind, s.to or s.subject, s.money) for s in steps.values()]
+        self.assertEqual(kinds, [("mail", "Alt3", 50_000_000), ("take", "Cap 1", CAP), ("mail", "Alt1", CAP),
+                                 ("take", "Cap 2", CAP), ("mail", "Alt2", CAP), ("take", "Cap 3", CAP),
+                                 ("mail", "Alt3", 949_999_999)])
+        self.assertEqual(dict(short.items()), {})
+        self.assertEqual(hand, 50_000_000)
+
+    def test_a_row_that_can_not_be_paid_is_named(self):
+        plan = self.lua.eval('''UMMModern.Plan.Compose({ to = "", gold = {
+            { to = "Alt1", amount = 600000000, row = 1 }, { to = "Alt2", amount = 600000000, row = 2 } } },
+          { hand = 100000000, pool = { { sender = "Bank", money = 500000000, subject = "Big" } }, player = "SenderOne" })''')
+        self.assertEqual(dict(plan.shortRows.items()), {2: 600_000_000})
+        self.assertEqual(list(plan.errors.values()),
+                         ["Not enough gold: 600,000,000 short, counting this character and the inbox."])
+
+    def test_a_short_note_rides_in_the_gold_mail_and_missing_parts_are_named(self):
+        plan = self.lua.eval('''UMMModern.Plan.Compose({ to = "Alt1", subject = "Rent", body = "for May",
+          gold = { { to = "", amount = 1000, row = 1 } } }, { hand = 5000, player = "SenderOne" })''')
+        steps = list(plan.steps.values())
+        self.assertEqual([(s.to, s.subject, s.body, s.money) for s in steps], [("Alt1", "Rent", "for May", 1000)])
+        self.assertEqual(plan.mails, 1)
+
+        def errors(form):
+            return list(self.lua.eval(f'UMMModern.Plan.Compose({form}, {{ hand = 0, player = "SenderOne" }})').errors.values())
+        self.assertEqual(errors('{ to = "Alt1", subject = "", body = "text" }'), ["Enter a subject."])
+        self.assertEqual(errors('{ to = "", subject = "Hi", body = "" }'), ["Enter a name in To."])
+        self.assertEqual(errors('{ to = "senderone", subject = "Hi" }'), ["You can't send mail to yourself (senderone)."])
+        self.assertEqual(errors('{ to = "Alt1" }'), ["Nothing to send yet: write a mail, add an item, or enter gold."])
+
+
+class ModernXmlTests(unittest.TestCase):
+    def test_modern_xml_is_what_the_generator_writes(self):
+        spec = importlib.util.spec_from_file_location("gen_umm_modern_xml", ROOT / "tools/gen_umm_modern_xml.py")
+        generator = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generator)
+        self.assertEqual((UMM / "Modern/Modern.xml").read_text(encoding="utf-8"), generator.build())
+
+    def test_modern_xml_holds_bare_frames_whose_handlers_all_go_through_the_loader(self):
+        root = ET.parse(UMM / "Modern/Modern.xml").getroot()
+        handlers = 0
+        for element in root.iter():
+            tag = element.tag.split("}")[-1]
+            self.assertNotIn(tag, {"Layers", "Layer", "Texture", "FontString", "Size", "Anchors", "Backdrop"})
+            if tag.startswith("On"):
+                handlers += 1
+                self.assertTrue(element.text.startswith("UMMModern_On("), element.text)
+        self.assertGreater(handlers, 30)
+
+    def test_the_toc_loads_only_the_loader_and_the_frames(self):
+        toc = (ROOT / "Interface/AddOns/CherrysKit/CherrysKit.toc").read_text(encoding="utf-8")
+        modern = [line.strip() for line in toc.splitlines() if "UltimateMailMod/Modern/" in line]
+        self.assertEqual(modern, ["UltimateMailMod/Modern/Loader.lua", "UltimateMailMod/Modern/Modern.xml"])
+        loader = (UMM / "Modern/Loader.lua").read_text(encoding="utf-8")
+        for name in MODERN_FILES:
+            self.assertIn(f'"{name[:-4]}"', loader)
+            self.assertTrue((UMM / "Modern" / name).exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

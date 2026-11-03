@@ -1088,24 +1088,33 @@ local function MarkTypes(types)
   end
 end
 
+-- Marks the bag items of category id (1-35, 36 = all of them). Returns the name set for that
+-- category in Recipient/Characters.lua (UMM_MSI_RECIPE_SEND_TO..id), or nil. Also used by the
+-- modern window's Mass send page.
+function UMMMassMarkCategory(id)
+  local types = {};
+  if (id == 36) then
+    -- "all": every category 1 to 35
+    for typeId = 1, 35 do
+      table.insert(types, UMMItemDB:GetTypeByID(typeId));
+    end
+  else
+    table.insert(types, UMMItemDB:GetTypeByID(id));
+  end
+  MarkTypes(types);
+  local sendTo = getglobal("UMM_MSI_RECIPE_SEND_TO"..id);
+  if (sendTo ~= nil and sendTo ~= "") then return sendTo; end
+  return nil;
+end
+
 function UMMMassSendItemsMarkButtonsTemplate_OnLoad(this)
 
   this.ButtonClick = function(self, id)
     getglobal(self:GetParent():GetName().."Bags"):CancelBoxSelection();
-    local sendTo = getglobal("UMM_MSI_RECIPE_SEND_TO"..id);
-    if (sendTo ~= nil and sendTo ~= "") then
+    local sendTo = UMMMassMarkCategory(id);
+    if (sendTo) then
       getglobal(this:GetParent():GetName().."RecipientRecipient"):SetText(sendTo);
     end
-    local types = {};
-    if (id == 36) then
-      -- "all": every category 1 to 35
-      for typeId = 1, 35 do
-        table.insert(types, UMMItemDB:GetTypeByID(typeId));
-      end
-    else
-      table.insert(types, UMMItemDB:GetTypeByID(id));
-    end
-    MarkTypes(types);
     getglobal(this:GetParent():GetName().."Bags"):PopulateBags();
   end;
   
