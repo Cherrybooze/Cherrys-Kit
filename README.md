@@ -32,6 +32,7 @@ Pick the full kit, or install the hub and just the addons you want. Type **`/ck`
 - **Setup and the login screen ask for administrator rights** (hub 0.4.34, LogNextChar 1.3.4), and so do the Addons page's offload, restore, delete, mailbox switch and login screen buttons. Install Chrome extension and the Global Bank helper stay as your own Windows user: Chrome registers its bridge per user and has to reach the helper.
 - **Clearer popup** (extension 1.3.5): **Run automatically while Chrome is open** says that it starts the helper in the background instead of a visible terminal window.
 - **Gameforge accounts copy buttons** (extension 1.3.5): a copy button turns green with *copied* after its label, on the page and in the right-click menu, and stays that way until you copy another field, which fades the previous one out.
+- **Character hover card** (extension 1.3.5): gold, Diamonds, Rubies, Daily Tokens and Arcane Transmutor charges on one line with their icons, and the mouse hints as short key-cap lines: **LMB** select, **RMB** copy / control, **Shift + LMB** range.
 
 ## What's new in 0.11.117
 
