@@ -92,7 +92,7 @@ It is a personal hobby project, shared so other players can use it, learn from i
 
 ## What's included
 
-The **Full ZIP** contains the hub and every addon in this table. For a smaller install, take the **Hub ZIP** and the individual addons you want. Click an addon's name for its full guide, controls, credits and current testing limits.
+The **Full ZIP** contains the hub, guided setup 1.2.0 and every addon in this table. Versions are the current ones in this repository; a version newer than the [latest release](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest) arrives with the next one. For a smaller install, take the **Hub ZIP** and the individual addons you want. Click an addon's name for its full guide, controls, credits and current testing limits.
 
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
@@ -116,11 +116,13 @@ The **Full ZIP** contains the hub and every addon in this table. For a smaller i
 
 ## Separate packages
 
-These are outside the Full ZIP. LogNextChar needs the hub and loads through it; zMail is a separate addon beside the kit. The Chrome extension is described [below](#optional-chrome-extension).
+These are outside the Full ZIP. LogNextChar needs the hub and loads through it; zMail is a separate addon beside the kit; the Chrome extension needs Global Bank.
 
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
 | [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next/Prev buttons switch to the neighbouring character; `/lnc 3` selects a character slot and `/lnc settings` configures the buttons. Its login screen handles a stuck server list, saved logins, secondary passwords and keyboard selection; with Global Bank it shows gold, last saves and Arcane Transmutor charges. Extract its ZIP into `Interface\AddOns`, then let setup install the login screen or run `CherrysKit\LogNextChar\Install login screen.bat` with the game closed. | `/lnc`, `/lpc` | 1.3.4 |
+| [zMail](#zmail-the-other-mailbox) | pyrr's mailbox addon, as an alternative to Ultimate Mail Mod, in its own `Interface\AddOns\zmail` folder. The kit's copy is zMail 1.4 with one fix: mails with gold over the gold cap are no longer opened, so they keep their 30 days. | Opens with the mailbox | 1.4-ck1 |
+| [Global Bank for RoM](extras/GlobalBankDailyRewards/README.md) | Chrome extension for Global Bank's page and popup: combined bank, gold overview, mail, stats, macros, addon management and the optional daily reward. Needs Global Bank and its Windows helper; see [Chrome installation](#optional-chrome-extension). | Chrome toolbar | 1.3.5 |
 
 Download it from this build: [LogNextChar-1.3.3.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.117/LogNextChar-1.3.3.zip).
 
