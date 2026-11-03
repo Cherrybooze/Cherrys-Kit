@@ -1,5 +1,8 @@
 [![Download the full kit install ZIP. Run !setup_cherryskit.bat after extracting.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.117/CherrysKit-Full-0.11.117.zip)
 
+<img width="226" height="167" alt="image" src="https://github.com/user-attachments/assets/ae948bbd-8894-4c24-82f5-a1fb8111cf20" />
+
+
 **[Read the setup walkthrough and flowchart ↓](#guided-setup-every-prompt)**
 
 # Cherry's Kit
