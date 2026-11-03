@@ -486,6 +486,15 @@ tbody tr:last-child td { border-bottom: 0; }
 .bank-tip-row { font-size: 12px; }
 .bank-tip-row b { color: #fff; }
 .bank-tip-row i { font-style: normal; color: #9fb6cc; }
+.bank-tooltip:has(.bank-tip-copies) { width: 420px; max-width: calc(100vw - 16px); }
+/* Stacked gear, one line for each copy: durability, name, count, holder, slot */
+.bank-tip-copies { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; column-gap: 8px; row-gap: 1px; font-size: 12px; align-items: baseline; }
+.bank-tip-copies > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bank-tip-copies b { color: #fff; font-weight: 600; }
+.bank-tip-dura { font-variant-numeric: tabular-nums; color: #c9d3dd; text-align: right; }
+.bank-tip-dura.is-high { color: #7fd17f; }
+.bank-tip-copy-count { font-variant-numeric: tabular-nums; color: #9fb6cc; text-align: right; }
+.bank-tip-copy-where { color: #9fb6cc; }
 .bank-tip-stat { font-size: 12px; color: #7fdc7f; }
 .bank-tip-plain { font-size: 12px; }
 .bank-tip-warn, .char-tip-warn { font-size: 12px; color: #e8b36b; }

@@ -18,6 +18,8 @@ const GBBank = (() => {
   const TIER_FROM = 7;
   const SHOP_FROM = 200;
   const MAX_HOLDERS = 10;
+  // Copies of a stack of gear its tooltip lists one by one
+  const MAX_COPIES = 15;
   const TYPES = ['Armour', 'Weapons', 'Jewellery', 'Runes', 'Mana stones', 'Potions', 'Materials', 'Recipes', 'Mounts and pets', 'Other'];
   const EQUIPPABLE = new Set(['Weapons', 'Armour', 'Jewellery']);
   // Every type can stack, and anything with stats of its own stacks only with identical copies.
@@ -309,13 +311,15 @@ const GBBank = (() => {
       settings.excluded.add(key);
     }
   }
-  // What tells two copies of an item apart: a piece of gear's plus, tier, durability, stats and runes, or a stone's stats,
-  // in whatever order the game listed them.
+  // What tells two copies of an item apart: a piece of gear's plus, tier, stats and runes, or a stone's stats, in
+  // whatever order the game listed them. Durability wears down and is repaired, so it never keeps copies apart: the
+  // stack's tooltip lists each copy with its own.
   function statsSignature(entry) {
     const sorted = list => [...list].sort().join(';');
-    if (entry.gear) return ['g', entry.gear.plus, entry.gear.tier, entry.gear.dura, entry.gear.maxDura, sorted(entry.gear.stats), sorted(entry.gear.runes)].join('/');
+    if (entry.gear) return ['g', entry.gear.plus, entry.gear.tier, sorted(entry.gear.stats), sorted(entry.gear.runes)].join('/');
     return 's/' + sorted(entry.stats);
   }
+  const duraOf = entry => `${Number(entry.gear?.dura) || 0}/${Number(entry.gear?.maxDura) || 0}`;
   // Which stack an item joins, or null when it stays on its own. An item you chose to always stack joins every copy of
   // itself. Otherwise its type has to be ticked, and anything with stats of its own stacks only as rules.stats says:
   // 'match' with identical copies, 'apart' with none, 'all' with every copy.
@@ -343,10 +347,13 @@ const GBBank = (() => {
       let cell = found.get(key);
       if (!cell) {
         cell = {key: itemKey(entry), id: entry.id, name: entry.name, icon: entry.icon, type: entry.type, gear: entry.gear, stats: entry.stats, stone: entry.stone, tier: entry.tier || 0,
-          tip: entry.tip, color: entry.color || '', quality: entry.quality || 0, bound: entry.bound, total: 0, places: [], mixed: false};
+          tip: entry.tip, color: entry.color || '', quality: entry.quality || 0, bound: entry.bound, total: 0, places: [], mixed: false, duraMixed: false};
         found.set(key, cell);
         out.push(cell);
-      } else if (!cell.mixed && (entry.gear || entry.stats.length || cell.gear || cell.stats.length) && statsSignature(entry) !== statsSignature(cell.places[0])) cell.mixed = true;
+      } else {
+        if (!cell.mixed && (entry.gear || entry.stats.length || cell.gear || cell.stats.length) && statsSignature(entry) !== statsSignature(cell.places[0])) cell.mixed = true;
+        if (!cell.duraMixed && (entry.gear || cell.gear) && duraOf(entry) !== duraOf(cell.places[0])) cell.duraMixed = true;
+      }
       cell.total += entry.count;
       cell.places.push(entry);
     }
@@ -357,7 +364,7 @@ const GBBank = (() => {
     if (cell.mixed) return {tier: '', durability: '', plus: '', words: []};
     const tier = cell.tier > 0 && cell.tier >= tierFrom ? `T${cell.tier}` : '';
     const plus = cell.gear?.plus > 0 ? `+${cell.gear.plus}` : '';
-    const durability = cell.gear?.dura > HIGH_DURABILITY ? 'HD' : '';
+    const durability = (cell.places?.length ? cell.places.every(entry => entry.gear?.dura > HIGH_DURABILITY) : cell.gear?.dura > HIGH_DURABILITY) ? 'HD' : '';
     return {tier, durability, plus, words: [tier && `tier ${cell.tier}`, plus, durability && 'high durability'].filter(Boolean)};
   }
   // By name, with a numeral at the end counted, so Wrath VIII comes before Wrath IX and Wrath X
@@ -468,7 +475,9 @@ const GBBank = (() => {
       for (const [label, count] of [...kinds.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)) lines.push({text: `${formatNumber(count)} × ${label}`, kind: 'stat'});
       if (kinds.size > 8) lines.push({text: `and ${kinds.size - 8} more kinds`, kind: 'type'});
     } else if (cell.gear) {
-      for (const text of gearLines(cell.gear)) lines.push({text, kind: 'plain'});
+      const gear = gearLines(cell.gear);
+      if (cell.duraMixed) gear[0] = `Durability ${duraRange(cell.places)}, each copy below`;
+      for (const text of gear) lines.push({text, kind: 'plain'});
     } else if (cell.stats.length) {
       for (const text of cell.stats) lines.push({text, kind: 'stat'});
     }
@@ -497,6 +506,32 @@ const GBBank = (() => {
       }
       return {name: row.name, key: row.key, server: row.server, count: row.count, parts};
     });
+  }
+
+  // Lowest to highest durability among a stack's copies, "80–120 / 120"
+  function duraRange(places) {
+    const now = places.map(entry => Number(entry.gear?.dura) || 0);
+    const most = places.map(entry => Number(entry.gear?.maxDura) || 0);
+    const span = values => {
+      const low = Math.min(...values), high = Math.max(...values);
+      return low === high ? formatNumber(low) : `${formatNumber(low)}–${formatNumber(high)}`;
+    };
+    return `${span(now)} / ${span(most)}`;
+  }
+  // Where a copy is, short: "Bag 10 (p1)", "Bank 205 (shop 5)", "Worn (Head)"
+  function shortLocation(entry) {
+    if (entry.place === 'worn') return `Worn (${slotLabel(entry.where)})`;
+    if (entry.place === 'bank' && entry.slot > SHOP_FROM) return `Bank ${entry.slot} (shop ${entry.slot - SHOP_FROM})`;
+    const perPage = PER_PAGE[entry.place];
+    if (!perPage || !entry.slot) return `${PLACE[entry.place] || entry.place} ${entry.slot || ''}`.trim();
+    return `${PLACE[entry.place]} ${entry.slot} (p${Math.floor((entry.slot - 1) / perPage) + 1})`;
+  }
+  // A stack of gear, one line for each copy: its durability, name, count, holder and slot, lowest durability first
+  function instanceLines(cell) {
+    if (!cell.gear || cell.mixed || (cell.places?.length || 0) < 2) return [];
+    return [...cell.places].sort((a, b) => (Number(a.gear?.dura) || 0) - (Number(b.gear?.dura) || 0) || a.character.localeCompare(b.character) || a.slot - b.slot)
+      .map(entry => ({dura: entry.gear ? `${formatNumber(Number(entry.gear.dura) || 0)}/${formatNumber(Number(entry.gear.maxDura) || 0)}` : '?', high: (Number(entry.gear?.dura) || 0) > HIGH_DURABILITY,
+        name: entry.name, count: entry.count, character: entry.character, server: entry.ch?.shownServer || '', key: entry.ch?.key || '', where: shortLocation(entry)}));
   }
 
   // The Currencies tab: a column for each currency anyone has, a total, and the characters in the order asked for.
@@ -1235,14 +1270,27 @@ const GBBank = (() => {
       }
       const who = holders(cell.places);
       const servers = new Set(who.map(row => row.server));
-      for (const row of who.slice(0, MAX_HOLDERS)) {
-        const line = make('span', 'bank-tip-row');
-        line.append(make('b', '', row.name));
-        if (servers.size > 1 && row.server && !row.name.endsWith(`(${row.server})`)) line.append(make('i', '', ` ${row.server}`));
-        line.append(` ${row.parts.join(' · ')}`);
-        nodes.push(line);
+      const copies = instanceLines(cell);
+      if (copies.length) {
+        // Stacked gear: each copy on its own line, so a worn-down one is easy to find
+        const table = make('div', 'bank-tip-copies');
+        for (const copy of copies.slice(0, MAX_COPIES)) {
+          table.append(make('span', 'bank-tip-dura' + (copy.high ? ' is-high' : ''), copy.dura), make('span', 'bank-tip-copy-name', copy.name),
+            make('span', 'bank-tip-copy-count', `×${formatNumber(copy.count)}`), make('b', '', copy.character + (servers.size > 1 && copy.server && !copy.character.endsWith(`(${copy.server})`) ? ` ${copy.server}` : '')),
+            make('span', 'bank-tip-copy-where', copy.where));
+        }
+        nodes.push(table);
+        if (copies.length > MAX_COPIES) nodes.push(make('span', 'bank-tip-type', `and ${formatNumber(copies.length - MAX_COPIES)} more`));
+      } else {
+        for (const row of who.slice(0, MAX_HOLDERS)) {
+          const line = make('span', 'bank-tip-row');
+          line.append(make('b', '', row.name));
+          if (servers.size > 1 && row.server && !row.name.endsWith(`(${row.server})`)) line.append(make('i', '', ` ${row.server}`));
+          line.append(` ${row.parts.join(' · ')}`);
+          nodes.push(line);
+        }
+        if (who.length > MAX_HOLDERS) nodes.push(make('span', 'bank-tip-type', `and ${formatNumber(who.length - MAX_HOLDERS)} more characters`));
       }
-      if (who.length > MAX_HOLDERS) nodes.push(make('span', 'bank-tip-type', `and ${formatNumber(who.length - MAX_HOLDERS)} more characters`));
       if (/^\d+$/.test(String(cell.id || ''))) nodes.push(make('span', 'bank-tip-hint', `Item ${cell.id}${cell.bound ? ' · bound' : ''}${servers.size > 1 ? ` · on ${formatNumber(servers.size)} servers` : ''}`));
       nodes.push(make('span', 'bank-tip-hint', 'Click for where it is. Right-click: favourite, always stack, exclude, select who holds it, or copy a login'));
       tooltip.replaceChildren(...nodes);
@@ -1704,6 +1752,17 @@ const GBBank = (() => {
       }
       if (who.length > 200) owners.append(make('span', 'hint', `and ${formatNumber(who.length - 200)} more characters`));
       nodes.push(owners);
+      const copies = instanceLines(cell);
+      if (copies.length) {
+        nodes.push(make('div', 'detail-title', 'Each copy'));
+        const table = make('div', 'bank-tip-copies');
+        for (const copy of copies.slice(0, 200)) {
+          table.append(make('span', 'bank-tip-dura' + (copy.high ? ' is-high' : ''), copy.dura), make('span', 'bank-tip-copy-name', copy.name),
+            make('span', 'bank-tip-copy-count', `×${formatNumber(copy.count)}`), make('b', '', copy.character), make('span', 'bank-tip-copy-where', copy.where));
+        }
+        nodes.push(table);
+        if (copies.length > 200) nodes.push(make('span', 'hint', `and ${formatNumber(copies.length - 200)} more`));
+      }
       if (/^\d+$/.test(String(cell.id || ''))) nodes.push(make('span', 'hint', `Item ${cell.id}${servers.size > 1 ? ` · on ${formatNumber(servers.size)} servers` : ''}`));
       const actions = make('div', 'detail-actions');
       const copy = make('button', 'gb-button--sm', 'Copy name');
@@ -2173,7 +2232,7 @@ const GBBank = (() => {
       loadedAt: () => state.loadedAt,
     };
   }
-  return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, DEFAULT_RULES,
+  return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, instanceLines, duraRange, DEFAULT_RULES,
     quickFilters, wornGear, plusOf, slotLabel, SLOT_LABELS, TIER_FROM, statEffects, templateTip, SORT_GROUPS, sortGroupOf, sortByType, SORTS,
     formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
     rosterRows, renderRoster, statTable, renderStats, searchRows, characterFilters, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
