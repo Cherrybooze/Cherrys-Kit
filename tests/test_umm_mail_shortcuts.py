@@ -141,7 +141,8 @@ class MailShortcutsTests(unittest.TestCase):
         self.g.UMMMailComposer.SendCompleted(self.g.UMMMailComposer, status)
 
     def history(self):
-        return list(self.g.UMMConfig.RecipientHistory.values())
+        """The names mailed from the server the test plays on (UMMConfig.RecentByServer)."""
+        return list(self.lua.eval("UMMSettings:History()").values())
 
     def test_old_profiles_get_default_on_shortcuts_without_changing_other_settings(self):
         self.lua.execute('''
@@ -424,6 +425,34 @@ class MailShortcutsTests(unittest.TestCase):
         self.assertTrue(self.g.UMMConfig.Settings.MailShortcuts)
         self.assertEqual(self.g.UMMConfig.Settings.GoldPreset1, 100000)
         self.assertEqual(self.history(), ["Alpha", "Beta", "Gamma"])
+
+    def test_recent_names_are_kept_per_server_and_the_old_shared_list_goes_to_the_first_server(self):
+        self.lua.execute('UMMConfig.RecentByServer=nil; UMMConfig.RecipientHistory={"Old1","Old2"}; '
+                         'ummRealm=nil; UMMSettings:Init()')
+        # while no server is known, the old list shows and stays where it is
+        self.assertEqual(self.history(), ["Old1", "Old2"])
+        self.assertIsNotNone(self.g.UMMConfig.RecipientHistory)
+        # the first server known takes it over (colour codes and spaces are not part of the name)
+        self.g.ummRealm = "|cffffd100Alpha|r "
+        self.assertEqual(self.history(), ["Old1", "Old2"])
+        self.assertIsNone(self.g.UMMConfig.RecipientHistory)
+        self.send("Ann")
+        self.assertEqual(self.history(), ["Ann", "Old1", "Old2"])
+        # another server starts empty and keeps its own names
+        self.g.ummRealm = "Beta"
+        self.assertEqual(self.history(), [])
+        self.assertIsNone(self.g.UMMSettings.LastRecipient(self.g.UMMSettings))
+        self.send("Bob")
+        self.assertEqual(self.history(), ["Bob"])
+        self.g.ummRealm = "Alpha"
+        self.assertEqual(self.history(), ["Ann", "Old1", "Old2"])
+        self.assertEqual(self.g.UMMSettings.LastRecipient(self.g.UMMSettings), "Ann")
+        # the login screen's server name when the game gives none
+        self.lua.execute('ummRealm=nil; LOGCHAR_SERVER="Beta"')
+        self.assertEqual(self.history(), ["Bob"])
+        # saved lists are cleaned when they load, as the old one was
+        self.lua.execute('UMMConfig.RecentByServer.Beta={" Bob ","bob","",false,"Cid"}; UMMSettings:Init()')
+        self.assertEqual(self.history(), ["Bob", "Cid"])
 
     def test_slash_configuration_matches_ui_and_large_amount_labels_keep_leading_zero_groups(self):
         self.lua.execute('''

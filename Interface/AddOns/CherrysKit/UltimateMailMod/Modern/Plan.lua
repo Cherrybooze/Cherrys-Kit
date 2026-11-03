@@ -138,7 +138,9 @@ function P.Gold(rows, hand, pool, cap)
   return steps, short, hand;
 end
 
--- The whole Send of the compose page. form: { to, subject, body, items, cod, gold }; items are
+-- The whole Send of the compose page. form: { to, subject, autoSubject, body, items, cod, gold }
+-- (autoSubject: the subject the page filled in from the first item or gold; only mails with text
+-- and nothing else take it, item and gold mails keep their own); items are
 -- { index, link, name, count, icon }; gold rows { to, amount, row } (to "" = form.to).
 -- ctx: { hand, pool, player }. Returns { steps, errors, mails, takes, goldMails, goldTotal,
 -- itemMails, textParts, short, recipients }.
@@ -148,6 +150,7 @@ function P.Compose(form, ctx)
                  itemMails = 0, textParts = 0, short = 0, recipients = {}, shortRows = {} };
   local to = form.to or "";
   local subject = form.subject or "";
+  local autoSubject = form.autoSubject or "";
   local body = form.body or "";
   local items = form.items or {};
   local hasText = subject ~= "" or body ~= "";
@@ -179,7 +182,7 @@ function P.Compose(form, ctx)
     return plan;
   end
   if ((main > 0 or note) and to == "") then table.insert(errors, UMM_M_ERR_TO); end
-  if (subject == "" and main > table.getn(items)) then table.insert(errors, UMM_M_ERR_SUBJECT); end
+  if (subject == "" and autoSubject == "" and main > table.getn(items)) then table.insert(errors, UMM_M_ERR_SUBJECT); end
   if (plan.short > 0) then table.insert(errors, string.format(UMM_M_ERR_SHORT, M.Gold(plan.short))); end
 
   for k = 1, main do
@@ -189,6 +192,8 @@ function P.Compose(form, ctx)
       mail.subject = P.Numbered(subject, k, main);
     elseif (item) then
       mail.subject = P.ItemSubject(item);
+    elseif (autoSubject ~= "") then
+      mail.subject = P.Numbered(autoSubject, k, main);
     else
       mail.subject = "";
     end

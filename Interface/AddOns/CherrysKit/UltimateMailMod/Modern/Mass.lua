@@ -491,7 +491,9 @@ local function buildTop()
     drawWho();
     drawControls();
   end });
-  UMMModernMassTo.ummFocus = function(box) K.Open(box, function() drawWho(); drawControls(); end); end;
+  UMMModernMassTo.ummFocus = function(box)
+    if (UMMAutoNameList()) then K.Open(box, function() drawWho(); drawControls(); end); end
+  end;
   UMMModernMassTo.ummEnterKey = function(box)
     local first = K.IsOpenFor(box) and K.First();
     if (first) then K.Use(first); else K.Close(); box:ClearFocus(); end

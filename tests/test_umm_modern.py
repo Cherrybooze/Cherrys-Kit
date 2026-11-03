@@ -724,6 +724,128 @@ class ComposeTests(ModernWindowFixture, unittest.TestCase):
         self.assertFalse(self.shown("UMMModernComposeSlot1"))
         self.assertIn("Write a mail, drop items on +, or add gold on the right.", self.texts("UMMModernCompose"))
 
+    def test_the_subject_takes_the_first_item_or_gold_until_one_is_typed(self):
+        self.lua.execute('ummItem(1, "Herb", 5); ummItem(2, "Ore", 1); ummSetMoney(1000000)')
+        self.open()
+        self.page(2)
+        subject = self.g.UMMModernComposeSubject
+        self.type("UMMModernComposeTo", "Alt1")
+        self.h.script("UMMModernComposeTo", "OnEnterPressed")
+        self.step()
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeSubject")
+        # an item first: its name, even with the cursor waiting in the empty subject
+        self.g.ummCursor = 1001
+        self.click("UMMModernComposeAdd")
+        self.step()
+        self.assertEqual(subject.text, "Herb (5)")
+        self.click("UMMModernGoldAdd")
+        self.type("UMMModernGoldRow1Amount", "400000")
+        self.step()
+        self.assertEqual(subject.text, "Herb (5)", "the item came first")
+        # the item taken out: the gold names the mail now, and keeps doing so when an item comes back
+        self.click("UMMModernComposeSlot1")
+        self.step()
+        self.assertEqual(subject.text, "Money: 400,000")
+        self.g.ummCursor = 1002
+        self.click("UMMModernComposeAdd")
+        self.step()
+        self.assertEqual(subject.text, "Money: 400,000")
+        # clicking in selects it, so typing replaces it; a typed subject stays
+        self.g.UMMModernComposeBody.SetFocus(self.g.UMMModernComposeBody)
+        subject.SetFocus(subject)
+        self.assertEqual((subject.selStart, subject.caret), (0, len("Money: 400,000")))
+        self.type("UMMModernComposeSubject", "For the bank")
+        self.type("UMMModernGoldRow1Amount", "50000")
+        self.step()
+        self.assertEqual(subject.text, "For the bank")
+        # emptied while typing, it stays empty until the cursor leaves it
+        self.type("UMMModernComposeSubject", "")
+        self.step()
+        self.assertEqual(subject.text, "")
+        self.g.UMMModernComposeBody.SetFocus(self.g.UMMModernComposeBody)
+        self.step()
+        self.assertEqual(subject.text, "Money: 50,000")
+        self.click("UMMModernComposeReset")
+        self.step()
+        self.assertEqual(subject.text, "")
+
+    def test_a_filled_in_subject_leaves_each_item_its_own_name_and_numbers_text_only_mails(self):
+        self.lua.execute('ummItem(1, "Herb", 5); ummItem(2, "Ore", 1)')
+        self.open()
+        self.page(2)
+        self.type("UMMModernComposeTo", "Alt1")
+        for slot in (1001, 1002):
+            self.g.ummCursor = slot
+            self.click("UMMModernComposeAdd")
+        self.step()
+        self.assertEqual(self.g.UMMModernComposeSubject.text, "Herb (5)")
+        self.type("UMMModernComposeBody", " ".join(f"line{i:04d}" for i in range(500)))
+        self.step()
+        self.click("UMMModernComposeSend")
+        self.assertEqual(self.review_lines(), ["1.  Herb (5) to Alt1  + text 1/3", "2.  Ore to Alt1  + text 2/3",
+                                               "3.  Text part 3/3 to Alt1"])
+        self.click("UMMModernReviewGo")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("subject", "item"),
+                         [("Herb (5)", "Herb"), ("Ore", "Ore"), ("Herb (5) (3/3)", None)])
+
+    def test_a_good_item_clears_the_line_about_one_that_could_not_go(self):
+        self.lua.execute('ummItem(1, "Bound Ring", 1); ummItem(2, "Herb", 5); '
+                         'UMMMailComposer.ItemIsBound = function(_, index) return index == 1001 end')
+        self.open()
+        self.page(2)
+        self.g.ummCursor = 1001
+        self.click("UMMModernComposeAdd")
+        self.assertEqual(self.status(), "Bound Ring is bound and can't be mailed.")
+        self.assertFalse(self.shown("UMMModernComposeSlot1"))
+        self.g.ummCursor = 1002
+        self.click("UMMModernComposeAdd")
+        self.assertTrue(self.shown("UMMModernComposeSlot1"))
+        self.assertEqual(self.status(), "")
+        # a line that is about something else stays
+        self.g.UMMModern.Status("Done: 3 of 3 mails sent.")
+        self.g.ummCursor = 1001
+        self.click("UMMModernComposeAdd")
+        self.g.UMMModern.Status("Done: 3 of 3 mails sent.")
+        self.lua.execute('ummItem(3, "Ore", 1)')
+        self.g.ummCursor = 1003
+        self.click("UMMModernComposeAdd")
+        self.assertEqual(self.status(), "Done: 3 of 3 mails sent.")
+
+    def test_the_name_list_can_wait_for_its_button(self):
+        self.g.UMMSettingsFrame.Show(self.g.UMMSettingsFrame)
+        self.assertTrue(self.g.UMMSettingsFrameCheck6.checked)
+        self.assertEqual(self.g.UMMSettingsFrameCheck6Name.text, "Open name list by itself")
+        self.h.click("UMMSettingsFrameCheck6")
+        self.assertFalse(self.g.UMMAutoNameList())
+        self.open()
+        self.page(2)
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeTo")
+        self.assertFalse(self.shown("UMMModernPicker"))
+        self.type("UMMModernComposeTo", "Pa")
+        self.assertFalse(self.shown("UMMModernPicker"))
+        self.click("UMMModernComposePick")
+        self.assertTrue(self.shown("UMMModernPicker"))
+        self.click("UMMModernComposePick")
+        self.assertFalse(self.shown("UMMModernPicker"))
+        self.page(3)
+        self.g.UMMModernMassTo.SetFocus(self.g.UMMModernMassTo)
+        self.step()
+        self.assertFalse(self.shown("UMMModernPicker"))
+        self.close()
+
+        self.lua.execute('SlashCmdList.UMM(nil, "namelist on")')
+        self.assertTrue(self.g.UMMAutoNameList())
+        self.assertTrue(self.g.UMMSettingsFrameCheck6.checked)
+        self.open()
+        self.page(2)
+        self.g.UMMModernComposeBody.SetFocus(self.g.UMMModernComposeBody)
+        self.g.UMMModernComposeTo.SetFocus(self.g.UMMModernComposeTo)
+        self.step()
+        self.assertTrue(self.shown("UMMModernPicker"))
+        self.lua.execute('SlashCmdList.UMM(nil, "namelist off")')
+        self.assertFalse(self.g.UMMSettingsFrameCheck6.checked)
+
     def test_one_plain_mail_goes_without_the_list(self):
         self.open()
         self.page(2)
@@ -824,9 +946,11 @@ class MassSendTests(ModernWindowFixture, unittest.TestCase):
         self.grid = self.g.UMMModernMassGrid
 
     def point(self, slot, dx=14, dy=14):
+        """Where a cell is on the screen: the window is drawn at its scale (UMMModern.Scale)."""
         x, y = self.g.UMMModern.pages.mass.CellPos(slot)
         left, top = self.grid.GetPos(self.grid)
-        return left + x + dx, top + y + dy
+        scale = self.grid.GetRealScale(self.grid)
+        return left + (x + dx) * scale, top + (y + dy) * scale
 
     def press(self, slot, *, ctrl=False, to=None, dx=14, dy=14):
         self.g.ctrl = ctrl
@@ -919,7 +1043,12 @@ class LayoutTests(ModernWindowFixture, unittest.TestCase):
     def window_rect(self):
         f = self.g.UMMModernFrame
         x, y = f.GetPos(f)
-        return x, y, x + f.width, y + f.height
+        w, h = f.GetRealSize(f)
+        return x, y, x + w, y + h
+
+    def scale(self):
+        f = self.g.UMMModernFrame
+        return f.GetRealScale(f)
 
     def center(self, name):
         return self.g.RomLayout.Center(self.g[name])
@@ -935,7 +1064,7 @@ class LayoutTests(ModernWindowFixture, unittest.TestCase):
 
     def drag_title(self, dx, dy):
         left, top, _, _ = self.window_rect()
-        x, y = left + 60, top + 18            # the title, left of the tabs
+        x, y = left + 660 * self.scale(), top + 18 * self.scale()   # the title bar, past the gold
         self.assertEqual(self.g.RomLayout.Down(x, y), "UMMModernTitle")
         self.step()
         self.g.cursorX, self.g.cursorY = x + dx, y + dy
@@ -953,8 +1082,9 @@ class LayoutTests(ModernWindowFixture, unittest.TestCase):
                 self.assertLessEqual(w.width * w.height, 1, f"{name} took a size nobody gave it")
             if w.IsVisible(w) and name != "UMMModernFrame":
                 x, y = w.GetPos(w)
-                self.assertTrue(left <= x and y >= top and x + w.width <= right and y + w.height <= bottom,
-                                f"{name} reaches past the window: {(x, y, w.width, w.height)}")
+                rw, rh = w.GetRealSize(w)
+                self.assertTrue(left <= x + 1e-6 and y + 1e-6 >= top and x + rw <= right + 1e-6 and y + rh <= bottom + 1e-6,
+                                f"{name} reaches past the window: {(x, y, rw, rh)}")
 
     def test_frames_keep_their_sizes_when_the_window_moves_and_the_screen_lays_out_again(self):
         self.open()
@@ -1015,7 +1145,10 @@ class LayoutTests(ModernWindowFixture, unittest.TestCase):
             self.step()
             overlaps = self.lua.eval('''(function()
               local out = {}
-              local function rect(w) local x, y = w:GetPos(); return x, y, x + w.width, y + w.height end
+              local function rect(w)
+                local x, y = w:GetPos(); local rw, rh = w:GetRealSize()
+                return x + 1e-6, y + 1e-6, x + rw - 1e-6, y + rh - 1e-6
+              end
               local function walk(f)
                 local live = {}
                 for _, c in ipairs(f.rl.children) do
@@ -1040,6 +1173,131 @@ class LayoutTests(ModernWindowFixture, unittest.TestCase):
               walk(UMMModernFrame)
               return out end)()''')
             self.assertEqual(list(overlaps.values()), [], page)
+
+    def scale_command(self, value):
+        self.lua.execute(f'SlashCmdList.UMM(nil, "scale {value}")')
+        self.step()
+
+    def test_scale_one_draws_the_layout_at_one_point_two_and_the_setting_resizes_it_at_once(self):
+        self.open()
+        self.assertAlmostEqual(self.scale(), 1.2)
+        left, top, right, bottom = self.window_rect()
+        self.assertAlmostEqual(right - left, 912)
+        self.assertAlmostEqual(bottom - top, 600)
+        self.assertEqual((left, top), (504, 90), "centred, near the top of a 1920 x 1080 screen")
+        self.drag_title(-100, 30)
+        self.assertEqual(self.window_rect()[:2], (404, 120))
+
+        # the settings window's scale row, one step up: bigger at once, same top left corner
+        self.g.UMMSettingsFrame.Show(self.g.UMMSettingsFrame)
+        self.assertEqual(self.g.UMMSettingsFrameRow6Label.text, "Mail window scale")
+        self.assertEqual(self.g.UMMSettingsFrameRow6Value.text, "1.00")
+        self.h.script("UMMSettingsFrameRow6Plus")
+        self.step()
+        self.assertEqual(self.g.UMMSettingsFrameRow6Value.text, "1.05")
+        self.assertAlmostEqual(self.scale(), 1.26)
+        left, top, right, bottom = self.window_rect()
+        self.assertAlmostEqual(left, 404)
+        self.assertAlmostEqual(top, 120)
+        self.assertAlmostEqual(right - left, 957.6)
+        self.assert_sizes_hold()
+
+        # /umm scale, with a decimal comma too; out of range changes nothing
+        self.scale_command("1,5")
+        self.assertAlmostEqual(self.scale(), 1.8)
+        self.assertEqual(self.g.UMMSettingsFrameRow6Value.text, "1.50")
+        self.assertTrue(any("mail window scale: 1.50 (/umm scale 0.7 - 1.5)" in line for line in self.chat()))
+        self.scale_command("2")
+        self.assertAlmostEqual(self.scale(), 1.8)
+        self.assertTrue(any("/umm scale <0.7 - 1.5>" in line for line in self.chat()))
+        self.assertAlmostEqual(self.window_rect()[0], 404)
+
+        # grown past the right edge of the screen, it moves back in whole
+        self.scale_command("1")
+        self.drag_title(700, 0)
+        self.assertAlmostEqual(self.window_rect()[2], 1920, msg="dragged as far right as it goes")
+        self.scale_command("1.5")
+        left, _, right, _ = self.window_rect()
+        self.assertAlmostEqual(right, 1920)
+        self.assertAlmostEqual(left, 1920 - 760 * 1.8)
+
+        # shut and opened again smaller: where it was dragged to, at the scale of the setting
+        self.close()
+        self.scale_command("0.7")
+        self.open()
+        self.assertAlmostEqual(self.scale(), 0.84)
+        left, top, _, _ = self.window_rect()
+        self.assertAlmostEqual(left, 1008)
+        self.assertAlmostEqual(top, 120)
+        self.assert_sizes_hold()
+
+    def test_the_smallest_and_the_biggest_scale_keep_the_layout_and_every_click(self):
+        for setting in ("0.7", "1.5"):
+            with self.subTest(setting=setting):
+                self.scale_command(setting)
+                self.open()
+                self.assertAlmostEqual(self.scale(), 1.2 * float(setting))
+                self.assert_sizes_hold()
+                for i in (2, 3, 4, 1):
+                    self.assertEqual(self.click_on(f"UMMModernTab{i}"), f"UMMModernTab{i}")
+                    self.assert_sizes_hold()
+                self.drag_title(-40, 25)
+                self.g.RomLayout.Relayout()
+                self.assert_sizes_hold()
+                left, top, right, bottom = self.window_rect()
+                for x, y in [(right + 3, top + 40), (left + 40, bottom + 3), (left - 3, top + 40)]:
+                    hit = self.g.RomLayout.FrameAt(x, y)
+                    self.assertTrue(hit is None or hit.name == "UIParent", f"{hit and hit.name} at {(x, y)}")
+                self.close()
+
+    def test_the_title_bar_starts_with_the_inbox_tab_and_the_gold_follows_the_tabs(self):
+        self.open()
+        left, top, _, _ = self.window_rect()
+        s = self.scale()
+
+        def x_in_window(widget):
+            x, _ = widget.GetPos(widget)
+            return round((x - left) / s, 6)
+
+        self.assertEqual([x_in_window(self.g[f"UMMModernTab{i}"]) for i in range(1, 5)], [8, 126, 244, 362])
+        self.assertTrue(self.label("UMMModernTab1").startswith("Inbox"))
+        self.assertNotIn("Mail", self.texts("UMMModernFrame"), "no window title")
+        last = self.g.UMMModernTab4
+        self.assertGreater(x_in_window(self.g.UMMModern.gold), x_in_window(last) + last.width)
+        self.assertEqual(self.click_on("UMMModernTab1"), "UMMModernTab1")
+
+    def test_a_click_that_misses_take_all_lands_on_delete_emptied_and_return_is_last(self):
+        self.lua.execute('ummMail("Bank", 1000)')
+        self.open()
+        names = ["UMMModernInboxTake", "UMMModernInboxClean", "UMMModernInboxDelete", "UMMModernInboxReturn"]
+        xs = [self.g[name].GetPos(self.g[name])[0] for name in names]
+        self.assertEqual(xs, sorted(xs), "Take all, Delete emptied, Delete, Return")
+        take = self.g.UMMModernInboxTake
+        x, y = take.GetPos(take)
+        w, h = take.GetRealSize(take)
+        self.assertEqual(self.click_at(x + w + 6 * self.scale(), y + h / 2), "UMMModernInboxClean")
+        self.assertEqual(self.inbox(), ["Mail 1"], "nothing went back")
+
+    def test_the_open_name_list_leaves_the_items_cod_and_price_free(self):
+        self.lua.execute('ummItem(1, "Herb", 5)')
+        self.open()
+        self.page(2)
+        self.assertTrue(self.shown("UMMModernPicker"))
+        picker = self.g.UMMModernPicker
+        px, py = picker.GetPos(picker)
+        pw, ph = picker.GetRealSize(picker)
+        free = ["UMMModernComposeAdd", "UMMModernComposeCOD", "UMMModernComposeCODAmount", "UMMModernComposeSend"]
+        for name in free:
+            w = self.g[name]
+            _, y = w.GetPos(w)
+            self.assertGreaterEqual(y, py + ph, f"{name} is under the name list")
+        self.g.ummCursor = 1001
+        self.assertEqual(self.click_on("UMMModernComposeAdd"), "UMMModernComposeAdd")
+        self.assertTrue(self.shown("UMMModernComposeSlot1"))
+        slot = self.g.UMMModernComposeSlot1
+        self.assertGreaterEqual(slot.GetPos(slot)[1], py + ph)
+        self.assertEqual(self.click_on("UMMModernComposeCOD"), "UMMModernComposeCOD")
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeCODAmount")
 
 
 class PlanTests(ModernWindowFixture, unittest.TestCase):

@@ -97,6 +97,8 @@ function SaveVariables(name) ummSaves[#ummSaves+1]=name end
 function UnitName() return ummPlayer end
 function IsInGuild() return false end
 function GetUIScale() return ummUIScale end
+ummRealm="Testserver"
+function GetServerName() return ummRealm end
 function GetScreenWidth() return ummScreenWidth end
 function GetScreenHeight() return ummScreenHeight end
 function GetInboxNumItems() return 0 end

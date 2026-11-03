@@ -1,7 +1,8 @@
 -- The RoM client's layout and mouse rules, for tests that need real geometry. Ported from the client
 -- source (cherrybooze/oneforall, SourceCodeVS2019/Client/Ispania_English/ui/core and ui/xml):
 --
---   uilayout.cpp  SetAnchorSize, ResetSize, ResetAnchors, SetPos, SetSize, SetAnchor, ClearAllAnchors
+--   uilayout.cpp  SetAnchorSize, ResetSize, ResetAnchors, SetPos, SetSize, SetAnchor, ClearAllAnchors,
+--                 SetScale
 --   uiframe.cpp   InsertChild, AdjustFrameLevel, GetFrameAtPoint, ContainsPoint, HandleMouse
 --   ui.cpp        LoadXmlLayout (size, then anchors, a TOPLEFT anchor to the parent when none),
 --                 LoadXmlFrame (strata, level, enableMouse), Update (hit test, capture, mouse up)
@@ -26,7 +27,7 @@ local LAYERS = { Texture = true, FontString = true }
 
 local Widget = getmetatable(UIParent)
 local plain = {}
-for _, name in ipairs({ "SetAnchor", "ClearAllAnchors", "SetWidth", "SetHeight", "SetSize", "GetPos" }) do
+for _, name in ipairs({ "SetAnchor", "ClearAllAnchors", "SetWidth", "SetHeight", "SetSize", "GetPos", "SetScale" }) do
   plain[name] = Widget[name]
 end
 
@@ -297,6 +298,13 @@ end
 function Widget:GetPos()
   if not self.rl then return plain.GetPos(self) end
   return self.rl.x, self.rl.y
+end
+
+-- CUiLayout::SetScale: a new scale re-anchors the frame and everything hanging from it.
+function Widget:SetScale(v)
+  local changed = self:GetScale() ~= v
+  plain.SetScale(self, v)
+  if self.rl and changed then resetAnchors(self) end
 end
 
 function Widget:SetFrameLevel(level)

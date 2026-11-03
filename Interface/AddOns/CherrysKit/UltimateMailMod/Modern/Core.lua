@@ -14,7 +14,6 @@ local function default(name, text)
 end
 M.Default = default;
 
-default("UMM_M_TITLE", "Mail");
 default("UMM_M_TAB_INBOX", "Inbox");
 default("UMM_M_TAB_COMPOSE", "Compose");
 default("UMM_M_TAB_MASS", "Mass send");
@@ -30,6 +29,9 @@ default("UMM_M_DRAG_TIP", "Drag to move the window.");
 default("UMM_MODERN_FAILED", "the modern mail window could not load (%s). The classic window opens instead; /umm ui classic keeps it.");
 
 M.W, M.H = 760, 500;
+-- The window is laid out at M.W x M.H and drawn at this times the scale setting (/umm scale, 1 by
+-- default): 1.2 made the first in-game build easier to read.
+M.BASE_SCALE = 1.2;
 M.CAP = 999999999;
 local MEDIA = UMMPath.."Textures/Modern/";
 local FONT = UMMPath.."Fonts/FiraSans-Medium.ttf";
@@ -558,22 +560,42 @@ M.pages = {};
 M.order = { "inbox", "compose", "mass", "activity" };
 local TAB_ICONS = { inbox = "inbox", compose = "compose", mass = "mass", activity = "activity" };
 local TAB_TEXT = { inbox = "UMM_M_TAB_INBOX", compose = "UMM_M_TAB_COMPOSE", mass = "UMM_M_TAB_MASS", activity = "UMM_M_TAB_ACTIVITY" };
+local TAB_X, TAB_W, TAB_STEP = 8, 114, 118;
 
 local function savedPos()
   local pos = UMMSettings:Get("ModernPos");
   if (type(pos) == "table" and type(pos.x) == "number" and type(pos.y) == "number") then return pos.x, pos.y; end
 end
 
+-- The window's scale: the setting times M.BASE_SCALE.
+function M.Scale()
+  return M.BASE_SCALE * ((UMMWindowScale and UMMWindowScale()) or 1);
+end
+
+-- Puts the window's top left corner at x, y of the screen (UI units; nil: where it was saved, else
+-- centred near the top), at the scale of the setting, keeping the title bar on the screen. The
+-- client multiplies a frame's anchor offset by the frame's own scale, so the offset is x / scale.
 function M.PlaceWindow(x, y)
   local frame = UMMModernFrame;
+  local scale = M.Scale();
   local uiW, uiH = UIParent:GetWidth() or 1024, UIParent:GetHeight() or 768;
+  local w, h = M.W * scale, M.H * scale;
   if (not x) then x, y = savedPos(); end
-  if (not x) then x, y = math.floor((uiW - M.W) / 2), 90; end
-  x = math.max(0, math.min(x, uiW - M.W));
-  y = math.max(0, math.min(y, uiH - 40));
+  if (not x) then x, y = math.floor((uiW - w) / 2), math.min(90, math.floor((uiH - h) / 2)); end
+  x = math.max(0, math.min(x, uiW - w));
+  y = math.max(0, math.min(y, uiH - 40 * scale));
   M.x, M.y = x, y;
+  if (frame:GetScale() ~= scale) then frame:SetScale(scale); end
   frame:ClearAllAnchors();
-  frame:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", x, y);
+  frame:SetAnchor("TOPLEFT", "TOPLEFT", "UIParent", x / scale, y / scale);
+end
+
+-- The scale setting changed: the window keeps its top left corner.
+function M.ApplyScale()
+  if (UMMModernFrame:IsVisible()) then
+    M.PlaceWindow(M.x, M.y);
+    M.HideTip();
+  end
 end
 
 local function titleDown(f, key)
@@ -673,23 +695,19 @@ local function buildFrame()
   end };
   UMMModernLater.ummOn = { update = runLater };
 
-  local logo = M.Texture(f, "ARTWORK", "Mail");
-  M.Place(logo, f, 10, 8, 22, 22);
-  local title = M.Label(f, 15, C.head, "LEFT");
-  M.Place(title, f, 38, 2, 80, 34);
-  title:SetText(UMM_M_TITLE);
-
+  -- the tabs from the left edge, then the gold on hand; the drag area is what the bar has left
   for i, key in ipairs(M.order) do
-    M.Button(getglobal("UMMModernTab"..i), f, 104 + (i - 1) * 118, 6, 114, 26, {
+    M.Button(getglobal("UMMModernTab"..i), f, TAB_X + (i - 1) * TAB_STEP, 6, TAB_W, 26, {
       text = getglobal(TAB_TEXT[key]), icon = TAB_ICONS[key], iconSize = 16, size = 13,
       click = function() M.ShowPage(key); end,
     });
   end
 
+  local goldX = TAB_X + table.getn(M.order) * TAB_STEP + 10;
   local coin = M.Texture(f, "ARTWORK", "Gold");
-  M.Place(coin, f, 582, 10, 18, 18);
-  M.gold = M.Label(f, 13, C.gold, "RIGHT");
-  M.Place(M.gold, f, 600, 2, 92, 34);
+  M.Place(coin, f, goldX, 10, 18, 18);
+  M.gold = M.Label(f, 13, C.gold, "LEFT");
+  M.Place(M.gold, f, goldX + 22, 2, 120, 34);
   UMMModernTitle.ummTip = { UMM_M_ONHAND, UMM_M_DRAG_TIP };
 
   M.Button(UMMModernGear, f, M.W - 60, 8, 24, 22, { icon = "gear", iconSize = 16, style = "quiet",

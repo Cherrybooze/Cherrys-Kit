@@ -18,7 +18,7 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 
 ## Recent changes
 
-- **7.0.1-ck14**: a new mail window, on by default; **Classic mail window** in `/umm` switches back, without Reload UI. The **Inbox** filters by gold, items, diamonds, unread, sender and search, and never reads a mail on its own, so unread mails keep their time. **Compose** sends one mail or many to one name: long text in numbered parts, up to 10 items dropped on **+**, and gold rows filled from the gold mails in the inbox, so 7 gold caps can go to 7 characters in one Send. **Mass send** also marks by name and by category, and **Activity** lists what went out this session.
+- **7.0.1-ck14**: a new mail window, on by default, with its own scale setting; **Classic mail window** in `/umm` switches back, without Reload UI. The **Inbox** filters by gold, items, diamonds, unread, sender and search, and never reads a mail on its own, so unread mails keep their time. **Compose** sends one mail or many to one name: long text in numbered parts, up to 10 items dropped on **+**, and gold rows filled from the gold mails in the inbox, so 7 gold caps can go to 7 characters in one Send. **Mass send** also marks by name and by category, and **Activity** lists what went out this session. Recently mailed names are kept per server.
 - **7.0.1-ck13**: **Compose** shows your recently sent recipients as the first name column, before **Characters** and **Friends**. In a guild, the window widens a little on Compose so **Guildies** fit too. **Mass Send Items** gets **Use last** too, and marked items keep their marks when the game updates your bags. Compose keeps the name in **To** across tabs until **Reset**, and clicking into a filled **To** selects the whole name.
 - **7.0.1-ck12**: mass send no longer stops with "no longer in that bag slot" on an item that never moved, such as one you just bought. **/umm trace** shows both links of any mail it skips.
 
@@ -37,13 +37,13 @@ New in the Cherry's Kit version:
 - **Send fast or Send safely**: under 40 mails there is one Send button (fast). From 40 mails you choose: *Send fast* (quick pace, stops at the first failure) or *Send safely* (paced, with a short pause every 20 mails). C.O.D. mails always go the safe way. A **Stop** button stops after the current mail; unsent items stay marked.
 - **Drag a box to select items** across all six bag tabs. Ctrl+drag or Shift+drag adds to what you marked, and Escape or right-click cancels. **Ctrl+click** a marked item to unmark its whole group.
 - **Bound items in red**, also when several are marked; they are skipped with "(N bound, not sent)".
-- **History tab**: your last 20 recipients, newest first, shared by all your characters. Click a name to start a mail to them. A **Recently sent** list beside Mass Send Items shows the same names: click one to fill the mass-send To and keep your marked items.
+- **History tab**: your last 20 recipients on this server, newest first, shared by your characters there. Click a name to start a mail to them. A **Recently sent** list beside Mass Send Items shows the same names: click one to fill the mass-send To and keep your marked items.
 - **Mail shortcuts** (on by default): **Use last** beside To fills the last recipient you mailed successfully, and two gold buttons under Send Gold fill amounts you choose (100,000 and 1,000,000 to start with; change them in `/umm`).
 - **Names from chat**: with the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To** (Compose, or Mass Send Items while that tab is open).
 - **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, mail shortcuts and gold presets, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
 - Faster bag handling (the bag list is no longer rebuilt on every bag change), a faster loading screen, and almost no work while the mailbox is closed.
 
-History, the last recipient and the gold presets are kept in the shared `SaveVariables.lua` (as `UMMConfig`), so every character on this PC sees them.
+History, the last recipient and the gold presets are kept in the shared `SaveVariables.lua` (as `UMMConfig`), so every character on this PC sees them (history and the last recipient for its own server).
 
 **Please help test:** after a big mass send, `/umm trace` shows what happened. If sending waits forever, run `/umm x` with an item in the send slot and send the output; `/umm slotcheck off` is the workaround. The drag box, the History and Recently sent lists, the gold buttons next to the game's money confirmation, history across characters and the new mail window still need checking in game. If the new window misbehaves, `/umm ui classic` brings back the classic one.
 
@@ -62,6 +62,8 @@ History, the last recipient and the gold presets are kept in the shared `SaveVar
 - `/umm shortcuts on|off`: Use last and gold buttons (default on)
 - `/umm gold <amount1> <amount2>`: save both shared gold presets
 - `/umm ui modern|classic`: which mail window a mailbox opens (default modern)
+- `/umm scale <0.7-1.5>`: size of the modern mail window (default 1)
+- `/umm namelist on|off`: the name list opens by itself in To fields (default on)
 - `/umm sound`: new-mail sound on or off
 - `/umm reset`: forget your saved characters
 

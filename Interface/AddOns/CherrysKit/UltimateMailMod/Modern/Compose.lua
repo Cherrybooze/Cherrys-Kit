@@ -17,13 +17,13 @@ M.Default("UMM_M_CO_TO", "To");
 M.Default("UMM_M_CO_TO_HINT", "Name");
 M.Default("UMM_M_CO_PICK_TIP", "Names: recently mailed, your characters, friends, guild.");
 M.Default("UMM_M_CO_LAST", "Use last");
-M.Default("UMM_M_CO_LAST_TIP", "Puts the last name you mailed in To. Shared across your characters.");
+M.Default("UMM_M_CO_LAST_TIP", "Puts the last name you mailed on this server in To. Shared by your characters there.");
 M.Default("UMM_M_CO_SUBJECT", "Subject");
 M.Default("UMM_M_CO_SUBJECT_HINT", "Item mails use the item's name when this is empty");
 M.Default("UMM_M_CO_BODY_HINT", "Text. Longer than one mail holds? It goes out in numbered parts.");
 M.Default("UMM_M_CO_COUNT", "%s / 2,000");
 M.Default("UMM_M_CO_COUNT_PARTS", "%s letters: %d mails, numbered in the subject");
-M.Default("UMM_M_CO_ITEMS", "Items: each goes in its own mail to the same name. Drop items on +.");
+M.Default("UMM_M_CO_ITEMS", "Items");
 M.Default("UMM_M_CO_SLOT_TIP", "Click to take it out of this mail.");
 M.Default("UMM_M_CO_ADD", "Add an item");
 M.Default("UMM_M_CO_ADD_TIP", "Drop an item from your bags here (or click here while holding one). It goes in its own mail to the same name, with the same subject.");
@@ -85,7 +85,10 @@ M.Default("UMM_M_RV_PART", "  + text %d/%d");
 M.Default("UMM_M_RV_CODN", "  C.O.D. %s");
 
 local SLOTS, GOLD_ROWS = 10, 8;
-local SLOT, SLOT_GAP, SLOT_Y = 38, 42, 252;
+-- The item row sits below the name list (it opens under To and ends at 272), so all of the row,
+-- C.O.D. and its price stay in reach while the list is open.
+local SLOT, SLOT_GAP, SLOT_X, SLOT_Y = 38, 42, 54, 282;
+local COD_Y = SLOT_Y + SLOT + 8;
 local ROWS_Y, ROW_STEP = 128, 28;
 local REVIEW_LINES = 14;
 
@@ -97,20 +100,29 @@ local reviewPlan, reviewOffset = nil, 0;
 local ui = {};
 local slots, goldRow, goldTo, goldAmount, goldRemove = {}, {}, {}, {}, {};
 local lastPlan = nil;
+local autoSubject = nil;  -- the subject as this page filled it in (nil: empty or typed by the player)
+local firstKind = nil;    -- "item" or "gold": which came first, for that subject
+local subjectEmptied = false;  -- the player emptied the subject: it fills in again once they leave it
+local itemNote = nil;     -- the status line's last word on an item that could not go in
 
 local function trim(text)
   return string.match(text or "", "^%s*(.-)%s*$") or "";
 end
 
 local function readForm()
+  local subject = UMMModernComposeSubject:GetText() or "";
   local form = {
     to = trim(UMMModernComposeTo:GetText()),
-    subject = UMMModernComposeSubject:GetText() or "",
+    subject = subject,
     body = UMMModernComposeBody:GetText() or "",
     items = items,
     cod = 0,
     gold = {},
   };
+  if (autoSubject and subject == autoSubject) then
+    -- filled in from the first item or gold: item and gold mails still say what each one holds
+    form.subject, form.autoSubject = "", subject;
+  end
   if (codOn) then form.cod = M.GoldOf(UMMModernComposeCODAmount) or 0; end
   for i = 1, rowCount do
     local amount = M.GoldOf(goldAmount[i]);
@@ -189,7 +201,7 @@ local function drawSlots()
     end
   end
   if (n < SLOTS) then
-    M.Place(UMMModernComposeAdd, Page.frame, 8 + n * SLOT_GAP, SLOT_Y, SLOT, SLOT);
+    M.Place(UMMModernComposeAdd, Page.frame, SLOT_X + n * SLOT_GAP, SLOT_Y, SLOT, SLOT);
     M.Enable(UMMModernComposeAdd, not sending);
     UMMModernComposeAdd:Show();
   else
@@ -287,8 +299,41 @@ local function drawPlan(plan, form)
   M.Enable(UMMModernComposeReset, not sending);
 end
 
+-- The first item or gold amount put in names the mail while the subject is empty or still the one
+-- filled in here; a subject you type stays.
+local function subjectFromForm()
+  local item = items[1];
+  local gold = nil;
+  for i = 1, rowCount do
+    local amount = M.GoldOf(goldAmount[i]);
+    if (amount) then gold = amount; break; end
+  end
+  if (not item and not gold) then
+    firstKind = nil;
+    return "";
+  end
+  if (firstKind == "item" and not item) or (firstKind == "gold" and not gold) or not firstKind then
+    firstKind = item and "item" or "gold";
+  end
+  if (firstKind == "item") then return P.ItemSubject(item); end
+  return (UMM_COMPOSER_AUTOSUBJECT or "Money: ")..M.Gold(gold);
+end
+
+local function fillSubject()
+  local box = UMMModernComposeSubject;
+  local current = box:GetText() or "";
+  if (current ~= "" and current ~= autoSubject) or (current == "" and subjectEmptied) then
+    autoSubject = nil;
+    return;
+  end
+  local text = string.sub(subjectFromForm(), 1, P.SUBJECT_LIMIT);
+  if (text ~= current) then M.SetEditText(box, text); end
+  autoSubject = (text ~= "") and text or nil;
+end
+
 local function updatePlan()
   if (not Page.frame:IsVisible()) then return; end
+  fillSubject();
   local form = readForm();
   drawPlan(compute(form), form);
 end
@@ -311,13 +356,18 @@ local function itemOf(slot)
   return entry;
 end
 
+local function itemStatus(text, rgb)
+  itemNote = text;
+  M.Status(text, rgb);
+end
+
 -- The item on the cursor goes in slot k (k past the last one adds a mail).
 local function addFromCursor(k)
   if (sending or not UMMCursorHasItem()) then return; end
   local slot = tonumber(GetCursorItemInfo and GetCursorItemInfo());
   if (not slot) then return; end
   if (slot == 0) then
-    M.Status(UMM_M_CO_BAGERR, C.bad);
+    itemStatus(UMM_M_CO_BAGERR, C.bad);
     return;
   end
   local entry = itemOf(slot);
@@ -325,23 +375,26 @@ local function addFromCursor(k)
   PickupBagItem(slot);   -- the item goes back into its bag slot; the mail only remembers the slot
   for _, item in ipairs(items) do
     if (item.index == slot) then
-      M.Status(string.format(UMM_M_CO_TWICE, entry.Name or "?"), C.warn);
+      itemStatus(string.format(UMM_M_CO_TWICE, entry.Name or "?"), C.warn);
       return;
     end
   end
   if (UMMBagManager:IsBound(entry)) then
-    M.Status(string.format(UMM_M_CO_BOUND, entry.Name or "?"), C.bad);
+    itemStatus(string.format(UMM_M_CO_BOUND, entry.Name or "?"), C.bad);
     return;
   end
   local item = { index = slot, link = entry.Link, name = entry.Name, count = entry.Count or 1, icon = entry.Icon };
   if (items[k]) then
     items[k] = item;
   elseif (table.getn(items) >= SLOTS) then
-    M.Status(UMM_M_CO_FULL, C.warn);
+    itemStatus(UMM_M_CO_FULL, C.warn);
     return;
   else
     table.insert(items, item);
   end
+  -- an item went in: a line about one that could not is old news
+  if (itemNote and M.status:GetText() == itemNote) then M.Status(""); end
+  itemNote = nil;
   drawSlots();
   changed();
 end
@@ -375,7 +428,7 @@ local function checkItems()
     local link = GetBagItemLink(item.index);
     if (not link or not UMMSameItem(link, nil, item.link, item.name)) then
       table.remove(items, k);
-      M.Status(string.format(UMM_M_CO_GONE, item.name or "?"), C.warn);
+      itemStatus(string.format(UMM_M_CO_GONE, item.name or "?"), C.warn);
       gone = true;
     else
       local entry = UMMBagManager.BySlot[item.index];
@@ -584,6 +637,7 @@ end
 local function clearForm(keepTo)
   if (not keepTo) then M.SetEditText(UMMModernComposeTo, ""); end
   M.SetEditText(UMMModernComposeSubject, "");
+  autoSubject, firstKind, subjectEmptied = nil, nil, false;
   M.SetEditText(UMMModernComposeBody, "");
   items = {};
   codOn = false;
@@ -656,7 +710,7 @@ end
 
 local function nameBox(e, onDone)
   e.ummFocus = function(box)
-    K.Open(box, function(b) changed(); onDone(b); end);
+    if (UMMAutoNameList()) then K.Open(box, function(b) changed(); onDone(b); end); end
   end;
   e.ummEnterKey = function(box)
     local first = K.IsOpenFor(box) and K.First();
@@ -721,9 +775,19 @@ local function buildMail()
   ui.subjectLabel = M.Label(f, 12, C.dim, "LEFT");
   M.Place(ui.subjectLabel, f, 8, 34, 50, 22);
   ui.subjectLabel:SetText(UMM_M_CO_SUBJECT);
-  M.Edit(UMMModernComposeSubject, f, 62, 34, 408, 22, { hint = UMM_M_CO_SUBJECT_HINT, text = changed,
-    nextBox = UMMModernComposeBody });
+  M.Edit(UMMModernComposeSubject, f, 62, 34, 408, 22, { hint = UMM_M_CO_SUBJECT_HINT, nextBox = UMMModernComposeBody,
+    text = function(box)
+      subjectEmptied = (box:GetText() or "") == "";
+      changed();
+    end });
   UMMModernComposeSubject.ummEnterKey = function() UMMModernComposeBody:SetFocus(); end;
+  -- the subject filled in from an item or gold is selected on the way in, so typing replaces it
+  UMMModernComposeSubject.ummFocus = function(box)
+    if (autoSubject and (box:GetText() or "") == autoSubject) then box:HighlightText(); end
+  end;
+  UMMModernComposeSubject.ummUnfocus = function(box)
+    if (subjectEmptied) then subjectEmptied = false; changed(); end
+  end;
 
   M.Edit(UMMModernComposeBody, f, 8, 62, 462, 150, { hint = UMM_M_CO_BODY_HINT, panel = true, text = function()
     drawCounter();
@@ -733,13 +797,13 @@ local function buildMail()
   ui.counter = M.Label(f, 11, C.dim, "RIGHT");
   M.Place(ui.counter, f, 8, 214, 462, 16);
 
-  ui.itemsLabel = M.Label(f, 11, C.dim, "LEFT");
-  M.Place(ui.itemsLabel, f, 8, 234, 462, 16);
+  ui.itemsLabel = M.Label(f, 12, C.dim, "LEFT");
+  M.Place(ui.itemsLabel, f, 8, SLOT_Y, SLOT_X - 10, SLOT);
   ui.itemsLabel:SetText(UMM_M_CO_ITEMS);
   for k = 1, SLOTS do
     local b = getglobal("UMMModernComposeSlot"..k);
     slots[k] = b;
-    M.Button(b, f, 8 + (k - 1) * SLOT_GAP, SLOT_Y, SLOT, SLOT, { style = "choice", click = function(btn)
+    M.Button(b, f, SLOT_X + (k - 1) * SLOT_GAP, SLOT_Y, SLOT, SLOT, { style = "choice", click = function(btn)
       if (UMMCursorHasItem()) then
         addFromCursor(btn.ummSlot);
       elseif (not btn.ummCarry) then
@@ -768,7 +832,7 @@ local function buildMail()
     end;
     b:Hide();
   end
-  M.Button(UMMModernComposeAdd, f, 8, SLOT_Y, SLOT, SLOT, { icon = "Plus", iconSize = 18, style = "quiet",
+  M.Button(UMMModernComposeAdd, f, SLOT_X, SLOT_Y, SLOT, SLOT, { icon = "Plus", iconSize = 18, style = "quiet",
     tip = { UMM_M_CO_ADD, UMM_M_CO_ADD_TIP }, click = function(btn)
       addFromCursor(table.getn(items) + 1);
       btn.ummCarry = false;
@@ -776,14 +840,14 @@ local function buildMail()
   UMMModernComposeAdd.ummSlot = nil;   -- past the last item: a new mail
   dropTarget(UMMModernComposeAdd);
 
-  M.Button(UMMModernComposeCOD, f, 8, 298, 84, 22, { text = UMM_M_CO_COD, icon = "CheckboxOff", iconSize = 14, size = 12,
+  M.Button(UMMModernComposeCOD, f, 8, COD_Y, 84, 22, { text = UMM_M_CO_COD, icon = "CheckboxOff", iconSize = 14, size = 12,
     style = "quiet", tip = { UMM_M_CO_COD, UMM_M_CO_COD_TIP }, click = function()
       codOn = not codOn;
       M.ButtonIcon(UMMModernComposeCOD, codOn and "CheckboxOn" or "CheckboxOff");
       if (codOn) then UMMModernComposeCODAmount:SetFocus(); end
       changed();
     end });
-  M.Edit(UMMModernComposeCODAmount, f, 100, 298, 130, 22, { gold = true, hint = UMM_M_CO_COD_HINT, text = function()
+  M.Edit(UMMModernComposeCODAmount, f, 100, COD_Y, 130, 22, { gold = true, hint = UMM_M_CO_COD_HINT, text = function()
     if (not codOn and (UMMModernComposeCODAmount:GetText() or "") ~= "") then
       codOn = true;
       M.ButtonIcon(UMMModernComposeCOD, "CheckboxOn");
@@ -792,9 +856,9 @@ local function buildMail()
   end });
 
   ui.plan = M.Label(f, 12, C.text, "LEFT");
-  M.Place(ui.plan, f, 8, 330, 462, 18);
+  M.Place(ui.plan, f, 8, COD_Y + 28, 462, 18);
   ui.note = M.Label(f, 11, C.dim, "LEFT");
-  M.Place(ui.note, f, 8, 350, 462, 16);
+  M.Place(ui.note, f, 8, COD_Y + 46, 462, 16);
 
   M.Button(UMMModernComposeReset, f, 8, 394, 86, 24, { text = UMM_M_CO_RESET, icon = "Broom", iconSize = 14, size = 12,
     style = "quiet", tip = { UMM_M_CO_RESET, UMM_M_CO_RESET_TIP }, click = reset });

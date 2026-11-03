@@ -396,6 +396,8 @@ local function ShowHelp()
   UMMPrompt("/umm slotcheck on|off : wait for the item to show in the send slot (default on)");
   UMMPrompt("/umm shortcuts on|off : Use last and gold preset buttons (default on)");
   UMMPrompt("/umm ui modern|classic : which mail window a mailbox opens (default modern)");
+  UMMPrompt("/umm scale <0.7 - 1.5> : size of the modern mail window (default 1)");
+  UMMPrompt("/umm namelist on|off : the name list opens by itself in To fields (default on)");
   UMMPrompt("/umm gold <amount1> <amount2> : set both shared gold presets");
   PrintPacing();
 end
@@ -506,6 +508,21 @@ SlashCmdList["UMM"] = function(editBox, msg)
   elseif (cmd == "ui") then
     if (arg1 == "modern" or arg1 == "classic") then UMMSetUIStyle(arg1); end
     UMMPrompt(string.format(UMM_UI_NOW, UMMUIStyle() == "classic" and UMM_UI_CLASSIC or UMM_UI_MODERN).."  (/umm ui modern|classic)");
+    if (type(UMMSettingsUI_Refresh) == "function") then UMMSettingsUI_Refresh(); end
+  elseif (cmd == "scale") then
+    if (arg1 ~= "") then
+      -- 1,2 as well as 1.2
+      if (SetNumber("WindowScale", (string.gsub(arg1, ",", ".")), UMM_WINDOW_SCALE_LOW, UMM_WINDOW_SCALE_HIGH)) then
+        UMMApplyWindowScale();
+      else
+        UMMPrompt("/umm scale <0.7 - 1.5>");
+      end
+    end
+    UMMPrompt(string.format("mail window scale: %.2f (/umm scale 0.7 - 1.5)", UMMWindowScale()));
+    if (type(UMMSettingsUI_Refresh) == "function") then UMMSettingsUI_Refresh(); end
+  elseif (cmd == "namelist") then
+    if (arg1 == "on" or arg1 == "off") then UMMSettings:Set("AutoNameList", arg1 == "on"); end
+    UMMPrompt("name list opens by itself: "..(UMMAutoNameList() and "on" or "off").." (/umm namelist on|off)");
     if (type(UMMSettingsUI_Refresh) == "function") then UMMSettingsUI_Refresh(); end
   elseif (cmd == "x" or cmd == "probe") then
     Probe();

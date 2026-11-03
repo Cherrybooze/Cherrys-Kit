@@ -784,18 +784,20 @@ local function buildTools()
   summary = M.Label(f, 11, C.dim, "LEFT");
   M.Place(summary, f, LIST_X + 2, LIST_Y + BAR_H + 3, LIST_W, 18);
 
+  -- Take, then the Delete emptied toggle beside it: a click that misses Take must not return
+  -- mail, so Return sits at the far end
   local y = LIST_Y + BAR_H + 24;
   M.Button(UMMModernInboxTake, f, LIST_X, y, 104, 24, { text = UMM_M_RD_TAKE, icon = "Bag", iconSize = 14, size = 12,
     style = "action", tip = { UMM_M_RD_TAKE, UMM_M_IN_TAKE_TIP }, click = function() run("take"); end });
-  M.Button(UMMModernInboxReturn, f, LIST_X + 108, y, 98, 24, { text = UMM_M_RD_RETURN, icon = "Reload", iconSize = 14,
-    size = 12, style = "quiet", tip = { UMM_M_RD_RETURN, UMM_M_IN_RETURN_TIP }, click = function() run("return"); end });
-  M.Button(UMMModernInboxDelete, f, LIST_X + 210, y, 98, 24, { text = UMM_M_RD_DELETE, icon = "Trash", iconSize = 14,
-    size = 12, style = "danger", tip = { UMM_M_RD_DELETE, UMM_M_IN_DELETE_TIP }, click = function() run("delete"); end });
-  M.Button(UMMModernInboxClean, f, LIST_X + 312, y, 134, 24, { text = UMM_M_IN_CLEAN, icon = "CheckboxOn", iconSize = 14,
+  M.Button(UMMModernInboxClean, f, LIST_X + 108, y, 134, 24, { text = UMM_M_IN_CLEAN, icon = "CheckboxOn", iconSize = 14,
     size = 12, style = "quiet", tip = { UMM_M_IN_CLEAN, UMM_M_IN_CLEAN_TIP }, click = function()
       UMMSettings:Set("CheckTakeDeleteEmpty", UMMSettings:Get("CheckTakeDeleteEmpty") == false);
       drawButtons();
     end });
+  M.Button(UMMModernInboxDelete, f, LIST_X + 246, y, 98, 24, { text = UMM_M_RD_DELETE, icon = "Trash", iconSize = 14,
+    size = 12, style = "danger", tip = { UMM_M_RD_DELETE, UMM_M_IN_DELETE_TIP }, click = function() run("delete"); end });
+  M.Button(UMMModernInboxReturn, f, LIST_X + 348, y, 98, 24, { text = UMM_M_RD_RETURN, icon = "Reload", iconSize = 14,
+    size = 12, style = "quiet", tip = { UMM_M_RD_RETURN, UMM_M_IN_RETURN_TIP }, click = function() run("return"); end });
 end
 
 local function buildReader()

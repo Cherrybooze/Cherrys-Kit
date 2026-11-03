@@ -8,7 +8,9 @@ local ROWS = {
   { "BatchSize",  "Safely: pause after ... mails", 5, 0,  200, "%d" },
   { "BatchPause", "Safely: pause length (s)",           1,   0,   120, "%d" },
   { "MaxRetries", "Safely: tries again",      1,   0,   10,  "%d" },
+  { "WindowScale", UMM_SETTINGS_SCALE,       0.05, UMM_WINDOW_SCALE_LOW, UMM_WINDOW_SCALE_HIGH, "%.2f" },
 };
+local SCALE_ROW = 6;
 
 -- check boxes: label, read, write
 local CHECKS = {
@@ -34,6 +36,9 @@ local CHECKS = {
       UMMSetUIStyle(on and "classic" or "modern");
       UMMPrompt(string.format(UMM_UI_NOW, on and UMM_UI_CLASSIC or UMM_UI_MODERN));
     end },
+  { UMM_SETTINGS_AUTOLIST,
+    function() return UMMAutoNameList() end,
+    function(on) UMMSettings:Set("AutoNameList", on and true or false) end },
 };
 
 local goldDirty, refreshingGold = false, false;
@@ -169,12 +174,25 @@ function UMMSettingsUI_ShortcutTip(this)
   GameTooltip:Show();
 end
 
-function UMMSettingsUI_StyleTip(this)
+local function tip(this, title, text)
   if (not GameTooltip) then return; end
   GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT", 0, 0);
-  GameTooltip:SetText(UMM_SETTINGS_CLASSICUI);
-  GameTooltip:AddLine(UMM_SETTINGS_TIP_CLASSICUI, 1, 1, 1);
+  GameTooltip:SetText(title);
+  GameTooltip:AddLine(text, 1, 1, 1);
   GameTooltip:Show();
+end
+
+function UMMSettingsUI_StyleTip(this)
+  tip(this, UMM_SETTINGS_CLASSICUI, UMM_SETTINGS_TIP_CLASSICUI);
+end
+
+function UMMSettingsUI_ListTip(this)
+  tip(this, UMM_SETTINGS_AUTOLIST, UMM_SETTINGS_TIP_AUTOLIST);
+end
+
+-- Number rows with a tooltip: the window scale only.
+function UMMSettingsUI_RowTip(this)
+  if (this:GetID() == SCALE_ROW) then tip(this, UMM_SETTINGS_SCALE, UMM_SETTINGS_TIP_SCALE); end
 end
 
 function UMMSettingsUI_Step(i, direction)
@@ -184,6 +202,7 @@ function UMMSettingsUI_Step(i, direction)
   value = math.max(row[4], math.min(row[5], value));
   UMMSettings:Set(row[1], value);
   UMMSettingsUI_Refresh();
+  if (i == SCALE_ROW) then UMMApplyWindowScale(); end
 end
 
 function UMMSettingsUI_Check(i, checked)
@@ -213,6 +232,8 @@ function UMMSettingsUI_Button(action)
     end
     UMMSettings:Set("NoSlotCheck", false);
     UMMSettings:Set("MailShortcuts", true);
+    UMMSettings:Set("AutoNameList", true);
+    UMMApplyWindowScale();
     UMMSettings:SetGoldPresets(UMM_GOLD_PRESET_DEFAULTS[1], UMM_GOLD_PRESET_DEFAULTS[2]);
     UMMPrompt("send settings back to defaults");
     UMMSettingsUI_Refresh(true);

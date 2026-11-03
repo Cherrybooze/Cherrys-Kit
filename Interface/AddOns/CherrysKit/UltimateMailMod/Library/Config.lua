@@ -45,6 +45,23 @@ local function RecipientHistory(history, latest)
   return result;
 end
 
+-- The server this character plays on, for the names you mailed: a character name exists on its own
+-- server only. The login screen leaves it in LOGCHAR_SERVER for a client that can't say in game
+-- (as Global Bank reads it). "?" while neither knows.
+function UMMServerKey()
+  local name = nil;
+  if (type(GetServerName) == "function") then
+    local ok, value = pcall(GetServerName);
+    if (ok) then name = value; end
+  end
+  if (type(name) ~= "string" or name == "") then name = LOGCHAR_SERVER; end
+  if (type(name) ~= "string") then return "?"; end
+  name = string.gsub(string.gsub(name, "|c%x%x%x%x%x%x%x%x", ""), "|r", "");
+  name = string.match(name, "^%s*(.-)%s*$") or "";
+  if (name == "") then return "?"; end
+  return name;
+end
+
 local function RefreshShortcuts()
   if (type(UMMRefreshMailShortcuts) == "function") then UMMRefreshMailShortcuts(); end
 end
@@ -86,7 +103,22 @@ UMMSettings = {
       local key = "GoldPreset"..i;
       UMMConfig.Settings[key] = UMMGoldAmount(UMMConfig.Settings[key]) or UMM_GOLD_PRESET_DEFAULTS[i];
     end
-    UMMConfig.RecipientHistory = RecipientHistory(UMMConfig.RecipientHistory);
+    -- names you mailed, one list per server (RecentByServer[server] = names, newest first)
+    local byServer = {};
+    if (type(UMMConfig.RecentByServer) == "table") then
+      for server, names in pairs(UMMConfig.RecentByServer) do
+        if (type(server) == "string" and server ~= "") then
+          names = RecipientHistory(names);
+          if (#names > 0) then byServer[server] = names; end
+        end
+      end
+    end
+    UMMConfig.RecentByServer = byServer;
+    -- the one list of every server from before 7.0.1-ck14: the first server that asks takes it over
+    if (UMMConfig.RecipientHistory ~= nil) then
+      local old = RecipientHistory(UMMConfig.RecipientHistory);
+      UMMConfig.RecipientHistory = (#old > 0) and old or nil;
+    end
     if (UMMConfig.NewMail == nil) then
       UMMConfig.NewMail = {};
     end
@@ -116,8 +148,23 @@ UMMSettings = {
     return true;
   end;
 
+  -- The names mailed from this server, newest first (at most 20).
   History = function(self)
-    return type(UMMConfig) == "table" and type(UMMConfig.RecipientHistory) == "table" and UMMConfig.RecipientHistory or {};
+    if (type(UMMConfig) ~= "table") then return {}; end
+    local server = UMMServerKey();
+    local byServer = UMMConfig.RecentByServer;
+    local names = type(byServer) == "table" and byServer[server] or nil;
+    if (type(names) == "table") then return names; end
+    if (type(UMMConfig.RecipientHistory) == "table") then
+      if (server == "?") then return UMMConfig.RecipientHistory; end
+      -- the list kept for every server before: it stays with the first server known
+      if (type(byServer) ~= "table") then byServer = {}; UMMConfig.RecentByServer = byServer; end
+      byServer[server] = RecipientHistory(UMMConfig.RecipientHistory);
+      UMMConfig.RecipientHistory = nil;
+      self:Save();
+      return byServer[server];
+    end
+    return {};
   end;
 
   LastRecipient = function(self)
@@ -130,7 +177,8 @@ UMMSettings = {
     if (type(UMMConfig) ~= "table") then self:Init(); end
     local history = self:History();
     if (history[1] == recipient) then return; end
-    UMMConfig.RecipientHistory = RecipientHistory(history, recipient);
+    if (type(UMMConfig.RecentByServer) ~= "table") then UMMConfig.RecentByServer = {}; end
+    UMMConfig.RecentByServer[UMMServerKey()] = RecipientHistory(history, recipient);
     self:Save();
     RefreshShortcuts();
   end;
