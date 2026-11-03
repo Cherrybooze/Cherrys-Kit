@@ -124,22 +124,29 @@ class CharacterRowsTest(unittest.TestCase):
 
     def test_modern_gold_has_a_coin_and_three_lines(self):
         ui = shown(True)
-        text, tex, visible = cell(ui, self.ROW % (1, 3))
+        text, tex, visible = cell(ui, self.ROW % (1, 4))
         self.assertEqual(text, "|cffffd35e1,234,567|r\n|cff8ca6b8Charges 12|r\n|cff61758a2026-11-02 23:08|r")
         self.assertEqual(tex, MEDIA + "coin")
         self.assertTrue(visible)
-        coin = ui.state(ui.g(self.ROW % (1, 3) + "_tex"))
+        coin = ui.state(ui.g(self.ROW % (1, 4) + "_tex"))
         self.assertEqual((coin.w, coin.h), (15, 15))
         # A server recorded but no transmutor record: none, not unknown
-        self.assertEqual(cell(ui, self.ROW % (2, 3))[0].split("\n")[1], "|cff8ca6b8Charges 0|r")
+        self.assertEqual(cell(ui, self.ROW % (2, 4))[0].split("\n")[1], "|cff8ca6b8Charges 0|r")
 
     def test_modern_names_classes_and_zone(self):
         ui = shown(True)
-        self.assertEqual(cell(ui, self.ROW % (2, 2))[0], "Cherrybooze |cff8ca6b8(7)|r\n"
+        self.assertEqual(cell(ui, self.ROW % (2, 3))[0], "Cherrybooze |cff8ca6b8(7)|r\n"
                          "|cff8ca6b8Priest 102 / Druid 100|r\n|cff61758aObsidian Stronghold|r")
-        self.assertEqual(cell(ui, self.ROW % (1, 1))[1], "interface/widgeticons/classicon_CHAMPION_WARDEN.tga")
-        self.assertEqual(cell(ui, self.ROW % (3, 1))[1], MEDIA + "plus")
-        self.assertEqual(cell(ui, self.ROW % (3, 2))[0], "Create")
+        self.assertEqual(cell(ui, self.ROW % (1, 2))[1], "interface/widgeticons/classicon_CHAMPION_WARDEN.tga")
+        self.assertEqual(cell(ui, self.ROW % (3, 2))[1], MEDIA + "plus")
+        self.assertEqual(cell(ui, self.ROW % (3, 3))[0], "Create")
+
+    def test_modern_rows_are_numbered_from_one(self):
+        ui = shown(True)
+        self.assertEqual([cell(ui, self.ROW % (i, 1))[0] for i in (1, 2, 3)], ["1", "2", ""])
+        color = ui.state(ui.state(ui.g(self.ROW % (1, 1))).parts.normalText).color
+        cyan = ui.lua.eval("LoginLook.color.cyan")
+        self.assertEqual([round(color[j], 2) for j in (1, 2, 3)], [round(cyan[j], 2) for j in (1, 2, 3)])
 
     def test_modern_list_fits_its_rows(self):
         ui = shown(True)
@@ -156,8 +163,8 @@ class CharacterRowsTest(unittest.TestCase):
 
     def test_modern_without_global_bank_has_no_gold_column(self):
         ui = shown(True, before="")
-        self.assertFalse(cell(ui, self.ROW % (1, 3))[2])
-        self.assertTrue(cell(ui, self.ROW % (1, 2))[2])
+        self.assertFalse(cell(ui, self.ROW % (1, 4))[2])
+        self.assertTrue(cell(ui, self.ROW % (1, 3))[2])
 
     def test_classic_rows_are_unchanged(self):
         ui = shown(False)
@@ -174,6 +181,161 @@ class CharacterRowsTest(unittest.TestCase):
         self.assertEqual(colors[0], colors[1])  # same load, same colour
         self.assertEqual(len(set(colors)), 3)
         self.assertEqual(cell(classic, "LoginCharSelectFrame_channels_list_4_1")[1], "interface/buttons/uiindexred-normal")
+
+
+def names(table):
+    return [table[i] for i in range(1, len(table) + 1)]
+
+
+def saved_order(*order):
+    """Saved settings with this character order on Gaia"""
+    listed = ", ".join(f"'{name}'" for name in order)
+    return GLOBAL_BANK + f"""
+CherrysLoginxml_Settings = CherrysLoginxml_Settings or {{}}
+CherrysLoginxml_Settings.character_order = {{Gaia = {{{listed}}}}}
+"""
+
+
+class OrderTest(unittest.TestCase):
+    """Edit character order: arrows that change the numbers, which Next, Prev and /lnc <number> follow"""
+    ROW = "LoginCharSelectFrame_chars_list_%d_%d"
+
+    def editing(self, modern=True, before=GLOBAL_BANK):
+        ui = screen(modern, before=before)
+        ui.lua.execute("login.settings.set('character_order_edit', true)")
+        return ui
+
+    def shown_names(self, ui):
+        return [ui.lua.eval(f"login.charselect.charlist[{i}].name") for i in (1, 2)]
+
+    def test_the_toggle_is_with_the_character_settings(self):
+        ui = screen(True, "server")
+        toggles = ui.lua.eval("login.settings.toggles")
+        index = next(i for i in range(1, len(toggles) + 1) if toggles[i].key == "character_order_edit")
+        self.assertEqual(toggles[index].group, 2)
+        box = ui.g(f"LoginServerFrame_options_{index}")
+        self.assertTrue(ui.visible(box))
+        self.assertEqual(ui.state(ui.state(box).parts.normalText).text, "Edit character order")
+        self.assertFalse(ui.state(box).checked)
+        ui.click(f"LoginServerFrame_options_{index}")
+        self.assertTrue(ui.lua.eval("login.config.character_order_edit"))
+        self.assertTrue(ui.lua.eval("CherrysLoginxml_Settings.character_order_edit"))
+
+    def test_arrows_show_only_while_editing(self):
+        ui = self.editing()
+        up, down = (cell(ui, self.ROW % (1, col)) for col in (5, 6))
+        self.assertEqual((up[1], down[1]), (MEDIA + "arrow_up", MEDIA + "arrow_down"))
+        # the first can't go up, the last can't go down: those arrows are dimmed
+        faint, dim = ui.lua.eval("LoginLook.color.faint"), ui.lua.eval("LoginLook.color.dim")
+        def color(row, col):
+            c = ui.state(ui.g(self.ROW % (row, col) + "_tex")).color
+            return [round(c[j], 3) for j in (1, 2, 3)]
+        self.assertEqual(color(1, 5), [round(faint[j], 3) for j in (1, 2, 3)])
+        self.assertEqual(color(1, 6), [round(dim[j], 3) for j in (1, 2, 3)])
+        self.assertEqual(color(2, 6), [round(faint[j], 3) for j in (1, 2, 3)])
+        self.assertEqual(cell(ui, self.ROW % (3, 5))[0:2], ("", None))  # none on Create
+        self.assertEqual(ui.errors() + ui.caught(), [])
+        ui.lua.execute("login.settings.set('character_order_edit', false)")
+        self.assertFalse(cell(ui, self.ROW % (1, 5))[2])
+        # off again, the screen is as it was before
+        self.assertEqual(differences(ui.snapshot(), shown(True).snapshot()), {})
+
+    def test_an_arrow_moves_the_character_and_keeps_the_order(self):
+        ui = self.editing()
+        selected = ui.lua.eval("login.charselect.selected")
+        ui.click(self.ROW % (1, 6))  # Kittycombo down
+        self.assertEqual(self.shown_names(ui), ["Cherrybooze", "Kittycombo"])
+        self.assertEqual([cell(ui, self.ROW % (i, 1))[0] for i in (1, 2)], ["1", "2"])
+        self.assertTrue(cell(ui, self.ROW % (1, 3))[0].startswith("Cherrybooze"))
+        self.assertEqual(ui.lua.eval("login.charselect.selected"), selected)  # an arrow doesn't pick
+        self.assertEqual(names(ui.lua.eval("CherrysLoginxml_Settings.character_order.Gaia")), ["Cherrybooze", "Kittycombo"])
+        self.assertEqual(names(ui.lua.eval("CherrysLoginxml_Live.values.character_order.Gaia")),
+                         ["Cherrybooze", "Kittycombo"])
+        # for LogNextChar in game: the numbers' order, and the game's slots as they are
+        self.assertEqual(names(ui.lua.eval("LOGCHAR_ORDER")), ["Cherrybooze", "Kittycombo"])
+        self.assertEqual(names(ui.lua.eval("LOGCHAR_ROSTER")), ["Kittycombo", "Cherrybooze"])
+        ui.click(self.ROW % (2, 5))  # and back up
+        self.assertEqual(self.shown_names(ui), ["Kittycombo", "Cherrybooze"])
+        self.assertEqual(ui.errors() + ui.caught(), [])
+
+    def test_shift_and_the_arrow_keys_move_the_selected_character(self):
+        ui = self.editing()
+        ui.lua.execute("SelectCharacter(1); CLIENT.shift = true; login.charselect.onKeyDown('DOWN')")
+        self.assertEqual(self.shown_names(ui), ["Cherrybooze", "Kittycombo"])
+        self.assertEqual(ui.lua.eval("login.charselect.selected"), 1)  # still Kittycombo, now number 2
+        ui.lua.execute("CLIENT.shift = false; login.charselect.onKeyDown('UP')")  # without Shift it only selects
+        self.assertEqual(self.shown_names(ui), ["Cherrybooze", "Kittycombo"])
+        self.assertEqual(ui.lua.eval("login.charselect.selected"), 2)
+
+    def test_the_saved_order_numbers_the_list_without_editing(self):
+        ui = screen(True, before=saved_order("Cherrybooze", "Kittycombo"))
+        self.assertEqual(self.shown_names(ui), ["Cherrybooze", "Kittycombo"])
+        self.assertEqual([cell(ui, self.ROW % (i, 1))[0] for i in (1, 2)], ["1", "2"])
+        self.assertFalse(cell(ui, self.ROW % (1, 5))[2])
+        self.assertEqual(names(ui.lua.eval("LOGCHAR_ORDER")), ["Cherrybooze", "Kittycombo"])
+
+    def test_other_accounts_characters_keep_their_places(self):
+        # One list per server, shared by the accounts on it: this account's two fill their own places
+        ui = self.editing(before=saved_order("Alt", "Kittycombo", "Other", "Cherrybooze"))
+        self.assertEqual(self.shown_names(ui), ["Kittycombo", "Cherrybooze"])
+        ui.click(self.ROW % (1, 6))
+        self.assertEqual(names(ui.lua.eval("login.config.character_order.Gaia")),
+                         ["Alt", "Cherrybooze", "Other", "Kittycombo"])
+        # a new character goes at the end
+        ui.lua.execute("table.insert(CLIENT.characters, {'Newbie', 0, 1, 'Warrior', 0, '', 'Pioneers Colony', nil, 0})")
+        ui.event("UPDATE_CHARACTER_SELECT_LIST")
+        self.assertEqual(ui.lua.eval("login.charselect.charlist[3].name"), "Newbie")
+        ui.click(self.ROW % (3, 5))
+        self.assertEqual(names(ui.lua.eval("login.config.character_order.Gaia")),
+                         ["Alt", "Cherrybooze", "Other", "Newbie", "Kittycombo"])
+
+    def test_use_config_lua_keeps_the_order(self):
+        ui = self.editing()
+        ui.click(self.ROW % (1, 6))
+        ui.lua.execute("login.settings.reset()")
+        self.assertFalse(ui.lua.eval("login.config.character_order_edit"))
+        self.assertEqual(self.shown_names(ui), ["Cherrybooze", "Kittycombo"])
+        self.assertEqual(names(ui.lua.eval("CherrysLoginxml_Settings.character_order.Gaia")), ["Cherrybooze", "Kittycombo"])
+
+    def test_sorting_by_level_waits_while_editing(self):
+        ui = screen(True, before=saved_order("Cherrybooze", "Kittycombo"))
+        ui.lua.execute("login.settings.set('character_sort', true)")
+        self.assertEqual(self.shown_names(ui), ["Cherrybooze", "Kittycombo"])
+        ui = screen(True)
+        ui.lua.execute("login.settings.set('character_sort', true)")
+        self.assertEqual(self.shown_names(ui), ["Cherrybooze", "Kittycombo"])  # level 102 first
+        self.assertEqual([cell(ui, self.ROW % (i, 1))[0] for i in (1, 2)], ["2", "1"])  # numbers stay
+        ui.lua.execute("login.settings.set('character_order_edit', true)")
+        self.assertEqual(self.shown_names(ui), ["Kittycombo", "Cherrybooze"])
+
+    def test_the_list_widens_for_the_arrows_and_stays_on_screen(self):
+        before = self.editing()
+        plain = shown(True)
+        width = lambda ui, name: ui.rect(ui.g(name))[2] - ui.rect(ui.g(name))[0]
+        self.assertEqual(width(before, "LoginCharSelectFrame_chars") - width(plain, "LoginCharSelectFrame_chars"), 40)
+        left, top, right, bottom = before.rect(before.g("LoginCharSelectFrame_chars"))
+        c_left, _, c_right, _ = before.rect(before.g("LoginCharSelectFrame_channels"))
+        self.assertEqual((c_left, c_right), (left, right))
+        self.assertGreaterEqual(left, 0)
+        self.assertLessEqual(right, 1280)
+
+    def test_classic_shows_numbers_and_arrows_only_while_editing(self):
+        ui = self.editing(modern=False)
+        self.assertEqual(cell(ui, self.ROW % (1, 1))[0], "1")
+        self.assertEqual(cell(ui, self.ROW % (1, 2))[1], "interface/widgeticons/classicon_CHAMPION_WARDEN.tga")
+        self.assertEqual(cell(ui, self.ROW % (1, 3))[0], "Kittycombo\nChampion 85/70 Warden\nElven Island")
+        self.assertEqual(cell(ui, self.ROW % (1, 6))[1], "interface/buttons/scrollbar-downbutton-normal")
+        self.assertEqual(cell(ui, self.ROW % (3, 2))[1], "interface/buttons/minimapplusbutton_normal")
+        ui.click(self.ROW % (1, 6))
+        self.assertEqual(self.shown_names(ui), ["Cherrybooze", "Kittycombo"])
+        ui.lua.execute("login.settings.set('character_order_edit', false)")
+        self.assertEqual(cell(ui, self.ROW % (1, 1))[1], "interface/widgeticons/classicon_PRIEST_DRUID.tga")
+        self.assertEqual(ui.errors() + ui.caught(), [])
+
+    def test_classic_off_is_the_screen_as_it_was(self):
+        ui = self.editing(modern=False)
+        ui.lua.execute("login.settings.set('character_order_edit', false)")
+        self.assertEqual(differences(ui.snapshot(), shown(False).snapshot()), {})
 
 
 class ServerRowsTest(unittest.TestCase):
@@ -201,6 +363,21 @@ class ServerRowsTest(unittest.TestCase):
         self.assertEqual(e_right - e_left, c_right - c_left)
         self.assertEqual(e_top, bottom + 6)
 
+    def test_modern_settings_on_the_left_and_servers_on_the_right(self):
+        ui = shown(True, "server")
+        s_left, s_top, s_right, s_bottom = ui.rect(ui.g("LoginServerFrame_options"))
+        l_left, _, l_right, _ = ui.rect(ui.g("LoginServerFrame_list"))
+        self.assertEqual(s_left, 10)
+        self.assertEqual(l_right, 1280 - 10)
+        self.assertLess(s_right, l_left)
+        self.assertGreaterEqual(s_top, 0)
+        self.assertLessEqual(s_bottom, 800)
+        # and Classic keeps the list in the middle, the settings beside it
+        classic = shown(False, "server")
+        left, _, right, _ = classic.rect(classic.g("LoginServerFrame_list"))
+        self.assertAlmostEqual((left + right) / 2, 640, delta=1)
+        self.assertGreater(classic.rect(classic.g("LoginServerFrame_options"))[0], right)
+
     def test_classic_rows_are_unchanged(self):
         ui = shown(False, "server")
         flag = ui.state(ui.g(self.ROW % (1, 1) + "_tex"))
@@ -220,6 +397,7 @@ class MediaTest(unittest.TestCase):
         for modern in (True, False):
             ui = screen(modern, "server")
             ui.character_screen()
+            ui.lua.execute("login.settings.set('character_order_edit', true)")  # its arrows
             ui.lua.execute("login.GOTO('charcreate')")
             ui.event("SET_LOGIN_SCREEN", "login")
             for i in range(1, len(ui.ui.objects) + 1):

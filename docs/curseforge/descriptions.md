@@ -1129,27 +1129,28 @@ Made for alts. One click, and you are on the next character without touching the
 
 ## Recent changes
 
-- **1.4.0**: Next and Prev show the slot they log into, big under their name. A modern login screen in the style of rom weakauras and Cherry's Bar, with gold beside a coin on the character screen, tidier character, server and settings panels, and new check boxes. **Modern look** in the settings panel switches back to the game's own look at once.
+- **1.4.0**: The character screen numbers your characters, and Next and Prev show the number they log into, big under their name. **Edit character order** renumbers them with arrows. A modern login screen in the style of rom weakauras and Cherry's Bar, with gold beside a coin on the character screen, tidier character, server and settings panels, and new check boxes. **Modern look** in the settings panel switches back to the game's own look at once.
 - **1.3.4**: `Install login screen.bat` asks Windows for administrator rights and installs in that window, so a protected game folder can't refuse it.
 - **1.3.3**: Next and Prev no longer stay on the character screen. The login screen waits for the whole character list before it picks, and a logout you cancel drops the queued switch. Run `Install login screen.bat` again after updating.
 
 ## Features
 
 - **Next and Prev buttons** just below the minimap, Next on top and Prev under it, the same way round as the character list. They follow the minimap at any UI scale or resolution.
-- **The slot each button goes to**, big under its name in its own colour: playing slot 4, Next shows 5 and Prev 3.
+- **The number of the character each button goes to**, big under its name in its own colour: playing number 4, Next shows 5 and Prev 3. The character screen shows the same numbers.
+- **Your own order**: **Edit character order** in the login screen's settings puts up and down arrows on the character screen to change the numbers, kept for each server. Next, Prev and `/lnc <number>` follow them.
 - **Hover to see who is next.** The tooltip names the character each button will pick.
 - **Greyed out when there is nobody to switch to**, on accounts with one character.
 - **Safe switching**: the mailbox and Ultimate Mail Mod's window close first. On the character screen, clicking a character or using the arrow keys cancels a switch, and one that can't finish within 15 seconds leaves the choice to you.
 - **Move them if you like**: unlock them in the settings window, then right-drag or Shift+drag.
 - **A row in the Cherry's Kit hub** (`/ck`), whose Settings button opens the settings window.
-- For macros, `ChangeChar(slot)` does the same as `/lnc <slot>`.
+- For macros, `ChangeChar(slot)` logs in the character in that slot, in the order the characters were created.
 
 ## Commands
 
 - `/lnc` or `/lnc next`: the next character
 - `/lpc` or `/lnc prev`: the previous character
 - `/lnc current`: log out and back in to the same character
-- `/lnc 3`: the character in slot 3, in the order the characters were created
+- `/lnc 3`: the character with number 3 on the character screen
 - `/lnc settings`: the settings window
 - `/lnc show`, `/lnc hide`: show or hide the buttons
 - `/lnc lock`, `/lnc unlock`: stop or allow moving them

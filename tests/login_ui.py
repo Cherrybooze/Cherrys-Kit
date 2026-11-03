@@ -564,7 +564,7 @@ function ChangeServerList(name) CLIENT.server = name end
 function GetSelectedRealmState() return CLIENT.realmRecord end
 function SetSelectedRealmState(on) CLIENT.realmRecord = on end
 function IsHideLoginUI() return false end
-function IsShiftKeyDown() return false end
+function IsShiftKeyDown() return CLIENT.shift == true end
 function IsAltKeyDown() return false end
 function IsCtrlKeyDown() return false end
 function GetCursorPos() return 0, 0 end

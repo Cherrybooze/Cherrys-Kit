@@ -24,7 +24,11 @@ Without the login screen installed, Next and Prev only log you out, and you pick
 
 ## Updated in 1.4.0
 
-Next and Prev show the slot they log into, big under their name in cyan: playing the character in slot 4, Next shows 5 and Prev shows 3. They take the slots from the login screen's character list, so without the login screen, or with one character, the buttons only show their names.
+The character screen numbers your characters from 1, and Next and Prev show the number they log into, big under their name in cyan: playing number 4, Next shows 5 and Prev shows 3. They take the numbers from the login screen's character list, so without the login screen, or with one character, the buttons only show their names.
+
+**Edit character order**, a new toggle with the character settings, puts an up and a down arrow on each row of the character screen. Click one, or hold Shift and press Up or Down, to move a character, and the numbers follow. Next, Prev and `/lnc <number>` go by your order. It is kept for each server and saved with the toggles; untick the toggle when you're done and the order stays. Characters on another account on the same server keep their own places. With Modern look off, the numbers only show while you edit.
+
+On the server screen, the settings now sit at the left edge and the server list at the right edge.
 
 The login screen has a new look, in the style of rom weakauras and Cherry's Bar: flat dark panels with a thin border, cyan for what you have selected, and gold for the main button. Gold on the character screen is gold, beside a coin, with the charges and the last save under it. The character, channel and server lists are as long as what is in them, the server rows show the flag and how many characters you have there beside a helmet, and the settings panel groups its toggles under headings, with new check boxes. Buttons, edit boxes and the sliders on the character creation screen match.
 
@@ -69,7 +73,7 @@ Run the same file again after updating. It never touches your own accounts, pass
 
 ## The buttons
 
-Next sits on top and Prev under it, the same way round as the character list, just below the minimap. They follow the minimap at any UI scale or resolution. Each shows the slot it will log in, big under its name, and hovering it names that character. Both grey out when the account has only one character on that server.
+Next sits on top and Prev under it, the same way round as the character list, just below the minimap. They follow the minimap at any UI scale or resolution. Each shows the number of the character it will log in, as the character screen numbers them, big under its name, and hovering it names that character. Both grey out when the account has only one character on that server.
 
 The buttons are locked until you unlock them: open **Settings** in the hub or type `/lnc settings`, choose **Unlock login next char buttons**, then right-drag (or Shift+drag) them. The same window can hide them or put them back in their default spot.
 
@@ -80,7 +84,7 @@ The buttons are locked until you unlock them: open **Settings** in the hub or ty
 | `/lnc` or `/lnc next` | Next character |
 | `/lpc` or `/lnc prev` | Previous character |
 | `/lnc current` | Log out and back in to the same character |
-| `/lnc 3` | The character in slot 3, in the order the characters were created |
+| `/lnc 3` | The character with number 3 on the character screen |
 | `/lnc settings` | Open the settings |
 | `/lnc show`, `/lnc hide` | Show or hide the buttons |
 | `/lnc lock`, `/lnc unlock` | Stop or allow moving them |
@@ -89,7 +93,7 @@ The buttons are locked until you unlock them: open **Settings** in the hub or ty
 
 Clicking a character, or using the arrow keys, on the character select screen cancels a pending switch. If a switch can't finish within 15 seconds, it gives up and leaves the choice to you.
 
-For macros, `ChangeChar(slot)` does the same as `/lnc <slot>`.
+For macros, `ChangeChar(slot)` logs in the character in that slot, in the order the characters were created, whatever their numbers.
 
 ## The login screen
 
@@ -104,7 +108,7 @@ A replacement login screen for Runes of Magic. Original project: Rom Autologin b
 
 ## Settings
 
-The on/off settings are toggle buttons to the right of the server list on the server screen. A click applies at once, and the game saves it when you log out or quit. **Use config.lua** forgets the saved toggles and goes back to the file.
+The on/off settings are toggle buttons on the server screen, at its left edge (to the right of the server list with Modern look off). A click applies at once, and the game saves it when you log out or quit. **Use config.lua** forgets the saved toggles and goes back to the file.
 
 | Toggle | Setting | Shipped | What it does |
 | --- | --- | --- | --- |
@@ -112,7 +116,8 @@ The on/off settings are toggle buttons to the right of the server list on the se
 | Log in the first character | `character_login_first` | off | Logs in the first character in the list, once after each account login |
 | Ctrl stops at character select | `character_nologin_ctrl` | on | Hold Ctrl while logging in to stop at character select anyway |
 | One click logs in a character | `character_single_click` | off | Otherwise a double-click |
-| Sort characters by level | `character_sort` | off | Otherwise in creation order |
+| Sort characters by level | `character_sort` | off | Otherwise in number order |
+| Edit character order | `character_order_edit` | off | Up and down arrows on the character screen that change the characters' numbers |
 | One click joins a server | `server_single_click` | off | Otherwise a double-click |
 | Retry the server list | `server_list_retry` | on (10) | Launcher logins: seconds before asking for the server list again, 0 = only by hand |
 | One click logs in an account | `account_single_click` | off | Otherwise a double-click |
@@ -149,7 +154,7 @@ Loginxml reads `Interface\loginxml\` before `data\`, and installing an update ne
 | --- | --- |
 | Account | Enter logs in, Tab switches fields, click or double-click an entry in a list |
 | Server list | Up / Down to choose, Enter to join, Esc to go back |
-| Character select | Up / Down to choose, Enter to log in, Esc back to the server list, drag to turn the character |
+| Character select | Up / Down to choose, Enter to log in, Esc back to the server list, drag to turn the character. With **Edit character order** on, Shift+Up / Down moves the selected character |
 | Launcher login | The Retry button counts down and asks for the server list again by itself. Click it to retry at once. |
 
 For addons and macros, `CHARACTER_SELECT.selectedIndex` holds the slot of the character you're playing, as on the default login screen.

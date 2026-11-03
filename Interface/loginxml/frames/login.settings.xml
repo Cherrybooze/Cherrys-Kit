@@ -365,6 +365,23 @@
           </OnClick>
         </Scripts>
       </CheckButton>
+      <CheckButton name="$parent_15" inherits="LoginCheckButtonTemplate" id="15">
+        <Size>
+          <AbsDimension x="24" y="24"/>
+        </Size>
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="12" y="370"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            login.settings.onClick(this)
+          </OnClick>
+        </Scripts>
+      </CheckButton>
       <Button name="$parent_reset" inherits="LoginButtonTemplate" text="Use config.lua">
         <Size>
           <AbsDimension x="124" y="22"/>

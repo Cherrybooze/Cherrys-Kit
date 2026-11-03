@@ -14,9 +14,13 @@ def tick(lua, seconds, step=0.25):
 
 
 class CampNextTest(unittest.TestCase):
-    # As the client does it on the way back: the last played character selected, then the list event
-    def relog(self, mode, start, target="nil", seconds=10):
+    # As the client does it on the way back: the last played character selected, then the list event.
+    # order: the names in number order, as Edit character order saves them
+    def relog(self, mode, start, target="nil", seconds=10, order=None):
         lua = login_screen()
+        if order:
+            listed = ", ".join(f'"{name}"' for name in order)
+            lua.execute(f"login.config.character_order = {{Server = {{{listed}}}}}")
         lua.execute(f'LOGCHAR_FLAG = 1; LOGCHAR_MODE = "{mode}"; LOGCHAR_TARGET = {target}')
         tick(lua, 0.5)
         lua.execute(f"login.charselect.UPDATE_SELECTED_CHARACTER({start})")
@@ -108,6 +112,30 @@ class CampNextTest(unittest.TestCase):
         self.assertEqual(self.relog("current", 2)[1], [2])
         self.assertEqual(self.relog("index", 3, target=1)[1], [1])
 
+    def test_slot_is_the_games_own(self):
+        self.assertEqual(self.relog("slot", 3, target=1)[1], [1])
+        self.assertEqual(self.relog("slot", 3, target=1, order=["Cc", "Bb", "Aa"])[1], [1])
+        lua, entered = self.relog("slot", 1, target=4)
+        self.assertEqual((entered, lua.eval("login.campnext.armed")), ([], 0))
+
+    def test_next_prev_and_numbers_follow_the_character_order(self):
+        order = ["Cc", "Aa", "Bb"]  # numbers 1, 2, 3 for slots 3, 1, 2
+        self.assertEqual(self.relog("next", 1, order=order)[1], [2])  # Aa (2) -> Bb (3)
+        self.assertEqual(self.relog("next", 2, order=order)[1], [3])  # Bb, the last -> Cc, the first
+        self.assertEqual(self.relog("prev", 3, order=order)[1], [2])  # Cc, the first -> Bb, the last
+        self.assertEqual(self.relog("prev", 1, order=order)[1], [3])
+        self.assertEqual(self.relog("index", 2, target=1, order=order)[1], [3])
+        self.assertEqual(self.relog("index", 2, target=3, order=order)[1], [2])
+
+    def test_order_with_other_accounts_and_new_characters(self):
+        # names from another account are skipped, characters the order lacks come after, in slot order
+        order = ["Zz", "Bb", "Yy"]
+        self.assertEqual(self.relog("next", 2, order=order)[1], [1])  # Bb (1) -> Aa (2)
+        self.assertEqual(self.relog("next", 3, order=order)[1], [2])  # Cc (3), the last -> Bb
+        lua, _ = self.relog("current", 1, order=order)
+        self.assertEqual(lua_list(lua.eval("LOGCHAR_ORDER")), ["Bb", "Aa", "Cc"])
+        self.assertEqual(lua_list(lua.eval("LOGCHAR_ROSTER")), ["Aa", "Bb", "Cc"])
+
     def test_missing_slot_cancels_instead_of_looping(self):
         lua, entered = self.relog("index", 2, target=9)
         self.assertEqual(entered, [])
@@ -136,6 +164,7 @@ class CampNextTest(unittest.TestCase):
         shown = lua.eval("login.charselect.charlist")
         self.assertEqual([shown[i].name for i in range(1, 4)], ["Bb", "Cc", "Aa"])
         self.assertEqual(lua_list(lua.eval("LOGCHAR_ROSTER")), ["Aa", "Bb", "Cc"])
+        self.assertEqual(lua_list(lua.eval("LOGCHAR_ORDER")), ["Aa", "Bb", "Cc"])  # no order of its own: slots
 
 
 class StockGlobalTest(unittest.TestCase):

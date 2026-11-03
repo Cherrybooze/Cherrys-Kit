@@ -34,6 +34,8 @@ accepted = 0
 function AcceptUserAgreement() accepted = accepted + 1 end
 function IsHideLoginUI() return true end
 function IsCtrlKeyDown() return false end
+shift = false
+function IsShiftKeyDown() return shift end
 function TEXT(key) return key end
 local function widget()
   return setmetatable({}, {__index = function() return function() end end})
@@ -45,7 +47,7 @@ end
 LoginAccount = shown()
 LoginFrame_debug = shown()
 LoginDebugFrame = shown()
-for i = 1, 14 do
+for i = 1, 15 do -- as many as login.settings.xml has
   _G["LoginServerFrame_options_" .. i] = {
     SetID = function(self, id) self.id = id end, GetID = function(self) return self.id end,
     SetText = function(self, text) self.text = text end,

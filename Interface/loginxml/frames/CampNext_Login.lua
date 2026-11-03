@@ -1,17 +1,20 @@
 -- CampNext: picks the character to log in after a relog requested in game.
 -- In game, LogNextChar (/lnc, /lpc or ChangeChar) sets
 --   LOGCHAR_FLAG = 1
---   LOGCHAR_MODE = "next" | "prev" | "current" | "index"
---   LOGCHAR_TARGET = <character index>   (only for "index")
+--   LOGCHAR_MODE = "next" | "prev" | "current" | "index" | "slot"
+--   LOGCHAR_TARGET = the character's number on the character screen ("index", /lnc <number>)
+--                    or its slot in the game's own order ("slot", ChangeChar)
 --   LOGCHAR_FROM = <name of the character being left>
+-- Next, Prev and numbers follow the order the character screen numbers the characters in, which is the
+-- game's own unless it was changed there with Edit character order (login.charselect.order).
 -- and logs out. This file picks that up on the character select screen.
 -- The client fills the character list one character at a time and only then selects the one last played
 -- (UPDATE_SELECTED_CHARACTER, then UPDATE_CHARACTER_SELECT_LIST). So nothing is picked before that list is
 -- in, and the pick is held until the login starts: a late selection from the client can't undo it.
 local me = {
   armed = 0,
-  mode = nil,          -- "next", "prev", "current" or "index"
-  wanted = nil,        -- index asked for by "index" mode
+  mode = nil,          -- "next", "prev", "current", "index" or "slot"
+  wanted = nil,        -- number asked for by "index" mode, slot by "slot" mode
   lastIndex = nil,
   targetIndex = nil,
   retryTimer = 0,
@@ -101,19 +104,46 @@ local function importFlag()
   end
 end
 
+-- The game's indexes in number order: numbered(count)[n] is the character with number n
+local function numbered(count)
+  local ok, order = pcall(login.charselect.order)
+  if ok and type(order) == "table" and #order == count then
+    return order
+  end
+  order = {}
+  for i = 1, count do
+    order[i] = i
+  end
+  return order
+end
+
 local function computeTarget(count)
-  if me.mode == "next" then
-    return getNextIndex(me.lastIndex, count)
-  elseif me.mode == "prev" then
-    return getPrevIndex(me.lastIndex, count)
-  elseif me.mode == "current" then
+  if me.mode == "current" then
     return me.lastIndex
-  elseif me.mode == "index" then
+  elseif me.mode == "slot" then
     if me.wanted and me.wanted >= 1 and me.wanted <= count then
       return me.wanted
     end
+    return nil
   end
-  return nil
+  local order = numbered(count)
+  if me.mode == "index" then
+    return me.wanted and order[me.wanted] or nil
+  end
+  local pos
+  for number, index in ipairs(order) do
+    if index == me.lastIndex then
+      pos = number
+    end
+  end
+  if me.mode == "next" then
+    pos = getNextIndex(pos, count)
+  elseif me.mode == "prev" then
+    pos = getPrevIndex(pos, count)
+  else
+    pos = nil
+  end
+  return pos and order[pos] or nil
 end
 
 -- Where the switch starts: the character it was asked from, found by name, else the one the client selected
@@ -253,7 +283,8 @@ login.charselect.UPDATE_CHARACTER_SELECT_LIST = function(...)
   end
 end
 
--- Leave the character names (slot order) behind for LogNextChar's tooltips in game
+-- Leave the character names behind for LogNextChar's buttons and tooltips in game: LOGCHAR_ROSTER in the
+-- game's slot order, LOGCHAR_ORDER in number order
 local _original_updateList = login.charselect.updateCharacterList
 login.charselect.updateCharacterList = function(...)
   _original_updateList(...)
@@ -261,11 +292,16 @@ login.charselect.updateCharacterList = function(...)
   if type(GetServerName) == "function" then
     LOGCHAR_SERVER = GetServerName()
   end
-  local roster = {}
-  for i = 1, GetNumCharacters() do
+  local count = GetNumCharacters()
+  local roster, order = {}, {}
+  for i = 1, count do
     roster[i] = (GetCharacterInfo(i))
   end
+  for number, index in ipairs(numbered(count)) do
+    order[number] = roster[index]
+  end
   _G.LOGCHAR_ROSTER = roster
+  _G.LOGCHAR_ORDER = order
 end
 
 login.campnext = me

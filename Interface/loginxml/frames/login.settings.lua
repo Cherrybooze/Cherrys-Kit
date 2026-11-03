@@ -14,6 +14,8 @@ local me = {
     {key = 'character_nologin_ctrl', label = 'Ctrl stops at character select', group = 2},
     {key = 'character_single_click', label = 'One click logs in a character', group = 2},
     {key = 'character_sort', label = 'Sort characters by level', group = 2},
+    -- arrows on the character screen that change the numbers, which Next, Prev and /lnc <number> follow
+    {key = 'character_order_edit', label = 'Edit character order', group = 2},
     {key = 'server_single_click', label = 'One click joins a server', group = 3},
     {key = 'server_list_retry', label = 'Retry the server list', on = 10, off = 0, group = 3},
     {key = 'account_single_click', label = 'One click logs in an account', group = 4},
@@ -116,6 +118,11 @@ function me.applyLive(key)
     if LoginLook then
       LoginLook.apply(login.config.modern_ui ~= false)
     end
+  elseif key == 'character_order_edit' or key == 'character_sort' then
+    if login.charselect and login.charselect.onSkin then
+      pcall(login.charselect.updateCharacterList)
+      pcall(login.charselect.onSkin)
+    end
   end
 end
 
@@ -127,13 +134,15 @@ function me.set(key, value)
   me.refresh()
 end
 
--- Forgets every saved toggle and goes back to config.lua
+-- Forgets every saved toggle and goes back to config.lua. The character order isn't a toggle: it stays.
 function me.reset()
-  CherrysLoginxml_Settings = {}
-  CherrysLoginxml_Live = {values = {}, reset = true}
+  local order = login.config.character_order
+  CherrysLoginxml_Settings = {character_order = order}
+  CherrysLoginxml_Live = {values = {character_order = order}, reset = true}
   local data = login.loadFile('config')
   if type(data) == 'table' then
     login.config = data
+    data.character_order = order
   end
   me.source = 'config.lua'
   for _, toggle in ipairs(me.toggles) do
@@ -180,8 +189,8 @@ function me.onClick(box)
   end
 end
 
--- Classic: one column of boxes as in login.settings.xml. Modern: smaller boxes under group headings,
--- the panel centred on the server list beside it.
+-- Classic: one column of boxes as in login.settings.xml, right of the server list. Modern: smaller boxes
+-- under group headings, the panel at the left edge of the screen (the server list is on the right).
 local CLASSIC_ROW, ROW, HEAD, GAP, BOX, WIDTH = 24, 21, 17, 6, 18, 250 -- WIDTH: as in login.settings.xml
 
 local function place(object, x, y)
@@ -231,7 +240,8 @@ function me.layout()
     hint:SetAnchor('BOTTOMLEFT', 'BOTTOMLEFT', frame, 16, -40)
     frame:SetHeight(y + 136)
     frame:ClearAllAnchors()
-    frame:SetAnchor('LEFT', 'RIGHT', LoginServerFrame_list, 60, 0)
+    -- at the left edge, level with the server list on the right
+    frame:SetAnchor('LEFT', 'LEFT', LoginServerFrame, 10, -20)
     place(_G[name .. '_title'], 16, 13)
     skin.tint(_G[name .. '_title'], skin.color.text)
     skin.tint(_G[name .. '_hint'], skin.color.dim)
@@ -279,5 +289,5 @@ function me.refresh()
   end
 end
 
-me.max = 14 -- check buttons in login.settings.xml
+me.max = 15 -- check buttons in login.settings.xml
 login.settings = me;

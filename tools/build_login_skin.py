@@ -128,8 +128,9 @@ def slider():
     draw.ellipse((2 * S, 2 * S, 14 * S - 1, 14 * S - 1), fill=(0, 0, 0, 170))
     draw.ellipse((3 * S, 3 * S, 13 * S - 1, 13 * S - 1), fill=(255, 255, 255, 255))
     save(big.resize((16, 16), Image.Resampling.LANCZOS), "slider_thumb")
-    # The step buttons beside it: small chevrons
-    for name, points in (("arrow_left", [(10, 4), (6, 8), (10, 12)]), ("arrow_right", [(6, 4), (10, 8), (6, 12)])):
+    # The step buttons beside it: small chevrons. Up and down are Edit character order's arrows.
+    for name, points in (("arrow_left", [(10, 4), (6, 8), (10, 12)]), ("arrow_right", [(6, 4), (10, 8), (6, 12)]),
+                         ("arrow_up", [(4, 10), (8, 6), (12, 10)]), ("arrow_down", [(4, 6), (8, 10), (12, 6)])):
         big = Image.new("RGBA", (16 * S, 16 * S), (0, 0, 0, 0))
         ImageDraw.Draw(big).line([(x * S, y * S) for x, y in points], fill=(255, 255, 255, 255), width=2 * S, joint="curve")
         save(big.resize((16, 16), Image.Resampling.LANCZOS), name)

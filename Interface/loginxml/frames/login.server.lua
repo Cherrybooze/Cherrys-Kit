@@ -76,9 +76,22 @@ function me.initServerList()
   me.placeButtons()
 end
 
+-- Modern: the server list at the right edge, the settings at the left (login.settings.lua).
+-- Classic: in the middle, as login.server.xml has it.
+function me.placeList()
+  local list = LoginServerFrame_list
+  list:ClearAllAnchors()
+  if modern() then
+    list:SetAnchor('RIGHT', 'RIGHT', LoginServerFrame, -10, -20)
+  else
+    list:SetAnchor('CENTER', 'CENTER', LoginServerFrame, 0, -20)
+  end
+end
+
 -- Modern: Confirm and Cancel as wide as the list together, Record server a little below them.
 -- Classic: as login.server.xml has them.
 function me.placeButtons()
+  me.placeList()
   local enter, cancel, record = LoginServerFrame_enter, LoginServerFrame_cancel, LoginServerFrame_settings
   local label = record:GetNormalText()
   enter:ClearAllAnchors()

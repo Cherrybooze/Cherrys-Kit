@@ -24,4 +24,5 @@ return { --
   character_login_first = false, -- log in the first character in the list once after each account login
   character_nologin_ctrl = true, --
   character_sort = false, --
+  character_order_edit = false, -- up and down arrows on the character screen that change the characters' numbers
 }
