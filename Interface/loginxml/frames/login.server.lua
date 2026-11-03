@@ -48,11 +48,9 @@ function me.SERVER_LIST_UPDATE()
 end
 function me.show()
   LoginServerFrame:Show()
-  me.placeShared()
 end
 function me.hide()
   LoginServerFrame:Hide()
-  me.placeShared()
 end
 
 function me.login()
@@ -78,48 +76,15 @@ function me.initServerList()
   me.placeButtons()
 end
 
--- Modern: right of the settings panel at the left edge (login.settings.lua), as far from it as Classic
--- has them apart, the tops level. Not anchored to the panel, which Classic anchors to the list.
+-- Modern: the server list at the right edge, the settings at the left (login.settings.lua).
 -- Classic: in the middle, as login.server.xml has it.
-me.GAP = 90
 function me.placeList()
   local list = LoginServerFrame_list
   list:ClearAllAnchors()
-  local settings = login.settings
-  if modern() and settings and settings.modernTopLeft then
-    local left, top = settings.modernTopLeft()
-    list:SetAnchor('TOPLEFT', 'LEFT', LoginServerFrame, left + settings.WIDTH + me.GAP, top)
+  if modern() then
+    list:SetAnchor('RIGHT', 'RIGHT', LoginServerFrame, -10, -20)
   else
     list:SetAnchor('CENTER', 'CENTER', LoginServerFrame, 0, -20)
-  end
-end
-
--- Settings, Back and Exit Game: Modern puts them at the bottom left, under the settings panel, the mirror
--- image of the bottom right where the other screens have them (Exit Game in the corner), and DEBUG takes
--- Exit Game's corner. Off the server screen, or in Classic, they go back to login.xml's places.
-local function corner(button, point, x, y)
-  button:ClearAllAnchors()
-  button:SetAnchor(point, point, LoginFrame, x, y)
-end
-function me.placeShared()
-  local mirror = modern() and LoginServerFrame:IsVisible() and true or false
-  if mirror == (me.mirrored or false) then
-    return
-  end
-  me.mirrored = mirror or nil
-  local quit, system, back = LoginFrame_quit, LoginFrame_settings, LoginServerFrame_account
-  system:ClearAllAnchors()
-  back:ClearAllAnchors()
-  if mirror then
-    corner(quit, 'BOTTOMLEFT', 6, -30)
-    system:SetAnchor('BOTTOMLEFT', 'TOPLEFT', quit, 0, -5)
-    back:SetAnchor('LEFT', 'RIGHT', quit, 0, 0)
-    corner(LoginFrame_debug, 'BOTTOMRIGHT', -6, -30)
-  else
-    corner(quit, 'BOTTOMRIGHT', -6, -30)
-    system:SetAnchor('BOTTOMRIGHT', 'TOPRIGHT', quit, 0, -5)
-    back:SetAnchor('RIGHT', 'LEFT', quit, 0, 0)
-    corner(LoginFrame_debug, 'BOTTOMLEFT', 6, -30)
   end
 end
 
@@ -157,7 +122,6 @@ function me.onSkin()
   if LoginServerFrame_list and LoginServerFrame_list.updateCallback then
     me.initServerList()
   end
-  me.placeShared()
 end
 
 -- ! ==============================================================

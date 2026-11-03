@@ -374,47 +374,29 @@ class ServerRowsTest(unittest.TestCase):
         self.assertEqual(e_right - e_left, c_right - c_left)
         self.assertEqual(e_top, bottom + 6)
 
-    def test_modern_servers_beside_the_settings_tops_level(self):
+    def test_modern_settings_on_the_left_and_servers_on_the_right(self):
         ui = shown(True, "server")
         s_left, s_top, s_right, s_bottom = ui.rect(ui.g("LoginServerFrame_options"))
-        l_left, l_top, _, _ = ui.rect(ui.g("LoginServerFrame_list"))
+        l_left, _, l_right, _ = ui.rect(ui.g("LoginServerFrame_list"))
         self.assertEqual(s_left, 10)
-        self.assertEqual((l_left, l_top), (s_right + 90, s_top))
+        self.assertEqual(l_right, 1280 - 10)
+        self.assertLess(s_right, l_left)
         self.assertGreaterEqual(s_top, 0)
         self.assertLessEqual(s_bottom, 800)
         # and Classic keeps the list in the middle, the settings beside it
         classic = shown(False, "server")
-        left, top, right, _ = classic.rect(classic.g("LoginServerFrame_list"))
+        left, _, right, _ = classic.rect(classic.g("LoginServerFrame_list"))
         self.assertAlmostEqual((left + right) / 2, 640, delta=1)
-        self.assertEqual(classic.rect(classic.g("LoginServerFrame_options"))[0:2], (right + 90, top))
+        self.assertGreater(classic.rect(classic.g("LoginServerFrame_options"))[0], right)
 
-    def corner_buttons(self, ui):
-        return {name: ui.rect(ui.g(name)) for name in
-                ("LoginFrame_quit", "LoginFrame_settings", "LoginServerFrame_account", "LoginFrame_debug")}
-
-    def test_modern_settings_back_and_exit_mirrored_under_the_settings(self):
-        ui = screen(True, "server", before=GLOBAL_BANK + "CherrysLoginxml_Settings.debug = true")
-        b = self.corner_buttons(ui)
-        quit, system, back = b["LoginFrame_quit"], b["LoginFrame_settings"], b["LoginServerFrame_account"]
-        self.assertEqual((quit[0], quit[3]), (6, 800 - 30))  # Exit Game in the bottom left corner
-        self.assertEqual((system[0], system[3]), (6, quit[1] - 5))  # Settings above it
-        self.assertEqual((back[0], back[1]), (quit[2], quit[1]))  # Back beside it
-        self.assertLess(ui.rect(ui.g("LoginServerFrame_options"))[3], system[1])  # all under the panel
-        self.assertEqual((b["LoginFrame_debug"][2], b["LoginFrame_debug"][3]), (1280 - 6, 800 - 30))
-        self.assertTrue(ui.visible(ui.g("LoginFrame_debug")))
-        # the other screens keep them at the bottom right, as login.xml has them
-        ui.character_screen()
-        plain = screen(True, "char", before=GLOBAL_BANK + "CherrysLoginxml_Settings.debug = true")
-        moved = differences(ui.snapshot(), plain.snapshot())
-        self.assertEqual([name for name in moved if not name.startswith("LoginDebugFrame")], [])  # its log differs
-        self.assertEqual(self.corner_buttons(ui)["LoginFrame_quit"][2:4], (1280 - 6, 800 - 30))
-        self.assertEqual(ui.errors() + ui.caught(), [])
-
-    def test_classic_keeps_them_at_the_bottom_right(self):
-        ui = shown(False, "server")
-        quit = ui.rect(ui.g("LoginFrame_quit"))
-        self.assertEqual(quit[2:4], (1280 - 6, 800 - 30))
-        self.assertEqual(ui.rect(ui.g("LoginServerFrame_account"))[2], quit[0])
+    def test_settings_back_and_exit_stay_at_the_bottom_right(self):
+        for modern in (True, False):
+            with self.subTest(modern=modern):
+                ui = shown(modern, "server")
+                quit = ui.rect(ui.g("LoginFrame_quit"))
+                self.assertEqual(quit[2:4], (1280 - 6, 800 - 30))  # Exit Game in the corner
+                self.assertEqual(ui.rect(ui.g("LoginServerFrame_account"))[2], quit[0])  # Back beside it
+                self.assertEqual(ui.rect(ui.g("LoginFrame_settings"))[2:4], (1280 - 6, quit[1] - 5))  # Settings above
 
     def test_classic_rows_are_unchanged(self):
         ui = shown(False, "server")

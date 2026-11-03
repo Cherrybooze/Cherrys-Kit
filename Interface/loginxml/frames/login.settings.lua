@@ -190,35 +190,8 @@ function me.onClick(box)
 end
 
 -- Classic: one column of boxes as in login.settings.xml, right of the server list. Modern: smaller boxes
--- under group headings, the panel at the left edge of the screen with the server list beside it.
+-- under group headings, the panel at the left edge of the screen (the server list is on the right).
 local CLASSIC_ROW, ROW, HEAD, GAP, BOX, WIDTH = 24, 21, 17, 6, 18, 250 -- WIDTH: as in login.settings.xml
-me.WIDTH = WIDTH
-
--- Modern: each group's heading, then its toggles, top to bottom. place(kind, index, y) for each one;
--- returns the panel's height.
-local function modernRows(place)
-  local y, group = 38, nil
-  for i, toggle in ipairs(me.toggles) do
-    if toggle.group ~= group then
-      y = group and y + GAP or y
-      group = toggle.group
-      place('group', group, y)
-      y = y + HEAD
-    end
-    place('toggle', i, y)
-    y = y + ROW
-  end
-  -- Global Bank's state (up to four lines), the hint (up to three) and the button under them
-  return y + 136
-end
-
--- Modern: the panel's top left corner, from the middle of the screen's left edge (it sits a little above
--- the middle). The server list lines up with its top (login.server.placeList), and neither is anchored to the
--- other: the client re-anchors whatever is anchored to a frame whenever it moves, recursively, so two
--- frames anchored to each other, even for a moment, never stop.
-function me.modernTopLeft()
-  return 10, -20 - modernRows(function() end) / 2
-end
 
 local function place(object, x, y)
   object:ClearAllAnchors()
@@ -239,20 +212,24 @@ function me.layout()
   local name = 'LoginServerFrame_options'
   local skin = LoginLook
   if skin and skin.modern then
-    local height = modernRows(function(kind, i, y)
-      if kind == 'group' then
-        local head = _G[name .. '_group' .. i]
+    local y, group = 38, nil
+    for i, toggle in ipairs(me.toggles) do
+      if toggle.group ~= group then
+        y = group and y + GAP or y
+        group = toggle.group
+        local head = _G[name .. '_group' .. group]
         place(head, 16, y)
-        head:SetText(me.groups[i])
+        head:SetText(me.groups[group])
         skin.tint(head, skin.color.cyan)
         head:Show()
-      else
-        local box = _G['LoginServerFrame_options_' .. i]
-        place(box, 14, y)
-        box:SetSize(BOX, BOX)
-        label(box, 7, 0)
+        y = y + HEAD
       end
-    end)
+      local box = _G['LoginServerFrame_options_' .. i]
+      place(box, 14, y)
+      box:SetSize(BOX, BOX)
+      label(box, 7, 0)
+      y = y + ROW
+    end
     -- Global Bank's state (up to four lines) and the hint (up to three) above the button
     local status, hint = _G[name .. '_globalbank'], _G[name .. '_hint']
     status:SetSize(WIDTH - 32, 48)
@@ -261,10 +238,10 @@ function me.layout()
     status:SetAnchor('BOTTOMLEFT', 'BOTTOMLEFT', frame, 16, -80)
     hint:ClearAllAnchors()
     hint:SetAnchor('BOTTOMLEFT', 'BOTTOMLEFT', frame, 16, -40)
-    frame:SetHeight(height)
+    frame:SetHeight(y + 136)
     frame:ClearAllAnchors()
-    local left, top = me.modernTopLeft()
-    frame:SetAnchor('TOPLEFT', 'LEFT', LoginServerFrame, left, top)
+    -- at the left edge, level with the server list on the right
+    frame:SetAnchor('LEFT', 'LEFT', LoginServerFrame, 10, -20)
     place(_G[name .. '_title'], 16, 13)
     skin.tint(_G[name .. '_title'], skin.color.text)
     skin.tint(_G[name .. '_hint'], skin.color.dim)
