@@ -60,30 +60,96 @@ class CampNextTest(unittest.TestCase):
         self.assertEqual(lua_list(lua.eval("entered")), [2])
         self.assertIsNone(lua.eval("LOGCHAR_FROM"))
 
-    def test_an_unknown_name_falls_back_to_the_selection(self):
+    def test_a_list_without_the_character_it_left_cancels(self):
+        # another server's or account's list: the player went elsewhere while it waited
         lua = login_screen()
         lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"; LOGCHAR_FROM = "Gone"')
         lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(2); login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
         tick(lua, 5)
-        self.assertEqual(lua_list(lua.eval("entered")), [3])
+        self.assertEqual(lua_list(lua.eval("entered")), [])
+        self.assertEqual(lua.eval("login.campnext.armed"), 0)
+        self.assertEqual(lua.eval("LOGCHAR_FAILED"), "Gone is not in this character list")
 
-    def test_goes_on_without_the_list_event(self):
+    def test_never_picks_from_the_list_on_screen_before_the_new_one(self):
+        # Back from the game the screen still shows the old list (or none) for the 3 s the client waits before
+        # it connects again, and longer with a second password or a queue
         lua = login_screen()
         lua.execute("login.charselect.updateCharacterList(); login.charselect.UPDATE_SELECTED_CHARACTER(1)")
-        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"')
-        tick(lua, 5)
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"; LOGCHAR_FROM = "Aa"')
+        tick(lua, 60)
         self.assertEqual(lua_list(lua.eval("entered")), [])
+        self.assertEqual(lua.eval("login.campnext.armed"), 1)
+        lua.execute("login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, 5)
+        self.assertEqual(lua_list(lua.eval("entered")), [2])
+        self.assertIsNone(lua.eval("LOGCHAR_FAILED"))
+
+    def test_a_list_filling_in_is_not_picked_from(self):
+        # the client adds the characters one at a time; Prev from the first (Aa) must find the last (Cc)
+        lua = login_screen()
+        lua.execute('full = chars; chars = {}; login.charselect.selected = 1')
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "prev"; LOGCHAR_FROM = "Aa"')
+        tick(lua, 8)
+        for count in (1, 2):
+            lua.execute(f"chars[{count}] = full[{count}]")
+            tick(lua, 4)
+        self.assertEqual(lua.eval("login.campnext.targetIndex"), None)
+        lua.execute("chars = full; login.charselect.UPDATE_SELECTED_CHARACTER(1)")
+        lua.execute("login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, 5)
+        self.assertEqual(lua_list(lua.eval("entered")), [3])
+
+    def test_a_slow_list_still_leaves_time_to_switch(self):
+        for seconds in (5.5, 20, 100):
+            with self.subTest(seconds=seconds):
+                lua = login_screen()
+                lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"; chars_backup = chars; chars = {}')
+                tick(lua, seconds)
+                lua.execute("chars = chars_backup")
+                lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(2); login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+                tick(lua, 9)
+                self.assertEqual(lua_list(lua.eval("entered")), [3])
+
+    def test_gives_up_when_no_list_comes(self):
+        lua = login_screen()
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"; chars = {}')
+        tick(lua, 119)
+        self.assertEqual(lua.eval("login.campnext.armed"), 1)
+        tick(lua, 2)
+        self.assertEqual(lua.eval("login.campnext.armed"), 0)
+        self.assertEqual(lua.eval("LOGCHAR_FAILED"), "No character list 120 s after logging out")
+
+    def test_a_failing_list_handler_still_lets_it_switch(self):
+        lua = login_screen()
+        lua.execute("login.charselect.autoLogin = function() error('broken') end")
+        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"')
+        lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(1)")
+        ok = lua.eval("(pcall(login.charselect.UPDATE_CHARACTER_SELECT_LIST))")
+        self.assertFalse(ok)  # the screen's own error still shows in the DEBUG log
         tick(lua, 5)
         self.assertEqual(lua_list(lua.eval("entered")), [2])
 
-    def test_a_slow_list_still_leaves_time_to_switch(self):
+    def test_a_broken_debug_log_cannot_stop_a_switch(self):
         lua = login_screen()
-        lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"; chars_backup = chars; chars = {}')
-        tick(lua, 5.5)
-        lua.execute("chars = chars_backup")
-        lua.execute("login.charselect.UPDATE_SELECTED_CHARACTER(2); login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
-        tick(lua, 9)
-        self.assertEqual(lua_list(lua.eval("entered")), [3])
+        lua.execute("function lprint() error('the DEBUG list broke') end")
+        self.assertEqual(self.relog_in(lua, "next", 3), [1])
+
+    def test_leaves_its_steps_for_the_game(self):
+        lua, entered = self.relog("next", 2)
+        trail = lua_list(lua.eval("LOGCHAR_TRAIL"))
+        self.assertTrue(trail[0].startswith("[CampNext] Armed mode=next"))
+        self.assertIn("[CampNext] Logging into 3 (Cc)", trail)
+        self.assertIsNone(lua.eval("LOGCHAR_FAILED"))
+        lua.execute("for i = 1, 40 do login.campnext.activate('next') end")
+        self.assertLessEqual(len(lua_list(lua.eval("LOGCHAR_TRAIL"))), 12)
+
+    def relog_in(self, lua, mode, start):
+        lua.execute(f'LOGCHAR_FLAG = 1; LOGCHAR_MODE = "{mode}"')
+        tick(lua, 0.5)
+        lua.execute(f"login.charselect.UPDATE_SELECTED_CHARACTER({start})")
+        lua.execute("login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        tick(lua, 10)
+        return lua_list(lua.eval("entered"))
 
     def test_a_click_while_it_waits_to_log_in_wins(self):
         lua = login_screen()
@@ -144,9 +210,11 @@ class CampNextTest(unittest.TestCase):
     def test_gives_up_after_timeout(self):
         lua = login_screen()
         lua.execute('LOGCHAR_FLAG = 1; LOGCHAR_MODE = "next"')
-        for _ in range(64):  # 16 s with nothing selected
+        lua.execute("login.charselect.UPDATE_CHARACTER_SELECT_LIST()")
+        for _ in range(64):  # 16 s after the list with nothing selected
             lua.execute("login.charselect.onUpdate({}, 0.25)")
         self.assertEqual(lua.eval("login.campnext.armed"), 0)
+        self.assertEqual(lua.eval("LOGCHAR_FAILED"), "Not logged in 15 s after the character list came")
 
     def test_picking_by_hand_cancels(self):
         lua = login_screen()
@@ -165,6 +233,75 @@ class CampNextTest(unittest.TestCase):
         self.assertEqual([shown[i].name for i in range(1, 4)], ["Bb", "Cc", "Aa"])
         self.assertEqual(lua_list(lua.eval("LOGCHAR_ROSTER")), ["Aa", "Bb", "Cc"])
         self.assertEqual(lua_list(lua.eval("LOGCHAR_ORDER")), ["Aa", "Bb", "Cc"])  # no order of its own: slots
+
+
+class RelogTimingTest(unittest.TestCase):
+    """The whole login screen (tests/login_ui.py) through the client's own way back from the game: the old list
+    cleared, 3 s before it connects again, the character screen, the characters one at a time, the last played
+    selected by name, then the list event (CGameMain::ReturnCharacterSelect, CAccountLogin::UpdateRealmList).
+    The selection lives in the client (EnterWorld logs in that one) and SelectCharacter only reports a change."""
+
+    CLIENT = r"""
+    FULL = {}
+    for i, name in ipairs({'Aa', 'Bb', 'Cc', 'Dd', 'Ee', 'Ff'}) do
+      FULL[i] = {name, 1, 60, 'Mage', 50, 'Priest', 'Varanas', nil, 0}
+    end
+    CLIENT.characters = {}
+    for i, c in ipairs(FULL) do CLIENT.characters[i] = c end
+    CLIENT.selected, CLIENT.connected = 0, true
+    function SelectCharacter(i)
+      i = math.min(math.max(1, i), #CLIENT.characters)
+      if CLIENT.selected ~= i then
+        CLIENT.selected = i
+        UI.event('UPDATE_SELECTED_CHARACTER', i)
+      end
+    end
+    function EnterWorld()
+      table.insert(CLIENT.entered, CLIENT.connected and (GetCharacterInfo(CLIENT.selected)) or 'not connected')
+    end
+    """
+
+    def relog(self, mode, start, list_at, step=0.25):
+        from login_ui import LoginUI
+
+        ui = LoginUI()
+        ui.lua.execute(self.CLIENT)
+        ui.character_screen()
+        ui.lua.execute(f"SelectCharacter({start}); login.charselect.login(); CLIENT.entered = {{}}")
+        ui.lua.execute("CLIENT.selected = 0")  # entering the world closes the selection
+        name = ui.lua.eval(f"FULL[{start}][1]")
+        ui.lua.execute(f'LOGCHAR_FLAG = 1; LOGCHAR_MODE = "{mode}"; LOGCHAR_FROM = "{name}"')
+        ui.lua.execute("CLIENT.characters = {}; CLIENT.connected = false")
+        ui.event("SHOW_LOGIN")
+        ui.event("OPEN_LOGIN_DIALOG", "WAITING_QUEUE", "connecting")
+        t, stage = 0.0, 0
+        while t < list_at + 20:
+            if stage == 0 and t >= 3:
+                ui.lua.execute("CLIENT.connected = true")
+                ui.event("CLOSE_LOGIN_DIALOG")
+                ui.event("SET_LOGIN_SCREEN", "charselect")
+                stage = 1
+            if stage == 1 and t >= list_at - 1:
+                count = min(6, int((t - (list_at - 1)) * 6) + 1)  # one character every 1/6 s
+                ui.lua.execute(f"for i = 1, {count} do CLIENT.characters[i] = FULL[i] end")
+            if stage == 1 and t >= list_at:
+                ui.lua.execute(f"for i = 1, 6 do CLIENT.characters[i] = FULL[i] end; SelectCharacter({start})")
+                ui.event("UPDATE_CHARACTER_SELECT_LIST")
+                ui.lua.execute("SelectCharacter(CLIENT.selected)")
+                stage = 2
+            ui.update(step)
+            t += step
+        entered = ui.lua.eval("CLIENT.entered")
+        return [entered[i] for i in range(1, len(entered) + 1)], ui
+
+    def test_next_and_prev_however_long_the_way_back_takes(self):
+        for list_at in (4.5, 14, 40):
+            for mode, start, want in (("next", 3, "Dd"), ("prev", 1, "Ff"), ("next", 6, "Aa")):
+                with self.subTest(list_at=list_at, mode=mode, start=start):
+                    entered, ui = self.relog(mode, start, list_at)
+                    self.assertEqual(entered, [want])
+                    self.assertIsNone(ui.lua.eval("LOGCHAR_FAILED"))
+                    self.assertEqual(ui.errors(), [])
 
 
 class StockGlobalTest(unittest.TestCase):

@@ -374,10 +374,24 @@ function me.OnLoad(bar)
     Step("Numbering the buttons", me.UpdateNumbers)
 end
 
+-- After a switch the login screen couldn't finish (you picked the character yourself), says why, once.
+-- loginxml's CampNext_Login.lua leaves the reason in LOGCHAR_FAILED and what it did in LOGCHAR_TRAIL.
+function me.SayWhySwitchFailed()
+    local reason = _G.LOGCHAR_FAILED
+    if type(reason) ~= "string" then
+        return
+    end
+    _G.LOGCHAR_FAILED = nil
+    Print("The login screen couldn't switch: " .. reason .. ". /lnc probe shows what it did.")
+end
+
 function me.OnEvent(event)
     if event == "FORCE_DIALOG_HIDE" then
         me.ForgetQueued()
         return
+    end
+    if event == "LOADING_END" then
+        Step("Checking the last switch", me.SayWhySwitchFailed)
     end
     if event == "VARIABLES_LOADED" then
         me.Place()
@@ -523,6 +537,16 @@ local function Probe()
         type(roster) == "table" and tostring(#roster) or "unknown (login screen not installed?)",
         tostring(CHARACTER_SELECT and CHARACTER_SELECT.selectedIndex),
         tostring(me.Get("lock")), tostring(me.Get("show")), tostring(me.IsOn())))
+    -- The login screen's steps in the last switch (CampNext_Login.lua)
+    local trail = _G.LOGCHAR_TRAIL
+    if type(trail) == "table" and #trail > 0 then
+        Print("Last switch on the login screen:")
+        for _, line in ipairs(trail) do
+            Print("  " .. tostring(line))
+        end
+    else
+        Print("No switch on the login screen since the game started.")
+    end
 end
 
 local function HandleBar(msg)

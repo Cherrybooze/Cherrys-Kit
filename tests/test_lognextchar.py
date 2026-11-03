@@ -157,6 +157,33 @@ class DefaultSpotTest(unittest.TestCase):
         self.assertEqual(lua.eval("logouts"), 0)
 
 
+class SwitchReportTest(unittest.TestCase):
+    def test_says_once_why_the_login_screen_could_not_switch(self):
+        lua = in_game('LOGCHAR_FAILED = "No character list 120 s after logging out"')
+        lua.execute('LogNextChar.OnEvent("LOADING_END")')
+        chat = lua_list(lua.eval("chat"))
+        self.assertIn("The login screen couldn't switch: No character list 120 s after logging out.", chat[-1])
+        self.assertIsNone(lua.eval("LOGCHAR_FAILED"))
+        lua.execute('LogNextChar.OnEvent("LOADING_END")')  # the next zone
+        self.assertEqual(len(lua_list(lua.eval("chat"))), len(chat))
+
+    def test_quiet_after_a_switch_that_worked(self):
+        lua = in_game()
+        before = len(lua_list(lua.eval("chat")))
+        lua.execute('LogNextChar.OnEvent("LOADING_END")')
+        self.assertEqual(len(lua_list(lua.eval("chat"))), before)
+
+    def test_probe_lists_the_login_screens_steps(self):
+        lua = in_game('LOGCHAR_TRAIL = {"[CampNext] Armed mode=next from Bb", "[CampNext] Logging into 3 (Cc)"}')
+        lua.execute('SlashCmdList.LOGNEXTCHAR(nil, "probe")')
+        chat = lua_list(lua.eval("chat"))
+        self.assertTrue(any("Last switch on the login screen" in line for line in chat))
+        self.assertTrue(any("Logging into 3 (Cc)" in line for line in chat))
+        lua = in_game()
+        lua.execute('SlashCmdList.LOGNEXTCHAR(nil, "probe")')
+        self.assertTrue(any("No switch on the login screen" in line for line in lua_list(lua.eval("chat"))))
+
+
 class ButtonTest(unittest.TestCase):
     def test_kitty_style_tiles(self):
         lua = in_game()
