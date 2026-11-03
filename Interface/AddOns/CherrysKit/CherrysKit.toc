@@ -124,6 +124,8 @@ UltimateMailMod/Menu/Menu.lua
 UltimateMailMod/Menu/Menu.xml
 UltimateMailMod/Menu/Settings.lua
 UltimateMailMod/Menu/Settings.xml
+UltimateMailMod/Modern/Loader.lua
+UltimateMailMod/Modern/Modern.xml
 UltimateMailMod/UltimateMailMod.lua
 UltimateMailMod/UltimateMailMod.xml
 KitLoad/AdvancedAuctionHouse.lua

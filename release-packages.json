@@ -187,12 +187,12 @@
     {
       "folder": "UltimateMailMod",
       "title": "Ultimate Mail Mod",
-      "version": "7.0.1-ck12",
+      "version": "7.0.1-ck14",
       "command": "/umm",
       "alternative_to": "zMail",
       "description_file": "09-ultimate-mail-mod.md",
-      "summary": "Mail management, drag-box selection, shared recipients, gold presets and mass sending.",
-      "minimum_hub_version": "0.4.17",
+      "summary": "A modern mail window (inbox filters, mails that split as needed, inbox gold in compose, session activity) with the classic window one switch away, drag-box selection, shared recipients, gold presets and reliable mass sending.",
+      "minimum_hub_version": "0.4.34",
       "works_with": [
         {
           "package": "CherrysChat",

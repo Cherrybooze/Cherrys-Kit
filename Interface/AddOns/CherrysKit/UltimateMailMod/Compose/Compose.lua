@@ -452,6 +452,7 @@ function UMMComposeMailTemplate_OnLoad(this)
   end;
   
   this.SetReply = function(self, name, subject)
+    getglobal(self:GetParent():GetName().."History"):Hide();
     getglobal(self:GetParent():GetName().."Own"):Hide();
     getglobal(self:GetParent():GetName().."Friends"):Hide();
     getglobal(self:GetParent():GetName().."Guildies"):Hide();
@@ -515,6 +516,7 @@ function UMMComposeMailTemplate_OnLoad(this)
       getglobal(self:GetName().."HeaderSubject"):SetFocus();
     end
   
+    getglobal(self:GetParent():GetName().."History"):Show();
     getglobal(self:GetParent():GetName().."Own"):Show();
     getglobal(self:GetParent():GetName().."Friends"):Show();
     if (IsInGuild()) then
@@ -708,11 +710,19 @@ function UMMComposeMailTemplate_OnLoad(this)
   this:RefreshShortcuts();
 end
 
+-- Cherry's Kit: To keeps its name while you visit other tabs (or close the mailbox); only
+-- Reset or erasing the name empties it. The rest of the mail starts fresh as before.
 function UMMComposeMailTemplate_OnShow(this)
-  this:ClearMail(true);
+  local author = getglobal(this:GetName().."HeaderAuthor");
+  local keep = (author:GetText() or "") ~= "";
+  this:ClearMail(not keep);
   this:CheckSendStatus();
   this:RefreshShortcuts();
-  getglobal(this:GetName().."HeaderAuthor"):SetFocus();
+  if (keep) then
+    getglobal(this:GetName().."HeaderSubject"):SetFocus();
+  else
+    author:SetFocus();
+  end
 end
 
 function UMMComposeMailTemplate_OnHide(this)
@@ -723,7 +733,7 @@ end
 
 function UMMComposeMailTemplateButton_OnClick(this, action)
   if (string.lower(action) == "reset") then
-    this:GetParent():ClearMail();
+    this:GetParent():ClearMail(true);  -- Reset empties To too
   elseif (string.lower(action) == "send") then
     local moneyAttached = nil;
     local money = getglobal(this:GetParent():GetName().."FooterMoney"):GetText();
@@ -777,7 +787,12 @@ local function tabLocked(id)
 end
 
 function UMMUseClickedName(name)
-  if (type(name) ~= "string" or name == "" or not UMMFrame or not UMMFrame:IsVisible()) then return false; end
+  if (type(name) ~= "string" or name == "") then return false; end
+  if (UMMModernFrame and UMMModernFrame:IsVisible()) then
+    -- the modern window: Mass Send's To while that page shows, else Compose's To
+    return UMMModern ~= nil and UMMModern.UseName ~= nil and UMMModern.UseName(name) and true or false;
+  end
+  if (not UMMFrame or not UMMFrame:IsVisible()) then return false; end
   if (UMMMailShortcutsBusy()) then UMMPrompt(UMM_ERROR_STILLSENDING);return true; end
   if (UMMComposeConfirm:IsVisible()) then return false; end
   if (UMMFrameTab3:IsVisible()) then
@@ -840,7 +855,7 @@ local function wrapNameClicks(key)
   local original = _G[key];
   if (type(original) ~= "function" or UMMNameClickWrappers[original]) then return; end
   local wrapper = function(...)
-    if (modifierDown() and UMMFrame and UMMFrame:IsVisible()) then
+    if (modifierDown() and UMMMailWindowShown()) then
       local name = clickedName(...);
       if (name and UMMUseClickedName(name)) then return; end
     end

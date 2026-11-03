@@ -653,5 +653,47 @@ class MassSendSlotCheckTests(MassSendFixture, unittest.TestCase):
         self.assertEqual(self.marked(), {5})
 
 
+class MassUseLastTests(MassSendFixture, unittest.TestCase):
+    def test_use_last_fills_to_and_keeps_marks_like_compose(self):
+        button = self.g.UMMFrameTab3RecipientUseLast
+        self.assertFalse(button.enabled, "nothing sent yet")
+        self.h.send("Older")
+        self.h.send("Newest")
+        self.assertTrue(button.enabled)
+        self.assertEqual(button.text, "Use last")
+        self.mark(1, 7, 90)
+        self.h.click("UMMFrameTab3RecipientUseLast")
+        self.assertEqual(self.g.UMMFrameTab3RecipientRecipient.text, "Newest")
+        self.assertEqual(self.marked(), {1, 7, 90})
+        self.assertTrue(self.g.UMMFrameTab3.IsVisible(self.g.UMMFrameTab3))
+
+    def test_use_last_is_blocked_while_sending_and_hidden_with_shortcuts_off(self):
+        self.h.send("Recipient")
+        self.g.UMMFrameTab3RecipientRecipient.SetText(self.g.UMMFrameTab3RecipientRecipient, "Keep")
+        status = self.g.UMMFrameTab3Status
+        status.Show(status)
+        self.assertFalse(self.g.UMMFrameTab3RecipientUseLast.enabled)
+        self.h.click("UMMFrameTab3RecipientUseLast")
+        self.assertEqual(self.g.UMMFrameTab3RecipientRecipient.text, "Keep")
+        status.Hide(status)
+        self.assertTrue(self.g.UMMFrameTab3RecipientUseLast.enabled)
+        self.lua.execute('UMMSettings:Set("MailShortcuts",false);UMMRefreshMailShortcuts()')
+        self.assertFalse(self.g.UMMFrameTab3RecipientUseLast.visible)
+        self.h.click("UMMFrameTab3RecipientUseLast")
+        self.assertEqual(self.g.UMMFrameTab3RecipientRecipient.text, "Keep")
+
+    def test_marks_survive_a_bag_update_that_rewrites_links_before_picking_a_recent_name(self):
+        self.h.send("Alt")
+        self.mark(1, 7)
+        # the game rewrites the links of marked items and announces a bag change
+        self.lua.execute('''
+          ummBagSlots[1].link="|Hitem:1 0 0 3|h[Item1]|h";ummBagSlots[7].link="|Hitem:7 0 0 3|h[Item7]|h"
+          UMMBagManager:Invalidate();UMMFrameTab3Bags:PopulateBags()
+        ''')
+        self.h.click("UMMFrameTab3RecentEntry1")
+        self.assertEqual(self.g.UMMFrameTab3RecipientRecipient.text, "Alt")
+        self.assertEqual(self.marked(), {1, 7})
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,380 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+  <!-- Written by tools/gen_umm_modern_xml.py: change that file, not this one.
+       Ultimate Mail Mod's modern mail window: only the frames that take clicks, typing or the
+       mouse wheel. Modern/Core.lua sizes, places and skins them the first time a mailbox opens
+       the window; until then each handler finds nothing to call. -->
+  <Button name="UMMModernButtonTemplate" virtual="true" enableMouse="true" text="">
+    <Scripts>
+      <OnClick>UMMModern_On(&quot;click&quot;, this, key);</OnClick>
+      <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
+      <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
+      <OnMouseDown>UMMModern_On(&quot;down&quot;, this, key);</OnMouseDown>
+      <OnMouseUp>UMMModern_On(&quot;up&quot;, this, key);</OnMouseUp>
+      <OnMouseWheel>UMMModern_On(&quot;wheel&quot;, this, delta or arg1);</OnMouseWheel>
+    </Scripts>
+  </Button>
+  <Button name="UMMModernSlotTemplate" virtual="true" enableMouse="true" text="">
+    <Scripts>
+      <OnClick>UMMModern_On(&quot;click&quot;, this, key);</OnClick>
+      <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
+      <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
+      <OnMouseDown>UMMModern_On(&quot;down&quot;, this, key);</OnMouseDown>
+      <OnMouseUp>UMMModern_On(&quot;up&quot;, this, key);</OnMouseUp>
+      <OnMouseWheel>UMMModern_On(&quot;wheel&quot;, this, delta or arg1);</OnMouseWheel>
+      <OnReceiveDrag>UMMModern_On(&quot;drop&quot;, this);</OnReceiveDrag>
+    </Scripts>
+  </Button>
+  <Frame name="UMMModernHitTemplate" virtual="true" enableMouse="true">
+    <Scripts>
+      <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
+      <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
+      <OnMouseDown>UMMModern_On(&quot;down&quot;, this, key);</OnMouseDown>
+      <OnMouseUp>UMMModern_On(&quot;up&quot;, this, key);</OnMouseUp>
+      <OnMouseWheel>UMMModern_On(&quot;wheel&quot;, this, delta or arg1);</OnMouseWheel>
+    </Scripts>
+  </Frame>
+  <Frame name="UMMModernUpdateTemplate" virtual="true" hidden="true">
+    <Scripts>
+      <OnUpdate>UMMModern_On(&quot;update&quot;, this, elapsedTime);</OnUpdate>
+    </Scripts>
+  </Frame>
+  <EditBox name="UMMModernEditTemplate" virtual="true" inherits="UIPanelEditBoxTemplate" letters="255" historyLines="0" autoFocus="false">
+    <Scripts>
+      <OnTextChanged>UMMModern_On(&quot;text&quot;, this);</OnTextChanged>
+      <OnEnterPressed>UMMModern_On(&quot;enterkey&quot;, this);</OnEnterPressed>
+      <OnEscapePressed>UMMModern_On(&quot;esc&quot;, this);</OnEscapePressed>
+      <OnTabPressed>UMMModern_On(&quot;tab&quot;, this);</OnTabPressed>
+      <OnEditFocusGained>UMMModern_On(&quot;focus&quot;, this);</OnEditFocusGained>
+      <OnEditFocusLost>UMMModern_On(&quot;unfocus&quot;, this);</OnEditFocusLost>
+      <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
+      <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
+    </Scripts>
+  </EditBox>
+  <EditBox name="UMMModernGoldTemplate" virtual="true" inherits="UIPanelEditBoxTemplate" numeric="true" letters="11" historyLines="0" autoFocus="false">
+    <Scripts>
+      <OnTextChanged>UMMModern_On(&quot;text&quot;, this);</OnTextChanged>
+      <OnEnterPressed>UMMModern_On(&quot;enterkey&quot;, this);</OnEnterPressed>
+      <OnEscapePressed>UMMModern_On(&quot;esc&quot;, this);</OnEscapePressed>
+      <OnTabPressed>UMMModern_On(&quot;tab&quot;, this);</OnTabPressed>
+      <OnEditFocusGained>UMMModern_On(&quot;focus&quot;, this);</OnEditFocusGained>
+      <OnEditFocusLost>UMMModern_On(&quot;unfocus&quot;, this);</OnEditFocusLost>
+      <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
+      <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
+    </Scripts>
+  </EditBox>
+  <EditBox name="UMMModernBodyTemplate" virtual="true" inherits="UIPanelEditBoxTemplate" multiLine="true" letters="8000" historyLines="0" autoFocus="false">
+    <Scripts>
+      <OnTextChanged>UMMModern_On(&quot;text&quot;, this);</OnTextChanged>
+      <OnEscapePressed>UMMModern_On(&quot;esc&quot;, this);</OnEscapePressed>
+      <OnEditFocusGained>UMMModern_On(&quot;focus&quot;, this);</OnEditFocusGained>
+      <OnEditFocusLost>UMMModern_On(&quot;unfocus&quot;, this);</OnEditFocusLost>
+      <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
+      <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
+    </Scripts>
+  </EditBox>
+  <Frame name="UMMModernFrame" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+    <Scripts>
+      <OnShow>UMMModern_On(&quot;show&quot;, this);</OnShow>
+      <OnHide>UMMModern_On(&quot;hide&quot;, this);</OnHide>
+    </Scripts>
+    <Frames>
+      <Frame name="UMMModernTitle" inherits="UMMModernHitTemplate"/>
+      <Frame name="UMMModernMover" inherits="UMMModernUpdateTemplate"/>
+      <Frame name="UMMModernLater" inherits="UMMModernUpdateTemplate"/>
+      <Button name="UMMModernTab1" inherits="UMMModernButtonTemplate"/>
+      <Button name="UMMModernTab2" inherits="UMMModernButtonTemplate"/>
+      <Button name="UMMModernTab3" inherits="UMMModernButtonTemplate"/>
+      <Button name="UMMModernTab4" inherits="UMMModernButtonTemplate"/>
+      <Button name="UMMModernGear" inherits="UMMModernButtonTemplate"/>
+      <Button name="UMMModernClose" inherits="UMMModernButtonTemplate"/>
+      <Button name="UMMModernStop" inherits="UMMModernButtonTemplate"/>
+      <Frame name="UMMModernInbox" hidden="true">
+        <Frames>
+          <Button name="UMMModernInboxFilter1" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernInboxFilter2" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernInboxFilter3" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernInboxFilter4" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernInboxFilter5" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernInboxFrom" inherits="UMMModernButtonTemplate"/>
+          <EditBox name="UMMModernInboxSearch" inherits="UMMModernEditTemplate"/>
+          <Frame name="UMMModernInboxList" inherits="UMMModernHitTemplate">
+            <Frames>
+              <Button name="UMMModernInboxRow1" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow1Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow2" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow2Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow3" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow3Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow4" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow4Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow5" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow5Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow6" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow6Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow7" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow7Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow8" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow8Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow9" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow9Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow10" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow10Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow11" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow11Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow12" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow12Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow13" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow13Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+              <Button name="UMMModernInboxRow14" inherits="UMMModernButtonTemplate">
+                <Frames>
+                  <Button name="UMMModernInboxRow14Check" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Button>
+            </Frames>
+          </Frame>
+          <Frame name="UMMModernInboxBar" inherits="UMMModernHitTemplate">
+            <Frames>
+              <Button name="UMMModernInboxThumb" inherits="UMMModernButtonTemplate"/>
+            </Frames>
+          </Frame>
+          <Button name="UMMModernInboxTake" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernInboxReturn" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernInboxDelete" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernInboxSelect" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernInboxClean" inherits="UMMModernButtonTemplate"/>
+          <Frame name="UMMModernReader">
+            <Frames>
+              <EditBox name="UMMModernReaderBody" inherits="UMMModernBodyTemplate"/>
+              <Button name="UMMModernReaderShow" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderItem1" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderItem2" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderItem3" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderItem4" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderItem5" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderTake" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderReply" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderReturn" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderDelete" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReaderCOD" inherits="UMMModernButtonTemplate"/>
+            </Frames>
+          </Frame>
+        </Frames>
+      </Frame>
+      <Frame name="UMMModernCompose" hidden="true">
+        <Frames>
+          <EditBox name="UMMModernComposeTo" inherits="UMMModernEditTemplate"/>
+          <Button name="UMMModernComposePick" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernComposeLast" inherits="UMMModernButtonTemplate"/>
+          <EditBox name="UMMModernComposeSubject" inherits="UMMModernEditTemplate"/>
+          <EditBox name="UMMModernComposeBody" inherits="UMMModernBodyTemplate"/>
+          <Button name="UMMModernComposeSlot1" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeSlot2" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeSlot3" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeSlot4" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeSlot5" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeSlot6" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeSlot7" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeSlot8" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeSlot9" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeSlot10" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeAdd" inherits="UMMModernSlotTemplate"/>
+          <Button name="UMMModernComposeCOD" inherits="UMMModernButtonTemplate"/>
+          <EditBox name="UMMModernComposeCODAmount" inherits="UMMModernGoldTemplate"/>
+          <Frame name="UMMModernGold">
+            <Frames>
+              <Frame name="UMMModernGoldRow1">
+                <Frames>
+                  <EditBox name="UMMModernGoldRow1To" inherits="UMMModernEditTemplate"/>
+                  <EditBox name="UMMModernGoldRow1Amount" inherits="UMMModernGoldTemplate"/>
+                  <Button name="UMMModernGoldRow1Remove" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Frame>
+              <Frame name="UMMModernGoldRow2">
+                <Frames>
+                  <EditBox name="UMMModernGoldRow2To" inherits="UMMModernEditTemplate"/>
+                  <EditBox name="UMMModernGoldRow2Amount" inherits="UMMModernGoldTemplate"/>
+                  <Button name="UMMModernGoldRow2Remove" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Frame>
+              <Frame name="UMMModernGoldRow3">
+                <Frames>
+                  <EditBox name="UMMModernGoldRow3To" inherits="UMMModernEditTemplate"/>
+                  <EditBox name="UMMModernGoldRow3Amount" inherits="UMMModernGoldTemplate"/>
+                  <Button name="UMMModernGoldRow3Remove" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Frame>
+              <Frame name="UMMModernGoldRow4">
+                <Frames>
+                  <EditBox name="UMMModernGoldRow4To" inherits="UMMModernEditTemplate"/>
+                  <EditBox name="UMMModernGoldRow4Amount" inherits="UMMModernGoldTemplate"/>
+                  <Button name="UMMModernGoldRow4Remove" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Frame>
+              <Frame name="UMMModernGoldRow5">
+                <Frames>
+                  <EditBox name="UMMModernGoldRow5To" inherits="UMMModernEditTemplate"/>
+                  <EditBox name="UMMModernGoldRow5Amount" inherits="UMMModernGoldTemplate"/>
+                  <Button name="UMMModernGoldRow5Remove" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Frame>
+              <Frame name="UMMModernGoldRow6">
+                <Frames>
+                  <EditBox name="UMMModernGoldRow6To" inherits="UMMModernEditTemplate"/>
+                  <EditBox name="UMMModernGoldRow6Amount" inherits="UMMModernGoldTemplate"/>
+                  <Button name="UMMModernGoldRow6Remove" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Frame>
+              <Frame name="UMMModernGoldRow7">
+                <Frames>
+                  <EditBox name="UMMModernGoldRow7To" inherits="UMMModernEditTemplate"/>
+                  <EditBox name="UMMModernGoldRow7Amount" inherits="UMMModernGoldTemplate"/>
+                  <Button name="UMMModernGoldRow7Remove" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Frame>
+              <Frame name="UMMModernGoldRow8">
+                <Frames>
+                  <EditBox name="UMMModernGoldRow8To" inherits="UMMModernEditTemplate"/>
+                  <EditBox name="UMMModernGoldRow8Amount" inherits="UMMModernGoldTemplate"/>
+                  <Button name="UMMModernGoldRow8Remove" inherits="UMMModernButtonTemplate"/>
+                </Frames>
+              </Frame>
+              <Button name="UMMModernGoldAdd" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernGoldFill" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernGoldClear" inherits="UMMModernButtonTemplate"/>
+            </Frames>
+          </Frame>
+          <Button name="UMMModernComposeReset" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernComposeSend" inherits="UMMModernButtonTemplate"/>
+          <Frame name="UMMModernReview" inherits="UMMModernHitTemplate" frameStrata="DIALOG" hidden="true">
+            <Frames>
+              <Frame name="UMMModernReviewList" inherits="UMMModernHitTemplate"/>
+              <Button name="UMMModernReviewBack" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernReviewGo" inherits="UMMModernButtonTemplate"/>
+            </Frames>
+          </Frame>
+        </Frames>
+      </Frame>
+      <Frame name="UMMModernMass" hidden="true">
+        <Frames>
+          <EditBox name="UMMModernMassTo" inherits="UMMModernEditTemplate"/>
+          <Button name="UMMModernMassPick" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassLast" inherits="UMMModernButtonTemplate"/>
+          <EditBox name="UMMModernMassSearch" inherits="UMMModernEditTemplate"/>
+          <Frame name="UMMModernMassGrid" inherits="UMMModernHitTemplate"/>
+          <Frame name="UMMModernMassHover" inherits="UMMModernUpdateTemplate"/>
+          <Frame name="UMMModernMassMarked" inherits="UMMModernHitTemplate">
+            <Frames>
+              <Button name="UMMModernMassMarkedRow1" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow2" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow3" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow4" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow5" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow6" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow7" inherits="UMMModernButtonTemplate"/>
+            </Frames>
+          </Frame>
+          <Frame name="UMMModernMassCats" inherits="UMMModernHitTemplate">
+            <Frames>
+              <Button name="UMMModernMassCatRow1" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassCatRow2" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassCatRow3" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassCatRow4" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassCatRow5" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassCatRow6" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassCatRow7" inherits="UMMModernButtonTemplate"/>
+            </Frames>
+          </Frame>
+          <Button name="UMMModernMassClear" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCOD" inherits="UMMModernButtonTemplate"/>
+          <EditBox name="UMMModernMassCODAmount" inherits="UMMModernGoldTemplate"/>
+          <Button name="UMMModernMassSend" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassFast" inherits="UMMModernButtonTemplate"/>
+        </Frames>
+      </Frame>
+      <Frame name="UMMModernActivity" hidden="true">
+        <Frames>
+          <Frame name="UMMModernActivityLog" inherits="UMMModernHitTemplate"/>
+          <Button name="UMMModernActivityName1" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName2" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName3" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName4" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName5" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName6" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName7" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName8" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName9" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName10" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName11" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName12" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName13" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName14" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName15" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName16" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName17" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName18" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName19" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityName20" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernActivityClear" inherits="UMMModernButtonTemplate"/>
+        </Frames>
+      </Frame>
+      <Frame name="UMMModernPicker" inherits="UMMModernHitTemplate" frameStrata="DIALOG" hidden="true">
+        <Frames>
+          <Button name="UMMModernPickerChip1" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerChip2" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerChip3" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerChip4" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerChip5" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow1" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow2" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow3" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow4" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow5" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow6" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow7" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow8" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow9" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernPickerRow10" inherits="UMMModernButtonTemplate"/>
+        </Frames>
+      </Frame>
+    </Frames>
+  </Frame>
+</Ui>

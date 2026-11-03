@@ -28,6 +28,12 @@ local CHECKS = {
   { UMM_SETTINGS_MAILSHORTCUTS,
     function() return UMMSettings:ShortcutsEnabled() end,
     function(on) UMMSettings:Set("MailShortcuts", on) end },
+  { UMM_SETTINGS_CLASSICUI,
+    function() return UMMUIStyle() == "classic" end,
+    function(on)
+      UMMSetUIStyle(on and "classic" or "modern");
+      UMMPrompt(string.format(UMM_UI_NOW, on and UMM_UI_CLASSIC or UMM_UI_MODERN));
+    end },
 };
 
 local goldDirty, refreshingGold = false, false;
@@ -160,6 +166,14 @@ function UMMSettingsUI_ShortcutTip(this)
   GameTooltip:SetText(UMM_SETTINGS_MAILSHORTCUTS);
   GameTooltip:AddLine(UMM_SETTINGS_TIP_MAILSHORTCUTS, 1, 1, 1);
   GameTooltip:AddLine(UMM_SETTINGS_PRESETHELP, 1, 1, 1);
+  GameTooltip:Show();
+end
+
+function UMMSettingsUI_StyleTip(this)
+  if (not GameTooltip) then return; end
+  GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT", 0, 0);
+  GameTooltip:SetText(UMM_SETTINGS_CLASSICUI);
+  GameTooltip:AddLine(UMM_SETTINGS_TIP_CLASSICUI, 1, 1, 1);
   GameTooltip:Show();
 end
 

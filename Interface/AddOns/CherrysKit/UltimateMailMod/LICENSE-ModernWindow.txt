@@ -1,0 +1,34 @@
+Ultimate Mail Mod: the modern mail window (Modern/, Textures/Modern/, Fonts/)
+
+LICENSE.txt in this folder holds the kit's combined notices; section 9 covers Ultimate Mail Mod.
+This file adds the notices for the modern mail window, which came after that file was written.
+
+Code
+  Modern/*.lua and Modern/Modern.xml are written by Cherry for Cherry's Kit (2026). Like Cherry's
+  other changes to Ultimate Mail Mod, they are offered under the GNU General Public License
+  version 2, whose full text is in LICENSE.txt. tools/build_umm_modern_assets.py and
+  tools/gen_umm_modern_xml.py in the kit's repository build the pictures and Modern.xml.
+
+Pictures (Textures/Modern/)
+  - gear, history, moveup, movedown, ok, delete, collapse, expand, info: copied unchanged from
+    rom weakauras, which has them from WeakAuras (GPL v2) and Power Auras Classic, as distributed
+    with WeakAuras 5.21.1 (LICENSE.txt, "Other notices", 4).
+  - Bag, Broom, Characters, CheckboxOff, CheckboxOn, Clock, Close, Gold, Guild, Lock, Mail, Minus,
+    Plus, Reload, Run (copied unchanged from Cherry's Bar) and Trash (cut from the same source
+    sheet): Cherry's Studio Panel Assets v1, by Cherry, offered under Creative Commons
+    Attribution-NonCommercial-ShareAlike 3.0 Unported
+    (https://creativecommons.org/licenses/by-nc-sa/3.0/), like the rest of Cherry's Bar. You may
+    share and change them, with credit, under that same licence, and not for money or other
+    commercial advantage.
+  - activity, caps, cod, compose, gem, inbox, letter, mass, search, split, the round-*.tga button
+    shapes and white.tga: drawn for this window in rom weakauras' style, offered under the GPL v2.
+
+Font (Fonts/FiraSans-Medium.ttf)
+  Fira Sans Medium, copied unchanged from rom weakauras.
+  Digitized data copyright 2012-2018: The Mozilla Foundation, Telefonica S.A., Carrois Corporate
+  GbR and bBox Type GmbH. Licensed under the SIL Open Font License 1.1, whose full text is in
+  LICENSE.txt ("Other notices", 2).
+
+Because of the NonCommercial terms above and elsewhere in the kit, Cherry's Kit is free and must
+never be sold. The disclaimers of these licences apply: this window is provided as is, without
+warranty.

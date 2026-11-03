@@ -57,6 +57,7 @@
                 this:ClearFocus();
                 getglobal(this:GetParent():GetName().."Subject"):SetFocus();
               </OnTabPressed>
+              <OnEditFocusGained>UMMSelectAllOnFocus(this);</OnEditFocusGained>
               <OnTextChanged>
                 this:GetParent():GetParent():CheckSendStatus();
               </OnTextChanged>
@@ -437,11 +438,27 @@
         </Anchors>
       </Frame>
       
-      <Frame name="$parentOwn" inherits="UMMRecipientListTemplate">
+      <!-- Cherry's Kit: recently sent first, then Characters, Friends and (in a guild) Guildies -->
+      <Frame name="$parentHistory" inherits="UMMRecipientListTemplate">
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
               <AbsDimension x="340" y="5" />
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnShow>
+            this:SetTarget(this:GetParent():GetName().."ComposerHeaderAuthor");
+            this:SetupList("history");
+          </OnShow>
+        </Scripts>
+      </Frame>
+      <Frame name="$parentOwn" inherits="UMMRecipientListTemplate">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parentHistory" relativePoint="TOPRIGHT">
+            <Offset>
+              <AbsDimension x="5" y="0" />
             </Offset>
           </Anchor>
         </Anchors>

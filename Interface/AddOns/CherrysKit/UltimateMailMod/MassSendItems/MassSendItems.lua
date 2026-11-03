@@ -1088,24 +1088,33 @@ local function MarkTypes(types)
   end
 end
 
+-- Marks the bag items of category id (1-35, 36 = all of them). Returns the name set for that
+-- category in Recipient/Characters.lua (UMM_MSI_RECIPE_SEND_TO..id), or nil. Also used by the
+-- modern window's Mass send page.
+function UMMMassMarkCategory(id)
+  local types = {};
+  if (id == 36) then
+    -- "all": every category 1 to 35
+    for typeId = 1, 35 do
+      table.insert(types, UMMItemDB:GetTypeByID(typeId));
+    end
+  else
+    table.insert(types, UMMItemDB:GetTypeByID(id));
+  end
+  MarkTypes(types);
+  local sendTo = getglobal("UMM_MSI_RECIPE_SEND_TO"..id);
+  if (sendTo ~= nil and sendTo ~= "") then return sendTo; end
+  return nil;
+end
+
 function UMMMassSendItemsMarkButtonsTemplate_OnLoad(this)
 
   this.ButtonClick = function(self, id)
     getglobal(self:GetParent():GetName().."Bags"):CancelBoxSelection();
-    local sendTo = getglobal("UMM_MSI_RECIPE_SEND_TO"..id);
-    if (sendTo ~= nil and sendTo ~= "") then
+    local sendTo = UMMMassMarkCategory(id);
+    if (sendTo) then
       getglobal(this:GetParent():GetName().."RecipientRecipient"):SetText(sendTo);
     end
-    local types = {};
-    if (id == 36) then
-      -- "all": every category 1 to 35
-      for typeId = 1, 35 do
-        table.insert(types, UMMItemDB:GetTypeByID(typeId));
-      end
-    else
-      table.insert(types, UMMItemDB:GetTypeByID(id));
-    end
-    MarkTypes(types);
     getglobal(this:GetParent():GetName().."Bags"):PopulateBags();
   end;
   
@@ -1158,11 +1167,8 @@ function UMMMassRecent_OnLoad(this)
   UMMHistory_Refresh();
 end
 
-function UMMMassRecent_Select(index)
-  local pane = getglobal("UMMFrameTab3Recent");
-  if (not pane or not pane:IsVisible() or pane.priv_Blocked or UMMMailShortcutsBusy()) then return; end
-  local recipient = UMMSettings:History()[index];
-  if (not recipient) then return; end
+-- Puts a name in the mass-send To field. Marked items stay marked; the picker closes.
+local function useMassRecipient(recipient)
   UMMCancelMassSelection();
   local chooser = getglobal("UMMFrameTab3Recipient");
   if (not UMMFrameTab3Bags:IsVisible()) then chooser:ShowBody(); end
@@ -1170,6 +1176,34 @@ function UMMMassRecent_Select(index)
   field:SetText(recipient);
   field:SetFocus();
   getglobal("UMMFrameTab3Action"):CheckStatus();
+end
+
+local function massShortcutsBlocked()
+  local pane = getglobal("UMMFrameTab3Recent");
+  return (pane and pane.priv_Blocked) or UMMMailShortcutsBusy();
+end
+
+function UMMMassRecent_Select(index)
+  local pane = getglobal("UMMFrameTab3Recent");
+  if (not pane or not pane:IsVisible() or massShortcutsBlocked()) then return; end
+  local recipient = UMMSettings:History()[index];
+  if (not recipient) then return; end
+  useMassRecipient(recipient);
+end
+
+-- "Use last" beside the mass-send To field, the same button as on Compose
+function UMMMassUseLast()
+  if (not UMMSettings:ShortcutsEnabled() or massShortcutsBlocked()) then return; end
+  local recipient = UMMSettings:LastRecipient();
+  if (recipient) then useMassRecipient(recipient); end
+end
+
+function UMMMassUseLast_Refresh()
+  local button = getglobal("UMMFrameTab3RecipientUseLast");
+  if (not button) then return; end
+  button:SetText(UMM_COMPOSER_USELAST);
+  if (UMMSettings:ShortcutsEnabled()) then button:Show(); else button:Hide(); end
+  if (UMMSettings:LastRecipient() and not massShortcutsBlocked()) then button:Enable(); else button:Disable(); end
 end
 
 function UMMMassSendItemsTemplate_OnShow(this)

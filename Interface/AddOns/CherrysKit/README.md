@@ -137,7 +137,7 @@ Each one is its own download and needs Cherry's Kit:
 - **Cherry's Chat**: selectable, copyable chat with emoji symbols (`/cchat`)
 - **zBag**: bags with search, slot numbers and an All bags window (`/zb`)
 - **Global Bank**: every character's bags, bank and gold in one window (`/gb`)
-- **Ultimate Mail Mod**: mail window with shared recipient history, configurable gold shortcuts and reliable mass send (`/umm`)
+- **Ultimate Mail Mod**: a modern mail window that splits mails as needed and sends inbox gold on, with shared recipient history, configurable gold shortcuts and reliable mass send (`/umm`)
 - **Advanced AuctionHouse**: resizable auction house with stat filters (`/aah`)
 - **ZShop**: item shop and daily loyalty reward in one click (`/zshop`)
 - **Cherry's Info**: quest tracker with Ctrl+click NPCs, richer tooltips with IDs, target portrait HP%, chat filters and 10,500+ macro icons (`/cinfo`, `/cq`, `/emi`)

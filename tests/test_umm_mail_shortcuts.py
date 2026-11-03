@@ -28,6 +28,19 @@ class MailShortcutsTests(unittest.TestCase):
           loadfile=function() return nil,"locale supplied by fixture" end
         ''')
         self.load("Library/Tools.lua")
+        if getattr(self, "recipient_lists", False):
+            # the real name columns of Compose; the friend and guild lists are the game's boundary
+            self.lua.execute('''
+              ummFriends={{"Pal",true}};ummInGuild=false
+              GetFriendCount=function() return #ummFriends end
+              GetFriendInfo=function(_,i) return ummFriends[i][1],nil,ummFriends[i][2] end
+              IsInGuild=function() return ummInGuild end
+              GetNumGuildMembers=function() return 1 end
+              GetGuildRosterInfo=function() return "Guildmate",nil,nil,nil,nil,nil,nil,nil,nil,nil,true end
+            ''')
+            self.load("Library/Templates.lua")
+            self.load("Recipient/Recipient.lua")
+            self.load_xml("Recipient/Recipient.xml")
         for name in ("Library/PopUpDialog.xml", "Compose/Compose.xml", "History/History.xml", "Menu/Menu.xml", "Menu/Settings.xml"):
             self.load_xml(name)
         self.g.UMMFrame_OnLoad(self.g.UMMFrame)
@@ -421,6 +434,83 @@ class MailShortcutsTests(unittest.TestCase):
           SlashCmdList.UMM(nil,"shortcuts off");assert(not UMMSettings:ShortcutsEnabled())
           SlashCmdList.UMM(nil,"shortcuts on");assert(UMMSettings:ShortcutsEnabled())
         ''')
+
+
+    def test_to_keeps_its_name_across_tabs_until_reset_or_erased(self):
+        composer = self.compose()
+        author = self.g.UMMFrameTab2ComposerHeaderAuthor
+        subject = self.g.UMMFrameTab2ComposerHeaderSubject
+        author.SetText(author, "Coralbanka")
+        subject.SetText(subject, "Mats")
+        def visit(tab):
+            # the client sends the child composer its own hide and show with the tab
+            self.g.UMMMenuSelectTab(tab)
+            self.script(composer.name, "OnHide")
+            self.compose()
+        for tab in (1, 3, 4):
+            visit(tab)
+            self.assertEqual(author.text, "Coralbanka")
+        self.assertEqual(subject.text, "", "only the name is kept")
+        self.assertTrue(subject.focus)
+        self.g.UMMComposeMailTemplateButton_OnClick(self.g.UMMFrameTab2ComposerReset, "reset")
+        self.assertEqual(author.text, "")
+        author.SetText(author, "Other")
+        author.SetText(author, "")
+        visit(1)
+        self.assertEqual(author.text, "")
+        self.assertTrue(author.focus)
+
+    def test_clicking_into_a_filled_to_field_selects_the_whole_name(self):
+        self.compose()
+        author = self.g.UMMFrameTab2ComposerHeaderAuthor
+        author.SetText(author, "Coralbanka")
+        author.caret = 3
+        self.script(author.name, "OnEditFocusGained")
+        self.assertEqual((author.selStart, author.caret), (0, len("Coralbanka")))
+        author.SetText(author, "")
+        author.selStart = None
+        self.script(author.name, "OnEditFocusGained")
+        self.assertIsNone(author.selStart)
+
+
+class ComposeRecentColumnTests(MailShortcutsTests):
+    recipient_lists = True
+
+    def names(self, column):
+        frame = getattr(self.g, "UMMFrameTab2" + column)
+        out = []
+        for i in range(1, 29):
+            button = getattr(self.g, frame.name + "ListName" + str(i))
+            if button.visible:
+                out.append(getattr(self.g, button.name + "Name").text)
+        return out
+
+    def test_recently_sent_column_comes_first_and_updates_after_a_send(self):
+        self.send("Older")
+        composer = self.compose()
+        self.g.UMMFrameTab2History.visible = False
+        composer.ClearMail(composer, True)
+        self.assertTrue(self.g.UMMFrameTab2History.visible)
+        self.assertEqual(self.g.UMMFrameTab2History.anchor[4], 340)
+        self.assertEqual(self.g.UMMFrameTab2Own.anchor[3], "UMMFrameTab2History")
+        self.assertIn("History", self.g.UMMFrameTab2HistoryHeaderTitle.text)
+        self.assertEqual(len(self.names("History")), 1)
+        self.send("Newest")
+        names = self.names("History")
+        self.assertEqual(len(names), 2)
+        self.assertIn("Newest", names[0])
+        self.g.UMMFixtureDispatch("UMMFrameTab2HistoryListName2", "OnClick")
+        self.assertEqual(self.g.UMMFrameTab2ComposerHeaderAuthor.text, "Older")
+
+    def test_window_widens_on_compose_only_in_a_guild(self):
+        self.g.UMMMenuSelectTab(2)
+        self.assertEqual(self.g.UMMFrame.width, 805)
+        self.g.ummInGuild = True
+        self.g.UMMMenuSelectTab(1)
+        self.g.UMMMenuSelectTab(2)
+        self.assertEqual(self.g.UMMFrame.width, 950)
+        self.g.UMMMenuSelectTab(1)
+        self.assertEqual(self.g.UMMFrame.width, 805)
 
 
 if __name__ == "__main__":

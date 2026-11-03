@@ -42,7 +42,7 @@ UMM_VERSION = {
   Minor     = 0,
   Revision  = 2,
   Build     = 20211118,	-- 2787
-  ummRev    = '023-ck12';	-- Cherry's Kit 2026-11-01
+  ummRev    = '023-ck14';	-- Cherry's Kit 2026-11-03
 }
 
 -- ##### Local Variables #####
@@ -135,9 +135,12 @@ local function KitDisabled()
   return CherrysKit ~= nil and CherrysKit.IsEnabled ~= nil and not CherrysKit.IsEnabled("UltimateMailMod");
 end
 
--- Is a mass send or a single mail in progress?
+-- Is a mass send or a single mail in progress? (UMMQueue: the modern window's sends)
 local function Sending()
   if (UMMMailComposer:Busy()) then
+    return true;
+  end
+  if (UMMQueue and UMMQueue:Busy()) then
     return true;
   end
   local status = getglobal("UMMFrameTab3Status");
@@ -151,9 +154,24 @@ local IDLE_TIME = 0.5;
 local idleElapsed = 0;
 local idle = false;
 
+local function ModernShown()
+  return UMMModernFrame ~= nil and UMMModernFrame:IsVisible();
+end
+
 local function IsIdle()
-  return not MailFrame:IsVisible() and not UMMFrame:IsVisible() and not Sending()
+  return not MailFrame:IsVisible() and not UMMFrame:IsVisible() and not ModernShown() and not Sending()
     and UMMGlobalTimeout <= 0 and UMMGlobalFailTimeout <= 0 and UMMGlobalInboxLoadTimeout <= 0;
+end
+
+-- The window a mailbox opens: the modern one unless the classic one is chosen (or the modern
+-- one could not load). The inbox automation follows the window that is open.
+UMMMailView = nil;
+local function OpenMailWindow()
+  if (UMMUIStyle() == "modern" and type(UMMModern_Open) == "function" and UMMModern_Open()) then
+    return;
+  end
+  UMMMailView = nil;
+  ShowUIPanel(UMMFrame);
 end
 
 function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
@@ -183,15 +201,17 @@ function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
     UMMNewMailButton:CheckStatus();
   elseif (event == "MAIL_SHOW") then
     UMMSettings:CheckCharacter();
-    ShowUIPanel(UMMFrame);
+    OpenMailWindow();
   elseif (event == "MAIL_INBOX_UPDATE") then
     -- Reload the inbox
     UMMMailManager:InboxRefresh();
     UMMGlobalInboxLoadTimeout = 0;
     if (UMMMailManager:InboxShown()) then
-      UMMFrameTab1TOC:RefreshTOC();
-      UMMFrameTab1TOC:ShowInboxStatus();
+      local view = UMMMailManager:View();
+      view:RefreshTOC();
+      view:ShowInboxStatus();
     end
+    if (UMMModern and UMMModern.InboxUpdated) then UMMModern.InboxUpdated(); end
   elseif (event == "MAIL_SEND_INFO_UPDATE") then
     UMMTraceAdd(event, UMMMailComposer:State());
     UMMMailComposer:SendInfoUpdated();
@@ -209,9 +229,12 @@ function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
     UMMMailManager:UnLock("Item");
     -- If inbox automation is running, go on with it
     UMMMailManager:AttachmentSucceeded();
+    if (UMMModern and UMMModern.BagsChanged) then UMMModern.BagsChanged(); end
   elseif (event == "PLAYER_MONEY") then
     -- Inform the MailManager to unlock for money
     UMMMailManager:UnLock("Money");
+    if (UMMQueue) then UMMQueue:MoneyChanged(); end
+    if (UMMModern and UMMModern.MoneyChanged) then UMMModern.MoneyChanged(); end
   elseif (event == "CHAT_MSG_SYSTEM") then
     if (arg1 ~= nil and TEXT("SYS_NEW_MAIL") == arg1) then
       -- Pop the "New Mail" icon
@@ -283,9 +306,16 @@ function UMMMasterFrame_OnUpdate(this, elapsedTime)
     HideUIPanel(UMMFrame);
     UMMComposeConfirm:Clear();
   end
+  local modern = ModernShown();
+  if (modern and not MailFrame:IsVisible()) then
+    HideUIPanel(UMMModernFrame);
+    modern = false;
+  end
   -- mail sending state machines
   UMMMailComposer:Tick(elapsedTime);
   UMMFrameTab3Status:Tick(elapsedTime);
+  if (UMMQueue) then UMMQueue:Tick(elapsedTime); end
+  if (modern and UMMModern and UMMModern.Tick) then UMMModern.Tick(elapsedTime); end
   -- redraw the mass send bag view once the bags stop changing
   if (UMMBagManager:IsDirty() and UMMFrameTab3Bags:IsShownBags()) then
     UMMBagChangedTime = UMMBagChangedTime + elapsedTime;
@@ -365,6 +395,7 @@ local function ShowHelp()
   UMMPrompt("/umm x : check (probe) - mail slot, cursor and send state");
   UMMPrompt("/umm slotcheck on|off : wait for the item to show in the send slot (default on)");
   UMMPrompt("/umm shortcuts on|off : Use last and gold preset buttons (default on)");
+  UMMPrompt("/umm ui modern|classic : which mail window a mailbox opens (default modern)");
   UMMPrompt("/umm gold <amount1> <amount2> : set both shared gold presets");
   PrintPacing();
 end
@@ -384,6 +415,8 @@ local function Probe()
   local send, bound = UMMBagManager:CountMarked();
   UMMPrint("marked: "..send.." to send, "..bound.." bound   mail window open: "..tostring(MailFrame and MailFrame:IsVisible()));
   UMMPrint("kit: "..tostring(CherrysKit ~= nil).."   enabled: "..tostring(ModEnabled).."   path: "..tostring(UMMPath));
+  UMMPrint("window: "..UMMUIStyle()..(type(UMMModern_Status) == "function" and ("   modern: "..UMMModern_Status()) or "")
+    .."   queue: "..tostring(UMMQueue ~= nil and UMMQueue:Busy()));
   PrintPacing();
   UMMPrint("Tip: put an item in the game's send slot, then /umm x again: 'send slot has item' should say true.");
 end
@@ -435,7 +468,9 @@ SlashCmdList["UMM"] = function(editBox, msg)
     end
     PrintPacing();
   elseif (cmd == "stop") then
-    if (UMMFrameTab3Status:IsSending()) then
+    if (UMMQueue and UMMQueue:Busy()) then
+      UMMQueue:Stop();
+    elseif (UMMFrameTab3Status:IsSending()) then
       UMMFrameTab3Status:Stop();
     elseif (UMMMailComposer:Busy()) then
       UMMMailComposer:Abort();
@@ -468,6 +503,10 @@ SlashCmdList["UMM"] = function(editBox, msg)
     if (arg1 ~= "" and not UMMSettings:SetGoldPresets(arg1, arg2)) then UMMPrompt(UMM_SETTINGS_PRESETERROR); end
     UMMPrompt("gold presets: "..UMMFormatNumber(UMMSettings:GoldPreset(1)).." / "..UMMFormatNumber(UMMSettings:GoldPreset(2)));
     if (type(UMMSettingsUI_Refresh) == "function") then UMMSettingsUI_Refresh(true); end
+  elseif (cmd == "ui") then
+    if (arg1 == "modern" or arg1 == "classic") then UMMSetUIStyle(arg1); end
+    UMMPrompt(string.format(UMM_UI_NOW, UMMUIStyle() == "classic" and UMM_UI_CLASSIC or UMM_UI_MODERN).."  (/umm ui modern|classic)");
+    if (type(UMMSettingsUI_Refresh) == "function") then UMMSettingsUI_Refresh(); end
   elseif (cmd == "x" or cmd == "probe") then
     Probe();
   else
