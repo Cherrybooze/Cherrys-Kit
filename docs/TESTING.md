@@ -2,7 +2,28 @@
 
 The automated tests run production Lua 5.1 modules and XML handlers with simulated client APIs. They cover the reported logic failures; the native client's drawing, input, sound and event timing still need these checks.
 
-Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck13 requires **0.4.17** for its History files. Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
+Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck14 requires **0.4.34** for its modern mail window (0.4.17 for its History files). Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
+
+## Ultimate Mail Mod's modern mail window (7.0.1-ck14, hub 0.4.34, not yet released)
+
+`tests/test_umm_modern.py` drives the window on a simulated mailbox: lazy loading, the classic switch, inbox filters that never read a mail, take/return/delete, compose plans (text parts, item mails, inbox gold caps), the send queue with late gold and the gold limit, mass send and Activity. The game's own drawing, mouse handling (dropping items on **+**), fonts and mail timing still need these checks. Use characters whose mail you can afford to move around.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| UM1 | Log in and open a mailbox. Type `/umm x`. | The modern window opens and the classic one doesn't. The title bar shows this character's gold. `/umm x` says `window: modern   modern: open`. No error in chat. |
+| UM2 | Tick **Classic mail window** in `/umm`, close and open the mailbox. Untick it and open it again. Then try `/umm ui classic` and `/umm ui modern`. Reload UI after each. | Each change shows the next time a mailbox opens, without Reload UI, and survives Reload UI. Only one window ever shows. |
+| UM3 | Reload UI with the modern window open, then open the mailbox again. | The window comes back once: no doubled text, buttons or pictures, no error. |
+| UM4 | With 20 or more mails, some unread, some with gold, items, diamonds or C.O.D.: click **Gold**, **Items**, **Diamonds**, **Unread**, switch **From**, and search. Hover rows and item icons. | The counts and lists match. Item tooltips show. Unread mails stay unread: their days left don't drop to 3, also in the game's own mail list after closing. |
+| UM5 | Open an unread mail and press **Read this mail**. | The text and every item show, and only now does that mail drop to 3 days. |
+| UM6 | Ctrl+click and Shift+click to tick mails. Use **Take**, **Return** and **Delete** with mails ticked and with none ticked, with **Delete emptied** on and off. Try Take with a character close to 999,999,999 gold. | Only the ticked (or shown) mails change. C.O.D. mails and gold that would pass 999,999,999 stay, and the line says how many. With Delete emptied on, the mails Take emptied go away. |
+| UM7 | On **Compose**, click into To, type part of a name, press Enter; try **Use last**. Paste a text of 5,000 letters and send it to an alt. | The name list opens under To and narrows while you type. The counter shows how many mails the text needs. The alt gets "Subject (1/3)", "(2/3)", "(3/3)", in order, with the whole text. |
+| UM8 | Drag three items from your bags onto **+**, then pick one up and click **+**. Click an item in the mail. Send. | Every drop adds the item once, and nothing is taken out by the same click. Clicking an item in the mail takes only that one out. Each item arrives in its own mail with the subject. |
+| UM9 | Send 2 to 7 gold mails to one character, up to 999,999,999 each. On that character, open Compose, press **Use inbox gold**, give the rows names (one empty), and Send. Press **Stop** once in a second run. | **Check before sending** lists every take and mail in order. Each inbox mail's gold is taken just before it goes on, the gold on this character never passes 999,999,999, the empty row goes to the name in To, and Stop ends after the step on its way. **Activity** lists it all. |
+| UM10 | Type gold amounts by hand, digit by digit, then paste 1234567890 and 1,000,001 into a gold row. | Commas appear every three digits; amounts stop at 999,999,999; a short row says how much is missing. |
+| UM11 | On **Mass send**, click, Ctrl+click and drag a box over items, type in **Mark by name** and press Enter, mark a category, unmark a group in the list. Send 5 items, then 40 or more with **Send safely** and **Send fast**. | Marks match what you did, bound items stay red and are left out, and every mail goes out at the paced speed from `/umm`. |
+| UM12 | Ctrl+click and Shift+click a player's name in chat with the window on **Compose**, then on **Mass send**. | The name goes into that page's To. |
+| UM13 | Drag the window by its title bar, close and open the mailbox, then relog. | It opens where you left it. |
+| UM14 | Walk away from the mailbox in the middle of a run. | The run stops, an item that was being attached goes back to your bags, and the line at the bottom says how many mails went out. |
 
 ## Global Bank Addons page (not yet released)
 
