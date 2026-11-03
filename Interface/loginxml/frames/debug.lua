@@ -38,7 +38,7 @@ function me.onLoad(this)
   list:init(data)
   local cmd = _G[frameName:format('_cmd')]
   cmd:SetPlaceholder('command')
-  cmd:SetScript('OnEnterPressed', me.onCommand)
+  -- Enter is debug.xml's OnEnterPressed: the client has no SetScript, scripts come from the XML
 end
 
 function me.onCommand(editbox)

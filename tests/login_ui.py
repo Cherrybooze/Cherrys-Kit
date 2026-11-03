@@ -5,7 +5,8 @@ whole tree exists, children first. Widgets are Lua tables with the client's meth
 login screen calls); their state stays inside the stand-in, so tests can compare what is shown.
 
 It is not the game: textures aren't loaded, text is measured roughly, and calls to methods it doesn't
-know are counted in UI.unknown and do nothing. The game's own settings window and colour picker
+know are counted in UI.unknown and do nothing. A method the client doesn't have for that kind of object
+(its uilua*.cpp tables) is nil, as in the game, and looking it up is counted in UI.missing. The game's own settings window and colour picker
 (game_settings/, logincolorpickerframe) are left out."""
 import copy
 import os
@@ -49,14 +50,126 @@ function pcall(fn, ...)
   end
   return unpack(r, 1, r.n)
 end
+-- Each kind's Lua methods in the client (ui/core/lua/uilua*.cpp in the client source), with what it inherits.
+-- A method a kind doesn't have is nil there, as in the game: calling it is an error, so a test sees it.
+local CLIENT = {
+  layout = {
+    'ClearAllAnchors', 'GetAlpha', 'GetAnchor', 'GetAnchorOffset', 'GetBottom', 'GetCenter', 'GetColor',
+    'GetHeight', 'GetLeft', 'GetName', 'GetParent', 'GetPos', 'GetRealScale', 'GetRealSize', 'GetRight',
+    'GetScale', 'GetSize', 'GetTop', 'GetWidth', 'Hide', 'IsVisible', 'Moving', 'SetAlpha', 'SetAnchor',
+    'SetColor', 'SetHeight', 'SetPos', 'SetScale', 'SetSize', 'SetWidth', 'Show',
+  },
+  frame = {
+    'Disable', 'Enable', 'GetID', 'IsEnable', 'Locked', 'RegisterEvent', 'RegisterForClicks', 'RegisterForDrag',
+    'ResetFrameOrder', 'SetBackdrop', 'SetBackdropEdgeAlpha', 'SetBackdropEdgeColor', 'SetBackdropTileAlpha',
+    'SetBackdropTileColor', 'SetFrameLevel', 'SetFrameStrata', 'SetID', 'SetKeyboardEnable', 'SetLayers',
+    'SetMouseEnable', 'SetParent', 'SetScripts', 'StartMoving', 'StartSizing', 'StopMovingOrSizing', 'Unlocked',
+    'UnregisterEvent',
+  },
+  button = {
+    'GetDisabledText', 'GetDisabledTexture', 'GetHighlightText', 'GetHighlightTexture', 'GetNormalText',
+    'GetNormalTexture', 'GetPushedTexture', 'GetText', 'GetTextHeight', 'GetTextWidth', 'IsButtonPushed',
+    'LockHighlight', 'LockPushed', 'SetDisabledTexture', 'SetHighlightTexture', 'SetNormalTexture',
+    'SetPushedTexture', 'SetText', 'SetTextAnchor', 'SetTextColor', 'UnlockHighlight', 'UnlockPushed',
+  },
+  checkbutton = {
+    'GetCheckedTexture', 'GetDisabledCheckTexture', 'IsChecked', 'SetChecked',
+  },
+  radiobutton = {
+    'GetGroupId',
+  },
+  editbox = {
+    'AddHistoryLine', 'ClearFocus', 'GetCaretColor', 'GetMultiFirstLine', 'GetMultiMaxLines', 'GetMultiRangeLines',
+    'GetNumber', 'GetText', 'HighlightText', 'InsertChar', 'InsertText', 'SetCaretColor', 'SetFocus',
+    'SetKeyboardInputEnable', 'SetMultiFirstLine', 'SetNumber', 'SetPasswordMode', 'SetPlaceCaret', 'SetRTL',
+    'SetText', 'SetTextColor', 'SetTextInset',
+  },
+  fontstring = {
+    'GetDisplayWidth', 'GetPaintLines', 'GetText', 'HideLastDot', 'IsDrawDot', 'SetFont', 'SetFontSize',
+    'SetJustifyHType', 'SetRTL', 'SetText',
+  },
+  texture = {
+    'GetAnimationProgress', 'PlayAnimation', 'Reload', 'SetAlphaMode', 'SetAnimation', 'SetCooldown', 'SetFile',
+    'SetLuminance', 'SetMaskFile', 'SetRotate', 'SetTexCoord', 'SetTexture',
+  },
+  slider = {
+    'GetMaxValue', 'GetMinMaxValues', 'GetMinValue', 'GetValue', 'GetValueStepMode', 'SetMaxValue',
+    'SetMinMaxValues', 'SetMinValue', 'SetValue', 'SetValueStepMode',
+  },
+  statusbar = {
+    'GetBarColor', 'GetMaxValue', 'GetMinValue', 'GetValue', 'SetBarColor', 'SetMaxValue', 'SetMinValue',
+    'SetValue',
+  },
+  tooltip = {
+    'AddDoubleLine', 'AddLine', 'AddSeparator', 'ClearLines', 'IsOwned', 'SetATFTitleItem', 'SetATFTitleTipItem',
+    'SetATFUseItem', 'SetAbility', 'SetAccountBagItem', 'SetActionItem', 'SetAssignItem', 'SetAuctionBidItem',
+    'SetAuctionBrowseItem', 'SetAuctionItem', 'SetAuctionSellItem', 'SetBagItem', 'SetBankItem', 'SetBootyItem',
+    'SetBulletinBoardItem', 'SetCraftItem', 'SetCraftItemRuneHole', 'SetCraftQueueRequestItem',
+    'SetCraftRequestItem', 'SetEquipmentItem', 'SetExtraActionItem', 'SetFusionStone', 'SetGameBarItem',
+    'SetHistoryItem', 'SetHouseItem', 'SetHyperLink', 'SetImplementActionItem', 'SetInboxItem', 'SetInventoryItem',
+    'SetItemDB', 'SetItemMall', 'SetLootItem', 'SetMagicBaseDB', 'SetMagicCollectDB', 'SetMerchantItem',
+    'SetOwner', 'SetPartnerItem', 'SetPetActionItem', 'SetPetEquipmentItem', 'SetPetFeedFoodItem',
+    'SetPetFeedFoodItemTmp', 'SetPetProductItem', 'SetPetSkillItem', 'SetPetTalentSkillItem', 'SetQuestItem',
+    'SetRTL', 'SetRecipeStoreItem', 'SetRuneExChangeItem', 'SetSendMailItem', 'SetShoppingCartItem',
+    'SetSkillItem', 'SetSkillItem_LevelUp', 'SetStoreItem', 'SetSuitSkillEquipmentItem', 'SetSuitSkillListItem',
+    'SetSuitSkillPlateItem', 'SetSuitSkillSkillItem', 'SetText', 'SetTitle', 'SetTradePlayerItem',
+    'SetTradeTargetItem', 'SetUnitBuff', 'SetUnitDebuff',
+  },
+  model = {
+    'Build', 'CanDyeFXColors', 'GetMaterialCount', 'InserLinkFrame', 'IsPaperdoll', 'PlayMotion', 'ReleaseModel',
+    'SetAlignmentFrames', 'SetCameraPosition', 'SetComponent', 'SetComponentColors', 'SetDefaultTexture',
+    'SetDummyFemale', 'SetDummyMale', 'SetDyeFXColors', 'SetGuildHouseBuilding', 'SetHanger', 'SetItemLink',
+    'SetMaskFile', 'SetModel', 'SetModelOffset', 'SetPet', 'SetPlayerModel', 'SetServant', 'SetServantHire',
+    'SetTargetBone', 'SetTargetRotate', 'SetUnit', 'TakeOffAll', 'TakeOffWeapon',
+  },
+  scrollframe = {
+    'GetHorizontalScroll', 'GetScrollRange', 'GetVerticalScroll', 'SetHorizontalScroll', 'SetScrollRange',
+    'SetVerticalScroll', 'UpdateScrollChildRect',
+  },
+  listbox = {
+    'Clear', 'GetCurrentItem', 'GetItemHeight', 'GetItemSize', 'GetTopItem', 'InsertItem', 'IsItemChecked',
+    'RemoveItem', 'SetItemChecked', 'SetItemHeight', 'SetTopItem',
+  },
+  messageframe = {
+    'AddMessage', 'ClearText', 'EnableHyperlink', 'GetFontString', 'GetLines', 'GetPageLines', 'GetPosition',
+    'ResetTime', 'ScrollBottom', 'ScrollDown', 'ScrollTop', 'ScrollUp', 'SetFontSize', 'SetLineBytes',
+    'SetPosition',
+  },
+}
+local INHERITS = {frame = 'layout', button = 'frame', checkbutton = 'button', radiobutton = 'checkbutton',
+  editbox = 'frame', fontstring = 'layout', texture = 'layout', slider = 'frame', statusbar = 'frame', tooltip = 'frame',
+  model = 'frame', scrollframe = 'frame', listbox = 'frame', messageframe = 'frame'}
+local KIND = {Frame = 'frame', Button = 'button', CheckButton = 'checkbutton', RadioButton = 'radiobutton',
+  EditBox = 'editbox', FontString = 'fontstring', Texture = 'texture', Slider = 'slider', StatusBar = 'statusbar',
+  GameTooltip = 'tooltip', Model = 'model', ScrollFrame = 'scrollframe', ListBox = 'listbox', MessageFrame = 'messageframe'}
+local HAS = {}
+for kind in pairs(CLIENT) do
+  local set, k = {}, kind
+  while k do
+    for _, name in ipairs(CLIENT[k]) do set[name] = true end
+    k = INHERITS[k]
+  end
+  HAS[kind] = set
+end
+UI.has = HAS
+UI.missing = {} -- 'kind.Method' looked up on an object of a kind that doesn't have it
+
 local M = {}
 local mt = {__index = function(o, k)
+  if type(k) ~= 'string' or not string.find(k, '^[A-Z]') then
+    return nil
+  end
+  local s = S[o]
+  local has = s and HAS[KIND[s.kind] or 'frame']
+  if has and not has[k] then
+    local key = s.kind .. '.' .. k
+    UI.missing[key] = (UI.missing[key] or 0) + 1
+    return nil
+  end
   local m = M[k]
   if m ~= nil then return m end
-  if type(k) == 'string' and string.find(k, '^[A-Z]') then
-    UI.unknown[k] = (UI.unknown[k] or 0) + 1
-    return function() end
-  end
+  UI.unknown[k] = (UI.unknown[k] or 0) + 1
+  return function() end
 end}
 UI.methods = M
 
@@ -721,6 +834,10 @@ class LoginUI:
 
     def unknown(self):
         return dict(self.ui.unknown.items())
+
+    def missing(self):
+        """'Kind.Method' looked up on objects whose kind has no such method in the client"""
+        return dict(self.ui.missing.items())
 
     def event(self, name, *args):
         self.ui.event(name, *args)

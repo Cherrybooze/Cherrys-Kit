@@ -107,9 +107,10 @@ local function button(name)
   _G[name] = {GetName = function() return name end, GetHighlightTexture = function() return glow end,
     SetAlpha = function(self, a) self.alpha = a end, glow = glow}
   _G[name .. "Icon"] = {SetTexture = function(self, path) self.path = path end}
+  -- As the client's FontString: SetColor (from its layout), no SetTextColor (that is a button's)
   local function fontString()
     return {SetText = function(self, text) self.text = text end,
-      SetTextColor = function(self, r, g, b) self.color = {r, g, b} end,
+      SetColor = function(self, r, g, b) self.color = {r, g, b} end,
       ClearAllAnchors = function(self) self.anchor = nil end,
       SetAnchor = function(self, point, relativePoint, relativeTo, x, y)
         self.anchor = {point, relativePoint, relativeTo, x, y}

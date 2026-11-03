@@ -28,12 +28,8 @@
             local text = this:GetText()
             if not string.match(text, "^\s*$") then
               this:AddHistoryLine(text)
-              local res, msg = pcall(loadstring(text))
-              if not res then
-                lprint(msg)
-              end
             end
-            this:SetText("")
+            LoginDebug.onCommand(this) -- campnext commands, else runs it as Lua
           </OnEnterPressed>
         </Scripts>
       </EditBox>

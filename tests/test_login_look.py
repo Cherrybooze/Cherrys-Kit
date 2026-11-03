@@ -68,6 +68,8 @@ class LoadsTest(unittest.TestCase):
                     self.assertEqual(ui.caught(), [])
                     # A method the stand-in doesn't know is one the client may not have either
                     self.assertEqual(ui.unknown(), {})
+                    # Looked up on a kind that doesn't have it in the client (only list.lua's guarded probe)
+                    self.assertEqual(set(ui.missing()) - {"Slider.GetStepRange"}, set())
 
     def test_modern_unless_turned_off(self):
         self.assertTrue(shown(None).lua.eval("LoginLook.modern"))

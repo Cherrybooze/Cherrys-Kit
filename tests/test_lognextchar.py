@@ -53,6 +53,27 @@ class LayoutTest(unittest.TestCase):
         self.assertGreater(height["$parentNumber"], height["$parentLetters"])
 
 
+class LoadTest(unittest.TestCase):
+    def test_both_buttons_ready_at_load(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C", "D", "E", "F", "G", "H"}; CHARACTER_SELECT = {selectedIndex = 1}')
+        self.assertEqual((lua.eval("LogNextCharBarNext.mode"), lua.eval("LogNextCharBarPrev.mode")), ("next", "prev"))
+        self.assertEqual(lua.eval("LogNextCharBarPrevIcon.path"), "Interface/AddOns/LogNextChar/gfx/button.tga")
+        self.assertEqual(lua.eval("LogNextCharBarPrevLetters.text"), "Prev")
+        self.assertEqual(lua.eval("LogNextCharBarPrevNumber.text"), "8")  # numbered before any hover
+
+    def test_a_failing_step_leaves_the_other_button_working(self):
+        lua = in_game('LogNextCharBarNextNumber = {SetText = function() error("broken") end}')
+        self.assertEqual(lua.eval("LogNextCharBarPrev.mode"), "prev")
+        self.assertEqual(lua.eval("LogNextCharBarPrevLetters.text"), "Prev")
+        self.assertTrue(any("Next button failed" in line for line in lua_list(lua.eval("chat"))))
+
+    def test_prev_from_the_first_character_goes_to_the_last(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C", "D", "E", "F", "G", "H"}; CHARACTER_SELECT = {selectedIndex = 1}')
+        press(lua, "LogNextCharBarPrev")
+        self.assertEqual((lua.eval("LOGCHAR_MODE"), lua.eval("logouts")), ("prev", 1))
+        self.assertFalse(any("Unknown mode" in line for line in lua_list(lua.eval("chat"))))
+
+
 class SlotNumberTest(unittest.TestCase):
     def numbers(self, lua):
         return lua.eval("LogNextCharBarNextNumber.text"), lua.eval("LogNextCharBarPrevNumber.text")
@@ -67,9 +88,10 @@ class SlotNumberTest(unittest.TestCase):
 
     def test_the_number_has_its_own_colour(self):
         lua = in_game()
-        color = lua_list(lua.eval("LogNextCharBarNextNumber.color"))
-        self.assertEqual(color, lua_list(lua.eval("LogNextChar.NUMBER_COLOR")))
-        self.assertIsNone(lua.eval("LogNextCharBarNextLetters.color"))  # the name keeps its font's colour
+        for button in ("Next", "Prev"):
+            color = lua_list(lua.eval(f"LogNextCharBar{button}Number.color"))
+            self.assertEqual(color, lua_list(lua.eval("LogNextChar.NUMBER_COLOR")))
+            self.assertIsNone(lua.eval(f"LogNextCharBar{button}Letters.color"))  # the name keeps its font's gold
 
     def test_numbers_go_round_like_the_switch(self):
         lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C"}; CHARACTER_SELECT = {selectedIndex = 3}')
@@ -84,6 +106,20 @@ class SlotNumberTest(unittest.TestCase):
         lua.execute('LOGCHAR_ROSTER = {"A"}; CHARACTER_SELECT = {selectedIndex = 1}; LogNextChar.OnEvent("LOADING_END")')
         self.assertEqual(self.numbers(lua), ("", ""))
         self.assertEqual(self.name_spot(lua, "Prev"), "CENTER")
+
+    def test_numbers_follow_the_character_screens_order(self):
+        # Edit character order put D first: playing D (slot 4) is number 1, so Next is C (2), Prev is B (4)
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C", "D"}; LOGCHAR_ORDER = {"D", "C", "A", "B"};'
+                      ' CHARACTER_SELECT = {selectedIndex = 4}')
+        self.assertEqual(self.numbers(lua), ("2", "4"))
+        lua.execute("LogNextChar.OnEnter(LogNextCharBarNext)")
+        self.assertEqual(lua_list(lua.eval("tip"))[1], "C (2/4)")
+        lua.execute('UnitName = function() return "A" end; LogNextChar.OnEvent("LOADING_END")')
+        self.assertEqual(self.numbers(lua), ("4", "2"))  # by name first: A is number 3
+
+    def test_an_order_that_doesnt_match_the_list_is_ignored(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C"}; LOGCHAR_ORDER = {"C", "A"}; CHARACTER_SELECT = {selectedIndex = 2}')
+        self.assertEqual(self.numbers(lua), ("3", "1"))
 
     def test_a_list_that_arrives_later_shows_on_hover(self):
         lua = in_game()
@@ -277,8 +313,8 @@ class CommandTest(unittest.TestCase):
         lua = in_game()
         lua.execute('SlashCmdList.LOGNEXTCHAR(nil, "4")')
         self.assertEqual((lua.eval("LOGCHAR_MODE"), lua.eval("LOGCHAR_TARGET")), ("index", 4))
-        lua.execute("ChangeChar(2)")
-        self.assertEqual((lua.eval("LOGCHAR_MODE"), lua.eval("LOGCHAR_TARGET")), ("index", 2))
+        lua.execute("ChangeChar(2)")  # older login addons' call: the game's slot
+        self.assertEqual((lua.eval("LOGCHAR_MODE"), lua.eval("LOGCHAR_TARGET")), ("slot", 2))
 
     def test_button_commands(self):
         lua = in_game()
