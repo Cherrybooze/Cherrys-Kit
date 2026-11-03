@@ -6,7 +6,7 @@ Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, 
 
 ## Ultimate Mail Mod's modern mail window (7.0.1-ck14, hub 0.4.34, not yet released)
 
-`tests/test_umm_modern.py` drives the window on a simulated mailbox: lazy loading, the classic switch, inbox filters that never read a mail, take/return/delete, compose plans (text parts, item mails, inbox gold caps), the send queue with late gold and the gold limit, mass send and Activity. The game's own drawing, mouse handling (dropping items on **+**), fonts and mail timing still need these checks. Use characters whose mail you can afford to move around.
+`tests/test_umm_modern.py` drives the window on a simulated mailbox: lazy loading, the classic switch, inbox filters that never read a mail, take/return/delete, compose plans (text parts, item mails, inbox gold caps), the send queue with late gold and the gold limit, mass send and Activity. Its frames follow the client's own layout and click rules there (`tests/rom_layout.lua`, from the client source): sizes, anchors, which frame a click lands on, and the lift a click gives a frame. The game's own drawing, dropping items on **+**, fonts and mail timing still need these checks. Use characters whose mail you can afford to move around.
 
 | # | Do this | Expected |
 | --- | --- | --- |
@@ -24,6 +24,7 @@ Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, 
 | UM12 | Ctrl+click and Shift+click a player's name in chat with the window on **Compose**, then on **Mass send**. | The name goes into that page's To. |
 | UM13 | Drag the window by its title bar, close and open the mailbox, then relog. | It opens where you left it. |
 | UM14 | Walk away from the mailbox in the middle of a run. | The run stops, an item that was being attached goes back to your bags, and the line at the bottom says how many mails went out. |
+| UM15 | Click the tabs in one order and then another, drag the window by its title bar, and click every tab, the cog and the close button again. Click into each text box. Move the mouse just past the window's bottom and right edges, and look along the bottom of the screen. | Every click lands on what is under the mouse. Past its edges the window takes no clicks and shows no hover. No bars show anywhere outside the window, each text box has its border around it, and Compose's text area is a dark box. Nothing in the world shows through the window. |
 
 ## Global Bank Addons page (not yet released)
 

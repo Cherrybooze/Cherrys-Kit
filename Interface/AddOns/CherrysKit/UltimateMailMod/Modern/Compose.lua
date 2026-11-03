@@ -725,7 +725,7 @@ local function buildMail()
     nextBox = UMMModernComposeBody });
   UMMModernComposeSubject.ummEnterKey = function() UMMModernComposeBody:SetFocus(); end;
 
-  M.Edit(UMMModernComposeBody, f, 8, 62, 462, 150, { hint = UMM_M_CO_BODY_HINT, text = function()
+  M.Edit(UMMModernComposeBody, f, 8, 62, 462, 150, { hint = UMM_M_CO_BODY_HINT, panel = true, text = function()
     drawCounter();
     changed();
   end });

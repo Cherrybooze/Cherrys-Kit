@@ -2,8 +2,10 @@
   <!-- Written by tools/gen_umm_modern_xml.py: change that file, not this one.
        Ultimate Mail Mod's modern mail window: only the frames that take clicks, typing or the
        mouse wheel. Modern/Core.lua sizes, places and skins them the first time a mailbox opens
-       the window; until then each handler finds nothing to call. -->
+       the window; until then each handler finds nothing to call. Every frame has a size here:
+       without one the client keeps resizing it to its parent. -->
   <Button name="UMMModernButtonTemplate" virtual="true" enableMouse="true" text="">
+    <Size><AbsDimension x="1" y="1"/></Size>
     <Scripts>
       <OnClick>UMMModern_On(&quot;click&quot;, this, key);</OnClick>
       <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
@@ -14,6 +16,7 @@
     </Scripts>
   </Button>
   <Button name="UMMModernSlotTemplate" virtual="true" enableMouse="true" text="">
+    <Size><AbsDimension x="1" y="1"/></Size>
     <Scripts>
       <OnClick>UMMModern_On(&quot;click&quot;, this, key);</OnClick>
       <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
@@ -25,6 +28,7 @@
     </Scripts>
   </Button>
   <Frame name="UMMModernHitTemplate" virtual="true" enableMouse="true">
+    <Size><AbsDimension x="1" y="1"/></Size>
     <Scripts>
       <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
       <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
@@ -34,11 +38,13 @@
     </Scripts>
   </Frame>
   <Frame name="UMMModernUpdateTemplate" virtual="true" hidden="true">
+    <Size><AbsDimension x="1" y="1"/></Size>
     <Scripts>
       <OnUpdate>UMMModern_On(&quot;update&quot;, this, elapsedTime);</OnUpdate>
     </Scripts>
   </Frame>
-  <EditBox name="UMMModernEditTemplate" virtual="true" inherits="UIPanelEditBoxTemplate" letters="255" historyLines="0" autoFocus="false">
+  <EditBox name="UMMModernEditTemplate" virtual="true" inherits="UIPanelEditBoxTemplate" enableMouse="true" letters="255" historyLines="0" autoFocus="false">
+    <Size><AbsDimension x="1" y="1"/></Size>
     <Scripts>
       <OnTextChanged>UMMModern_On(&quot;text&quot;, this);</OnTextChanged>
       <OnEnterPressed>UMMModern_On(&quot;enterkey&quot;, this);</OnEnterPressed>
@@ -50,7 +56,8 @@
       <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
     </Scripts>
   </EditBox>
-  <EditBox name="UMMModernGoldTemplate" virtual="true" inherits="UIPanelEditBoxTemplate" numeric="true" letters="11" historyLines="0" autoFocus="false">
+  <EditBox name="UMMModernGoldTemplate" virtual="true" inherits="UIPanelEditBoxTemplate" enableMouse="true" numeric="true" letters="11" historyLines="0" autoFocus="false">
+    <Size><AbsDimension x="1" y="1"/></Size>
     <Scripts>
       <OnTextChanged>UMMModern_On(&quot;text&quot;, this);</OnTextChanged>
       <OnEnterPressed>UMMModern_On(&quot;enterkey&quot;, this);</OnEnterPressed>
@@ -62,7 +69,8 @@
       <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
     </Scripts>
   </EditBox>
-  <EditBox name="UMMModernBodyTemplate" virtual="true" inherits="UIPanelEditBoxTemplate" multiLine="true" letters="8000" historyLines="0" autoFocus="false">
+  <EditBox name="UMMModernBodyTemplate" virtual="true" inherits="UIMultiEditBoxTemplate" enableMouse="true" multiLine="true" letters="8000" historyLines="0" autoFocus="false">
+    <Size><AbsDimension x="1" y="1"/></Size>
     <Scripts>
       <OnTextChanged>UMMModern_On(&quot;text&quot;, this);</OnTextChanged>
       <OnEscapePressed>UMMModern_On(&quot;esc&quot;, this);</OnEscapePressed>
@@ -71,8 +79,11 @@
       <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
       <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
     </Scripts>
+    <FontString inherits="GameEditFont" spacing="1"/>
+    <TextInsets><AbsInset left="8" right="8" top="6" bottom="6"/></TextInsets>
   </EditBox>
   <Frame name="UMMModernFrame" parent="UIParent" frameStrata="MEDIUM" enableMouse="true" hidden="true">
+    <Size><AbsDimension x="1" y="1"/></Size>
     <Scripts>
       <OnShow>UMMModern_On(&quot;show&quot;, this);</OnShow>
       <OnHide>UMMModern_On(&quot;hide&quot;, this);</OnHide>
@@ -81,14 +92,15 @@
       <Frame name="UMMModernTitle" inherits="UMMModernHitTemplate"/>
       <Frame name="UMMModernMover" inherits="UMMModernUpdateTemplate"/>
       <Frame name="UMMModernLater" inherits="UMMModernUpdateTemplate"/>
-      <Button name="UMMModernTab1" inherits="UMMModernButtonTemplate"/>
-      <Button name="UMMModernTab2" inherits="UMMModernButtonTemplate"/>
-      <Button name="UMMModernTab3" inherits="UMMModernButtonTemplate"/>
-      <Button name="UMMModernTab4" inherits="UMMModernButtonTemplate"/>
-      <Button name="UMMModernGear" inherits="UMMModernButtonTemplate"/>
-      <Button name="UMMModernClose" inherits="UMMModernButtonTemplate"/>
-      <Button name="UMMModernStop" inherits="UMMModernButtonTemplate"/>
+      <Button name="UMMModernTab1" inherits="UMMModernButtonTemplate" frameLevel="2"/>
+      <Button name="UMMModernTab2" inherits="UMMModernButtonTemplate" frameLevel="2"/>
+      <Button name="UMMModernTab3" inherits="UMMModernButtonTemplate" frameLevel="2"/>
+      <Button name="UMMModernTab4" inherits="UMMModernButtonTemplate" frameLevel="2"/>
+      <Button name="UMMModernGear" inherits="UMMModernButtonTemplate" frameLevel="2"/>
+      <Button name="UMMModernClose" inherits="UMMModernButtonTemplate" frameLevel="2"/>
+      <Button name="UMMModernStop" inherits="UMMModernButtonTemplate" frameLevel="2"/>
       <Frame name="UMMModernInbox" hidden="true">
+        <Size><AbsDimension x="1" y="1"/></Size>
         <Frames>
           <Button name="UMMModernInboxFilter1" inherits="UMMModernButtonTemplate"/>
           <Button name="UMMModernInboxFilter2" inherits="UMMModernButtonTemplate"/>
@@ -182,6 +194,7 @@
           <Button name="UMMModernInboxSelect" inherits="UMMModernButtonTemplate"/>
           <Button name="UMMModernInboxClean" inherits="UMMModernButtonTemplate"/>
           <Frame name="UMMModernReader">
+            <Size><AbsDimension x="1" y="1"/></Size>
             <Frames>
               <EditBox name="UMMModernReaderBody" inherits="UMMModernBodyTemplate"/>
               <Button name="UMMModernReaderShow" inherits="UMMModernButtonTemplate"/>
@@ -200,6 +213,7 @@
         </Frames>
       </Frame>
       <Frame name="UMMModernCompose" hidden="true">
+        <Size><AbsDimension x="1" y="1"/></Size>
         <Frames>
           <EditBox name="UMMModernComposeTo" inherits="UMMModernEditTemplate"/>
           <Button name="UMMModernComposePick" inherits="UMMModernButtonTemplate"/>
@@ -220,8 +234,10 @@
           <Button name="UMMModernComposeCOD" inherits="UMMModernButtonTemplate"/>
           <EditBox name="UMMModernComposeCODAmount" inherits="UMMModernGoldTemplate"/>
           <Frame name="UMMModernGold">
+            <Size><AbsDimension x="1" y="1"/></Size>
             <Frames>
               <Frame name="UMMModernGoldRow1">
+                <Size><AbsDimension x="1" y="1"/></Size>
                 <Frames>
                   <EditBox name="UMMModernGoldRow1To" inherits="UMMModernEditTemplate"/>
                   <EditBox name="UMMModernGoldRow1Amount" inherits="UMMModernGoldTemplate"/>
@@ -229,6 +245,7 @@
                 </Frames>
               </Frame>
               <Frame name="UMMModernGoldRow2">
+                <Size><AbsDimension x="1" y="1"/></Size>
                 <Frames>
                   <EditBox name="UMMModernGoldRow2To" inherits="UMMModernEditTemplate"/>
                   <EditBox name="UMMModernGoldRow2Amount" inherits="UMMModernGoldTemplate"/>
@@ -236,6 +253,7 @@
                 </Frames>
               </Frame>
               <Frame name="UMMModernGoldRow3">
+                <Size><AbsDimension x="1" y="1"/></Size>
                 <Frames>
                   <EditBox name="UMMModernGoldRow3To" inherits="UMMModernEditTemplate"/>
                   <EditBox name="UMMModernGoldRow3Amount" inherits="UMMModernGoldTemplate"/>
@@ -243,6 +261,7 @@
                 </Frames>
               </Frame>
               <Frame name="UMMModernGoldRow4">
+                <Size><AbsDimension x="1" y="1"/></Size>
                 <Frames>
                   <EditBox name="UMMModernGoldRow4To" inherits="UMMModernEditTemplate"/>
                   <EditBox name="UMMModernGoldRow4Amount" inherits="UMMModernGoldTemplate"/>
@@ -250,6 +269,7 @@
                 </Frames>
               </Frame>
               <Frame name="UMMModernGoldRow5">
+                <Size><AbsDimension x="1" y="1"/></Size>
                 <Frames>
                   <EditBox name="UMMModernGoldRow5To" inherits="UMMModernEditTemplate"/>
                   <EditBox name="UMMModernGoldRow5Amount" inherits="UMMModernGoldTemplate"/>
@@ -257,6 +277,7 @@
                 </Frames>
               </Frame>
               <Frame name="UMMModernGoldRow6">
+                <Size><AbsDimension x="1" y="1"/></Size>
                 <Frames>
                   <EditBox name="UMMModernGoldRow6To" inherits="UMMModernEditTemplate"/>
                   <EditBox name="UMMModernGoldRow6Amount" inherits="UMMModernGoldTemplate"/>
@@ -264,6 +285,7 @@
                 </Frames>
               </Frame>
               <Frame name="UMMModernGoldRow7">
+                <Size><AbsDimension x="1" y="1"/></Size>
                 <Frames>
                   <EditBox name="UMMModernGoldRow7To" inherits="UMMModernEditTemplate"/>
                   <EditBox name="UMMModernGoldRow7Amount" inherits="UMMModernGoldTemplate"/>
@@ -271,6 +293,7 @@
                 </Frames>
               </Frame>
               <Frame name="UMMModernGoldRow8">
+                <Size><AbsDimension x="1" y="1"/></Size>
                 <Frames>
                   <EditBox name="UMMModernGoldRow8To" inherits="UMMModernEditTemplate"/>
                   <EditBox name="UMMModernGoldRow8Amount" inherits="UMMModernGoldTemplate"/>
@@ -294,6 +317,7 @@
         </Frames>
       </Frame>
       <Frame name="UMMModernMass" hidden="true">
+        <Size><AbsDimension x="1" y="1"/></Size>
         <Frames>
           <EditBox name="UMMModernMassTo" inherits="UMMModernEditTemplate"/>
           <Button name="UMMModernMassPick" inherits="UMMModernButtonTemplate"/>
@@ -331,6 +355,7 @@
         </Frames>
       </Frame>
       <Frame name="UMMModernActivity" hidden="true">
+        <Size><AbsDimension x="1" y="1"/></Size>
         <Frames>
           <Frame name="UMMModernActivityLog" inherits="UMMModernHitTemplate"/>
           <Button name="UMMModernActivityName1" inherits="UMMModernButtonTemplate"/>

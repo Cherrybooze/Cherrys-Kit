@@ -2,8 +2,17 @@
 
 The modern mail window of Ultimate Mail Mod. RoM only runs script handlers declared in XML, so every
 frame that is clicked, typed into or scrolled is declared here, and nothing else: no textures, no
-labels, no sizes or positions. Modern/Core.lua (read the first time a mailbox opens the window) lays
-the frames out and draws the skins, so the game builds only these bare frames while loading.
+labels, no positions. Modern/Core.lua (read the first time a mailbox opens the window) lays the
+frames out and draws the skins, so the game builds only these bare frames while loading.
+
+Every frame still needs a <Size> here, even though Lua sizes it. The client gives a frame declared
+without one an "anchor size" of 0 x 0, which means "as big as my parent", and puts it back to its
+parent's size each time something it is anchored to moves (CUiLayout::ResetSize in ui/core), undoing
+SetWidth/SetHeight. Every template and every frame without a template therefore gets a 1 x 1 size.
+
+The client also lifts a clicked frame above its siblings of the same strata and frame level, so
+overlapping siblings swap places after a click. The title bar's drag area sits under the tabs and
+buttons of the title bar, so those get a higher frame level, which a click can never undo.
 
 Every handler calls UMMModern_On(event, this, ...) from Modern/Loader.lua, which looks the frame's
 handler up in frame.ummOn. Run after changing the frame list: python tools/gen_umm_modern_xml.py
@@ -49,20 +58,32 @@ def scripts(events, indent):
     return lines
 
 
+# Lua sets the real size; this only keeps the client from tying the frame to its parent's size.
+SIZE = '<Size><AbsDimension x="1" y="1"/></Size>'
+# Above the title bar's drag area (frame level 0), whatever was clicked last.
+OVER_TITLE = 'frameLevel="2"'
+
+# A multi-line box as the classic compose window and Cherry's Info make it: UIPanelEditBoxTemplate
+# draws a one-line border across the middle of a tall box. Modern/Core.lua draws its background.
+BODY_EXTRA = ('<FontString inherits="GameEditFont" spacing="1"/>',
+              '<TextInsets><AbsInset left="8" right="8" top="6" bottom="6"/></TextInsets>')
+
 TEMPLATES = [
-    ('Button', 'UMMModernButtonTemplate', 'enableMouse="true" text=""', BUTTON_EVENTS, None),
-    ('Button', 'UMMModernSlotTemplate', 'enableMouse="true" text=""', SLOT_EVENTS, None),
-    ('Frame', 'UMMModernHitTemplate', 'enableMouse="true"', HIT_EVENTS, None),
-    ('Frame', 'UMMModernUpdateTemplate', 'hidden="true"', UPDATE_EVENTS, None),
+    ('Button', 'UMMModernButtonTemplate', 'enableMouse="true" text=""', BUTTON_EVENTS, ()),
+    ('Button', 'UMMModernSlotTemplate', 'enableMouse="true" text=""', SLOT_EVENTS, ()),
+    ('Frame', 'UMMModernHitTemplate', 'enableMouse="true"', HIT_EVENTS, ()),
+    ('Frame', 'UMMModernUpdateTemplate', 'hidden="true"', UPDATE_EVENTS, ()),
+    # An XML frame takes the mouse only when it or its template says so (CXmlFrame), edit boxes too.
     ('EditBox', 'UMMModernEditTemplate',
-     'inherits="UIPanelEditBoxTemplate" letters="255" historyLines="0" autoFocus="false"', EDIT_EVENTS, None),
+     'inherits="UIPanelEditBoxTemplate" enableMouse="true" letters="255" historyLines="0" autoFocus="false"',
+     EDIT_EVENTS, ()),
     # numeric only filters typing; the commas come from Modern/Core.lua (999,999,999 = 11 letters)
     ('EditBox', 'UMMModernGoldTemplate',
-     'inherits="UIPanelEditBoxTemplate" numeric="true" letters="11" historyLines="0" autoFocus="false"',
-     EDIT_EVENTS, None),
+     'inherits="UIPanelEditBoxTemplate" enableMouse="true" numeric="true" letters="11" historyLines="0" '
+     'autoFocus="false"', EDIT_EVENTS, ()),
     ('EditBox', 'UMMModernBodyTemplate',
-     'inherits="UIPanelEditBoxTemplate" multiLine="true" letters="8000" historyLines="0" autoFocus="false"',
-     BODY_EVENTS, None),
+     'inherits="UIMultiEditBoxTemplate" enableMouse="true" multiLine="true" letters="8000" historyLines="0" '
+     'autoFocus="false"', BODY_EVENTS, BODY_EXTRA),
 ]
 
 
@@ -155,11 +176,13 @@ def window():
         *buttons("UMMModernPickerChip", PICKER_CHIPS),
         *buttons("UMMModernPickerRow", PICKER_ROWS),
     ])
+    over_title = [node("Button", name, "UMMModernButtonTemplate", OVER_TITLE)
+                  for name in ("UMMModernTab1", "UMMModernTab2", "UMMModernTab3", "UMMModernTab4",
+                               "UMMModernGear", "UMMModernClose", "UMMModernStop")]
     children = [
         hit("UMMModernTitle"),
         updater("UMMModernMover"), updater("UMMModernLater"),
-        *buttons("UMMModernTab", 4),
-        button("UMMModernGear"), button("UMMModernClose"), button("UMMModernStop"),
+        *over_title,
         inbox, compose, mass, activity, picker,
     ]
     return ("Frame", "UMMModernFrame", None,
@@ -173,12 +196,15 @@ def emit(item, indent, lines):
         head += f' inherits="{template}"'
     if attrs:
         head += " " + attrs
-    if not children and name != "UMMModernFrame":
+    # a frame with a template has the template's size
+    own = [] if template else [SIZE]
+    if name == "UMMModernFrame":
+        own += scripts(WINDOW_EVENTS, "")
+    if not children and not own:
         lines.append(head + "/>")
         return
     lines.append(head + ">")
-    if name == "UMMModernFrame":
-        lines.extend(scripts(WINDOW_EVENTS, indent + "  "))
+    lines.extend(f"{indent}  {line}" for line in own)
     if children:
         lines.append(f"{indent}  <Frames>")
         for child in children:
@@ -194,11 +220,14 @@ def build():
         "  <!-- Written by tools/gen_umm_modern_xml.py: change that file, not this one.",
         "       Ultimate Mail Mod's modern mail window: only the frames that take clicks, typing or the",
         "       mouse wheel. Modern/Core.lua sizes, places and skins them the first time a mailbox opens",
-        "       the window; until then each handler finds nothing to call. -->",
+        "       the window; until then each handler finds nothing to call. Every frame has a size here:",
+        "       without one the client keeps resizing it to its parent. -->",
     ]
-    for kind, name, attrs, events, _ in TEMPLATES:
+    for kind, name, attrs, events, extra in TEMPLATES:
         lines.append(f'  <{kind} name="{name}" virtual="true" {attrs}>')
+        lines.append(f"    {SIZE}")
         lines.extend(scripts(events, "    "))
+        lines.extend(f"    {line}" for line in extra)
         lines.append(f"  </{kind}>")
     emit(window(), "  ", lines)
     lines.append("</Ui>")

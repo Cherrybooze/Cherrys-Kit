@@ -280,6 +280,11 @@ class ModernWindowFixture:
         self.g.UMMPath = str(UMM) + "/"
         self.h.load("Modern/Loader.lua")
         self.h.load_xml("Modern/Modern.xml")
+        # the window's frames follow the client's layout and mouse rules (tests/rom_layout.lua)
+        self.lua.execute(Path(__file__).with_name("rom_layout.lua").read_text(encoding="utf-8"), name="rom_layout.lua")
+        self.lua.execute('RomLayout.Adopt("UMMModernFrame"); local create = CreateUIComponent; '
+                         'function CreateUIComponent(kind, name, parent) '
+                         'local w = create(kind, name, parent); RomLayout.Created(w); return w end')
         self.g.UMMFrame.visible = False
         self.lua.execute('UMMConfig.Characters = { "Alt1", "Alt2", "Alt3" }; UMMMasterFrame_OnEvent("VARIABLES_LOADED")')
 
@@ -892,6 +897,151 @@ class MassSendTests(ModernWindowFixture, unittest.TestCase):
         self.assertTrue(self.g.UMMModernMassFast.umm.enabled)
 
 
+class LayoutTests(ModernWindowFixture, unittest.TestCase):
+    """The window under the client's own layout and mouse rules (tests/rom_layout.lua).
+
+    In game, frames declared without a size kept snapping back to their parent's size, and a clicked
+    frame is lifted above its siblings: after one click a tab the size of the screen took every click,
+    and the edit boxes' borders showed as bars across the bottom of the screen.
+    """
+    PAGES = ["inbox", "compose", "mass", "activity"]
+
+    def frames(self):
+        return self.lua.eval('''(function()
+          local out = {}
+          for name, w in pairs(ummWidgets) do
+            if w.rl and w.kind ~= "Texture" and w.kind ~= "FontString" and string.find(name, "^UMMModern") then
+              out[name] = w
+            end
+          end
+          return out end)()''')
+
+    def window_rect(self):
+        f = self.g.UMMModernFrame
+        x, y = f.GetPos(f)
+        return x, y, x + f.width, y + f.height
+
+    def center(self, name):
+        return self.g.RomLayout.Center(self.g[name])
+
+    def click_at(self, x, y):
+        name = self.g.RomLayout.Click(x, y)
+        self.step()
+        return name
+
+    def click_on(self, name):
+        x, y = self.center(name)
+        return self.click_at(x, y)
+
+    def drag_title(self, dx, dy):
+        left, top, _, _ = self.window_rect()
+        x, y = left + 60, top + 18            # the title, left of the tabs
+        self.assertEqual(self.g.RomLayout.Down(x, y), "UMMModernTitle")
+        self.step()
+        self.g.cursorX, self.g.cursorY = x + dx, y + dy
+        self.step()
+        self.g.RomLayout.Up(x + dx, y + dy)
+        self.step()
+
+    def assert_sizes_hold(self):
+        """Every frame is the size Lua last gave it, and nothing visible reaches past the window."""
+        left, top, right, bottom = self.window_rect()
+        for name, w in self.frames().items():
+            if w.rl.luaW is not None:
+                self.assertEqual((w.width, w.height), (w.rl.luaW, w.rl.luaH), f"{name} lost its size")
+            else:
+                self.assertLessEqual(w.width * w.height, 1, f"{name} took a size nobody gave it")
+            if w.IsVisible(w) and name != "UMMModernFrame":
+                x, y = w.GetPos(w)
+                self.assertTrue(left <= x and y >= top and x + w.width <= right and y + w.height <= bottom,
+                                f"{name} reaches past the window: {(x, y, w.width, w.height)}")
+
+    def test_frames_keep_their_sizes_when_the_window_moves_and_the_screen_lays_out_again(self):
+        self.open()
+        self.assert_sizes_hold()
+        self.drag_title(-120, 40)
+        self.assert_sizes_hold()
+        for page in self.PAGES:
+            self.g.UMMModern.ShowPage(page)
+            self.step()
+            self.g.RomLayout.Relayout()      # what Cherry's Bar's lift or a resolution change does
+            self.assert_sizes_hold()
+
+    def test_tabs_take_every_click_whatever_was_clicked_before(self):
+        self.open()
+        for order in ([2, 3, 4, 1], [1, 4, 2, 3, 1]):
+            for i in order:
+                self.assertEqual(self.click_on(f"UMMModernTab{i}"), f"UMMModernTab{i}")
+                self.assertEqual(self.g.UMMModern.page, self.PAGES[i - 1])
+        # the title bar's drag area lies under the tabs; a click on it must not lift it over them
+        self.drag_title(0, 0)
+        self.drag_title(30, 10)
+        for i in (3, 1, 2):
+            self.assertEqual(self.click_on(f"UMMModernTab{i}"), f"UMMModernTab{i}")
+            self.assertEqual(self.g.UMMModern.page, self.PAGES[i - 1])
+        # clicks inside a page lift that page's frames, never above the tabs
+        self.assertEqual(self.click_on("UMMModernComposeTo"), "UMMModernComposeTo")
+        self.assertEqual(self.click_on("UMMModernGoldAdd"), "UMMModernGoldAdd")
+        self.assertEqual(self.click_on("UMMModernTab1"), "UMMModernTab1")
+        self.assertEqual(self.click_on("UMMModernInboxFilter2"), "UMMModernInboxFilter2")
+        self.assertEqual(self.click_on("UMMModernInboxSearch"), "UMMModernInboxSearch")
+        self.assertEqual(self.click_on("UMMModernTab4"), "UMMModernTab4")
+        self.assertEqual(self.g.UMMModern.page, "activity")
+        self.assertEqual(self.click_on("UMMModernGear"), "UMMModernGear")
+        self.assertEqual(self.click_on("UMMModernClose"), "UMMModernClose")
+        self.assertFalse(self.shown("UMMModernFrame"))
+
+    def test_nothing_outside_the_window_takes_the_mouse(self):
+        self.open()
+        for i in (2, 3, 4, 1):
+            self.click_on(f"UMMModernTab{i}")
+        self.drag_title(-50, 20)
+        self.g.RomLayout.Relayout()
+        left, top, right, bottom = self.window_rect()
+        outside = [(x, bottom + 4) for x in range(int(left), int(right), 37)]
+        outside += [(right + 4, y) for y in range(int(top), int(bottom), 31)]
+        outside += [(right + 300, bottom + 200), (1900, 1060), (left - 4, top + 50), (left + 100, top - 4)]
+        for x, y in outside:
+            hit = self.g.RomLayout.FrameAt(x, y)
+            self.assertTrue(hit is None or hit.name == "UIParent", f"{hit and hit.name} takes the mouse at {(x, y)}")
+
+    def test_no_two_frames_that_take_the_mouse_overlap_on_any_page(self):
+        """The client lifts a clicked frame over its siblings of the same strata and level, so two
+        overlapping ones would swap places after a click. Only the title bar's drag area lies under
+        other frames, at a lower frame level."""
+        self.open()
+        for page in self.PAGES:
+            self.g.UMMModern.ShowPage(page)
+            self.step()
+            overlaps = self.lua.eval('''(function()
+              local out = {}
+              local function rect(w) local x, y = w:GetPos(); return x, y, x + w.width, y + w.height end
+              local function walk(f)
+                local live = {}
+                for _, c in ipairs(f.rl.children) do
+                  if c.visible then
+                    if c.mouse and c.width * c.height > 1 then table.insert(live, c) end
+                    walk(c)
+                  end
+                end
+                for i = 1, #live do
+                  for j = i + 1, #live do
+                    local a, b = live[i], live[j]
+                    if a.rl.strata == b.rl.strata and a.rl.level == b.rl.level then
+                      local ax, ay, ar, ab = rect(a)
+                      local bx, by, br, bb = rect(b)
+                      if ax < br and bx < ar and ay < bb and by < ab then
+                        table.insert(out, a.name .. " / " .. b.name)
+                      end
+                    end
+                  end
+                end
+              end
+              walk(UMMModernFrame)
+              return out end)()''')
+            self.assertEqual(list(overlaps.values()), [], page)
+
+
 class PlanTests(ModernWindowFixture, unittest.TestCase):
     def setUp(self):
         super().setUp()
@@ -968,13 +1118,46 @@ class ModernXmlTests(unittest.TestCase):
     def test_modern_xml_holds_bare_frames_whose_handlers_all_go_through_the_loader(self):
         root = ET.parse(UMM / "Modern/Modern.xml").getroot()
         handlers = 0
+        parents = {child: parent for parent in root.iter() for child in parent}
         for element in root.iter():
             tag = element.tag.split("}")[-1]
-            self.assertNotIn(tag, {"Layers", "Layer", "Texture", "FontString", "Size", "Anchors", "Backdrop"})
+            # no art and no positions: Modern/Core.lua draws and places everything
+            self.assertNotIn(tag, {"Layers", "Layer", "Texture", "Anchors", "Backdrop"})
+            if tag == "FontString":   # only the text font of the multi-line template
+                self.assertEqual(parents[element].get("name"), "UMMModernBodyTemplate")
             if tag.startswith("On"):
                 handlers += 1
                 self.assertTrue(element.text.startswith("UMMModern_On("), element.text)
         self.assertGreater(handlers, 30)
+
+    def test_every_frame_has_a_size_so_the_client_never_ties_it_to_its_parent(self):
+        # Without a <Size> the client gives a frame anchor size 0 x 0, "as big as my parent", and
+        # puts it back to its parent's size whenever what it hangs from moves (CUiLayout::ResetSize).
+        root = ET.parse(UMM / "Modern/Modern.xml").getroot()
+        templates = {e.get("name"): e for e in root if e.get("virtual") == "true"}
+
+        def sized(element):
+            size = element.find("ui:Size/ui:AbsDimension", support.NS)
+            if size is not None:
+                return float(size.get("x")) > 0 and float(size.get("y")) > 0
+            base = templates.get(element.get("inherits"))   # the game's own templates do not count
+            return base is not None and sized(base)
+
+        frames = [e for e in root.iter() if e.tag.split("}")[-1] in ("Frame", "Button", "EditBox")]
+        self.assertGreater(len(frames), 150)
+        for element in frames:
+            self.assertTrue(sized(element), element.get("name"))
+
+    def test_the_title_bar_buttons_sit_above_its_drag_area(self):
+        root = ET.parse(UMM / "Modern/Modern.xml").getroot()
+        level = {e.get("name"): int(e.get("frameLevel", 0)) for e in root.iter() if e.get("name")}
+        for name in ("UMMModernTab1", "UMMModernTab2", "UMMModernTab3", "UMMModernTab4", "UMMModernGear",
+                     "UMMModernClose", "UMMModernStop"):
+            self.assertGreater(level[name], level["UMMModernTitle"], name)
+        # and every edit box takes the mouse itself: an XML frame does only when told to
+        for template in ("UMMModernEditTemplate", "UMMModernGoldTemplate", "UMMModernBodyTemplate"):
+            element = next(e for e in root if e.get("name") == template)
+            self.assertEqual(element.get("enableMouse"), "true", template)
 
     def test_the_toc_loads_only_the_loader_and_the_frames(self):
         toc = (ROOT / "Interface/AddOns/CherrysKit/CherrysKit.toc").read_text(encoding="utf-8")

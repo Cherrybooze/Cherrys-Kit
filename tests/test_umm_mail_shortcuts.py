@@ -95,11 +95,15 @@ class MailShortcutsTests(unittest.TestCase):
             self.g.UMMFixtureWidget("FontString", name + "Title", name)
         if "CommonOptionsCheckButtonTemplate" in inherited:
             self.g.UMMFixtureWidget("FontString", name + "Name", name)
+        # what tests/rom_layout.lua needs to load the frame as the client does
+        obj.xmlStrata = attributes.get("frameStrata")
+        obj.xmlLevel = attributes.get("frameLevel")
         for source in sources:
             dimensions = source.find("ui:Size/ui:AbsDimension", NS)
             if dimensions is not None:
                 obj.width = float(dimensions.get("x", 0))
                 obj.height = float(dimensions.get("y", 0))
+                obj.xmlSized = True
             anchor = source.find("ui:Anchors/ui:Anchor", NS)
             if anchor is not None:
                 offset = anchor.find("ui:Offset/ui:AbsDimension", NS)

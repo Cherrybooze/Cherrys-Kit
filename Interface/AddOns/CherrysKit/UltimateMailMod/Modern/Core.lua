@@ -431,6 +431,17 @@ function M.Edit(e, parent, x, y, w, h, opts)
     e.ummAfter = opts.text;
     e.ummText = nil;
   end
+  if (opts.panel) then
+    -- a multi-line box draws nothing of its own (Modern.xml): a flat background to type on
+    local p = e.ummPanel;
+    if (not p) then
+      e.ummPanel = M.Panel(e, 0, 0, w, h, C.panel, STYLES.quiet.edge, 1);
+    else
+      M.Place(p.fill, e, 0, 0, w, h);
+      M.Place(p.top, e, 0, 0, w, 1); M.Place(p.bottom, e, 0, h - 1, w, 1);
+      M.Place(p.left, e, 0, 0, 1, h); M.Place(p.right, e, w - 1, 0, 1, h);
+    end
+  end
   if (opts.hint) then
     -- on the box itself: the box's own background would cover a label of the page
     e.ummHint = e.ummHint or M.Label(e, 12, C.dim, "LEFT", "OVERLAY");
@@ -647,8 +658,8 @@ local function buildFrame()
   local f = UMMModernFrame;
   M.Size(f, M.W, M.H);
   f.ummOn = { show = function() M.Shown(); end, hide = function() M.Hidden(); end };
-  -- body, title bar, status line
-  M.Panel(f, 0, 0, M.W, M.H, C.bg, STYLES.quiet.edge, 0.97);
+  -- body, title bar, status line (opaque: name plates in the world must not show through)
+  M.Panel(f, 0, 0, M.W, M.H, C.bg, STYLES.quiet.edge, 1);
   M.Panel(f, 1, 1, M.W - 2, 36, C.bar, false);
   M.Line(f, 1, 37, M.W - 2, 1, C.line, 0.8);
   M.Panel(f, 1, M.H - 27, M.W - 2, 26, C.bar, false);
