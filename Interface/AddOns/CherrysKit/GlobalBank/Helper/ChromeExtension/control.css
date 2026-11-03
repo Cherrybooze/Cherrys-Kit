@@ -508,6 +508,19 @@ tbody tr:last-child td { border-bottom: 0; }
 .char-tip-name { font-size: 14px; }
 .char-tip-sub { font-size: 12px; color: #a7b7c9; }
 .char-tip-gold { font-size: 12px; color: var(--gb-gold); }
+.bank-tooltip .char-tip-money { display: flex; flex-wrap: wrap; gap: 3px 12px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.bank-tooltip .char-tip-coin { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.char-tip-coin .ico svg { width: 13px; height: 13px; }
+.char-tip-coin.is-gold { color: var(--gb-gold); }
+.char-tip-coin.is-diamond { color: #8fd3f4; }
+.char-tip-coin.is-ruby { color: #f08a9a; }
+.char-tip-coin.is-token { color: #a8e07a; }
+.char-tip-coin.is-charges { color: #c9a6f2; }
+.bank-tooltip .char-tip-keys { display: flex; flex-direction: column; gap: 2px; margin-top: 5px; font-size: 11px; color: #8fa3b5; }
+.bank-tooltip .char-tip-keys > span { display: inline-flex; align-items: center; gap: 3px; }
+.char-tip-keys kbd { min-width: 14px; padding: 0 4px; font-size: 10px; line-height: 15px; color: #b3c5d9; text-align: center; background: #1a293b; border: 1px solid #34465c; border-radius: 3px; }
+.char-tip-key-does { margin-left: 4px; }
+.char-tip-selected { font-weight: 600; color: var(--gb-gold); }
 .char-tip-row { font-size: 12px; }
 .char-tip-note { font-size: 12px; font-style: italic; }
 .gf-menu { position: fixed; z-index: 95; display: flex; flex-direction: column; gap: 3px; width: 244px; max-height: 80vh; padding: 7px; overflow-y: auto; font-size: 12px; color: var(--gb-text); background: #101b28; border: 1px solid #5c6d80; border-radius: 8px; box-shadow: 0 10px 28px #0008; }

@@ -280,6 +280,14 @@ const GBRoster = (() => {
   }
   // The few lines a hover over a character shows: who, where, what it holds, and what to do about stale data.
   // extra: what accountLine needs, hideGameforge and hideRom, and currencyName(item).
+  // On the hover card's gold line, after the gold: Diamonds and Rubies (the RoM account's), Daily Tokens and Arcane
+  // Transmutor charges (the character's own)
+  const TIP_MONEY = [
+    {key: 'account', icon: 'diamond', tone: 'diamond', label: 'Diamonds'},
+    {key: 'bonus', icon: 'ruby', tone: 'ruby', label: 'Rubies'},
+    {key: 'billdin', icon: 'star', tone: 'token', label: 'Daily Tokens'},
+    {key: 'transmutor', icon: 'sparkles', tone: 'charges', label: 'Arcane Transmutor charges'},
+  ];
   function describe(character, extra = {}) {
     const lines = [];
     const server = character.shownServer ? character.shownServer + (character.manualServer ? ' (set by hand)' : '') : NO_SERVER;
@@ -292,7 +300,14 @@ const GBRoster = (() => {
     }
     const classes = (character.classes || []).filter(item => item.name).map(item => `${item.name} ${item.level}`);
     lines.push({kind: 'sub', text: [classes.length ? classes.join(' · ') : [character.class, character.level || ''].filter(Boolean).join(' '), server].filter(Boolean).join(' · ')});
-    lines.push({kind: 'gold', text: `${number(character.gold)} gold${character.gold >= FULL_CAP ? ' (a full cap)' : ''}`});
+    // Gold and the four counts players look for, each with its icon. A count the character hasn't saved yet is left out.
+    const goldText = `${number(character.gold)} gold${character.gold >= FULL_CAP ? ' (a full cap)' : ''}`;
+    const parts = [{icon: 'coin', tone: 'gold', label: 'Gold', value: number(character.gold) + (character.gold >= FULL_CAP ? ' (cap)' : '')}];
+    for (const item of TIP_MONEY) {
+      const saved = (character.currencies || []).find(money => money.key === item.key);
+      if (saved) parts.push({icon: item.icon, tone: item.tone, label: item.label, value: number(saved.amount)});
+    }
+    lines.push({kind: 'gold', text: goldText, parts});
     if (account) lines.push(account);
     const bag = (character.bag || []).length, bank = (character.bank || []).length;
     const bagText = character.bagSlots ? `Bag ${number(bag)} of ${number(character.bagSlots)}` : `Bag ${number(bag)}`;
@@ -302,7 +317,7 @@ const GBRoster = (() => {
     if (stones) lines.push({kind: 'row', text: stones});
     const mail = extra.mail ? extra.mail(character) : null;
     if (mail) lines.push({kind: mail.soon ? 'warn' : 'row', text: mail.text});
-    const money = (character.currencies || []).filter(item => Number(item.amount) > 0);
+    const money = (character.currencies || []).filter(item => Number(item.amount) > 0 && !TIP_MONEY.some(shown => shown.key === item.key));
     if (money.length) {
       const named = money.slice(0, 3).map(item => `${extra.currencyName ? extra.currencyName(item) : item.name || item.key} ${number(item.amount)}`);
       lines.push({kind: 'row', text: named.join(' · ') + (money.length > 3 ? ` · and ${money.length - 3} more` : '')});
@@ -659,9 +674,32 @@ const GBRoster = (() => {
       const color = options.classColor ? options.classColor(character) : null;
       if (color) title.style.color = color;
       const nodes = [title];
-      for (const line of describe(character, {...options, hideGameforge: roster.view.hideGameforge, hideRom: roster.view.hideRom})) nodes.push(make('span', `char-tip-${line.kind}`, line.text));
-      const selected = roster.isSelected(key);
-      nodes.push(make('span', 'char-tip-hint', (selected ? 'Selected. ' : '') + (clickable ? 'Click to select, Shift-click for a range. ' : '') + 'Right-click to copy its login or rename its accounts.'));
+      for (const line of describe(character, {...options, hideGameforge: roster.view.hideGameforge, hideRom: roster.view.hideRom})) {
+        if (!line.parts) { nodes.push(make('span', `char-tip-${line.kind}`, line.text)); continue; }
+        const row = make('span', 'char-tip-money');
+        for (const part of line.parts) {
+          const item = make('span', `char-tip-coin is-${part.tone}`);
+          item.title = part.label;
+          const icon = make('span', 'ico');
+          icon.innerHTML = window.GB_ICONS?.[part.icon] || '';
+          item.append(icon, make('span', 'gb-sr-only', part.label + ' '), make('span', '', part.value));
+          row.append(item);
+        }
+        nodes.push(row);
+      }
+      // What the mouse does, one key-cap line each
+      const keys = make('span', 'char-tip-keys');
+      if (roster.isSelected(key)) keys.append(make('span', 'char-tip-selected', 'Selected'));
+      const keyLine = (caps, words) => {
+        const line = make('span');
+        caps.forEach((cap, index) => { if (index) line.append(' + '); line.append(make('kbd', '', cap)); });
+        line.append(make('span', 'char-tip-key-does', words));
+        keys.append(line);
+      };
+      if (clickable) keyLine(['LMB'], 'select');
+      keyLine(['RMB'], 'copy / control');
+      if (clickable) keyLine(['Shift', 'LMB'], 'range');
+      nodes.push(keys);
       tooltip.replaceChildren(...nodes);
       tooltip.hidden = false;
       place(event);
