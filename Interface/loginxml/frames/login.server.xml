@@ -60,6 +60,9 @@
         <Scripts>
           <OnLoad>
             this:SetChecked(GetSelectedRealmState())
+            if LoginLook then
+              LoginLook.check(this, 22)
+            end
           </OnLoad>
           <OnClick>
 						SetSelectedRealmState(this:IsChecked());

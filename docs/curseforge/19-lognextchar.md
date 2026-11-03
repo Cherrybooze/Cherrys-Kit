@@ -18,11 +18,9 @@ Made for alts. One click, and you are on the next character without touching the
 
 ## Recent changes
 
+- **1.4.0**: a modern login screen in the style of rom weakauras and Cherry's Bar, with gold beside a coin on the character screen, tidier character, server and settings panels, and new check boxes. **Modern look** in the settings panel switches back to the game's own look at once.
 - **1.3.4**: `Install login screen.bat` asks Windows for administrator rights and installs in that window, so a protected game folder can't refuse it.
 - **1.3.3**: Next and Prev no longer stay on the character screen. The login screen waits for the whole character list before it picks, and a logout you cancel drops the queued switch. Run `Install login screen.bat` again after updating.
-- **1.3.2**: the character screen shows each character's Arcane Transmutor charges under its gold.
-- **1.3.1**: the login screen finds each character's gold by server, so same-named characters on different servers no longer mix. Gold saved before servers were recorded shows a question mark.
-- **1.3.0**: Cherry's Loginxml is now part of this addon: one addon, one zip, and one row in the hub. The login screen travels inside the zip, and your saved logins and toggles carry over. Its installer moves the old `CherrysLoginxml` and `CherrysLoginxmlHook` folders to `Interface\offloaded_addons`.
 
 ## Features
 
@@ -51,6 +49,7 @@ Made for alts. One click, and you are on the next character without touching the
 - **Gets past a stuck "obtaining server list"**, including for Steam and Gameforge launcher logins: the Retry button counts down and asks for the server list again by itself (click it to retry at once).
 - **Saved logins**, with account or character lists and notes for NoCheckVersion accounts.
 - **Fills in the secondary password.**
+- **A modern look**, or the game's own: flat dark panels, gold beside a coin, lists that fit what is in them and grouped settings. **Modern look** in the settings panel switches between them at once.
 - **Cleaner server and character select**, usable from the keyboard: Up and Down to choose, Enter to go, Esc to go back.
 - **Settings as toggle buttons on the server screen.** A click applies at once, and the game saves it when you log out or quit. **Use config.lua** forgets the saved toggles and goes back to the file.
 - **Log straight in**: when an account has only one character, or the first character in the list. Hold Ctrl to stop at character select anyway.

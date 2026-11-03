@@ -1,12 +1,18 @@
 -- local _,y = loadfile("interface/loginxml/frames/login.charselect.lua") lprint(y) 
 local me = { --
   charlist = {}, --
-  channels = {}, --
+  channels = {}, -- rows for the channel list, in the look in use
+  zones = {}, -- the channels: name and load (1 low .. 3 full)
   classes = {}, --
   selected = nil, --
   channel = 1, -- overwritten by config
   _locks = {},
 }
+
+-- The Modern look (template/skin.lua) is on
+local function modern()
+  return LoginLook and LoginLook.modern
+end
 
 function me.onLoad(this)
   me.initchannels()
@@ -52,15 +58,17 @@ function me.UPDATE_SELECTED_CHARACTER(arg1)
   me.updateDeleteButton()
 end
 function me.UPDATE_CHARACTER_PARALLEZONE()
-  local tex = 'interface/buttons/uiindex%s-normal'
-  local colors = {'green', 'yellow', 'red'}
-  me.channels = {}
+  me.zones = {}
   for i = 1, GetNumParalleZones() do
     local name, load = GetParalleZonesInfo(i)
-    local _tex = string.format(tex, colors[load])
-    table.insert(me.channels, {{tex = _tex}, name, {tex = _tex}})
+    table.insert(me.zones, {name = name, load = load})
   end
-  LoginCharSelectFrame_channels:update();
+  me.buildChannels()
+  if modern() and LoginCharSelectFrame_channels.numRow ~= me.channelRows() then
+    me.layoutChannels()
+  else
+    LoginCharSelectFrame_channels:update();
+  end
 end
 function me.UPDATE_CHARACTER_SELECT_LIST()
   me.updateDeleteButton()
@@ -167,33 +175,101 @@ function me.initCharacterList()
   end
   -- Room for gold only for players with Global Bank's data
   me.goldColumn = login.globalbank and login.globalbank.read()
-  local data = {
-    col = me.goldColumn and {45, 155, 118} or {45, 155}, --
-    fn = { --
-      callback = me.charactersCallback, --
-      onClick = me.charactersOnClick, --
-    }, --
-    numRow = 8, --
-    rowHeight = 45, --
-    noHead = true, --
-    align = {0, 2, 1}, --
-  }
-  LoginCharSelectFrame_chars:init(data)
-  LoginCharSelectFrame_chars_list:SetBackdropTileAlpha(.5)
+  me.layoutCharacterList()
 end
 function me.initchannels()
   me.channel = login.config.channel or me.channel
-  local data = {
-    col = {20, 160, 20}, --
-    fn = { --
-      callback = me.channelsCallback, --
-      onClick = me.channelsOnClick, --
-    }, --
-    numRow = 4, --
-    noHead = true, --
-  }
+  me.layoutChannels()
+end
+
+-- Modern column widths: "Champion 100 / Warlock 100" and "2026-11-02 23:08" each fit on one line
+me.NAME_WIDTH = 172
+me.GOLD_WIDTH = 130
+
+-- Modern: as many rows as there are characters and the Create row, up to 8; Classic always shows 8
+function me.characterRows()
+  local count = #me.charlist
+  if count < GetMaxCharacterCreate() then
+    count = count + 1
+  end
+  return math.max(1, math.min(8, count))
+end
+function me.channelRows()
+  return math.max(1, math.min(4, #me.zones))
+end
+
+function me.layoutCharacterList()
+  local fn = {callback = me.charactersCallback, onClick = me.charactersOnClick}
+  local data
+  if modern() then
+    data = {
+      col = {46, me.NAME_WIDTH, me.goldColumn and me.GOLD_WIDTH or nil}, --
+      fn = fn, numRow = me.characterRows(), rowHeight = 46, noHead = true, --
+      align = {0, 2, 1}, --
+      -- class icon, three lines of text, gold with the coin beside its first line
+      cells = {nil, {left = 6, right = 4}, {left = 2, right = 22, tex = {'TOPRIGHT', -4, 3}}}, --
+    }
+  else
+    data = {
+      col = me.goldColumn and {45, 155, 118} or {45, 155}, --
+      fn = fn, numRow = 8, rowHeight = 45, noHead = true, --
+      align = {0, 2, 1}, --
+    }
+  end
+  LoginCharSelectFrame_chars:init(data)
+  LoginCharSelectFrame_chars_list:SetBackdropTileAlpha(.5)
+  -- Modern leaves a little room between the two lists and above the Delete button
+  local gap = modern() and 6 or 0
+  LoginCharSelectFrame_channels:ClearAllAnchors()
+  LoginCharSelectFrame_channels:SetAnchor('BOTTOM', 'TOP', LoginCharSelectFrame_chars, 0, -gap)
+  LoginCharSelectFrame_delete:ClearAllAnchors()
+  if modern() then
+    -- centred on the list itself; the frame keeps room on the right for the scroll bar
+    LoginCharSelectFrame_delete:SetAnchor('TOP', 'BOTTOM', LoginCharSelectFrame_chars_list, 0, gap)
+  else
+    LoginCharSelectFrame_delete:SetAnchor('TOP', 'BOTTOM', LoginCharSelectFrame_chars, 0, 0)
+  end
+  me.layoutChannels()
+end
+
+-- Modern: a dot in the channel's load colour and its name, as wide as the character list
+function me.layoutChannels()
+  local fn = {callback = me.channelsCallback, onClick = me.channelsOnClick}
+  local data
+  if modern() then
+    local width = 46 + me.NAME_WIDTH + (me.goldColumn and me.GOLD_WIDTH or 0)
+    data = {col = {26, width - 26}, fn = fn, numRow = me.channelRows(), rowHeight = 22, noHead = true, align = {0, 2},
+      cells = {nil, {left = 2}}}
+  else
+    data = {col = {20, 160, 20}, fn = fn, numRow = 4, noHead = true}
+  end
   LoginCharSelectFrame_channels:init(data)
   LoginCharSelectFrame_channels_list:SetBackdropTileAlpha(.5)
+end
+
+local LOAD = {'green', 'yellow', 'red'}
+local LOAD_MODERN = {'green', 'gold', 'red'}
+function me.buildChannels()
+  me.channels = {}
+  local skin = modern() and LoginLook
+  for _, zone in ipairs(me.zones) do
+    if skin then
+      local dot = {file = skin.MEDIA .. 'dot', size = {8, 8}, color = skin.color[LOAD_MODERN[zone.load] or 'quiet']}
+      table.insert(me.channels, {{tex = dot}, zone.name})
+    else
+      local tex = string.format('interface/buttons/uiindex%s-normal', LOAD[zone.load] or 'green')
+      table.insert(me.channels, {{tex = tex}, zone.name, {tex = tex}})
+    end
+  end
+end
+
+-- The Modern look switched on or off: lay both lists out again
+function me.onSkin()
+  if not (LoginCharSelectFrame_chars and LoginCharSelectFrame_chars.updateCallback) then
+    return
+  end
+  me.buildChannels()
+  me.layoutCharacterList()
 end
 
 -- ! ==============================================================
@@ -242,7 +318,11 @@ function me.updateCharacterList()
   if login.config.character_sort then
     table.sort(me.charlist, sortCharacterList)
   end
-  LoginCharSelectFrame_chars:update()
+  if modern() and LoginCharSelectFrame_chars.numRow ~= me.characterRows() then
+    me.layoutCharacterList()
+  else
+    LoginCharSelectFrame_chars:update()
+  end
 end
 -- ! ==============================================================
 -- ! ========================== list ==============================
@@ -255,13 +335,82 @@ function me.channelsOnClick(frame, double, index)
   me.channel = index
   LoginCharSelectFrame_channels:update()
 end
+local function shorten(text, max)
+  if text:len() > max then
+    return text:sub(1, max - 2) .. '...'
+  end
+  return text
+end
+
+local function deleteTimer(seconds)
+  local sec = seconds % 60
+  local min = math.floor(seconds / 60) % 60
+  local hour = math.floor(seconds / 60 / 60) % 60
+  return string.format('%02d:%02d:%02d', hour, min, sec)
+end
+
+-- Modern row: name (peak level dimmed), classes and levels, zone or the delete timer in red;
+-- gold in gold beside a coin, charges, when Global Bank saved it
+function me.modernRow(data, skin)
+  local hex = skin.hex
+  local name = shorten(data.name, 20)
+  if data.destroy then
+    name = string.format('|cff%s%s|r', hex.faint, name)
+  end
+  if (tonumber(data.peak) or 0) > 0 then
+    name = string.format('%s |cff%s(%d)|r', name, hex.dim, data.peak)
+  end
+  local classes = string.format('%s %d', data.mc, data.lv)
+  if data.seclv > 0 then
+    classes = string.format('%s / %s %d', classes, data.sc, data.seclv)
+  end
+  local last = data.destroy and string.format('|cff%s%s|r', hex.red, deleteTimer(data.destroy))
+    or string.format('|cff%s%s|r', hex.faint, shorten(data.zone or '', 26))
+  local text = string.format('%s\n|cff%s%s|r\n%s', name, hex.dim, shorten(classes, 26), last)
+  local row = {{tex = {file = data.icon, size = {34, 34}}}, {text = text}}
+  if me.goldColumn then
+    local known = login.globalbank.character(data.name)
+    if known then
+      local gold, charges, saved = login.globalbank.parts(known)
+      -- always three lines, so the coin stays beside the first
+      row[3] = {
+        text = string.format('|cff%s%s|r%s\n|cff%s%s|r\n|cff%s%s|r', hex.gold, gold, known.unsure and ' ?' or '',
+          hex.dim, charges and 'Charges ' .. charges or ' ', hex.faint, saved),
+        tex = {file = skin.MEDIA .. 'coin', size = {15, 15}},
+      }
+    else
+      row[3] = ''
+    end
+  end
+  return row
+end
+
 function me.charactersCallback(frame)
   local res = {}
   local selected = nil
+  local skin = modern() and LoginLook
   for index, data in pairs(me.charlist) do
     if data.index == me.selected then
       selected = index
     end
+    if skin then
+      table.insert(res, me.modernRow(data, skin))
+    else
+      table.insert(res, me.classicRow(data))
+    end
+  end
+  if #res < GetMaxCharacterCreate() then
+    if skin then
+      table.insert(res, {{tex = {file = skin.MEDIA .. 'plus', size = {20, 20}}},
+        {text = TEXT('CHARACTER_SELECT_CREATE'), color = skin.color.dim}, me.goldColumn and '' or nil})
+    else
+      table.insert(res, {{tex = {file = 'interface/buttons/minimapplusbutton_normal', size = {20, 20}}}, TEXT('CHARACTER_SELECT_CREATE'), me.goldColumn and '' or nil});
+    end
+  end
+  return res, nil, selected
+end
+
+function me.classicRow(data)
     local color = data.destroy and {.5, .5, .5} or nil
 
     local firstLine = data.name
@@ -274,10 +423,7 @@ function me.charactersCallback(frame)
     end
     local thirdLine = data.zone
     if data.destroy then
-      local sec = data.destroy % 60
-      local min = math.floor(data.destroy / 60) % 60
-      local hour = math.floor(data.destroy / 60 / 60) % 60
-      thirdLine = string.format('%02d:%02d:%02d', hour, min, sec)
+      thirdLine = deleteTimer(data.destroy)
     end
     local lines = {firstLine, secondLine, thirdLine}
     for index, text in ipairs(lines) do
@@ -291,12 +437,7 @@ function me.charactersCallback(frame)
       local known = login.globalbank.character(data.name)
       row[3] = known and {text = login.globalbank.describe(known), color = color} or ''
     end
-    table.insert(res, row)
-  end
-  if #res < GetMaxCharacterCreate() then
-    table.insert(res, {{tex = {file = 'interface/buttons/minimapplusbutton_normal', size = {20, 20}}}, TEXT('CHARACTER_SELECT_CREATE'), me.goldColumn and '' or nil});
-  end
-  return res, nil, selected
+    return row
 end
 
 function me.charactersOnClick(frame, double, index)

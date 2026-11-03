@@ -8,7 +8,8 @@ local me = {
     },
     scrollbar = {
         width = 20,
-    }
+    },
+    textColor = {1, 1, 1}, -- cell text without a colour of its own (skin.lua sets it)
 };
 
 me.OnLoad = function(frame)
@@ -21,6 +22,9 @@ me.OnLoad = function(frame)
     frame.onEnter = me.onEnter;
     frame.onLeave = me.onLeave;
     frame.scrollTo = me.scrollTo;
+    if LoginLook then
+        LoginLook.list(frame)
+    end
 end
 
 -- scrolls just enough to show data row <index> (keyboard selection)
@@ -55,13 +59,45 @@ me.onLeave = function(frame, row, col)
     end
 end
 
-me.initCol = function(col, id, width, align, offset)
+-- A column's own layout (tbl.cells[i]), for lists that want one:
+-- left/right = text insets (10), size = font size, tex = {point, x, y} for the picture (CENTER)
+me.layoutCell = function(col, cell)
+    local text = col:GetNormalText()
+    if cell or col.cellLayout then
+        local left, right = 10, 10
+        if cell then
+            left, right = cell.left or left, cell.right or right
+        end
+        text:ClearAllAnchors()
+        text:SetAnchor("TOPLEFT", "TOPLEFT", col, left, 0)
+        text:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", col, -right, 0)
+        if cell and cell.size then
+            text:SetFontSize(cell.size)
+            col.cellSize = true
+        elseif col.cellSize then
+            text:SetFontSize(12) -- LoginFontHighlightSmall
+            col.cellSize = nil
+        end
+        local tex = _G[col:GetName().."_tex"]
+        local place = cell and cell.tex
+        tex:ClearAllAnchors()
+        if place then
+            tex:SetAnchor(place[1], place[1], col, place[2] or 0, place[3] or 0)
+        else
+            tex:SetAnchor("CENTER", "CENTER", col, 0, 0)
+        end
+        col.cellLayout = cell and true or nil
+    end
+end
+
+me.initCol = function(col, id, width, align, offset, cell)
     col:Show()
     col:SetID(id)
     col:ClearAllAnchors()
     local parent = col:GetParent():GetName()
 	col:SetAnchor("TOPLEFT", "TOPLEFT", parent, offset - 1, 0)
 	col:SetAnchor("BOTTOMRIGHT", "BOTTOMLEFT", parent, offset + 1+width, 0)
+    me.layoutCell(col, cell)
     local align = align or 0;
 	if align==1 then
 		col:GetNormalText():SetJustifyHType("RIGHT")
@@ -81,7 +117,7 @@ me.initCol = function(col, id, width, align, offset)
     end
     col:SetText(col:GetName())
 end
-me.initRow = function(noHead, row, id, col, align)
+me.initRow = function(noHead, row, id, col, align, cells)
     row:SetID(id)
     id = noHead and id - 1 or id
     row:Show()
@@ -89,7 +125,7 @@ me.initRow = function(noHead, row, id, col, align)
     for i = 1, me.col.max do
 		local _col = _G[row:GetName().."_"..i]
         if col[i] then
-            me.initCol(_col, i, col[i], align[i], offset)
+            me.initCol(_col, i, col[i], align[i], offset, cells and cells[i])
             offset = offset + col[i]
         else
             _col:Hide()
@@ -119,7 +155,7 @@ me.init = function(frame, tbl)
     for i=0, me.row.max do
         local row = _G[frame:GetName().."_list_"..i]
         if i <= frame.numRow and (i>0 or not noHead) then
-            me.initRow(noHead, row, i, col, tbl.align or {})
+            me.initRow(noHead, row, i, col, tbl.align or {}, i > 0 and tbl.cells)
         else
             row:Hide()
         end
@@ -169,6 +205,24 @@ me.updateHead = function(row, data)
         end
     end
     row:Show()
+    me.showSeparator(row, data[1] ~= nil)
+end
+
+-- The line under a row (Modern only; skin.lua colours it)
+me.showSeparator = function(row, on)
+    local sep = row.sep
+    if sep == nil then
+        sep = _G[row:GetName().."_sep"] or false
+        row.sep = sep
+    end
+    if sep then
+        local root = row:GetParent():GetParent()
+        if on and root.modern then
+            sep:Show()
+        else
+            sep:Hide()
+        end
+    end
 end
 me.updateColumns = function(row, data)
     for i=1, me.col.max do
@@ -182,7 +236,7 @@ me.updateColumns = function(row, data)
                 _data = {text=tostring(_data)}
             end
             col:SetText(_data.text or "")
-            col:SetTextColor(unpack(_data.color or {1,1,1}))
+            col:SetTextColor(unpack(_data.color or me.textColor))
             local tex = _G[col:GetName().."_tex"]
             if _data.tex then
                 local x,y = col:GetSize()
@@ -193,6 +247,8 @@ me.updateColumns = function(row, data)
                 tex:SetAlphaMode(_data.tex.mode or "BLEND")
                 tex:SetTexCoord(unpack(_data.tex.coord or {0,1,0,1}))
                 tex:SetSize(unpack(_data.tex.size or {x-5,y-5}))
+                local color = _data.tex.color or me.white
+                tex:SetColor(color[1], color[2], color[3])
                 tex:Show()
             else
                 tex:Hide()
@@ -206,6 +262,7 @@ end
 me.showHighlight = function(frame, index)
     local hl = _G[frame:GetName().."_list_hl"]
     local list = _G[frame:GetName().."_list"]
+    local bar = _G[frame:GetName().."_list_hlbar"]
     
     if (type(index) == "number") then
         index = index - (frame.noHead and 1 or 0)
@@ -213,8 +270,18 @@ me.showHighlight = function(frame, index)
 		hl:SetAnchor("TOPLEFT", "TOPLEFT", list:GetName(), 5, index*frame.rowHeight+2);
 		hl:SetAnchor("BOTTOMRIGHT", "TOPRIGHT", list:GetName(), -5, (index+1)*frame.rowHeight);
         hl:Show();
+        if bar then
+            if frame.modern then
+                bar:Show()
+            else
+                bar:Hide()
+            end
+        end
     else
         hl:Hide()
+        if bar then
+            bar:Hide()
+        end
 	end;
 end
 
@@ -227,6 +294,16 @@ me.repaintTable = function(frame)
 	maxval = maxval < 1 and 1 or maxval;
     local scroll = _G[frame:GetName().."_scroll"]
     scroll:SetMinMaxValues(1, maxval);
+    -- Modern shows the scroll bar only when there is something to scroll
+    local hideScroll = frame.modern and maxval <= 1 or false
+    if hideScroll ~= frame.scrollHidden then
+        frame.scrollHidden = hideScroll
+        if hideScroll then
+            scroll:Hide()
+        else
+            scroll:Show()
+        end
+    end
 	me.onValueChanged(frame, true)
     local val = scroll:GetValue();
     local row = _G[frame:GetName().."_list_0"]
@@ -244,6 +321,7 @@ me.repaintTable = function(frame)
                 row:Show()
             end
             me.updateColumns(row, tbl[index])
+            me.showSeparator(row, i < frame.numRow and tbl[index + 1] ~= nil)
         else
             row:Hide()    
         end
@@ -253,5 +331,7 @@ me.repaintTable = function(frame)
     end
 end
 
+
+me.white = {1, 1, 1}
 
 _G["LOGIN_LIST_TEMPLATE"] = me;

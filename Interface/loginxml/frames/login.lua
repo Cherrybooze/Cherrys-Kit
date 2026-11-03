@@ -1,6 +1,6 @@
 local me = {
   name = "LogNextChar",
-  version = "1.3.4",
+  version = "1.4.0",
   sub = {
     'account', --
     'server', --
@@ -25,6 +25,7 @@ local me = {
     account_page = 1, --
     account_columns = 5, --
     show_account_info = true, --
+    modern_ui = true, -- false: the game's own look (template/skin.lua)
   }, --
   autologin = {}, --
 }
@@ -34,6 +35,10 @@ function me.onLoad(this)
   me.config = type(data) == 'table' and data or me.config
   if me.settings then
     me.settings.load()
+  end
+  -- The buttons above loaded with the default look; the rest load with this one
+  if LoginLook then
+    pcall(LoginLook.apply, me.config.modern_ui ~= false)
   end
 
   if me.config.show_account_info then
