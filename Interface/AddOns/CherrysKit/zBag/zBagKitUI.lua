@@ -44,13 +44,21 @@ function K.PlaceSearchBoxes()
       BagSearchEditBox:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", parent, -5, K.IsOneBag() and -5 or -4)
     end
   end
-  if show and BankSearchEditBox then
-    local parent = K.IsOneBank() and zBagBBackground or BankFrame
-    if parent then
-      BankSearchEditBox:ClearAllAnchors()
-      if K.IsOneBank() then BankSearchEditBox:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", parent, -5, -5)
-      else BankSearchEditBox:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", parent, -5, -32) end
-    end
+  K.PlaceBankSearch()
+end
+
+-- The bank search box: bottom of the one bank, or of the item shop box when that sits beside it.
+function K.PlaceBankSearch()
+  if not BankSearchEditBox then return end
+  if K.IsOneBank() then
+    local parent = zBagBBackground
+    if K.BankShopSide() and zBagBShop then parent = zBagBShop end
+    if not parent then return end
+    BankSearchEditBox:ClearAllAnchors()
+    BankSearchEditBox:SetAnchor("BOTTOMLEFT", "BOTTOMLEFT", parent, -5, -5)
+  elseif BankFrame then
+    BankSearchEditBox:ClearAllAnchors()
+    BankSearchEditBox:SetAnchor("BOTTOMRIGHT", "BOTTOMRIGHT", BankFrame, -5, -32)
   end
 end
 
@@ -599,6 +607,7 @@ function K.LoadConfig()
   zBagKitConfigMoney:SetChecked(v["showmoney"] == 1)
   zBagKitConfigShare:SetChecked(zBag_SHARE ~= 0)
   zBagKitConfigOneBank:SetChecked(v["bankmode"] == "onebank")
+  if zBagKitConfigShopSide then zBagKitConfigShopSide:SetChecked(v["bankshopside"] == 1) end
   local hint
   if not K.IsOn() then
     hint = "|cffff6060zBag is turned off in the Cherry's Kit window.|r"
@@ -656,6 +665,11 @@ function K.OnConfigClick(what)
     if K.cherryOpen then
       K.OpenCherry()
     end
+  elseif what == "shopside" then
+    v["bankshopside"] = zBagKitConfigShopSide:IsChecked() and 1 or 0
+    save()
+    if zBagB_Resize and zBagB then zBagB_Resize(zBagB) end
+    K.PlaceBankSearch()
   elseif what == "bagauto" then
     v["bagauto"] = zBagKitBagAuto:IsChecked() and 1 or 0
     zBagConfig_Save() -- re-lays out zBag's window
@@ -703,6 +717,7 @@ end
 
 K.TOOLTIPS = {
   share = { "Share bag settings across characters", "Use the same bag and bank settings for your characters. Turn this off to keep separate settings for each character. Existing shared and separate settings are kept when you switch." },
+  shopside = { "Item shop bank next to bank", "With one bank (classic zBag): the item shop bank opens in its own box attached to the right side of the bank, and the bank search box moves under it. Needs bank tab 6 ticked." },
   onebank = { "Use one bank (classic zBag)", "Show all bank pages in zBag's combined bank window. Turn this off for the game's normal bank. This choice is independent of your bag layout." },
   individual = { "Individual bags (stock+search)", "Use the game's own bag window, one page at a time, with a search box and slot numbers added. Choose the bank separately." },
   cherry = { "One bag (Cherry's)", "Each bag opens as its own plain box. Drag a bag to move it; drag its bottom-right corner to change its shape (narrower = more rows). Bag I has the search box under it. B opens and closes them; choose the bank separately. Bags you untick under show backpack tab stay closed." },

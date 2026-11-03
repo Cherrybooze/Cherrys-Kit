@@ -151,6 +151,7 @@ Tested on copies of real save files in Chrome, and the Import window in the simu
 | # | Do this | Expected |
 | --- | --- | --- |
 | Z1 | Type *stamina* in zBag's search, in each layout and in the bank. | Items with a stamina line light up a moment after you stop typing, and names still match straight away. `/zb probe` has a stat search line. |
+| Z2 | With *Use one bank (classic zBag)* and bank tab 6 on, tick *Item shop bank next to bank* in `/zb` and open the bank. Drag the bank by its edge, change the items-on-a-row slider, then untick it. | The item shop slots sit in their own *Item shop* box attached to the right of the bank, first rows level with the bank's, and the bank search box is under that box. Both move together. Unticked, the slots go back to the bottom of the bank and the search box with them. |
 | W1 | Make an icon from the gallery's Present buff template, on a buff that stacks. | The count sits in its bottom-right corner, and the icon display's **Stack count** choice turns it off and on. |
 
 ## 0.11.115 Chrome Web Store readiness (extension 1.2.3)

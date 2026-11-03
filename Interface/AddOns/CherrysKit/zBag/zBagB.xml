@@ -85,6 +85,23 @@
 				</OnMouseUp>
 				</Scripts>
 			</Frame>
+			<!-- Cherry's Kit: the item shop bank (slots 201-300) beside the bank, when "Item shop bank next to bank" is on.
+			     Defined before the slots so they draw over it; zBagB_Resize sizes and shows it. -->
+			<Frame name="zBagBShop" inherits="UIPanelBackdropFrame" enableMouse="true" frameStrata="LOW" hidden="true">
+				<Size><AbsDimension x="250" y="250"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagBBackground" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="-4" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="zBagBShopTitleText" inherits="GameTitleFont" text="Item shop">
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="14" y="7"/></Offset></Anchor></Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts><OnLoad>UIPanelBackdropFrame_SetTexture(this,"Interface/Common/PanelCommonBorder",64,64);</OnLoad></Scripts>
+			</Frame>
 			<Button name="zBagBBackgroundCloseButton"  inherits="UIPanelCloseButtonTemplate"> <!-- override default close button -->
 				<Anchors>
 					<Anchor point="TOPRIGHT" relativeTo="zBagBBackground" relativePoint="TOPRIGHT">					

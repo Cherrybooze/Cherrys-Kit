@@ -1,6 +1,6 @@
 # zBag
 
-Version **5.07-ck20** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **5.07-ck21** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
@@ -21,6 +21,10 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 > **Other addons:** AddonManager lists it when you have that addon. BagSearch 1.21, BagSort 1.05b, PocketMaid and Sol are built in, so delete any separate `BagSearch` or `BagSort` folder. The quick-sell filter is based on Lootomatic, which is a separate addon and can stay.
 
 <!-- end of requirements -->
+
+## Updated in 5.07-ck21
+
+**Item shop bank next to the bank.** With *Use one bank (classic zBag)*, tick *Item shop bank next to bank* in **/zb** and the item shop bank's 100 slots open in their own box, attached to the right side of the bank window, with as many slots on a row as the bank. It moves with the bank, and the bank search box sits under it. It needs bank tab 6 ticked. *Lock resize* for Cherry's bags moved down to the *Hide default backpack* row to make room.
 
 ## Updated in 5.07-ck20
 

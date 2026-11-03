@@ -8,6 +8,8 @@
 -- zBag_VAR["bankslotnumbers"] 1 = numbers over the bank slots
 -- zBag_VAR["slothover"]       0 = numbers always shown; anything else (default) = only on the slot
 --                             under the mouse
+-- zBag_VAR["bankshopside"]    1 = the one bank's item shop slots (201-300) sit in their own box
+--                             attached to the right of the bank, with the bank search under them
 
 zBagKit = zBagKit or {}
 local K = zBagKit
@@ -19,7 +21,7 @@ K.cherryOpen, K.resizing, K.dragging = nil, nil, nil
 K.storageInitialized, K.storageShared = nil, nil
 K.hoverOwner, K.hoverButton = nil, nil
 
-K.version = "5.07-ck20"
+K.version = "5.07-ck21"
 K.DEFAULT_SLOT_FONT_SIZE, K.MIN_SLOT_FONT_SIZE, K.MAX_SLOT_FONT_SIZE = 8, 6, 20
 K.path = (CherrysKit_Paths and CherrysKit_Paths.zBag) or "Interface/AddOns/zBag/"
 K.BAG_SLOTS = 180
@@ -283,6 +285,11 @@ end
 
 function K.IsOneBank()
   return K.IsOn() and type(zBag_VAR) == "table" and zBag_VAR["bankmode"] == "onebank"
+end
+
+-- One bank: the item shop bank beside the bank (only while its page is shown, bank tick 6).
+function K.BankShopSide()
+  return type(zBag_VAR) == "table" and zBag_VAR["bankshopside"] == 1 and zBag_VAR["bank6"] == 1
 end
 
 function K.ApplyBankLayout()
