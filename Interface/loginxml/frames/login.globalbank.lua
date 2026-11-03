@@ -90,6 +90,11 @@ function me.describe(known)
   return table.concat(lines, '\n')
 end
 
+-- The same pieces for the Modern look, which lays them out itself: gold, charges (nil while unknown), saved
+function me.parts(known)
+  return me.formatGold(known.gold), known.charges and me.formatGold(known.charges) or nil, known.saved
+end
+
 function me.formatGold(amount)
   local text = string.format('%d', amount)
   while true do

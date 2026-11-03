@@ -7,7 +7,7 @@ local ADDON = "LogNextChar"
 LogNextChar = LogNextChar or {}
 local me = LogNextChar
 
-me.version = "1.3.4"
+me.version = "1.4.0"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.LogNextChar) or "Interface/AddOns/LogNextChar/"
 
 -- Saved: LogNextChar_Settings = { show, lock, position = { x, y } }
@@ -270,6 +270,9 @@ function me.Refresh()
     end
 end
 
+-- The slot number's colour: the kit's cyan, so it stands apart from the name
+me.NUMBER_COLOR = { 0.33, 0.86, 0.95 }
+
 -- Paints a button like the Kitty mode button: tile, gold glow on hover, text in the middle
 local function Paint(button, mode, text)
     button.mode = mode
@@ -281,9 +284,39 @@ local function Paint(button, mode, text)
     if letters then
         letters:SetText(text)
     end
+    local number = _G[button:GetName() .. "Number"]
+    if number then
+        number:SetText("")
+        number:SetTextColor(me.NUMBER_COLOR[1], me.NUMBER_COLOR[2], me.NUMBER_COLOR[3])
+    end
     local glow = button.GetHighlightTexture and button:GetHighlightTexture()
     if glow then
         pcall(glow.SetTexture, glow, me.BASE_PATH .. "gfx/button_hl.tga")
+    end
+end
+
+-- Each button shows the slot it logs into, big under its name (playing slot 4: Next 5, Prev 3), from the
+-- login screen's character list. Without that list, or with one character, the name stays in the middle.
+-- Runs on load, on the loading events and on hover only.
+function me.UpdateNumbers()
+    local single = SingleCharacter()
+    for _, button in ipairs({ LogNextCharBarNext, LogNextCharBarPrev }) do
+        local name = button:GetName()
+        local number, letters = _G[name .. "Number"], _G[name .. "Letters"]
+        if number and letters then
+            local slot
+            if not single then
+                local _, index = Target(button.mode)
+                slot = index
+            end
+            number:SetText(slot and tostring(slot) or "")
+            letters:ClearAllAnchors()
+            if slot then
+                letters:SetAnchor("TOP", "TOP", button, 0, 4)
+            else
+                letters:SetAnchor("CENTER", "CENTER", button, 0, 0)
+            end
+        end
     end
 end
 
@@ -309,6 +342,7 @@ function me.OnLoad(bar)
     me.Place()
     me.Refresh()
     me.UpdateEnabled()
+    me.UpdateNumbers()
 end
 
 function me.OnEvent(event)
@@ -325,6 +359,7 @@ function me.OnEvent(event)
         end
     end
     me.UpdateEnabled()
+    me.UpdateNumbers()
 end
 
 -- As on the Kitty mode button: a click relogs, right-drag (or Shift+drag) moves the pair
@@ -363,6 +398,7 @@ end
 
 function me.OnEnter(button)
     me.UpdateEnabled()
+    me.UpdateNumbers()
     if not GameTooltip then
         return
     end

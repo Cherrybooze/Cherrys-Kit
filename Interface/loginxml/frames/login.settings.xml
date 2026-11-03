@@ -26,6 +26,45 @@
       </TileSize>
     </Backdrop>
     <Layers>
+      <Layer level="BORDER">
+        <!-- skin.lua's border(): hidden in Classic -->
+        <Texture name="$parent_bt" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
+            <Anchor point="TOPRIGHT"/>
+          </Anchors>
+        </Texture>
+        <Texture name="$parent_bb" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="BOTTOMLEFT"/>
+            <Anchor point="BOTTOMRIGHT"/>
+          </Anchors>
+        </Texture>
+        <Texture name="$parent_bl" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
+            <Anchor point="BOTTOMLEFT"/>
+          </Anchors>
+        </Texture>
+        <Texture name="$parent_br" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPRIGHT"/>
+            <Anchor point="BOTTOMRIGHT"/>
+          </Anchors>
+        </Texture>
+      </Layer>
       <Layer level="ARTWORK">
         <FontString name="$parent_title" inherits="LoginFontHighlight" justifyH="LEFT" text="Settings">
           <Anchors>
@@ -34,6 +73,31 @@
                 <AbsDimension x="14" y="10"/>
               </Offset>
             </Anchor>
+          </Anchors>
+        </FontString>
+        <FontString name="$parent_group1" inherits="LoginFontNormalSmall" justifyH="LEFT" hidden="true">
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
+          </Anchors>
+        </FontString>
+        <FontString name="$parent_group2" inherits="LoginFontNormalSmall" justifyH="LEFT" hidden="true">
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
+          </Anchors>
+        </FontString>
+        <FontString name="$parent_group3" inherits="LoginFontNormalSmall" justifyH="LEFT" hidden="true">
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
+          </Anchors>
+        </FontString>
+        <FontString name="$parent_group4" inherits="LoginFontNormalSmall" justifyH="LEFT" hidden="true">
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
+          </Anchors>
+        </FontString>
+        <FontString name="$parent_group5" inherits="LoginFontNormalSmall" justifyH="LEFT" hidden="true">
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
           </Anchors>
         </FontString>
         <FontString name="$parent_globalbank" inherits="LoginFontNormalSmall" justifyH="LEFT" text="">
@@ -321,6 +385,9 @@
     </Frames>
     <Scripts>
       <OnLoad>
+        if LoginLook then
+          LoginLook.panel(this, "tooltip")
+        end
         login.settings.onLoad(this)
       </OnLoad>
       <OnShow>

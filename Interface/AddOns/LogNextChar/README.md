@@ -1,6 +1,6 @@
 # LogNextChar
 
-Version **1.3.4** · Kit release **0.11.117** · [All addons / hub](../CherrysKit/README.md)
+Version **1.4.0** · Kit release **0.11.117** · [All addons / hub](../CherrysKit/README.md)
 
 **Next** and **Prev** buttons in game, plus `/lnc`, log you out and straight into the neighbouring character on the account. It brings its own login screen, which picks the character, and which is a better login screen in its own right.
 
@@ -21,6 +21,14 @@ Without the login screen installed, Next and Prev only log you out, and you pick
 > **After installing:** close the game and run `!setup_cherryskit.bat`, or double-click `Interface\AddOns\CherrysKit\LogNextChar\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there. Until then, Next and Prev only log you out.
 
 <!-- end of requirements -->
+
+## Updated in 1.4.0
+
+Next and Prev show the slot they log into, big under their name in cyan: playing the character in slot 4, Next shows 5 and Prev shows 3. They take the slots from the login screen's character list, so without the login screen, or with one character, the buttons only show their names.
+
+The login screen has a new look, in the style of rom weakauras and Cherry's Bar: flat dark panels with a thin border, cyan for what you have selected, and gold for the main button. Gold on the character screen is gold, beside a coin, with the charges and the last save under it. The character, channel and server lists are as long as what is in them, the server rows show the flag and how many characters you have there beside a helmet, and the settings panel groups its toggles under headings, with new check boxes. Buttons, edit boxes and the sliders on the character creation screen match.
+
+**Modern look**, the first toggle in the settings panel on the server screen, switches back to the game's own look at once, and the game remembers it like the other toggles. `modern_ui = false` in `config.lua` does the same. Run `Install login screen.bat` again after updating.
 
 ## Updated in 1.3.4
 
@@ -55,13 +63,13 @@ Next, Prev and the other switches now close the mailbox and Ultimate Mail Mod's 
 1. Remove any other login addon first. Only one can replace the login screen.
 2. Extract the zip into `Interface\AddOns`. You should end up with `Interface\AddOns\CherrysKit\LogNextChar\LogNextChar.lua`. If you have an older `Interface\AddOns\LogNextChar` folder, delete it.
 3. Close the game and double-click `Interface\AddOns\CherrysKit\LogNextChar\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, and a package can only fill `Interface\AddOns`, so this copies it across. If you already have a `loginxml`, a copy of it goes to `Interface\offloaded_addons` first, and only the files that differ change. It leaves nothing running.
-4. Start the game. The login screen shows `(LogNextChar 1.3.4)` next to the client version in the top right corner.
+4. Start the game. The login screen shows `(LogNextChar 1.4.0)` next to the client version in the top right corner.
 
 Run the same file again after updating. It never touches your own accounts, passwords or settings. If you forget, the addon tells you in chat.
 
 ## The buttons
 
-Next sits on top and Prev under it, the same way round as the character list, just below the minimap. They follow the minimap at any UI scale or resolution. Hover a button to see which character it will log in. Both grey out when the account has only one character on that server.
+Next sits on top and Prev under it, the same way round as the character list, just below the minimap. They follow the minimap at any UI scale or resolution. Each shows the slot it will log in, big under its name, and hovering it names that character. Both grey out when the account has only one character on that server.
 
 The buttons are locked until you unlock them: open **Settings** in the hub or type `/lnc settings`, choose **Unlock login next char buttons**, then right-drag (or Shift+drag) them. The same window can hide them or put them back in their default spot.
 

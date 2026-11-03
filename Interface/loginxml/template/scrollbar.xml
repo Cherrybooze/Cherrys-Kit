@@ -112,7 +112,7 @@
         <HighlightTexture file="Interface\Buttons\ScrollBar-UpButton-Highlight" alphaMode="ADD"/>
       </Button>
     </Frames>
-    <ThumbTexture file="Interface\Buttons\ScrollBar-Knob">
+    <ThumbTexture name="$parentThumb" file="Interface\Buttons\ScrollBar-Knob">
       <Size>
         <AbsDimension x="16" y="42"/>
       </Size>
@@ -195,10 +195,17 @@
 				<HighlightTexture file="Interface\Login\CharacterCreate\SliderRight-Highlight" alphaMode="ADD"/>
 			</Button>
 		</Frames>
-		<ThumbTexture file="Interface\BagFrame\BagFrame-Slider-knob">
+		<ThumbTexture name="$parentThumb" file="Interface\BagFrame\BagFrame-Slider-knob">
 			<Size>
 				<AbsDimension x="16" y="16"/>
 			</Size>
 		</ThumbTexture>
+		<Scripts>
+			<OnLoad>
+				if LoginLook then
+					LoginLook.slider(this)
+				end
+			</OnLoad>
+		</Scripts>
 	</Slider>
 </Ui>

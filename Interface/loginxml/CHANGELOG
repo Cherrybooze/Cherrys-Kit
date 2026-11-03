@@ -1,3 +1,10 @@
+LogNextChar 1.4.0
+- Next and Prev show the slot they log into, big under their name in cyan (playing slot 4: Next 5, Prev 3).
+- A Modern look, now the default: flat dark panels with a thin border, cyan for the selection, gold for the main button, Cherry's Bar's icons. Gold on the character screen sits beside a coin, with charges and the last save under it; the character, channel and server lists fit what is in them; server rows show the flag and your character count beside a helmet; the settings toggles are grouped under headings. Buttons, check boxes, edit boxes, lists and the character creation sliders match.
+- "Modern look", the first toggle in the settings panel, switches to the game's own look (Classic) and back at once, without a reload. config.lua: modern_ui = false.
+- The textures are in media/, drawn by tools/build_login_skin.py; template/skin.lua holds both looks.
+- Fixed: Tab moves between the two boxes of a dialog that asks for two entries (its script didn't compile).
+
 LogNextChar 1.3.3
 - Next and Prev wait for the whole character list before picking, start from the character left by name, and hold the pick until the login starts, so the game's own late selection can't leave you on the character screen.
 - A cancelled logout drops the queued switch in game.

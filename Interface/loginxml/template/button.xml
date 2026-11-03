@@ -37,6 +37,9 @@
                     end
                 end
                 this:SetText(this:GetText());
+                if LoginLook then
+                    LoginLook.button(this)
+                end
       </OnLoad>
       <OnEnter>
 				if ( this.tooltip and  LoginTooltip) then
@@ -102,6 +105,13 @@
     <Size>
       <AbsDimension x="32" y="32"/>
     </Size>
+    <Scripts>
+      <OnLoad>
+        if LoginLook then
+          LoginLook.check(this)
+        end
+      </OnLoad>
+    </Scripts>
     <NormalTexture file="Interface\Buttons\CheckBox-Normal"/>
     <PushedTexture file="Interface\Buttons\CheckBox-Depress"/>
     <HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>

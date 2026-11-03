@@ -1,6 +1,9 @@
 local me = {}
 function LoginEditBox_OnLoad(frame)
     frame.SetPlaceholder = me.SetPlaceholder
+    if LoginLook then
+        LoginLook.edit(frame)
+    end
 end
 
 me.SetPlaceholder = function(frame, text)
