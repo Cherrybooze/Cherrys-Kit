@@ -38,7 +38,7 @@
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.6.7"
+GB.version = "1.6.8"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -675,7 +675,9 @@ function GB.Snapshot(withBank, authoritative)
   c.steam = CherrysKit and CherrysKit.IsSteam and CherrysKit.IsSteam() or nil
   c.bag, c.bagMax = GB.ReadBag()
   c.equip = GB.ReadEquipment() or c.equip
-  c.mail = GB.MailboxSummary() or c.mail
+  -- The mailbox is extra: nothing in it may stop the snapshot itself.
+  local mailOk, mail = pcall(GB.MailboxSummary)
+  c.mail = (mailOk and mail) or c.mail
   if withBank then
     local bank, max = GB.ReadBank()
     if authoritative or #bank > 0 or (tonumber(max) or 0) > 0 then
@@ -1317,7 +1319,11 @@ function GB.MailboxSummary()
   if m.days >= 0 then
     m.days = math.floor(m.days * 10 + 0.5) / 10
   end
-  local ok, when = pcall(os.date, "%Y-%m-%d %H:%M", GB.mailbox.time)
+  -- This client has no os table: indexing it outside the pcall stopped every snapshot once a mailbox was known.
+  local ok, when = false, nil
+  if os and os.date and (GB.mailbox.time or 0) > 0 then
+    ok, when = pcall(os.date, "%Y-%m-%d %H:%M", GB.mailbox.time)
+  end
   m.when = ok and type(when) == "string" and when or ""
   return m
 end
@@ -1367,6 +1373,22 @@ function GB.MailAnswered(went)
 end
 
 ---------------------------------------------------------------------------
+-- Switching characters keeps the Lua state, and the game only replaces the save variables a character's own file
+-- has. A character that never saved Global Bank data (new, or new to the kit) so starts with the last one's
+-- snapshot, tooltips and mailbox, and would save them as its own until its first snapshot. A snapshot naming
+-- someone else marks them all as inherited. Same name on another server is the same file, and SettleServer's.
+function GB.DropInherited()
+  local name = GB.PlayerName()
+  local mine = name and GB.Parse(GlobalBank_Char)
+  if mine and mine.name and string.lower(mine.name) ~= string.lower(name) then
+    GlobalBank_Char, GlobalBank_Tips, GlobalBank_Mail = nil, nil, nil
+    GlobalBank_Others, GlobalBank_MailOthers = nil, nil
+    return true
+  end
+  return false
+end
+
+---------------------------------------------------------------------------
 -- Events: the only moments anything is read from the game
 ---------------------------------------------------------------------------
 
@@ -1412,6 +1434,7 @@ function GB.OnEvent(event)
       return
     end
     GB.started = true
+    GB.DropInherited()
     GB.LoadRemoved()
     GB.LoadNotes()
     GB.LoadMail()
@@ -1431,6 +1454,10 @@ function GB.OnEvent(event)
   elseif not GB.started then
     return
   elseif event == "LOADING_END" then
+    -- Again, for a client that can't name the player yet when the save variables load
+    if GB.DropInherited() then
+      GB.LoadMail()
+    end
     schedule(3, true, false)
   elseif event == "UNIT_LEVEL" or event == "EXCHANGECLASS_SUCCESS" then
     -- Ignore other units. Refresh only when the player levels or changes class.

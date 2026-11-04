@@ -12,9 +12,14 @@ const BACKUP_REQUESTS = new Set(['backup-overview', 'backup-macros', 'backup-set
 const ADDON_REQUESTS = new Set(['addons-list', 'addons-check', 'addons-install', 'addons-offload', 'addons-restore', 'addons-delete', 'addons-mailbox', 'addons-loginscreen']);
 // The clock also tells the helper's folder the automatic-start choice, which only this extension knows,
 // so the helper's exit message can say what happens next.
-let autoHelperChoice;
-chrome.storage?.local?.get?.('autoHelper')?.then?.(({autoHelper}) => { autoHelperChoice = !!autoHelper; })?.catch?.(() => {});
-const stampClock = () => chrome.runtime.sendNativeMessage(HOST, autoHelperChoice === undefined ? {type:'clock'} : {type:'clock', autoHelper: autoHelperChoice}, () => void chrome.runtime.lastError);
+// With the choice on, the same once-a-minute message also starts a helper that isn't running.
+let autoHelperChoice, showTerminalChoice = false;
+chrome.storage?.local?.get?.(['autoHelper', 'showTerminal'])?.then?.(({autoHelper, showTerminal}) => {
+  autoHelperChoice = !!autoHelper;
+  showTerminalChoice = !!showTerminal;
+})?.catch?.(() => {});
+const stampClock = () => chrome.runtime.sendNativeMessage(HOST, autoHelperChoice === undefined ? {type:'clock'}
+  : {type:'clock', autoHelper: autoHelperChoice, showWindow: showTerminalChoice}, () => void chrome.runtime.lastError);
 // Once a minute is cheap and keeps the helper's 15-second check honest.
 const ensureHeartbeat = () => chrome.alarms?.create?.('globalbank-heartbeat', {periodInMinutes: 1});
 chrome.alarms?.onAlarm?.addListener(alarm => { if (alarm.name === 'globalbank-heartbeat') stampClock(); });
@@ -29,6 +34,7 @@ const shareAutoCollect = () => chrome.storage.local.get('autoCollect')
 chrome.storage?.onChanged?.addListener((changes, area) => {
   if (area !== 'local') return;
   if ('autoCollect' in changes) shareAutoCollect();
+  if ('showTerminal' in changes) showTerminalChoice = !!changes.showTerminal.newValue;
   if ('autoHelper' in changes) { autoHelperChoice = !!changes.autoHelper.newValue; stampClock(); }
 });
 // The Terminal view talks over one open port, so its polling never starts a process. The host answers in

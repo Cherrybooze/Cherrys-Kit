@@ -705,7 +705,7 @@ function Invoke-GBExit {
     Set-GBFeedState @{ state = 'stopping' }
     Add-GBMessage 'Stopping the helper.' 'warn'
     if ($Auto -or (Test-GBAutoStartChosen)) {
-        Add-GBMessage 'Automatic start is still on in Chrome, so the helper starts again the next time Chrome starts. To turn that off, use the extension''s popup.' 'muted' -Small
+        Add-GBMessage 'Automatic start is still on in Chrome, so the helper starts again in the background within a minute while Chrome is open. To turn that off, use the extension''s popup.' 'muted' -Small
     }
 }
 

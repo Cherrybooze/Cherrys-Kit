@@ -221,8 +221,16 @@ function Get-ControlHelperInfo([string]$dataDirectory) {
     return $info
 }
 
+# A helper the player opened in a window hands over: it says where the helper went and stops, then this one starts.
 function Start-ControlHelperAuto([string]$dataDirectory, [bool]$showWindow) {
     $info = Get-ControlHelperInfo $dataDirectory
+    if ($info.running -and -not $info.auto) {
+        $flag = Join-Path $dataDirectory 'GlobalBankHelperAuto.stop'
+        [IO.File]::WriteAllText($flag, 'handover')
+        $deadline = (Get-Date).AddSeconds(20)
+        while ((Get-Date) -lt $deadline -and (Get-ControlHelperInfo $dataDirectory).running) { Start-Sleep -Milliseconds 300 }
+        $info = Get-ControlHelperInfo $dataDirectory
+    }
     if ($info.running) { return $info }
     Remove-Item -LiteralPath (Join-Path $dataDirectory 'GlobalBankHelperAuto.stop') -Force -ErrorAction SilentlyContinue
     $helper = Join-Path $PSScriptRoot 'GlobalBank-Update.ps1'

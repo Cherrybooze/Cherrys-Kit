@@ -38,6 +38,17 @@ Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, 
 | UM26 | Open **Mass send** next to the game's bags. Tick and untick **C.O.D.**, then close and open the mailbox. | Each bag and each slot has rounded corners like the game's bags. The C.O.D. price box shows only while C.O.D. is ticked, and unticking empties it. It is off again after reopening. |
 | UM27 | On **Mass send**, look at the two rows of boxes under the bags and hold the mouse over a few. Click **Runes** (first box) with runes in the bags, then a pet egg box, then **All**. Send a few items and watch the boxes while they go out. | 36 boxes sit under the bag columns, between the bags and **Unmark all** / **Send**. Each shows a game icon that fits its kind; recipe, T6, pet egg and Cenedril boxes also carry a short tag (pet egg tags in their element's colour), and the tooltip gives the full name. A click marks every item of that kind; **All** marks every kind. The boxes grey out while mails go out. The line under **Marked** says what Send will do. Note any box whose icon looks wrong. |
 
+## Snapshots after switching characters, automatic helper (Global Bank 1.6.8, extension 1.3.8, not yet released)
+
+Reload the extension first; the page's sidebar says Version 1.3.8.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| GS1 | Log in a character that has Global Bank data and mail, open its mailbox, move an item in the bags, wait 5 seconds and log out. | The helper log says it updated that character (items moved or swapped). |
+| GS2 | In the same game window, switch with Next to a character never logged in with Global Bank, wait 10 seconds, and log out. | The helper log adds that character under its own name; the previous character's entry is unchanged. |
+| GS3 | Open the helper with **Start Global Bank helper.bat**, then turn **Run automatically while Chrome is open** on in the popup. | Within about 20 seconds the window says the helper moved to the background and how to get the terminal view back; the popup shows the helper running. |
+| GS4 | With the option on, end the background helper's PowerShell process in Task Manager and wait a minute. | The popup shows the helper running again. |
+
 ## Character transfers on the Characters page (Global Bank 1.6.7, extension 1.3.7, not yet released)
 
 Not run on the real site yet: the reader was checked against a copy of the transfer page made from screenshots. Reload the extension first; the page's sidebar says Version 1.3.7.

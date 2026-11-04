@@ -368,7 +368,7 @@ class BridgeTests(TerminalFixture):
         self.assertEqual(answer['commandId'], 'exit')
         self.assertTrue(answer['helper']['stopping'])
         self.assertIn('Stopping the helper', self.texts(answer))
-        self.assertIn('starts again the next time Chrome starts', self.texts(answer))
+        self.assertIn('starts again in the background within a minute while Chrome is open', self.texts(answer))
         self.assertEqual(self.wait_for_exit(), 0)
         self.assertEqual((self.data / 'GlobalBankAutoStart.txt').read_text(), 'on', 'exit leaves the Chrome preference alone')
         after = self.command('exit')
