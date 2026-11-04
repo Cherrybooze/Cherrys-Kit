@@ -734,7 +734,7 @@ end
 
 K.TOOLTIPS = {
   share = { "Share bag settings across characters", "Use the same bag and bank settings for your characters. Turn this off to keep separate settings for each character. Existing shared and separate settings are kept when you switch." },
-  statprefix = { "Stats on icons", "Write the short names of each item's stats on its bag icon, one per line (str, stam, patt). Works in every bag layout. Items are read from their tooltips the first time, so new ones show their stats a moment later." },
+  statprefix = { "Stats on icons", "Write the short names of each mana stone's stats on its bag icon, one per line (str, stam, patt). Works in every bag layout. Items are read from their tooltips the first time, so new ones show their stats a moment later." },
   shopside = { "Item shop bank next to bank", "With one bank (classic zBag): the item shop bank opens in its own box attached to the right side of the bank, and the bank search box moves under it. Needs bank tab 6 ticked." },
   onebank = { "Use one bank (classic zBag)", "Show all bank pages in zBag's combined bank window. Turn this off for the game's normal bank. This choice is independent of your bag layout." },
   individual = { "Individual bags (stock+search)", "Use the game's own bag window, one page at a time, with a search box and slot numbers added. Choose the bank separately." },

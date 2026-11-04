@@ -17,7 +17,7 @@ class StatPrefixTests(unittest.TestCase):
           function SaveVariables() end
           function SaveVariablesPerCharacter() end
           linkCalls = 0
-          links = {[5] = "|Hitem:1|h", [6] = "|Hitem:2|h"}
+          links = {[5] = "|Hitem:31858 0 0 1 0 0|h", [6] = "|Hitem:31858 0 0 2 0 0|h"}
           function GetBagItemLink(i) linkCalls = linkCalls + 1; return links[i] end
           function GetBagItemInfo(slot) return slot + 100 end
           function fs(name)
@@ -34,8 +34,8 @@ class StatPrefixTests(unittest.TestCase):
         for filename in ("zBagKit.lua", "zBagKitStats.lua"):
             self.lua.execute((SOURCE / filename).read_text(encoding="utf-8-sig"), name=filename)
         self.lua.execute('''
-          zBagKit.statCache["|Hitem:1|h"] = "strength\\nstamina\\nstamina"
-          zBagKit.statCache["|Hitem:2|h"] = "strength\\ndexterity\\nphysical attack\\nmagical defense\\nwisdom"
+          zBagKit.statCache["|Hitem:31858 0 0 1 0 0|h"] = "strength\\nstamina\\nstamina"
+          zBagKit.statCache["|Hitem:31858 0 0 2 0 0|h"] = "strength\\ndexterity\\nphysical attack\\nmagical defense\\nwisdom"
         ''')
         self.g = self.lua.globals()
 
@@ -68,19 +68,28 @@ class StatPrefixTests(unittest.TestCase):
         self.assertEqual(len(self.g.OwnerKitStats.writes), 3)  # same text: nothing redrawn
 
     def test_bag_slot_resolves_the_index_lazily(self):
-        self.g.links[105] = "|Hitem:1|h"
+        self.g.links[105] = "|Hitem:31858 0 0 1 0 0|h"
         self.g.zBagKit.StatPrefix(self.g.Owner, None, 8, 5)
         self.assertEqual(self.g.OwnerKitStats.text, "str\nstam")
 
     def test_unread_item_asks_the_tick_and_draws_after_the_read(self):
-        self.g.links[7] = "|Hitem:3|h"
+        self.g.links[7] = "|Hitem:31858 0 0 3 0 0|h"
         self.g.zBagKit.statsMissing = False
         self.g.zBagKit.StatPrefix(self.g.Owner, 7, 8)
         self.assertTrue(self.g.zBagKit.statsMissing)
         self.assertFalse(self.g.OwnerKitStats.visible)
-        self.lua.execute('zBagKit.statCache["|Hitem:3|h"] = "intelligence"')
+        self.lua.execute('zBagKit.statCache["|Hitem:31858 0 0 3 0 0|h"] = "intelligence"')
         self.g.zBagKit.StatPrefix(self.g.Owner, 7, 8)
         self.assertEqual(self.g.OwnerKitStats.text, "int")
+
+    def test_only_mana_stones_with_stats_get_names(self):
+        self.lua.execute('''
+          links[8] = "|Hitem:1e240 0 0 1 0 0|h"; zBagKit.statCache[links[8]] = "strength"   -- gear
+          links[9] = "|Hitem:31858 0 0 0 0 0|h"; zBagKit.statCache[links[9]] = "strength"   -- clean stone
+        ''')
+        for index in (8, 9):
+            self.g.zBagKit.StatPrefix(self.g.Owner, index, 8)
+            self.assertFalse(self.g.OwnerKitStats.visible, index)
 
     def test_tick_off_clears_the_icon(self):
         self.g.zBagKit.StatPrefix(self.g.Owner, 5, 8)

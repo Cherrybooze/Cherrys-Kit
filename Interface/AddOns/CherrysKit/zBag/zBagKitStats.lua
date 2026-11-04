@@ -333,8 +333,8 @@ function FindBankItemByName(itemName)
 end
 
 ---------------------------------------------------------------------------
--- "Stats" tick beside the bag search (zBag_VAR["statprefix"] = 1): every bag icon shows the short
--- names of its stats, one per line ("str", "stam", "patt"), in every layout. The names come from the
+-- "Stats" tick beside the bag search (zBag_VAR["statprefix"] = 1): every mana stone's bag icon shows
+-- the short names of its stats, one per line ("str", "stam", "patt"), in every layout. The names come from the
 -- same cache as the stat search; items not read yet are read by K.StatsTick and drawn after.
 -- Each icon only looks its item up again when the bags change (K.prefixGen) or it holds another
 -- slot, so an open bag costs nothing between bag events.
@@ -432,7 +432,8 @@ function K.StatPrefix(owner, index, size, bagSlot)
       index = GetBagItemInfo(bagSlot)
     end
     local link = index and index >= 0 and GetBagItemLink and GetBagItemLink(index)
-    if link and link ~= "" then
+    -- mana and fusion stones only (C, 2026-11-04); a clean stone has nothing to show
+    if link and link ~= "" and K.StoneState(link) == 2 then
       local names = K.statCache[link]
       if names == nil then
         K.statsMissing = true
