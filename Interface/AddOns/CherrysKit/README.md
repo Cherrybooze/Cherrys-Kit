@@ -1,10 +1,14 @@
 # Cherry's Kit
 
-Version **0.4.34** · Kit release **0.11.118** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.35** · Kit release **0.11.118** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 
 Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own it does nothing visible except the hub window and a minimap button; install the addons you want and they show up in it.
+
+## Hub 0.4.35
+
+The guided setup always ends on the newest published versions. Installed from a ZIP that's older than the latest release, it brings the newer versions in straight away instead of asking. Global Bank's Chrome extension is compared by its own version, so it catches up even when Global Bank's number stayed the same. An addon that's newer here than the release, such as a test build, is never swapped for the older one. When GitHub can't be reached, the setup says the versions may not be the newest.
 
 ## Hub 0.4.34
 
