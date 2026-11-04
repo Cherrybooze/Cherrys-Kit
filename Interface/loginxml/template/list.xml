@@ -85,6 +85,19 @@
     </HighlightText>
   </Button>
   <Frame name="LOGIN_List_HeadRow_Template" virtual="true">
+    <Layers>
+      <Layer>
+        <Texture name="$parent_sep" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="BOTTOMLEFT"/>
+            <Anchor point="BOTTOMRIGHT"/>
+          </Anchors>
+        </Texture>
+      </Layer>
+    </Layers>
     <Frames>
       <Button name="$parent_1" inherits="LOGIN_List_HeadButton_Template"/>
       <Button name="$parent_2" inherits="LOGIN_List_HeadButton_Template"/>
@@ -143,9 +156,11 @@
         this.root:onClick(this.row, key, this, true);
       </OnDoubleClick>
       <OnEnter>
-        local hl = _G[this:GetName().."_hl"]
-        hl:Show();
-        hl:SetAlpha(.2)
+        if not this.root.modern then
+          local hl = _G[this:GetName().."_hl"]
+          hl:Show();
+          hl:SetAlpha(.2)
+        end
         this.root:onEnter(this.row, this);
       </OnEnter>
       <OnLeave>
@@ -161,6 +176,15 @@
     <Layers>
       <Layer>
         <Texture name="$parent_hl" hidden="true" file="Interface\AuctionFrame\AuctionFrameItem-Highlight" alphaMode="ADD" />
+        <Texture name="$parent_sep" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="BOTTOMLEFT"/>
+            <Anchor point="BOTTOMRIGHT"/>
+          </Anchors>
+        </Texture>
       </Layer>
     </Layers>
     <Frames>
@@ -199,6 +223,54 @@
         <Layers>
           <Layer level="BACKGROUND">
             <Texture name="$parent_hl" file="Interface\Login\Common\ServerlistButton-Highlight" hidden="true"/>
+            <Texture name="$parent_hlbar" hidden="true">
+              <Size>
+                <AbsDimension x="3" y="1"/>
+              </Size>
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent_hl"/>
+                <Anchor point="BOTTOMLEFT" relativeTo="$parent_hl"/>
+              </Anchors>
+            </Texture>
+          </Layer>
+          <Layer level="BORDER">
+            <!-- skin.lua's border(): hidden in Classic -->
+            <Texture name="$parent_bt" hidden="true">
+              <Size>
+                <AbsDimension x="1" y="1"/>
+              </Size>
+              <Anchors>
+                <Anchor point="TOPLEFT"/>
+                <Anchor point="TOPRIGHT"/>
+              </Anchors>
+            </Texture>
+            <Texture name="$parent_bb" hidden="true">
+              <Size>
+                <AbsDimension x="1" y="1"/>
+              </Size>
+              <Anchors>
+                <Anchor point="BOTTOMLEFT"/>
+                <Anchor point="BOTTOMRIGHT"/>
+              </Anchors>
+            </Texture>
+            <Texture name="$parent_bl" hidden="true">
+              <Size>
+                <AbsDimension x="1" y="1"/>
+              </Size>
+              <Anchors>
+                <Anchor point="TOPLEFT"/>
+                <Anchor point="BOTTOMLEFT"/>
+              </Anchors>
+            </Texture>
+            <Texture name="$parent_br" hidden="true">
+              <Size>
+                <AbsDimension x="1" y="1"/>
+              </Size>
+              <Anchors>
+                <Anchor point="TOPRIGHT"/>
+                <Anchor point="BOTTOMRIGHT"/>
+              </Anchors>
+            </Texture>
           </Layer>
         </Layers>
         <Frames>

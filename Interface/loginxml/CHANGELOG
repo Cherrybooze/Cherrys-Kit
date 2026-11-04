@@ -1,3 +1,15 @@
+LogNextChar 1.4.0
+- The character screen numbers the characters from 1 (Classic: while editing their order). Next and Prev show the number they log into, big under their name in cyan (playing 4: Next 5, Prev 3).
+- New toggle "Edit character order" (config.lua: character_order_edit): up and down arrows on each row, or Shift+Up/Down, change the numbers. The order is kept for each server (character_order, saved with the toggles; another account's characters keep their places), and Next, Prev and /lnc <number> follow it. ChangeChar(n) still takes the game's slot.
+- Modern: the settings panel sits at the left edge of the server screen, the server list at the right edge.
+- The top right corner says "Loginxml 1.4.0" where the game has no account name to show: a Gameforge launcher login gives it "TNTLogin".
+- Fixed: Next, Prev and /lnc could stay on the character screen, or pick from a half-loaded list, when the way back from the game took more than a few seconds (the game waits 3 s, connects again, then loads the list). The switch now waits for the new list, up to 2 minutes; if it can't switch, LogNextChar says why in game after you log in, and /lnc probe lists its steps.
+- Fixed: the DEBUG box ran everything as Lua, so its campnext commands never worked.
+- A Modern look, now the default: flat dark panels with a thin border, cyan for the selection, gold for the main button, Cherry's Bar's icons. Gold on the character screen sits beside a coin, with charges and the last save under it; the character, channel and server lists fit what is in them; server rows show the flag and your character count beside a helmet; the settings toggles are grouped under headings. Buttons, check boxes, edit boxes, lists and the character creation sliders match.
+- "Modern look", the first toggle in the settings panel, switches to the game's own look (Classic) and back at once, without a reload. config.lua: modern_ui = false.
+- The textures are in media/, drawn by tools/build_login_skin.py; template/skin.lua holds both looks.
+- Fixed: Tab moves between the two boxes of a dialog that asks for two entries (its script didn't compile).
+
 LogNextChar 1.3.3
 - Next and Prev wait for the whole character list before picking, start from the character left by name, and hold the pick until the login starts, so the game's own late selection can't leave you on the character screen.
 - A cancelled logout drops the queued switch in game.

@@ -7,7 +7,7 @@ local ADDON = "LogNextChar"
 LogNextChar = LogNextChar or {}
 local me = LogNextChar
 
-me.version = "1.3.4"
+me.version = "1.4.0"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.LogNextChar) or "Interface/AddOns/LogNextChar/"
 
 -- Saved: LogNextChar_Settings = { show, lock, position = { x, y } }
@@ -39,7 +39,7 @@ local function ShowHelp()
     Print("  /lnc                 - Load next character")
     Print("  /lpc                 - Load previous character")
     Print("  /lnc current         - Relog the same character")
-    Print("  /lnc <number>        - Load the character in slot <number>")
+    Print("  /lnc <number>        - Load the character with that number on the character screen")
     Print("  /lnc settings        - Open the settings (also in the Cherry's Kit hub)")
     Print("  /lnc show | hide     - Show or hide the Next / Prev buttons")
     Print("  /lnc lock | unlock   - Stop or allow moving the buttons")
@@ -128,6 +128,8 @@ local function ArmAndLogout(mode, target)
         Print("Relog queued. Logging out...")
     elseif mode == "index" then
         Print("Character " .. tostring(target) .. " queued. Logging out...")
+    elseif mode == "slot" then
+        Print("The character in slot " .. tostring(target) .. " queued. Logging out...")
     else
         Print("Unknown mode: " .. tostring(mode))
         return
@@ -172,16 +174,34 @@ function me.ForgetQueued()
     end
 end
 
--- Name of the character "next" or "prev" will pick. loginxml leaves the
--- character list of this account and server in LOGCHAR_ROSTER (slot order).
+-- Name and number of the character "next" or "prev" will pick. loginxml leaves the character list of this
+-- account and server behind: LOGCHAR_ROSTER in the game's slot order, LOGCHAR_ORDER in the order the
+-- character screen numbers them (the same, unless it was changed there with Edit character order).
 local function Target(mode)
     local roster = _G.LOGCHAR_ROSTER
-    local current = CHARACTER_SELECT and tonumber(CHARACTER_SELECT.selectedIndex)
-    if type(roster) ~= "table" or not current then
+    if type(roster) ~= "table" then
         return nil
     end
-    local count = #roster
-    if count < 1 or current < 1 or current > count then
+    local order = _G.LOGCHAR_ORDER
+    if type(order) ~= "table" or #order ~= #roster then
+        order = roster
+    end
+    local count = #order
+    local slot = CHARACTER_SELECT and tonumber(CHARACTER_SELECT.selectedIndex)
+    local playing = type(UnitName) == "function" and UnitName("player") or nil
+    if not playing and slot then
+        playing = roster[slot]
+    end
+    local current
+    for i = 1, count do
+        if order[i] == playing then
+            current = i
+        end
+    end
+    if not current and order == roster then
+        current = slot
+    end
+    if count < 1 or not current or current < 1 or current > count then
         return nil
     end
     local index
@@ -190,7 +210,7 @@ local function Target(mode)
     else
         index = current <= 1 and count or current - 1
     end
-    return roster[index], index, count
+    return order[index], index, count
 end
 
 ---------------------------------------------------------------------------
@@ -270,6 +290,10 @@ function me.Refresh()
     end
 end
 
+-- The number's colour: the kit's cyan, so it stands apart from the name's gold.
+-- A FontString takes its colour with SetColor; SetTextColor is only for buttons.
+me.NUMBER_COLOR = { 0.33, 0.86, 0.95 }
+
 -- Paints a button like the Kitty mode button: tile, gold glow on hover, text in the middle
 local function Paint(button, mode, text)
     button.mode = mode
@@ -281,9 +305,39 @@ local function Paint(button, mode, text)
     if letters then
         letters:SetText(text)
     end
+    local number = _G[button:GetName() .. "Number"]
+    if number then
+        number:SetText("")
+        number:SetColor(me.NUMBER_COLOR[1], me.NUMBER_COLOR[2], me.NUMBER_COLOR[3])
+    end
     local glow = button.GetHighlightTexture and button:GetHighlightTexture()
     if glow then
         pcall(glow.SetTexture, glow, me.BASE_PATH .. "gfx/button_hl.tga")
+    end
+end
+
+-- Each button shows the number of the character it logs into, big under its name (playing number 4:
+-- Next 5, Prev 3), as the character screen numbers them. Without the login screen's character list, or
+-- with one character, the name stays in the middle. Runs on load, on the loading events and on hover only.
+function me.UpdateNumbers()
+    local single = SingleCharacter()
+    for _, button in ipairs({ LogNextCharBarNext, LogNextCharBarPrev }) do
+        local name = button:GetName()
+        local number, letters = _G[name .. "Number"], _G[name .. "Letters"]
+        if number and letters then
+            local slot
+            if not single then
+                local _, index = Target(button.mode)
+                slot = index
+            end
+            number:SetText(slot and tostring(slot) or "")
+            letters:ClearAllAnchors()
+            if slot then
+                letters:SetAnchor("TOP", "TOP", button, 0, 4)
+            else
+                letters:SetAnchor("CENTER", "CENTER", button, 0, 0)
+            end
+        end
     end
 end
 
@@ -300,21 +354,44 @@ function me.UpdateEnabled()
     end
 end
 
+-- Each step on its own, so one that fails can't leave a button without its tile, its name or its mode
+local function Step(what, fn, ...)
+    local ok, err = pcall(fn, ...)
+    if not ok then
+        Print(what .. " failed: " .. tostring(err))
+    end
+end
+
 function me.OnLoad(bar)
-    Paint(LogNextCharBarNext, "next", "Next")
-    Paint(LogNextCharBarPrev, "prev", "Prev")
     bar:RegisterEvent("VARIABLES_LOADED")
     bar:RegisterEvent("LOADING_END")
     bar:RegisterEvent("FORCE_DIALOG_HIDE")
-    me.Place()
+    Step("Next button", Paint, LogNextCharBarNext, "next", "Next")
+    Step("Prev button", Paint, LogNextCharBarPrev, "prev", "Prev")
+    Step("Placing the buttons", me.Place)
     me.Refresh()
-    me.UpdateEnabled()
+    Step("Greying the buttons", me.UpdateEnabled)
+    Step("Numbering the buttons", me.UpdateNumbers)
+end
+
+-- After a switch the login screen couldn't finish (you picked the character yourself), says why, once.
+-- loginxml's CampNext_Login.lua leaves the reason in LOGCHAR_FAILED and what it did in LOGCHAR_TRAIL.
+function me.SayWhySwitchFailed()
+    local reason = _G.LOGCHAR_FAILED
+    if type(reason) ~= "string" then
+        return
+    end
+    _G.LOGCHAR_FAILED = nil
+    Print("The login screen couldn't switch: " .. reason .. ". /lnc probe shows what it did.")
 end
 
 function me.OnEvent(event)
     if event == "FORCE_DIALOG_HIDE" then
         me.ForgetQueued()
         return
+    end
+    if event == "LOADING_END" then
+        Step("Checking the last switch", me.SayWhySwitchFailed)
     end
     if event == "VARIABLES_LOADED" then
         me.Place()
@@ -325,6 +402,7 @@ function me.OnEvent(event)
         end
     end
     me.UpdateEnabled()
+    me.UpdateNumbers()
 end
 
 -- As on the Kitty mode button: a click relogs, right-drag (or Shift+drag) moves the pair
@@ -357,12 +435,13 @@ function me.OnMouseUp(button)
         end
     end
     if not moved and not dragKey and not SingleCharacter() then
-        ArmAndLogout(button.mode)
+        ArmAndLogout(button.mode or (button == LogNextCharBarPrev and "prev" or "next"))
     end
 end
 
 function me.OnEnter(button)
     me.UpdateEnabled()
+    me.UpdateNumbers()
     if not GameTooltip then
         return
     end
@@ -458,6 +537,16 @@ local function Probe()
         type(roster) == "table" and tostring(#roster) or "unknown (login screen not installed?)",
         tostring(CHARACTER_SELECT and CHARACTER_SELECT.selectedIndex),
         tostring(me.Get("lock")), tostring(me.Get("show")), tostring(me.IsOn())))
+    -- The login screen's steps in the last switch (CampNext_Login.lua)
+    local trail = _G.LOGCHAR_TRAIL
+    if type(trail) == "table" and #trail > 0 then
+        Print("Last switch on the login screen:")
+        for _, line in ipairs(trail) do
+            Print("  " .. tostring(line))
+        end
+    else
+        Print("No switch on the login screen since the game started.")
+    end
 end
 
 local function HandleBar(msg)
@@ -539,6 +628,7 @@ SlashCmdList["LOGPREVCHAR"] = HandlePrev
 -- ChangeChar(index) is the relog call some older login addons provided; keep it
 -- so macros written for them still work, e.g.
 -- /script ChangeChar(CHARACTER_SELECT.selectedIndex)
+-- Its number is the game's slot, as it was for them, whatever order the character screen shows.
 -- Only defined when no other login addon already provides it.
 if not ChangeChar then
     function ChangeChar(char)
@@ -547,7 +637,7 @@ if not ChangeChar then
         elseif char == "next" or char == "prev" then
             ArmAndLogout(char)
         elseif tonumber(char) then
-            ArmAndLogout("index", tonumber(char))
+            ArmAndLogout("slot", tonumber(char))
         else
             Print("ChangeChar: unknown character " .. tostring(char))
         end

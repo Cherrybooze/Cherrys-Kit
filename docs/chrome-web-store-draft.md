@@ -2,7 +2,7 @@
 
 This is a working draft, not a published listing or final privacy policy.
 
-Current listing/version notes are kept in [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md). Version 1.3.3 adds original stat colours, inline effects, class-coloured holders and a locally saved excluded-stat list; permissions are unchanged. Version 1.3.4 also corrects hub-version comparison and explains published releases versus reloading installed files.
+Current listing/version notes are kept in [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md). Version 1.3.3 adds original stat colours, inline effects, class-coloured holders and a locally saved excluded-stat list; permissions are unchanged. Version 1.3.4 also corrects hub-version comparison and explains published releases versus reloading installed files. Version 1.3.7 adds character transfer tracking from the Runes of Magic site's character transfer page: one more content script, no new permissions.
 
 ## Listing description
 
@@ -18,9 +18,11 @@ The extension’s session data is cleared when the browser closes or the extensi
 
 The local bridge also writes Windows' time to `CherrysClockStamp.lua` in that same folder whenever Chrome starts or the extension contacts it, so the game's addons can show the real time. That file stays on the player's PC.
 
+On the Runes of Magic site's character transfer page, while the player has it open, the extension reads the transfers listed as planned and the characters the transfer form offers, each with its server. It keeps those in Chrome's local storage as a transfer log for the Characters page, and nothing else from that page: no account name, e-mail address or link. It never clicks, fills in or submits anything there.
+
 The page shows what the game saved for each character: its bags, bank, gold, currencies, what it wears, and its mail (what its mailbox held when last open, and the recipient, subject, gold and items of the mail it sent, the newest 360). All of it is read from the player's own save files through the local helper and stays on the player's PC.
 
-When the player presses **Check for updates**, **Update from GitHub** or **Download and install** on the Addons page, the local helper downloads Cherry's Kit's release files from github.com/Cherrybooze/Cherrys-Kit. Nothing about the player is sent; this is the only time the extension or helper goes online, apart from the Gameforge shop pages the player opens. The data-use declarations should say so.
+When the player presses **Check for updates**, **Update from GitHub** or **Download and install** on the Addons page, the local helper downloads Cherry's Kit's release files from github.com/Cherrybooze/Cherrys-Kit. Nothing about the player is sent; this is the only time the extension or helper goes online, apart from the Gameforge shop and character transfer pages the player opens. The data-use declarations should say so.
 
 ## Before submission
 

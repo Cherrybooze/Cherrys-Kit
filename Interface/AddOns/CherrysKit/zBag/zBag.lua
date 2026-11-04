@@ -301,10 +301,23 @@ end
 -- leave an empty row before the equipment).
 crx=1;
 
+-- Cherry's Kit: with "Next to bag (zBag)" the equipment goes into zBagEqBox, attached to the right
+-- of the bag: one column when the bag has a row for every slot, else two columns.
+local eqside = (ZBAG_SHOWEQ == 1) and zBagKit.EqSide and zBagKit.EqSide();
+local eqrows = ZBAG_MAXEQ;
+if (eqside and cry < ZBAG_MAXEQ) then
+	eqrows = math.ceil(ZBAG_MAXEQ/2);
+end
+
 for i = 1, ZBAG_MAXEQ do
 	item = getglobal("zEqItem"..i);
 	item:ClearAllAnchors();
-	if (ZBAG_SHOWEQ == 1) then
+	if (eqside) then
+		zBagItem_Resize(item,32*ZBAG_SCALE,32*ZBAG_SCALE);
+		item:SetAnchor("TOPLEFT","TOPLEFT",zBagEqBox,math.floor((i-1)/eqrows)*35*ZBAG_SCALE+14,((i-1)%eqrows)*35*ZBAG_SCALE+15+additionalTopOffset);
+		item.display=true;
+		item:Show();
+	elseif (ZBAG_SHOWEQ == 1) then
 		if (crx-1 == ZBAG_ROW_ITEMS) then --new line when enough items on row
 			crx=1; cry=cry+1;
 		end
@@ -323,11 +336,18 @@ end
 
 local bagbk = getglobal("zBagBackground");
 local padd=10;
-if (ZBAG_SHOWEQ==0) then
+if (ZBAG_SHOWEQ==0 or eqside) then
 	padd=0;
 end
-if (ZBAG_SHOWEQ == 1) then
+if (ZBAG_SHOWEQ == 1 and not eqside) then
 	cry=cry+1;
+end
+if (eqside and zBag_VAR["showback"]==1) then
+	local eqcols = math.ceil(ZBAG_MAXEQ/eqrows);
+	zBagEqBox:SetSize(eqcols*35*ZBAG_SCALE+25,eqrows*35*ZBAG_SCALE+27+additionalTopOffset);
+	zBagEqBox:Show();
+else
+	zBagEqBox:Hide();
 end
 
 if (zBag_VAR["showback"]==1) then
@@ -443,6 +463,7 @@ function zBag_Update()
 			else
 				zBagKit.Label(item, nil);
 			end
+			if (zBagKit.StatPrefix) then zBagKit.StatPrefix(item, index, zBagKit.SlotNumberFontSize()*ZBAG_SCALE); end -- Cherry's Kit: "Stats" tick
 			if (GameTooltip:IsVisible() and GameTooltip:IsOwned(item)) then
 				GameTooltip:SetBagItem(item.index);
 			end

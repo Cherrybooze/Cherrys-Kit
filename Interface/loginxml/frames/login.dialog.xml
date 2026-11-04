@@ -34,6 +34,45 @@
           <Anchor point="CENTER"/>
         </Anchors>
         <Layers>
+          <Layer level="BORDER">
+            <!-- skin.lua's border(): hidden in Classic -->
+            <Texture name="$parent_bt" hidden="true">
+              <Size>
+                <AbsDimension x="1" y="1"/>
+              </Size>
+              <Anchors>
+                <Anchor point="TOPLEFT"/>
+                <Anchor point="TOPRIGHT"/>
+              </Anchors>
+            </Texture>
+            <Texture name="$parent_bb" hidden="true">
+              <Size>
+                <AbsDimension x="1" y="1"/>
+              </Size>
+              <Anchors>
+                <Anchor point="BOTTOMLEFT"/>
+                <Anchor point="BOTTOMRIGHT"/>
+              </Anchors>
+            </Texture>
+            <Texture name="$parent_bl" hidden="true">
+              <Size>
+                <AbsDimension x="1" y="1"/>
+              </Size>
+              <Anchors>
+                <Anchor point="TOPLEFT"/>
+                <Anchor point="BOTTOMLEFT"/>
+              </Anchors>
+            </Texture>
+            <Texture name="$parent_br" hidden="true">
+              <Size>
+                <AbsDimension x="1" y="1"/>
+              </Size>
+              <Anchors>
+                <Anchor point="TOPRIGHT"/>
+                <Anchor point="BOTTOMRIGHT"/>
+              </Anchors>
+            </Texture>
+          </Layer>
           <Layer>
             <FontString name="$parent_text" inherits="LoginFontHighlight" justifyH="CENTER" text="test">
               <Size>
@@ -78,7 +117,7 @@
               </OnEnterPressed>
               <OnTabPressed>
                 local edit = _G[this:GetParent():GetName().."_edit2"]
-                if edit:IsVisible()
+                if edit:IsVisible() then
                   edit:SetFocus()
                 end
               </OnTabPressed>
@@ -99,7 +138,7 @@
               </OnEnterPressed>
               <OnTabPressed>
                 local edit = _G[this:GetParent():GetName().."_edit1"]
-                if edit:IsVisible()
+                if edit:IsVisible() then
                   edit:SetFocus()
                 end
               </OnTabPressed>
@@ -113,7 +152,12 @@
         login.dialog.onAction(this, false)
       </OnEscapePressed>
       <OnLoad>
-        this:SetBackdropTileAlpha(.4)
+        if LoginLook then
+          LoginLook.panel(this, "dim", .4)
+          LoginLook.panel(LoginDialog, "list")
+        else
+          this:SetBackdropTileAlpha(.4)
+        end
       </OnLoad>
       <OnHide>
         -- FIXME: Dirty workaround

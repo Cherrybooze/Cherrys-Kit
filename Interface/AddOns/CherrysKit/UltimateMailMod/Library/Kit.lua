@@ -27,10 +27,10 @@ default("UMM_MSI_STOPPED", "Mass send stopped: %d of %d mails sent. The items no
 default("UMM_MSI_GAVEUP", "Mail for %s failed %d times (%s). Stopped so nothing gets stuck.");
 default("UMM_MSI_SKIPPED", "Skipped %s: it is no longer in that bag slot.");
 default("UMM_COMPOSER_USELAST", "Use last");
-default("UMM_COMPOSER_TIP_USELAST", "Fill To with the last successfully mailed recipient. Shared across your characters.");
+default("UMM_COMPOSER_TIP_USELAST", "Fill To with the last successfully mailed recipient on this server. Shared by your characters there.");
 default("UMM_COMPOSER_TIP_GOLDPRESET", "Fill Send Gold with %s gold. Change both amounts in /umm. This button only fills the form.");
 default("UMM_SETTINGS_MAILSHORTCUTS", "Mail shortcuts");
-default("UMM_SETTINGS_TIP_MAILSHORTCUTS", "Show Use last beside To and two gold preset buttons below Send Gold. On by default; settings and recipient history are shared across characters.");
+default("UMM_SETTINGS_TIP_MAILSHORTCUTS", "Show Use last beside To and two gold preset buttons (beside the gold box in the modern window, below Send Gold in the classic one). On by default; settings are shared across characters, recipient history by the characters on each server.");
 default("UMM_SETTINGS_GOLDPRESET", "Gold preset %d");
 default("UMM_SETTINGS_SAVEPRESETS", "Save presets");
 default("UMM_SETTINGS_PRESETHELP", "Shared across characters. Enter whole gold amounts, then Save presets.");
@@ -39,13 +39,74 @@ default("UMM_SETTINGS_PRESETSAVED", "Gold presets saved.");
 default("UMM_MENU_HISTORY", "History");
 default("UMM_HISTORY_TITLE", "Recipient history");
 default("UMM_RECIPIENT_HISTORY", "History");  -- first column of the Mass Send recipient picker
-default("UMM_HISTORY_HELP", "Your last 20 distinct recipients, newest first. Shared across characters. Click a name to compose mail.");
+default("UMM_HISTORY_HELP", "Your last 20 distinct recipients on this server, newest first. Shared by your characters there. Click a name to compose mail.");
 default("UMM_HISTORY_EMPTY", "No successfully sent mail yet.");
 default("UMM_HISTORY_COUNT", "%d / 20 recipients");
 default("UMM_MSI_RECENT_TITLE", "Recently sent");
 default("UMM_MSI_RECENT_HELP", "Use this recipient for Mass Send Items. Selected items stay selected; sending still uses Send or C.O.D.");
 default("UMM_MSI_SELECT_TITLE", "Item selection");
 default("UMM_MSI_SELECT_HELP", "Drag a box to select items. Ctrl/Shift-drag adds; Esc cancels. Ctrl-click toggles matching stacks.");
+default("UMM_SETTINGS_CLASSICUI", "Classic mail window");
+default("UMM_SETTINGS_TIP_CLASSICUI", "Off (the default): the modern mail window opens at a mailbox. On: the classic Ultimate Mail Mod window. The change shows the next time you open a mailbox; no Reload UI needed. Also /umm ui modern|classic.");
+default("UMM_UI_NOW", "Mail window: %s. It shows the next time you open a mailbox.");
+default("UMM_UI_MODERN", "modern");
+default("UMM_UI_CLASSIC", "classic");
+default("UMM_SETTINGS_SCALE", "Mail window scale");
+default("UMM_SETTINGS_TIP_SCALE", "Size of the modern mail window. 1 is the default size; 0.7 to 1.5. The window changes at once. Also /umm scale <0.7 - 1.5>.");
+default("UMM_SETTINGS_AUTOLIST", "Open name list by itself");
+default("UMM_SETTINGS_TIP_AUTOLIST", "On (the default): the list of names opens when a To field of the modern mail window gets the cursor. Off: it opens only from the button beside To. Also /umm namelist on|off.");
+
+-- ### Which mail window ###
+-- Both windows' frames exist (the game builds every XML frame while loading, before saved
+-- settings are read); only the chosen one is ever shown or updated. The modern window's Lua is
+-- read the first time it opens (Modern/Loader.lua).
+
+function UMMUIStyle()
+  local style = UMMSettings and UMMSettings:Get("UIStyle");
+  if (style == "classic") then return "classic"; end
+  return "modern";
+end
+
+function UMMSetUIStyle(style)
+  style = (style == "classic") and "classic" or "modern";
+  UMMSettings:Set("UIStyle", style);
+  return style;
+end
+
+-- The modern window's scale setting, 0.7 to 1.5 (1 is the default size).
+UMM_WINDOW_SCALE_LOW, UMM_WINDOW_SCALE_HIGH = 0.7, 1.5;
+
+function UMMWindowScale()
+  local value = UMMSendSetting("WindowScale");
+  if (type(value) ~= "number" or value ~= value) then return 1; end
+  return math.max(UMM_WINDOW_SCALE_LOW, math.min(UMM_WINDOW_SCALE_HIGH, value));
+end
+
+-- Resizes the modern window at once when it is built (else it takes the scale when it opens).
+function UMMApplyWindowScale()
+  if (UMMModern and UMMModern.ready and UMMModern.ApplyScale) then UMMModern.ApplyScale(); end
+end
+
+-- Does the name list open by itself when a To field of the modern window gets the cursor? On
+-- unless switched off; off, it opens from the button beside To only.
+function UMMAutoNameList()
+  return not (UMMSettings and UMMSettings:Get("AutoNameList") == false);
+end
+
+-- Is either mail window open?
+function UMMMailWindowShown()
+  if (UMMFrame and UMMFrame:IsVisible()) then return true; end
+  return (UMMModernFrame ~= nil and UMMModernFrame:IsVisible()) and true or false;
+end
+
+-- ### To fields ###
+-- Clicking into a To field that holds a name selects all of it, so typing replaces it; a second
+-- click (the field already has focus) places the cursor as usual.
+function UMMSelectAllOnFocus(box)
+  if (box and box.HighlightText and (box:GetText() or "") ~= "") then
+    box:HighlightText();
+  end
+end
 
 -- ### Send pacing ###
 -- Defaults are deliberately gentle: the old 0.2 s spacing with no pauses is what ran into
@@ -57,6 +118,7 @@ UMM_SEND_DEFAULTS = {
   BatchSize   = 20,   -- pause after this many mails (0 = never)
   BatchPause  = 5,    -- seconds of that pause
   MaxRetries  = 3,    -- tries again this often before giving up on a mail
+  WindowScale = 1,    -- the modern mail window's size (Modern/Core.lua draws 1 at 1.2 times its layout)
 };
 
 function UMMSendSetting(name)

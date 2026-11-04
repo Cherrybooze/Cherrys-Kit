@@ -40,6 +40,94 @@ class LayoutTest(unittest.TestCase):
         size = bar.find(f"{ns}Size/{ns}AbsDimension")
         self.assertGreater(int(size.get("y")), int(size.get("x")))
 
+    def test_slot_number_drawn_behind_the_name(self):
+        # Within a layer the client draws in the order listed, so the number comes before the name
+        path = os.path.join(ROOT, "AddOns", "LogNextChar", "LogNextChar.xml")
+        ns = "{http://www.runewaker.com/}"
+        template = next(f for f in ET.parse(path).getroot() if f.get("name") == "LogNextCharButtonTemplate")
+        overlay = next(layer for layer in template.iter(f"{ns}Layer") if layer.get("level") == "OVERLAY")
+        texts = [s.get("name") for s in overlay.findall(f"{ns}FontString")]
+        self.assertEqual(texts, ["$parentNumber", "$parentLetters"])
+        height = {s.get("name"): int(s.find(f"{ns}FontHeight/{ns}AbsValue").get("val"))
+                  for s in overlay.findall(f"{ns}FontString")}
+        self.assertGreater(height["$parentNumber"], height["$parentLetters"])
+
+
+class LoadTest(unittest.TestCase):
+    def test_both_buttons_ready_at_load(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C", "D", "E", "F", "G", "H"}; CHARACTER_SELECT = {selectedIndex = 1}')
+        self.assertEqual((lua.eval("LogNextCharBarNext.mode"), lua.eval("LogNextCharBarPrev.mode")), ("next", "prev"))
+        self.assertEqual(lua.eval("LogNextCharBarPrevIcon.path"), "Interface/AddOns/LogNextChar/gfx/button.tga")
+        self.assertEqual(lua.eval("LogNextCharBarPrevLetters.text"), "Prev")
+        self.assertEqual(lua.eval("LogNextCharBarPrevNumber.text"), "8")  # numbered before any hover
+
+    def test_a_failing_step_leaves_the_other_button_working(self):
+        lua = in_game('LogNextCharBarNextNumber = {SetText = function() error("broken") end}')
+        self.assertEqual(lua.eval("LogNextCharBarPrev.mode"), "prev")
+        self.assertEqual(lua.eval("LogNextCharBarPrevLetters.text"), "Prev")
+        self.assertTrue(any("Next button failed" in line for line in lua_list(lua.eval("chat"))))
+
+    def test_prev_from_the_first_character_goes_to_the_last(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C", "D", "E", "F", "G", "H"}; CHARACTER_SELECT = {selectedIndex = 1}')
+        press(lua, "LogNextCharBarPrev")
+        self.assertEqual((lua.eval("LOGCHAR_MODE"), lua.eval("logouts")), ("prev", 1))
+        self.assertFalse(any("Unknown mode" in line for line in lua_list(lua.eval("chat"))))
+
+
+class SlotNumberTest(unittest.TestCase):
+    def numbers(self, lua):
+        return lua.eval("LogNextCharBarNextNumber.text"), lua.eval("LogNextCharBarPrevNumber.text")
+
+    def name_spot(self, lua, button):
+        return lua.eval(f"LogNextCharBar{button}Letters.anchor[1]")
+
+    def test_next_and_prev_show_the_slots_they_log_into(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C", "D", "E", "F", "G", "H"}; CHARACTER_SELECT = {selectedIndex = 4}')
+        self.assertEqual(self.numbers(lua), ("5", "3"))
+        self.assertEqual((self.name_spot(lua, "Next"), self.name_spot(lua, "Prev")), ("TOP", "TOP"))
+
+    def test_the_number_has_its_own_colour(self):
+        lua = in_game()
+        for button in ("Next", "Prev"):
+            color = lua_list(lua.eval(f"LogNextCharBar{button}Number.color"))
+            self.assertEqual(color, lua_list(lua.eval("LogNextChar.NUMBER_COLOR")))
+            self.assertIsNone(lua.eval(f"LogNextCharBar{button}Letters.color"))  # the name keeps its font's gold
+
+    def test_numbers_go_round_like_the_switch(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C"}; CHARACTER_SELECT = {selectedIndex = 3}')
+        self.assertEqual(self.numbers(lua), ("1", "2"))
+        lua.execute('CHARACTER_SELECT.selectedIndex = 1; LogNextChar.OnEvent("LOADING_END")')
+        self.assertEqual(self.numbers(lua), ("2", "3"))
+
+    def test_name_alone_in_the_middle_without_a_list_or_with_one_character(self):
+        lua = in_game()
+        self.assertEqual(self.numbers(lua), ("", ""))
+        self.assertEqual(self.name_spot(lua, "Next"), "CENTER")
+        lua.execute('LOGCHAR_ROSTER = {"A"}; CHARACTER_SELECT = {selectedIndex = 1}; LogNextChar.OnEvent("LOADING_END")')
+        self.assertEqual(self.numbers(lua), ("", ""))
+        self.assertEqual(self.name_spot(lua, "Prev"), "CENTER")
+
+    def test_numbers_follow_the_character_screens_order(self):
+        # Edit character order put D first: playing D (slot 4) is number 1, so Next is C (2), Prev is B (4)
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C", "D"}; LOGCHAR_ORDER = {"D", "C", "A", "B"};'
+                      ' CHARACTER_SELECT = {selectedIndex = 4}')
+        self.assertEqual(self.numbers(lua), ("2", "4"))
+        lua.execute("LogNextChar.OnEnter(LogNextCharBarNext)")
+        self.assertEqual(lua_list(lua.eval("tip"))[1], "C (2/4)")
+        lua.execute('UnitName = function() return "A" end; LogNextChar.OnEvent("LOADING_END")')
+        self.assertEqual(self.numbers(lua), ("4", "2"))  # by name first: A is number 3
+
+    def test_an_order_that_doesnt_match_the_list_is_ignored(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B", "C"}; LOGCHAR_ORDER = {"C", "A"}; CHARACTER_SELECT = {selectedIndex = 2}')
+        self.assertEqual(self.numbers(lua), ("3", "1"))
+
+    def test_a_list_that_arrives_later_shows_on_hover(self):
+        lua = in_game()
+        lua.execute('LOGCHAR_ROSTER = {"A", "B"}; CHARACTER_SELECT = {selectedIndex = 1}')
+        lua.execute("LogNextChar.OnEnter(LogNextCharBarNext)")
+        self.assertEqual(self.numbers(lua), ("2", "2"))
+        self.assertEqual(self.name_spot(lua, "Next"), "TOP")
+
 
 class DefaultSpotTest(unittest.TestCase):
     def anchor(self, lua):
@@ -67,6 +155,33 @@ class DefaultSpotTest(unittest.TestCase):
         chat = lua_list(lua.eval("chat"))
         self.assertTrue(any("MinimapViewFrame: at 1000, 20" in line for line in chat))
         self.assertEqual(lua.eval("logouts"), 0)
+
+
+class SwitchReportTest(unittest.TestCase):
+    def test_says_once_why_the_login_screen_could_not_switch(self):
+        lua = in_game('LOGCHAR_FAILED = "No character list 120 s after logging out"')
+        lua.execute('LogNextChar.OnEvent("LOADING_END")')
+        chat = lua_list(lua.eval("chat"))
+        self.assertIn("The login screen couldn't switch: No character list 120 s after logging out.", chat[-1])
+        self.assertIsNone(lua.eval("LOGCHAR_FAILED"))
+        lua.execute('LogNextChar.OnEvent("LOADING_END")')  # the next zone
+        self.assertEqual(len(lua_list(lua.eval("chat"))), len(chat))
+
+    def test_quiet_after_a_switch_that_worked(self):
+        lua = in_game()
+        before = len(lua_list(lua.eval("chat")))
+        lua.execute('LogNextChar.OnEvent("LOADING_END")')
+        self.assertEqual(len(lua_list(lua.eval("chat"))), before)
+
+    def test_probe_lists_the_login_screens_steps(self):
+        lua = in_game('LOGCHAR_TRAIL = {"[CampNext] Armed mode=next from Bb", "[CampNext] Logging into 3 (Cc)"}')
+        lua.execute('SlashCmdList.LOGNEXTCHAR(nil, "probe")')
+        chat = lua_list(lua.eval("chat"))
+        self.assertTrue(any("Last switch on the login screen" in line for line in chat))
+        self.assertTrue(any("Logging into 3 (Cc)" in line for line in chat))
+        lua = in_game()
+        lua.execute('SlashCmdList.LOGNEXTCHAR(nil, "probe")')
+        self.assertTrue(any("No switch on the login screen" in line for line in lua_list(lua.eval("chat"))))
 
 
 class ButtonTest(unittest.TestCase):
@@ -225,8 +340,8 @@ class CommandTest(unittest.TestCase):
         lua = in_game()
         lua.execute('SlashCmdList.LOGNEXTCHAR(nil, "4")')
         self.assertEqual((lua.eval("LOGCHAR_MODE"), lua.eval("LOGCHAR_TARGET")), ("index", 4))
-        lua.execute("ChangeChar(2)")
-        self.assertEqual((lua.eval("LOGCHAR_MODE"), lua.eval("LOGCHAR_TARGET")), ("index", 2))
+        lua.execute("ChangeChar(2)")  # older login addons' call: the game's slot
+        self.assertEqual((lua.eval("LOGCHAR_MODE"), lua.eval("LOGCHAR_TARGET")), ("slot", 2))
 
     def test_button_commands(self):
         lua = in_game()

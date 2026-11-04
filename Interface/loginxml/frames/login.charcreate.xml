@@ -20,6 +20,9 @@
 						this:SetValueStepMode("FLOAT");
             this.part = string.match(this:GetName(), "_([^_]+)$")
             this.text = TEXT("LOGIN_"..string.upper(this.part)).." (%0.2f)"
+            if LoginLook then
+              LoginLook.slider(this)
+            end
       </OnLoad>
       <OnValueChanged>
             _G[this:GetName().."_name"]:SetText(string.format(this.text, this:GetValue()))
@@ -65,6 +68,9 @@
 						this:SetValueStepMode("INT");
             this.part = string.match(this:GetName(), "_([^_]+)$")
             this.text = TEXT(tbl[this.part]).." (%d)"
+            if LoginLook then
+              LoginLook.slider(this)
+            end
       </OnLoad>
       <OnValueChanged>
         _G[this:GetName().."_name"]:SetText(string.format(this.text, this:GetValue()))
@@ -85,9 +91,54 @@
         <AbsValue val="5"/>
       </TileSize>
     </Backdrop>
+    <Layers>
+      <Layer level="BORDER">
+        <!-- skin.lua's border(): hidden in Classic -->
+        <Texture name="$parent_bt" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
+            <Anchor point="TOPRIGHT"/>
+          </Anchors>
+        </Texture>
+        <Texture name="$parent_bb" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="BOTTOMLEFT"/>
+            <Anchor point="BOTTOMRIGHT"/>
+          </Anchors>
+        </Texture>
+        <Texture name="$parent_bl" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPLEFT"/>
+            <Anchor point="BOTTOMLEFT"/>
+          </Anchors>
+        </Texture>
+        <Texture name="$parent_br" hidden="true">
+          <Size>
+            <AbsDimension x="1" y="1"/>
+          </Size>
+          <Anchors>
+            <Anchor point="TOPRIGHT"/>
+            <Anchor point="BOTTOMRIGHT"/>
+          </Anchors>
+        </Texture>
+      </Layer>
+    </Layers>
     <Scripts>
       <OnLoad>
-        this:SetBackdropTileAlpha(.4)
+        if LoginLook then
+          LoginLook.panel(this, "list", .4)
+        else
+          this:SetBackdropTileAlpha(.4)
+        end
       </OnLoad>
     </Scripts>
   </Frame>
@@ -97,6 +148,7 @@
     </Size>
     <Scripts>
       <OnLoad>
+          LoginEditBox_OnLoad(this)
           this.color = string.match(this:GetName(), "_([^_]+)$")
       </OnLoad>
       <OnTextChanged>

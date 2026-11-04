@@ -28,6 +28,19 @@ class MailShortcutsTests(unittest.TestCase):
           loadfile=function() return nil,"locale supplied by fixture" end
         ''')
         self.load("Library/Tools.lua")
+        if getattr(self, "recipient_lists", False):
+            # the real name columns of Compose; the friend and guild lists are the game's boundary
+            self.lua.execute('''
+              ummFriends={{"Pal",true}};ummInGuild=false
+              GetFriendCount=function() return #ummFriends end
+              GetFriendInfo=function(_,i) return ummFriends[i][1],nil,ummFriends[i][2] end
+              IsInGuild=function() return ummInGuild end
+              GetNumGuildMembers=function() return 1 end
+              GetGuildRosterInfo=function() return "Guildmate",nil,nil,nil,nil,nil,nil,nil,nil,nil,true end
+            ''')
+            self.load("Library/Templates.lua")
+            self.load("Recipient/Recipient.lua")
+            self.load_xml("Recipient/Recipient.xml")
         for name in ("Library/PopUpDialog.xml", "Compose/Compose.xml", "History/History.xml", "Menu/Menu.xml", "Menu/Settings.xml"):
             self.load_xml(name)
         self.g.UMMFrame_OnLoad(self.g.UMMFrame)
@@ -73,6 +86,11 @@ class MailShortcutsTests(unittest.TestCase):
         obj.text = attributes.get("text", "")
         obj.mouse = attributes.get("enableMouse") == "true"
         obj.alpha = float(attributes.get("alpha", 1))
+        if kind == "EditBox":
+            # what the client's typing goes by (test_umm_modern.py: ummChar)
+            obj.numeric = attributes.get("numeric") == "true"
+            obj.multiLine = attributes.get("multiLine") == "true"
+            obj.letters = int(attributes.get("letters", 255))
         self.g.ummScripts[name] = self.lua.table_from(scripts)
         # These child labels come from the client's common panel/check templates.
         inherited = {source.get("inherits") for source in sources}
@@ -82,11 +100,15 @@ class MailShortcutsTests(unittest.TestCase):
             self.g.UMMFixtureWidget("FontString", name + "Title", name)
         if "CommonOptionsCheckButtonTemplate" in inherited:
             self.g.UMMFixtureWidget("FontString", name + "Name", name)
+        # what tests/rom_layout.lua needs to load the frame as the client does
+        obj.xmlStrata = attributes.get("frameStrata")
+        obj.xmlLevel = attributes.get("frameLevel")
         for source in sources:
             dimensions = source.find("ui:Size/ui:AbsDimension", NS)
             if dimensions is not None:
                 obj.width = float(dimensions.get("x", 0))
                 obj.height = float(dimensions.get("y", 0))
+                obj.xmlSized = True
             anchor = source.find("ui:Anchors/ui:Anchor", NS)
             if anchor is not None:
                 offset = anchor.find("ui:Offset/ui:AbsDimension", NS)
@@ -124,7 +146,8 @@ class MailShortcutsTests(unittest.TestCase):
         self.g.UMMMailComposer.SendCompleted(self.g.UMMMailComposer, status)
 
     def history(self):
-        return list(self.g.UMMConfig.RecipientHistory.values())
+        """The names mailed from the server the test plays on (UMMConfig.RecentByServer)."""
+        return list(self.lua.eval("UMMSettings:History()").values())
 
     def test_old_profiles_get_default_on_shortcuts_without_changing_other_settings(self):
         self.lua.execute('''
@@ -408,6 +431,34 @@ class MailShortcutsTests(unittest.TestCase):
         self.assertEqual(self.g.UMMConfig.Settings.GoldPreset1, 100000)
         self.assertEqual(self.history(), ["Alpha", "Beta", "Gamma"])
 
+    def test_recent_names_are_kept_per_server_and_the_old_shared_list_goes_to_the_first_server(self):
+        self.lua.execute('UMMConfig.RecentByServer=nil; UMMConfig.RecipientHistory={"Old1","Old2"}; '
+                         'ummRealm=nil; UMMSettings:Init()')
+        # while no server is known, the old list shows and stays where it is
+        self.assertEqual(self.history(), ["Old1", "Old2"])
+        self.assertIsNotNone(self.g.UMMConfig.RecipientHistory)
+        # the first server known takes it over (colour codes and spaces are not part of the name)
+        self.g.ummRealm = "|cffffd100Alpha|r "
+        self.assertEqual(self.history(), ["Old1", "Old2"])
+        self.assertIsNone(self.g.UMMConfig.RecipientHistory)
+        self.send("Ann")
+        self.assertEqual(self.history(), ["Ann", "Old1", "Old2"])
+        # another server starts empty and keeps its own names
+        self.g.ummRealm = "Beta"
+        self.assertEqual(self.history(), [])
+        self.assertIsNone(self.g.UMMSettings.LastRecipient(self.g.UMMSettings))
+        self.send("Bob")
+        self.assertEqual(self.history(), ["Bob"])
+        self.g.ummRealm = "Alpha"
+        self.assertEqual(self.history(), ["Ann", "Old1", "Old2"])
+        self.assertEqual(self.g.UMMSettings.LastRecipient(self.g.UMMSettings), "Ann")
+        # the login screen's server name when the game gives none
+        self.lua.execute('ummRealm=nil; LOGCHAR_SERVER="Beta"')
+        self.assertEqual(self.history(), ["Bob"])
+        # saved lists are cleaned when they load, as the old one was
+        self.lua.execute('UMMConfig.RecentByServer.Beta={" Bob ","bob","",false,"Cid"}; UMMSettings:Init()')
+        self.assertEqual(self.history(), ["Bob", "Cid"])
+
     def test_slash_configuration_matches_ui_and_large_amount_labels_keep_leading_zero_groups(self):
         self.lua.execute('''
           SlashCmdList.UMM(nil,"gold 1000001 2000002")
@@ -421,6 +472,83 @@ class MailShortcutsTests(unittest.TestCase):
           SlashCmdList.UMM(nil,"shortcuts off");assert(not UMMSettings:ShortcutsEnabled())
           SlashCmdList.UMM(nil,"shortcuts on");assert(UMMSettings:ShortcutsEnabled())
         ''')
+
+
+    def test_to_keeps_its_name_across_tabs_until_reset_or_erased(self):
+        composer = self.compose()
+        author = self.g.UMMFrameTab2ComposerHeaderAuthor
+        subject = self.g.UMMFrameTab2ComposerHeaderSubject
+        author.SetText(author, "Coralbanka")
+        subject.SetText(subject, "Mats")
+        def visit(tab):
+            # the client sends the child composer its own hide and show with the tab
+            self.g.UMMMenuSelectTab(tab)
+            self.script(composer.name, "OnHide")
+            self.compose()
+        for tab in (1, 3, 4):
+            visit(tab)
+            self.assertEqual(author.text, "Coralbanka")
+        self.assertEqual(subject.text, "", "only the name is kept")
+        self.assertTrue(subject.focus)
+        self.g.UMMComposeMailTemplateButton_OnClick(self.g.UMMFrameTab2ComposerReset, "reset")
+        self.assertEqual(author.text, "")
+        author.SetText(author, "Other")
+        author.SetText(author, "")
+        visit(1)
+        self.assertEqual(author.text, "")
+        self.assertTrue(author.focus)
+
+    def test_clicking_into_a_filled_to_field_selects_the_whole_name(self):
+        self.compose()
+        author = self.g.UMMFrameTab2ComposerHeaderAuthor
+        author.SetText(author, "Coralbanka")
+        author.caret = 3
+        self.script(author.name, "OnEditFocusGained")
+        self.assertEqual((author.selStart, author.caret), (0, len("Coralbanka")))
+        author.SetText(author, "")
+        author.selStart = None
+        self.script(author.name, "OnEditFocusGained")
+        self.assertIsNone(author.selStart)
+
+
+class ComposeRecentColumnTests(MailShortcutsTests):
+    recipient_lists = True
+
+    def names(self, column):
+        frame = getattr(self.g, "UMMFrameTab2" + column)
+        out = []
+        for i in range(1, 29):
+            button = getattr(self.g, frame.name + "ListName" + str(i))
+            if button.visible:
+                out.append(getattr(self.g, button.name + "Name").text)
+        return out
+
+    def test_recently_sent_column_comes_first_and_updates_after_a_send(self):
+        self.send("Older")
+        composer = self.compose()
+        self.g.UMMFrameTab2History.visible = False
+        composer.ClearMail(composer, True)
+        self.assertTrue(self.g.UMMFrameTab2History.visible)
+        self.assertEqual(self.g.UMMFrameTab2History.anchor[4], 340)
+        self.assertEqual(self.g.UMMFrameTab2Own.anchor[3], "UMMFrameTab2History")
+        self.assertIn("History", self.g.UMMFrameTab2HistoryHeaderTitle.text)
+        self.assertEqual(len(self.names("History")), 1)
+        self.send("Newest")
+        names = self.names("History")
+        self.assertEqual(len(names), 2)
+        self.assertIn("Newest", names[0])
+        self.g.UMMFixtureDispatch("UMMFrameTab2HistoryListName2", "OnClick")
+        self.assertEqual(self.g.UMMFrameTab2ComposerHeaderAuthor.text, "Older")
+
+    def test_window_widens_on_compose_only_in_a_guild(self):
+        self.g.UMMMenuSelectTab(2)
+        self.assertEqual(self.g.UMMFrame.width, 805)
+        self.g.ummInGuild = True
+        self.g.UMMMenuSelectTab(1)
+        self.g.UMMMenuSelectTab(2)
+        self.assertEqual(self.g.UMMFrame.width, 950)
+        self.g.UMMMenuSelectTab(1)
+        self.assertEqual(self.g.UMMFrame.width, 805)
 
 
 if __name__ == "__main__":

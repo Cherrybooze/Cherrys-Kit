@@ -29,6 +29,11 @@ function me.onLoad(this)
   me.initAccountList()
   me.initPageList()
   me.initPageSlider()
+  if LoginLook then
+    -- the arrow beside the password: Cherry's Bar's play icon in the Modern look
+    LoginLook.icon(LoginAccountFrame_login, 'run', {'Interface\\buttons\\pagerightbutton-normal',
+      'Interface\\buttons\\pagerightbutton-depress', 'Interface\\buttons\\panelbutton-highlight'})
+  end
 end
 function me.onEvent(event)
   return pcall(me[event], arg1, arg2, arg3, arg4)

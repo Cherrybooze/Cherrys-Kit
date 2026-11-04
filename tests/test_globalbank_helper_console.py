@@ -237,7 +237,11 @@ Write-Beat
 $before=[IO.File]::ReadAllText($beat)
 $lock=New-Object IO.FileStream($beat,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
 try { Write-Beat } finally { $lock.Dispose() }
-if ([IO.File]::ReadAllText($beat) -ne $before) { throw 'Busy beat was truncated' }
+# Windows refuses the replace while a reader holds the file, so the beat stays as it was.
+# Linux and macOS allow the rename, so the beat may already carry the next second.
+# Either way it must be one whole beat, never empty or cut short.
+$after=[IO.File]::ReadAllText($beat)
+if ($after -ne $before -and ($after -notmatch '^GlobalBank_HelperBeat = [0-9]+' -or -not $after.EndsWith([string][char]10))) { throw 'Busy beat was truncated' }
 Write-Beat
 if (Get-ChildItem -LiteralPath $fixture -Filter '*.tmp') { throw 'Heartbeat temporary file leaked' }
 ''')

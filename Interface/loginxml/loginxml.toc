@@ -1,5 +1,6 @@
 $root\data\loginString_$language.lua
 
+template/skin.lua
 template/font.xml
 template/button.xml
 template/scrollbar.lua

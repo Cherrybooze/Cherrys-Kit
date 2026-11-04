@@ -8,6 +8,10 @@
 -- zBag_VAR["bankslotnumbers"] 1 = numbers over the bank slots
 -- zBag_VAR["slothover"]       0 = numbers always shown; anything else (default) = only on the slot
 --                             under the mouse
+-- zBag_VAR["eqside"]          1 = the one bag's equipment slots sit in their own box attached to the
+--                             right of the bag (one column, or two when the bag is shorter)
+-- zBag_VAR["bankshopside"]    1 = the one bank's item shop slots (201-300) sit in their own box
+--                             attached to the right of the bank, with the bank search under them
 
 zBagKit = zBagKit or {}
 local K = zBagKit
@@ -19,7 +23,7 @@ K.cherryOpen, K.resizing, K.dragging = nil, nil, nil
 K.storageInitialized, K.storageShared = nil, nil
 K.hoverOwner, K.hoverButton = nil, nil
 
-K.version = "5.07-ck20"
+K.version = "5.07-ck21"
 K.DEFAULT_SLOT_FONT_SIZE, K.MIN_SLOT_FONT_SIZE, K.MAX_SLOT_FONT_SIZE = 8, 6, 20
 K.path = (CherrysKit_Paths and CherrysKit_Paths.zBag) or "Interface/AddOns/zBag/"
 K.BAG_SLOTS = 180
@@ -285,6 +289,16 @@ function K.IsOneBank()
   return K.IsOn() and type(zBag_VAR) == "table" and zBag_VAR["bankmode"] == "onebank"
 end
 
+-- One bag: the equipment slots beside the bag ("Next to bag (zBag)", only while they are shown).
+function K.EqSide()
+  return type(zBag_VAR) == "table" and zBag_VAR["eqside"] == 1
+end
+
+-- One bank: the item shop bank beside the bank (only while its page is shown, bank tick 6).
+function K.BankShopSide()
+  return type(zBag_VAR) == "table" and zBag_VAR["bankshopside"] == 1 and zBag_VAR["bank6"] == 1
+end
+
 function K.ApplyBankLayout()
   if not K.IsOneBank() then
     if zBagB and zBagB:IsVisible() then zBagB:Hide() end
@@ -344,6 +358,7 @@ function K.Label(owner, slot, size, showOwner)
   if owner.kitSlot == slot and owner.kitSize == size and owner.kitShown == shown then
     return
   end
+  local changed = owner.kitSlot ~= slot or owner.kitSize ~= size
   owner.kitSlot, owner.kitSize, owner.kitShown, owner.kitShowOwner = slot, size, shown, showOwner
   local name = owner:GetName()
   local text, back = _G[name .. "KitSlot"], _G[name .. "KitSlotBack"]
@@ -358,32 +373,30 @@ function K.Label(owner, slot, size, showOwner)
     end
     owner.kitSlotPositioned = true
   end
-  if back then back:SetSize(math.max(12, math.ceil(size * 2)), math.max(9, math.ceil(size + 2))) end
-  if shown then
+  -- The number is laid out (text, then font size) whenever the slot or size changes, also while
+  -- hidden, so a mouseover only shows it. Setting the text while showing it drew it at the template's
+  -- bigger font for a moment before the small size took.
+  if changed then
     if text then
-      text:SetText(tostring(slot))
+      -- As zBag's own config button text: the client only takes SetFontSize after the text has
+      -- changed, so the text goes to "z" and back first and the size comes last (with
+      -- the size set before the text, the font size setting never showed).
+      text:SetText("z")
+      text:SetText(slot ~= nil and tostring(slot) or "")
       if size then
         text:SetFontSize(size)
       end
-      text:Show()
     end
-    if back then
-      back:Show()
-    end
-    if showOwner then
-      owner:Show()
-    end
+    if back then back:SetSize(math.max(12, math.ceil(size * 2)), math.max(9, math.ceil(size + 2))) end
+  end
+  if shown then
+    if text then text:Show() end
+    if back then back:Show() end
+    if showOwner then owner:Show() end
   else
-    if text then
-      text:SetText("")
-      text:Hide()
-    end
-    if back then
-      back:Hide()
-    end
-    if showOwner then
-      owner:Hide()
-    end
+    if text then text:Hide() end
+    if back then back:Hide() end
+    if showOwner then owner:Hide() end
   end
 end
 

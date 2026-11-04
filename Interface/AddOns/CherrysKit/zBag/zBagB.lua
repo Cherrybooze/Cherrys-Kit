@@ -2,6 +2,48 @@
 ZBAG_MAXBBAG=300;
 zBag_VAR = {};
 
+-- Colours a bank slot by its page (moved out of zBagB_Resize so the item shop slots beside the
+-- bank get the same colours).
+function zBagB_TabColor(item, visibletab)
+		local itemhighlight=getglobal(item:GetName().."TabColor");
+		if (ZBAG_BANKINSPECT==0) then
+			if (zBag_VAR["bankhighlighteven"]==1 and visibletab%2==1) then
+				--itemhighlight:SetColor(0.7,0.7,0,0.5);
+				itemhighlight:Show();
+			else
+				itemhighlight:Hide();
+			end
+		else
+			if (zBag_VAR["bankhighlightinspecting"]==1 and zBag_VAR["bankhighlighteven"]==1) then
+				if (visibletab%2==1) then
+
+					itemhighlight:SetColor(1,0.7,0,0.5);
+				else
+
+					itemhighlight:SetColor(0.7,0,0,0.5);
+				end
+				itemhighlight:Show();
+			elseif (zBag_VAR["bankhighlightinspecting"]==1 and zBag_VAR["bankhighlighteven"]==0) then
+
+					itemhighlight:SetColor(0.7,0,0,0.5);
+					itemhighlight:Show();
+			elseif (zBag_VAR["bankhighlightinspecting"]==0 and zBag_VAR["bankhighlighteven"]==1) then
+
+				if (visibletab%2==1) then
+
+					itemhighlight:SetColor(0.7,0.7,0,0.5);
+					itemhighlight:Show();
+				else
+
+					itemhighlight:Hide();
+				end
+			else
+
+					itemhighlight:Hide();
+			end
+		end
+end
+
 function zBagB_Resize(this)
 	--yecho("zbank resize");
 	local item;
@@ -12,6 +54,10 @@ function zBagB_Resize(this)
 	local startrowitem=zBagBItem1; local lastitem=zBagItem1;
 	local additionalTopOffset = 0;
 	local additionalBottomOffset = 15;
+	-- Cherry's Kit: with "Item shop bank next to bank" the item shop slots (201-300) go into
+	-- zBagBShop, attached to the right of the bank, with their own rows.
+	local shopside = zBagKit.BankShopSide();
+	local scx=1; local scy=1;
 	local zBagBSliderValue = zBagBRowSlider:GetValue();
 	if (zBagBSliderValue == 0) then
 		zBagBSliderValue = zBag_VAR["bankrowitems"];
@@ -83,49 +129,23 @@ function zBagB_Resize(this)
 			item = getglobal("zBagBItem"..i);
 			item.index=i;
 			item:ClearAllAnchors();
-			if (showtab==1) then
+			if (showtab==1 and shopside and i > 200) then
+				if (scx-1 == zBag_VAR["bankrowitems"]) then
+					scx=1; scy=scy+1;
+				end
+				zBagItem_Resize(item,32*zBag_VAR["bankscale"],32*zBag_VAR["bankscale"]);
+				item:SetAnchor("TOPLEFT","TOPLEFT",zBagBShop,(scx-1)*35*zBag_VAR["bankscale"]+14,(scy-1)*35*zBag_VAR["bankscale"]+15+additionalTopOffset);
+				zBagB_TabColor(item, visibletab);
+				item.display=true;
+				item:Show();
+				scx=scx+1;
+			elseif (showtab==1) then
 				if (crx-1 == zBag_VAR["bankrowitems"]) then --new line when enough items on row
 					crx=1; cry=cry+1;
 				end
 				zBagItem_Resize(item,32*zBag_VAR["bankscale"],32*zBag_VAR["bankscale"]);
 				item:SetAnchor("TOPLEFT","TOPLEFT",zBagBBackground,(crx-1)*35*zBag_VAR["bankscale"]+14,(cry-1)*35*zBag_VAR["bankscale"]+15+additionalTopOffset);
-				local itemhighlight=getglobal(item:GetName().."TabColor");
-				if (ZBAG_BANKINSPECT==0) then
-					if (zBag_VAR["bankhighlighteven"]==1 and visibletab%2==1) then
-						--itemhighlight:SetColor(0.7,0.7,0,0.5);
-						itemhighlight:Show();
-					else
-						itemhighlight:Hide();
-					end
-				else
-					if (zBag_VAR["bankhighlightinspecting"]==1 and zBag_VAR["bankhighlighteven"]==1) then
-						if (visibletab%2==1) then
-
-							itemhighlight:SetColor(1,0.7,0,0.5);
-						else
-
-							itemhighlight:SetColor(0.7,0,0,0.5);
-						end
-						itemhighlight:Show();
-					elseif (zBag_VAR["bankhighlightinspecting"]==1 and zBag_VAR["bankhighlighteven"]==0) then
-
-							itemhighlight:SetColor(0.7,0,0,0.5);
-							itemhighlight:Show();
-					elseif (zBag_VAR["bankhighlightinspecting"]==0 and zBag_VAR["bankhighlighteven"]==1) then
-
-						if (visibletab%2==1) then
-
-							itemhighlight:SetColor(0.7,0.7,0,0.5);
-							itemhighlight:Show();
-						else
-
-							itemhighlight:Hide();
-						end
-					else
-
-							itemhighlight:Hide();
-					end
-				end
+				zBagB_TabColor(item, visibletab);
 				item.display=true;
 				item:Show();
 				lastitem=item;
@@ -157,6 +177,13 @@ function zBagB_Resize(this)
 		else
 			bagbk:Hide();
 		end
+		if (shopside and zBag_VAR["bankshowback"]==1) then
+			zBagBShop:SetSize(zBag_VAR["bankrowitems"]*35*zBag_VAR["bankscale"]+25,scy*35*zBag_VAR["bankscale"]+27+additionalTopOffset+additionalBottomOffset);
+			zBagBShop:Show();
+		else
+			zBagBShop:Hide();
+		end
+		if (zBagKit.PlaceBankSearch) then zBagKit.PlaceBankSearch(); end
 		cry=cry+1;
 		local sx,sy = (zBag_VAR["bankrowitems"]+1)*35*zBag_VAR["bankscale"], (cry)*35*zBag_VAR["bankscale"];
 		--yecho("zBBx,zBBy:" .. zBagBBackground:GetWidth() .. "," .. zBagBBackground:GetHeight() .. " sx,sy:" .. sx .. "," .. sy);

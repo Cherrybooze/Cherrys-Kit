@@ -34,6 +34,8 @@ accepted = 0
 function AcceptUserAgreement() accepted = accepted + 1 end
 function IsHideLoginUI() return true end
 function IsCtrlKeyDown() return false end
+shift = false
+function IsShiftKeyDown() return shift end
 function TEXT(key) return key end
 local function widget()
   return setmetatable({}, {__index = function() return function() end end})
@@ -45,7 +47,7 @@ end
 LoginAccount = shown()
 LoginFrame_debug = shown()
 LoginDebugFrame = shown()
-for i = 1, 14 do
+for i = 1, 15 do -- as many as login.settings.xml has
   _G["LoginServerFrame_options_" .. i] = {
     SetID = function(self, id) self.id = id end, GetID = function(self) return self.id end,
     SetText = function(self, text) self.text = text end,
@@ -107,7 +109,17 @@ local function button(name)
   _G[name] = {GetName = function() return name end, GetHighlightTexture = function() return glow end,
     SetAlpha = function(self, a) self.alpha = a end, glow = glow}
   _G[name .. "Icon"] = {SetTexture = function(self, path) self.path = path end}
-  _G[name .. "Letters"] = {SetText = function(self, text) self.text = text end}
+  -- As the client's FontString: SetColor (from its layout), no SetTextColor (that is a button's)
+  local function fontString()
+    return {SetText = function(self, text) self.text = text end,
+      SetColor = function(self, r, g, b) self.color = {r, g, b} end,
+      ClearAllAnchors = function(self) self.anchor = nil end,
+      SetAnchor = function(self, point, relativePoint, relativeTo, x, y)
+        self.anchor = {point, relativePoint, relativeTo, x, y}
+      end}
+  end
+  _G[name .. "Letters"] = fontString()
+  _G[name .. "Number"] = fontString()
 end
 button("LogNextCharBarPrev")
 button("LogNextCharBarNext")

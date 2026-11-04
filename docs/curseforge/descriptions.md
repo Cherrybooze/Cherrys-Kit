@@ -94,7 +94,7 @@ Each one is its own download and needs Cherry's Kit:
 - **Cherry's Chat**: selectable, copyable chat with emoji and encrypted channels (`/cchat`)
 - **zBag**: bags with search, slot numbers and an All bags window (`/zb`)
 - **Global Bank**: every character's bags, bank and gold in one window, and a bank viewer in Chrome (`/gb`)
-- **Ultimate Mail Mod**: mail window with shared recipient history, gold shortcuts and reliable mass send (`/umm`)
+- **Ultimate Mail Mod**: a modern mail window that splits mails as needed and sends inbox gold on, with shared recipient history and reliable mass send (`/umm`)
 - **Advanced AuctionHouse**: resizable auction house with stat filters (`/aah`)
 - **ZShop**: item shop and daily loyalty reward in one click (`/zshop`)
 - **Cherry's Info**: quest tracker with Ctrl+click NPCs, richer tooltips with ID numbers, target health on its portrait, chat filters and thousands more macro icons (`/cinfo`, `/cq`)
@@ -415,6 +415,7 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 ## Recent changes
 
+- **5.07-ck21**: a *Stats* tick beside the bag search writes a single-stat mana stone's stat on its icon (*str*, *stam*, *patt*), or *2x* to *6x* for stones with more stats. *Item shop bank next to bank* in **/zb** puts the one bank's item shop bank in its own box on the right side of the bank, with the bank search under it; *Next to bag* does the same for the equipment slots.
 - **5.07-ck20**: *Numbers on mouseover only* sits next to *Show bag slot numbers* in **/zb**, with a new *Slot number font size* setting (- and +) right under it.
 - **5.07-ck19**: slot numbers show only on the slot under the mouse; untick *Numbers on mouseover only* in **/zb** to see every number again. Search *#clean* for mana stones without stats, or *#dirty* for mana stones with stats.
 - **5.07-ck18**: the bag and bank search also finds items by their stats. Type a stat name such as *stamina* or *dexterity* and every item with that stat lights up. Numbers aren't needed.
@@ -494,6 +495,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.7**: character transfers on the Chrome page's Characters list. Open the site's character transfer page, and each planned transfer gets a plate with its new server and when it was registered, with a countdown to the Thursday maintenance; one cancelled there loses it, and a character with no save yet gets a row from the transfer page. After the maintenance, a login on the old server shows whether it went, and the character waits on its new server's list until it logs in there. A Transfers log keeps who went where and when.
 - **1.6.5**: Addons page updates ask Windows for administrator permission, so protected game folders no longer stop them with *Access is denied*; replaced addons leave the list once gone, a Login screen panel shows `Interface\loginxml`, and the action buttons line up with the rows. The Stats page shows each stat's own value, without the HD bonus. Gear with identical stats stacks whatever its durability, and the stack's tooltip lists each copy's durability, character and slot.
 - **1.6.4**: the hub is compared with its actual published version, and the page/popup explain that reload reads installed files instead of downloading an update.
 - **1.6.3**: the Chrome Stats page keeps the game's colours, shows effects beside stat names, colours holders by class, and has an excluded-stat list with restore controls. Private helper data remains outside the distributed kit.
@@ -598,7 +600,7 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/gb probe`
 
 # Ultimate Mail Mod
 
-> **Requires:** Cherry's Kit (hub 0.4.17 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+> **Requires:** Cherry's Kit (hub 0.4.34 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\UltimateMailMod`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
@@ -610,16 +612,15 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/gb probe`
 >
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
-**A better mail window with mass send that no longer gets stuck after about 60 mails, shared recipient history and gold shortcuts.**
+**A modern mail window for moving lots of mail between your characters and friends, with a mass send that no longer gets stuck after about 60 mails, shared recipient history and gold shortcuts. The classic window is one switch away.**
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
 
 ## Recent changes
 
+- **7.0.1-ck14**: a new mail window, on by default, with its own scale setting; **Classic mail window** in `/umm` switches back, without Reload UI. The **Inbox** filters by gold, items, unread, sender and search, and never reads a mail on its own, so unread mails keep their time. **Compose** sends one mail or many to one name: pick the name, type the gold (or click a gold preset), long text in numbered parts, up to 10 items dropped on **+**, and extra gold mails filled from the gold mails in the inbox, so 7 gold caps can go to 7 characters in one Send. Ctrl+Backspace takes gold back to the last comma, a name whole, and text a word at a time. **Mass send** also marks by name, and by category with one click on two rows of icon boxes under the bags, and **Activity** lists what went out this session. Recently mailed names are kept per server.
+- **7.0.1-ck13**: **Compose** shows your recently sent recipients as the first name column, before **Characters** and **Friends**. In a guild, the window widens a little on Compose so **Guildies** fit too. **Mass Send Items** gets **Use last** too, and marked items keep their marks when the game updates your bags. Compose keeps the name in **To** across tabs until **Reset**, and clicking into a filled **To** selects the whole name.
 - **7.0.1-ck12**: mass send no longer stops with "no longer in that bag slot" on an item that never moved, such as one you just bought. **/umm trace** shows both links of any mail it skips.
-- **7.0.1-ck11**: on **Mass Send Items**, the recipient picker shows **History** first (your last 20 recipients, newest first), then **Characters**, then **Friends**. Click a name to put it in To. In a guild, **Guildies** take the place of the **Recently sent** panel until you pick a name. The **History** tab stays as it is.
-- **7.0.1-ck10**: with the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To**. On **Mass Send Items** it fills the mass-send To field and your marked items stay marked; from the inbox or **History** it opens Compose with that name.
-- **7.0.1-ck9**: the gold presets show a comma every three digits while you type and stop at 999,999,999, the most gold a character can hold. **Forget own chars** asks Yes or No first. With the mailbox closed, UMM checks twice a second instead of on every frame.
 
 ## Features
 
@@ -631,19 +632,20 @@ From the original:
 
 New in the Cherry's Kit version:
 
+- **Modern mail window** (the default since 7.0.1-ck14): **Inbox**, **Compose**, **Mass send** and **Activity** pages. Compose turns one mail into as many as it takes, and sends gold from the inbox on without hitting the gold limit. Its code is only read the first time you open a mailbox, so loading the game stays quick. **Classic mail window** in `/umm` switches back.
 - **Mass send fixed**: the old version could send the next mail before the item was attached, counted failed mails as sent, and never gave a stuck item back, so it broke after about 60 mails until you logged out. Now each mail waits until its item is really attached, timeouts give the item back, and failures are retried (3 times by default, with growing waits).
 - **Send fast or Send safely**: under 40 mails there is one Send button (fast). From 40 mails you choose: *Send fast* (quick pace, stops at the first failure) or *Send safely* (paced, with a short pause every 20 mails). C.O.D. mails always go the safe way. A **Stop** button stops after the current mail; unsent items stay marked.
 - **Drag a box to select items** across all six bag tabs. Ctrl+drag or Shift+drag adds to what you marked, and Escape or right-click cancels. **Ctrl+click** a marked item to unmark its whole group.
 - **Bound items in red**, also when several are marked; they are skipped with "(N bound, not sent)".
-- **History tab**: your last 20 recipients, newest first, shared by all your characters. Click a name to start a mail to them. A **Recently sent** list beside Mass Send Items shows the same names: click one to fill the mass-send To and keep your marked items.
+- **History tab**: your last 20 recipients on this server, newest first, shared by your characters there. Click a name to start a mail to them. A **Recently sent** list beside Mass Send Items shows the same names: click one to fill the mass-send To and keep your marked items.
 - **Mail shortcuts** (on by default): **Use last** beside To fills the last recipient you mailed successfully, and two gold buttons under Send Gold fill amounts you choose (100,000 and 1,000,000 to start with; change them in `/umm`).
 - **Names from chat**: with the mail window open, **Ctrl+click** or **Shift+click** a player's name in chat to put it in **To** (Compose, or Mass Send Items while that tab is open).
 - **Settings window**: send delay, fast delay, batch size and pause, retries, slot check, new-mail sound, live trace, mail shortcuts and gold presets, plus Run check, Show trace, Defaults and Forget own chars. Hover tooltips on everything.
 - Faster bag handling (the bag list is no longer rebuilt on every bag change), a faster loading screen, and almost no work while the mailbox is closed.
 
-History, the last recipient and the gold presets are kept in the shared `SaveVariables.lua` (as `UMMConfig`), so every character on this PC sees them.
+History, the last recipient and the gold presets are kept in the shared `SaveVariables.lua` (as `UMMConfig`), so every character on this PC sees them (history and the last recipient for its own server).
 
-**Please help test:** after a big mass send, `/umm trace` shows what happened. If sending waits forever, run `/umm x` with an item in the send slot and send the output; `/umm slotcheck off` is the workaround. The drag box, the History and Recently sent lists, the gold buttons next to the game's money confirmation, and history across characters still need checking in game.
+**Please help test:** after a big mass send, `/umm trace` shows what happened. If sending waits forever, run `/umm x` with an item in the send slot and send the output; `/umm slotcheck off` is the workaround. The drag box, the History and Recently sent lists, the gold buttons next to the game's money confirmation, history across characters and the new mail window still need checking in game. If the new window misbehaves, `/umm ui classic` brings back the classic one.
 
 ## Chat commands
 
@@ -659,12 +661,15 @@ History, the last recipient and the gold presets are kept in the shared `SaveVar
 - `/umm slotcheck on|off`: wait for the item to show in the send slot (default on)
 - `/umm shortcuts on|off`: Use last and gold buttons (default on)
 - `/umm gold <amount1> <amount2>`: save both shared gold presets
+- `/umm ui modern|classic`: which mail window a mailbox opens (default modern)
+- `/umm scale <0.7-1.5>`: size of the modern mail window (default 1)
+- `/umm namelist on|off`: the name list opens by itself in To fields (default on)
 - `/umm sound`: new-mail sound on or off
 - `/umm reset`: forget your saved characters
 
 ## Install
 
-- **Requires Cherry's Kit** 0.4.17 or later (installed automatically by CurseForge). This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
+- **Requires Cherry's Kit** 0.4.34 or later (installed automatically by CurseForge); its manifest loads the modern mail window, and with an older hub the classic window opens. This addon goes in `Interface\AddOns\CherrysKit\UltimateMailMod\`.
 - **Move the old `Interface\AddOns\UltimateMailMod` folder out of AddOns** (`!setup_cherryskit.bat` offers to). While it is there, Cherry's Kit keeps this version turned off.
 - Turn it on or off in the Cherry's Kit window (`/ck`).
 
@@ -676,7 +681,8 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 - **Ultimate Mail Mod** originally by **Shardea of Siochain**, later maintained by **Maxeem of Muinin, mvoigt and Jagodragon**, with 2019-2021 changes by **Raihir** and a French translation by **Claralouise**. It has no licence statement, so its copyright stays with its authors and those parts are not covered by the GPL.
 - Bundles **LibStub** (public domain; Kaelten, Cladhaire, ckknight, Mikk, Ammo, Nevcairiel, joshborke) and **Sol by Alleris** (no licence statement).
-- Cherry's changes (send queue rewrite, drag-box selection, bag handling, ctrl+click toggle, bound items in red, shared history/recipient panes/mail shortcuts, settings window, kit switch, /umm commands) are offered under the **GNU GPL v2**.
+- Cherry's changes (send queue rewrite, drag-box selection, bag handling, ctrl+click toggle, bound items in red, shared history/recipient panes/mail shortcuts, settings window, kit switch, /umm commands) and the modern mail window are offered under the **GNU GPL v2**.
+- The modern window's pictures come from **rom weakauras** (WeakAuras textures, GPL v2) and from **Cherry's Bar** (Cherry's Studio Panel Assets, CC BY-NC-SA 3.0, https://creativecommons.org/licenses/by-nc-sa/3.0/), or were drawn for it in rom weakauras' style. Its font is **Fira Sans** (SIL Open Font License 1.1). Details: `Interface\AddOns\CherrysKit\UltimateMailMod\LICENSE-ModernWindow.txt`.
 - Full licence texts: `Interface\AddOns\CherrysKit\LICENSE.txt` (installed with Cherry's Kit). Free, never to be sold.
 
 ---
@@ -1127,28 +1133,28 @@ Made for alts. One click, and you are on the next character without touching the
 
 ## Recent changes
 
+- **1.4.0**: The character screen numbers your characters, and Next and Prev show the number they log into, big under their name. **Edit character order** renumbers them with arrows. A modern login screen in the style of rom weakauras and Cherry's Bar, with gold beside a coin on the character screen, tidier character, server and settings panels, and new check boxes. **Modern look** in the settings panel switches back to the game's own look at once.
 - **1.3.4**: `Install login screen.bat` asks Windows for administrator rights and installs in that window, so a protected game folder can't refuse it.
 - **1.3.3**: Next and Prev no longer stay on the character screen. The login screen waits for the whole character list before it picks, and a logout you cancel drops the queued switch. Run `Install login screen.bat` again after updating.
-- **1.3.2**: the character screen shows each character's Arcane Transmutor charges under its gold.
-- **1.3.1**: the login screen finds each character's gold by server, so same-named characters on different servers no longer mix. Gold saved before servers were recorded shows a question mark.
-- **1.3.0**: Cherry's Loginxml is now part of this addon: one addon, one zip, and one row in the hub. The login screen travels inside the zip, and your saved logins and toggles carry over. Its installer moves the old `CherrysLoginxml` and `CherrysLoginxmlHook` folders to `Interface\offloaded_addons`.
 
 ## Features
 
 - **Next and Prev buttons** just below the minimap, Next on top and Prev under it, the same way round as the character list. They follow the minimap at any UI scale or resolution.
+- **The number of the character each button goes to**, big under its name in its own colour: playing number 4, Next shows 5 and Prev 3. The character screen shows the same numbers.
+- **Your own order**: **Edit character order** in the login screen's settings puts up and down arrows on the character screen to change the numbers, kept for each server. Next, Prev and `/lnc <number>` follow them.
 - **Hover to see who is next.** The tooltip names the character each button will pick.
 - **Greyed out when there is nobody to switch to**, on accounts with one character.
 - **Safe switching**: the mailbox and Ultimate Mail Mod's window close first. On the character screen, clicking a character or using the arrow keys cancels a switch, and one that can't finish within 15 seconds leaves the choice to you.
 - **Move them if you like**: unlock them in the settings window, then right-drag or Shift+drag.
 - **A row in the Cherry's Kit hub** (`/ck`), whose Settings button opens the settings window.
-- For macros, `ChangeChar(slot)` does the same as `/lnc <slot>`.
+- For macros, `ChangeChar(slot)` logs in the character in that slot, in the order the characters were created.
 
 ## Commands
 
 - `/lnc` or `/lnc next`: the next character
 - `/lpc` or `/lnc prev`: the previous character
 - `/lnc current`: log out and back in to the same character
-- `/lnc 3`: the character in slot 3, in the order the characters were created
+- `/lnc 3`: the character with number 3 on the character screen
 - `/lnc settings`: the settings window
 - `/lnc show`, `/lnc hide`: show or hide the buttons
 - `/lnc lock`, `/lnc unlock`: stop or allow moving them
@@ -1160,6 +1166,7 @@ Made for alts. One click, and you are on the next character without touching the
 - **Gets past a stuck "obtaining server list"**, including for Steam and Gameforge launcher logins: the Retry button counts down and asks for the server list again by itself (click it to retry at once).
 - **Saved logins**, with account or character lists and notes for NoCheckVersion accounts.
 - **Fills in the secondary password.**
+- **A modern look**, or the game's own: flat dark panels, gold beside a coin, lists that fit what is in them and grouped settings. **Modern look** in the settings panel switches between them at once.
 - **Cleaner server and character select**, usable from the keyboard: Up and Down to choose, Enter to go, Esc to go back.
 - **Settings as toggle buttons on the server screen.** A click applies at once, and the game saves it when you log out or quit. **Use config.lua** forgets the saved toggles and goes back to the file.
 - **Log straight in**: when an account has only one character, or the first character in the list. Hold Ctrl to stop at character select anyway.

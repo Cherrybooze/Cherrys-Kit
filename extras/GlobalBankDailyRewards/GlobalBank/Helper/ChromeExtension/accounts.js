@@ -180,6 +180,8 @@ const GBAccounts = (() => {
     const keys = [];
     if (character.key && character.shownServer && !character.manualServer) keys.push(linkKey(character.key));
     keys.push(linkKey(character.name));
+    // A character transfer keeps the game account: the link it had on its old server still counts
+    if (character.formerKey) keys.push(linkKey(character.formerKey));
     return keys;
   }
   function accountFor(state, character) {
@@ -386,6 +388,26 @@ const GBAccounts = (() => {
     async function copy(text) {
       await navigator.clipboard.writeText(text);
     }
+    // A copy button turns green with ": copied" after its label, and stays that way until another field is copied:
+    // then its green and its ": copied" fade out, so only the last thing on the clipboard is marked.
+    let copiedButton = null;
+    function copyButton(label, text) {
+      const node = button('', async () => {
+        await copy(text()).catch(() => {});
+        markCopied(node);
+      });
+      node.classList.add('gf-copy');
+      const words = make('span', 'gf-copy-text', label);
+      words.append(make('span', 'gf-copy-done', ': copied'));
+      node.append(words);
+      node.disabled = !text();
+      return node;
+    }
+    function markCopied(node) {
+      if (copiedButton && copiedButton !== node) copiedButton.classList.remove('is-copied');
+      copiedButton = node;
+      node.classList.add('is-copied');
+    }
 
     // The right-click menu stays open after copying, so the account name and then the password are two clicks.
     // For several characters it stacks their names, and each one's logins open in a side menu next to its name.
@@ -402,14 +424,7 @@ const GBAccounts = (() => {
       byId('gf-menu').hidden = true;
       closeSide();
     }
-    function copyRow(label, text) {
-      const row = button(label, async () => {
-        await copy(text).catch(() => {});
-        row.textContent = `${label}: copied`;
-      });
-      row.disabled = !text;
-      return row;
-    }
+    const copyRow = (label, text) => copyButton(label, () => text);
     // owner: a character (saved, or only listed on a login screen) or the name the page shows it by
     function ownerRows(menu, owner, heading) {
       const name = typeof owner === 'string' ? owner : String(owner.name);
@@ -692,12 +707,9 @@ const GBAccounts = (() => {
         row.append(make('td', '', account.name), make('td', 'gf-password', secret(account.password)), make('td', 'gf-password', secret(account.secondary)),
           make('td', 'gf-notes', account.notes || ''), make('td', '', number(counts[account.id] || 0)));
         const actions = make('td', 'gf-actions');
-        const copied = (node, label) => { node.textContent = `${label}: copied`; setTimeout(() => { node.textContent = label; }, 1500); };
-        const copyAccount = button('Copy account', () => copy(account.name).then(() => copied(copyAccount, 'Copy account')));
-        const copyPassword = button('Copy password', () => copy(account.password).then(() => copied(copyPassword, 'Copy password')));
-        copyPassword.disabled = !account.password;
-        const copySecondary = button('Copy secondary', () => copy(account.secondary).then(() => copied(copySecondary, 'Copy secondary')));
-        copySecondary.disabled = !account.secondary;
+        const copyAccount = copyButton('Copy account', () => account.name);
+        const copyPassword = copyButton('Copy password', () => account.password);
+        const copySecondary = copyButton('Copy secondary', () => account.secondary);
         const edit = button('Edit', () => {
           const field = (type, value, label) => {
             const box = make('input');

@@ -12,6 +12,14 @@
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY">
+				<!-- The slot it logs into, big in the lower half. Listed first, so it is drawn behind the name,
+				     which moves up to the top while a number shows (LogNextChar.UpdateNumbers). -->
+				<FontString name="$parentNumber" inherits="GameFontNormal" justifyH="CENTER" text="">
+					<Anchors>
+						<Anchor point="BOTTOM"><Offset><AbsDimension x="0" y="-1" /></Offset></Anchor>
+					</Anchors>
+					<FontHeight><AbsValue val="20" /></FontHeight>
+				</FontString>
 				<FontString name="$parentLetters" inherits="GameFontNormal" justifyH="CENTER" text="">
 					<Anchors>
 						<Anchor point="CENTER" />

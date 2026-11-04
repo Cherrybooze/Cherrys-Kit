@@ -1,6 +1,6 @@
 local me = {
   name = "LogNextChar",
-  version = "1.3.4",
+  version = "1.4.0",
   sub = {
     'account', --
     'server', --
@@ -25,6 +25,7 @@ local me = {
     account_page = 1, --
     account_columns = 5, --
     show_account_info = true, --
+    modern_ui = true, -- false: the game's own look (template/skin.lua)
   }, --
   autologin = {}, --
 }
@@ -34,6 +35,10 @@ function me.onLoad(this)
   me.config = type(data) == 'table' and data or me.config
   if me.settings then
     me.settings.load()
+  end
+  -- The buttons above loaded with the default look; the rest load with this one
+  if LoginLook then
+    pcall(LoginLook.apply, me.config.modern_ui ~= false)
   end
 
   if me.config.show_account_info then
@@ -73,13 +78,23 @@ end
 function me.SHOW_LOGIN()
   LoginParent:Show();
 end
+-- The second line in the top right corner: the account name, or this login screen's name and version when
+-- the game has no account name of its own (a Gameforge launcher login hands it "TNTLogin")
+function me.accountLabel()
+  local account = GetAccountName() or ''
+  if account == '' or string.lower(account) == 'tntlogin' then
+    return 'Loginxml ' .. me.version
+  end
+  return account
+end
+
 function me.SET_LOGIN_SCREEN(arg1, arg2)
   if arg1 == 'login' then
     me.GOTO('account', nil, true)
-    LoginAccount:SetText(GetAccountName())
+    LoginAccount:SetText(me.accountLabel())
     AcceptUserAgreement();
   elseif arg1 == 'charselect' then
-    LoginAccount:SetText(GetAccountName())
+    LoginAccount:SetText(me.accountLabel())
     me.GOTO('charselect')
     me.pw_helper = {num = 1}
   end

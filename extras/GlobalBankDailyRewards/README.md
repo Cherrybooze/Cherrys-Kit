@@ -6,6 +6,10 @@ It also records your Daily Loyalty Bonus after the Gameforge daily shop page con
 
 The helper now follows Chrome: the extension's button shows whether it is running and for how long, and can stop it or show its terminal window. The helper ends on its own when Chrome or the extension goes away.
 
+## Character transfers in 1.3.7
+
+Open the Runes of Magic site's character transfer page (the gear icon in the Gameforge client, then its character transfer link) and the Characters page tracks the transfers it lists as planned: a plate beside the character, **Xfer › new server › when it was registered**, with a countdown to the Thursday maintenance in its tooltip, and **Transfers**, a log of who went where and when. A transfer cancelled on the site loses its plate; registered again, it is a new transfer with its own time. A transferred character Global Bank has no save for yet gets a row of its own from the transfer page: its name, its server and the plate, the rest left blank until it logs in once. After the maintenance, a login on the old server with a character of the same account shows whether it went; the character then shows on its new server with **Log in to confirm transfer** until it logs in there. From that page the extension keeps only the planned transfers and the characters its form offers, in Chrome's local storage (Global Bank 1.6.7).
+
 ## Popup wording in 1.3.5
 
 **Run automatically while Chrome is open** now says what it does: the helper starts in the background instead of a visible terminal window. Addons page updates ask Windows for administrator permission, and the Stats page shows stat values without the HD bonus, and gear with identical stats stacks whatever its durability, with each copy listed in the tooltip (Global Bank 1.6.5).
@@ -27,7 +31,7 @@ Your Steam and Gameforge clients can use the same private local database. Never 
 **You need:** Google Chrome and Cherry's Kit with Global Bank installed. You do **not** need Python for the addons, the Global Bank helper, or this extension.
 
 1. Install the [full kit, or the hub plus Global Bank](../../README.md#download-and-install), into your game's `Interface/AddOns/` folder. Check that `Interface/AddOns/CherrysKit/CherrysKit.toc` exists.
-2. For a separate extension release, download the [Global Bank for RoM installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.117/CherrysKit-GlobalBankDailyRewards-1.3.4.zip). Extract it into the **same** `Interface/AddOns/` and merge `CherrysKit/`. Keep the installed files in their final location. GitHub's automatic source ZIP is a repository snapshot, not this installer.
+2. For a separate extension release, download the [Global Bank for RoM installer ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.118/CherrysKit-GlobalBankDailyRewards-1.3.7.zip). Extract it into the **same** `Interface/AddOns/` and merge `CherrysKit/`. Keep the installed files in their final location. GitHub's automatic source ZIP is a repository snapshot, not this installer.
 3. Say yes to the Chrome installer in `!setup_cherryskit.bat`, or open `Interface/AddOns/CherrysKit/GlobalBank/Helper/` and double-click **Install Chrome extension.bat** as your normal Windows user. It registers that user's local bridge and opens Chrome's extensions page, with a small setup window on top. Chrome still needs the next steps.
 4. If the extensions page did not open, type **`chrome://extensions/`** into Chrome's address bar. Turn on **Developer mode** at the top right, then click **Load unpacked** at the top left.
 5. The setup window tries to fill in and select the folder for you. If it cannot, select **`<game>\Interface\AddOns\CherrysKit\GlobalBank\Helper\ChromeExtension`** manually: this is the folder directly containing **`manifest.json`**. If the setup window says it copied the path, use **Ctrl+V**, then **Enter**, in the folder picker. Do not select the ZIP or the parent Helper folder.

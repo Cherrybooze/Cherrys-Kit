@@ -14,6 +14,7 @@ function UMMFixtureDispatch(name,event)
 end
 function UMMFixtureWidget(kind,name,parent)
   local obj=setmetatable({kind=kind,name=name,parent=parent,visible=true,enabled=true,text="",id=0,width=0,height=0},Widget)
+  ummSeq=(ummSeq or 0)+1;obj.seq=ummSeq -- creation order, for tests/rom_layout.lua
   ummWidgets[name],_G[name]=obj,obj
   return obj
 end
@@ -96,6 +97,8 @@ function SaveVariables(name) ummSaves[#ummSaves+1]=name end
 function UnitName() return ummPlayer end
 function IsInGuild() return false end
 function GetUIScale() return ummUIScale end
+ummRealm="Testserver"
+function GetServerName() return ummRealm end
 function GetScreenWidth() return ummScreenWidth end
 function GetScreenHeight() return ummScreenHeight end
 function GetInboxNumItems() return 0 end

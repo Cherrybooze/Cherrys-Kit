@@ -217,6 +217,11 @@ end
 
 -- Shows the new matches in whichever search is open.
 function K.RefreshStatSearch()
+  if K.StatPrefixOn and K.StatPrefixOn() then
+    K.StatPrefixRefresh()
+    if zBag and zBag:IsVisible() and zBag_Update then pcall(zBag_Update) end
+    if K.UpdateOverlaysNow then K.UpdateOverlaysNow() end
+  end
   if AttemptBagSearch and BagSearchInstalled == 1 then
     pcall(AttemptBagSearch, "Bag")
     if bankOpen() then
@@ -325,4 +330,181 @@ function FindBankItemByName(itemName)
     end
   end
   return itemList
+end
+
+---------------------------------------------------------------------------
+-- "Stats" tick beside the bag search (zBag_VAR["statprefix"] = 1): a mana stone with one stat shows
+-- its short name on the bag icon, one with more shows "2x" to "6x", in every layout. The names come from the
+-- same cache as the stat search; items not read yet are read by K.StatsTick and drawn after.
+-- Each icon only looks its item up again when the bags change (K.prefixGen) or it holds another
+-- slot, so an open bag costs nothing between bag events.
+---------------------------------------------------------------------------
+
+K.SHORT_STATS = {
+  ["strength"] = "str", ["stamina"] = "stam", ["dexterity"] = "dex", ["intelligence"] = "int",
+  ["wisdom"] = "wis", ["all attributes"] = "all", ["all main attributes"] = "all",
+  ["physical attack"] = "patt", ["magical attack"] = "matt", ["magic attack"] = "matt",
+  ["physical defense"] = "def", ["defense"] = "def", ["magical defense"] = "mdef", ["magic defense"] = "mdef",
+  ["maximum health"] = "hp", ["max health"] = "hp", ["max hp"] = "hp", ["health"] = "hp", ["hp"] = "hp",
+  ["maximum mana"] = "mp", ["max mana"] = "mp", ["max mp"] = "mp", ["mana"] = "mp", ["mp"] = "mp",
+  ["physical damage"] = "pdmg", ["magical damage"] = "mdmg", ["magic damage"] = "mdmg",
+  ["physical critical rate"] = "pcrit", ["magical critical rate"] = "mcrit", ["critical rate"] = "crit",
+  ["physical critical hit rate"] = "pcrit", ["magical critical hit rate"] = "mcrit", ["critical hit rate"] = "crit",
+  ["accuracy"] = "acc", ["physical accuracy"] = "acc", ["magical accuracy"] = "macc",
+  ["dodge rate"] = "dodge", ["parry rate"] = "parry", ["attack speed"] = "aspd", ["casting speed"] = "cast",
+  ["block rate"] = "block", ["movement speed"] = "move", ["healing"] = "heal", ["heal"] = "heal", ["resistance"] = "res",
+}
+
+-- A colour per main stat so a bag of stones reads at a glance.
+K.STAT_COLORS = {
+  str = "ff4a4a", stam = "ffa53c", dex = "5ce65c", int = "4aa0ff", wis = "7fe8ff",
+  patt = "ff6fc8", matt = "b77cff", def = "c8c8c8", mdef = "3cd2b4",
+}
+
+K.prefixCache = {}
+K.prefixCount = 0
+K.prefixGen = (K.prefixGen or 0) + 1
+
+function K.StatPrefixOn()
+  return K.IsOn() and type(zBag_VAR) == "table" and zBag_VAR["statprefix"] == 1
+end
+
+-- "physical attack" -> "patt": a known name, else the first letters of the leading words and three
+-- of the last ("magical defense" -> "mdef"), or a single word's first four.
+function K.ShortStat(name)
+  local known = K.SHORT_STATS[name]
+  if known then
+    return known
+  end
+  local initials, last = "", nil
+  for word in string.gmatch(name, "%a+") do
+    if last then
+      initials = initials .. string.sub(last, 1, 1)
+    end
+    last = word
+  end
+  if not last then
+    return string.sub(name, 1, 4)
+  end
+  if initials == "" then
+    return string.sub(last, 1, 4)
+  end
+  return string.sub(initials, 1, 2) .. string.sub(last, 1, 3)
+end
+
+-- The text for an item's stat names ("" when it has none), kept per item.
+function K.StatPrefixText(names)
+  local text = K.prefixCache[names]
+  if text then
+    return text
+  end
+  -- a single-stat stone shows its stat's short name ("stam"); a stone with 2 to 6 stats shows only
+  -- how many it has ("2x" ... "6x")
+  local n, first = 0, nil
+  for name in string.gmatch(names, "[^\n]+") do
+    n = n + 1
+    first = first or name
+  end
+  if n == 0 then
+    text = ""
+  elseif n == 1 then
+    text = K.ShortStat(first)
+    local color = K.STAT_COLORS[text]
+    if color then
+      text = "|cff" .. color .. text .. "|r"
+    end
+  else
+    text = n .. "x"
+  end
+  if K.prefixCount >= K.STATS_CACHE_MAX then
+    K.prefixCache = {}
+    K.prefixCount = 0
+  end
+  K.prefixCache[names] = text
+  K.prefixCount = K.prefixCount + 1
+  return text
+end
+
+-- Draws (or clears) the short stat names on one icon. owner: zBag's item button or an individual-bags
+-- overlay; index: the item's inventory index (nil or < 0 for none); size: font size.
+-- bagSlot (1-180) instead of index: the index is looked up only when the icon needs it.
+function K.StatPrefix(owner, index, size, bagSlot)
+  if not owner then
+    return
+  end
+  local text = ""
+  local key = bagSlot or index
+  if key and (bagSlot or index >= 0) and K.StatPrefixOn() then
+    if owner.kitStatIndex == key and owner.kitStatGen == K.prefixGen then
+      return
+    end
+    owner.kitStatIndex, owner.kitStatGen = key, K.prefixGen
+    if bagSlot then
+      index = GetBagItemInfo(bagSlot)
+    end
+    local link = index and index >= 0 and GetBagItemLink and GetBagItemLink(index)
+    -- mana and fusion stones only; a clean stone has nothing to show
+    if link and link ~= "" and K.StoneState(link) == 2 then
+      local names = K.statCache[link]
+      if names == nil then
+        K.statsMissing = true
+        owner.kitStatGen = nil -- look again after the read
+      elseif names ~= "" then
+        text = K.StatPrefixText(names)
+      end
+    end
+  else
+    owner.kitStatIndex, owner.kitStatGen = nil, nil
+  end
+  size = math.floor((size or K.SlotNumberFontSize()) + 0.5)
+  if owner.kitStatText == text and owner.kitStatSize == size then
+    return
+  end
+  owner.kitStatText, owner.kitStatSize = text, size
+  local fs = owner.kitStatFS
+  if fs == nil then
+    fs = _G[owner:GetName() .. "KitStats"] or false
+    owner.kitStatFS = fs
+  end
+  if not fs then
+    return
+  end
+  if text == "" then
+    fs:SetText("")
+    fs:Hide()
+    return
+  end
+  -- the client takes SetFontSize only after the text changed
+  fs:SetText("z")
+  fs:SetText(text)
+  fs:SetFontSize(size)
+  fs:Show()
+end
+
+-- Bags changed, or the tick or the cache did: every icon looks its item up again.
+function K.StatPrefixRefresh()
+  K.prefixGen = K.prefixGen + 1
+end
+
+function K.SyncStatTicks()
+  local on = type(zBag_VAR) == "table" and zBag_VAR["statprefix"] == 1
+  if zBagKitStatTick then zBagKitStatTick:SetChecked(on) end
+  if zBagKitStatTickCB then zBagKitStatTickCB:SetChecked(on) end
+end
+
+function K.ToggleStatPrefix(tick)
+  if type(zBag_VAR) ~= "table" then zBag_VAR = {} end
+  zBag_VAR["statprefix"] = (tick and tick:IsChecked()) and 1 or 0
+  K.SaveSettings()
+  K.SyncStatTicks()
+  K.StatPrefixRefresh()
+  K.RefreshStatPrefixes()
+end
+
+-- Redraws the bag icons of whichever layout is open.
+function K.RefreshStatPrefixes()
+  if zBag and zBag:IsVisible() and zBag_Update then pcall(zBag_Update) end
+  if K.UpdateAll then K.UpdateAll() end
+  if K.UpdateCherry then K.UpdateCherry() end
+  if K.UpdateOverlaysNow then K.UpdateOverlaysNow() end
 end

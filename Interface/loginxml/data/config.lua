@@ -1,13 +1,14 @@
 -- Settings for LogNextChar's login screen. To change them, copy this file to
 -- Interface\loginxml\config.lua and edit the copy: loginxml reads that one
 -- first, and installing an update never overwrites it. Keep every line: an
--- on/off setting missing from the file you use counts as off.
+-- on/off setting missing from the file you use counts as off (modern_ui as on).
 return { --
   debug = false, -- true shows the DEBUG button and log
   channel = 1, --
   server_list_retry = 10, -- launcher logins: seconds before asking for the server list again, 0 = only by hand
   server_list_retry_max = 3, -- automatic retries before leaving it to the Retry button
   show_account_info = true, --
+  modern_ui = true, -- false: the game's own look instead of the Modern one
 
   account_single_click = false,--
   account_force_show = false,--
@@ -23,4 +24,5 @@ return { --
   character_login_first = false, -- log in the first character in the list once after each account login
   character_nologin_ctrl = true, --
   character_sort = false, --
+  character_order_edit = false, -- up and down arrows on the character screen that change the characters' numbers
 }

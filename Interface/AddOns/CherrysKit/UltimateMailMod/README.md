@@ -1,14 +1,14 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck12** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **7.0.1-ck14** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
-**A better mail window with mass send that no longer gets stuck after about 60 mails.**
+**A modern mail window for moving lots of mail between your characters and friends, with a mass send that no longer gets stuck after about 60 mails. The classic window is one switch away.**
 
 Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten send queue.
 
 <!-- requirements: tools/curseforge_pages.py writes this -->
 
-> **Requires:** Cherry's Kit (hub 0.4.17 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
+> **Requires:** Cherry's Kit (hub 0.4.34 or later). The CurseForge app installs it for you; if you install by hand, install it first. This addon can't load without the hub.
 >
 > **Where it goes:** `Interface\AddOns\CherrysKit\UltimateMailMod`. The hub loads it from there, and it won't load from anywhere else, which keeps it apart from any version you manage yourself.
 >
@@ -21,6 +21,27 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
 <!-- end of requirements -->
+
+## Updated in 7.0.1-ck14
+
+**A new mail window**, made for sending lots of mail between your characters and friends and keeping track of it. It opens at the mailbox by default. To keep the classic Ultimate Mail Mod window, tick **Classic mail window** in `/umm`, or type `/umm ui classic`; `/umm ui modern` switches back. The change shows the next time you open a mailbox, without Reload UI. Only the window you use is ever drawn or updated. While the game loads, it reads just the new window's bare frames; its code (about 150 KB) is read the first time a mailbox opens it, so players who keep the classic window pay next to nothing for it. If it ever fails to load, the classic window opens instead, the chat says why once, and `/umm x` shows it too.
+
+The title bar holds the four page tabs and the gold on this character. Drag it to move the window; it opens there again next time. **Mail window scale** in `/umm` (or `/umm scale 0.7` to `1.5`) makes the whole window smaller or bigger at once; 1 is the default size. The line at the bottom says what is happening, with **Stop** while mails go out. The window has four pages:
+
+- **Inbox**: the mail list, with the open mail beside it. **Gold**, **Items** and **Unread** show only those mails and count them (diamonds can't be mailed, so they have no filter); **From** switches between anyone, your characters, friends, your guild and everyone else; the search box looks at sender and subject. The list never reads a mail on its own, because the game cuts a mail's time in the inbox to 3 days once it is read. Rows show what the mail's header says (sender, subject, gold, diamonds, C.O.D., the first item and the days left), item tooltips work without reading, and **Read this mail** shows the text when you ask for it. Ctrl+click ticks a mail, Shift+click ticks everything up to it, and **Tick all** beside **From** ticks every mail the list shows. **Take all** (beside the search), **Delete** and **Return** work on the ticked mails, or on every mail the list shows when none is ticked. The bottom row starts with **Delete emptied**, then **Delete**, and **Return** comes last, well away from Take all. Take leaves C.O.D. mails, and gold that would take this character past 999,999,999, in the inbox and says how many stayed. With **Delete emptied** on, it deletes the mails it emptied.
+- **Compose**: one name in **To**, and as many mails as it takes. Pick the name from the list that opens under To (recently mailed on this server, your characters, friends, guild; Enter takes the first match), or press **Use last**. Untick **Open name list by itself** in `/umm` to open the list only from the button beside To. Text longer than one mail holds goes out in numbered parts, "Subject (1/3)" and so on, and a counter shows the length while you type. Once a name is picked the cursor moves to the gold box beside **C.O.D.**: gold typed there goes to the name in To, in the same mail as the text when there are no items. The two gold buttons beside it fill in your gold presets. **C.O.D.** is never on by default and never ticks itself; tick it and the same box is the C.O.D. price of each item mail (ticking or unticking empties the box). Drop up to 10 items on **+**, below the name list so they stay in reach while it is open: each goes in its own mail to the same name, with your subject or the item's name. Until you type a subject, Subject shows the first item's name or gold amount, whichever went in first. On the right, **Extra gold mails** is for gold to more names, and shows the gold on this character and in the inbox. **Use inbox gold** makes one row for each gold mail in the inbox (up to 8), with its amount. Give each row a name (empty means the name in To) and any amount up to 999,999,999, the most one mail holds; every gold amount has a comma every three digits. Send takes the gold out of the inbox mails one at a time, just before sending it on, so this character never goes past the gold limit: 7 gold caps in the inbox can go to 7 characters in one Send. Whenever more than one mail, or any gold, would go out, **Check before sending** first lists every mail and every gold take, in order. Ctrl+Backspace works in every box: a gold box goes back to the last comma (500,000,000, 500,000, 500), a name in To goes whole, and text goes back a word at a time.
+- **Mass send**: your bags, marked as before (click, Ctrl+click for every stack, drag a box), plus **Mark by name** (type, then Enter marks every match). Under the bags, two rows of category boxes mark a whole kind with one click: runes, production runes, fusion stones, mana stones, materials, food, potions, T6 gear, recipes for each craft, ores, wood, herbs, cards, guild items, pet eggs for each element, Cenedril and daily quest materials, and **All** for every one of them. Each box shows the game's own icon of a typical item of its kind; boxes whose items look alike carry a short tag (pet eggs in their element's colour), and the mouse over a box shows its full name. A list beside the bags shows what is marked, by item; click one to unmark it. Under it, a line says what Send will do. Send, Send safely, Send fast, C.O.D. and the pacing settings work as on Mass Send Items; the C.O.D. price box shows only while C.O.D. is ticked.
+- **Activity**: every mail and gold take this window sent during this session, newest first, with what failed or was skipped and why, totals for mails, gold and takes, and the 20 names you mailed last, each one click away from a new mail. It is kept in memory only; nothing is saved.
+
+Ctrl+click or Shift+click a name in chat to fill **To** in the new window too: on Mass send while that page shows, otherwise on Compose.
+
+## Updated in 7.0.1-ck13
+
+- **Compose** shows your recently sent recipients as the first name column, before **Characters** and **Friends**, newest first. Click a name to put it in To. It updates as soon as a mail goes out. In a guild, the window gets a little wider on Compose so **Guildies** fit as a fourth column.
+- **Mass Send Items** gets the same **Use last** button as Compose, right of **Reset**. Like the **Recently sent** names, it fills To and leaves your marked items marked. It hides when mail shortcuts are off in the settings, and waits while mails are going out.
+- **Compose** keeps the name in **To** when you switch to the inbox, **History** or **Mass Send Items** and come back, until you press **Reset** or erase it. The rest of the mail still starts fresh, and the name also stays after a mail goes out, as before.
+- Clicking into a **To** field that holds a name (Compose or Mass Send) selects the whole name, so whatever you type replaces it. Click again to place the cursor and edit it.
+- Marked items no longer lose their marks when the game updates your bags, for example right before you click a recently sent name. A changed item link used to count as a new item.
 
 ## Updated in 7.0.1-ck12
 
@@ -68,9 +89,9 @@ Open **/umm** to configure **Mail shortcuts**, on by default for new and existin
 
 - **Use last**, beside **To**, fills the most recent successfully mailed recipient. A successful send to someone else replaces that selection; failed, cancelled or timed-out sends do not.
 - Two buttons below **Send Gold** fill **100,000** or **1,000,000** gold by default. Set both amounts in `/umm`, then click **Save presets** (or press Enter). Whole amounts from **1 to 999,999,999** are accepted. The buttons select Send Gold and clear C.O.D.; sending still uses the existing Send/confirmation controls.
-- **History** is the third main mail tab, between Compose and Mass Send Items. It lists up to **20 distinct recipients**, newest first. Sending to an earlier recipient moves it to the top; repeated mails do not duplicate a name. Click a name to open Compose with that recipient. Single-mail and mass-send successes use the same history.
+- **History** is the third main mail tab, between Compose and Mass Send Items. It lists up to **20 distinct recipients** mailed on this server, newest first. Sending to an earlier recipient moves it to the top; repeated mails do not duplicate a name. Click a name to open Compose with that recipient. Single-mail and mass-send successes use the same history.
 
-All characters share the data through `UMMConfig` in the shared **SaveVariables.lua**: `Settings.MailShortcuts`, `Settings.GoldPreset1`, `Settings.GoldPreset2` and `RecipientHistory`. **Use last** reads the first history entry. Turning shortcuts off hides the compose buttons; History remains available. Defaults restores the shortcut/preset defaults and retains recipient history.
+All characters share the data through `UMMConfig` in the shared **SaveVariables.lua**: `Settings.MailShortcuts`, `Settings.GoldPreset1`, `Settings.GoldPreset2` and `RecentByServer`, one recipient list per server, because a name belongs to one server. The single list from before 7.0.1-ck14 (`RecipientHistory`) goes to the first server you log in to. **Use last** reads the first history entry of this server. Turning shortcuts off hides the compose buttons; History remains available. Defaults restores the shortcut/preset defaults and retains recipient history.
 
 These controls and send-result handling have simulated-client coverage; test native layout, gold confirmation and cross-character persistence in game.
 
@@ -84,6 +105,7 @@ From the original:
 
 New in the Cherry's Kit version:
 
+- **Modern mail window** (the default since 7.0.1-ck14): Inbox, Compose, Mass send and Activity pages, described at the top of this page. Compose turns one mail into as many as it takes, and sends gold from the inbox on without hitting the gold limit. **Classic mail window** in `/umm` switches back.
 - **Mass send fixed**: the old version could send the next mail before the item was attached, counted failed mails as sent, and never gave a stuck item back, so it broke after about 60 mails until you logged out. Now each mail waits until its item is really attached, timeouts give the item back, and failures are retried (3 times by default, with growing waits).
 - **Send fast or Send safely**: under 40 mails there is one Send button (fast). From 40 mails you choose: *Send fast* (quick pace, stops at the first failure) or *Send safely* (paced, with a short pause every 20 mails). C.O.D. mails always go the safe way. A **Stop** button stops after the current mail; unsent items stay marked.
 - **Bound items in red**, also when several are marked; they are skipped with "(N bound, not sent)".
@@ -108,12 +130,15 @@ New in the Cherry's Kit version:
 - `/umm slotcheck on|off`: wait for the item to show in the send slot (default on)
 - `/umm shortcuts on|off`: Use last and gold buttons (default on)
 - `/umm gold <amount1> <amount2>`: save both shared gold presets
+- `/umm ui modern|classic`: which mail window a mailbox opens (default modern)
+- `/umm scale <0.7-1.5>`: size of the modern mail window (default 1)
+- `/umm namelist on|off`: the name list opens by itself in To fields (default on)
 - `/umm sound`: new-mail sound on or off
 - `/umm reset`: forget your saved characters
 
 ## Install
 
-Requires [Cherry's Kit hub **0.4.17 or later**](../README.md) to load the History files. Kit **0.11.85** includes hub **0.4.20**. Download ZIPs from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/releases).
+Requires [Cherry's Kit hub **0.4.34 or later**](../README.md): the hub's manifest loads the modern mail window's two files, and with an older hub the classic window opens instead. Hub 0.4.17 added the History files. Download ZIPs from [Releases](https://github.com/Cherrybooze/Cherrys-Kit/releases).
 
 1. Install the full kit, or install the hub ZIP and this addon's ZIP.
 2. Extract into your game's `Interface/AddOns/` folder, merging the `CherrysKit` folders. This addon must end up at `Interface/AddOns/CherrysKit/UltimateMailMod/`.
@@ -132,7 +157,8 @@ Write to **cherry** on the Runes of Magic Discord. Add the output of `/umm x` if
 
 - **Ultimate Mail Mod** originally by **Shardea of Siochain**, later maintained by **Maxeem of Muinin, mvoigt and Jagodragon**, with 2019-2021 changes by **Raihir** and a French translation by **Claralouise**. It has no licence statement, so its copyright stays with its authors and those parts are not covered by the GPL.
 - Bundles **LibStub** (public domain; Kaelten, Cladhaire, ckknight, Mikk, Ammo, Nevcairiel, joshborke) and **Sol by Alleris** (no licence statement).
-- Cherry's changes (send queue rewrite, drag-box selection, bag handling, ctrl+click toggle, bound items in red, shared history/recipient panes/mail shortcuts, settings window, kit switch, /umm commands) are offered under the **GNU GPL v2**.
+- Cherry's changes (send queue rewrite, drag-box selection, bag handling, ctrl+click toggle, bound items in red, shared history/recipient panes/mail shortcuts, settings window, kit switch, /umm commands) and the modern mail window (`Modern/`) are offered under the **GNU GPL v2**.
+- The modern window's pictures (`Textures/Modern/`) come from **rom weakauras** (WeakAuras textures, GPL v2) and from **Cherry's Bar** (Cherry's Studio Panel Assets, [CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/)), or were drawn for it in rom weakauras' style. Its font is **Fira Sans** (SIL Open Font License 1.1), the same as rom weakauras'. Details: [LICENSE-ModernWindow.txt](LICENSE-ModernWindow.txt).
 - Full licence texts: [LICENSE.txt](LICENSE.txt) (the complete kit notices, also installed with the hub). Free, never to be sold.
 
 ## Support and contributions

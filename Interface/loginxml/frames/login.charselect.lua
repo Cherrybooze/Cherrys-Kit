@@ -1,12 +1,18 @@
 -- local _,y = loadfile("interface/loginxml/frames/login.charselect.lua") lprint(y) 
 local me = { --
   charlist = {}, --
-  channels = {}, --
+  channels = {}, -- rows for the channel list, in the look in use
+  zones = {}, -- the channels: name and load (1 low .. 3 full)
   classes = {}, --
   selected = nil, --
   channel = 1, -- overwritten by config
   _locks = {},
 }
+
+-- The Modern look (template/skin.lua) is on
+local function modern()
+  return LoginLook and LoginLook.modern
+end
 
 function me.onLoad(this)
   me.initchannels()
@@ -52,15 +58,17 @@ function me.UPDATE_SELECTED_CHARACTER(arg1)
   me.updateDeleteButton()
 end
 function me.UPDATE_CHARACTER_PARALLEZONE()
-  local tex = 'interface/buttons/uiindex%s-normal'
-  local colors = {'green', 'yellow', 'red'}
-  me.channels = {}
+  me.zones = {}
   for i = 1, GetNumParalleZones() do
     local name, load = GetParalleZonesInfo(i)
-    local _tex = string.format(tex, colors[load])
-    table.insert(me.channels, {{tex = _tex}, name, {tex = _tex}})
+    table.insert(me.zones, {name = name, load = load})
   end
-  LoginCharSelectFrame_channels:update();
+  me.buildChannels()
+  if modern() and LoginCharSelectFrame_channels.numRow ~= me.channelRows() then
+    me.layoutChannels()
+  else
+    LoginCharSelectFrame_channels:update();
+  end
 end
 function me.UPDATE_CHARACTER_SELECT_LIST()
   me.updateDeleteButton()
@@ -167,33 +175,254 @@ function me.initCharacterList()
   end
   -- Room for gold only for players with Global Bank's data
   me.goldColumn = login.globalbank and login.globalbank.read()
-  local data = {
-    col = me.goldColumn and {45, 155, 118} or {45, 155}, --
-    fn = { --
-      callback = me.charactersCallback, --
-      onClick = me.charactersOnClick, --
-    }, --
-    numRow = 8, --
-    rowHeight = 45, --
-    noHead = true, --
-    align = {0, 2, 1}, --
-  }
-  LoginCharSelectFrame_chars:init(data)
-  LoginCharSelectFrame_chars_list:SetBackdropTileAlpha(.5)
+  me.layoutCharacterList()
 end
 function me.initchannels()
   me.channel = login.config.channel or me.channel
-  local data = {
-    col = {20, 160, 20}, --
-    fn = { --
-      callback = me.channelsCallback, --
-      onClick = me.channelsOnClick, --
-    }, --
-    numRow = 4, --
-    noHead = true, --
-  }
+  me.layoutChannels()
+end
+
+-- Modern column widths: "Champion 100 / Warlock 100" and "2026-11-02 23:08" each fit on one line
+me.NAME_WIDTH = 172
+me.GOLD_WIDTH = 130
+me.NUMBER_WIDTH = 24 -- the character's number, from 1
+me.ARROW_WIDTH = 20 -- Edit character order's up and down arrows
+
+-- Modern: as many rows as there are characters and the Create row, up to 8; Classic always shows 8
+function me.characterRows()
+  local count = #me.charlist
+  if count < GetMaxCharacterCreate() then
+    count = count + 1
+  end
+  return math.max(1, math.min(8, count))
+end
+function me.channelRows()
+  return math.max(1, math.min(4, #me.zones))
+end
+
+-- The columns, left to right: the number, class icon, three lines of text, gold (with Global Bank's data),
+-- then the two arrows while Edit character order is on. Classic only adds the number and arrows while editing.
+function me.characterColumns()
+  local col, align, cells
+  if modern() then
+    -- the coin sits beside the gold's first line
+    col, align = {me.NUMBER_WIDTH, 46, me.NAME_WIDTH}, {0, 0, 2}
+    cells = {{left = 0, right = 0, size = 14}, nil, {left = 6, right = 4}}
+    if me.goldColumn then
+      col[4], align[4], cells[4] = me.GOLD_WIDTH, 1, {left = 2, right = 22, tex = {'TOPRIGHT', -4, 3}}
+    end
+  elseif me.editing() then
+    col, align, cells = {22, 45, 155}, {0, 0, 2}, {{left = 0, right = 0}}
+    if me.goldColumn then
+      col[4], align[4] = 118, 1
+    end
+  else
+    return me.goldColumn and {45, 155, 118} or {45, 155}, {0, 2, 1}, nil
+  end
+  if me.editing() then
+    local n = #col
+    col[n + 1], col[n + 2], align[n + 1], align[n + 2] = me.ARROW_WIDTH, me.ARROW_WIDTH, 0, 0
+  end
+  return col, align, cells
+end
+
+-- The arrows' column numbers while editing (after the number, icon, text and gold)
+function me.arrowColumns()
+  local before = me.goldColumn and 4 or 3
+  return before + 1, before + 2
+end
+
+function me.listWidth()
+  local width = 0
+  for _, w in ipairs((me.characterColumns())) do
+    width = width + w
+  end
+  return width
+end
+
+function me.layoutCharacterList()
+  local fn = {callback = me.charactersCallback, onClick = me.charactersOnClick}
+  local col, align, cells = me.characterColumns()
+  local data = {col = col, align = align, cells = cells, fn = fn, noHead = true}
+  if modern() then
+    data.numRow, data.rowHeight = me.characterRows(), 46
+  else
+    data.numRow, data.rowHeight = 8, 45
+  end
+  LoginCharSelectFrame_chars:init(data)
+  LoginCharSelectFrame_chars_list:SetBackdropTileAlpha(.5)
+  -- Modern leaves a little room between the two lists and above the Delete button
+  local gap = modern() and 6 or 0
+  LoginCharSelectFrame_channels:ClearAllAnchors()
+  LoginCharSelectFrame_channels:SetAnchor('BOTTOM', 'TOP', LoginCharSelectFrame_chars, 0, -gap)
+  LoginCharSelectFrame_delete:ClearAllAnchors()
+  if modern() then
+    -- centred on the list itself; the frame keeps room on the right for the scroll bar
+    LoginCharSelectFrame_delete:SetAnchor('TOP', 'BOTTOM', LoginCharSelectFrame_chars_list, 0, gap)
+  else
+    LoginCharSelectFrame_delete:SetAnchor('TOP', 'BOTTOM', LoginCharSelectFrame_chars, 0, 0)
+  end
+  me.layoutChannels()
+end
+
+-- Modern: a dot in the channel's load colour and its name, as wide as the character list
+function me.layoutChannels()
+  local fn = {callback = me.channelsCallback, onClick = me.channelsOnClick}
+  local data
+  if modern() then
+    local width = me.listWidth()
+    data = {col = {26, width - 26}, fn = fn, numRow = me.channelRows(), rowHeight = 22, noHead = true, align = {0, 2},
+      cells = {nil, {left = 2}}}
+  else
+    data = {col = {20, 160, 20}, fn = fn, numRow = 4, noHead = true}
+  end
   LoginCharSelectFrame_channels:init(data)
   LoginCharSelectFrame_channels_list:SetBackdropTileAlpha(.5)
+end
+
+local LOAD = {'green', 'yellow', 'red'}
+local LOAD_MODERN = {'green', 'gold', 'red'}
+function me.buildChannels()
+  me.channels = {}
+  local skin = modern() and LoginLook
+  for _, zone in ipairs(me.zones) do
+    if skin then
+      local dot = {file = skin.MEDIA .. 'dot', size = {8, 8}, color = skin.color[LOAD_MODERN[zone.load] or 'quiet']}
+      table.insert(me.channels, {{tex = dot}, zone.name})
+    else
+      local tex = string.format('interface/buttons/uiindex%s-normal', LOAD[zone.load] or 'green')
+      table.insert(me.channels, {{tex = tex}, zone.name, {tex = tex}})
+    end
+  end
+end
+
+-- The Modern look switched on or off: lay both lists out again
+function me.onSkin()
+  if not (LoginCharSelectFrame_chars and LoginCharSelectFrame_chars.updateCallback) then
+    return
+  end
+  me.buildChannels()
+  me.layoutCharacterList()
+end
+
+-- ! ==============================================================
+-- ! ========================= order ==============================
+-- ! ==============================================================
+-- Each character's number, from 1: the order saved for this server with Edit character order (by name; it
+-- can hold the server's other accounts' characters too), then any character it doesn't have, in the game's
+-- own order. Next, Prev and /lnc <number> go by these numbers (CampNext_Login.lua, LOGCHAR_ORDER).
+
+function me.editing()
+  return login.config.character_order_edit and true or false
+end
+
+local function serverKey()
+  return tostring(GetServerName and GetServerName() or '')
+end
+
+function me.savedOrder()
+  local all = login.config.character_order
+  local list = type(all) == 'table' and all[serverKey()]
+  return type(list) == 'table' and list or nil
+end
+
+-- The game's character indexes, in number order
+function me.order()
+  local count = GetNumCharacters()
+  local result, used = {}, {}
+  local saved = me.savedOrder()
+  if saved then
+    local byName = {}
+    for i = 1, count do
+      local name = GetCharacterInfo(i)
+      if name then
+        byName[name] = i
+      end
+    end
+    for _, name in ipairs(saved) do
+      local i = byName[name]
+      if i and not used[i] then
+        used[i] = true
+        table.insert(result, i)
+      end
+    end
+  end
+  for i = 1, count do
+    if not used[i] then
+      table.insert(result, i)
+    end
+  end
+  return result
+end
+
+-- This account's names in their new order, in the places they had in the server's list; another
+-- account's names keep theirs, and names the list didn't have go at the end
+local function merge(saved, names)
+  local mine, seen, result = {}, {}, {}
+  for _, name in ipairs(names) do
+    mine[name] = true
+  end
+  for _, name in ipairs(saved or {}) do
+    if not seen[name] then
+      seen[name] = true
+      if mine[name] then
+        table.insert(result, false) -- filled in below
+      else
+        table.insert(result, name)
+      end
+    end
+  end
+  for _, name in ipairs(names) do
+    if not seen[name] then
+      table.insert(result, false)
+    end
+  end
+  local j = 0
+  for i = 1, #result do
+    if result[i] == false then
+      j = j + 1
+      result[i] = names[j]
+    end
+  end
+  return result
+end
+
+function me.saveOrder(order)
+  local names = {}
+  for _, index in ipairs(order) do
+    local name = GetCharacterInfo(index)
+    if name then
+      table.insert(names, name)
+    end
+  end
+  local all = {}
+  if type(login.config.character_order) == 'table' then
+    for server, list in pairs(login.config.character_order) do
+      all[server] = list
+    end
+  end
+  all[serverKey()] = merge(all[serverKey()], names)
+  login.settings.set('character_order', all)
+end
+
+-- Edit character order: one number up (-1) or down (1)
+function me.moveCharacter(index, delta)
+  local order = me.order()
+  local from
+  for pos, i in ipairs(order) do
+    if i == index then
+      from = pos
+    end
+  end
+  local to = from and from + delta
+  if not to or to < 1 or to > #order then
+    return
+  end
+  order[from], order[to] = order[to], order[from]
+  me.saveOrder(order)
+  me.updateCharacterList()
+  LoginCharSelectFrame_chars:scrollTo(to)
+  LoginCharSelectFrame_chars:update()
 end
 
 -- ! ==============================================================
@@ -230,19 +459,24 @@ function me.updateCharacterList()
   if login.globalbank then
     login.globalbank.read()
   end
-  for i = 1, GetNumCharacters() do
+  for pos, i in ipairs(me.order()) do
     local name, sex, lv, mc, seclv, sc, zone, destroyTime, peakLevel = GetCharacterInfo(i);
     local mtag = me.classes[tostring(mc)]
     local stag = me.classes[tostring(sc)]
     local icon = string.format(imgpath[stag and 2 or 1], mtag, stag)
     table.insert(me.charlist, {
-      index = i, name = name, lv = lv, seclv = seclv, mc = mc, sc = sc, zone = zone, destroy = destroyTime, peak = peakLevel, icon = icon,
+      index = i, pos = pos, name = name, lv = lv, seclv = seclv, mc = mc, sc = sc, zone = zone, destroy = destroyTime, peak = peakLevel, icon = icon,
     })
   end
-  if login.config.character_sort then
+  -- while editing the order, the list shows it
+  if login.config.character_sort and not me.editing() then
     table.sort(me.charlist, sortCharacterList)
   end
-  LoginCharSelectFrame_chars:update()
+  if modern() and LoginCharSelectFrame_chars.numRow ~= me.characterRows() then
+    me.layoutCharacterList()
+  else
+    LoginCharSelectFrame_chars:update()
+  end
 end
 -- ! ==============================================================
 -- ! ========================== list ==============================
@@ -255,13 +489,117 @@ function me.channelsOnClick(frame, double, index)
   me.channel = index
   LoginCharSelectFrame_channels:update()
 end
+local function shorten(text, max)
+  if text:len() > max then
+    return text:sub(1, max - 2) .. '...'
+  end
+  return text
+end
+
+local function deleteTimer(seconds)
+  local sec = seconds % 60
+  local min = math.floor(seconds / 60) % 60
+  local hour = math.floor(seconds / 60 / 60) % 60
+  return string.format('%02d:%02d:%02d', hour, min, sec)
+end
+
+-- Modern row: name (peak level dimmed), classes and levels, zone or the delete timer in red;
+-- gold in gold beside a coin, charges, when Global Bank saved it
+function me.modernRow(data, skin)
+  local hex = skin.hex
+  local name = shorten(data.name, 20)
+  if data.destroy then
+    name = string.format('|cff%s%s|r', hex.faint, name)
+  end
+  if (tonumber(data.peak) or 0) > 0 then
+    name = string.format('%s |cff%s(%d)|r', name, hex.dim, data.peak)
+  end
+  local classes = string.format('%s %d', data.mc, data.lv)
+  if data.seclv > 0 then
+    classes = string.format('%s / %s %d', classes, data.sc, data.seclv)
+  end
+  local last = data.destroy and string.format('|cff%s%s|r', hex.red, deleteTimer(data.destroy))
+    or string.format('|cff%s%s|r', hex.faint, shorten(data.zone or '', 26))
+  local text = string.format('%s\n|cff%s%s|r\n%s', name, hex.dim, shorten(classes, 26), last)
+  local row = {{text = tostring(data.pos or ''), color = skin.color.cyan}, {tex = {file = data.icon, size = {34, 34}}},
+    {text = text}}
+  if me.goldColumn then
+    local known = login.globalbank.character(data.name)
+    if known then
+      local gold, charges, saved = login.globalbank.parts(known)
+      -- always three lines, so the coin stays beside the first
+      row[4] = {
+        text = string.format('|cff%s%s|r%s\n|cff%s%s|r\n|cff%s%s|r', hex.gold, gold, known.unsure and ' ?' or '',
+          hex.dim, charges and 'Charges ' .. charges or ' ', hex.faint, saved),
+        tex = {file = skin.MEDIA .. 'coin', size = {15, 15}},
+      }
+    else
+      row[4] = ''
+    end
+  end
+  return row
+end
+
+-- Edit character order's arrows, dimmed where the character can't go further
+local ARROWS = {
+  modern = {up = 'arrow_up', down = 'arrow_down'},
+  classic = {up = 'interface/buttons/scrollbar-upbutton-normal', down = 'interface/buttons/scrollbar-downbutton-normal'},
+}
+local function arrow(skin, which, can)
+  if skin then
+    return {tex = {file = skin.MEDIA .. ARROWS.modern[which], size = {14, 14}, color = can and skin.color.dim or skin.color.faint}}
+  end
+  return {tex = {file = ARROWS.classic[which], size = {18, 18}, color = can and {1, 1, 1} or {.4, .4, .4}}}
+end
+
 function me.charactersCallback(frame)
   local res = {}
   local selected = nil
+  local skin = modern() and LoginLook
+  local editing = me.editing()
+  local up, down = me.arrowColumns()
   for index, data in pairs(me.charlist) do
     if data.index == me.selected then
       selected = index
     end
+    local row
+    if skin then
+      row = me.modernRow(data, skin)
+    else
+      row = me.classicRow(data)
+      if editing then
+        table.insert(row, 1, tostring(data.pos or ''))
+      end
+    end
+    if editing then
+      row[up] = arrow(skin, 'up', index > 1)
+      row[down] = arrow(skin, 'down', index < #me.charlist)
+    end
+    table.insert(res, row)
+  end
+  if #res < GetMaxCharacterCreate() then
+    local row
+    if skin then
+      row = {'', {tex = {file = skin.MEDIA .. 'plus', size = {20, 20}}},
+        {text = TEXT('CHARACTER_SELECT_CREATE'), color = skin.color.dim}}
+    else
+      row = {{tex = {file = 'interface/buttons/minimapplusbutton_normal', size = {20, 20}}}, TEXT('CHARACTER_SELECT_CREATE')}
+      if editing then
+        table.insert(row, 1, '')
+      end
+    end
+    if me.goldColumn then
+      row[#row + 1] = ''
+    end
+    if editing then
+      row[up], row[down] = '', ''
+    end
+    table.insert(res, row)
+  end
+  return res, nil, selected
+end
+
+function me.classicRow(data)
     local color = data.destroy and {.5, .5, .5} or nil
 
     local firstLine = data.name
@@ -274,10 +612,7 @@ function me.charactersCallback(frame)
     end
     local thirdLine = data.zone
     if data.destroy then
-      local sec = data.destroy % 60
-      local min = math.floor(data.destroy / 60) % 60
-      local hour = math.floor(data.destroy / 60 / 60) % 60
-      thirdLine = string.format('%02d:%02d:%02d', hour, min, sec)
+      thirdLine = deleteTimer(data.destroy)
     end
     local lines = {firstLine, secondLine, thirdLine}
     for index, text in ipairs(lines) do
@@ -291,17 +626,19 @@ function me.charactersCallback(frame)
       local known = login.globalbank.character(data.name)
       row[3] = known and {text = login.globalbank.describe(known), color = color} or ''
     end
-    table.insert(res, row)
-  end
-  if #res < GetMaxCharacterCreate() then
-    table.insert(res, {{tex = {file = 'interface/buttons/minimapplusbutton_normal', size = {20, 20}}}, TEXT('CHARACTER_SELECT_CREATE'), me.goldColumn and '' or nil});
-  end
-  return res, nil, selected
+    return row
 end
 
-function me.charactersOnClick(frame, double, index)
+function me.charactersOnClick(frame, double, index, key, col)
   if login.campnext then
     login.campnext.cancel() -- picking by hand stops a queued /lnc switch
+  end
+  if me.editing() and index <= #me.charlist then
+    local up, down = me.arrowColumns()
+    if col == up or col == down then
+      me.moveCharacter(me.charlist[index].index, col == up and -1 or 1)
+      return
+    end
   end
   if index > #me.charlist then
     if double then
@@ -340,10 +677,15 @@ function me.move(delta)
   LoginCharSelectFrame_chars:update()
 end
 function me.onKeyDown(key)
-  if key == 'UP' then
-    me.move(-1)
-  elseif key == 'DOWN' then
-    me.move(1)
+  local delta = (key == 'UP' and -1) or (key == 'DOWN' and 1) or nil
+  if not delta then
+    return
+  end
+  -- Shift moves the selected character's number while Edit character order is on
+  if me.editing() and me.selected and IsShiftKeyDown() then
+    me.moveCharacter(me.selected, delta)
+  else
+    me.move(delta)
   end
 end
 login.charselect = me;

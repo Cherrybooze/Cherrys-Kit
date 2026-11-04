@@ -89,28 +89,6 @@
 					<OnLeave>GameTooltip:Hide();</OnLeave>
 				</Scripts>
 			</CheckButton>
-			<CheckButton name="$parentCherryLock">
-				<Size><AbsDimension x="24" y="24"/></Size>
-				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentCherry" relativePoint="TOPLEFT"><Offset><AbsDimension x="330" y="0"/></Offset></Anchor></Anchors>
-				<HitRectInsets><AbsInset top="0" left="8" bottom="8" right="0"/></HitRectInsets>
-				<Layers>
-					<Layer level="OVERLAY">
-						<FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Lock resize">
-							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="6"/></Offset></Anchor></Anchors>
-						</FontString>
-					</Layer>
-				</Layers>
-				<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
-				<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
-				<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
-				<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
-				<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
-				<Scripts>
-					<OnClick>zBagKit.OnConfigClick("cherrylock");</OnClick>
-					<OnEnter>zBagKit.ShowTooltip(this, "cherrylock");</OnEnter>
-					<OnLeave>GameTooltip:Hide();</OnLeave>
-				</Scripts>
-			</CheckButton>
 			<CheckButton name="$parentBagSlots">
 				<Size><AbsDimension x="24" y="24"/></Size>
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentCherry" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
@@ -204,6 +182,28 @@
 					<OnLeave>GameTooltip:Hide();</OnLeave>
 				</Scripts>
 			</CheckButton>
+			<CheckButton name="$parentCherryLock">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentHideBackpack" relativePoint="TOPLEFT"><Offset><AbsDimension x="330" y="0"/></Offset></Anchor></Anchors>
+				<HitRectInsets><AbsInset top="0" left="8" bottom="8" right="0"/></HitRectInsets>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Lock resize">
+							<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="6"/></Offset></Anchor></Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/>
+				<PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+				<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/>
+				<CheckedTexture file="Interface\Buttons\CheckBox-Checked"/>
+				<DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+				<Scripts>
+					<OnClick>zBagKit.OnConfigClick("cherrylock");</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "cherrylock");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</CheckButton>
 			<CheckButton name="$parentMoney">
 				<Size><AbsDimension x="24" y="24"/></Size>
 				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentHideBackpack" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
@@ -252,6 +252,24 @@
 				<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/><PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
 				<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
 				<Scripts><OnClick>zBagKit.OnConfigClick("onebank");</OnClick><OnEnter>zBagKit.ShowTooltip(this, "onebank");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+			</CheckButton>
+			<CheckButton name="$parentEqSide">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagConfigFrameshoweq" relativePoint="TOPLEFT"><Offset><AbsDimension x="150" y="0"/></Offset></Anchor></Anchors>
+				<HitRectInsets><AbsInset top="0" left="8" bottom="8" right="0"/></HitRectInsets>
+				<Layers><Layer level="OVERLAY"><FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Next to bag (zBag)"><Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="6"/></Offset></Anchor></Anchors></FontString></Layer></Layers>
+				<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/><PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+				<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+				<Scripts><OnClick>zBagKit.OnConfigClick("eqside");</OnClick><OnEnter>zBagKit.ShowTooltip(this, "eqside");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+			</CheckButton>
+			<CheckButton name="$parentShopSide">
+				<Size><AbsDimension x="24" y="24"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentCherry" relativePoint="TOPLEFT"><Offset><AbsDimension x="270" y="0"/></Offset></Anchor></Anchors>
+				<HitRectInsets><AbsInset top="0" left="8" bottom="8" right="0"/></HitRectInsets>
+				<Layers><Layer level="OVERLAY"><FontString name="$parentTxt1" inherits="GameFontLabelYellow" text="Item shop next to bank (zBag)"><Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="6"/></Offset></Anchor></Anchors></FontString></Layer></Layers>
+				<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/><PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+				<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+				<Scripts><OnClick>zBagKit.OnConfigClick("shopside");</OnClick><OnEnter>zBagKit.ShowTooltip(this, "shopside");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
 			</CheckButton>
 			<Button name="$parentReset" inherits="UIPanelButtonTemplate" text="Reset bag positions">
 				<Size><AbsDimension x="140" y="22"/></Size>
@@ -1806,6 +1824,10 @@
 					<Anchors><Anchor point="CENTER"/></Anchors>
 					<Color r="0" g="0" b="0" a="0.35"/>
 				</Texture>
+				<FontString name="$parentKitStats" inherits="GameFontHighlight" text="" justifyH="LEFT" hidden="true">
+					<Size><AbsDimension x="34" y="32"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="1" y="1"/></Offset></Anchor></Anchors>
+				</FontString>
 				<FontString name="$parentKitSlot" inherits="GameFontHighlight" text="" hidden="true">
 					<Anchors><Anchor point="CENTER"/></Anchors>
 				</FontString>
@@ -2033,4 +2055,23 @@
 	<Frame name="zBagKitBank39" parent="BankItemButton39" inherits="zBagKitSlotTemplate" hidden="true"/>
 	<Frame name="zBagKitBank40" parent="BankItemButton40" inherits="zBagKitSlotTemplate" hidden="true"/>
 	<GameTooltip name="zBagKitTipReader" hidden="true" alpha="0" enableMouse="false" inherits="GameTooltipTemplate" parent="UIParent"/>
+	<!-- Cherry's Kit: "Stats" tick beside the bag search boxes, short stat names on the bag icons. -->
+	<CheckButton name="zBagKitStatTick" parent="BagSearchEditBox">
+		<Size><AbsDimension x="22" y="22"/></Size>
+		<Anchors><Anchor point="LEFT" relativeTo="BagSearchEditBox" relativePoint="RIGHT"><Offset><AbsDimension x="2" y="0"/></Offset></Anchor></Anchors>
+		<HitRectInsets><AbsInset top="0" left="0" bottom="0" right="-30"/></HitRectInsets>
+		<Layers><Layer level="OVERLAY"><FontString name="$parentTxt1" inherits="GameFontHighlight" text="Stats"><Anchors><Anchor point="LEFT" relativePoint="RIGHT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors></FontString></Layer></Layers>
+		<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/><PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+		<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+		<Scripts><OnClick>zBagKit.ToggleStatPrefix(this);</OnClick><OnEnter>zBagKit.ShowTooltip(this, "statprefix");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+	</CheckButton>
+	<CheckButton name="zBagKitStatTickCB" parent="zBagKitCBSearch">
+		<Size><AbsDimension x="22" y="22"/></Size>
+		<Anchors><Anchor point="LEFT" relativeTo="zBagKitCBSearch" relativePoint="RIGHT"><Offset><AbsDimension x="2" y="0"/></Offset></Anchor></Anchors>
+		<HitRectInsets><AbsInset top="0" left="0" bottom="0" right="-30"/></HitRectInsets>
+		<Layers><Layer level="OVERLAY"><FontString name="$parentTxt1" inherits="GameFontHighlight" text="Stats"><Anchors><Anchor point="LEFT" relativePoint="RIGHT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors></FontString></Layer></Layers>
+		<NormalTexture file="Interface\Buttons\CheckBox-Normal2"/><PushedTexture file="Interface\Buttons\CheckBox-Depress2"/>
+		<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
+		<Scripts><OnClick>zBagKit.ToggleStatPrefix(this);</OnClick><OnEnter>zBagKit.ShowTooltip(this, "statprefix");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
+	</CheckButton>
 </Ui>
