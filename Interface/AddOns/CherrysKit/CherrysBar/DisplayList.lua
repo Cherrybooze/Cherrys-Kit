@@ -519,10 +519,35 @@ local function clockTime()
   return nil
 end
 
+-- "Show server name with clock" adds SERVER_TEXT to the format; the text is measured on each redraw,
+-- so the display widens to fit the name.
+local SERVER_TEXT = " - [SERVER]"
+
+local function hasServer(fmt)
+  return string.find(fmt, "[SERVER]", 1, true) and true or false
+end
+
+local function serverName()
+  local name = type(GetServerName) == "function" and GetServerName() or nil
+  return (type(name) == "string" and name ~= "") and name or "?"
+end
+
 D.Add({
   key = "Clock", label = "Time", title = "Clock", bar = "top", side = "right", order = 30,
   icon = Icon("Clock"), fmt = "[TIME24]", every = 1,
-  tokens = "[TIME24] [TIME12] [DATE] [ONLINE] this session [TOTAL] all characters",
+  tokens = "[TIME24] [TIME12] [DATE] [SERVER] [ONLINE] this session [TOTAL] all characters",
+  option = {
+    text = "Show server name with clock",
+    checked = function(cfg) return hasServer(cfg.fmt) end,
+    flip = function(cfg)
+      if hasServer(cfg.fmt) then
+        local fmt = string.gsub(cfg.fmt, "%s*%-?%s*%[SERVER%]", "")
+        cfg.fmt = fmt
+      else
+        cfg.fmt = cfg.fmt .. SERVER_TEXT
+      end
+    end,
+  },
   tick = function(def)
     local _, clockMinute = clockTime()
     local minute = clockMinute or math.floor(now() / 60)
@@ -537,6 +562,7 @@ D.Add({
     return true
   end,
   read = function(v)
+    v.SERVER = serverName()
     v.ONLINE = hoursMinutes(math.floor((now() - session.start) / 60))
     local hour, minute = clockTime()
     if hour then
@@ -551,6 +577,7 @@ D.Add({
     v.TOTAL = string.format("%dd %s", math.floor(total / 1440), hoursMinutes(total % 1440))
   end,
   tip = function(v)
+    tipPair("Server", v.SERVER)
     if clockTime() then
       tipPair("Date", v.DATE)
       tipPair("Time", v.TIME24)
