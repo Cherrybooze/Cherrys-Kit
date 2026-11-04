@@ -1922,22 +1922,21 @@ const GBBank = (() => {
     // changes on the way, the helper rewrote it, and it's read again from the start.
     async function fetchData(ifChanged) {
       for (let attempt = 0; ; attempt++) {
-        let json = '', total = 0, again = false;
+        let json = '', total = 0, again = false, first = null;
         for (;;) {
           const response = await send({type: 'bank-data', offset: json.length});
           const part = response.json || '';
+          if (first === null) first = part;
           if (json && response.total && total && response.total !== total) { again = true; break; }
           total = response.total || total;
           json += part;
-          if (ifChanged && json.length === part.length && total && total === state.total) {
-            const made = /^\s*\{"made":"([^"]*)"/.exec(json)?.[1];
-            if (made && made === state.made) return null;
-          }
+          // The stamp only has minutes, so two saves in one minute look alike: the first part itself has to match.
+          if (ifChanged && json.length === part.length && total && total === state.total && part === state.firstPart) return null;
           if (!part || !total || json.length >= total) break;
         }
         if (!again) {
           try {
-            return {data: json ? JSON.parse(json) : {characters: []}, total: total || json.length};
+            return {data: json ? JSON.parse(json) : {characters: []}, total: total || json.length, first};
           } catch (error) {
             if (attempt >= 2) throw new Error(`The saved data couldn't be read (${error.message}). Press Update now.`);
           }
@@ -1968,6 +1967,7 @@ const GBBank = (() => {
       if (!fetched) return false;
       const {data} = fetched;
       state.total = fetched.total;
+      state.firstPart = fetched.first;
       apply(Array.isArray(data.characters) ? data.characters : [], data.made || null);
       return true;
     }

@@ -1,6 +1,6 @@
 # Chrome Web Store listing — Global Bank for RoM
 
-Last updated: 2026-11-04. Working metadata for extension **1.3.8**; this file does not publish a store listing.
+Last updated: 2026-11-04. Working metadata for extension **1.3.9**; this file does not publish a store listing.
 
 ## Store listing
 
@@ -67,6 +67,7 @@ Data is not sold, used for unrelated purposes, or used for credit decisions. See
 
 | Version | Date | Changes | Status |
 | --- | --- | --- | --- |
+| 1.3.9 | 2026-11-04 | New saves reach every tab of the page within seconds while it is open (Stats included), not only the Terminal; a second save within the same minute is no longer skipped. No permission or storage changes. | Draft |
 | 1.3.8 | 2026-11-04 | Automatic helper start: with the option on, a helper that is not running starts again within a minute; a helper window open when the option is turned on hands over to a background helper. No permission or storage changes. | Draft |
 | 1.3.7 | 2026-11-04 | Character transfer tracking: reads the Runes of Magic site's character transfer page; plates, maintenance countdown and a transfer log on the Characters page, and a row for a transferred character with no save yet. New content script on that page; no new permissions. | Draft |
 | 1.3.4 | 2026-11-02 | Correct hub-version comparison; clarify published releases versus reloading installed files. No permission/storage changes. | Draft |
