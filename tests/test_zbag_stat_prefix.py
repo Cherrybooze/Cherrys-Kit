@@ -126,6 +126,27 @@ class StatPrefixTests(unittest.TestCase):
         self.assertEqual(de[4], "r\u00fcs")  # UTF-8 letters stay whole
         self.assertEqual(self.lua.eval("#zBagKit.ShortStat('r\\195')"), 1)  # half a character is dropped
 
+    def test_label_shrinks_to_fit_the_slot_with_a_thick_outline(self):
+        fit = self.g.zBagKit.FitLabelSize
+        self.assertEqual(fit("|cffffff00Int|r\n|cffffff00matt|r", 16, 32, 32), 11)  # "matt" sets the width
+        self.assertEqual(fit("2x", 12, 32, 32), 12)                                 # fits: size kept
+        self.assertEqual(fit("stam", 20, 20, 20), 6)                                # never below 6
+        self.lua.execute('''
+          links[12] = "|Hitem:31858 0 0 2a 0 0|h"
+          zBagKit.statCache[links[12]] = "intelligence\\nmagical attack"
+          function Owner:GetWidth() return 32 end
+          function Owner:GetHeight() return 32 end
+          function OwnerKitStats:SetSize(w, h) self.w, self.h = w, h end
+          function OwnerKitStats:SetFont(path, size, weight, outline)
+            self.font = {path, size, weight, outline}; self.writes[#self.writes + 1] = "font:" .. size
+          end
+        ''')
+        self.g.zBagKit.StatPrefix(self.g.Owner, 12, 16)
+        stats = self.g.OwnerKitStats
+        self.assertEqual((stats.w, stats.h), (30, 30))
+        self.assertEqual(list(stats.font.values()), ["Fonts/DFHEIMDU.TTF", 11, "NORMAL", "THICK"])
+        self.assertEqual(list(stats.writes.values())[-1], "font:11")  # after the text change
+
     def test_bag_slot_resolves_the_index_lazily(self):
         self.g.links[105] = "|Hitem:31858 0 0 10001 1 0|h"
         self.g.zBagKit.StatPrefix(self.g.Owner, None, 8, 5)

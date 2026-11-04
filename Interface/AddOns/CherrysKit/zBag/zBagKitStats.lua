@@ -632,10 +632,11 @@ function K.StatPrefix(owner, index, size, bagSlot, bankSlot)
     owner.kitStatIndex, owner.kitStatGen = nil, nil
   end
   size = math.floor((size or K.SlotNumberFontSize()) + 0.5)
-  if owner.kitStatText == text and owner.kitStatSize == size then
+  local width, height = K.SlotSize(owner)
+  if owner.kitStatText == text and owner.kitStatSize == size and owner.kitStatWidth == width then
     return
   end
-  owner.kitStatText, owner.kitStatSize = text, size
+  owner.kitStatText, owner.kitStatSize, owner.kitStatWidth = text, size, width
   local fs = owner.kitStatFS
   if fs == nil then
     fs = _G[owner:GetName() .. "KitStats"] or false
@@ -649,11 +650,57 @@ function K.StatPrefix(owner, index, size, bagSlot, bankSlot)
     fs:Hide()
     return
   end
-  -- the client takes SetFontSize only after the text changed
+  -- the text fills the slot: the font shrinks until the longest line and every line fit
+  if fs.SetSize then
+    fs:SetSize(width - 2, height - 2)
+  end
+  size = K.FitLabelSize(text, size, width, height)
+  -- the client takes a font change only after the text changed; a thick black outline keeps the
+  -- label readable on any icon
   fs:SetText("z")
   fs:SetText(text)
-  fs:SetFontSize(size)
+  if not (fs.SetFont and pcall(fs.SetFont, fs, K.LABEL_FONT, size, "NORMAL", "THICK")) then
+    fs:SetFontSize(size)
+  end
   fs:Show()
+end
+
+K.LABEL_FONT = "Fonts/DFHEIMDU.TTF"
+K.LABEL_CHAR_WIDTH = 0.62 -- average letter width per point of font size, outline included below
+K.LABEL_MIN_SIZE = 6
+
+-- The slot's size (36 x 36 when the client can't tell).
+function K.SlotSize(owner)
+  local w, h
+  if owner.GetWidth then
+    local ok, value = pcall(owner.GetWidth, owner)
+    if ok and type(value) == "number" and value > 8 then w = value end
+  end
+  if owner.GetHeight then
+    local ok, value = pcall(owner.GetHeight, owner)
+    if ok and type(value) == "number" and value > 8 then h = value end
+  end
+  return math.floor(w or 36), math.floor(h or w or 36)
+end
+
+-- The largest font size (up to `size`) at which every line of the label fits a width x height slot.
+function K.FitLabelSize(text, size, width, height)
+  local plain = string.gsub(string.gsub(text, "|c%x%x%x%x%x%x%x%x", ""), "|r", "")
+  local lines, longest = 0, 0
+  for line in string.gmatch(plain, "[^\n]+") do
+    lines = lines + 1
+    -- a UTF-8 letter is one character, not two bytes
+    local chars = string.len(string.gsub(line, "[\128-\191]", ""))
+    if chars > longest then longest = chars end
+  end
+  if lines == 0 then
+    return size
+  end
+  local fitWidth = (width - 4) / (longest * K.LABEL_CHAR_WIDTH)
+  local fitHeight = (height - 2) / lines
+  local fit = math.floor(math.min(size, fitWidth, fitHeight))
+  if fit < K.LABEL_MIN_SIZE then fit = K.LABEL_MIN_SIZE end
+  return fit
 end
 
 -- Bags changed, or the tick or the cache did: every icon looks its item up again.
