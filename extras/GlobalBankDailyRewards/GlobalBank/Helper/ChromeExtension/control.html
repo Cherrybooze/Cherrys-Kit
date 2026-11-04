@@ -667,6 +667,12 @@
       <label class="setting-row"><span>Cascade Runes of Magic windows on launch<small>Each time a game window opens, the helper lays every game window out in an overlapping cascade, the newest in front. Needs the helper running.</small></span><span class="gb-switch"><input id="cascade-on" type="checkbox"><span aria-hidden="true"></span></span></label>
       <div class="setting-row"><span>Start from<small>The oldest window sits in this corner, and each newer one steps toward the right</small></span><label class="filter-select"><span class="gb-sr-only">Start from</span><select id="cascade-corner"><option value="bottom-left">Bottom left, going up</option><option value="top-left">Top left, going down</option></select></label></div>
       <label class="setting-row"><span>Resize to fit the screen<small>Off keeps each window's own size</small></span><span class="gb-switch"><input id="cascade-fit" type="checkbox" checked><span aria-hidden="true"></span></span></label>
+      <div class="cascade-pixels" style="display:grid;grid-template-columns:auto 90px 90px;gap:4px 8px;align-items:center;font-size:12px;color:#a9b8ca">
+        <span></span><span>X</span><span>Y</span>
+        <span>Resolution</span><input id="cascade-width" type="number" min="0" max="16000" step="1" placeholder="auto" aria-label="Window width in pixels"><input id="cascade-height" type="number" min="0" max="16000" step="1" placeholder="auto" aria-label="Window height in pixels">
+        <span>Offset</span><input id="cascade-step-x" type="number" min="0" max="1000" step="1" placeholder="auto" aria-label="Offset to the right in pixels"><input id="cascade-step-y" type="number" min="0" max="1000" step="1" placeholder="auto" aria-label="Offset up or down in pixels">
+      </div>
+      <p class="hint">Exact pixels. Resolution gives every game window that size, in place of Resize to fit; offset is how far each window steps from the one behind it, right and up (or down). Empty means automatic. New game windows and Cascade now both use them.</p>
       <div class="button-row"><button id="cascade-now" type="button">Cascade now</button></div>
       <p id="cascade-status" class="hint" role="status"></p>
     </section>

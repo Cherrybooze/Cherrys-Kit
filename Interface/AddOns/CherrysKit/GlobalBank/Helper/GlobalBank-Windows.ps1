@@ -16,8 +16,43 @@ $script:GBCascadeMinHeight = 600
 $script:GBCascadeSettleSeconds = 6
 $script:GBCascadeGiveUpSeconds = 180
 
+# The C# compiler behind Add-Type works in the temp folder. Started from Chrome, or by a helper Chrome started,
+# that can be C:\Windows\TEMP, where it can't read back its own source ("Source file ... could not be found").
+# So it compiles in the player's own temp folder, or in the helper's folder, and the old one is put back after.
+function Get-GBCompileFolders {
+    $folders = @()
+    try {
+        $local = [Environment]::GetFolderPath('LocalApplicationData')
+        if ($local) { $folders += Join-Path $local 'Temp' }
+    } catch { }
+    try {
+        $dir = Get-Item -LiteralPath $PSScriptRoot
+        while ($dir -and $dir.Name -ine 'AddOns') { $dir = $dir.Parent }
+        if ($dir) { $folders += Join-Path (Join-Path $dir.Parent.FullName 'GlobalBankHelper') 'Compile' }
+    } catch { }
+    $folders += $env:TEMP
+    return @($folders | Where-Object { $_ } | Select-Object -Unique)
+}
+
 function Initialize-GBWindowApi {
     if ('CherrysKit.GameWindows' -as [type]) { return }
+    $oldTemp = $env:TEMP; $oldTmp = $env:TMP
+    $failure = $null
+    try {
+        foreach ($folder in Get-GBCompileFolders) {
+            try {
+                [void][IO.Directory]::CreateDirectory($folder)
+                $env:TEMP = $folder; $env:TMP = $folder
+                Add-GBWindowApiType
+                return
+            } catch { $failure = $_ }
+            if ('CherrysKit.GameWindows' -as [type]) { return }
+        }
+    } finally { $env:TEMP = $oldTemp; $env:TMP = $oldTmp }
+    if ($failure) { throw $failure }
+}
+
+function Add-GBWindowApiType {
     Add-Type -TypeDefinition @'
 using System;
 using System.Collections.Generic;
@@ -142,11 +177,17 @@ function Get-GBCascadePath([string]$dataFolder) { return Join-Path $dataFolder '
 
 # What the extension sent, made safe. Anything unknown falls back to the defaults.
 function ConvertTo-GBCascadeSettings($value) {
-    $settings = [ordered]@{ on = $false; corner = 'bottom-left'; fit = $true }
+    # width, height (each window's size) and stepX, stepY (each window's offset from the one behind it) are exact
+    # pixels; 0 means automatic (fit or own size, and a title bar's height).
+    $settings = [ordered]@{ on = $false; corner = 'bottom-left'; fit = $true; width = 0; height = 0; stepX = 0; stepY = 0 }
     if ($null -eq $value) { return $settings }
     if ($value.on -is [bool]) { $settings.on = $value.on }
     if ($value.corner -is [string] -and $script:GBCascadeCorners -contains $value.corner) { $settings.corner = $value.corner }
     if ($value.fit -is [bool]) { $settings.fit = $value.fit }
+    foreach ($field in @(@('width', 16000), @('height', 16000), @('stepX', 1000), @('stepY', 1000))) {
+        $number = $value.($field[0])
+        if (($number -is [int] -or $number -is [int64] -or $number -is [double]) -and $number -ge 0 -and $number -le $field[1]) { $settings[$field[0]] = [int][Math]::Floor($number) }
+    }
     return $settings
 }
 
@@ -191,26 +232,28 @@ function Get-GBGameProcesses {
 }
 
 # Where each window's visible frame goes. $frames: one @{ w; h } per window (its visible size now), oldest
-# first. $work: the monitor's work area (left, top, right, bottom). $step: the offset in real pixels.
+# first. $work: the monitor's work area (left, top, right, bottom). $stepX, $stepY: the offset in real pixels.
 # The oldest window sits in the chosen corner and each newer one is one step to the right, and one step
 # up (bottom-left) or down (top-left). With $fit, every window gets the size that makes the whole cascade
-# fill the work area; otherwise each keeps its own and is only kept on the screen.
-function Get-GBCascadeLayout([object[]]$frames, [int[]]$work, [string]$corner, [bool]$fit, [int]$step, [int]$minWidth, [int]$minHeight) {
+# fill the work area; otherwise each keeps its own and is only kept on the screen. An offset set by hand
+# ($exactStep) is kept; an automatic one shrinks before fitted windows would get too small to play in.
+function Get-GBCascadeLayout([object[]]$frames, [int[]]$work, [string]$corner, [bool]$fit, [int]$stepX, [int]$stepY, [int]$minWidth, [int]$minHeight, [bool]$exactStep = $false) {
     $count = $frames.Count
     if ($count -lt 1) { return @() }
     $left = $work[0]; $top = $work[1]; $width = $work[2] - $work[0]; $height = $work[3] - $work[1]
-    if ($count -gt 1) {
-        # Many windows: closer steps rather than windows too small to play in.
-        $room = [Math]::Min($width - [Math]::Min($minWidth, $width), $height - [Math]::Min($minHeight, $height))
-        $step = [Math]::Max(0, [Math]::Min($step, [Math]::Floor($room / ($count - 1))))
+    if ($count -gt 1 -and -not $exactStep) {
+        $roomX = [Math]::Floor(($width - [Math]::Min($minWidth, $width)) / ($count - 1))
+        $roomY = [Math]::Floor(($height - [Math]::Min($minHeight, $height)) / ($count - 1))
+        $stepX = [int][Math]::Max(0, [Math]::Min($stepX, $roomX))
+        $stepY = [int][Math]::Max(0, [Math]::Min($stepY, $roomY))
+        $stepX = $stepY = [Math]::Min($stepX, $stepY)
     }
-    $span = $step * ($count - 1)
     $layout = @()
     for ($i = 0; $i -lt $count; $i++) {
-        if ($fit) { $w = $width - $span; $h = $height - $span }
+        if ($fit) { $w = [Math]::Max(1, $width - $stepX * ($count - 1)); $h = [Math]::Max(1, $height - $stepY * ($count - 1)) }
         else { $w = [Math]::Min([int]$frames[$i].w, $width); $h = [Math]::Min([int]$frames[$i].h, $height) }
-        $x = $left + $i * $step
-        $y = if ($corner -eq 'top-left') { $top + $i * $step } else { $top + $height - $h - $i * $step }
+        $x = $left + $i * $stepX
+        $y = if ($corner -eq 'top-left') { $top + $i * $stepY } else { $top + $height - $h - $i * $stepY }
         # Kept inside the work area when the windows are bigger than the cascade allows.
         $x = [Math]::Max($left, [Math]::Min($x, $left + $width - $w))
         $y = [Math]::Max($top, [Math]::Min($y, $top + $height - $h))
@@ -240,14 +283,21 @@ function Invoke-GBCascade($settings, $processes = $null) {
     # The oldest window's monitor holds the cascade.
     $first = $windows[0].info
     $work = [int[]]@($first[8], $first[9], $first[10], $first[11])
-    $step = [int][Math]::Round($script:GBCascadeStep * $first[16] / 96.0)
     $scale = $first[16] / 96.0
+    # Pixels set on the page win: the offset between windows, and one size for every window.
+    $auto = [int][Math]::Round($script:GBCascadeStep * $scale)
+    $exactStep = [int]$settings.stepX -gt 0 -or [int]$settings.stepY -gt 0
+    $stepX = if ([int]$settings.stepX -gt 0) { [int]$settings.stepX } else { $auto }
+    $stepY = if ([int]$settings.stepY -gt 0) { [int]$settings.stepY } else { $auto }
+    $sized = [int]$settings.width -gt 0 -and [int]$settings.height -gt 0
+    $fit = [bool]$settings.fit -and -not $sized
     $frames = @($windows | ForEach-Object {
         $i = $_.info
-        @{ w = $i[2] - $i[4] - $i[6]; h = $i[3] - $i[5] - $i[7] }
+        if ($sized) { @{ w = [int]$settings.width; h = [int]$settings.height } }
+        else { @{ w = $i[2] - $i[4] - $i[6]; h = $i[3] - $i[5] - $i[7] } }
     })
-    $layout = @(Get-GBCascadeLayout $frames $work ([string]$settings.corner) ([bool]$settings.fit) $step `
-        ([int]($script:GBCascadeMinWidth * $scale)) ([int]($script:GBCascadeMinHeight * $scale)))
+    $layout = @(Get-GBCascadeLayout $frames $work ([string]$settings.corner) $fit $stepX $stepY `
+        ([int]($script:GBCascadeMinWidth * $scale)) ([int]($script:GBCascadeMinHeight * $scale)) $exactStep)
     # Newest first, so it ends up in front and each older one goes behind the one placed before it. The
     # window's own rectangle includes the borders Windows 10 and 11 draw invisibly, so the visible frames line up.
     $count = $windows.Count

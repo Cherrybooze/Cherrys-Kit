@@ -51,7 +51,7 @@ The tests use throwaway game folders and local release folders; none of this has
 
 ## Cascade the game windows (Global Bank 1.6.9, extension 1.3.11, not yet released)
 
-Not run on Windows yet: the window calls were written without a Windows machine. Update the helper files, reload the extension (the page's sidebar says Version 1.3.11) and restart the helper. Open the page's **Connection** panel; the options are under **Game windows**.
+Update the helper files, reload the extension (the page's sidebar says Version 1.3.11) and restart the helper. Open the page's **Connection** panel; the options are under **Game windows**.
 
 | # | Do this | Expected |
 | --- | --- | --- |
@@ -65,6 +65,9 @@ Not run on Windows yet: the window calls were written without a Windows machine.
 | WC8 | On a display scaled to 125% or 150%, press **Cascade now**. | The windows still fill the screen exactly and line up; the step looks like one title bar. |
 | WC9 | If the game runs as administrator (its window has a shield, or Task Manager's Elevated column says Yes), press **Cascade now**. | Either the windows move, or the status line says Windows refused to move them because the game was started as administrator. |
 | WC10 | Open the toolbar popup and expand **Advanced**. Turn **Cascade Runes of Magic windows on launch** on there, then press **Cascade now**. | The page's Connection panel shows the same toggle on. The windows cascade with the corner and size chosen on the page. |
+| WC11 | In the popup's **Advanced**, set Resolution 1280 x 800 and Offset 60 x 30, then press **Cascade now**. | Every game window is 1280 x 800 (its visible frame), each one 60 px right and 30 px up from the one behind it. |
+| WC12 | Turn **Move cascade button under Global Bank button** on, close and reopen the popup. | A cascade button sits right under Open Global Bank and the one in Advanced is gone; it cascades the same way. |
+| WC13 | Start a new game client with the helper restarted after this update. | The new window gets the same size and offset as Cascade now gives. |
 
 ## Snapshots after switching characters, automatic helper (Global Bank 1.6.8, extension 1.3.8, not yet released)
 

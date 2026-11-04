@@ -1260,15 +1260,22 @@
   // Game windows: the helper does the cascading. The choice is stored here and reaches it with the clock.
   const cascadeOn = byId('cascade-on'), cascadeCorner = byId('cascade-corner'), cascadeFit = byId('cascade-fit');
   const cascadeStatus = byId('cascade-status');
-  const cascadeChoice = () => ({on: cascadeOn.checked, corner: cascadeCorner.value === 'top-left' ? 'top-left' : 'bottom-left', fit: cascadeFit.checked});
+  const cascadeWidth = byId('cascade-width'), cascadeHeight = byId('cascade-height'), cascadeStepX = byId('cascade-step-x'), cascadeStepY = byId('cascade-step-y');
+  // Exact pixels, or 0 for automatic.
+  const pixels = (input, most) => { const n = Math.floor(Number(input.value)); return input.value !== '' && n > 0 && n <= most ? n : 0; };
+  const cascadeChoice = () => ({on: cascadeOn.checked, corner: cascadeCorner.value === 'top-left' ? 'top-left' : 'bottom-left', fit: cascadeFit.checked,
+    width: pixels(cascadeWidth, 16000), height: pixels(cascadeHeight, 16000), stepX: pixels(cascadeStepX, 1000), stepY: pixels(cascadeStepY, 1000)});
   const showCascade = value => {
     cascadeOn.checked = value?.on === true;
     cascadeCorner.value = value?.corner === 'top-left' ? 'top-left' : 'bottom-left';
     cascadeFit.checked = value?.fit !== false;
+    for (const [input, key] of [[cascadeWidth, 'width'], [cascadeHeight, 'height'], [cascadeStepX, 'stepX'], [cascadeStepY, 'stepY']]) {
+      if (document.activeElement !== input) input.value = value?.[key] > 0 ? String(value[key]) : '';
+    }
   };
   chrome.storage.local.get('windowCascade').then(({windowCascade}) => showCascade(windowCascade)).catch(() => {});
   chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && changes.windowCascade) showCascade(changes.windowCascade.newValue); });
-  for (const input of [cascadeOn, cascadeCorner, cascadeFit]) {
+  for (const input of [cascadeOn, cascadeCorner, cascadeFit, cascadeWidth, cascadeHeight, cascadeStepX, cascadeStepY]) {
     input.addEventListener('change', async () => {
       const choice = cascadeChoice();
       await chrome.storage.local.set({windowCascade: choice});

@@ -24,7 +24,9 @@ class CascadeWiringTests(unittest.TestCase):
     def test_popup_has_the_toggle_and_cascade_now_under_advanced(self):
         html = (EXTENSION / 'popup.html').read_text(encoding='utf-8')
         advanced = html[html.index('class="popup-settings"'):]
-        for needle in ('id="cascade-on"', 'Cascade Runes of Magic windows on launch', 'id="cascade-now"', 'id="cascade-status"'):
+        for needle in ('id="cascade-on"', 'Cascade Runes of Magic windows on launch', 'id="cascade-now"', 'id="cascade-status"',
+                       'id="cascade-width"', 'id="cascade-height"', 'id="cascade-step-x"', 'id="cascade-step-y"',
+                       'id="cascade-under-bank"', 'Move cascade button under Global Bank button'):
             self.assertIn(needle, advanced)
 
     def test_helper_watches_on_its_loop_every_two_seconds(self):
@@ -80,12 +82,14 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 const same = (actual, expected) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected);
 await flush();
 listeners.alarm[0]({name:'globalbank-heartbeat'});
-same(full.pop().cascade, {on:true, corner:'top-left', fit:false});
+same(full.pop().cascade, {on:true, corner:'top-left', fit:false, width:0, height:0, stepX:0, stepY:0});
 // A change on the page reaches the helper's folder at once, cleaned.
 for (const fn of listeners.changed) fn({windowCascade:{newValue:{on:'yes', corner:'middle'}}}, 'local');
 const sent = full.pop();
 assert.equal(sent.type, 'clock');
-same(sent.cascade, {on:false, corner:'bottom-left', fit:true});
+same(sent.cascade, {on:false, corner:'bottom-left', fit:true, width:0, height:0, stepX:0, stepY:0});
+for (const fn of listeners.changed) fn({windowCascade:{newValue:{on:true, width:1280, height:800.5, stepX:-3, stepY:40}}}, 'local');
+same(full.pop().cascade, {on:true, corner:'bottom-left', fit:true, width:1280, height:0, stepX:0, stepY:40});
 // Cascade now only from the extension's own page.
 const ask = (message, url) => new Promise(resolve => {
   let answered = false;
@@ -96,9 +100,9 @@ assert.equal(await ask({type:'windows-cascade', cascade:{on:true}}, 'https://exa
 assert.equal(full.length, 0);
 const answer = await ask({type:'windows-cascade', cascade:{corner:'top-left', fit:false, evil:1}}, 'chrome-extension://test/control.html');
 assert.equal(answer.moved, 2);
-same(full.pop(), {type:'windows-cascade', cascade:{on:false, corner:'top-left', fit:false}});
+same(full.pop(), {type:'windows-cascade', cascade:{on:false, corner:'top-left', fit:false, width:0, height:0, stepX:0, stepY:0}});
 assert.equal((await ask({type:'windows-cascade', cascade:{on:true}}, 'chrome-extension://test/popup.html')).ok, true);
-same(full.pop().cascade, {on:true, corner:'bottom-left', fit:true});
+same(full.pop().cascade, {on:true, corner:'bottom-left', fit:true, width:0, height:0, stepX:0, stepY:0});
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
@@ -114,8 +118,8 @@ class CascadeLayoutTests(unittest.TestCase):
     def layout(self, count, corner, fit, frames=None, work=(0, 0, 1920, 1040), step=32):
         frames = frames or [{'w': 1280, 'h': 800}] * count
         listed = ','.join('@{w=%d;h=%d}' % (f['w'], f['h']) for f in frames)
-        return self.run_ps('ConvertTo-Json -Compress -InputObject @(Get-GBCascadeLayout @(%s) ([int[]]@(%s)) %s $%s %d 800 600)'
-                           % (listed, ','.join(map(str, work)), corner, 'true' if fit else 'false', step))
+        return self.run_ps('ConvertTo-Json -Compress -InputObject @(Get-GBCascadeLayout @(%s) ([int[]]@(%s)) %s $%s %d %d 800 600)'
+                           % (listed, ','.join(map(str, work)), corner, 'true' if fit else 'false', step, step))
 
     def test_bottom_left_fits_the_work_area_going_up_and_right(self):
         cells = self.layout(3, 'bottom-left', True)
@@ -137,9 +141,14 @@ class CascadeLayoutTests(unittest.TestCase):
         self.assertGreaterEqual(cells[0]['h'], 600)
         self.assertLessEqual(cells[-1]['y'] + cells[-1]['h'], 1040)
 
+    def test_an_exact_offset_is_kept_even_with_many_windows(self):
+        cells = self.run_ps('ConvertTo-Json -Compress -InputObject @(Get-GBCascadeLayout @(' + ','.join(['@{w=1000;h=700}'] * 6)
+                            + ') ([int[]]@(0,0,1920,1040)) top-left $false 50 20 800 600 $true)')
+        self.assertEqual([(c['x'], c['y']) for c in cells[:3]], [(0, 0), (50, 20), (100, 40)])
+
     def test_settings_are_cleaned(self):
         value = self.run_ps("ConvertTo-Json -Compress -InputObject (ConvertTo-GBCascadeSettings ('{\"on\":\"yes\",\"corner\":\"x\",\"fit\":false}' | ConvertFrom-Json))")
-        self.assertEqual(value, {'on': False, 'corner': 'bottom-left', 'fit': False})
+        self.assertEqual(value, {'on': False, 'corner': 'bottom-left', 'fit': False, 'width': 0, 'height': 0, 'stepX': 0, 'stepY': 0})
 
 
 if __name__ == '__main__':

@@ -272,30 +272,63 @@ poll();
 const cascadeOn = document.getElementById('cascade-on');
 const cascadeNow = document.getElementById('cascade-now');
 const cascadeStatus = document.getElementById('cascade-status');
+const cascadeQuick = document.getElementById('cascade-quick');
+const cascadeQuickStatus = document.getElementById('cascade-quick-status');
+const cascadeUnderBank = document.getElementById('cascade-under-bank');
 let cascadeStored = {};
+const cascadeFields = [['cascade-width', 'width', 16000], ['cascade-height', 'height', 16000], ['cascade-step-x', 'stepX', 1000], ['cascade-step-y', 'stepY', 1000]]
+  .map(([id, key, most]) => ({input: document.getElementById(id), key, most})).filter(field => field.input);
+const showCascadeStored = () => {
+  cascadeOn.checked = cascadeStored.on === true;
+  for (const {input, key} of cascadeFields) if (document.activeElement !== input) input.value = cascadeStored[key] > 0 ? String(cascadeStored[key]) : '';
+};
+const saveCascade = async () => {
+  cascadeStored = {corner: 'bottom-left', fit: true, ...cascadeStored, on: cascadeOn.checked};
+  for (const {input, key, most} of cascadeFields) {
+    const n = Math.floor(Number(input.value));
+    cascadeStored[key] = input.value !== '' && n > 0 && n <= most ? n : 0;
+  }
+  await chrome.storage.local.set({windowCascade: cascadeStored});
+};
+// The button can sit under Open Global Bank instead of in here.
+const placeCascadeButton = under => {
+  if (cascadeUnderBank) cascadeUnderBank.checked = under;
+  if (cascadeQuick) cascadeQuick.hidden = !under;
+  if (cascadeQuickStatus && !under) cascadeQuickStatus.hidden = true;
+  if (cascadeNow) cascadeNow.hidden = under;
+};
+async function runCascade(button, line) {
+  button.disabled = true;
+  line.hidden = false;
+  line.textContent = 'Cascading\u2026';
+  try {
+    await saveCascade();
+    const result = await chrome.runtime.sendMessage({type:'windows-cascade', cascade: cascadeStored});
+    if (!result?.ok) throw new Error(result?.error || 'No response from the local bridge.');
+    const refused = result.refused ? ` Windows refused to move ${result.refused}: the game runs as administrator.` : '';
+    line.textContent = !result.found ? 'No Runes of Magic window is open.'
+      : `Cascaded ${result.moved} game window${result.moved === 1 ? '' : 's'}.${refused}`;
+  } catch (error) {
+    line.textContent = 'Could not cascade: ' + String(error.message || error);
+  } finally {
+    button.disabled = false;
+  }
+}
 if (cascadeOn && cascadeNow && cascadeStatus) {
-  chrome.storage.local.get('windowCascade').then(({windowCascade}) => {
+  chrome.storage.local.get(['windowCascade', 'cascadeUnderBank']).then(({windowCascade, cascadeUnderBank: under}) => {
     cascadeStored = windowCascade || {};
-    cascadeOn.checked = cascadeStored.on === true;
+    showCascadeStored();
+    placeCascadeButton(under === true);
   }).catch(() => {});
   cascadeOn.addEventListener('change', async () => {
-    cascadeStored = {corner: 'bottom-left', fit: true, ...cascadeStored, on: cascadeOn.checked};
-    await chrome.storage.local.set({windowCascade: cascadeStored});
+    await saveCascade();
     cascadeStatus.textContent = cascadeOn.checked ? 'Needs the helper running: turn on Run automatically to keep it so.' : '';
   });
-  cascadeNow.addEventListener('click', async () => {
-    cascadeNow.disabled = true;
-    cascadeStatus.textContent = 'Cascading\u2026';
-    try {
-      const result = await chrome.runtime.sendMessage({type:'windows-cascade', cascade: cascadeStored});
-      if (!result?.ok) throw new Error(result?.error || 'No response from the local bridge.');
-      const refused = result.refused ? ` Windows refused to move ${result.refused}: the game runs as administrator.` : '';
-      cascadeStatus.textContent = !result.found ? 'No Runes of Magic window is open.'
-        : `Cascaded ${result.moved} game window${result.moved === 1 ? '' : 's'}.${refused}`;
-    } catch (error) {
-      cascadeStatus.textContent = 'Could not cascade: ' + String(error.message || error);
-    } finally {
-      cascadeNow.disabled = false;
-    }
+  for (const {input} of cascadeFields) input.addEventListener('change', saveCascade);
+  cascadeNow.addEventListener('click', () => runCascade(cascadeNow, cascadeStatus));
+  cascadeQuick?.addEventListener('click', () => runCascade(cascadeQuick, cascadeQuickStatus));
+  cascadeUnderBank?.addEventListener('change', async () => {
+    placeCascadeButton(cascadeUnderBank.checked);
+    await chrome.storage.local.set({cascadeUnderBank: cascadeUnderBank.checked});
   });
 }
