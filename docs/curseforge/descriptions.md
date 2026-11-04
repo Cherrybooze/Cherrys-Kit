@@ -495,6 +495,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.6**: character transfers on the Chrome page's Characters list. Open the site's character transfer page, and each planned transfer gets a plate with its new server and when it was registered, with a countdown to the Thursday maintenance; one cancelled there loses it. After the maintenance, a login on the old server shows whether it went, and the character waits on its new server's list until it logs in there. A Transfers log keeps who went where and when.
 - **1.6.5**: Addons page updates ask Windows for administrator permission, so protected game folders no longer stop them with *Access is denied*; replaced addons leave the list once gone, a Login screen panel shows `Interface\loginxml`, and the action buttons line up with the rows. The Stats page shows each stat's own value, without the HD bonus. Gear with identical stats stacks whatever its durability, and the stack's tooltip lists each copy's durability, character and slot.
 - **1.6.4**: the hub is compared with its actual published version, and the page/popup explain that reload reads installed files instead of downloading an update.
 - **1.6.3**: the Chrome Stats page keeps the game's colours, shows effects beside stat names, colours holders by class, and has an excluded-stat list with restore controls. Private helper data remains outside the distributed kit.

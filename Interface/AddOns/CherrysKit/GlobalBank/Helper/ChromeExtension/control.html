@@ -19,6 +19,7 @@
   <script defer src="backups.js"></script>
   <script defer src="addons.js"></script>
   <script defer src="terminal.js"></script>
+  <script defer src="transfers.js"></script>
   <script defer src="control.js"></script>
 </head>
 <body>
@@ -239,7 +240,7 @@
       <h1 class="page-title" id="currencies-title">Currencies</h1>
       <div id="currency-summary" class="currency-summary"></div>
       <div class="filter-row">
-        <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server or account</span><input id="currency-search" maxlength="160" autocomplete="off" placeholder="Find a character, server or account, or filter: #gold&gt;500m, #charges&gt;10k…" title="Filters, with commas or spaces between them: #level&gt;=100, #classes&gt;3, #classlevels&gt;500, #gold&lt;1m, #dailytokens&gt;5k, #charges&gt;10k, #diamonds, #rubies, #stones, #bagfree&gt;10, #bankfree, #worn, #mail, #mailgold&gt;1m, #class=mage, and any currency by the start of its name, such as #honor&gt;1000. k, m and b mean thousands, millions and billions. A filter with no number, such as #charges, means more than none; #needslogin, #nobank, #steam and #linked are yes or no. Anything else is a name, server, account, class or note to find."><kbd class="key-hint" aria-hidden="true">/</kbd></label>
+        <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server or account</span><input id="currency-search" maxlength="160" autocomplete="off" placeholder="Find a character, server or account, or filter: #gold&gt;500m, #charges&gt;10k…" title="Filters, with commas or spaces between them: #level&gt;=100, #classes&gt;3, #classlevels&gt;500, #gold&lt;1m, #dailytokens&gt;5k, #charges&gt;10k, #diamonds, #rubies, #stones, #bagfree&gt;10, #bankfree, #worn, #mail, #mailgold&gt;1m, #class=mage, and any currency by the start of its name, such as #honor&gt;1000. k, m and b mean thousands, millions and billions. A filter with no number, such as #charges, means more than none; #needslogin, #nobank, #steam, #linked and #xfer (a character transfer planned, or one waiting for its login) are yes or no. Anything else is a name, server, account, class or note to find."><kbd class="key-hint" aria-hidden="true">/</kbd></label>
         <label class="filter-select"><span class="ico" data-ui-icon="users"></span><span class="gb-sr-only">Group by</span><select id="currency-group"><option value="server">Group by server</option><option value="account">Group by account</option><option value="none">No groups</option></select></label>
       </div>
       <details class="help-note"><summary>How this works</summary><p class="hint">Every currency any of your characters has gets a column. Click a heading to sort by it, and a character to select it. A dash means not recorded: that character needs one login on the current version, and a 0 is a real zero. Diamonds and Rubies belong to an account, so the table doesn't add them up, and the cards above count each RoM account once. Daily Tokens are each character's own.</p></details>
@@ -393,7 +394,7 @@
     <div id="tab-characters" class="tab-panel is-fill is-tight" hidden>
       <div class="filter-row">
         <h1 class="page-title" id="characters-title">Characters</h1>
-        <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server, account, class or note</span><input id="roster-search" maxlength="160" autocomplete="off" placeholder="Find a character, server, account, class or note, or filter: #level&gt;=100, #classes&gt;3, #dailytokens&gt;5k…" title="Filters, with commas or spaces between them: #level&gt;=100, #classes&gt;3, #classlevels&gt;500, #gold&lt;1m, #dailytokens&gt;5k, #charges&gt;10k, #diamonds, #rubies, #stones, #bagfree&gt;10, #bankfree, #worn, #mail, #mailgold&gt;1m, #class=mage, and any currency by the start of its name, such as #honor&gt;1000. k, m and b mean thousands, millions and billions. A filter with no number, such as #charges, means more than none; #needslogin, #nobank, #steam and #linked are yes or no. Anything else is a name, server, account, class or note to find."><kbd class="key-hint" aria-hidden="true">/</kbd></label>
+        <label class="searchbox"><span class="ico" data-ui-icon="search"></span><span class="gb-sr-only">Character, server, account, class or note</span><input id="roster-search" maxlength="160" autocomplete="off" placeholder="Find a character, server, account, class or note, or filter: #level&gt;=100, #classes&gt;3, #dailytokens&gt;5k…" title="Filters, with commas or spaces between them: #level&gt;=100, #classes&gt;3, #classlevels&gt;500, #gold&lt;1m, #dailytokens&gt;5k, #charges&gt;10k, #diamonds, #rubies, #stones, #bagfree&gt;10, #bankfree, #worn, #mail, #mailgold&gt;1m, #class=mage, and any currency by the start of its name, such as #honor&gt;1000. k, m and b mean thousands, millions and billions. A filter with no number, such as #charges, means more than none; #needslogin, #nobank, #steam, #linked and #xfer (a character transfer planned, or one waiting for its login) are yes or no. Anything else is a name, server, account, class or note to find."><kbd class="key-hint" aria-hidden="true">/</kbd></label>
         <label class="filter-select"><span class="ico" data-ui-icon="users"></span><span class="gb-sr-only">Group by</span><select id="roster-group"><option value="account">Group by account</option><option value="server">Group by server</option><option value="none">No groups</option></select></label>
       </div>
       <div class="filter-row">
@@ -401,11 +402,12 @@
           <button type="button" class="section-tab" data-roster-filter="all" aria-pressed="true">All characters <span id="roster-count-all" class="counter"></span></button>
           <button type="button" class="section-tab" data-roster-filter="login" aria-pressed="false" title="Saved by an older version: each needs one login and logout on the current version for its server, currencies and item stats.">Needs login <span id="roster-count-login" class="counter"></span></button>
           <button type="button" class="section-tab" data-roster-filter="bank" aria-pressed="false" title="The game has given Global Bank no bank for that character yet. One login records it.">Bank not recorded <span id="roster-count-bank" class="counter"></span></button>
+          <button type="button" class="section-tab" data-roster-filter="transfers" aria-pressed="false" title="Character transfers: the ones the Runes of Magic site's transfer page lists as planned, and what became of them.">Transfers <span id="roster-count-transfers" class="counter"></span></button>
           <button type="button" class="section-tab" data-roster-filter="excluded" aria-pressed="false" title="Characters the helper doesn't track.">Excluded <span id="roster-count-excluded" class="counter"></span></button>
         </div>
         <span class="push"></span>
         <button id="select-stale" type="button" class="gb-button--ghost gb-button--sm" hidden></button>
-        <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it, a character to select it, and a group's Select to select all of it. Selecting doesn't change the Bank until you press Use in Bank. A character needing a login was saved by an older version: log in with it once. A bank not recorded also takes one login with that character. Update now only reads the saved files, so it can't do either. The search also takes filters, with commas or spaces between them: <code>#level&gt;=100</code>, <code>#classes&gt;3</code> (how many classes), <code>#classlevels&gt;500</code> (their levels added up), <code>#gold&lt;1m</code>, <code>#dailytokens&gt;5k</code>, <code>#charges&gt;10k</code> (Arcane Transmutor), <code>#diamonds</code>, <code>#rubies</code>, <code>#stones</code>, <code>#bagfree&gt;10</code>, <code>#bankfree</code>, <code>#worn</code>, <code>#mail</code>, <code>#mailgold&gt;1m</code>, <code>#class=mage</code>, and any currency by the start of its name, such as <code>#honor&gt;1000</code>. k, m and b are thousands, millions and billions; a filter with no number, such as <code>#charges</code>, means more than none; <code>#needslogin</code>, <code>#nobank</code>, <code>#steam</code> and <code>#linked</code> are yes or no. Transfer stones counts Server Transfer Stones in the bag and bank, and shows "at least" while the bank isn't recorded. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p></details>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Click a heading to sort by it, a character to select it, and a group's Select to select all of it. Selecting doesn't change the Bank until you press Use in Bank. A character needing a login was saved by an older version: log in with it once. A bank not recorded also takes one login with that character. Update now only reads the saved files, so it can't do either. The search also takes filters, with commas or spaces between them: <code>#level&gt;=100</code>, <code>#classes&gt;3</code> (how many classes), <code>#classlevels&gt;500</code> (their levels added up), <code>#gold&lt;1m</code>, <code>#dailytokens&gt;5k</code>, <code>#charges&gt;10k</code> (Arcane Transmutor), <code>#diamonds</code>, <code>#rubies</code>, <code>#stones</code>, <code>#bagfree&gt;10</code>, <code>#bankfree</code>, <code>#worn</code>, <code>#mail</code>, <code>#mailgold&gt;1m</code>, <code>#class=mage</code>, and any currency by the start of its name, such as <code>#honor&gt;1000</code>. k, m and b are thousands, millions and billions; a filter with no number, such as <code>#charges</code>, means more than none; <code>#needslogin</code>, <code>#nobank</code>, <code>#steam</code>, <code>#linked</code> and <code>#xfer</code> are yes or no. Transfer stones counts Server Transfer Stones in the bag and bank, and shows "at least" while the bank isn't recorded. A character with a transfer planned shows a plate beside it, Xfer › its new server › when it was registered: hover it for the countdown to the maintenance that moves it, click it for the transfer log. Reward day and Reward taken show the last daily reward collected through this extension, in your local time, for characters of level 100 or higher.</p></details>
       </div>
       <div id="roster-view" class="table-panel table-scroll is-grow" data-select-scope><table class="currency-table roster-table"><thead></thead><tbody></tbody></table></div>
       <section id="excluded-view" class="panel is-grow" aria-labelledby="excluded-title" hidden>
@@ -413,6 +415,22 @@
         <p class="hint">The helper doesn't track these, so they don't appear anywhere on this page. Their game save files aren't changed. Right-click a character anywhere on this page and choose Stop tracking to add one here.</p>
         <p id="excluded-status" class="hint" role="status"></p>
         <ul id="excluded-list" class="excluded-list"></ul>
+      </section>
+      <section id="transfers-view" class="panel is-grow transfers-panel" aria-labelledby="transfers-title" hidden>
+        <div class="panel-head">
+          <h2 id="transfers-title">Character transfers</h2>
+          <a class="gb-button gb-button--sm" href="https://en.runesofmagic.gameforge.com/charactertransfer" target="_blank" rel="noopener noreferrer">Open the transfer page</a>
+        </div>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Open the character transfer page on the Runes of Magic site, with the gear icon in the Gameforge client and then its character transfer link, or with the button above once the site knows you. Global Bank keeps only the transfers it lists as planned and the characters its form offers: no account name, no e-mail address. Each Gameforge account has its own page, so open it once for each account with a transfer. A transfer registered there gets a plate on its character's row, and one cancelled there goes. The game moves characters in the weekly maintenance, so the plate counts down to it. After that, the next login with a character of the same account on the old server shows whether it went: then it shows on its new server, waiting for one login with it there, which confirms the transfer. All of this stays in this Chrome.</p></details>
+        <div class="xfer-maintenance">
+          <label for="xfer-day">Weekly maintenance</label>
+          <select id="xfer-day"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select>
+          <input id="xfer-time" type="time" step="60" required aria-label="Maintenance time, German time">
+          <span class="hint">German time</span>
+          <span id="xfer-next" class="hint" role="status"></span>
+        </div>
+        <p id="transfers-status" class="hint" role="status"></p>
+        <div id="transfers-log" class="table-panel table-scroll is-grow"><table class="xfer-table"><thead><tr><th>Character</th><th>Transfer</th><th>Registered</th><th>Maintenance</th><th>State</th><th>Last news</th><th><span class="gb-sr-only">Forget</span></th></tr></thead><tbody id="transfers-rows"></tbody></table></div>
       </section>
     </div>
 
@@ -754,5 +772,6 @@
   </dialog>
   <div id="bank-tooltip" class="bank-tooltip" hidden></div>
   <div id="char-tooltip" class="bank-tooltip char-tip" hidden></div>
+  <div id="xfer-tooltip" class="bank-tooltip xfer-tip" role="tooltip" hidden></div>
 </body>
 </html>

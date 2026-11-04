@@ -279,7 +279,8 @@ const GBRoster = (() => {
     return labels.length ? {kind: 'row', text: `${labels.join(' / ')} account: ${names.join(' / ')}`} : null;
   }
   // The few lines a hover over a character shows: who, where, what it holds, and what to do about stale data.
-  // extra: what accountLine needs, hideGameforge and hideRom, and currencyName(item).
+  // extra: what accountLine needs, hideGameforge and hideRom, currencyName(item), and transfer(character): a line
+  // about its character transfer, or null.
   // On the hover card's gold line, after the gold: Diamonds and Rubies (the RoM account's), Daily Tokens and Arcane
   // Transmutor charges (the character's own)
   const TIP_MONEY = [
@@ -315,6 +316,9 @@ const GBRoster = (() => {
     lines.push({kind: 'row', text: `${bagText} · ${bankText}`});
     const stones = extra.stones ? extra.stones(character) : '';
     if (stones) lines.push({kind: 'row', text: stones});
+    // A character transfer planned, or one that moved it here
+    const transfer = extra.transfer ? extra.transfer(character) : null;
+    if (transfer) lines.push(transfer);
     const mail = extra.mail ? extra.mail(character) : null;
     if (mail) lines.push({kind: mail.soon ? 'warn' : 'row', text: mail.text});
     const money = (character.currencies || []).filter(item => Number(item.amount) > 0 && !TIP_MONEY.some(shown => shown.key === item.key));
@@ -706,6 +710,11 @@ const GBRoster = (() => {
     }
     const keyAt = target => target?.closest?.('[data-char], [data-char-tip]');
     document.addEventListener('mouseover', event => {
+      // A transfer plate shows its own tooltip, with its countdown
+      if (event.target?.closest?.('[data-xfer]')) {
+        if (shownKey) { tooltip.hidden = true; shownKey = null; }
+        return;
+      }
       const node = keyAt(event.target);
       const key = node ? node.dataset.char || node.dataset.charTip : null;
       if (!key) {

@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.5** · Kit release **0.11.117** · [All addons / hub](../README.md)
+Version **1.6.6** · Kit release **0.11.117** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,14 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.6
+
+**Character transfers on the Characters page** (extension 1.3.6). Open the Runes of Magic site's character transfer page, with the gear icon in the Gameforge client and then its character transfer link, and Global Bank records the transfers it lists as planned, and nothing else from that page: no account name, no e-mail address. Each Gameforge account has its own page, so open it once for each account with a transfer. A planned transfer puts a small plate beside its character's transfer stones, **Xfer › new server › when it was registered**. Hover it for who goes where, when it was registered, and a countdown to the maintenance that moves it; click it for the log. A transfer cancelled on the site loses its plate, and the site's page says so in its corner too.
+
+The game moves characters in the weekly maintenance, taken to be on Thursday at 09:00 German time; **Transfers** sets another day or time. After it, the next login with a character of the same account on the old server shows whether the character went: when that login screen no longer lists it, it moves to its new server's list on the page, with what it carried, and **Log in to confirm transfer**. One login with it there confirms the transfer, and the copy its old server kept goes. If it is still on its old server well after the maintenance, its transfer ends as **Didn't move**.
+
+**Transfers**, beside Needs login, is the log: who, from where to where, when it was registered, the maintenance, what became of it and the latest news, each with a tooltip of everything that happened to it. **Forget** takes one out. `#xfer` in the Characters and Currencies searches finds the characters with a transfer planned or waiting for its login. All of it stays in this Chrome.
 
 ## Updated in 1.6.5
 

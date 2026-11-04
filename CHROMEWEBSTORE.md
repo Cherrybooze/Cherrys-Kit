@@ -1,6 +1,6 @@
 # Chrome Web Store listing — Global Bank for RoM
 
-Last updated: 2026-11-02. Working metadata for extension **1.3.4**; this file does not publish a store listing.
+Last updated: 2026-11-04. Working metadata for extension **1.3.6**; this file does not publish a store listing.
 
 ## Store listing
 
@@ -13,6 +13,8 @@ Last updated: 2026-11-02. Working metadata for extension **1.3.4**; this file do
 Browse saved bags, banks, equipped items, mail, currencies and gold across your characters. Search stats in their original game colours, see who holds them, and keep a local list of stats you want to hide. Use the local macro library, settings backups, auction cache and addon manager from the same page.
 
 Install Cherry's Kit and Global Bank, run the bridge installer, then load the extension in Chrome. Open its button and choose Open Global Bank. The helper reads the game's saved character files; characters need to log out to refresh those files. Your own Steam and Gameforge clients can use the same local database.
+
+Open the Runes of Magic site's character transfer page and the Characters page tracks the transfers it lists: a plate counts down to the weekly maintenance, and a moved character shows on its new server until it logs in there.
 
 Daily reward tracking and automatic collection are optional. Automatic collection is off by default. The extension records collection after the Gameforge page confirms it. Addon downloads run only when you request them.
 
@@ -28,12 +30,13 @@ Daily reward tracking and automatic collection are optional. Automatic collectio
 
 | Permission or page access | Purpose |
 | --- | --- |
-| `storage` | Saves preferences, excluded stats, the depot list and the encrypted account-vault copy locally in this Chrome profile. |
+| `storage` | Saves preferences, excluded stats, the depot list, the character transfer log and the encrypted account-vault copy locally in this Chrome profile. |
 | `alarms` | Keeps the local helper informed that Chrome is open when automatic helper operation is enabled. |
 | `nativeMessaging` | Reads local helper data and performs the local operations the player requests, such as backups, macro management and addon installation. |
 | Gameforge daily and depot content scripts | Read the displayed daily reward state or depot items on the pages the player opens. Runtime URL checks restrict processing to the Runes of Magic shop. |
+| Runes of Magic character transfer content script | Reads the planned transfers and the characters the transfer form offers on `*.runesofmagic.gameforge.com/charactertransfer`, while the player has it open. It keeps no account name, e-mail address or link, and never clicks or submits anything. |
 
-The Stats changes add no permissions. The manifest and the [privacy policy](docs/privacy.md) describe the current scope.
+Character transfer tracking adds a content script on the site's transfer page and no permissions. The manifest and the [privacy policy](docs/privacy.md) describe the current scope.
 
 ## Privacy and data use
 
@@ -44,6 +47,7 @@ The Stats changes add no permissions. The manifest and the [privacy policy](docs
 | Gameforge accounts and passwords, when entered | An encrypted vault in local Chrome storage and the helper folder. The unlocking password is not retained. | No upload. |
 | Excluded stat names and display preferences | Local Chrome storage; exclusions only filter the Stats page. | No Chrome Sync or upload. |
 | Daily reward and depot page data | Local records after the player opens the supported Gameforge page. | Collecting a reward uses Gameforge's existing page/service. The helper does not upload its character database. |
+| Character transfer log | Local Chrome storage: planned transfers read from the site's transfer page, the characters it offered with them, and what the characters' saves later showed. **Forget** removes one. | No upload. |
 | Addon release files | Downloaded from this GitHub repository after a check/install request. | Requests do not contain character records, mail, macros or account-vault contents. |
 
 Local sharing between a player's own game clients is intentional. Private helper folders, exports, backups and terminal records are excluded from Git and every release-package route. Release input links and junctions are rejected to prevent private files being pulled into a build.
@@ -63,6 +67,7 @@ Data is not sold, used for unrelated purposes, or used for credit decisions. See
 
 | Version | Date | Changes | Status |
 | --- | --- | --- | --- |
+| 1.3.6 | 2026-11-04 | Character transfer tracking: reads the Runes of Magic site's character transfer page; plates, maintenance countdown and a transfer log on the Characters page. New content script on that page; no new permissions. | Draft |
 | 1.3.4 | 2026-11-02 | Correct hub-version comparison; clarify published releases versus reloading installed files. No permission/storage changes. | Draft |
 | 1.3.3 | 2026-11-02 | Original stat colours, inline effects, class-coloured holders and local excluded-stat controls. Private-data packaging guards strengthened. | Draft |
 | 1.3.2 | 2026-11-02 | Equipment/mail views and addon management; see the repository's release notes. | Prior build; publication status to confirm. |

@@ -1,4 +1,7 @@
 'use strict';
+// Character transfers: what the site's transfer page lists, and the records the Global Bank page draws from. A service
+// worker always has importScripts; a test running this file elsewhere may not, and has no transfers then.
+if (typeof importScripts === 'function') importScripts('transfers.js');
 const HOST = 'com.cherryskit.globalbank';
 // Only this extension's own pages can read what it stores locally, not its scripts running on web pages.
 chrome.storage?.local?.setAccessLevel?.({accessLevel: 'TRUSTED_CONTEXTS'})?.catch?.(() => {});
@@ -94,6 +97,42 @@ const validDepot = url => {
   try { const u = new URL(url); return u.protocol === 'https:' && /^[a-z0-9-]+-shop-runesofmagic\.gameforge\.com$/i.test(u.hostname) && /^\/depotitems\//.test(u.pathname); }
   catch { return false; }
 };
+// The Runes of Magic site's character transfer page, in any of its languages
+const validTransferPage = url => {
+  try { const u = new URL(url); return u.protocol === 'https:' && /^[a-z0-9-]+\.runesofmagic\.gameforge\.com$/i.test(u.hostname) && /^\/charactertransfer(\/|$)/i.test(u.pathname); }
+  catch { return false; }
+};
+// One change to the transfer records at a time, whether from the site's page or the Global Bank page, so neither
+// writes over the other
+let transferQueue = Promise.resolve();
+const transferTask = task => {
+  const run = transferQueue.then(task);
+  transferQueue = run.catch(() => {});
+  return run;
+};
+// What each tab of the transfer page showed last, so a transfer that leaves the list there was cancelled in that tab.
+// Session storage: gone when Chrome closes.
+const TRANSFER_TABS = 'transferTabs';
+async function recordTransferPage(tab, read) {
+  const now = Date.now();
+  const [kept, session] = await Promise.all([chrome.storage.local.get([GBTransfers.STORE, GBTransfers.MAINTENANCE_STORE]), chrome.storage.session.get(TRANSFER_TABS)]);
+  const tabs = session[TRANSFER_TABS] && typeof session[TRANSFER_TABS] === 'object' ? session[TRANSFER_TABS] : {};
+  const result = GBTransfers.applyRead(kept[GBTransfers.STORE], read, {now, previous: tabs[tab] || null, maintenance: kept[GBTransfers.MAINTENANCE_STORE]});
+  tabs[tab] = {at: now, planned: read.planned};
+  for (const [id, seen] of Object.entries(tabs)) if (!(now - (Number(seen?.at) || 0) < GBTransfers.TAB_MEMORY)) delete tabs[id];
+  await chrome.storage.session.set({[TRANSFER_TABS]: tabs});
+  if (result.changed) await chrome.storage.local.set({[GBTransfers.STORE]: result.state});
+  const maintenance = kept[GBTransfers.MAINTENANCE_STORE];
+  return {ok: true,
+    added: result.added.map(record => ({name: record.name, to: record.to, due: GBTransfers.dueOf(record, maintenance)})),
+    ended: result.ended.map(record => ({name: record.name, from: record.from, to: record.to, state: record.state}))};
+}
+async function changeTransfers(changes) {
+  const kept = await chrome.storage.local.get(GBTransfers.STORE);
+  const result = GBTransfers.applyChanges(kept[GBTransfers.STORE], changes);
+  if (result.changed) await chrome.storage.local.set({[GBTransfers.STORE]: result.state});
+  return {ok: true, changed: result.changed};
+}
 // What the depot page reported: its items and when, never its address.
 const cleanDepot = message => {
   if (!Array.isArray(message.items) || message.items.length > 2000 || typeof message.outline !== 'string' || message.outline.length > 40000) return null;
@@ -109,6 +148,13 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     const depot = cleanDepot(message);
     if (!depot) return;
     chrome.storage.local.set({depot}).then(() => reply({ok:true}), error => reply({ok:false,error:String(error)}));
+    return true;
+  }
+  // The character transfer page: only the transfers it lists and the characters its form offers
+  if (sender.id === chrome.runtime.id && !!sender.tab && message?.type === 'transfer-page' && validTransferPage(sender.url || '')) {
+    const read = GBTransfers.cleanRead(message);
+    if (!read) { reply({ok:false, error:'Not a transfer page read.'}); return; }
+    transferTask(() => recordTransferPage(String(sender.tab.id), read)).then(reply, error => reply({ok:false,error:String(error?.message || error)}));
     return true;
   }
   const control = sender.url === chrome.runtime.getURL('control.html');
@@ -133,6 +179,13 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       const error = bridgeError || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error,errorKind:bridgeError || !response ? 'bridge-unavailable' : 'native-error'} : response);
     });
+    return true;
+  }
+  // What the Global Bank page's saves showed about a transfer, or one the player forgot
+  if (control && message?.type === 'transfers-change') {
+    const changes = GBTransfers.cleanChanges(message.changes);
+    if (!changes) { reply({ok:false, error:'No transfer changes.'}); return; }
+    transferTask(() => changeTransfers(changes)).then(reply, error => reply({ok:false,error:String(error?.message || error)}));
     return true;
   }
   // Only the local extension page may ask for these.
