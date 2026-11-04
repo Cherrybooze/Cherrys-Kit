@@ -302,19 +302,22 @@ end
 crx=1;
 
 -- Cherry's Kit: with "Next to bag (zBag)" the equipment goes into zBagEqBox, attached to the right
--- of the bag: one column when the bag has a row for every slot, else two columns.
+-- of the bag: one column when the bag has a row for every slot, else two columns. The first
+-- slots fill the right column; the box keeps a small padding and sits level with the bag slots.
 local eqside = (ZBAG_SHOWEQ == 1) and zBagKit.EqSide and zBagKit.EqSide();
 local eqrows = ZBAG_MAXEQ;
 if (eqside and cry < ZBAG_MAXEQ) then
 	eqrows = math.ceil(ZBAG_MAXEQ/2);
 end
+local eqcols = math.ceil(ZBAG_MAXEQ/eqrows);
+local EQPAD = 9;
 
 for i = 1, ZBAG_MAXEQ do
 	item = getglobal("zEqItem"..i);
 	item:ClearAllAnchors();
 	if (eqside) then
 		zBagItem_Resize(item,32*ZBAG_SCALE,32*ZBAG_SCALE);
-		item:SetAnchor("TOPLEFT","TOPLEFT",zBagEqBox,math.floor((i-1)/eqrows)*35*ZBAG_SCALE+14,((i-1)%eqrows)*35*ZBAG_SCALE+15+additionalTopOffset);
+		item:SetAnchor("TOPLEFT","TOPLEFT",zBagEqBox,(eqcols-1-math.floor((i-1)/eqrows))*35*ZBAG_SCALE+EQPAD,((i-1)%eqrows)*35*ZBAG_SCALE+EQPAD);
 		item.display=true;
 		item:Show();
 	elseif (ZBAG_SHOWEQ == 1) then
@@ -343,8 +346,9 @@ if (ZBAG_SHOWEQ == 1 and not eqside) then
 	cry=cry+1;
 end
 if (eqside and zBag_VAR["showback"]==1) then
-	local eqcols = math.ceil(ZBAG_MAXEQ/eqrows);
-	zBagEqBox:SetSize(eqcols*35*ZBAG_SCALE+25,eqrows*35*ZBAG_SCALE+27+additionalTopOffset);
+	zBagEqBox:ClearAllAnchors();
+	zBagEqBox:SetAnchor("TOPLEFT","TOPRIGHT",zBagBackground,-4,15+additionalTopOffset-EQPAD);
+	zBagEqBox:SetSize(eqcols*35*ZBAG_SCALE+2*EQPAD-3*ZBAG_SCALE,eqrows*35*ZBAG_SCALE+2*EQPAD-3*ZBAG_SCALE);
 	zBagEqBox:Show();
 else
 	zBagEqBox:Hide();
