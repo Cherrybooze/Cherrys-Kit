@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.8** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.6.10** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,17 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.10
+
+**No save is dropped while the game is busy with it.** The helper used to say *3 save file(s) were busy; kept their previous entries* and wait for the next logout. Now nothing waits for a next logout:
+
+- A save file the game is still writing goes on a list, and the helper window reads it again as soon as the game is done: after 2 seconds, then less often, up to once a minute. The helper names the character, and says so again when its save is in.
+- That line also counted characters the database keeps from an earlier save, such as the same name on another server. They aren't busy, and the helper no longer calls them busy.
+- The helper no longer stops a game window from writing a save file while it reads it, and a file that changed during the read is read again.
+- Every 30 seconds the helper compares the save files with the ones it last read, so a logout that Windows' file watcher missed (it can drop events when many windows log out at once) is read too.
+- When the database can't be replaced (the game is reading it), the update runs again a few seconds later with the same logouts.
+- Switching characters in one game window could carry one character's other-server snapshots into the next character's save file, and that old copy could win over the character's own newer save. The character's own save now always wins, and Global Bank drops such copies at login.
 
 ## Updated in 1.6.8
 
