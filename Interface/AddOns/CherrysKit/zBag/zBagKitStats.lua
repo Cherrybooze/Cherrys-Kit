@@ -197,6 +197,41 @@ function K.StoneState(link)
   return state
 end
 
+-- How many stats a stone's link carries (each link field 4-6 holds two 16-bit stat ids). One stat can
+-- add several tooltip lines ("Furiousness of the Righteous": stamina and strength), so this counts
+-- stats, not lines. Kept per link.
+K.stoneStats = {}
+K.stoneStatsCount = 0
+
+function K.StoneStatCount(link)
+  local count = K.stoneStats[link]
+  if count then
+    return count
+  end
+  count = 0
+  local hex = type(link) == "string" and string.match(link, "|Hitem:([%x ]+)|h")
+  if hex then
+    local n = 0
+    for value in string.gmatch(hex, "%x+") do
+      n = n + 1
+      if n >= 4 and n <= 6 then
+        local v = tonumber(value, 16) or 0
+        if v % 65536 > 0 then count = count + 1 end
+        if math.floor(v / 65536) > 0 then count = count + 1 end
+      elseif n > 6 then
+        break
+      end
+    end
+  end
+  if K.stoneStatsCount >= K.STATS_CACHE_MAX then
+    K.stoneStats = {}
+    K.stoneStatsCount = 0
+  end
+  K.stoneStats[link] = count
+  K.stoneStatsCount = K.stoneStatsCount + 1
+  return count
+end
+
 function K.BagStatsMatch(index, text)
   if index == nil or index < 0 or not GetBagItemLink then
     return false
@@ -361,6 +396,13 @@ K.STAT_COLORS = {
   patt = "ff6fc8", matt = "b77cff", def = "c8c8c8", mdef = "3cd2b4",
 }
 
+-- A single stat that adds several stat lines shows each line's name, one per line, in this colour and
+-- order ("Sta" over "Str").
+K.COMBINED_COLOR = "ff8c1a"
+K.COMBINED_ORDER = { stam = 1, str = 2, dex = 3, int = 4, wis = 5, patt = 6, matt = 7, def = 8, mdef = 9 }
+K.COMBINED_NAMES = { stam = "Sta", str = "Str", dex = "Dex", int = "Int", wis = "Wis" }
+K.COUNT_TEXT = { "1x", "2x", "3x", "4x", "5x", "6x" }
+
 K.prefixCache = {}
 K.prefixCount = 0
 K.prefixGen = (K.prefixGen or 0) + 1
@@ -392,18 +434,37 @@ function K.ShortStat(name)
   return string.sub(initials, 1, 2) .. string.sub(last, 1, 3)
 end
 
--- The text for an item's stat names ("" when it has none), kept per item.
-function K.StatPrefixText(names)
+local combined = {}
+local function combinedBefore(a, b)
+  local oa, ob = K.COMBINED_ORDER[a] or 99, K.COMBINED_ORDER[b] or 99
+  if oa ~= ob then return oa < ob end
+  return a < b
+end
+
+-- The text for an item's stat names ("" when it has none), kept per item. stats: how many stats the
+-- link carries (K.StoneStatCount), or nil to count the names.
+function K.StatPrefixText(names, stats)
+  -- a single-stat stone shows its stat's short name ("stam"); a stone with 2 to 6 stats shows only
+  -- how many it has ("2x" ... "6x")
+  if stats and stats > 1 then
+    return K.COUNT_TEXT[stats] or (stats .. "x")
+  end
   local text = K.prefixCache[names]
   if text then
     return text
   end
-  -- a single-stat stone shows its stat's short name ("stam"); a stone with 2 to 6 stats shows only
-  -- how many it has ("2x" ... "6x")
   local n, first = 0, nil
   for name in string.gmatch(names, "[^\n]+") do
-    n = n + 1
-    first = first or name
+    local short = K.ShortStat(name)
+    local seen = false
+    for i = 1, n do
+      if combined[i] == short then seen = true; break end
+    end
+    if not seen then
+      n = n + 1
+      combined[n] = short
+      first = first or name
+    end
   end
   if n == 0 then
     text = ""
@@ -413,8 +474,19 @@ function K.StatPrefixText(names)
     if color then
       text = "|cff" .. color .. text .. "|r"
     end
+  elseif stats == 1 then
+    -- one stat with several lines: every line's name, stacked
+    table.sort(combined, combinedBefore)
+    text = ""
+    for i = 1, n do
+      local label = K.COMBINED_NAMES[combined[i]] or combined[i]
+      text = text .. (i > 1 and "\n" or "") .. "|cff" .. K.COMBINED_COLOR .. label .. "|r"
+    end
   else
     text = n .. "x"
+  end
+  for i = n, 1, -1 do
+    combined[i] = nil
   end
   if K.prefixCount >= K.STATS_CACHE_MAX then
     K.prefixCache = {}
@@ -450,7 +522,7 @@ function K.StatPrefix(owner, index, size, bagSlot)
         K.statsMissing = true
         owner.kitStatGen = nil -- look again after the read
       elseif names ~= "" then
-        text = K.StatPrefixText(names)
+        text = K.StatPrefixText(names, K.StoneStatCount(link))
       end
     end
   else
