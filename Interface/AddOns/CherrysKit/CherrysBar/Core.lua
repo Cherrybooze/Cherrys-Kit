@@ -10,7 +10,7 @@
 CherrysBar = {}
 local G = CherrysBar
 
-G.version = "1.1.10"
+G.version = "1.1.11"
 G.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.CherrysBar) or "Interface/AddOns/CherrysBar/"
 G.MEDIA = G.BASE_PATH .. "Media/"
 G.BAR_NAMES = { "top", "bottom" }

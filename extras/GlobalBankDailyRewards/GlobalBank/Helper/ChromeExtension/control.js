@@ -340,6 +340,7 @@
   const tables = {characters: ['roster', 'roster-view'], currencies: ['currency', 'currency-view']};
   const tableOptions = prefix => ({
     how: byId(prefix + '-group').value,
+    singlesTogether: prefix === 'roster' && byId('roster-singles').checked,
     search: byId(prefix + '-search').value,
     isSelected: key => roster.isSelected(key),
     accountName: name => accounts.accountName(name),
@@ -805,9 +806,21 @@
       // New groups start closed again when there are many rows
       byId(view).collapsed = new Set();
       byId(view).collapsedSet = false;
+      if (prefix === 'roster') showSinglesSwitch();
       changed([tab]);
     });
   }
+  // Characters page, grouped by account: accounts with one character can go without a heading, kept in this Chrome
+  const showSinglesSwitch = () => { byId('roster-singles-wrap').hidden = byId('roster-group').value !== 'account'; };
+  showSinglesSwitch();
+  chrome.storage.local.get('rosterSingles').then(({rosterSingles}) => {
+    byId('roster-singles').checked = rosterSingles === true;
+    if (rosterSingles === true) changed(['characters']);
+  }).catch(() => {});
+  byId('roster-singles').addEventListener('change', event => {
+    chrome.storage.local.set({rosterSingles: event.target.checked}).catch(() => {});
+    changed(['characters']);
+  });
   roster.onChange(what => {
     if (what === 'card') return;
     renderSelectionBar();

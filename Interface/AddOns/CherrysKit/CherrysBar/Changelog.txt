@@ -1,5 +1,10 @@
 Cherry's Bar
 
+1.1.11
+  The Clock has a Show server name with clock tick, in its right-click menu and in /cbar when Clock is
+  picked. It adds the server's name after the time and the display widens to fit it. The new [SERVER]
+  token can also go anywhere in the Clock's text, and the Clock's tooltip names the server.
+
 1.1.10
   The Clock's tooltip names the Chrome extension by its new name, Global Bank for RoM.
 

@@ -20,6 +20,7 @@ K.BANK_STAT_SLOTS = 300
 
 -- Reload UI runs this file again in the same Lua state: start with an empty cache and no pending work.
 K.statCache = {}
+K.statColors = {}      -- item link -> each stat line's tooltip colour (rrggbb), one per line like the names
 K.statCount = 0
 K.statsMissing = false
 K.statsText = nil      -- last search text a search used
@@ -31,6 +32,19 @@ K.statsReadTotal = 0
 
 local tipLeft, tipRight -- the reader's FontStrings, looked up once
 local parts = {}        -- reused while building one cache entry
+local colorParts = {}
+
+-- A tooltip line's colour as "rrggbb", or "" when the client can't tell.
+local function lineColor(fs)
+  if not fs or not fs.GetColor then
+    return ""
+  end
+  local ok, r, g, b = pcall(fs.GetColor, fs)
+  if not ok or type(r) ~= "number" or type(g) ~= "number" or type(b) ~= "number" then
+    return ""
+  end
+  return string.format("%02x%02x%02x", math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+end
 
 local function tipLines()
   if tipLeft then
@@ -68,7 +82,8 @@ function K.StatName(text)
   return string.lower(text)
 end
 
--- Every stat name on the tooltip the reader shows now, one per line ("" when it has none).
+-- Every stat name on the tooltip the reader shows now, one per line ("" when it has none), and each
+-- name's line colour in the same order.
 function K.StatNamesFromTip()
   local n = 0
   -- line 1 is the item's name (which may end in a refine level like +6)
@@ -80,16 +95,18 @@ function K.StatNamesFromTip()
       if not left then break end
     else
       local name = K.StatName(l)
-      if name then n = n + 1; parts[n] = name end
+      if name then n = n + 1; parts[n] = name; colorParts[n] = lineColor(left) end
       name = K.StatName(r)
-      if name then n = n + 1; parts[n] = name end
+      if name then n = n + 1; parts[n] = name; colorParts[n] = lineColor(right) end
     end
   end
   local names = n > 0 and table.concat(parts, "\n", 1, n) or ""
+  local colors = n > 0 and table.concat(colorParts, "\n", 1, n) or ""
   for i = n, 1, -1 do
     parts[i] = nil
+    colorParts[i] = nil
   end
-  return names
+  return names, colors
 end
 
 local function clearTip()
@@ -115,16 +132,19 @@ local function readItem(link, index, bank)
   -- the game can open its comparison tooltips beside any item tooltip
   if GameTooltip1 and not compare1 then GameTooltip1:Hide() end
   if GameTooltip2 and not compare2 then GameTooltip2:Hide() end
-  local names = ""
+  local names, colors = "", ""
   if ok then
-    local fine, text = pcall(K.StatNamesFromTip)
+    local fine, text, lineColors = pcall(K.StatNamesFromTip)
     names = fine and text or ""
+    colors = fine and lineColors or ""
   end
   if K.statCount >= K.STATS_CACHE_MAX then
     K.statCache = {}
+    K.statColors = {}
     K.statCount = 0
   end
   K.statCache[link] = names
+  K.statColors[link] = colors
   K.statCount = K.statCount + 1
   K.statsRead = K.statsRead + 1
   K.statsReadTotal = K.statsReadTotal + 1
@@ -195,6 +215,41 @@ function K.StoneState(link)
   K.stoneCache[link] = state
   K.stoneCount = K.stoneCount + 1
   return state
+end
+
+-- How many stats a stone's link carries (each link field 4-6 holds two 16-bit stat ids). One stat can
+-- add several tooltip lines ("Furiousness of the Righteous": stamina and strength), so this counts
+-- stats, not lines. Kept per link.
+K.stoneStats = {}
+K.stoneStatsCount = 0
+
+function K.StoneStatCount(link)
+  local count = K.stoneStats[link]
+  if count then
+    return count
+  end
+  count = 0
+  local hex = type(link) == "string" and string.match(link, "|Hitem:([%x ]+)|h")
+  if hex then
+    local n = 0
+    for value in string.gmatch(hex, "%x+") do
+      n = n + 1
+      if n >= 4 and n <= 6 then
+        local v = tonumber(value, 16) or 0
+        if v % 65536 > 0 then count = count + 1 end
+        if math.floor(v / 65536) > 0 then count = count + 1 end
+      elseif n > 6 then
+        break
+      end
+    end
+  end
+  if K.stoneStatsCount >= K.STATS_CACHE_MAX then
+    K.stoneStats = {}
+    K.stoneStatsCount = 0
+  end
+  K.stoneStats[link] = count
+  K.stoneStatsCount = K.stoneStatsCount + 1
+  return count
 end
 
 function K.BagStatsMatch(index, text)
@@ -361,6 +416,13 @@ K.STAT_COLORS = {
   patt = "ff6fc8", matt = "b77cff", def = "c8c8c8", mdef = "3cd2b4",
 }
 
+-- A single stat that adds several stat lines shows each line's name, one per line, in this colour and
+-- order ("Sta" over "Str").
+K.COMBINED_COLOR = "ff8c1a"
+K.COMBINED_ORDER = { stam = 1, str = 2, dex = 3, int = 4, wis = 5, patt = 6, matt = 7, def = 8, mdef = 9 }
+K.COMBINED_NAMES = { stam = "Sta", str = "Str", dex = "Dex", int = "Int", wis = "Wis" }
+K.COUNT_TEXT = { "1x", "2x", "3x", "4x", "5x", "6x" }
+
 K.prefixCache = {}
 K.prefixCount = 0
 K.prefixGen = (K.prefixGen or 0) + 1
@@ -392,35 +454,107 @@ function K.ShortStat(name)
   return string.sub(initials, 1, 2) .. string.sub(last, 1, 3)
 end
 
--- The text for an item's stat names ("" when it has none), kept per item.
-function K.StatPrefixText(names)
-  local text = K.prefixCache[names]
+local combined, combinedColor, colorList = {}, {}, {}
+local function combinedBefore(a, b)
+  local oa, ob = K.COMBINED_ORDER[a] or 99, K.COMBINED_ORDER[b] or 99
+  if oa ~= ob then return oa < ob end
+  return a < b
+end
+
+-- Rarer stat colours first when one label shows two colours ("2" orange, "x" yellow).
+K.LINE_COLOR_RANK = { f0610d = 1, ffff00 = 2, ["00ff00"] = 3, ffffff = 9 }
+local function colorBefore(a, b)
+  local ra, rb = K.LINE_COLOR_RANK[a] or 5, K.LINE_COLOR_RANK[b] or 5
+  if ra ~= rb then return ra < rb end
+  return a < b
+end
+
+local function paint(color, text)
+  if color and color ~= "" then
+    return "|cff" .. color .. text .. "|r"
+  end
+  return text
+end
+
+-- The text for an item's stat names ("" when it has none). stats: how many stats the link carries
+-- (K.StoneStatCount), or nil to count the names. colors: each name's tooltip line colour ("rrggbb",
+-- one per line like the names), or nil. Each label takes its stat's tooltip colour (yellow stats
+-- yellow, green green, orange orange); without one, the main stats keep their own colour.
+function K.StatPrefixText(names, stats, colors)
+  -- one line per stat, without repeats, with the first colour seen for it
+  local n, c = 0, 0
+  local nextColor = colors and colors ~= "" and string.gmatch(colors .. "\n", "([^\n]*)\n")
+  for name in string.gmatch(names, "[^\n]+") do
+    local color = nextColor and nextColor() or ""
+    local short = K.ShortStat(name)
+    local seen = false
+    for i = 1, n do
+      if combined[i] == short then seen = true; break end
+    end
+    if not seen then
+      n = n + 1
+      combined[n] = short
+      combinedColor[short] = color
+    end
+    if color ~= "" then
+      local known = false
+      for i = 1, c do
+        if colorList[i] == color then known = true; break end
+      end
+      if not known then c = c + 1; colorList[c] = color end
+    end
+  end
+  local text
+  if n == 0 then
+    text = ""
+  elseif (stats and stats > 1) or (not stats and n > 1) then
+    -- 2 to 6 stats: only how many ("2x" ... "6x"), in the stats' colour, or the count in the rarest
+    -- colour and the x in the next one when they differ
+    local count = stats or n
+    table.sort(colorList, colorBefore)
+    if c >= 2 then
+      text = paint(colorList[1], tostring(count)) .. paint(colorList[2], "x")
+    else
+      text = paint(colorList[1], K.COUNT_TEXT[count] or (count .. "x"))
+    end
+  elseif n == 1 then
+    local short = combined[1]
+    local color = combinedColor[short]
+    if color == "" then color = K.STAT_COLORS[short] end
+    text = paint(color, short)
+  else
+    -- one stat with several lines: every line's name, stacked ("Sta" over "Str")
+    table.sort(combined, combinedBefore)
+    text = ""
+    for i = 1, n do
+      local short = combined[i]
+      local color = combinedColor[short]
+      if color == "" then color = K.COMBINED_COLOR end
+      text = text .. (i > 1 and "\n" or "") .. paint(color, K.COMBINED_NAMES[short] or short)
+    end
+  end
+  for i = n, 1, -1 do
+    combinedColor[combined[i]] = nil
+    combined[i] = nil
+  end
+  for i = c, 1, -1 do
+    colorList[i] = nil
+  end
+  return text
+end
+
+-- The label for one stone, kept per item link.
+function K.StoneLabel(link, names)
+  local text = K.prefixCache[link]
   if text then
     return text
   end
-  -- a single-stat stone shows its stat's short name ("stam"); a stone with 2 to 6 stats shows only
-  -- how many it has ("2x" ... "6x")
-  local n, first = 0, nil
-  for name in string.gmatch(names, "[^\n]+") do
-    n = n + 1
-    first = first or name
-  end
-  if n == 0 then
-    text = ""
-  elseif n == 1 then
-    text = K.ShortStat(first)
-    local color = K.STAT_COLORS[text]
-    if color then
-      text = "|cff" .. color .. text .. "|r"
-    end
-  else
-    text = n .. "x"
-  end
+  text = K.StatPrefixText(names, K.StoneStatCount(link), K.statColors[link])
   if K.prefixCount >= K.STATS_CACHE_MAX then
     K.prefixCache = {}
     K.prefixCount = 0
   end
-  K.prefixCache[names] = text
+  K.prefixCache[link] = text
   K.prefixCount = K.prefixCount + 1
   return text
 end
@@ -428,13 +562,15 @@ end
 -- Draws (or clears) the short stat names on one icon. owner: zBag's item button or an individual-bags
 -- overlay; index: the item's inventory index (nil or < 0 for none); size: font size.
 -- bagSlot (1-180) instead of index: the index is looked up only when the icon needs it.
-function K.StatPrefix(owner, index, size, bagSlot)
+-- bankSlot (1-300) instead of both: a bank slot.
+function K.StatPrefix(owner, index, size, bagSlot, bankSlot)
   if not owner then
     return
   end
   local text = ""
   local key = bagSlot or index
-  if key and (bagSlot or index >= 0) and K.StatPrefixOn() then
+  if bankSlot then key = -bankSlot end -- bank keys never meet bag keys
+  if key and (bankSlot or bagSlot or index >= 0) and K.StatPrefixOn() then
     if owner.kitStatIndex == key and owner.kitStatGen == K.prefixGen then
       return
     end
@@ -442,7 +578,12 @@ function K.StatPrefix(owner, index, size, bagSlot)
     if bagSlot then
       index = GetBagItemInfo(bagSlot)
     end
-    local link = index and index >= 0 and GetBagItemLink and GetBagItemLink(index)
+    local link
+    if bankSlot then
+      link = GetBankItemLink and GetBankItemLink(bankSlot)
+    else
+      link = index and index >= 0 and GetBagItemLink and GetBagItemLink(index)
+    end
     -- mana and fusion stones only; a clean stone has nothing to show
     if link and link ~= "" and K.StoneState(link) == 2 then
       local names = K.statCache[link]
@@ -450,7 +591,7 @@ function K.StatPrefix(owner, index, size, bagSlot)
         K.statsMissing = true
         owner.kitStatGen = nil -- look again after the read
       elseif names ~= "" then
-        text = K.StatPrefixText(names)
+        text = K.StoneLabel(link, names)
       end
     end
   else
