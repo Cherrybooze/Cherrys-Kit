@@ -28,6 +28,8 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 **Steady slot numbers on mouseover.** With *Numbers on mouseover only*, a slot's number is now ready at its size before the mouse gets there, so it no longer shows big for a moment and then shrinks.
 
+**Slot number font size works.** The *Slot number font size* - and + buttons now change the numbers' size in game. The game only takes a new font size after the text changes, so zBag now sets it the way its own settings button does.
+
 ## Updated in 5.07-ck20
 
 **Slot number settings side by side.** In **/zb**, *Numbers on mouseover only* now sits right next to *Show bag slot numbers (1-180)*, and the row under it has *Slot number font size* with - and + buttons (6 to 20, default 8) for the bag and bank numbers. The font size buttons were in earlier versions too but never showed up in the window. *Reset bag positions* moved to the bottom row. Mouseover only stays on by default.

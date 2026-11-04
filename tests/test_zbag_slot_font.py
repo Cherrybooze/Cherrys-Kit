@@ -70,11 +70,14 @@ class SlotFontTests(unittest.TestCase):
           OwnerKitSlot.SetFontSize=function(self,n) writes[#writes+1]="size:"..n; fs(self,n) end
           zBagKit.Label(Owner,42,10)
           assert(not OwnerKitSlot.visible and OwnerKitSlot.text=="42" and OwnerKitSlot.fontSize==10)
-          assert(writes[1]=="size:10" and writes[2]=="text:42" and #writes==2)
+          -- the client takes SetFontSize only after the text changed: z, the number, then the size
+          assert(writes[1]=="text:z" and writes[2]=="text:42" and writes[3]=="size:10" and #writes==3)
           zBagKit.HoverLabel(Owner,true)
-          assert(OwnerKitSlot.visible and #writes==2)
+          assert(OwnerKitSlot.visible and #writes==3)
           zBagKit.HoverLabel(Owner,false)
-          assert(not OwnerKitSlot.visible and #writes==2 and OwnerKitSlot.text=="42")
+          assert(not OwnerKitSlot.visible and #writes==3 and OwnerKitSlot.text=="42")
+          zBagKit.Label(Owner,42,12)
+          assert(writes[4]=="text:z" and writes[5]=="text:42" and writes[6]=="size:12")
         ''')
 
     def test_native_plus_minus_controls_persist_and_refresh_all_bag_layouts(self):
