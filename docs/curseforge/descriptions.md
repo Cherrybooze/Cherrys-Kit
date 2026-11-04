@@ -415,6 +415,7 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 ## Recent changes
 
+- **5.07-ck21**: *Item shop bank next to bank* in **/zb** puts the one bank's item shop bank in its own box on the right side of the bank, with the bank search under it.
 - **5.07-ck20**: *Numbers on mouseover only* sits next to *Show bag slot numbers* in **/zb**, with a new *Slot number font size* setting (- and +) right under it.
 - **5.07-ck19**: slot numbers show only on the slot under the mouse; untick *Numbers on mouseover only* in **/zb** to see every number again. Search *#clean* for mana stones without stats, or *#dirty* for mana stones with stats.
 - **5.07-ck18**: the bag and bank search also finds items by their stats. Type a stat name such as *stamina* or *dexterity* and every item with that stat lights up. Numbers aren't needed.
