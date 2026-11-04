@@ -74,20 +74,26 @@ class EqSideTests(unittest.TestCase):
         self.resize(1, 2)  # 6 rows of bag: two columns of 11
         first, last = self.g.zEqItem1.anchor, self.g.zEqItem21.anchor
         self.assertEqual(first[3].name, "zBagEqBox")
-        self.assertEqual((first[4], first[5]), (14, self.g.zBagItem1.anchor[5]))  # level with the bag
-        self.assertEqual(self.g.zEqItem11.anchor[4], 14)
-        self.assertEqual(self.g.zEqItem12.anchor[4], 14 + 35)
+        # the first slots fill the right column, the rest the left one
+        self.assertEqual((first[4], first[5]), (9 + 35, 9))
+        self.assertEqual(self.g.zEqItem11.anchor[4], 9 + 35)
+        self.assertEqual(self.g.zEqItem12.anchor[4], 9)
         self.assertEqual(last[5], first[5] + 9 * 35)
-        self.assertTrue(self.g.zBagEqBox.visible)
-        self.assertEqual(self.g.zBagEqBox.w, 2 * 35 + 25)
+        # the box sits level with the bag slots with a small padding
+        box = self.g.zBagEqBox
+        self.assertEqual(box.anchor[3].name, "zBagBackground")
+        self.assertEqual(box.anchor[5] + first[5], self.g.zBagItem1.anchor[5])
+        self.assertTrue(box.visible)
+        self.assertEqual(box.w, 2 * 35 + 15)
+        self.assertEqual(box.h, 11 * 35 + 15)
         # 3 equipment rows and the 10 px padding are gone from the bag
         self.assertEqual(under - self.g.zBagBackground.h, 3 * 35 + 10)
 
     def test_one_column_when_the_bag_has_a_row_for_every_slot(self):
         self.lua.execute("ZBAG_MAXBAG = 300")
         self.resize(1, 10)  # 30 rows
-        self.assertEqual(self.g.zEqItem21.anchor[4], 14)
-        self.assertEqual(self.g.zBagEqBox.w, 35 + 25)
+        self.assertEqual(self.g.zEqItem21.anchor[4], 9)
+        self.assertEqual(self.g.zBagEqBox.w, 35 + 15)
 
     def test_xml(self):
         root = ET.parse(SOURCE / "zBag.xml").getroot()
