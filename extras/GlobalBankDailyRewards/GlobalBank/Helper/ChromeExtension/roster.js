@@ -24,6 +24,7 @@ const GBRoster = (() => {
   // currencies, stats and the game's own tooltips.
   const STALE_NOTE = 'Saved by an older Global Bank: log in once to record its server, currencies and item stats.';
   const UNSAVED_NOTE = 'A login screen lists it, but nothing is saved here yet: log in with it once.';
+  const TRANSFER_ONLY_NOTE = 'Known from the character transfer page only: log in with it once to fill in the rest.';
 
   const number = value => Number(value || 0).toLocaleString('en-US');
   const escapeHtml = text => String(text ?? '').replace(/[&<>"']/g, letter => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[letter]));
@@ -296,7 +297,9 @@ const GBRoster = (() => {
     if (character.notSaved) {
       lines.push({kind: 'sub', text: server});
       if (account) lines.push(account);
-      lines.push({kind: 'warn', text: UNSAVED_NOTE});
+      const transfer = extra.transfer ? extra.transfer(character) : null;
+      if (transfer) lines.push(transfer);
+      lines.push({kind: 'warn', text: character.fromTransfer ? TRANSFER_ONLY_NOTE : UNSAVED_NOTE});
       return lines;
     }
     const classes = (character.classes || []).filter(item => item.name).map(item => `${item.name} ${item.level}`);

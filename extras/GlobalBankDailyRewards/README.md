@@ -6,9 +6,9 @@ It also records your Daily Loyalty Bonus after the Gameforge daily shop page con
 
 The helper now follows Chrome: the extension's button shows whether it is running and for how long, and can stop it or show its terminal window. The helper ends on its own when Chrome or the extension goes away.
 
-## Character transfers in 1.3.6
+## Character transfers in 1.3.7
 
-Open the Runes of Magic site's character transfer page (the gear icon in the Gameforge client, then its character transfer link) and the Characters page tracks the transfers it lists as planned: a plate beside the character, **Xfer › new server › when it was registered**, with a countdown to the Thursday maintenance in its tooltip, and **Transfers**, a log of who went where and when. A transfer cancelled on the site loses its plate. After the maintenance, a login on the old server with a character of the same account shows whether it went; the character then shows on its new server with **Log in to confirm transfer** until it logs in there. From that page the extension keeps only the planned transfers and the characters its form offers, in Chrome's local storage (Global Bank 1.6.6).
+Open the Runes of Magic site's character transfer page (the gear icon in the Gameforge client, then its character transfer link) and the Characters page tracks the transfers it lists as planned: a plate beside the character, **Xfer › new server › when it was registered**, with a countdown to the Thursday maintenance in its tooltip, and **Transfers**, a log of who went where and when. A transfer cancelled on the site loses its plate; registered again, it is a new transfer with its own time. A transferred character Global Bank has no save for yet gets a row of its own from the transfer page: its name, its server and the plate, the rest left blank until it logs in once. After the maintenance, a login on the old server with a character of the same account shows whether it went; the character then shows on its new server with **Log in to confirm transfer** until it logs in there. From that page the extension keeps only the planned transfers and the characters its form offers, in Chrome's local storage (Global Bank 1.6.7).
 
 ## Popup wording in 1.3.5
 
