@@ -24,7 +24,7 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 ## Updated in 5.07-ck21
 
-**Item shop bank next to the bank.** With *Use one bank (classic zBag)*, tick *Item shop bank next to bank* in **/zb** and the item shop bank's 100 slots open in their own box, attached to the right side of the bank window, with as many slots on a row as the bank. It moves with the bank, and the bank search box sits under it. It needs bank tab 6 ticked. *Lock resize* for Cherry's bags moved down to the *Hide default backpack* row to make room.
+**Item shop bank next to the bank.** With *Use one bank (classic zBag)*, tick *Item shop next to bank (zBag)* in **/zb** and the item shop bank's 100 slots open in their own box, attached to the right side of the bank window, with as many slots on a row as the bank. It moves with the bank, and the bank search box sits under it. It needs bank tab 6 ticked. *Lock resize* for Cherry's bags moved down to the *Hide default backpack* row to make room.
 
 **Equipment next to the bag.** With one bag (classic zBag) and *Show equipment slots* on, tick *Next to bag (zBag)* beside it in **/zb**: the 21 equipment slots open in their own box attached to the right side of the bag, in one column when the bag has 21 rows or more, else in two. The bag then ends right after its last row of slots, without the equipment rows and padding at its bottom.
 
