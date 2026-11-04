@@ -185,6 +185,18 @@ class CascadeLayoutTests(unittest.TestCase):
         cells = self.layout(6, 'bottom-left', False, [(1280, 800)] * 6, step=60, step_y=30, exact=True)
         self.assertEqual([(c['x'], c['y'], c['w'], c['h']) for c in cells[:3]], [(0, 240, 1280, 800), (60, 210, 1280, 800), (120, 180, 1280, 800)])
 
+    def test_a_full_row_wraps_into_a_new_row_with_its_own_corner(self):
+        cells = self.layout(24, 'bottom-left', False, [(1134, 818)] * 24, work=(0, 0, 2560, 1392), exact=True)
+        self.assertEqual((cells[17]['x'], cells[17]['y']), (544, 30))  # the last that fits going up
+        self.assertEqual((cells[18]['x'], cells[18]['y']), (1134, 574))  # next row: beside the first window, at the bottom
+        corners = {(c['x'], c['y']) for c in cells}
+        self.assertEqual(len(corners), 24)
+        for c in cells:
+            self.assertLessEqual(c['x'] + c['w'], 2560)
+            self.assertGreaterEqual(c['y'], 0)
+        top = self.layout(20, 'top-left', False, [(1134, 818)] * 20, work=(0, 0, 2560, 1392), exact=True)
+        self.assertEqual((top[18]['x'], top[18]['y']), (1134, 0))
+
     def test_settings_are_cleaned(self):
         self.assertEqual(self.gb.clean_settings({'on': 'yes', 'corner': 'x', 'fit': False, 'width': 1280.7, 'stepX': -1, 'stepY': True}),
                          {'corner': 'bottom-left', 'fit': False, 'width': 1280, 'height': 0, 'stepX': 0, 'stepY': 0,

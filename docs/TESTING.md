@@ -68,7 +68,8 @@ Needs Python 3. Update the helper files and reload the extension (the page's sid
 | WC11 | Turn **Move cascade button under Global Bank button** on, close and reopen the popup. | A cascade button sits right under Open Global Bank and the one in Advanced is gone; it cascades the same way. |
 | WC12 | Start a new game client and wait. | Nothing moves by itself: cascading only happens on the button. |
 | WC13 | With two screens, open **Display** on the page and in the popup. | Each screen is listed with its resolution, the main one marked. Picking the second screen and pressing the button moves the whole cascade there, lined up with its taskbar. |
-| WC14 | Pick *Display 1, 2560 x 1440 screen* (or your screen) in **Size for a screen**. | Resolution becomes 1134 x 818 on a 1440p screen (851 x 614 on 1080p); the next cascade uses it. |
+| WC14 | Pick *Display 1, 2560 x 1440 screen* (or your screen) in **Size for a screen**, close and reopen the popup, then type another number into Resolution. | Resolution becomes 1134 x 818 on a 1440p screen (851 x 614 on 1080p) and the list keeps showing the screen picked, also after reopening; typing in Resolution sets it back to *Pick a screen*. |
+| WC17 | With Resolution 1134 x 818 on a 1440p screen, open 20 or more game windows and cascade. | After about 18 windows the next ones start a second row beside the first window, back at the bottom (or top); every window's corner is on its own spot. |
 | WC15 | Put Chrome over the game windows and press the button in the popup. | The game windows come in front of Chrome, newest in front, and Chrome keeps the keyboard. Clicking Chrome brings it back over them. |
 | WC16 | Turn **Keep game windows on top** on and press the button, then click Chrome. | The game windows stay above Chrome. Turning it off and pressing again lets other programs cover them again. |
 

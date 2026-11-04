@@ -60,28 +60,51 @@ def layout(frames, work, corner, fit, step_x, step_y, min_width, min_height, exa
     """Where each window's visible frame goes, oldest first. frames: (w, h) per window; work: the monitor's
     work area (left, top, right, bottom). The oldest window sits in the corner and each newer one is one step
     to the right, and up (bottom-left) or down (top-left). With fit, every window gets the size that makes the
-    cascade fill the work area; otherwise each keeps its own and is only kept on the screen."""
+    cascade fill the work area. Otherwise each keeps its own (or the chosen) size, and when the next window
+    would leave the screen a new row starts beside the previous one, back at the bottom (or top), so no two
+    windows share a corner."""
     count = len(frames)
     if not count:
         return []
     left, top = work[0], work[1]
     width, height = work[2] - work[0], work[3] - work[1]
-    if count > 1 and not exact_step:
+    right, bottom = left + width, top + height
+    if fit and count > 1 and not exact_step:
         room_x = (width - min(min_width, width)) // (count - 1)
         room_y = (height - min(min_height, height)) // (count - 1)
         step_x = step_y = max(0, min(step_x, step_y, room_x, room_y))
     cells = []
-    for i, (frame_w, frame_h) in enumerate(frames):
+    row_x, row_first_w, row_right, rows, k = left, 0, left, 0, 0
+    for frame_w, frame_h in frames:
         if fit:
             w, h = max(1, width - step_x * (count - 1)), max(1, height - step_y * (count - 1))
         else:
             w, h = min(int(frame_w), width), min(int(frame_h), height)
-        x = left + i * step_x
-        y = top + i * step_y if corner == 'top-left' else top + height - h - i * step_y
+
+        def place(origin, k):
+            x = origin + k * step_x
+            y = top + k * step_y if corner == 'top-left' else bottom - h - k * step_y
+            return x, y
+        x, y = place(row_x, k)
+        if not fit and k > 0 and (x + w > right or y < top or y + h > bottom):
+            # A new row: right of the whole previous row if it fits, else right of its first window, else a
+            # half step further along than the previous row's start.
+            rows += 1
+            for origin in (row_right, row_x + row_first_w):
+                if origin + w <= right:
+                    break
+            else:
+                origin = left + (rows * max(1, step_x // 2)) % max(1, width - w + 1)
+            row_x, row_right, k = origin, origin, 0
+            x, y = place(row_x, k)
+        if k == 0:
+            row_first_w = w
         # Kept inside the work area when the windows are bigger than the cascade allows.
-        x = max(left, min(x, left + width - w))
-        y = max(top, min(y, top + height - h))
+        x = max(left, min(x, right - w))
+        y = max(top, min(y, bottom - h))
+        row_right = max(row_right, x + w)
         cells.append({'x': int(x), 'y': int(y), 'w': int(w), 'h': int(h)})
+        k += 1
     return cells
 
 

@@ -273,7 +273,15 @@ const CASCADE_SCREENS = [[1920, 1080], [2560, 1440], [3440, 1440], [3840, 2160]]
 // A size that suits a screen: the same share of its height as 1134 x 818 on a 1440p screen, same shape.
 const cascadeSuggest = height => { const h = Math.round(height * 818 / 1440); return {width: Math.round(h * 1134 / 818), height: h}; };
 // Fills the Display and Size lists: the displays Windows reports, or plain numbers when they can't be listed.
-function fillCascadeLists(monitorSelect, sizeSelect, monitors, chosen) {
+// Shows which screen's size Resolution holds: the one picked if it still matches, else the first that does,
+// else "Pick a screen" (Resolution typed by hand).
+function showCascadeSize(sizeSelect, width, height) {
+  const key = `${width}x${height}`, options = [...sizeSelect.options];
+  if (options[sizeSelect.selectedIndex]?.value === key) return;
+  const index = options.findIndex(item => item.value === key);
+  sizeSelect.selectedIndex = index > 0 ? index : 0;
+}
+function fillCascadeLists(monitorSelect, sizeSelect, monitors, chosen, width, height) {
   const option = (value, text) => { const item = document.createElement('option'); item.value = value; item.textContent = text; return item; };
   const listed = Array.isArray(monitors) && monitors.length ? monitors : null;
   monitorSelect.replaceChildren(option('0', 'Where the oldest game window is'));
@@ -282,6 +290,7 @@ function fillCascadeLists(monitorSelect, sizeSelect, monitors, chosen) {
   }
   if (chosen && ![...monitorSelect.options].some(item => item.value === String(chosen))) monitorSelect.append(option(String(chosen), `Display ${chosen} (not found)`));
   monitorSelect.value = String(chosen || 0);
+  const picked = sizeSelect.options[sizeSelect.selectedIndex]?.textContent;
   sizeSelect.replaceChildren(option('', 'Pick a screen'));
   const screens = (listed || []).map(monitor => [monitor.width, monitor.height, `Display ${monitor.id}`]).concat(CASCADE_SCREENS.map(([w, h]) => [w, h, '']));
   const seen = new Set();
@@ -291,6 +300,9 @@ function fillCascadeLists(monitorSelect, sizeSelect, monitors, chosen) {
     seen.add(key);
     sizeSelect.append(option(key, `${name ? name + ', ' : ''}${w} x ${h} screen: ${size.width} x ${size.height}`));
   }
+  const again = [...sizeSelect.options].findIndex(item => item.textContent === picked);
+  if (again > 0) sizeSelect.selectedIndex = again;
+  showCascadeSize(sizeSelect, width, height);
 }
 const cascadeMonitor = document.getElementById('cascade-monitor');
 const cascadeSize = document.getElementById('cascade-size');
@@ -306,8 +318,9 @@ const cascadeFields = [['cascade-width', 'width', 16000], ['cascade-height', 'he
   .map(([id, key, most]) => ({input: document.getElementById(id), key, most})).filter(field => field.input);
 const showCascadeStored = () => {
   if (cascadeTop) cascadeTop.checked = cascadeStored.onTop === true;
-  if (cascadeMonitor && cascadeSize) fillCascadeLists(cascadeMonitor, cascadeSize, cascadeMonitors, Number.isInteger(cascadeStored.monitor) ? cascadeStored.monitor : 0);
   for (const {input, key} of cascadeFields) if (document.activeElement !== input) input.value = cascadeStored[key] > 0 ? String(cascadeStored[key]) : '';
+  if (cascadeMonitor && cascadeSize) fillCascadeLists(cascadeMonitor, cascadeSize, cascadeMonitors, Number.isInteger(cascadeStored.monitor) ? cascadeStored.monitor : 0,
+    cascadeStored.width || '', cascadeStored.height || '');
 };
 const saveCascade = async () => {
   cascadeStored = {corner: 'bottom-left', fit: true, ...cascadeStored};
@@ -352,11 +365,13 @@ if (cascadeNow && cascadeStatus) {
     placeCascadeButton(under === true);
   }).catch(() => {});
   for (const {input} of cascadeFields) input.addEventListener('change', saveCascade);
+  // Resolution typed by hand: the Size list goes back to "Pick a screen".
+  const resolution = cascadeFields.filter(({key}) => key === 'width' || key === 'height').map(({input}) => input);
+  for (const input of resolution) input.addEventListener('input', () => cascadeSize && showCascadeSize(cascadeSize, resolution[0].value, resolution[1].value));
   cascadeMonitor?.addEventListener('change', saveCascade);
   cascadeTop?.addEventListener('change', saveCascade);
   cascadeSize?.addEventListener('change', () => {
     const [width, height] = cascadeSize.value.split('x').map(Number);
-    cascadeSize.value = '';
     if (!width || !height) return;
     for (const {input, key} of cascadeFields) if (key === 'width' || key === 'height') input.value = String(key === 'width' ? width : height);
     saveCascade();
