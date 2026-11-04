@@ -9,8 +9,8 @@ const GBTerminal = (() => {
   const MAX_HISTORY = 200;
   const POLL_MS = 2000;
   const POLL_FAILED_MS = 10000;
-  // On the page's other tabs the feed is still read, slowly, so new saves reach every tab without a click
-  const WATCH_MS = 10000;
+  // On the page's other tabs the feed is still read, a little slower, so new saves reach every tab without a click
+  const WATCH_MS = 3000;
   const FEED_SIZE = 50;
 
   const make = (tag, className, text) => {
