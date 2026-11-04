@@ -344,7 +344,7 @@ K.SHORT_STATS = {
   ["strength"] = "str", ["stamina"] = "stam", ["dexterity"] = "dex", ["intelligence"] = "int",
   ["wisdom"] = "wis", ["all attributes"] = "all", ["all main attributes"] = "all",
   ["physical attack"] = "patt", ["magical attack"] = "matt", ["magic attack"] = "matt",
-  ["physical defense"] = "pdef", ["magical defense"] = "mdef", ["magic defense"] = "mdef",
+  ["physical defense"] = "def", ["defense"] = "def", ["magical defense"] = "mdef", ["magic defense"] = "mdef",
   ["maximum health"] = "hp", ["max health"] = "hp", ["max hp"] = "hp", ["health"] = "hp", ["hp"] = "hp",
   ["maximum mana"] = "mp", ["max mana"] = "mp", ["max mp"] = "mp", ["mana"] = "mp", ["mp"] = "mp",
   ["physical damage"] = "pdmg", ["magical damage"] = "mdmg", ["magic damage"] = "mdmg",
@@ -353,6 +353,12 @@ K.SHORT_STATS = {
   ["accuracy"] = "acc", ["physical accuracy"] = "acc", ["magical accuracy"] = "macc",
   ["dodge rate"] = "dodge", ["parry rate"] = "parry", ["attack speed"] = "aspd", ["casting speed"] = "cast",
   ["block rate"] = "block", ["movement speed"] = "move", ["healing"] = "heal", ["heal"] = "heal", ["resistance"] = "res",
+}
+
+-- A colour per main stat so a bag of stones reads at a glance (C, 2026-11-04).
+K.STAT_COLORS = {
+  str = "ff4a4a", stam = "ffa53c", dex = "5ce65c", int = "4aa0ff", wis = "7fe8ff",
+  patt = "ff6fc8", matt = "b77cff", def = "c8c8c8", mdef = "3cd2b4",
 }
 
 K.prefixCache = {}
@@ -403,6 +409,10 @@ function K.StatPrefixText(names)
     text = ""
   elseif n == 1 then
     text = K.ShortStat(first)
+    local color = K.STAT_COLORS[text]
+    if color then
+      text = "|cff" .. color .. text .. "|r"
+    end
   else
     text = n .. "x"
   end

@@ -42,7 +42,7 @@ class StatPrefixTests(unittest.TestCase):
     def test_short_names(self):
         short = self.g.zBagKit.ShortStat
         for name, want in (("strength", "str"), ("stamina", "stam"), ("dexterity", "dex"),
-                           ("physical attack", "patt"), ("magical defense", "mdef"),
+                           ("physical attack", "patt"), ("magical defense", "mdef"), ("physical defense", "def"),
                            ("block rate", "block"), ("toughness", "toug"), ("fire resistance bonus", "frbon")):
             self.assertEqual(short(name), want, name)
 
@@ -61,7 +61,7 @@ class StatPrefixTests(unittest.TestCase):
           links[11] = "|Hitem:31858 0 0 8 0 0|h"; zBagKit.statCache[links[11]] = "a\\nb\\nc\\nd\\ne\\nf"
         ''')
         self.g.zBagKit.StatPrefix(self.g.Owner, 10, 8)
-        self.assertEqual(self.g.OwnerKitStats.text, "patt")
+        self.assertEqual(self.g.OwnerKitStats.text, "|cffff6fc8patt|r")
         self.g.zBagKit.StatPrefix(self.g.Owner, 11, 8)
         self.assertEqual(self.g.OwnerKitStats.text, "6x")
 
@@ -88,7 +88,7 @@ class StatPrefixTests(unittest.TestCase):
         self.assertFalse(self.g.OwnerKitStats.visible)
         self.lua.execute('zBagKit.statCache["|Hitem:31858 0 0 3 0 0|h"] = "intelligence"')
         self.g.zBagKit.StatPrefix(self.g.Owner, 7, 8)
-        self.assertEqual(self.g.OwnerKitStats.text, "int")
+        self.assertEqual(self.g.OwnerKitStats.text, "|cff4aa0ffint|r")
 
     def test_only_mana_stones_with_stats_get_names(self):
         self.lua.execute('''
@@ -98,6 +98,13 @@ class StatPrefixTests(unittest.TestCase):
         for index in (8, 9):
             self.g.zBagKit.StatPrefix(self.g.Owner, index, 8)
             self.assertFalse(self.g.OwnerKitStats.visible, index)
+
+    def test_every_main_stat_has_its_own_colour(self):
+        colors = self.g.zBagKit.STAT_COLORS
+        names = ["str", "int", "dex", "stam", "patt", "matt", "wis", "def", "mdef"]
+        values = [colors[n] for n in names]
+        self.assertNotIn(None, values)
+        self.assertEqual(len(set(values)), len(values))
 
     def test_tick_off_clears_the_icon(self):
         self.g.zBagKit.StatPrefix(self.g.Owner, 5, 8)
