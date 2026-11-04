@@ -18,7 +18,8 @@ const GBTransfers = (() => {
   const MINUTE = 60000, HOUR = 60 * MINUTE, DAY = 24 * HOUR;
   // What a tab read this recently still tells about what that tab showed before
   const TAB_MEMORY = 30 * MINUTE;
-  // A transfer taken for cancelled that the site lists again this soon never was
+  // A transfer taken for cancelled that the site lists again this soon never was, unless the site's form offered its
+  // character again in between: then the player cancelled it and registered it once more
   const UNDO_CANCEL = 14 * DAY;
   // The servers the game lists, so that a server's name on the site's page can be told from a character's
   const SERVERS = ['Aynara', 'Kadmos', 'Kerub', 'Gaia', 'Svidur', 'Ayvenas'];
@@ -172,8 +173,9 @@ const GBTransfers = (() => {
   }
 
   // The records. Each: {id, name, from, to, state, at: registered, or first found planned; seen: last listed as planned;
-  // here: seen being registered in this Chrome; ended: when it stopped being planned; done: when it logged in on its new
-  // server; account: the characters the site listed with it, server|name; events: [{at, what, text}]}.
+  // here: seen being registered in this Chrome; ended: when it stopped being planned; offered: when the site's form
+  // offered its character again after that; done: when it logged in on its new server; account: the characters the site
+  // listed with it, server|name; events: [{at, what, text}]}.
   // States: planned, cancelled, moved (gone from its old server: a login on the new one confirms it), done, stayed (still
   // on its old server after the maintenance).
   function validRecord(record) {
@@ -234,19 +236,19 @@ const GBTransfers = (() => {
         ended.push(record);
         record = null;
       }
-      if (!record) {
-        record = records.find(other => (other.state === 'cancelled' || other.state === 'stayed') && keyOf(other.name, other.from) === keyOf(item.name, item.from)
-          && sameServer(other.to, item.to) && now - timeOf(other.ended) < UNDO_CANCEL && now - timeOf(other.ended) >= 0);
-        if (record) {
-          record.state = 'planned';
-          delete record.ended;
-          note(record, now, 'planned', 'Listed as planned on the transfer page again');
-        }
+      // Listed again soon after it seemed to end, with no chance to register it in between: it never ended
+      const finished = records.find(other => (other.state === 'cancelled' || other.state === 'stayed') && keyOf(other.name, other.from) === keyOf(item.name, item.from)
+        && sameServer(other.to, item.to));
+      if (!record && finished && !timeOf(finished.offered) && now - timeOf(finished.ended) < UNDO_CANCEL && now - timeOf(finished.ended) >= 0) {
+        record = finished;
+        record.state = 'planned';
+        delete record.ended;
+        note(record, now, 'planned', 'Listed as planned on the transfer page again');
       }
       if (!record) {
         const here = !!earlier && !listed(earlier, item);
         record = {id: newId(), name: item.name, from: item.from, to: item.to, state: 'planned', at: iso(now), seen: iso(now), here, account: [], events: []};
-        note(record, now, 'registered', here ? 'Registered on the transfer page' : 'Found planned on the transfer page');
+        note(record, now, 'registered', `${here ? 'Registered' : 'Found planned'}${finished ? ' again' : ''} on the transfer page`);
         records.unshift(record);
         added.push(record);
       } else if (timeOf(record.seen) && dueOf(record, maintenance) <= now) {
@@ -270,6 +272,12 @@ const GBTransfers = (() => {
       else if (before) end(record, 'cancelled', now, sameTab ? 'Cancelled on the transfer page' : 'No longer planned on the transfer page');
       else end(record, 'moved', now, 'No longer planned on the transfer page after the maintenance');
       ended.push(record);
+    }
+    // A cancelled or stayed one whose character the form offers again: listed as planned from now on, it is a new
+    // registration, not this one coming back
+    for (const record of records) {
+      if ((record.state === 'cancelled' || record.state === 'stayed') && !record.offered
+        && read.offered.some(item => keyOf(item.name, item.server) === keyOf(record.name, record.from))) record.offered = iso(now);
     }
     trim(records);
     return {state, changed: JSON.stringify(state) !== before, added, ended};
@@ -376,8 +384,9 @@ const GBTransfers = (() => {
 
   // The page's characters, moved as the records say. One gone from its old server shows on its new one, with what it
   // carried, until it logs in there; then the copy its old server's save file keeps goes. The old server's login screen
-  // lists stop naming it, so it isn't boxed with its old account. Run before every prepare: each time it starts again
-  // from what the characters saved themselves.
+  // lists stop naming it, so it isn't boxed with its old account. A transferred character nothing has saved yet gets a
+  // row of its own from what the transfer page said: its name, its server and the plate, the rest left blank. Run
+  // before every prepare: each time it starts again from what the characters saved themselves.
   function overlay(list, records) {
     for (const character of list) {
       if (!character.origin) character.origin = {server: character.server ?? '', roster: Array.isArray(character.roster) ? character.roster : [], mail: character.mail};
@@ -396,6 +405,20 @@ const GBTransfers = (() => {
       byName.get(name).push(character);
     }
     const hidden = new Set();
+    // The server a character saved, or else the one its daily reward named; failing both, one by that name with no
+    // server at all is taken for it
+    const serverOf = character => cleanServer(character.origin.server) || cleanServer(character.dailyLogin?.server);
+    const on = (mine, server) => mine.find(character => sameServer(serverOf(character), server))
+      || (mine.filter(character => !serverOf(character)).length === 1 ? mine.find(character => !serverOf(character)) : undefined);
+    // Rows for characters nothing saved, one for each name and server
+    const blank = [], placed = new Set();
+    const placeholder = (mine, record, server, shown) => {
+      const key = keyOf(record.name, server);
+      if (placed.has(key) || mine.some(character => sameServer(serverOf(character), server))) return;
+      placed.add(key);
+      blank.push({name: record.name, server, roster: [], notSaved: true, fromTransfer: true, stale: false, transfer: shown,
+        origin: {server: '', roster: [], mail: undefined}, ...(shown.carried ? {formerKey: keyOf(record.name, record.from)} : {})});
+    };
     // Newest first, so a character's newest transfer is the one it shows
     const touched = new Set();
     for (const record of records || []) {
@@ -403,16 +426,17 @@ const GBTransfers = (() => {
       const name = lower(record.name);
       const mine = byName.get(name) || [];
       const since = timeOf(record.at);
-      const old = mine.find(character => sameServer(character.origin.server, record.from));
-      const arrived = mine.find(character => sameServer(character.origin.server, record.to) && savedTime(character) > since);
+      const old = on(mine, record.from);
+      const arrived = mine.find(character => sameServer(serverOf(character), record.to) && savedTime(character) > since);
       const shown = {id: record.id, state: record.state, name: record.name, from: record.from, to: record.to};
       if (record.state === 'planned') {
         if (old && !touched.has(old)) {
           old.transfer = shown;
           touched.add(old);
-        }
+        } else if (!old) placeholder(mine, record, record.from, shown);
         continue;
       }
+      if (!old && !arrived && record.state === 'moved') placeholder(mine, record, record.to, {...shown, carried: true});
       const gone = timeOf(record.ended || record.done) || Date.now();
       if (old && !touched.has(old)) {
         if (arrived || record.state === 'done') {
@@ -441,7 +465,8 @@ const GBTransfers = (() => {
         }
       }
     }
-    return hidden.size ? list.filter(character => !hidden.has(character)) : list;
+    const kept = hidden.size ? list.filter(character => !hidden.has(character)) : list;
+    return blank.length ? kept.concat(blank) : kept;
   }
 
   // How the page shows them

@@ -1,6 +1,6 @@
 # Chrome Web Store listing — Global Bank for RoM
 
-Last updated: 2026-11-04. Working metadata for extension **1.3.6**; this file does not publish a store listing.
+Last updated: 2026-11-04. Working metadata for extension **1.3.7**; this file does not publish a store listing.
 
 ## Store listing
 
@@ -67,7 +67,7 @@ Data is not sold, used for unrelated purposes, or used for credit decisions. See
 
 | Version | Date | Changes | Status |
 | --- | --- | --- | --- |
-| 1.3.6 | 2026-11-04 | Character transfer tracking: reads the Runes of Magic site's character transfer page; plates, maintenance countdown and a transfer log on the Characters page. New content script on that page; no new permissions. | Draft |
+| 1.3.7 | 2026-11-04 | Character transfer tracking: reads the Runes of Magic site's character transfer page; plates, maintenance countdown and a transfer log on the Characters page, and a row for a transferred character with no save yet. New content script on that page; no new permissions. | Draft |
 | 1.3.4 | 2026-11-02 | Correct hub-version comparison; clarify published releases versus reloading installed files. No permission/storage changes. | Draft |
 | 1.3.3 | 2026-11-02 | Original stat colours, inline effects, class-coloured holders and local excluded-stat controls. Private-data packaging guards strengthened. | Draft |
 | 1.3.2 | 2026-11-02 | Equipment/mail views and addon management; see the repository's release notes. | Prior build; publication status to confirm. |

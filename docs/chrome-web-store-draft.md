@@ -2,7 +2,7 @@
 
 This is a working draft, not a published listing or final privacy policy.
 
-Current listing/version notes are kept in [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md). Version 1.3.3 adds original stat colours, inline effects, class-coloured holders and a locally saved excluded-stat list; permissions are unchanged. Version 1.3.4 also corrects hub-version comparison and explains published releases versus reloading installed files. Version 1.3.6 adds character transfer tracking from the Runes of Magic site's character transfer page: one more content script, no new permissions.
+Current listing/version notes are kept in [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md). Version 1.3.3 adds original stat colours, inline effects, class-coloured holders and a locally saved excluded-stat list; permissions are unchanged. Version 1.3.4 also corrects hub-version comparison and explains published releases versus reloading installed files. Version 1.3.7 adds character transfer tracking from the Runes of Magic site's character transfer page: one more content script, no new permissions.
 
 ## Listing description
 

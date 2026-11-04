@@ -690,7 +690,7 @@
     const metrics = make('div', 'detail-metrics');
     const stones = GBBank.transferStones(character);
     const known = GBBank.bankKnown(character);
-    for (const [value, label] of [[number(character.gold), Number(character.gold) >= GBRoster.FULL_CAP ? 'Gold · a full cap' : 'Gold'],
+    for (const [value, label] of [[character.notSaved ? 'Not recorded' : number(character.gold), Number(character.gold) >= GBRoster.FULL_CAP ? 'Gold · a full cap' : 'Gold'],
       [known || stones ? `${number(stones)}${known ? '' : '+'}` : 'Not recorded', known ? 'Transfer stones' : 'Transfer stones · bank not recorded']]) {
       const metric = make('div', 'detail-metric', value);
       metric.append(make('span', '', label));
@@ -702,7 +702,8 @@
     add('Bag', character.notSaved ? 'Not recorded' : character.bagSlots ? `${number(bag)} of ${number(character.bagSlots)} slots used` : `${number(bag)} slots used`);
     add('Bank', !known ? 'Bank not recorded: log in once with it' : character.bankSlots ? `${number(held)} of ${number(character.bankSlots)} slots used` : `${number(held)} slots used`);
     add('Last saved', character.saved || 'Not recorded');
-    add('Login status', character.notSaved ? 'Nothing saved yet: log in once' : character.stale ? 'Needs a login on the current version' : 'Current');
+    add('Login status', character.fromTransfer ? 'Known from the character transfer page only: log in with it once'
+      : character.notSaved ? 'Nothing saved yet: log in once' : character.stale ? 'Needs a login on the current version' : 'Current');
     if (!roster.view.hideGameforge) add('Gameforge account', accounts.accountNameOf(character) || (accounts.locked() ? 'Locked' : 'Not linked'));
     if (!roster.view.hideRom) add('RoM account', roster.romTitle(character) || 'Not known yet');
     const taken = Date.parse(character.dailyLogin?.collectedAt || '');

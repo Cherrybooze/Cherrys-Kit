@@ -113,11 +113,26 @@ assert.equal(result.state.list[0].state, 'planned');
 result = GBT.applyRead(planned, {planned: [], offered, form: true}, {now: t0 + 180e3, previous: {at: t0 + 60e3, planned: [{name: 'Zuuzuuhehtne', from: 'Gaia', to: 'Kadmos'}]}});
 assert.deepEqual(plain(result.ended.map(item => item.state)), ['cancelled']);
 assert.equal(result.state.list[0].events.at(-1).text, 'Cancelled on the transfer page');
-// Listed again within two weeks: the same record, planned again
-const again = GBT.applyRead(result.state, {planned: [{name: 'Zuuzuuhehtne', from: 'Gaia', to: 'Kadmos'}], offered, form: true}, {now: t0 + D});
-assert.equal(again.state.list.length, 1);
-assert.equal(again.state.list[0].state, 'planned');
-assert.equal(again.state.list[0].ended, undefined);
+// The form offers it again: listed as planned from now on, it was registered once more
+assert.equal(result.state.list[0].offered, new Date(t0 + 180e3).toISOString());
+// Registered again in the same tab, without reloading: a new transfer with its own time, and the cancelled one stays
+// in the log
+const kadmos = [{name: 'Zuuzuuhehtne', from: 'Gaia', to: 'Kadmos'}];
+const again = GBT.applyRead(result.state, {planned: kadmos, offered: [], form: false}, {now: t0 + 240e3, previous: {at: t0 + 180e3, planned: []}});
+assert.equal(again.added.length, 1);
+assert.deepEqual(plain(again.state.list.map(item => [item.state, item.at])),
+  [['planned', new Date(t0 + 240e3).toISOString()], ['cancelled', new Date(t0 + 60e3).toISOString()]]);
+assert.deepEqual(plain(again.state.list[0].events.map(item => item.text)), ['Registered again on the transfer page']);
+// ... and found planned again later in another tab, or after Chrome restarted: also a new one
+const later = GBT.applyRead(result.state, {planned: kadmos, offered: [], form: false}, {now: t0 + D});
+assert.deepEqual([later.added.length, later.state.list[0].events[0].text], [1, 'Found planned again on the transfer page']);
+// A page that briefly showed no transfer and no form either, then the transfer again: the same one, never cancelled
+const blip = GBT.applyRead(planned, {planned: [], offered: [], form: false}, {now: t0 + 180e3, previous: {at: t0 + 60e3, planned: kadmos}});
+assert.deepEqual(plain(blip.ended.map(item => item.state)), ['cancelled']);
+const back = GBT.applyRead(blip.state, {planned: kadmos, offered: [], form: false}, {now: t0 + 181e3, previous: {at: t0 + 180e3, planned: []}});
+assert.deepEqual([back.added.length, back.state.list.length, back.state.list[0].state, back.state.list[0].ended], [0, 1, 'planned', undefined]);
+assert.equal(back.state.list[0].events.at(-1).text, 'Listed as planned on the transfer page again');
+assert.equal(back.state.list[0].at, new Date(t0 + 60e3).toISOString());
 // Registered again for another server: the first one was cancelled
 const other = GBT.applyRead(planned, {planned: [{name: 'Zuuzuuhehtne', from: 'Gaia', to: 'Aynara'}], offered, form: true}, {now: t0 + H});
 assert.deepEqual(plain(other.state.list.map(item => [item.to, item.state])), [['Aynara', 'planned'], ['Kadmos', 'cancelled']]);
@@ -224,6 +239,35 @@ assert.equal(GBT.overlay(list, [done]).length, 4);
 // Cancelled ones change nothing
 list = base();
 assert.equal(GBT.overlay(list, [{...record, state: 'cancelled'}])[0].transfer, undefined);
+// A transferred character nothing saved yet: a row of its own from what the transfer page said, the rest left blank
+const stranger = {...record, id: 'bbbbbbbb2222', name: 'Newbie'};
+shown = GBT.overlay(base(), [stranger]);
+assert.equal(shown.length, 4);
+assert.deepEqual(plain([shown[3].name, shown[3].server, shown[3].notSaved, shown[3].fromTransfer, shown[3].stale, shown[3].transfer.state, shown[3].roster]),
+  ['Newbie', 'Gaia', true, true, false, 'planned', []]);
+assert.deepEqual(plain(['gold', 'level', 'class', 'bag', 'bank', 'saved'].map(key => shown[3][key] ?? null)), [null, null, null, null, null, null]);
+// Moved: on its new server, waiting for its first login there
+const strangerMoved = {...stranger, state: 'moved', ended: new Date(after).toISOString()};
+shown = GBT.overlay(base(), [strangerMoved]);
+assert.deepEqual([shown[3].server, shown[3].transfer.carried, shown[3].formerKey], ['Kadmos', true, 'gaia|newbie']);
+assert.equal(GBT.plateOf(shown[3], [strangerMoved], after).confirm, true);
+// One row for each name and server, from its newest transfer
+shown = GBT.overlay(base(), [stranger, {...stranger, id: 'cccccccc3333', at: new Date(t0 - D).toISOString()}]);
+assert.deepEqual(plain(shown.slice(3).map(character => character.transfer.id)), ['bbbbbbbb2222']);
+// Once it saved on its new server, that save is its row
+list = base();
+list.push({name: 'Newbie', server: 'Kadmos', roster: ['Newbie'], saved: saved(after + H)});
+shown = GBT.overlay(list, [{...strangerMoved, state: 'done', done: new Date(after + H).toISOString()}]);
+assert.deepEqual(plain(shown.filter(character => character.name === 'Newbie').map(character => [character.server, !!character.notSaved])), [['Kadmos', false]]);
+// Every run starts from the saves again: no blank row is left over in them
+list = base();
+GBT.overlay(list, [stranger]);
+assert.equal(list.length, 3);
+// A save from an older Global Bank names no server of its own: its daily reward's server places it
+list = base();
+list.push({name: 'Oldie', dailyLogin: {server: 'Gaia'}, saved: saved(t0 - D)});
+shown = GBT.overlay(list, [{...record, id: 'dddddddd4444', name: 'Oldie'}]);
+assert.deepEqual([shown.length, shown[3].transfer?.id], [4, 'dddddddd4444']);
 """)
 
     def test_plate_hover_card_and_tooltip(self):

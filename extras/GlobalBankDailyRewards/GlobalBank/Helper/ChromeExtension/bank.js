@@ -547,7 +547,7 @@ const GBBank = (() => {
         const shop = ACCOUNT_MONEY.has(money.key);
         if (!columns.has(money.key)) columns.set(money.key, {key: money.key, name: currencyName(money), total: 0, shop});
       }
-      return {name: character.name, key: character.key, server: character.shownServer ?? character.server ?? '', stale: !!character.stale, character, amounts};
+      return {name: character.name, key: character.key, server: character.shownServer ?? character.server ?? '', stale: !!character.stale, blank: !!character.notSaved, character, amounts};
     });
     for (const column of columns.values()) {
       column.total = column.shop ? null : rows.reduce((sum, row) => sum + (row.amounts[column.key] || 0), 0);
@@ -612,7 +612,8 @@ const GBBank = (() => {
         account: linked, rom: romOf(character, romTitle), stones: transferStones(character),
         class: String(character.class || ''), level: Number(character.level) || 0,
         gold: Number(character.gold) || 0, items: bag + bank, bag, bank, bankSeen: !!character.bankSeen, stale: !!character.stale,
-        saved: String(character.saved || ''), day: Number(character.dailyLogin?.day) || 0, taken: Number.isFinite(taken) ? taken : 0};
+        saved: String(character.saved || ''), day: Number(character.dailyLogin?.day) || 0, taken: Number.isFinite(taken) ? taken : 0,
+        blank: !!character.notSaved};
     });
     const direction = descending ? -1 : 1;
     const text = ROSTER_COLUMNS.find(column => column.key === sort)?.text;
@@ -859,6 +860,7 @@ const GBBank = (() => {
     }
     root.selectGroup = key => options.selectKeys && options.selectKeys((groups.find(group => group.key === key)?.rows || []).map(row => row.key));
     const amount = (row, column) => {
+      if (row.blank) return '';
       if (column.key !== 'gold' && row.stale && !(column.key in row.amounts)) return '<span class="not-recorded" title="Not recorded: log in once on the current version">—</span>';
       if (column.key === 'gold') return `<span class="gold-cell">${escapeHtml(formatNumber(row.amounts.gold))}</span>`;
       return escapeHtml(formatNumber(row.amounts[column.key] || 0));
@@ -876,6 +878,8 @@ const GBBank = (() => {
     root.querySelector('tbody').prepend(total);
   }
   const serverCell = row => (row.server ? `<span class="server-pill">${escapeHtml(row.server)}</span>` : `<span class="server-pill is-unknown">${escapeHtml(NO_SERVER)}</span>`);
+  // A cell nothing saved can fill: blank on a row only the character transfer page knows
+  const unsaved = cell => row => (row.blank ? '' : cell(row));
   // The letter on a coloured square: the class at a glance, and its colour where the page knows it
   const classBadge = (name, color) => `<span class="class-avatar"${color ? ` style="--class-color:${escapeHtml(color)}"` : ''} aria-hidden="true">${escapeHtml(String(name || '?').slice(0, 1).toUpperCase())}</span>`;
   // How many a character can transfer: "at least" what's in the bag while its bank isn't recorded, never a false 0
@@ -926,21 +930,21 @@ const GBBank = (() => {
       columns: [
         {key: 'name', name: 'Character', text: true, lead: `<input type="checkbox" class="select-all head-check" aria-label="Select all shown"${allSelected ? ' checked' : ''}>`,
           cell: row => `<span class="char-cell"><input type="checkbox" class="char-check" aria-label="Select ${escapeHtml(row.name)}"${options.isSelected && options.isSelected(row.key) ? ' checked' : ''}>${classBadge(row.class, options.classColor && options.classColor(row.character))}<span class="char-name">${escapeHtml(row.name)}</span></span>`},
-        {key: 'class', name: 'Class', text: true, cell: row => (row.class ? escapeHtml(row.class) : '<span class="not-recorded">Not recorded</span>')},
-        {key: 'level', name: 'Level', number: true, cell: row => (row.level ? escapeHtml(formatNumber(row.level)) : '<span class="not-recorded">—</span>')},
+        {key: 'class', name: 'Class', text: true, cell: unsaved(row => (row.class ? escapeHtml(row.class) : '<span class="not-recorded">Not recorded</span>'))},
+        {key: 'level', name: 'Level', number: true, cell: unsaved(row => (row.level ? escapeHtml(formatNumber(row.level)) : '<span class="not-recorded">—</span>'))},
         {key: 'server', name: 'Server', text: true, cell: serverCell},
-        {key: 'stones', name: 'Transfer stones', number: true, cell: row => transferPlate(options.transfer ? options.transfer(row.character) : null) + stonesCell(row)},
-        ...(showAccounts ? [{key: 'account', name: 'Gameforge', text: true, cell: row => (row.account ? escapeHtml(row.account) : `<span class="not-recorded">${options.locked && options.locked() ? 'Locked' : 'Not linked'}</span>`)},
-          {key: 'rom', name: 'RoM account', text: true, cell: row => (row.rom ? escapeHtml(row.rom) : '<span class="not-recorded">Not known</span>')}] : []),
-        {key: 'gold', name: 'Gold', number: true, cell: row => `<span class="gold-cell">${escapeHtml(formatNumber(row.gold))}</span>`},
-        {key: 'bag', name: 'Bag', number: true, cell: row => slots(row.bag, row.character?.bagSlots)},
-        {key: 'bank', name: 'Bank', number: true, cell: row => (row.bankSeen || row.bank > 0 ? slots(row.bank, row.character?.bankSlots) : '<span class="not-recorded" title="Bank not recorded: one login with this character records it">Not recorded</span>')},
-        {key: 'saved', name: 'Last saved', text: true, cell: row => escapeHtml(row.saved || 'Not recorded')},
+        {key: 'stones', name: 'Transfer stones', number: true, cell: row => transferPlate(options.transfer ? options.transfer(row.character) : null) + (row.blank ? '' : stonesCell(row))},
+        ...(showAccounts ? [{key: 'account', name: 'Gameforge', text: true, cell: row => (row.account ? escapeHtml(row.account) : row.blank ? '' : `<span class="not-recorded">${options.locked && options.locked() ? 'Locked' : 'Not linked'}</span>`)},
+          {key: 'rom', name: 'RoM account', text: true, cell: row => (row.rom ? escapeHtml(row.rom) : row.blank ? '' : '<span class="not-recorded">Not known</span>')}] : []),
+        {key: 'gold', name: 'Gold', number: true, cell: unsaved(row => `<span class="gold-cell">${escapeHtml(formatNumber(row.gold))}</span>`)},
+        {key: 'bag', name: 'Bag', number: true, cell: unsaved(row => slots(row.bag, row.character?.bagSlots))},
+        {key: 'bank', name: 'Bank', number: true, cell: unsaved(row => (row.bankSeen || row.bank > 0 ? slots(row.bank, row.character?.bankSlots) : '<span class="not-recorded" title="Bank not recorded: one login with this character records it">Not recorded</span>'))},
+        {key: 'saved', name: 'Last saved', text: true, cell: unsaved(row => escapeHtml(row.saved || 'Not recorded'))},
         {key: 'day', name: 'Reward day', number: true, also: [{key: 'taken', name: 'Taken'}],
-          cell: row => (row.taken ? `<span title="${escapeHtml(clock.format(row.taken))}">Day ${escapeHtml(row.day || '?')} <span class="muted">· ${escapeHtml(shortClock.format(row.taken))}</span></span>` : '<span class="not-recorded">Not recorded</span>')},
+          cell: unsaved(row => (row.taken ? `<span title="${escapeHtml(clock.format(row.taken))}">Day ${escapeHtml(row.day || '?')} <span class="muted">· ${escapeHtml(shortClock.format(row.taken))}</span></span>` : '<span class="not-recorded">Not recorded</span>'))},
         {key: 'stale', name: 'Status', cell: row => (options.transfer && options.transfer(row.character)?.confirm
           ? `<span class="status-pill is-xfer" title="${escapeHtml(`It moved to ${row.character.transfer.to}: one login with it there confirms the transfer and saves it on its new server`)}">Log in to confirm transfer</span>`
-          : row.stale ? '<span class="status-pill" title="Saved by an older version: log in once on the current one">Needs login</span>' : '<span class="status-pill is-good" role="img" aria-label="Current" title="Current"></span>')},
+          : row.blank ? '' : row.stale ? '<span class="status-pill" title="Saved by an older version: log in once on the current one">Needs login</span>' : '<span class="status-pill is-good" role="img" aria-label="Current" title="Current"></span>')},
         {key: 'open', noSort: true, className: 'open-col', cell: row => `<button type="button" class="row-open" data-open-char="${escapeHtml(row.key || '')}" aria-label="Details for ${escapeHtml(row.name)}" title="Details"><span class="ico" data-cell-icon="chevron-right"></span></button>`},
       ],
       groups, isSelected: options.isSelected, open: !!String(options.search || '').trim(), empty: characters.length ? 'No character matches.' : 'No characters saved yet.',
