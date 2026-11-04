@@ -60,6 +60,23 @@ class SlotFontTests(unittest.TestCase):
           zBagKit.Label(Owner,nil);assert(OwnerKitSlot.text=="" and not OwnerKitSlot.visible)
         ''')
 
+    def test_mouseover_only_shows_a_number_already_laid_out_at_its_size(self):
+        self.lua.execute('''
+          zBag_VAR.slothover=1
+          local writes={}
+          local set=OwnerKitSlot.SetText
+          OwnerKitSlot.SetText=function(self,t) writes[#writes+1]="text:"..t; set(self,t) end
+          local fs=OwnerKitSlot.SetFontSize
+          OwnerKitSlot.SetFontSize=function(self,n) writes[#writes+1]="size:"..n; fs(self,n) end
+          zBagKit.Label(Owner,42,10)
+          assert(not OwnerKitSlot.visible and OwnerKitSlot.text=="42" and OwnerKitSlot.fontSize==10)
+          assert(writes[1]=="size:10" and writes[2]=="text:42" and #writes==2)
+          zBagKit.HoverLabel(Owner,true)
+          assert(OwnerKitSlot.visible and #writes==2)
+          zBagKit.HoverLabel(Owner,false)
+          assert(not OwnerKitSlot.visible and #writes==2 and OwnerKitSlot.text=="42")
+        ''')
+
     def test_native_plus_minus_controls_persist_and_refresh_all_bag_layouts(self):
         self.lua.execute('''
           refreshed=0

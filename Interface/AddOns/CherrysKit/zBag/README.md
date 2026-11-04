@@ -26,6 +26,8 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 **Item shop bank next to the bank.** With *Use one bank (classic zBag)*, tick *Item shop bank next to bank* in **/zb** and the item shop bank's 100 slots open in their own box, attached to the right side of the bank window, with as many slots on a row as the bank. It moves with the bank, and the bank search box sits under it. It needs bank tab 6 ticked. *Lock resize* for Cherry's bags moved down to the *Hide default backpack* row to make room.
 
+**Steady slot numbers on mouseover.** With *Numbers on mouseover only*, a slot's number is now ready at its size before the mouse gets there, so it no longer shows big for a moment and then shrinks.
+
 ## Updated in 5.07-ck20
 
 **Slot number settings side by side.** In **/zb**, *Numbers on mouseover only* now sits right next to *Show bag slot numbers (1-180)*, and the row under it has *Slot number font size* with - and + buttons (6 to 20, default 8) for the bag and bank numbers. The font size buttons were in earlier versions too but never showed up in the window. *Reset bag positions* moved to the bottom row. Mouseover only stays on by default.

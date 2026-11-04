@@ -351,6 +351,7 @@ function K.Label(owner, slot, size, showOwner)
   if owner.kitSlot == slot and owner.kitSize == size and owner.kitShown == shown then
     return
   end
+  local changed = owner.kitSlot ~= slot or owner.kitSize ~= size
   owner.kitSlot, owner.kitSize, owner.kitShown, owner.kitShowOwner = slot, size, shown, showOwner
   local name = owner:GetName()
   local text, back = _G[name .. "KitSlot"], _G[name .. "KitSlotBack"]
@@ -365,32 +366,26 @@ function K.Label(owner, slot, size, showOwner)
     end
     owner.kitSlotPositioned = true
   end
-  if back then back:SetSize(math.max(12, math.ceil(size * 2)), math.max(9, math.ceil(size + 2))) end
-  if shown then
+  -- The number is laid out (font size first, then text) whenever the slot or size changes, also while
+  -- hidden, so a mouseover only shows it. Setting the text while showing it drew it at the template's
+  -- bigger font for a moment before the small size took (C, 2026-11-04).
+  if changed then
     if text then
-      text:SetText(tostring(slot))
       if size then
         text:SetFontSize(size)
       end
-      text:Show()
+      text:SetText(slot ~= nil and tostring(slot) or "")
     end
-    if back then
-      back:Show()
-    end
-    if showOwner then
-      owner:Show()
-    end
+    if back then back:SetSize(math.max(12, math.ceil(size * 2)), math.max(9, math.ceil(size + 2))) end
+  end
+  if shown then
+    if text then text:Show() end
+    if back then back:Show() end
+    if showOwner then owner:Show() end
   else
-    if text then
-      text:SetText("")
-      text:Hide()
-    end
-    if back then
-      back:Hide()
-    end
-    if showOwner then
-      owner:Hide()
-    end
+    if text then text:Hide() end
+    if back then back:Hide() end
+    if showOwner then owner:Hide() end
   end
 end
 
