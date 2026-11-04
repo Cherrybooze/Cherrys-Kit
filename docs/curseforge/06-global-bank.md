@@ -20,6 +20,7 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.11**: the Chrome page names RoM and Gameforge accounts from the Runes of Magic site: the username and e-mail address its character transfer and account pages show are kept for the characters they list, replace *Name's account*, and link those characters to a saved Gameforge account of that address.
 - **1.6.10**: no save is dropped: a save file the game is still writing waits on a list until the helper can read it, a logout the file watcher missed is found within 30 seconds, a failed update runs again, and a copy of a character in another character's save file never wins over its own save.
 - **1.6.9**: the Chrome extension's **Cascade game windows** button lays the game windows out in an overlapping cascade on the display you choose, from the bottom left or the top left toward the right, sized to fill the screen, at their own size or at an exact resolution and offset; it can sit right under *Open Global Bank* in the toolbar popup.
 - **1.6.8**: characters you log in update again (a mailbox already read stopped every later snapshot, and a character switched to without data of its own saved the previous one's); with automatic start on, the helper starts again within a minute, and a helper window open when the option is turned on hands over to the background.

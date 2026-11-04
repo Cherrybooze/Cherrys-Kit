@@ -166,6 +166,7 @@
     listed: () => roster.listed(),
     romTitle: character => roster.romTitle(character),
     romName: character => roster.romName(character),
+    siteEmail: character => roster.siteEmail(character),
     romFirst: () => roster.view.romFirst,
     linksChanged: () => changed(['currencies', 'characters', 'servers']),
     mailbox: key => mailboxes().get(key),
@@ -378,7 +379,8 @@
     singlesTogether: prefix === 'roster' && byId('roster-singles').checked,
     search: byId(prefix + '-search').value,
     isSelected: key => roster.isSelected(key),
-    accountName: name => accounts.accountName(name),
+    // The linked Gameforge account, or the e-mail address the site showed with the character
+    accountName: name => accounts.accountName(name) || roster.siteEmailByLabel(name),
     romTitle: character => roster.romTitle(character),
     classColor: GBAccounts.classColor,
     locked: () => accounts.locked(),
@@ -491,7 +493,8 @@
     const box = record.state === 'planned' && own[0] ? mailboxes().get(own[0].key) : null;
     return {
       rom: roster.view.hideRom ? '' : own.map(character => roster.romTitle(character)).find(Boolean) || (oldRom ? `${oldRom} on ${record.from}` : ''),
-      gameforge: roster.view.hideGameforge || accounts.locked() ? '' : [...own, ...mates].map(character => accounts.accountNameOf(character)).find(Boolean) || '',
+      gameforge: roster.view.hideGameforge ? '' : (accounts.locked() ? '' : [...own, ...mates].map(character => accounts.accountNameOf(character)).find(Boolean))
+        || [...own, ...mates].map(character => roster.siteEmail(character)).find(Boolean) || '',
       mail: box ? GBMail.summary(box, Date.now() / 1000, GBBank.formatCompact) : '',
     };
   }
@@ -740,7 +743,7 @@
     add('Last saved', character.saved || 'Not recorded');
     add('Login status', character.fromTransfer ? 'Known from the character transfer page only: log in with it once'
       : character.notSaved ? 'Nothing saved yet: log in once' : character.stale ? 'Needs a login on the current version' : 'Current');
-    if (!roster.view.hideGameforge) add('Gameforge account', accounts.accountNameOf(character) || (accounts.locked() ? 'Locked' : 'Not linked'));
+    if (!roster.view.hideGameforge) add('Gameforge account', accounts.accountNameOf(character) || roster.siteEmail(character) || (accounts.locked() ? 'Locked' : 'Not linked'));
     if (!roster.view.hideRom) add('RoM account', roster.romTitle(character) || 'Not known yet');
     const taken = Date.parse(character.dailyLogin?.collectedAt || '');
     const clock = new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'});
@@ -882,7 +885,7 @@
   });
   GBRoster.attach(roster, byId('char-tooltip'), {
     classColor: GBAccounts.classColor,
-    account: character => accounts.accountNameOf(character),
+    account: character => accounts.accountNameOf(character) || roster.siteEmail(character),
     locked: () => accounts.locked(),
     rom: character => roster.romTitle(character),
     currencyName: GBBank.currencyName,
@@ -997,6 +1000,8 @@
     }
     const linked = accounts.linkedAccount(character);
     if (linked) rows.push({label: 'Rename Gameforge account…', run: () => renameGameforge(linked)});
+    // The RoM username and e-mail address the Runes of Magic site showed with these characters
+    if (roster.siteAccount(character)) rows.push({label: 'Forget the site\u2019s account details', run: () => forgetSite(character)});
     if (!character.shownServer || character.manualServer) {
       // Characters one login screen lists are on one server
       const list = rom ? rom.characters.filter(member => !member.shownServer || member.manualServer) : [character];
@@ -1004,6 +1009,14 @@
     }
     if (!character.notSaved) rows.push({label: 'Stop tracking…', run: () => stopTracking(character)});
     return rows;
+  }
+  async function forgetSite(character) {
+    try {
+      const gone = await roster.forgetSiteAccount(character);
+      toast(gone ? 'Forgot the RoM username and e-mail address the site showed for these characters. Open the site\u2019s transfer or account page to read them again.' : 'Nothing to forget.');
+    } catch (error) {
+      toast('Could not forget them: ' + String(error.message || error));
+    }
   }
   async function renameRom(character) {
     const rom = roster.romAccount(character);
@@ -1013,7 +1026,7 @@
     const text = await ask({
       title: 'Rename RoM account',
       hint: `The characters one login screen lists: ${list}. The name is only a label for this page. It's kept in this browser without encryption, so never type a password here.`,
-      label: 'RoM account name', value: rom.name, placeholder: `${names[0]}'s account`,
+      label: 'RoM account name', value: rom.name, placeholder: roster.siteAccount(character)?.user || `${names[0]}'s account`,
       clear: rom.name ? 'Use the default name' : '',
       check: text => (text.length > 60 ? 'Keep it to 60 letters or fewer.' : ''),
     });
@@ -1218,6 +1231,11 @@
     if (changes.autoHelper) { autoHelper.checked = !!changes.autoHelper.newValue; refreshStatus(); }
     if (changes.showTerminal) { showTerminal.checked = !!changes.showTerminal.newValue; refreshStatus(); }
     transfers.stored(changes);
+    // The site showed an account with its characters: their RoM account's name, and Gameforge links
+    if (changes[GBRoster.SITE_STORE]) {
+      roster.setSiteAccounts(changes[GBRoster.SITE_STORE].newValue);
+      accounts.siteChanged();
+    }
   });
   // The status line and the toggle
   const statusHelper = byId('status-helper');

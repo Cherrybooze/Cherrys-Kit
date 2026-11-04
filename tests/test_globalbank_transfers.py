@@ -70,7 +70,10 @@ const read = plain(GBT.parsePage(page));
 assert.deepEqual(read.planned, [{name: 'Zuuzuuhehtne', from: 'Gaia', to: 'Kadmos'}]);
 assert.deepEqual(read.offered, [{name: 'Zuuzuuhehtne', server: 'Gaia'}, {name: 'Zuuzuuhrutu', server: 'Kadmos'}]);
 assert.equal(read.form, true);
-assert.doesNotMatch(JSON.stringify(read), /someone|example|ACCOUNT/);
+// The login's e-mail address, the only one on the page; nothing else of the account
+assert.deepEqual(read.account, {user: '', email: 'someone@example.com'});
+assert.deepEqual(read.listed, []);
+assert.doesNotMatch(JSON.stringify(read), /ACCOUNT/);
 // Split over several pieces of text, other arrows, and servers the game doesn't list
 const split = plain(GBT.parsePage({selects: [], texts: ['Zuuzuuhehtne', '(', 'Gaia (PvE)', ')', '', 'Kadmos', '(PvE)', 'Cancel', 'Anna (Kerub)', '→', 'Ayvenas', 'Bo (Zhyro (PvP))', 'Smaragd (PvE)']}));
 assert.deepEqual(split.planned, [{name: 'Zuuzuuhehtne', from: 'Gaia', to: 'Kadmos'}, {name: 'Anna', from: 'Kerub', to: 'Ayvenas'}, {name: 'Bo', from: 'Zhyro', to: 'Smaragd'}]);
@@ -86,7 +89,7 @@ assert.equal(GBT.cleanRead({planned: 'x', offered: []}), null);
 assert.equal(GBT.cleanRead({planned: new Array(41).fill({name: 'Anna', from: 'Gaia', to: 'Kadmos'}), offered: []}), null);
 const clean = plain(GBT.cleanRead({planned: [{name: 'Anna', from: 'Gaia (PvE)', to: 'Kadmos'}, {name: '<b>x</b>', from: 'Gaia', to: 'Kadmos'}, {name: 'Bert', from: 'Gaia', to: 'Gaia'}],
   offered: [{name: 'Anna', server: 'Gaia'}, {name: 'a b', server: 'Gaia'}], form: 'yes'}));
-assert.deepEqual(clean, {planned: [{name: 'Anna', from: 'Gaia', to: 'Kadmos'}], offered: [{name: 'Anna', server: 'Gaia'}], form: false});
+assert.deepEqual(clean, {planned: [{name: 'Anna', from: 'Gaia', to: 'Kadmos'}], offered: [{name: 'Anna', server: 'Gaia'}], listed: [], form: false, account: null});
 """)
 
     def test_registered_cancelled_and_listed_again_on_the_site(self):
@@ -340,7 +343,7 @@ assert.equal(GBT.PHASE_NAMES[GBT.phase(moved, later)], 'Moved: log in to confirm
   let listener;
   const local = {}, session = {};
   const area = store => ({get: async keys => Object.fromEntries([].concat(keys).filter(key => key in store).map(key => [key, plain(store[key])])),
-    set: async data => Object.assign(store, plain(data)), setAccessLevel: async () => {}});
+    set: async data => Object.assign(store, plain(data)), remove: async keys => { for (const key of [].concat(keys)) delete store[key]; }, setAccessLevel: async () => {}});
   const chrome = {runtime: {id: 'test', getURL: file => 'chrome-extension://test/' + file, onMessage: {addListener: fn => { listener = fn; }},
     onStartup: {addListener() {}}, onInstalled: {addListener() {}}, sendNativeMessage: (host, message, reply) => reply({ok: true})},
     storage: {local: area(local), session: area(session), onChanged: {addListener() {}}}, alarms: {create() {}, onAlarm: {addListener() {}}}};
@@ -351,8 +354,11 @@ assert.equal(GBT.PHASE_NAMES[GBT.phase(moved, later)], 'Moved: log in to confirm
   vm.runInContext(source, sandbox);
   const ask = (message, sender) => new Promise(resolve => { if (listener(message, sender, resolve) !== true) resolve('no answer'); });
   const read = {type: 'transfer-page', planned: [{name: 'Anna', from: 'Gaia', to: 'Kadmos'}], offered: [{name: 'Anna', server: 'Gaia'}], form: true};
-  // Not from the transfer page, or not from a tab: ignored
-  assert.equal(await ask(read, {id: 'test', tab: {id: 3}, url: 'https://en.runesofmagic.gameforge.com/user/administration'}), 'no answer');
+  // Not from the transfer or account page, or not from a tab: ignored
+  assert.equal(await ask(read, {id: 'test', tab: {id: 3}, url: 'https://en.runesofmagic.gameforge.com/forum'}), 'no answer');
+  // The account page links accounts but never records or ends a transfer
+  assert.equal((await ask(read, {id: 'test', tab: {id: 3}, url: 'https://en.runesofmagic.gameforge.com/user/administration'})).ok, true);
+  assert.equal(local.gbTransfers, undefined);
   assert.equal(await ask(read, {id: 'test', tab: {id: 3}, url: 'https://evil.example/charactertransfer'}), 'no answer');
   assert.equal(await ask(read, {id: 'test', url: 'https://en.runesofmagic.gameforge.com/charactertransfer'}), 'no answer');
   assert.equal(local.gbTransfers, undefined);
@@ -396,15 +402,15 @@ assert.equal(GBT.PHASE_NAMES[GBT.phase(moved, later)], 'Moved: log in to confirm
   vm.runInContext(fs.readFileSync(path.join(folder, 'transfer-page.js'), 'utf8'), sandbox);
   timers.shift()();
   for (let i = 0; i < 5; i++) await new Promise(resolve => setImmediate(resolve));
-  assert.deepEqual(sent, [{type: 'transfer-page', planned: [{name: 'Zuuzuuhehtne', from: 'Gaia', to: 'Kadmos'}],
-    offered: [{name: 'Zuuzuuhehtne', server: 'Gaia'}, {name: 'Mate', server: 'Gaia'}], form: true}]);
+  assert.deepEqual(sent, [{type: 'transfer-page', kind: 'transfer', planned: [{name: 'Zuuzuuhehtne', from: 'Gaia', to: 'Kadmos'}],
+    offered: [{name: 'Zuuzuuhehtne', server: 'Gaia'}, {name: 'Mate', server: 'Gaia'}], listed: [], form: true, account: {user: '', email: 'someone@example.com'}}]);
   assert.ok(notice, 'the first read says what it understood');
   // The same page again sends nothing
   observer(); timers.pop()();
   for (let i = 0; i < 5; i++) await new Promise(resolve => setImmediate(resolve));
   assert.equal(sent.length, 1);
   // Another site, or another page of it: the script does nothing
-  for (const where of [{hostname: 'evil.example', pathname: '/charactertransfer'}, {hostname: 'en.runesofmagic.gameforge.com', pathname: '/user/administration'}]) {
+  for (const where of [{hostname: 'evil.example', pathname: '/charactertransfer'}, {hostname: 'en.runesofmagic.gameforge.com', pathname: '/forum'}]) {
     const other = {...sandbox, location: where, chrome: {runtime: {id: 'test', sendMessage: async () => { throw new Error('sent'); }}}, MutationObserver: class { observe() { throw new Error('watched'); } }};
     vm.createContext(other);
     vm.runInContext(fs.readFileSync(path.join(folder, 'transfers.js'), 'utf8'), other);
@@ -418,7 +424,7 @@ assert.equal(GBT.PHASE_NAMES[GBT.phase(moved, later)], 'Moved: log in to confirm
         manifest = json.loads((EXTENSION / 'manifest.json').read_text(encoding='utf-8'))
         scripts = [entry for entry in manifest['content_scripts'] if 'transfer-page.js' in entry['js']]
         self.assertEqual(len(scripts), 1)
-        self.assertEqual(scripts[0]['matches'], ['https://*.runesofmagic.gameforge.com/charactertransfer*'])
+        self.assertEqual(scripts[0]['matches'], ['https://*.runesofmagic.gameforge.com/charactertransfer*', 'https://*.runesofmagic.gameforge.com/user/administration*'])
         self.assertEqual(scripts[0]['js'], ['transfers.js', 'transfer-page.js'])
         self.assertEqual(sorted(manifest['permissions']), ['alarms', 'nativeMessaging', 'storage'])
         self.assertNotIn('host_permissions', manifest)

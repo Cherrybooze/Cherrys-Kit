@@ -20,6 +20,9 @@ const GBRoster = (() => {
   const SCOPE_STORE = 'gbScope';
   // The names you gave RoM accounts, by character. Only labels for this page: logins live with the Gameforge accounts.
   const NAMES_STORE = 'gbRomNames';
+  // The RoM username and Gameforge e-mail address the Runes of Magic site showed with each character
+  // (transfers.js keeps them): the names a RoM account gets when you haven't named it
+  const SITE_STORE = 'gbSiteAccounts';
   // The newest snapshots name their server. One without was saved by an older Global Bank, before it kept servers,
   // currencies, stats and the game's own tooltips.
   const STALE_NOTE = 'Saved by an older Global Bank: log in once to record its server, currencies and item stats.';
@@ -341,6 +344,32 @@ const GBRoster = (() => {
     return lines;
   }
 
+  // The site's account for a character: kept for its key, for the key it had before a transfer, or for its name when
+  // every server's copy of that name has the same account. {user, email} or null.
+  function siteAccountOf(chars, character) {
+    if (!chars || !character) return null;
+    for (const key of [character.key, character.formerKey]) if (key && Object.prototype.hasOwnProperty.call(chars, key)) return chars[key];
+    const name = '|' + String(character.base ?? character.name ?? '').toLowerCase();
+    let found = null;
+    for (const key of Object.keys(chars)) {
+      if (!key.endsWith(name)) continue;
+      const entry = chars[key];
+      if (found && (found.user.toLowerCase() !== entry.user.toLowerCase() || found.email !== entry.email)) return null;
+      found = found || entry;
+    }
+    return found;
+  }
+  function siteMap(value) {
+    const chars = Object.create(null);
+    const kept = value && typeof value.chars === 'object' && value.chars ? value.chars : {};
+    for (const [key, entry] of Object.entries(kept)) {
+      if (!entry || typeof entry !== 'object') continue;
+      const user = typeof entry.user === 'string' ? entry.user.trim().slice(0, 40) : '', email = typeof entry.email === 'string' ? entry.email.trim().slice(0, 200) : '';
+      if (user || email) chars[key] = {user, email};
+    }
+    return chars;
+  }
+
   // The view and the selection, and who wants to know when they change. Kept in this browser only.
   // Changes it tells about: 'view' (region, ticks, the regions' lists), 'selection', 'scope' (who the Bank shows),
   // 'assigned' (a server set by hand: the page prepares its characters again), 'names' (a RoM account renamed),
@@ -352,6 +381,9 @@ const GBRoster = (() => {
     const scope = new Set();
     const listeners = new Set();
     let romNames = Object.create(null);
+    let siteChars = Object.create(null);
+    const siteCache = new Map();
+    let byLabel = null;
     let characters = [];
     let byKey = new Map();
     let listed = new Map();
@@ -391,6 +423,27 @@ const GBRoster = (() => {
       nameCache.set(group, found);
       return found;
     }
+    // The site's account for a character, or for the first of its login screen's characters the site showed
+    function siteOf(character) {
+      if (!character) return null;
+      const group = character.romAccount;
+      const cacheKey = group || character;
+      if (siteCache.has(cacheKey)) return siteCache.get(cacheKey);
+      let found = siteAccountOf(siteChars, character);
+      if (group) {
+        const user = (found && found.user) || '', email = (found && found.email) || '';
+        found = found ? {user, email} : null;
+        for (const member of members.get(group) || []) {
+          if (found && found.user && found.email) break;
+          const other = siteAccountOf(siteChars, member);
+          if (!other) continue;
+          found = {user: (found && found.user) || other.user, email: (found && found.email) || other.email};
+        }
+      }
+      siteCache.set(cacheKey, found);
+      return found;
+    }
+    const siteChanged = () => { siteCache.clear(); byLabel = null; };
     // Where a server goes: added to a region by hand, or taken off the game's own list for it.
     function place(name, region) {
       const key = serverKey(name);
@@ -406,7 +459,7 @@ const GBRoster = (() => {
       onChange(listener) { listeners.add(listener); return () => listeners.delete(listener); },
       async load() {
         if (!storage) return;
-        const saved = await storage.get([VIEW_STORE, SELECTION_STORE, SCOPE_STORE, NAMES_STORE]).catch(() => ({}));
+        const saved = await storage.get([VIEW_STORE, SELECTION_STORE, SCOPE_STORE, NAMES_STORE, SITE_STORE]).catch(() => ({}));
         const kept = saved[VIEW_STORE] || {};
         view.region = typeof kept.region === 'string' ? kept.region : '';
         view.serversOff = new Set(Array.isArray(kept.serversOff) ? kept.serversOff : []);
@@ -420,6 +473,8 @@ const GBRoster = (() => {
         view.regionCache.clear();
         romNames = textMap(saved[NAMES_STORE]);
         nameCache.clear();
+        siteChars = siteMap(saved[SITE_STORE]);
+        siteChanged();
         for (const key of Array.isArray(saved[SELECTION_STORE]) ? saved[SELECTION_STORE] : []) selection.add(key);
         for (const key of Array.isArray(saved[SCOPE_STORE]) ? saved[SCOPE_STORE] : []) scope.add(key);
       },
@@ -440,6 +495,7 @@ const GBRoster = (() => {
         }
         listedList = [...listed.values()];
         nameCache.clear();
+        siteChanged();
         if (!view.region) view.region = guessRegion(list);
       },
       characters: () => characters,
@@ -569,12 +625,53 @@ const GBRoster = (() => {
       },
       // The name you gave its RoM account, or ''
       romName: character => romNameOf(character?.romAccount),
-      // The name to show: yours, or the first name on its login screen's list; '' while no list names it. Steam's says so.
+      // The name to show: yours, the RoM username the site showed with its characters, or the first name on its login
+      // screen's list; '' while nothing names it. Steam's says so.
       romTitle(character) {
         const group = character?.romAccount;
-        if (!group) return '';
-        if (group.steam) return romNameOf(group) ? `${romNameOf(group)} (Steam)` : 'Steam account';
-        return romNameOf(group) || `${group.names[0]}'s account`;
+        const user = siteOf(character)?.user || '';
+        if (!group) return user;
+        if (group.steam) return romNameOf(group) ? `${romNameOf(group)} (Steam)` : user ? `${user} (Steam)` : 'Steam account';
+        return romNameOf(group) || user || `${group.names[0]}'s account`;
+      },
+      // What the site showed for it: {user, email}, or null
+      siteAccount: character => siteOf(character),
+      // Its Gameforge account's e-mail address as the site showed it, or ''
+      siteEmail: character => siteOf(character)?.email || '',
+      // The same by the name the page shows for it
+      siteEmailByLabel(label) {
+        if (!byLabel) {
+          byLabel = new Map();
+          for (const character of characters.concat(listedList)) if (!byLabel.has(String(character.name).toLowerCase())) byLabel.set(String(character.name).toLowerCase(), character);
+        }
+        return siteOf(byLabel.get(String(label || '').toLowerCase()))?.email || '';
+      },
+      // Forget what the site showed for its RoM account's characters, or for it alone. Says how many it forgot.
+      async forgetSiteAccount(character) {
+        if (!storage || !character) return 0;
+        const group = character.romAccount;
+        const list = group ? members.get(group) || [character] : [character];
+        const keys = new Set(), names = new Set();
+        for (const member of list) {
+          for (const key of [member.key, member.formerKey]) if (key) keys.add(key);
+          names.add('|' + String(member.base ?? member.name ?? '').toLowerCase());
+        }
+        const saved = await storage.get(SITE_STORE).catch(() => ({}));
+        const kept = saved[SITE_STORE] && typeof saved[SITE_STORE].chars === 'object' && saved[SITE_STORE].chars ? {...saved[SITE_STORE].chars} : {};
+        let gone = 0;
+        for (const key of Object.keys(kept)) {
+          if (!keys.has(key) && ![...names].some(name => key.endsWith(name))) continue;
+          delete kept[key];
+          gone++;
+        }
+        if (gone) await storage.set({[SITE_STORE]: {v: 1, chars: kept}});
+        return gone;
+      },
+      // The site's accounts changed in storage
+      setSiteAccounts(value) {
+        siteChars = siteMap(value);
+        siteChanged();
+        changed('names');
       },
       setRomName(character, name) {
         const group = character?.romAccount;
@@ -751,6 +848,6 @@ const GBRoster = (() => {
     });
   }
 
-  return {NO_SERVER, FULL_CAP, REGIONS, STALE_NOTE, UNSAVED_NOTE, number, escapeHtml, cleanServer, serverKey, keyOf, prepare, regionOf, regionLists, inRegion, shows,
+  return {SITE_STORE, siteAccountOf, NO_SERVER, FULL_CAP, REGIONS, STALE_NOTE, UNSAVED_NOTE, number, escapeHtml, cleanServer, serverKey, keyOf, prepare, regionOf, regionLists, inRegion, shows,
     serverList, serverTable, unlistedServers, guessRegion, groupBy, describe, accountLine, create, attach};
 })();
