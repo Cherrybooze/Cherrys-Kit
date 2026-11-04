@@ -371,6 +371,7 @@ function zBagB_Update()
 				else
 					zBagKit.Label(item, nil);
 				end
+				if (zBagKit.StatPrefix) then zBagKit.StatPrefix(item, nil, zBagKit.SlotNumberFontSize()*(zBag_VAR["bankscale"] or 1), nil, i); end -- Cherry's Kit: "Stats" tick
 				if (locked~=item.enbl) then 
 					SetItemButtonLuminance(item,locked); 
 					item.enbl=locked;

@@ -109,6 +109,14 @@ class StatSearchTests(unittest.TestCase):
         self.assertEqual(self.find("+12"), [])
         self.assertFalse(self.g.zBagKit.statsMissing)
 
+    def test_each_stat_line_keeps_its_tooltip_colour(self):
+        # line 3 of item 101 (Stamina) is green; line 4 (+5% Dexterity) has no colour from the client
+        self.lua.execute("zBagKitTipReaderTextLeft3.GetColor = function() return 0, 1, 0 end")
+        self.find("stamina")
+        self.tick_until_idle()
+        self.assertEqual(self.g.zBagKit.statCache["L1"], "stamina\ndexterity")
+        self.assertEqual(self.g.zBagKit.statColors["L1"], "00ff00\n")
+
     def test_known_items_are_never_read_again(self):
         self.find("stamina")
         self.tick_until_idle()
