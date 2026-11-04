@@ -1319,6 +1319,8 @@
     toast,
     startHelper,
   });
+  // New saves reach the Stats page and every other tab, not only while the Terminal shows
+  terminal.watch(true);
   terminal.catalogue().then(reply => { if (reply.ok) byId('roster-count-excluded').textContent = number((reply.excluded || []).length); });
   const stats = {
     str:'Strength', dex:'Dexterity', sta:'Stamina', int:'Intelligence', wis:'Wisdom',

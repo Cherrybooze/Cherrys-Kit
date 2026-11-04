@@ -9,6 +9,8 @@ const GBTerminal = (() => {
   const MAX_HISTORY = 200;
   const POLL_MS = 2000;
   const POLL_FAILED_MS = 10000;
+  // On the page's other tabs the feed is still read, slowly, so new saves reach every tab without a click
+  const WATCH_MS = 10000;
   const FEED_SIZE = 50;
 
   const make = (tag, className, text) => {
@@ -74,7 +76,7 @@ const GBTerminal = (() => {
     let historyAt = 0, draft = '';
     let busy = false, pending = null, helper = null, bridgeDown = false;
     let follow = true, manualPause = false, unread = 0;
-    let shown = false, opened = false, polling = false, timer = 0, session = null, seq = 0;
+    let shown = false, watching = false, opened = false, polling = false, timer = 0, session = null, seq = 0;
     let catalogue = null, catalogueAsked = null;
     let suggestions = [], cycleAt = -1, listDismissed = false;
     let eventBlock = null;
@@ -540,12 +542,12 @@ const GBTerminal = (() => {
     }
     async function poll() {
       clearTimeout(timer);
-      if (!shown || document.hidden || polling) return;
+      if (!(shown || watching) || document.hidden || polling) return;
       polling = true;
       let again = POLL_MS;
       const reply = await ask({type: 'terminal-feed', session, after: seq, max: FEED_SIZE});
       polling = false;
-      if (!shown) return;
+      if (!(shown || watching)) return;
       if (reply.ok) {
         bridgeDown = false;
         if (reply.session !== session) seq = 0;
@@ -571,7 +573,7 @@ const GBTerminal = (() => {
       }
       showHelper(reply.helper);
       if (!catalogueAsked) getCatalogue();
-      if (shown && !document.hidden) timer = setTimeout(poll, again);
+      if ((shown || watching) && !document.hidden) timer = setTimeout(poll, shown ? again : Math.max(again, WATCH_MS));
     }
     async function open() {
       if (opened) return;
@@ -579,7 +581,7 @@ const GBTerminal = (() => {
       const reply = await getCatalogue();
       if (reply.ok && Array.isArray(reply.banner) && reply.banner.length) addLines(reply.banner);
     }
-    document.addEventListener('visibilitychange', () => { if (shown && !document.hidden) poll(); });
+    document.addEventListener('visibilitychange', () => { if ((shown || watching) && !document.hidden) poll(); });
     showFollow();
     setPromptState();
 
@@ -589,11 +591,18 @@ const GBTerminal = (() => {
         shown = on;
         if (!on) {
           clearTimeout(timer);
+          if (watching && !document.hidden) timer = setTimeout(poll, WATCH_MS);
           return;
         }
         open().finally(poll);
         input.focus({preventScroll: true});
         if (follow) output.scrollTop = output.scrollHeight;
+      },
+      // The rest of the page wants to hear about new saves while it is open, on any tab
+      watch(on) {
+        watching = !!on;
+        if (watching && !shown) poll();
+        else if (!watching && !shown) clearTimeout(timer);
       },
       // For the rest of the page: one command, its answer, and nothing drawn here
       command: command => ask({type: 'terminal-command', requestId: newRequestId(), command}),
