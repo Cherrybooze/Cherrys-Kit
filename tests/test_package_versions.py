@@ -1,4 +1,4 @@
-"""Each package version in release-packages.json matches its addon README.
+"""Release versions agree: release-packages.json, addon READMEs and download links.
 
 The release ZIP name and release-versions.json come from release-packages.json,
 while the guided setup reads the installed addon's README "Version **x**" line.
@@ -37,6 +37,26 @@ class PackageVersionTests(unittest.TestCase):
                                      folder + ": release-packages.json and README.md disagree")
                     checked += 1
         self.assertGreater(checked, 10)
+
+    def test_download_links_name_files_this_release_builds(self):
+        data = json.loads((ROOT / "release-packages.json").read_text(encoding="utf-8"))
+        kit = data["kit_version"]
+        manifest = ROOT / "extras/GlobalBankDailyRewards/GlobalBank/Helper/ChromeExtension/manifest.json"
+        extension = json.loads(manifest.read_text(encoding="utf-8"))["version"]
+        expected = {"CherrysKit-Full-" + kit + ".zip", "CherrysKit-Hub-" + kit + ".zip",
+                    "CherrysKit-GlobalBankDailyRewards-" + extension + ".zip",
+                    "release-versions.json", "release-manifest.json", "SHA256SUMS.txt"}
+        expected |= {"CherrysKit-%s-%s.zip" % (a["folder"], a["version"]) for a in data["addons"]}
+        expected |= {"%s-%s.zip" % (a["folder"], a["version"])
+                     for a in data["standalone_packages"] + data["external_packages"]}
+        link = re.compile(r"releases/download/v" + re.escape(kit) + r"/([^)\s\"'#?]+)")
+        found = 0
+        for path in (ROOT / "README.md", ROOT / "extras/GlobalBankDailyRewards/README.md"):
+            for name in link.findall(path.read_text(encoding="utf-8")):
+                found += 1
+                with self.subTest(file=path.name, link=name):
+                    self.assertIn(name, expected, "no such file in release v" + kit)
+        self.assertGreater(found, 0)
 
 
 if __name__ == "__main__":
