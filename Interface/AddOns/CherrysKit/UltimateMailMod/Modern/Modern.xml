@@ -340,19 +340,51 @@
               <Button name="UMMModernMassMarkedRow5" inherits="UMMModernButtonTemplate"/>
               <Button name="UMMModernMassMarkedRow6" inherits="UMMModernButtonTemplate"/>
               <Button name="UMMModernMassMarkedRow7" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow8" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow9" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow10" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow11" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow12" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow13" inherits="UMMModernButtonTemplate"/>
+              <Button name="UMMModernMassMarkedRow14" inherits="UMMModernButtonTemplate"/>
             </Frames>
           </Frame>
-          <Frame name="UMMModernMassCats" inherits="UMMModernHitTemplate">
-            <Frames>
-              <Button name="UMMModernMassCatRow1" inherits="UMMModernButtonTemplate"/>
-              <Button name="UMMModernMassCatRow2" inherits="UMMModernButtonTemplate"/>
-              <Button name="UMMModernMassCatRow3" inherits="UMMModernButtonTemplate"/>
-              <Button name="UMMModernMassCatRow4" inherits="UMMModernButtonTemplate"/>
-              <Button name="UMMModernMassCatRow5" inherits="UMMModernButtonTemplate"/>
-              <Button name="UMMModernMassCatRow6" inherits="UMMModernButtonTemplate"/>
-              <Button name="UMMModernMassCatRow7" inherits="UMMModernButtonTemplate"/>
-            </Frames>
-          </Frame>
+          <Button name="UMMModernMassCat1" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat2" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat3" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat4" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat5" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat6" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat7" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat8" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat9" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat10" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat11" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat12" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat13" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat14" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat15" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat16" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat17" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat18" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat19" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat20" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat21" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat22" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat23" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat24" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat25" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat26" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat27" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat28" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat29" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat30" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat31" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat32" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat33" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat34" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat35" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernMassCat36" inherits="UMMModernButtonTemplate"/>
           <Button name="UMMModernMassClear" inherits="UMMModernButtonTemplate"/>
           <Button name="UMMModernMassCOD" inherits="UMMModernButtonTemplate"/>
           <EditBox name="UMMModernMassCODAmount" inherits="UMMModernGoldTemplate"/>

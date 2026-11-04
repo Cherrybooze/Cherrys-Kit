@@ -340,8 +340,11 @@ UMMNewMailButton = { CheckStatus = function() end }
 UIPanelBackdropFrame_SetTexture = function() end
 UMMNormalBar = { Hide = function() end, Show = function() end, SetStatus = function() end, Init = function() end }
 UMMTooltip = { SetHyperLink = function() end, Hide = function() end }
-UMMItemDB = { GetTypeByID = function(_, id) return "Type"..id end,
+-- Library/ItemDB.lua (550 KB) is read the first time anything is asked of UMMItemDB: what was asked
+ummItemDBReads = {}
+local itemDB = { GetTypeByID = function(_, id) return "Type"..id end,
   IsItem = function(_, kind, link) return ummCategories[kind] ~= nil and ummCategories[kind][link] == true end }
+UMMItemDB = setmetatable({}, { __index = function(_, key) table.insert(ummItemDBReads, key); return itemDB[key] end })
 UMMFixtureWidget("Frame", "MailFrame", "UIParent").visible = false
 UMMFixtureWidget("Frame", "UMMFrameTab1Tools", "UMMFrameTab1")
 local toc = UMMFixtureWidget("Frame", "UMMFrameTab1TOC", "UMMFrameTab1")
@@ -1203,7 +1206,7 @@ class MassSendTests(ModernWindowFixture, unittest.TestCase):
         self.step(0.5)
         self.assertEqual(self.marked(), set())
         self.assertEqual(self.status(), "Done: 4 of 4 mails sent.")
-        self.assertIn("Nothing marked. Click items, drag a box, or pick a category.", self.texts("UMMModernMass"))
+        self.assertIn("Nothing marked. Click items, drag a box, or click a category under the bags.", self.texts("UMMModernMass"))
 
     def test_a_box_marks_what_it_covers_and_a_click_on_marked_unmarks(self):
         self.press(1, dx=4, dy=4, to=(8, 4, 4))
@@ -1216,13 +1219,86 @@ class MassSendTests(ModernWindowFixture, unittest.TestCase):
 
     def test_a_category_marks_its_items_and_search_with_enter_marks_by_name(self):
         self.lua.execute('ummCategories.Type5 = { [ummBagSlots[4].link] = true }')
-        self.click("UMMModernMassCatRow5")
+        self.click("UMMModernMassCat5")
         self.assertEqual(self.marked(), {4})
         self.type("UMMModernMassSearch", "her")
         self.assertEqual(self.g.UMMModernMassMarkedRow1.ummName.text, "Gem")
         self.h.script("UMMModernMassSearch", "OnEnterPressed")
         self.step()
         self.assertEqual(self.marked(), {1, 2, 4, 7})
+
+    def box(self, i):
+        return self.g[f"UMMModernMassCat{i}"]
+
+    def test_category_boxes_sit_in_two_rows_of_18_under_the_bag_columns(self):
+        gx, gy = self.grid.GetPos(self.grid)
+        _, grid_h = self.grid.GetRealSize(self.grid)
+        send_top = self.g.UMMModernMassSend.GetPos(self.g.UMMModernMassSend)[1]
+        rows = set()
+        for i in range(1, 37):
+            box = self.box(i)
+            self.assertTrue(self.shown(f"UMMModernMassCat{i}"))
+            x, y = box.GetPos(box)
+            w, h = box.GetRealSize(box)
+            col = (i - 1) % 18
+            slot = (3 + col // 6) * 30 + 24 + col % 6 + 1      # the bottom slot of the bag column above
+            self.assertAlmostEqual(x + w / 2, self.point(slot)[0], places=4, msg=f"box {i}")
+            self.assertGreater(y, gy + grid_h)
+            self.assertLessEqual(y + h, send_top)
+            rows.add(round(y, 3))
+        self.assertEqual(len(rows), 2)
+        # the summary moved to the side column, under the marked list and beside the Send button
+        self.assertIn("Nothing marked. Click items, drag a box, or click a category under the bags.",
+                      self.texts("UMMModernMass"))
+        sx, sy = self.lua.eval('''(function()
+          for _, w in pairs(ummWidgets) do
+            if w.kind == "FontString" and w.text == UMM_M_MS_NONE then return { w:GetPos() } end
+          end
+        end)()''').values()
+        last = self.g.UMMModernMassMarkedRow14
+        lx, ly = last.GetPos(last)
+        _, lh = last.GetRealSize(last)
+        self.assertGreaterEqual(sx, lx)
+        self.assertGreaterEqual(sy, ly + lh)
+
+    def test_boxes_show_pictures_and_tags_and_the_item_list_is_read_only_on_a_click(self):
+        icon = lambda i: self.box(i).umm.icon.texture
+        # this client has no GetObjImage: pictures from Interface/icons
+        self.assertEqual(icon(1), "Interface/icons/runes_stone01_01")
+        self.assertEqual(icon(10), "Interface/icons/icon-default")
+        self.assertIsNone(self.box(1).ummTag)
+        self.assertEqual(self.box(27).ummTag.text, "Fi")
+        self.assertEqual(self.box(13).ummTag.text, "Alc")
+        self.assertNotEqual(tuple(self.box(27).ummTag.color.values()), tuple(self.box(29).ummTag.color.values()))
+        self.assertEqual(self.label("UMMModernMassCat36"), "All")
+        self.assertIsNone(self.box(36).umm.icon)
+        tip = lambda i: list(self.box(i).ummTip(self.box(i)).values())
+        self.assertEqual(tip(3), ["Fusion Stones", "Click to mark every item of this kind in your bags."])
+        self.assertEqual(tip(36), ["All categories", "Click to mark every item of all the kinds here."])
+        self.g.UMM_MSI_RECIPE_SEND_TO14 = "Cook"
+        self.assertEqual(tip(14)[2], "Fills an empty To with Cook (Recipient/Characters.lua).")
+        # opening the page read nothing from the 550 KB item list; a click does
+        self.assertEqual(self.lua_list("ummItemDBReads"), [])
+        self.lua.execute('ummCategories.Type27 = { [ummBagSlots[8].link] = true }')
+        self.click("UMMModernMassCat27")
+        self.assertEqual(self.marked(), {8})
+        self.assertIn("GetTypeByID", self.lua_list("ummItemDBReads"))
+
+    def test_all_marks_every_kind_and_the_boxes_rest_while_a_send_runs(self):
+        self.lua.execute('ummCategories.Type3 = { [ummBagSlots[4].link] = true }; '
+                         'ummCategories.Type20 = { [ummBagSlots[3].link] = true }')
+        self.click("UMMModernMassCat36")
+        self.assertEqual(self.marked(), {3, 4})
+        self.type("UMMModernMassTo", "Alt1")
+        self.click("UMMModernMassSend")
+        self.assertTrue(self.lua.eval("UMMQueue:Busy()"))
+        self.assertFalse(self.box(1).umm.enabled)
+        self.assertFalse(self.box(36).umm.enabled)
+        self.until("not UMMQueue:Busy()")
+        self.step(0.5)
+        self.assertTrue(self.box(1).umm.enabled)
+        self.assertTrue(self.box(36).umm.enabled)
+
 
     def test_cod_is_off_until_ticked_and_its_price_box_shows_only_then(self):
         def ticked():
@@ -1269,6 +1345,24 @@ class MassSendTests(ModernWindowFixture, unittest.TestCase):
         self.assertTrue(self.shown("UMMModernMassFast"))
         self.assertTrue(self.g.UMMModernMassFast.umm.enabled)
 
+
+class MassCategoryIconTests(ModernWindowFixture, unittest.TestCase):
+    def test_boxes_use_the_game_icon_of_their_item_and_fall_back_when_it_has_none(self):
+        self.lua.execute('''
+          ummObjImages = {}
+          function GetObjImage(id)
+            table.insert(ummObjImages, id)
+            if id == 520021 then return "interface/icons/rune_power_01" end
+            if id == 202882 then error("no such object") end
+            return ""
+          end''')
+        self.open()
+        self.click("UMMModernTab3")
+        icon = lambda i: self.g[f"UMMModernMassCat{i}"].umm.icon.texture
+        self.assertEqual(icon(1), "interface/icons/rune_power_01")
+        self.assertEqual(icon(3), "Interface/icons/fusion_stone001")     # GetObjImage failed
+        self.assertEqual(icon(4), "Interface/icons/mana stone10")        # GetObjImage had no picture
+        self.assertEqual(len(self.lua.eval("ummObjImages")), 35)
 
 class CtrlBackspaceTests(ModernWindowFixture, unittest.TestCase):
     """Ctrl+Backspace, which the client lacks: gold goes back to the last comma, a name goes whole,

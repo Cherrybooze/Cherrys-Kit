@@ -1,6 +1,6 @@
 -- Cherry's Kit: the Mass send page of the modern window. All six bag pages at once; click items to
--- mark them (Ctrl-click: every stack of that item), drag a box over them, mark a whole category, or
--- type part of a name and press Enter. Every marked item goes in its own mail to To.
+-- mark them (Ctrl-click: every stack of that item), drag a box over them, click a category box under
+-- the bags, or type part of a name and press Enter. Every marked item goes in its own mail to To.
 --
 -- The bag grid is one mouse frame: the slot under the cursor is worked out from the cursor, so the
 -- 180 slots are only textures, made the first time the page opens.
@@ -17,10 +17,12 @@ M.Default("UMM_M_MS_SEARCH", "Mark by name, then Enter");
 M.Default("UMM_M_MS_SEARCH_TIP", "Items whose name has these letters stay bright; Enter marks all of them. In the bags: click marks an item, Ctrl-click every stack of it, and a box dragged over items marks what is inside (Ctrl or Shift keeps what is marked already).");
 M.Default("UMM_M_MS_MARKED", "Marked");
 M.Default("UMM_M_MS_UNMARK_TIP", "Click to unmark all of these.");
-M.Default("UMM_M_MS_CATS", "Mark a category");
-M.Default("UMM_M_MS_CAT_TIP", "Marks every item of this kind in your bags.");
-M.Default("UMM_M_MS_ALLCATS", "Everything in these categories");
-M.Default("UMM_M_MS_NONE", "Nothing marked. Click items, drag a box, or pick a category.");
+M.Default("UMM_M_MS_CAT_TIP", "Click to mark every item of this kind in your bags.");
+M.Default("UMM_M_MS_CAT_TO", "Fills an empty To with %s (Recipient/Characters.lua).");
+M.Default("UMM_M_MS_ALLCATS", "All categories");
+M.Default("UMM_M_MS_ALLCATS_TIP", "Click to mark every item of all the kinds here.");
+M.Default("UMM_M_MS_ALL", "All");
+M.Default("UMM_M_MS_NONE", "Nothing marked. Click items, drag a box, or click a category under the bags.");
 M.Default("UMM_M_MS_SUMMARY", "%d marked: %d mails to %s");
 M.Default("UMM_M_MS_SUMMARY_NOTO", "%d marked: enter a name in To.");
 M.Default("UMM_M_MS_BOUND", "  (%d bound, left out)");
@@ -42,14 +44,67 @@ local PANEL_PAD = 3;
 local PANEL_TINT, SLOT_TINT = {0.08, 0.16, 0.20}, {0.20, 0.30, 0.38};
 local GRID_X, GRID_Y = 8, 36;
 local GRID_W, GRID_H = BAG_W * 3 + BAG_GAP * 2, BAG_H * 2 + BAG_GAP;
-local LIST_ROWS, LIST_ROW = 7, 22;
-local CATS = 36;
+local LIST_ROWS, LIST_ROW = 14, 22;
 local SIDE_X, SIDE_W = 572, 180;
+local BOTTOM_Y = 398;
+
+-- ### Categories ###
+-- The 35 kinds UMMMassMarkCategory marks (Library/ItemDB.lua's GetTypeByID, in that order), then
+-- all of them as box 36. Each box shows the game's own icon of a typical item of its kind
+-- (GetObjImage), so Library/ItemDB.lua (550 KB) is still read only when a box is clicked. A client
+-- without GetObjImage gets a picture from Interface/icons instead. Kinds whose items look alike
+-- (T6 gear, recipes, pet eggs, Cenedril) also carry a short tag; pet egg tags take their element's
+-- colour.
+local CATS = 36;
+local CAT_SIZE, CAT_STEP = 22, 24;
+local CAT_Y = GRID_Y + GRID_H + 6;
+local ELEMENT = {
+  dark = {0.74, 0.58, 1.00}, earth = {0.86, 0.66, 0.36}, fire = {1.00, 0.48, 0.32}, light = {1.00, 0.92, 0.45},
+  water = {0.42, 0.76, 1.00}, rune = {0.45, 0.95, 0.90}, wind = {0.56, 1.00, 0.56},
+};
+local CATEGORY = {
+  { item = 520021, icon = "runes_stone01_01" },                     -- 1 runes (Power I)
+  { item = 200854, icon = "rune_crystal_001" },                     -- 2 production runes (Purify Rune)
+  { item = 202882, icon = "fusion_stone001" },                      -- 3 fusion stones
+  { item = 202849, icon = "mana stone10" },                         -- 4 mana stones (tier 10)
+  { item = 202939, icon = "item_mat_001" },                         -- 5 general materials (Life Crystal)
+  { item = 200473, icon = "item_mat_002" },                         -- 6 raw materials (Apple)
+  { item = 200084, icon = "item_food_010_001" },                    -- 7 foods and desserts (Roasted Meat)
+  { item = 200154, icon = "item_potion_000_001" },                  -- 8 potions (Basic Healing Potion)
+  { item = 224451, icon = "bag01", tag = "Bag" },                   -- 9 T6 bag stat items
+  { item = 212635, tag = "Cln" },                                   -- 10 clean T6 items
+  { item = 214843, tag = "!" },                                     -- 11 T6 items to check before sending
+  { item = 210438, tag = "Abl" },                                   -- 12 T6 items with an ability
+  { item = 550676, tag = "Alc" },                                   -- 13 alchemy recipes
+  { item = 550432, tag = "Ck" },                                    -- 14 cooking recipes
+  { item = 550483, tag = "Tl" },                                    -- 15 tailoring recipes
+  { item = 550257, tag = "Cp" },                                    -- 16 carpentry recipes
+  { item = 550579, tag = "Ar" },                                    -- 17 armorcrafting recipes
+  { item = 550346, tag = "Bs" },                                    -- 18 blacksmithing recipes
+  { item = 550952, tag = "+" },                                     -- 19 other recipes
+  { item = 200234, icon = "item_ore_001" },                         -- 20 ores (Iron Ore)
+  { item = 200293, icon = "item_lum_001" },                         -- 21 wood (Ash Wood)
+  { item = 200333, icon = "item_her_001" },                         -- 22 herbs (Bitterleaf)
+  { item = 770004, icon = "item_moncard" },                         -- 23 monster cards
+  { item = 202916, icon = "guildwar_001" },                         -- 24 guild contributions (Guild Rune)
+  { item = 204481, icon = "shop_goods/egg_01", tag = "Dk", color = ELEMENT.dark },    -- 25 pet eggs
+  { item = 204476, icon = "shop_goods/egg_01", tag = "Ea", color = ELEMENT.earth },   -- 26
+  { item = 204478, icon = "shop_goods/egg_01", tag = "Fi", color = ELEMENT.fire },    -- 27
+  { item = 204480, icon = "shop_goods/egg_01", tag = "Li", color = ELEMENT.light },   -- 28
+  { item = 204477, icon = "shop_goods/egg_01", tag = "Wa", color = ELEMENT.water },   -- 29
+  { item = 204509, icon = "shop_goods/egg_01", tag = "Ru", color = ELEMENT.rune },    -- 30
+  { item = 204479, icon = "shop_goods/egg_01", tag = "Wi", color = ELEMENT.wind },    -- 31
+  { item = 209873, tag = "Dyn" },                                   -- 32 Cenedril: dynamic
+  { item = 209875, tag = "Mys" },                                   -- 33 mystical
+  { item = 209874, tag = "Std" },                                   -- 34 steadfast
+  { item = 200016, icon = "quest_bag01" },                          -- 35 daily quest materials
+};
+local catButtons = {};
 
 local built = false;
 local cells = {};
 local groups = {};
-local markedOffset, catOffset = 0, 0;
+local markedOffset = 0;
 local search = "";
 local codOn = false;
 local dirty = false;
@@ -228,16 +283,6 @@ local function drawMarked()
   ui.markedHead:SetText(UMM_M_MS_MARKED..(sendCount + boundCount > 0 and ("  "..(sendCount + boundCount)) or ""));
 end
 
-local function drawCats()
-  catOffset = math.max(0, math.min(catOffset, CATS - LIST_ROWS));
-  for i = 1, LIST_ROWS do
-    local row = getglobal("UMMModernMassCatRow"..i);
-    local id = catOffset + i;
-    row.ummCat = id;
-    M.ButtonText(row, id == CATS and UMM_M_MS_ALLCATS or (getglobal("UMM_MSI_MARK_TOOLTIP"..id) or tostring(id)));
-  end
-end
-
 local function sendOK()
   local to = trim(UMMModernMassTo:GetText());
   local player = UnitName("player");
@@ -271,6 +316,7 @@ local function drawControls()
   end
   M.Enable(UMMModernMassSend, ok);
   M.Enable(UMMModernMassClear, sendCount + boundCount > 0 and not running);
+  for i = 1, table.getn(catButtons) do M.Enable(catButtons[i], not running); end
 end
 
 -- C.O.D. is off until ticked, and its price box shows only while it is on; ticking either way
@@ -498,17 +544,9 @@ end
 
 -- ### Building ###
 
-local function listWheel(which)
-  return function(_, delta)
-    local step = delta > 0 and -2 or 2;
-    if (which == "marked") then
-      markedOffset = markedOffset + step;
-      drawMarked();
-    else
-      catOffset = catOffset + step;
-      drawCats();
-    end
-  end;
+local function markedWheel(_, delta)
+  markedOffset = markedOffset + (delta > 0 and -2 or 2);
+  drawMarked();
 end
 
 local function buildTop()
@@ -559,7 +597,7 @@ local function buildSide()
   M.Place(ui.markedHead, f, SIDE_X + 2, 34, SIDE_W, 14);
   local marked = UMMModernMassMarked;
   M.Hit(marked, f, SIDE_X, 50, SIDE_W, LIST_ROWS * LIST_ROW);
-  marked.ummWheel = listWheel("marked");
+  marked.ummWheel = markedWheel;
   for i = 1, LIST_ROWS do
     local row = getglobal("UMMModernMassMarkedRow"..i);
     M.Button(row, marked, 0, (i - 1) * LIST_ROW, SIDE_W, LIST_ROW - 1, { style = "row",
@@ -575,31 +613,70 @@ local function buildSide()
     M.Place(row.ummCount, row, 120, 0, SIDE_W - 124, LIST_ROW - 1);
     row:Hide();
   end
+  -- what Send would do, beside the Send button: up to three lines
+  ui.summary = M.Label(f, 12, C.text, "LEFT");
+  M.Place(ui.summary, f, SIDE_X + 2, 50 + LIST_ROWS * LIST_ROW + 6, SIDE_W - 4, 54);
+end
 
-  local catHead = M.Label(f, 11, C.dim, "LEFT");
-  M.Place(catHead, f, SIDE_X + 2, 214, SIDE_W, 14);
-  catHead:SetText(UMM_M_MS_CATS);
-  local cats = UMMModernMassCats;
-  M.Hit(cats, f, SIDE_X, 230, SIDE_W, LIST_ROWS * LIST_ROW);
-  cats.ummWheel = listWheel("cats");
-  for i = 1, LIST_ROWS do
-    local row = getglobal("UMMModernMassCatRow"..i);
-    M.Button(row, cats, 0, (i - 1) * LIST_ROW, SIDE_W, LIST_ROW - 1, { text = "", size = 11, style = "row", justify = "LEFT",
-      tip = function(b)
-        local id = b.ummCat or 1;
-        return { id == CATS and UMM_M_MS_ALLCATS or (getglobal("UMM_MSI_MARK_TOOLTIP"..id) or ""), UMM_M_MS_CAT_TIP };
-      end,
-      click = function(b) if (b.ummCat) then markCategory(b.ummCat); end end });
-    row.umm.rowAlpha = 0.25;
-    row.ummWheel = cats.ummWheel;
+-- Name and help for category box b; the name set for that kind in Recipient/Characters.lua too.
+local function catTip(b)
+  local id = b.ummCat;
+  local tip;
+  if (id == CATS) then
+    tip = { UMM_M_MS_ALLCATS, UMM_M_MS_ALLCATS_TIP };
+  else
+    tip = { getglobal("UMM_MSI_MARK_TOOLTIP"..id) or tostring(id), UMM_M_MS_CAT_TIP };
+  end
+  local to = getglobal("UMM_MSI_RECIPE_SEND_TO"..id);
+  if (to and to ~= "") then table.insert(tip, string.format(UMM_M_MS_CAT_TO, to)); end
+  return tip;
+end
+
+-- The picture of category c: the game's icon of its item, else one from Interface/icons.
+local function catIcon(c)
+  local path;
+  if (type(GetObjImage) == "function") then
+    local ok, found = pcall(GetObjImage, c.item);
+    if (ok and type(found) == "string" and found ~= "") then path = found; end
+  end
+  return path or ("Interface/icons/"..(c.icon or "icon-default"));
+end
+
+-- The category boxes: 2 rows of 18 under the bags, each centred under a column of bag slots.
+local function buildCats()
+  local f = Page.frame;
+  local inset = math.floor((CELL - CAT_SIZE) / 2);
+  for id = 1, CATS do
+    local b = getglobal("UMMModernMassCat"..id);
+    local col, row = (id - 1) % 18, math.floor((id - 1) / 18);
+    local x = GRID_X + math.floor(col / 6) * (BAG_W + BAG_GAP) + (col % 6) * STEP + inset;
+    local c = CATEGORY[id];
+    M.Button(b, f, x, CAT_Y + row * CAT_STEP, CAT_SIZE, CAT_SIZE, { style = "quiet", tip = catTip,
+      text = (id == CATS) and UMM_M_MS_ALL or nil, size = 10,
+      click = function(button) markCategory(button.ummCat); end });
+    b.ummCat = id;
+    if (c) then
+      local icon = M.Icon(b, "ARTWORK", CAT_SIZE - 4);
+      M.Place(icon, b, 2, 2, CAT_SIZE - 4, CAT_SIZE - 4);
+      icon:SetTexture(catIcon(c));
+      b.umm.icon = icon;   -- dims with the button while a send runs
+      if (c.tag) then
+        M.Default("UMM_M_MS_TAG"..id, c.tag);
+        local shade = M.Texture(b, "OVERLAY", "white", C.bg, 0.72);
+        M.Place(shade, b, 2, CAT_SIZE - 11, CAT_SIZE - 4, 9);
+        local tag = M.Label(b, 9, c.color or C.text, "CENTER", "OVERLAY");
+        M.Place(tag, b, 1, CAT_SIZE - 12, CAT_SIZE - 2, 11);
+        tag:SetText(getglobal("UMM_M_MS_TAG"..id));
+        b.ummTag = tag;
+      end
+    end
+    catButtons[id] = b;
   end
 end
 
 local function buildBottom()
   local f = Page.frame;
-  ui.summary = M.Label(f, 12, C.text, "LEFT");
-  M.Place(ui.summary, f, GRID_X, GRID_Y + GRID_H + 8, GRID_W, 18);
-  local y = 394;
+  local y = BOTTOM_Y;
   M.Button(UMMModernMassClear, f, 8, y, 110, 24, { text = UMM_M_MS_CLEAR, icon = "Broom", iconSize = 14, size = 12,
     style = "quiet", click = clearMarks });
   M.Button(UMMModernMassCOD, f, 124, y, 84, 24, { text = UMM_M_MS_COD, icon = "CheckboxOff", iconSize = 14, size = 12,
@@ -632,6 +709,7 @@ function Page.Build()
   UMMModernMassHover.ummOn = { update = hoverUpdate };
   buildTop();
   buildSide();
+  buildCats();
   buildBottom();
 end
 
@@ -641,7 +719,6 @@ function Page.Show()
   buildGrid();   -- the 180 slots are made the first time the page opens
   drawShortcuts();
   drawGrid();
-  drawCats();
   drawWho();
   marksChanged();
 end

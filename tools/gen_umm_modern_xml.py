@@ -26,8 +26,9 @@ INBOX_ROWS = 14
 READER_ITEMS = 5
 COMPOSE_SLOTS = 10
 GOLD_ROWS = 8
-MASS_MARKED_ROWS = 7
-MASS_CATEGORY_ROWS = 7
+MASS_MARKED_ROWS = 14
+# Mass send's category boxes, 2 rows of 18 under the bags: the 35 kinds of UMMMassMarkCategory, then all of them
+MASS_CATEGORIES = 36
 HISTORY_NAMES = 20
 PICKER_ROWS = 10
 PICKER_CHIPS = 5
@@ -168,7 +169,7 @@ def window():
         hit("UMMModernMassGrid"),
         updater("UMMModernMassHover"),
         hit("UMMModernMassMarked", "", buttons("UMMModernMassMarkedRow", MASS_MARKED_ROWS)),
-        hit("UMMModernMassCats", "", buttons("UMMModernMassCatRow", MASS_CATEGORY_ROWS)),
+        *buttons("UMMModernMassCat", MASS_CATEGORIES),
         button("UMMModernMassClear"), button("UMMModernMassCOD"),
         edit("UMMModernMassCODAmount", "UMMModernGoldTemplate"),
         button("UMMModernMassSend"), button("UMMModernMassFast"),
