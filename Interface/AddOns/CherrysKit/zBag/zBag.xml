@@ -79,6 +79,16 @@
 				</OnMouseUp>
 				</Scripts>
 			</Frame>
+			<!-- Cherry's Kit: the equipment slots beside the bag, when "Next to bag (zBag)" is on.
+			     Defined before the slots so they draw over it; zBag_Resize sizes and shows it. -->
+			<Frame name="zBagEqBox" inherits="UIPanelBackdropFrame" enableMouse="true" frameStrata="LOW" hidden="true">
+				<Size><AbsDimension x="100" y="250"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="zBagBackground" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="-4" y="0"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts><OnLoad>UIPanelBackdropFrame_SetTexture(this,"Interface/Common/PanelCommonBorder",64,64);</OnLoad></Scripts>
+			</Frame>
 			<Button name="zBagBackgroundCloseButton"  inherits="UIPanelCloseButtonTemplate"> <!-- override default close button -->
 				<Anchors>
 					<Anchor point="TOPRIGHT" relativeTo="zBagBackground" relativePoint="TOPRIGHT">					
