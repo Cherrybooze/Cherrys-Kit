@@ -109,6 +109,23 @@ class StatPrefixTests(unittest.TestCase):
         self.g.zBagKit.StatPrefix(self.g.Owner, None, 8, None, 206)  # empty bank slot
         self.assertFalse(self.g.OwnerKitStats.visible)
 
+    def test_german_stat_names(self):
+        self.lua.execute(r'''
+          de = {
+            zBagKit.StatPrefixText("st\195\164rke\nausdauer", 1, ""),
+            zBagKit.StatPrefixText("intelligenz", 1, ""),
+            zBagKit.ShortStat("magische verteidigung"),
+            zBagKit.ShortStat("r\195\188stung"),
+            zBagKit.ShortStat("r\195\188"),
+          }
+        ''')
+        de = self.g.de
+        self.assertEqual(de[1], "|cffff8c1aSta|r\n|cffff8c1aStr|r")
+        self.assertEqual(de[2], "|cff4aa0ffint|r")
+        self.assertEqual(de[3], "mdef")
+        self.assertEqual(de[4], "r\u00fcs")  # UTF-8 letters stay whole
+        self.assertEqual(self.lua.eval("#zBagKit.ShortStat('r\\195')"), 1)  # half a character is dropped
+
     def test_bag_slot_resolves_the_index_lazily(self):
         self.g.links[105] = "|Hitem:31858 0 0 10001 1 0|h"
         self.g.zBagKit.StatPrefix(self.g.Owner, None, 8, 5)

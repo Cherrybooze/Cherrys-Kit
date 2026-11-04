@@ -838,6 +838,22 @@ function K.Probe()
     .. shown(BankSearchEditBox) .. "/" .. shown(GoodsSearchEditBox) .. ", use search " .. tostring(v["usebagsearch"]))
   add("stat search: reader " .. yes(zBagKitTipReader) .. ", items known " .. tostring(K.statCount)
     .. ", tooltips read " .. tostring(K.statsReadTotal) .. ", waiting " .. yes(K.statsMissing))
+  -- the first few stones with stats in the bags: link numbers, stat count, read names, colours, label
+  local stones = 0
+  for slot = 1, K.BAG_STAT_SLOTS do
+    if stones >= 4 then break end
+    local okInfo, index = pcall(GetBagItemInfo, slot)
+    local link = okInfo and index and index >= 0 and GetBagItemLink and GetBagItemLink(index)
+    if link and link ~= "" and K.StoneState and K.StoneState(link) == 2 then
+      stones = stones + 1
+      local names = K.statCache[link]
+      local label = names and names ~= "" and K.StoneLabel and K.StoneLabel(link, names) or ""
+      local function plain(s) return (string.gsub(string.gsub(tostring(s), "|", "!"), "\n", "/")) end
+      add("stone " .. slot .. ": " .. tostring(string.match(link, "|Hitem:([%x ]+)|h")) .. " stats "
+        .. tostring(K.StoneStatCount and K.StoneStatCount(link)) .. ", names " .. plain(names)
+        .. ", colours " .. plain(K.statColors and K.statColors[link]) .. ", label " .. plain(label))
+    end
+  end
   local ok, used, free, total = pcall(GetBagCount)
   add("game bag: window " .. shown(BagFrame) .. ", BagItemButton 1-" .. count("BagItemButton", 300)
     .. ", tabs " .. count("BagFrameTab", 10) .. ", selected tab "

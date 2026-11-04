@@ -410,6 +410,26 @@ K.SHORT_STATS = {
   ["block rate"] = "block", ["movement speed"] = "move", ["healing"] = "heal", ["heal"] = "heal", ["resistance"] = "res",
 }
 
+-- German client names, UTF-8 written as escapes (\195\164 is a with umlaut). StatName lower-cases
+-- only ASCII letters, so umlauts stay as they are.
+K.SHORT_STATS_DE = {
+  ["st\195\164rke"] = "str", ["ausdauer"] = "stam", ["geschicklichkeit"] = "dex", ["intelligenz"] = "int",
+  ["weisheit"] = "wis", ["alle attribute"] = "all", ["alle hauptattribute"] = "all",
+  ["physischer angriff"] = "patt", ["physische angriffskraft"] = "patt", ["magischer angriff"] = "matt",
+  ["magische angriffskraft"] = "matt", ["physische verteidigung"] = "def", ["verteidigung"] = "def",
+  ["magische verteidigung"] = "mdef", ["maximale lp"] = "hp", ["max. lp"] = "hp", ["lp"] = "hp",
+  ["lebenspunkte"] = "hp", ["maximale mp"] = "mp", ["max. mp"] = "mp", ["mp"] = "mp", ["mana"] = "mp",
+  ["physischer schaden"] = "pdmg", ["magischer schaden"] = "mdmg", ["genauigkeit"] = "acc",
+  ["physische genauigkeit"] = "acc", ["magische genauigkeit"] = "macc", ["ausweichrate"] = "dodge",
+  ["parierrate"] = "parry", ["blockrate"] = "block", ["angriffsgeschwindigkeit"] = "aspd",
+  ["zaubergeschwindigkeit"] = "cast", ["bewegungsgeschwindigkeit"] = "move", ["heilung"] = "heal",
+  ["kritische trefferrate"] = "crit", ["physische kritische trefferrate"] = "pcrit",
+  ["magische kritische trefferrate"] = "mcrit", ["widerstand"] = "res",
+}
+for name, short in pairs(K.SHORT_STATS_DE) do
+  K.SHORT_STATS[name] = K.SHORT_STATS[name] or short
+end
+
 -- A colour per main stat so a bag of stones reads at a glance.
 K.STAT_COLORS = {
   str = "ff4a4a", stam = "ffa53c", dex = "5ce65c", int = "4aa0ff", wis = "7fe8ff",
@@ -431,6 +451,19 @@ function K.StatPrefixOn()
   return K.IsOn() and type(zBag_VAR) == "table" and zBag_VAR["statprefix"] == 1
 end
 
+-- Drops a UTF-8 character cut in half at the end of a short name.
+function K.CutUtf8(text)
+  local last = string.byte(text, -1)
+  if last and last >= 192 then
+    return string.sub(text, 1, -2)
+  end
+  if last and last >= 128 then
+    local lead = string.byte(text, -2)
+    if lead and lead >= 224 then return string.sub(text, 1, -3) end
+  end
+  return text
+end
+
 -- "physical attack" -> "patt": a known name, else the first letters of the leading words and three
 -- of the last ("magical defense" -> "mdef"), or a single word's first four.
 function K.ShortStat(name)
@@ -439,19 +472,20 @@ function K.ShortStat(name)
     return known
   end
   local initials, last = "", nil
-  for word in string.gmatch(name, "%a+") do
+  -- letters include UTF-8 bytes, so "st\195\164rke" stays one word
+  for word in string.gmatch(name, "[%a\128-\255]+") do
     if last then
       initials = initials .. string.sub(last, 1, 1)
     end
     last = word
   end
   if not last then
-    return string.sub(name, 1, 4)
+    return K.CutUtf8(string.sub(name, 1, 4))
   end
   if initials == "" then
-    return string.sub(last, 1, 4)
+    return K.CutUtf8(string.sub(last, 1, 4))
   end
-  return string.sub(initials, 1, 2) .. string.sub(last, 1, 3)
+  return K.CutUtf8(string.sub(initials, 1, 2)) .. K.CutUtf8(string.sub(last, 1, 3))
 end
 
 local combined, combinedColor, colorList = {}, {}, {}
