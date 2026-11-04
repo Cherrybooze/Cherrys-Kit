@@ -746,7 +746,9 @@ const GBBank = (() => {
     charge: 'charges', transmutor: 'charges', diamond: 'diamonds', ruby: 'rubies', transferstones: 'stones', stone: 'stones', transfer: 'stones', mails: 'mail'};
   // Yes or no, with no number
   const CHARACTER_FLAGS = {needslogin: character => !!character.stale, steam: character => !!character.steam,
-    nobank: character => !bankKnown(character), linked: (character, extra, row) => !!row?.account};
+    nobank: character => !bankKnown(character), linked: (character, extra, row) => !!row?.account,
+    // A character transfer is planned, or it moved and waits for a login on its new server
+    xfer: character => !!character.transfer && character.transfer.state !== 'done'};
   const lettersOf = text => String(text || '').toLowerCase().replace(/[^a-zÀ-￿]/g, '');
   function compare(have, how, limit) {
     return how === '>' ? have > limit : how === '<' ? have < limit : how === '>=' || how === '=>' ? have >= limit
@@ -883,6 +885,13 @@ const GBBank = (() => {
     return row.stones ? `<span class="stone-count is-atleast" title="At least this many: the bank isn't recorded">${escapeHtml(formatNumber(row.stones))}+</span>`
       : '<span class="not-recorded" title="None in the bag, and the bank isn\'t recorded">—</span>';
   }
+  // The plate a planned or moved transfer puts on the character's row: "Xfer › Kadmos › Nov 4, 08:12". Its own tooltip
+  // counts down to the maintenance, and a click opens the transfer log at it.
+  function transferPlate(plate) {
+    if (!plate) return '';
+    return `<button type="button" class="xfer-plate is-${escapeHtml(plate.kind)}" data-xfer="${escapeHtml(plate.id)}" data-xfer-open aria-label="${escapeHtml(plate.label)}">`
+      + `<b>Xfer</b><span class="xfer-sep" aria-hidden="true">\u203a</span>${escapeHtml(plate.to)}<span class="xfer-sep" aria-hidden="true">\u203a</span><span class="xfer-when">${escapeHtml(plate.when)}</span></button>`;
+  }
   function renderRoster(root, characters, options = {}) {
     root.sorting = root.sorting || {key: 'gold', descending: true};
     root.collapsed = root.collapsed || new Set();
@@ -920,7 +929,7 @@ const GBBank = (() => {
         {key: 'class', name: 'Class', text: true, cell: row => (row.class ? escapeHtml(row.class) : '<span class="not-recorded">Not recorded</span>')},
         {key: 'level', name: 'Level', number: true, cell: row => (row.level ? escapeHtml(formatNumber(row.level)) : '<span class="not-recorded">—</span>')},
         {key: 'server', name: 'Server', text: true, cell: serverCell},
-        {key: 'stones', name: 'Transfer stones', number: true, cell: stonesCell},
+        {key: 'stones', name: 'Transfer stones', number: true, cell: row => transferPlate(options.transfer ? options.transfer(row.character) : null) + stonesCell(row)},
         ...(showAccounts ? [{key: 'account', name: 'Gameforge', text: true, cell: row => (row.account ? escapeHtml(row.account) : `<span class="not-recorded">${options.locked && options.locked() ? 'Locked' : 'Not linked'}</span>`)},
           {key: 'rom', name: 'RoM account', text: true, cell: row => (row.rom ? escapeHtml(row.rom) : '<span class="not-recorded">Not known</span>')}] : []),
         {key: 'gold', name: 'Gold', number: true, cell: row => `<span class="gold-cell">${escapeHtml(formatNumber(row.gold))}</span>`},
@@ -929,7 +938,9 @@ const GBBank = (() => {
         {key: 'saved', name: 'Last saved', text: true, cell: row => escapeHtml(row.saved || 'Not recorded')},
         {key: 'day', name: 'Reward day', number: true, also: [{key: 'taken', name: 'Taken'}],
           cell: row => (row.taken ? `<span title="${escapeHtml(clock.format(row.taken))}">Day ${escapeHtml(row.day || '?')} <span class="muted">· ${escapeHtml(shortClock.format(row.taken))}</span></span>` : '<span class="not-recorded">Not recorded</span>')},
-        {key: 'stale', name: 'Status', cell: row => (row.stale ? '<span class="status-pill" title="Saved by an older version: log in once on the current one">Needs login</span>' : '<span class="status-pill is-good" role="img" aria-label="Current" title="Current"></span>')},
+        {key: 'stale', name: 'Status', cell: row => (options.transfer && options.transfer(row.character)?.confirm
+          ? `<span class="status-pill is-xfer" title="${escapeHtml(`It moved to ${row.character.transfer.to}: one login with it there confirms the transfer and saves it on its new server`)}">Log in to confirm transfer</span>`
+          : row.stale ? '<span class="status-pill" title="Saved by an older version: log in once on the current one">Needs login</span>' : '<span class="status-pill is-good" role="img" aria-label="Current" title="Current"></span>')},
         {key: 'open', noSort: true, className: 'open-col', cell: row => `<button type="button" class="row-open" data-open-char="${escapeHtml(row.key || '')}" aria-label="Details for ${escapeHtml(row.name)}" title="Details"><span class="ico" data-cell-icon="chevron-right"></span></button>`},
       ],
       groups, isSelected: options.isSelected, open: !!String(options.search || '').trim(), empty: characters.length ? 'No character matches.' : 'No characters saved yet.',
@@ -1208,7 +1219,7 @@ const GBBank = (() => {
   // tooltip's element, review(kind): open the Characters page on 'login' or 'bank', favouritesChanged(count)}
   function create(root, send, status, onData, menu, options = {}) {
     const roster = options.roster || null;
-    const state = {characters: [], entries: [], made: null, total: -1, sort: 'name', byType: false, cells: [], names: new Map(), loadedAt: 0, layout: 'grid', active: -1};
+    const state = {characters: [], raw: [], entries: [], made: null, total: -1, sort: 'name', byType: false, cells: [], names: new Map(), loadedAt: 0, layout: 'grid', active: -1};
     // The items someone keeps in the item shop tab, worked out once for each load
     let shopKnown = null;
     function shopIds() {
@@ -1959,6 +1970,9 @@ const GBBank = (() => {
     // Who is who, then everything drawn from it. Also run again on the same characters when a server set by hand
     // changes where some of them are.
     function apply(list, made) {
+      // Everything as loaded, for running this again; then what the page shows of it (character transfers move some)
+      state.raw = list;
+      if (options.adjust) list = options.adjust(list) || list;
       if (typeof GBRoster !== 'undefined') GBRoster.prepare(list, typeof GBAccounts !== 'undefined' ? GBAccounts.accountGroups : null, roster?.assigned ? roster.assigned() : null);
       else tellApart(list);
       state.characters = list;
@@ -2220,11 +2234,13 @@ const GBBank = (() => {
         renderGrid(true);
       },
       // The same characters prepared again: a server set by hand moves them
-      reprepare() { if (state.characters.length) apply(state.characters, state.made); },
+      reprepare() { if (state.raw.length) apply(state.raw, state.made); },
       // The Bank tab was opened: draw what changed while it was hidden
       show() { if (gridDirty) renderGrid(); else if (hasDom) { layout(); repaint(); } },
       entries: () => state.entries,
       characters: () => state.characters,
+      // As loaded, before the page moved any of them
+      raw: () => state.raw,
       shownEntries() {
         const test = matcher({keep: keep(false)});
         return state.entries.filter(test);
@@ -2235,5 +2251,5 @@ const GBBank = (() => {
   return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, instanceLines, duraRange, DEFAULT_RULES,
     quickFilters, wornGear, plusOf, slotLabel, SLOT_LABELS, TIER_FROM, statEffects, templateTip, SORT_GROUPS, sortGroupOf, sortByType, SORTS,
     formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
-    rosterRows, renderRoster, statTable, renderStats, searchRows, characterFilters, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
+    rosterRows, renderRoster, transferPlate, statTable, renderStats, searchRows, characterFilters, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
 })();

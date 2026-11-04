@@ -37,6 +37,21 @@ Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, 
 | UM25 | Type 500000000 in the gold box and press Ctrl+Backspace three times. Type a name in To and press Ctrl+Backspace with the cursor in the middle of it. In Subject and in the text, press Ctrl+Backspace after a few words, after a line break, and with a word selected. | The gold goes 500,000,000, 500,000, 500, empty. The name goes all at once. Text goes back one word at a time (a line break on its own), and a selection goes on its own. No box ever shows a strange character. Plain Backspace still takes one letter. |
 | UM26 | Open **Mass send** next to the game's bags. Tick and untick **C.O.D.**, then close and open the mailbox. | Each bag and each slot has rounded corners like the game's bags. The C.O.D. price box shows only while C.O.D. is ticked, and unticking empties it. It is off again after reopening. |
 
+## Character transfers on the Characters page (Global Bank 1.6.6, extension 1.3.6, not yet released)
+
+Not run on the real site yet: the reader was checked against a copy of the transfer page made from screenshots. Reload the extension first; the page's sidebar says Version 1.3.6.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| XF1 | Click the gear icon in the Gameforge client, then the character transfer link on the site. | A small Global Bank note in the page's bottom right corner says no transfer is planned there yet, or that it keeps track of the planned ones. If no note shows within a few seconds, send a screenshot of the page. |
+| XF2 | Register a transfer for a character and answer **Yes**. | When the page lists it under planned transfers, the note says it recorded the transfer and when the maintenance moves it. On the Global Bank page, the character's row on **Characters** shows **Xfer › new server › time** beside its transfer stones, and **Transfers** has a count. |
+| XF3 | Hover the plate, then click it. | The tooltip names the character, both servers, its accounts if the page knows them, its mailbox if mail waits, when it was registered, and counts down each second to Thursday's maintenance. The click opens **Transfers** at that row, highlighted. |
+| XF4 | Cancel the transfer on the site. | The note says it is cancelled, the plate goes, and **Transfers** lists it as Cancelled. Registering it again brings the plate back. |
+| XF5 | After the maintenance, log in and out with another character of the same account on the old server. | The moved character shows on its new server with a teal plate and **Log in to confirm transfer** in Status. |
+| XF6 | Log in and out with the moved character on its new server. | Its plate goes, the old server's copy is gone, and its hover card says it came by transfer. **Transfers** says Done. |
+| XF7 | Under **Transfers**, change **Weekly maintenance** to another day or time. | **Next** follows it, and so does the countdown on the plates. Set it back to Thursday 09:00 afterwards, or to the real maintenance time if that differs. |
+| XF8 | Type `#xfer` in the Characters search. | Only characters with a planned transfer, or one waiting for its login, are listed. |
+
 ## Global Bank Addons page (not yet released)
 
 Not run on Windows yet: the tests check the page in Node and the bridge's offload and restore in PowerShell where it is installed. Use a game folder you can afford to change, with the game closed unless a row says otherwise.

@@ -38,7 +38,7 @@
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.6.5"
+GB.version = "1.6.6"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped

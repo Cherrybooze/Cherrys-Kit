@@ -180,6 +180,8 @@ const GBAccounts = (() => {
     const keys = [];
     if (character.key && character.shownServer && !character.manualServer) keys.push(linkKey(character.key));
     keys.push(linkKey(character.name));
+    // A character transfer keeps the game account: the link it had on its old server still counts
+    if (character.formerKey) keys.push(linkKey(character.formerKey));
     return keys;
   }
   function accountFor(state, character) {

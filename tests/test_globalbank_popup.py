@@ -644,7 +644,10 @@ assert.equal(gb.setLinks(gb.emptyState(), many, 'x'), 5000);
         self.assertNotIn('onMessageExternal', background)
         self.assertNotIn('onConnectExternal', background)
         self.assertNotIn('storage.local.get', (folder / 'depot.js').read_text(encoding='utf-8'))
-        for script in ('content.js', 'depot.js'):
+        # Every script that runs on a web page, the character transfer page's included
+        page_scripts = sorted({script for entry in manifest['content_scripts'] for script in entry['js']})
+        self.assertEqual(page_scripts, ['content.js', 'depot.js', 'transfer-page.js', 'transfers.js'])
+        for script in page_scripts:
             source = (folder / script).read_text(encoding='utf-8')
             self.assertNotIn('storage.local', source, script)
             self.assertNotIn('postMessage', source, script)

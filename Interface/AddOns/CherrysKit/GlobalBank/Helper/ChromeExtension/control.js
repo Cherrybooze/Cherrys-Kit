@@ -281,6 +281,21 @@
     node.classList.toggle('is-urgent', sum.expiring > 0);
     node.title = sum.expiring ? `${number(sum.expiring)} expire within 48 hours` : '';
   }
+  // Character transfers: what the Runes of Magic site's transfer page listed, the plates and the log, and the
+  // characters a transfer moved to their new server. The background keeps the records; this page draws them.
+  const transfers = GBTransfers.create({
+    storage: chrome.storage.local,
+    send,
+    changed: what => {
+      // One that moved a character, or changed what it is, prepares the characters again, the selection kept on them
+      if (what === 'records' && bank) roster.rekey(() => bank.reprepare());
+      renderTransferCount();
+      changed(['characters']);
+    },
+    who: record => transferWho(record),
+    openLog: id => openTransferLog(id),
+    tooltip: byId('xfer-tooltip'),
+  });
   let bank = null;
   bank = GBBank.create(byId('tab-bank'), bankSend, bankStatus, (totals, made, characters) => {
     accounts.setCharacters(characters);
@@ -289,7 +304,10 @@
     savedMade = made;
     renderSavedData();
     renderMailCount();
+    renderTransferCount();
     changed(['favourites', 'currencies', 'stats', 'heatmap', 'characters', 'accounts', 'servers', 'mail']);
+    // What the new saves say about transfers: one gone from its old server, or logged in on its new one
+    transfers.check(bank.raw());
   }, accounts.openMenu, {
     roster,
     favouritesRoot: byId('tab-favourites'),
@@ -299,6 +317,8 @@
     favouritesChanged: count => { byId('nav-count-favourites').textContent = count ? number(count) : ''; },
     review: kind => (kind === 'mail' ? showTab('mail') : setRosterFilter(kind, true)),
     mailboxes,
+    // A character a transfer moved shows on its new server, and its old server's copy goes once it logged in there
+    adjust: list => transfers.overlay(list),
   });
   // Macros and addon settings come from the save folders, whose names are the characters' names.
   // A folder the page has no character for always shows, like a character whose server isn't known.
@@ -330,6 +350,7 @@
     summary: prefix === 'currency' ? byId('currency-summary') : null,
     selectKeys,
     mailbox: key => mailboxes().get(key),
+    transfer: character => transfers.plate(character),
   });
   // Which characters the Characters page lists. Needs login and Bank not recorded mean different things and can
   // overlap. Excluded characters aren't in the saved data at all: the helper keeps that list.
@@ -349,8 +370,9 @@
   function setRosterFilter(kind, open) {
     rosterFilter = kind;
     document.querySelectorAll('[data-roster-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.rosterFilter === kind)));
-    byId('roster-view').hidden = kind === 'excluded';
+    byId('roster-view').hidden = kind === 'excluded' || kind === 'transfers';
     byId('excluded-view').hidden = kind !== 'excluded';
+    byId('transfers-view').hidden = kind !== 'transfers';
     if (open) showTab('characters');
     changed(['characters']);
   }
@@ -388,6 +410,80 @@
       return row;
     }));
   }
+  // The transfer log, under Characters: what each one is now, the weekly maintenance it waits for, and Forget
+  const dayClock = new Intl.DateTimeFormat(undefined, {weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+  function renderTransferCount() {
+    const count = transfers.counts();
+    const node = byId('roster-count-transfers');
+    node.textContent = count.total ? number(count.active) : '';
+    node.classList.toggle('is-attention', count.due + count.moved > 0);
+  }
+  function renderMaintenance() {
+    const plan = transfers.maintenance();
+    const day = byId('xfer-day'), time = byId('xfer-time');
+    if (document.activeElement !== day) day.value = String(plan.day);
+    if (document.activeElement !== time) time.value = `${String(plan.hour).padStart(2, '0')}:${String(plan.minute).padStart(2, '0')}`;
+    byId('xfer-next').textContent = `Next: ${dayClock.format(transfers.next())} your time`;
+  }
+  function drawTransfers() {
+    renderTransferCount();
+    renderMaintenance();
+    const shown = transfers.renderLog(byId('transfers-rows'), {search: byId('roster-search').value});
+    const total = transfers.counts().total;
+    byId('transfers-log').hidden = !shown;
+    byId('transfers-status').textContent = !total ? 'No character transfers yet. Open the transfer page on the Runes of Magic site, and Global Bank records the ones it lists as planned.'
+      : !shown ? 'No transfer matches the search.' : '';
+  }
+  // From a plate: the log, at that transfer
+  function openTransferLog(id) {
+    setRosterFilter('transfers', true);
+    const row = byId('xfer-' + id);
+    if (!row) return;
+    row.scrollIntoView({block: 'center'});
+    row.classList.add('is-focus');
+    setTimeout(() => byId('xfer-' + id)?.classList.remove('is-focus'), 2400);
+  }
+  // A transfer's character, wherever it shows now, and its accounts as this page knows them: its RoM account from its
+  // own login screen, or its old one's; its Gameforge account from it or any character the same transfer page
+  // offered; and, while it waits for the maintenance, what its mailbox still holds
+  function transferWho(record) {
+    const servers = record.state === 'moved' || record.state === 'done' ? [record.to, record.from] : [record.from, record.to];
+    const own = servers.map(server => roster.byKey(GBRoster.keyOf(record.name, server))).filter(Boolean);
+    const mates = (record.account || []).map(key => roster.byKey(key)).filter(Boolean);
+    const oldMates = mates.filter(character => GBRoster.serverKey(character.shownServer) === GBRoster.serverKey(record.from));
+    const oldRom = oldMates.map(character => roster.romTitle(character)).find(Boolean);
+    const box = record.state === 'planned' && own[0] ? mailboxes().get(own[0].key) : null;
+    return {
+      rom: roster.view.hideRom ? '' : own.map(character => roster.romTitle(character)).find(Boolean) || (oldRom ? `${oldRom} on ${record.from}` : ''),
+      gameforge: roster.view.hideGameforge || accounts.locked() ? '' : [...own, ...mates].map(character => accounts.accountNameOf(character)).find(Boolean) || '',
+      mail: box ? GBMail.summary(box, Date.now() / 1000, GBBank.formatCompact) : '',
+    };
+  }
+  function saveMaintenance() {
+    const [hour, minute] = byId('xfer-time').value.split(':').map(Number);
+    if (!Number.isInteger(hour) || !Number.isInteger(minute)) return;
+    transfers.setMaintenance({day: Number(byId('xfer-day').value), hour, minute}).catch(error => toast('Could not keep the maintenance time: ' + String(error.message || error)));
+  }
+  byId('xfer-day').addEventListener('change', saveMaintenance);
+  byId('xfer-time').addEventListener('change', saveMaintenance);
+  byId('transfers-rows').addEventListener('click', async event => {
+    const button = event.target.closest('[data-xfer-forget]');
+    const record = button && transfers.record(button.dataset.xferForget);
+    if (!record) return;
+    const waiting = record.state === 'planned' || record.state === 'moved';
+    const yes = await ask({title: 'Forget this transfer', noField: true, save: 'Forget',
+      hint: `${record.name}, ${record.from} to ${record.to}, leaves the log` + (waiting ? ', and its plate goes. If the transfer page still lists it, it comes back the next time you open that page.' : '.')});
+    if (yes === null) return;
+    try {
+      await transfers.forget(record.id);
+    } catch (error) {
+      toast('Could not forget it: ' + String(error.message || error));
+    }
+  });
+  // The log's countdowns, while it shows
+  setInterval(() => {
+    if (currentTab === 'characters' && rosterFilter === 'transfers' && !document.hidden && transfers.tickLog(byId('transfers-rows'))) drawTransfers();
+  }, 30000);
   // A character's note, kept by the helper and shown when you hover the character, here and in the game's window. It
   // goes through the helper's own note command, which checks it again.
   const noteProblem = text => (/[\x00-\x1f"~`|\\]/.test(text) ? 'A note can’t hold quotes, backslashes, |, ~ or backticks.'
@@ -621,6 +717,8 @@
       const sent = Array.isArray(character.mail?.sent) ? character.mail.sent : [];
       if (sent.length) add('Mail sent', `${number(sent.length)} kept, the last ${clock.format((Number(sent.at(-1).at) || 0) * 1000)}`);
     }
+    const transfer = transfers.cardLine(character);
+    if (transfer) add('Transfer', transfer.text);
     if (character.note) add('Note', character.note);
     const actions = make('div', 'detail-actions');
     const button = (label, primary, run) => {
@@ -667,6 +765,7 @@
     characters: () => {
       renderRosterCounts();
       if (rosterFilter === 'excluded') drawExcluded();
+      else if (rosterFilter === 'transfers') drawTransfers();
       else GBBank.renderRoster(byId('roster-view'), rosterShown(), tableOptions('roster'));
     },
     stats: () => GBBank.renderStats(byId('tab-stats'), roster.shown(), {data: {entries: bank.shownEntries()}, all: bank.entries(), tooltip: byId('bank-tooltip'),
@@ -739,6 +838,7 @@
     rom: character => roster.romTitle(character),
     currencyName: GBBank.currencyName,
     stones: GBBank.transferStonesText,
+    transfer: character => transfers.cardLine(character),
     mail: mailLine,
     menu: accounts.openMenu,
     rows: character => characterRows(character),
@@ -1068,6 +1168,7 @@
     if (changes.depot) { depot = changes.depot.newValue || null; renderDepot(); }
     if (changes.autoHelper) { autoHelper.checked = !!changes.autoHelper.newValue; refreshStatus(); }
     if (changes.showTerminal) { showTerminal.checked = !!changes.showTerminal.newValue; refreshStatus(); }
+    transfers.stored(changes);
   });
   // The status line and the toggle
   const statusHelper = byId('status-helper');
@@ -1185,11 +1286,12 @@
     refreshStatus();
   });
   showFolders().catch(() => {});
-  // The saved region, ticks and selection first, so the first drawing already uses them
-  roster.load().catch(() => {}).finally(() => {
+  // The saved region, ticks, selection and transfers first, so the first drawing already uses them
+  Promise.all([roster.load().catch(() => {}), transfers.load().catch(() => {})]).finally(() => {
     renderSettings();
     renderViewBar();
     renderSelectionBar();
+    renderTransferCount();
     tryReload();
   });
   // Coming back to this tab looks for new data, at most once a minute, and only reads it all when it changed.
