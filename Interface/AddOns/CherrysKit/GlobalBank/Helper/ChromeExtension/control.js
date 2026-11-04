@@ -1,5 +1,40 @@
 'use strict';
 (() => {
+  const CASCADE_SCREENS = [[1920, 1080], [2560, 1440], [3440, 1440], [3840, 2160]];
+  // A size that suits a screen: the same share of its height as 1134 x 818 on a 1440p screen, same shape.
+  const cascadeSuggest = height => { const h = Math.round(height * 818 / 1440); return {width: Math.round(h * 1134 / 818), height: h}; };
+  // Fills the Display and Size lists: the displays Windows reports, or plain numbers when they can't be listed.
+  // Shows which screen's size Resolution holds: the one picked if it still matches, else the first that does,
+  // else "Pick a screen" (Resolution typed by hand).
+  function showCascadeSize(sizeSelect, width, height) {
+    const key = `${width}x${height}`, options = [...sizeSelect.options];
+    if (options[sizeSelect.selectedIndex]?.value === key) return;
+    const index = options.findIndex(item => item.value === key);
+    sizeSelect.selectedIndex = index > 0 ? index : 0;
+  }
+  function fillCascadeLists(monitorSelect, sizeSelect, monitors, chosen, width, height) {
+    const option = (value, text) => { const item = document.createElement('option'); item.value = value; item.textContent = text; return item; };
+    const listed = Array.isArray(monitors) && monitors.length ? monitors : null;
+    monitorSelect.replaceChildren(option('0', 'Where the oldest game window is'));
+    for (const monitor of listed || [1, 2, 3, 4].map(id => ({id}))) {
+      monitorSelect.append(option(String(monitor.id), listed ? `Display ${monitor.id}: ${monitor.width} x ${monitor.height}${monitor.primary ? ' (main)' : ''}` : `Display ${monitor.id}`));
+    }
+    if (chosen && ![...monitorSelect.options].some(item => item.value === String(chosen))) monitorSelect.append(option(String(chosen), `Display ${chosen} (not found)`));
+    monitorSelect.value = String(chosen || 0);
+    const picked = sizeSelect.options[sizeSelect.selectedIndex]?.textContent;
+    sizeSelect.replaceChildren(option('', 'Pick a screen'));
+    const screens = (listed || []).map(monitor => [monitor.width, monitor.height, `Display ${monitor.id}`]).concat(CASCADE_SCREENS.map(([w, h]) => [w, h, '']));
+    const seen = new Set();
+    for (const [w, h, name] of screens) {
+      const size = cascadeSuggest(h), key = `${size.width}x${size.height}`;
+      if (!name && seen.has(key)) continue;
+      seen.add(key);
+      sizeSelect.append(option(key, `${name ? name + ', ' : ''}${w} x ${h} screen: ${size.width} x ${size.height}`));
+    }
+    const again = [...sizeSelect.options].findIndex(item => item.textContent === picked);
+    if (again > 0) sizeSelect.selectedIndex = again;
+    showCascadeSize(sizeSelect, width, height);
+  }
   const byId = id => document.getElementById(id);
   const status = byId('helper-status');
   const start = byId('start-helper');
@@ -1226,7 +1261,7 @@
         showHelperState('running', `Helper running${ran}`, how);
       }
       // Older helper files don't say their version.
-      if ((Number(info.bridge) || 0) < 4) showHelperState('error', 'Helper files out of date', 'Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.');
+      if ((Number(info.bridge) || 0) < 6) showHelperState('error', 'Helper files out of date', 'Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.');
     } catch (error) {
       if (await GBFolders.usable('saves').catch(() => null)) showHelperState('stopped', 'Reading your folders', 'The helper isn\u2019t installed on this PC. The Bank page is reading your chosen folders.');
       else showHelperState('error', 'Helper not set up', 'Cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder, or choose your folders under Connection.');
@@ -1275,6 +1310,64 @@
   });
   refreshStatus();
   setInterval(refreshStatus, 30000);
+  // Game windows: the local host cascades them when the button is pressed, with the choice stored here.
+  const cascadeCorner = byId('cascade-corner'), cascadeFit = byId('cascade-fit');
+  const cascadeMonitor = byId('cascade-monitor'), cascadeSize = byId('cascade-size'), cascadeTop = byId('cascade-top');
+  const cascadeStatus = byId('cascade-status');
+  const cascadeWidth = byId('cascade-width'), cascadeHeight = byId('cascade-height'), cascadeStepX = byId('cascade-step-x'), cascadeStepY = byId('cascade-step-y');
+  // Exact pixels, or 0 for automatic.
+  const pixels = (input, most) => { const n = Math.floor(Number(input.value)); return input.value !== '' && n > 0 && n <= most ? n : 0; };
+  const cascadeChoice = () => ({monitor: Math.max(0, Math.floor(Number(cascadeMonitor.value)) || 0), onTop: cascadeTop.checked, corner: cascadeCorner.value === 'top-left' ? 'top-left' : 'bottom-left', fit: cascadeFit.checked,
+    width: pixels(cascadeWidth, 16000), height: pixels(cascadeHeight, 16000), stepX: pixels(cascadeStepX, 1000), stepY: pixels(cascadeStepY, 1000)});
+  const showCascade = value => {
+    cascadeCorner.value = value?.corner === 'top-left' ? 'top-left' : 'bottom-left';
+    cascadeFit.checked = value?.fit !== false;
+    cascadeTop.checked = value?.onTop === true;
+    const monitor = Number.isInteger(value?.monitor) && value.monitor > 0 ? String(value.monitor) : '0';
+    if ([...cascadeMonitor.options].some(item => item.value === monitor)) cascadeMonitor.value = monitor;
+    cascadeMonitorChosen = Number(monitor);
+    for (const [input, key] of [[cascadeWidth, 'width'], [cascadeHeight, 'height'], [cascadeStepX, 'stepX'], [cascadeStepY, 'stepY']]) {
+      if (document.activeElement !== input) input.value = value?.[key] > 0 ? String(value[key]) : '';
+    }
+    showCascadeSize(cascadeSize, cascadeWidth.value, cascadeHeight.value);
+  };
+  let cascadeMonitorChosen = 0, cascadeMonitors = null;
+  const fillCascade = () => fillCascadeLists(cascadeMonitor, cascadeSize, cascadeMonitors, cascadeMonitorChosen, cascadeWidth.value, cascadeHeight.value);
+  chrome.storage.local.get('windowCascade').then(({windowCascade}) => { showCascade(windowCascade); fillCascade(); }).catch(() => {});
+  // The displays come from the local host; without it the lists offer plain numbers and common screens.
+  send({type:'windows-monitors'}).then(response => { cascadeMonitors = response.monitors; fillCascade(); }).catch(() => fillCascade());
+  cascadeSize.addEventListener('change', () => {
+    const [width, height] = cascadeSize.value.split('x').map(Number);
+    if (!width || !height) return;
+    cascadeWidth.value = String(width);
+    cascadeHeight.value = String(height);
+    chrome.storage.local.set({windowCascade: cascadeChoice()}).catch(() => {});
+  });
+  chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && changes.windowCascade) showCascade(changes.windowCascade.newValue); });
+  // Resolution typed by hand: the Size list goes back to "Pick a screen".
+  for (const input of [cascadeWidth, cascadeHeight]) input.addEventListener('input', () => showCascadeSize(cascadeSize, cascadeWidth.value, cascadeHeight.value));
+  for (const input of [cascadeMonitor, cascadeTop, cascadeCorner, cascadeFit, cascadeWidth, cascadeHeight, cascadeStepX, cascadeStepY]) {
+    input.addEventListener('change', () => chrome.storage.local.set({windowCascade: cascadeChoice()}).catch(() => {}));
+  }
+  byId('cascade-now').addEventListener('click', async () => {
+    const button = byId('cascade-now');
+    button.disabled = true;
+    cascadeStatus.textContent = 'Cascading\u2026 The first time, allow the Windows prompt.';
+    try {
+      const choice = cascadeChoice();
+      await chrome.storage.local.set({windowCascade: choice});
+      const result = await send({type:'windows-cascade', cascade: choice});
+      const full = result.fullScreen ? ` ${result.fullScreen} in full-screen mode ${result.fullScreen === 1 ? 'was' : 'were'} left as ${result.fullScreen === 1 ? 'it is' : 'they are'}.` : '';
+      const refused = result.refused ? ` Windows refused to move ${result.refused}: ${result.refused === 1 ? 'it runs' : 'they run'} as administrator. Press the button again and allow the Windows prompt.` : '';
+      const missing = result.monitorMissing ? ` Display ${result.monitorMissing} isn\u2019t connected, so the oldest window\u2019s display was used.` : '';
+      cascadeStatus.textContent = !result.found ? 'No Runes of Magic window is open.'
+        : `Cascaded ${result.moved} game window${result.moved === 1 ? '' : 's'}.${full}${refused}${missing}`;
+    } catch (error) {
+      cascadeStatus.textContent = 'Could not cascade: ' + String(error.message || error);
+    } finally {
+      button.disabled = false;
+    }
+  });
   // The folders
   const foldersStatus = byId('folders-status');
   const allow = byId('folders-allow');

@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.10** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.6.11** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -24,9 +24,13 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 <!-- end of requirements -->
 
-## Updated in 1.6.10
+## Updated in 1.6.11
 
 **Account names from the Runes of Magic site** (extension 1.4.1). The RoM username and Gameforge e-mail address on the Runes of Magic site's character transfer page and account page (`/user/administration`) are kept for the characters those pages list. The username replaces *Name's account* as their RoM account's name (a name you gave it still wins), the e-mail address shows as their Gameforge account until one is linked, and characters not linked yet join a saved Gameforge account named with that address. A page that shows the fields without characters is remembered for 30 minutes, so the transfer page opened next with the same login links its characters; a character kept for another account stops that. **Forget the site's account details** in a character's right-click menu removes them. The details are kept unencrypted in Chrome's storage for the extension, like the RoM account names you type, and never leave the PC.
+
+## Updated in 1.6.9
+
+**Cascade the game windows** (extension 1.4.0). In the Chrome page's **Connection** panel, under **Game windows**, the **Cascade game windows** button lays every open Runes of Magic window out in an overlapping cascade, the newest in front, each one a title bar's height from the one behind it. **Start from** picks the corner the oldest window sits in: bottom left, with the cascade going up and to the right, or top left, going down and to the right. **Display** picks the screen the cascade goes on (each one listed with its resolution), or the one the oldest game window is on. **Resize to fit the screen** sizes the windows so the whole cascade fills the screen; turned off, each window keeps its own size. **Size for a screen** fills Resolution with a size that suits a screen: 1134 x 818 on a 2560 x 1440 screen, scaled to the others; it shows the screen picked until Resolution is changed by hand. When the windows keep their own or a chosen size and more are open than fit in one diagonal, the next ones start a new row beside the first, so no two share a corner. The cascaded windows come to the front; **Keep game windows on top** keeps them above other programs. **Resolution** X and Y give every game window that exact size in pixels, and **Offset** X and Y set how far each window steps from the one behind it; empty fields stay automatic. These options (except Start from and Resize to fit) and the button are also under **Advanced** in the toolbar popup, where **Move cascade button under Global Bank button** puts the button right under *Open Global Bank*. The moving is done by a small Python script (`Helper\GlobalBank-Windows.py`), so it needs **Python 3** on the PC (the kit's setup offers it); it never takes the keyboard from the window you're using and leaves full-screen game windows alone. A game started as administrator can only be moved by a program running as administrator, so the first press asks Windows once for permission and sets up a scheduled task, *Cherry's Kit \ Cascade game windows*, that runs the script that way from a copy in `ProgramData\CherrysKit` only administrators can change; later presses don't ask. Declining the prompt still moves games not started as administrator. Delete the task in Task Scheduler to undo it.
 
 ## Updated in 1.6.8
 
