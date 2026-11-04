@@ -665,6 +665,9 @@
     <section class="drawer-section" aria-labelledby="windows-title">
       <h3 id="windows-title">Game windows</h3>
       <div class="setting-row"><span>Start from<small>The oldest window sits in this corner, and each newer one steps toward the right</small></span><label class="filter-select"><span class="gb-sr-only">Start from</span><select id="cascade-corner"><option value="bottom-left">Bottom left, going up</option><option value="top-left">Top left, going down</option></select></label></div>
+      <div class="setting-row"><span>Display<small>The screen the windows are cascaded on</small></span><label class="filter-select"><span class="gb-sr-only">Display</span><select id="cascade-monitor"><option value="0">Where the oldest game window is</option></select></label></div>
+      <div class="setting-row"><span>Size for a screen<small>Fills Resolution with a size that suits that screen (1134 x 818 on 1440p)</small></span><label class="filter-select"><span class="gb-sr-only">Size for a screen</span><select id="cascade-size"><option value="">Pick a screen</option></select></label></div>
+      <label class="setting-row"><span>Keep game windows on top<small>Off brings them to the front when cascaded; other programs can cover them again</small></span><span class="gb-switch"><input id="cascade-top" type="checkbox"><span aria-hidden="true"></span></span></label>
       <label class="setting-row"><span>Resize to fit the screen<small>Off keeps each window's own size</small></span><span class="gb-switch"><input id="cascade-fit" type="checkbox" checked><span aria-hidden="true"></span></span></label>
       <div class="cascade-pixels" style="display:grid;grid-template-columns:auto 90px 90px;gap:4px 8px;align-items:center;font-size:12px;color:#a9b8ca">
         <span></span><span>X</span><span>Y</span>

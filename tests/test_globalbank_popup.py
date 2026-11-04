@@ -129,7 +129,7 @@ async function popup(response) {
 (async () => {
   let page = await popup({ok:true,running:false,lastCollected:null});
   assert.match(page['helper-hint'].textContent, /older than this extension\. Update Cherry’s Kit, then run Install Chrome extension\.bat again/);
-  page = await popup({ok:true,running:false,lastCollected:null,bridge:5});
+  page = await popup({ok:true,running:false,lastCollected:null,bridge:6});
   assert.match(page['helper-hint'].textContent, /Start the helper below/);
   assert.equal(page['get-kit'].hidden, true);
   page = await popup({ok:false,error:'Specified native messaging host not found.',errorKind:'bridge-unavailable'});
@@ -180,7 +180,7 @@ const context = vm.createContext({document:{getElementById:id => elements[id]}, 
     runtime:{sendMessage:async message => {
       sent.push(message.type);
       if (message.type === 'helper-stop') running = false;
-      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null,bridge:5};
+      return {ok:true,running,auto:running,since:running ? '2026-10-30T09:00:00Z' : null,lastCollected:null,bridge:6};
     }}},
   setTimeout:() => 0, clearTimeout:() => {}, console});
 vm.runInContext(source, context);
@@ -1966,7 +1966,7 @@ class NativeStatusTests(unittest.TestCase):
         return self.data / 'GlobalBankExtensionBeat.txt'
 
     def test_clock_message_writes_only_the_time_for_addons(self):
-        self.assertEqual(self.send({'type':'clock'}), {'ok':True,'bridge':5})  # every answer says the bridge's version
+        self.assertEqual(self.send({'type':'clock'}), {'ok':True,'bridge':6})  # every answer says the bridge's version
         text = self.clock_file().read_text(encoding='ascii')
         match = re.fullmatch(r'return \{utc = (\d+), tick = (-?\d+), offset = (-?\d+)\}\s*', text)
         self.assertIsNotNone(match, text)

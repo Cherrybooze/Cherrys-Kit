@@ -21,7 +21,8 @@ class CascadeWiringTests(unittest.TestCase):
         html = (EXTENSION / 'control.html').read_text(encoding='utf-8')
         self.assertNotIn('cascade-on', html)
         for needle in ('id="cascade-corner"', 'Cascade game windows',
-                       '<option value="bottom-left">', '<option value="top-left">', 'id="cascade-fit"', 'id="cascade-now"'):
+                       '<option value="bottom-left">', '<option value="top-left">', 'id="cascade-fit"', 'id="cascade-now"',
+                       'id="cascade-monitor"', 'id="cascade-size"', 'id="cascade-top"', 'Keep game windows on top'):
             self.assertIn(needle, html)
 
     def test_popup_has_the_toggle_and_cascade_now_under_advanced(self):
@@ -30,7 +31,8 @@ class CascadeWiringTests(unittest.TestCase):
         self.assertNotIn('cascade-on', html)
         for needle in ('id="cascade-now"', 'Cascade game windows', 'id="cascade-status"',
                        'id="cascade-width"', 'id="cascade-height"', 'id="cascade-step-x"', 'id="cascade-step-y"',
-                       'id="cascade-under-bank"', 'Move cascade button under Global Bank button'):
+                       'id="cascade-under-bank"', 'Move cascade button under Global Bank button',
+                       'id="cascade-monitor"', 'id="cascade-size"', 'id="cascade-top"'):
             self.assertIn(needle, advanced)
 
     def test_no_cascade_on_launch(self):
@@ -56,7 +58,8 @@ class CascadeWiringTests(unittest.TestCase):
         self.assertIn("if ($message.type -eq 'windows-cascade') {", host)
         self.assertIn('Write-GBCascadeSettings (Get-HelperDataDirectory) $message.cascade', host)
         # The extension asks for newer helper files when they don't know this message.
-        self.assertGreaterEqual(int(re.search(r'\$BridgeVersion = (\d+)', host).group(1)), 5)
+        self.assertGreaterEqual(int(re.search(r'\$BridgeVersion = (\d+)', host).group(1)), 6)
+        self.assertIn("if ($message.type -eq 'windows-monitors') {", host)
 
     def test_windows_script_never_activates_or_types(self):
         text = WINDOWS.read_text(encoding='utf-8')
@@ -110,11 +113,36 @@ assert.equal(full.length, 0);
 const answer = await ask({type:'windows-cascade', cascade:{on:true, corner:'top-left', fit:false, evil:1, width:1280, height:800.5, stepX:-3, stepY:40}},
   'chrome-extension://test/control.html');
 assert.equal(answer.moved, 2);
-same(full.pop(), {type:'windows-cascade', cascade:{corner:'top-left', fit:false, width:1280, height:0, stepX:0, stepY:40}});
-assert.equal((await ask({type:'windows-cascade', cascade:{corner:'middle'}}, 'chrome-extension://test/popup.html')).ok, true);
-same(full.pop().cascade, {corner:'bottom-left', fit:true, width:0, height:0, stepX:0, stepY:0});
+same(full.pop(), {type:'windows-cascade', cascade:{corner:'top-left', fit:false, width:1280, height:0, stepX:0, stepY:40, monitor:0, onTop:false}});
+assert.equal((await ask({type:'windows-cascade', cascade:{corner:'middle', monitor:2, onTop:true}}, 'chrome-extension://test/popup.html')).ok, true);
+same(full.pop().cascade, {corner:'bottom-left', fit:true, width:0, height:0, stepX:0, stepY:0, monitor:2, onTop:true});
+assert.equal((await ask({type:'windows-cascade', cascade:{monitor:33, onTop:'yes'}}, 'chrome-extension://test/popup.html')).ok, true);
+same(full.pop().cascade, {corner:'bottom-left', fit:true, width:0, height:0, stepX:0, stepY:0, monitor:0, onTop:false});
+// The Display list: only from the extension's own pages.
+assert.equal(await ask({type:'windows-monitors'}, 'https://example.com/'), undefined);
+assert.equal(full.length, 0);
+await ask({type:'windows-monitors'}, 'chrome-extension://test/popup.html');
+same(full.pop(), {type:'windows-monitors'});
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
+
+
+@unittest.skipUnless(NODE, 'Node required')
+class CascadeSizeTests(unittest.TestCase):
+    def test_suggested_sizes_scale_from_the_1440p_size(self):
+        source = r'''
+const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
+for (const file of ['control.js', 'popup.js']) {
+  const text = fs.readFileSync(path.join(process.argv[1], file), 'utf8');
+  const line = text.split('\n').find(l => l.includes('const cascadeSuggest = '));
+  const cascadeSuggest = eval(line.trim().replace('const cascadeSuggest = ', '').replace(/;$/, ''));
+  assert.deepEqual(cascadeSuggest(1440), {width:1134, height:818}, file);
+  assert.deepEqual(cascadeSuggest(1080), {width:851, height:614}, file);
+  assert.deepEqual(cascadeSuggest(2160), {width:1701, height:1227}, file);
+}
+'''
+        result = subprocess.run([NODE, '-e', source, str(EXTENSION)], capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 def load_windows():
@@ -159,8 +187,19 @@ class CascadeLayoutTests(unittest.TestCase):
 
     def test_settings_are_cleaned(self):
         self.assertEqual(self.gb.clean_settings({'on': 'yes', 'corner': 'x', 'fit': False, 'width': 1280.7, 'stepX': -1, 'stepY': True}),
-                         {'corner': 'bottom-left', 'fit': False, 'width': 1280, 'height': 0, 'stepX': 0, 'stepY': 0})
+                         {'corner': 'bottom-left', 'fit': False, 'width': 1280, 'height': 0, 'stepX': 0, 'stepY': 0,
+                          'monitor': 0, 'onTop': False})
+        self.assertEqual(self.gb.clean_settings({'monitor': 2, 'onTop': True})['monitor'], 2)
+        self.assertTrue(self.gb.clean_settings({'onTop': True})['onTop'])
+        self.assertEqual(self.gb.clean_settings({'monitor': 33})['monitor'], 0)
 
     def test_script_answers_in_json_when_it_cannot_run(self):
-        result = subprocess.run([sys.executable, '-I', str(WINDOWS), 'nonsense'], capture_output=True, text=True, timeout=30)
-        self.assertEqual(json.loads(result.stdout)['ok'], False)
+        for command in (['nonsense'], ['monitors']):  # no Win32 here: the monitors list fails with an answer
+            result = subprocess.run([sys.executable, '-I', str(WINDOWS)] + command, capture_output=True, text=True, timeout=30)
+            self.assertEqual(json.loads(result.stdout)['ok'], False)
+
+    def test_cascade_brings_the_windows_to_the_front(self):
+        text = WINDOWS.read_text(encoding='utf-8')
+        self.assertIn("self.raise_windows([hwnd for hwnd, _ in windows], settings['onTop'])", text)
+        self.assertIn('c.c_void_p(-1)', text)  # HWND_TOPMOST
+        self.assertIn('c.c_void_p(-2)', text)  # HWND_NOTOPMOST unless kept on top

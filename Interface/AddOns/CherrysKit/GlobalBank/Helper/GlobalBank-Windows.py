@@ -7,6 +7,8 @@ clicked, typed or read from the game.
 
     python GlobalBank-Windows.py cascade SETTINGS.json [RESULT.json]
         cascades the game windows open now and prints what happened as JSON (also written to RESULT.json)
+    python GlobalBank-Windows.py monitors
+        prints the displays as JSON, for the extension's Display list
 
 A game started as administrator only lets a program running as administrator move its windows, so the local
 host runs this through a scheduled task made once with Windows' permission (GlobalBank-WindowsTask.ps1).
@@ -22,19 +24,24 @@ CORNERS = ('bottom-left', 'top-left')
 AUTO_STEP = 32
 # Smallest size a fitted window gets at 100% scale; an automatic step shrinks before the windows do.
 MIN_WIDTH, MIN_HEIGHT = 800, 600
+# Most displays Windows numbers (\\.\DISPLAY1 and up).
+MOST_MONITOR = 32
 
 
 def clean_settings(value):
     """What the extension sent, made safe. width/height (each window's size) and stepX/stepY (the offset from
-    the window behind) are exact pixels; 0 means automatic."""
-    settings = {'corner': 'bottom-left', 'fit': True, 'width': 0, 'height': 0, 'stepX': 0, 'stepY': 0}
+    the window behind) are exact pixels; 0 means automatic. monitor is Windows' display number (0: the display
+    the oldest game window is on); onTop keeps the game windows above other programs."""
+    settings = {'corner': 'bottom-left', 'fit': True, 'width': 0, 'height': 0, 'stepX': 0, 'stepY': 0,
+                'monitor': 0, 'onTop': False}
     if not isinstance(value, dict):
         return settings
     if value.get('corner') in CORNERS:
         settings['corner'] = value['corner']
-    if isinstance(value.get('fit'), bool):
-        settings['fit'] = value['fit']
-    for key, most in (('width', 16000), ('height', 16000), ('stepX', 1000), ('stepY', 1000)):
+    for key in ('fit', 'onTop'):
+        if isinstance(value.get(key), bool):
+            settings[key] = value[key]
+    for key, most in (('width', 16000), ('height', 16000), ('stepX', 1000), ('stepY', 1000), ('monitor', MOST_MONITOR)):
         number = value.get(key)
         if isinstance(number, (int, float)) and not isinstance(number, bool) and 0 <= number <= most:
             settings[key] = int(number)
@@ -119,9 +126,12 @@ class Windows:
         u.MonitorFromWindow.restype = W.HMONITOR
 
         class MONITORINFO(ctypes.Structure):
-            _fields_ = [('cbSize', W.DWORD), ('rcMonitor', W.RECT), ('rcWork', W.RECT), ('dwFlags', W.DWORD)]
+            _fields_ = [('cbSize', W.DWORD), ('rcMonitor', W.RECT), ('rcWork', W.RECT), ('dwFlags', W.DWORD),
+                        ('szDevice', W.WCHAR * 32)]  # MONITORINFOEXW
         self.MONITORINFO = MONITORINFO
         u.GetMonitorInfoW.argtypes = [W.HMONITOR, ctypes.POINTER(MONITORINFO)]
+        self.MONITORENUMPROC = ctypes.WINFUNCTYPE(W.BOOL, W.HMONITOR, W.HDC, ctypes.POINTER(W.RECT), W.LPARAM)
+        u.EnumDisplayMonitors.argtypes = [W.HDC, ctypes.POINTER(W.RECT), self.MONITORENUMPROC, W.LPARAM]
 
         class PROCESSENTRY32W(ctypes.Structure):
             _fields_ = [('dwSize', W.DWORD), ('cntUsage', W.DWORD), ('th32ProcessID', W.DWORD),
@@ -246,6 +256,54 @@ class Windows:
             'captioned': (style & 0x00C00000) == 0x00C00000,
         }
 
+    def monitors(self):
+        """The displays, by Windows' number: id, device name, main display or not, size and work area in pixels,
+        and scale (dpi)."""
+        ctypes, W, u = self.ctypes, self.W, self.user32
+        found = []
+
+        def visit(handle, _dc, _rect, _data):
+            info = self.MONITORINFO()
+            info.cbSize = ctypes.sizeof(info)
+            if not u.GetMonitorInfoW(handle, ctypes.byref(info)):
+                return True
+            name = info.szDevice
+            digits = ''.join(ch for ch in name[name.upper().rfind('DISPLAY') + 7:] if ch.isdigit()) if 'DISPLAY' in name.upper() else ''
+            dpi = 96
+            try:
+                x, y = W.UINT(), W.UINT()
+                if ctypes.WinDLL('shcore').GetDpiForMonitor(handle, 0, ctypes.byref(x), ctypes.byref(y)) == 0:
+                    dpi = x.value or 96
+            except (AttributeError, OSError):
+                pass
+            m, w = info.rcMonitor, info.rcWork
+            found.append({'id': int(digits) if digits else 0, 'name': name, 'primary': bool(info.dwFlags & 1),
+                          'x': m.left, 'y': m.top, 'width': m.right - m.left, 'height': m.bottom - m.top,
+                          'work': (w.left, w.top, w.right, w.bottom), 'dpi': dpi})
+            return True
+        callback = self.MONITORENUMPROC(visit)
+        u.EnumDisplayMonitors(None, None, callback, 0)
+        # Numbers Windows didn't give (an unusual device name) follow the others.
+        used = {item['id'] for item in found}
+        spare = (n for n in range(1, MOST_MONITOR + 1) if n not in used)
+        for item in found:
+            if not 1 <= item['id'] <= MOST_MONITOR:
+                item['id'] = next(spare, 0)
+        found.sort(key=lambda item: item['id'])
+        return found
+
+    def raise_windows(self, hwnds, on_top):
+        """Puts the game windows in front of other programs, oldest first so the newest ends in front, without
+        taking the keyboard. on_top keeps them there (always on top); otherwise other programs can cover them again."""
+        u, c = self.user32, self.ctypes
+        flags = 0x0001 | 0x0002 | 0x0010 | 0x0200  # SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOOWNERZORDER
+        for hwnd in hwnds:
+            if not u.IsWindow(hwnd):
+                continue
+            u.SetWindowPos(hwnd, c.c_void_p(-1), 0, 0, 0, 0, flags)  # HWND_TOPMOST: above every normal window
+            if not on_top:
+                u.SetWindowPos(hwnd, c.c_void_p(-2), 0, 0, 0, 0, flags)  # HWND_NOTOPMOST: first of the normal ones
+
     def cascade(self, settings):
         answer = {'found': 0, 'moved': 0, 'fullScreen': 0, 'refused': 0}
         errors = set()
@@ -263,9 +321,16 @@ class Windows:
             windows.append((hwnd, info))
         if not windows:
             return answer
-        # The oldest window's monitor holds the cascade.
+        # The chosen display holds the cascade; otherwise the oldest window's display.
         first = windows[0][1]
-        scale = first['dpi'] / 96.0
+        work, dpi = first['work'], first['dpi']
+        if settings['monitor']:
+            chosen = [item for item in self.monitors() if item['id'] == settings['monitor']]
+            if chosen:
+                work, dpi = chosen[0]['work'], chosen[0]['dpi']
+            else:
+                answer['monitorMissing'] = settings['monitor']
+        scale = dpi / 96.0
         auto = int(round(AUTO_STEP * scale))
         exact = settings['stepX'] > 0 or settings['stepY'] > 0
         step_x = settings['stepX'] or auto
@@ -276,7 +341,7 @@ class Windows:
         for _, info in windows:
             ml, mt, mr, mb = info['margins']
             frames.append((settings['width'], settings['height']) if sized else (info['w'] - ml - mr, info['h'] - mt - mb))
-        cells = layout(frames, first['work'], settings['corner'], fit, step_x, step_y,
+        cells = layout(frames, work, settings['corner'], fit, step_x, step_y,
                        int(MIN_WIDTH * scale), int(MIN_HEIGHT * scale), exact)
         u = self.user32
         # Newest first, so it ends up in front and each older one goes behind the one placed before it.
@@ -298,6 +363,7 @@ class Windows:
                 answer['refused'] += 1
                 errors.add(self.ctypes.get_last_error())
             above = hwnd
+        self.raise_windows([hwnd for hwnd, _ in windows], settings['onTop'])
         if errors:
             answer['errors'] = sorted(errors)
         answer['admin'] = self.is_admin()
@@ -311,8 +377,15 @@ class Windows:
 
 
 def main(argv):
+    if len(argv) == 2 and argv[1] == 'monitors':
+        try:
+            answer = {'ok': True, 'monitors': Windows().monitors()}
+        except Exception as error:  # the page shows this line and falls back to plain numbers
+            answer = {'ok': False, 'error': '%s: %s' % (type(error).__name__, error)}
+        print(json.dumps(answer))
+        return 0 if answer['ok'] else 1
     if len(argv) < 3 or argv[1] != 'cascade':
-        print(json.dumps({'ok': False, 'error': 'usage: cascade SETTINGS.json [RESULT.json]'}))
+        print(json.dumps({'ok': False, 'error': 'usage: cascade SETTINGS.json [RESULT.json] | monitors'}))
         return 2
     try:
         answer = dict(Windows().cascade(read_settings(argv[2])), ok=True)

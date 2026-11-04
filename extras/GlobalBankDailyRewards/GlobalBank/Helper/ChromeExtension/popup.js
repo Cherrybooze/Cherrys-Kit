@@ -14,7 +14,7 @@ const getKit = document.getElementById('get-kit');
 let starting = false;
 let refreshTimer;
 // The bridge says which version it is; older helper files lack what this extension asks for.
-const BRIDGE_VERSION = 5;
+const BRIDGE_VERSION = 6;
 const OLD_BRIDGE = 'Your Global Bank helper files are older than this extension. Update Cherry\u2019s Kit, then run Install Chrome extension.bat again.';
 
 // The version Chrome is running now, so you can see that Reload took.
@@ -269,6 +269,33 @@ document.getElementById('reload-extension').addEventListener('click', event => {
 poll();
 
 // Game windows: the same choice as the page's Connection panel. The local host does the cascading.
+const CASCADE_SCREENS = [[1920, 1080], [2560, 1440], [3440, 1440], [3840, 2160]];
+// A size that suits a screen: the same share of its height as 1134 x 818 on a 1440p screen, same shape.
+const cascadeSuggest = height => { const h = Math.round(height * 818 / 1440); return {width: Math.round(h * 1134 / 818), height: h}; };
+// Fills the Display and Size lists: the displays Windows reports, or plain numbers when they can't be listed.
+function fillCascadeLists(monitorSelect, sizeSelect, monitors, chosen) {
+  const option = (value, text) => { const item = document.createElement('option'); item.value = value; item.textContent = text; return item; };
+  const listed = Array.isArray(monitors) && monitors.length ? monitors : null;
+  monitorSelect.replaceChildren(option('0', 'Where the oldest game window is'));
+  for (const monitor of listed || [1, 2, 3, 4].map(id => ({id}))) {
+    monitorSelect.append(option(String(monitor.id), listed ? `Display ${monitor.id}: ${monitor.width} x ${monitor.height}${monitor.primary ? ' (main)' : ''}` : `Display ${monitor.id}`));
+  }
+  if (chosen && ![...monitorSelect.options].some(item => item.value === String(chosen))) monitorSelect.append(option(String(chosen), `Display ${chosen} (not found)`));
+  monitorSelect.value = String(chosen || 0);
+  sizeSelect.replaceChildren(option('', 'Pick a screen'));
+  const screens = (listed || []).map(monitor => [monitor.width, monitor.height, `Display ${monitor.id}`]).concat(CASCADE_SCREENS.map(([w, h]) => [w, h, '']));
+  const seen = new Set();
+  for (const [w, h, name] of screens) {
+    const size = cascadeSuggest(h), key = `${size.width}x${size.height}`;
+    if (!name && seen.has(key)) continue;
+    seen.add(key);
+    sizeSelect.append(option(key, `${name ? name + ', ' : ''}${w} x ${h} screen: ${size.width} x ${size.height}`));
+  }
+}
+const cascadeMonitor = document.getElementById('cascade-monitor');
+const cascadeSize = document.getElementById('cascade-size');
+const cascadeTop = document.getElementById('cascade-top');
+let cascadeMonitors = null;
 const cascadeNow = document.getElementById('cascade-now');
 const cascadeStatus = document.getElementById('cascade-status');
 const cascadeQuick = document.getElementById('cascade-quick');
@@ -278,11 +305,15 @@ let cascadeStored = {};
 const cascadeFields = [['cascade-width', 'width', 16000], ['cascade-height', 'height', 16000], ['cascade-step-x', 'stepX', 1000], ['cascade-step-y', 'stepY', 1000]]
   .map(([id, key, most]) => ({input: document.getElementById(id), key, most})).filter(field => field.input);
 const showCascadeStored = () => {
+  if (cascadeTop) cascadeTop.checked = cascadeStored.onTop === true;
+  if (cascadeMonitor && cascadeSize) fillCascadeLists(cascadeMonitor, cascadeSize, cascadeMonitors, Number.isInteger(cascadeStored.monitor) ? cascadeStored.monitor : 0);
   for (const {input, key} of cascadeFields) if (document.activeElement !== input) input.value = cascadeStored[key] > 0 ? String(cascadeStored[key]) : '';
 };
 const saveCascade = async () => {
   cascadeStored = {corner: 'bottom-left', fit: true, ...cascadeStored};
   delete cascadeStored.on;
+  if (cascadeMonitor) cascadeStored.monitor = Math.max(0, Math.floor(Number(cascadeMonitor.value)) || 0);
+  if (cascadeTop) cascadeStored.onTop = cascadeTop.checked;
   for (const {input, key, most} of cascadeFields) {
     const n = Math.floor(Number(input.value));
     cascadeStored[key] = input.value !== '' && n > 0 && n <= most ? n : 0;
@@ -304,9 +335,10 @@ async function runCascade(button, line) {
     await saveCascade();
     const result = await chrome.runtime.sendMessage({type:'windows-cascade', cascade: cascadeStored});
     if (!result?.ok) throw new Error(result?.error || 'No response from the local bridge.');
+    const missing = result.monitorMissing ? ` Display ${result.monitorMissing} isn\u2019t connected.` : '';
     const refused = result.refused ? ` Windows refused to move ${result.refused}: ${result.refused === 1 ? 'it runs' : 'they run'} as administrator. Press again and allow the Windows prompt.` : '';
     line.textContent = !result.found ? 'No Runes of Magic window is open.'
-      : `Cascaded ${result.moved} game window${result.moved === 1 ? '' : 's'}.${refused}`;
+      : `Cascaded ${result.moved} game window${result.moved === 1 ? '' : 's'}.${refused}${missing}`;
   } catch (error) {
     line.textContent = 'Could not cascade: ' + String(error.message || error);
   } finally {
@@ -320,6 +352,20 @@ if (cascadeNow && cascadeStatus) {
     placeCascadeButton(under === true);
   }).catch(() => {});
   for (const {input} of cascadeFields) input.addEventListener('change', saveCascade);
+  cascadeMonitor?.addEventListener('change', saveCascade);
+  cascadeTop?.addEventListener('change', saveCascade);
+  cascadeSize?.addEventListener('change', () => {
+    const [width, height] = cascadeSize.value.split('x').map(Number);
+    cascadeSize.value = '';
+    if (!width || !height) return;
+    for (const {input, key} of cascadeFields) if (key === 'width' || key === 'height') input.value = String(key === 'width' ? width : height);
+    saveCascade();
+  });
+  chrome.runtime.sendMessage({type:'windows-monitors'}).then(response => {
+    if (!response?.ok) return;
+    cascadeMonitors = response.monitors;
+    showCascadeStored();
+  }).catch(() => {});
   cascadeNow.addEventListener('click', () => runCascade(cascadeNow, cascadeStatus));
   cascadeQuick?.addEventListener('click', () => runCascade(cascadeQuick, cascadeQuickStatus));
   cascadeUnderBank?.addEventListener('change', async () => {

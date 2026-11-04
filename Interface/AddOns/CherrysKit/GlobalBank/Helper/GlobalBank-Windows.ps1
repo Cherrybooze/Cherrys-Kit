@@ -44,12 +44,14 @@ function Get-GBCascadePath([string]$dataFolder) { return Join-Path $dataFolder '
 # What the extension sent, made safe. Anything unknown falls back to the defaults.
 function ConvertTo-GBCascadeSettings($value) {
     # width, height (each window's size) and stepX, stepY (each window's offset from the one behind it) are exact
-    # pixels; 0 means automatic (fit or own size, and a title bar's height).
-    $settings = [ordered]@{ corner = 'bottom-left'; fit = $true; width = 0; height = 0; stepX = 0; stepY = 0 }
+    # pixels; 0 means automatic (fit or own size, and a title bar's height). monitor is Windows' display number
+    # (0: the display the oldest game window is on); onTop keeps the game windows above other programs.
+    $settings = [ordered]@{ corner = 'bottom-left'; fit = $true; width = 0; height = 0; stepX = 0; stepY = 0; monitor = 0; onTop = $false }
     if ($null -eq $value) { return $settings }
     if ($value.corner -is [string] -and $script:GBCascadeCorners -contains $value.corner) { $settings.corner = $value.corner }
     if ($value.fit -is [bool]) { $settings.fit = $value.fit }
-    foreach ($field in @(@('width', 16000), @('height', 16000), @('stepX', 1000), @('stepY', 1000))) {
+    if ($value.onTop -is [bool]) { $settings.onTop = $value.onTop }
+    foreach ($field in @(@('width', 16000), @('height', 16000), @('stepX', 1000), @('stepY', 1000), @('monitor', 32))) {
         $number = $value.($field[0])
         if (($number -is [int] -or $number -is [int64] -or $number -is [double]) -and $number -ge 0 -and $number -le $field[1]) { $settings[$field[0]] = [int][Math]::Floor($number) }
     }
@@ -122,6 +124,24 @@ function New-GBCascadeTask([string]$dataFolder, $python) {
     return $true
 }
 
+# The displays, for the extension's Display list. Listing them needs no administrator rights.
+function Get-GBMonitors {
+    $python = Get-GBPython
+    if (-not $python) { throw 'Listing the displays needs Python 3. Install it (the kit''s setup offers it), then try again.' }
+    $before = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    try { $output = & $python.exe @($python.args) $script:GBCascadeScript 'monitors' 2>$null }
+    finally { $ErrorActionPreference = $before }
+    $line = @($output | Where-Object { ([string]$_).StartsWith('{') } | Select-Object -Last 1)
+    if (-not $line.Count) { throw 'The window script gave no answer.' }
+    $answer = $line[0] | ConvertFrom-Json
+    if (-not $answer.ok) { throw ('The window script failed: ' + [string]$answer.error) }
+    $list = @()
+    foreach ($item in @($answer.monitors)) {
+        $list += @{ id = [int]$item.id; primary = [bool]$item.primary; width = [int]$item.width; height = [int]$item.height; dpi = [int]$item.dpi }
+    }
+    return ,$list
+}
+
 # Cascades the game windows now, with the choice saved in the helper's folder. Returns what happened, for the page.
 function Invoke-GBCascade([string]$dataFolder) {
     $python = Get-GBPython
@@ -152,5 +172,6 @@ function Invoke-GBCascade([string]$dataFolder) {
         $answer = $line[0] | ConvertFrom-Json
     }
     if (-not $answer.ok) { throw ('The window script failed: ' + [string]$answer.error) }
-    return @{ found = [int]$answer.found; moved = [int]$answer.moved; fullScreen = [int]$answer.fullScreen; refused = [int]$answer.refused; admin = [bool]$answer.admin }
+    return @{ found = [int]$answer.found; moved = [int]$answer.moved; fullScreen = [int]$answer.fullScreen; refused = [int]$answer.refused; admin = [bool]$answer.admin
+        monitorMissing = [int]$answer.monitorMissing }
 }

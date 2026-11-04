@@ -156,6 +156,14 @@
           <label class="gb-switch"><input id="show-terminal" type="checkbox"><span aria-hidden="true"></span></label>
         </div>
         <p class="hint">A helper running automatically restarts to apply this. Otherwise it applies the next time one starts.</p>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;font-size:11px;color:#a7bbd1">
+          <label for="cascade-monitor">Display</label><select id="cascade-monitor" style="min-width:0"><option value="0">Where the oldest game window is</option></select>
+          <label for="cascade-size">Size for</label><select id="cascade-size" style="min-width:0"><option value="">Pick a screen</option></select>
+        </div>
+        <div class="preference-row">
+          <label for="cascade-top">Keep game windows on top</label>
+          <label class="gb-switch"><input id="cascade-top" type="checkbox"><span aria-hidden="true"></span></label>
+        </div>
         <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:4px 8px;align-items:center;font-size:11px;color:#a7bbd1">
           <span></span><span>X</span><span>Y</span>
           <span>Resolution</span><input id="cascade-width" type="number" min="0" max="16000" step="1" placeholder="auto" aria-label="Window width in pixels"><input id="cascade-height" type="number" min="0" max="16000" step="1" placeholder="auto" aria-label="Window height in pixels">
