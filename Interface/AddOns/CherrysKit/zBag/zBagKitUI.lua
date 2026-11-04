@@ -625,6 +625,9 @@ function K.LoadConfig()
   zBagKitConfigOneBank:SetChecked(v["bankmode"] == "onebank")
   if K.SyncStatTicks then K.SyncStatTicks() end
   if zBagKitConfigShopSide then zBagKitConfigShopSide:SetChecked(v["bankshopside"] == 1) end
+  if zBagKitConfigEqSide then zBagKitConfigEqSide:SetChecked(v["eqside"] == 1) end
+  if zBagKitConfigShopSideTxt1 then zBagKitConfigShopSideTxt1:SetText("Item shop next to bank (" .. K.TEAL .. "zBag|r)") end
+  if zBagKitConfigEqSideTxt1 then zBagKitConfigEqSideTxt1:SetText("Next to bag (" .. K.TEAL .. "zBag|r)") end
   local hint
   if not K.IsOn() then
     hint = "|cffff6060zBag is turned off in the Cherry's Kit window.|r"
@@ -682,6 +685,10 @@ function K.OnConfigClick(what)
     if K.cherryOpen then
       K.OpenCherry()
     end
+  elseif what == "eqside" then
+    v["eqside"] = zBagKitConfigEqSide:IsChecked() and 1 or 0
+    save()
+    if zBag_Resize and zBag then zBag_Resize(zBag) end
   elseif what == "shopside" then
     v["bankshopside"] = zBagKitConfigShopSide:IsChecked() and 1 or 0
     save()
@@ -735,7 +742,8 @@ end
 K.TOOLTIPS = {
   share = { "Share bag settings across characters", "Use the same bag and bank settings for your characters. Turn this off to keep separate settings for each character. Existing shared and separate settings are kept when you switch." },
   statprefix = { "Stats on icons", "On mana stones in your bags: one stat shows its short name on the icon (str, stam, patt), more stats show how many (2x to 6x). Works in every bag layout. Items are read from their tooltips the first time, so new ones show their stats a moment later." },
-  shopside = { "Item shop bank next to bank", "With one bank (classic zBag): the item shop bank opens in its own box attached to the right side of the bank, and the bank search box moves under it. Needs bank tab 6 ticked." },
+  eqside = { "Equipment next to bag (zBag)", "With one bag (classic zBag) and Show equipment slots on: the equipment opens in its own box attached to the right side of the bag, in one column when the bag is tall enough, else in two, and the bag loses the equipment rows at its bottom." },
+  shopside = { "Item shop bank next to bank (zBag)", "With one bank (classic zBag): the item shop bank opens in its own box attached to the right side of the bank, and the bank search box moves under it. Needs bank tab 6 ticked." },
   onebank = { "Use one bank (classic zBag)", "Show all bank pages in zBag's combined bank window. Turn this off for the game's normal bank. This choice is independent of your bag layout." },
   individual = { "Individual bags (stock+search)", "Use the game's own bag window, one page at a time, with a search box and slot numbers added. Choose the bank separately." },
   cherry = { "One bag (Cherry's)", "Each bag opens as its own plain box. Drag a bag to move it; drag its bottom-right corner to change its shape (narrower = more rows). Bag I has the search box under it. B opens and closes them; choose the bank separately. Bags you untick under show backpack tab stay closed." },

@@ -8,6 +8,8 @@
 -- zBag_VAR["bankslotnumbers"] 1 = numbers over the bank slots
 -- zBag_VAR["slothover"]       0 = numbers always shown; anything else (default) = only on the slot
 --                             under the mouse
+-- zBag_VAR["eqside"]          1 = the one bag's equipment slots sit in their own box attached to the
+--                             right of the bag (one column, or two when the bag is shorter)
 -- zBag_VAR["bankshopside"]    1 = the one bank's item shop slots (201-300) sit in their own box
 --                             attached to the right of the bank, with the bank search under them
 
@@ -285,6 +287,11 @@ end
 
 function K.IsOneBank()
   return K.IsOn() and type(zBag_VAR) == "table" and zBag_VAR["bankmode"] == "onebank"
+end
+
+-- One bag: the equipment slots beside the bag ("Next to bag (zBag)", only while they are shown).
+function K.EqSide()
+  return type(zBag_VAR) == "table" and zBag_VAR["eqside"] == 1
 end
 
 -- One bank: the item shop bank beside the bank (only while its page is shown, bank tick 6).
