@@ -60,6 +60,30 @@ Restart the helper first, so it runs the new files.
 | BS3 | With the helper running, log in a character, move an item, and log out while the Global Bank page is open on Bank. | The item shows in its new place within a few seconds, as before. |
 | BS4 | Switch with Next from a character that has the same name on another server to one that hasn't, log out, and run `show <second character>` in the helper. | The second character shows its own data. Neither character's other-server entry changes. |
 
+## Cascade the game windows (Global Bank 1.6.9, extension 1.4.0, not yet released)
+
+Needs Python 3. Update the helper files and reload the extension (the page's sidebar says Version 1.4.0). Open the page's **Connection** panel; the options are under **Game windows**.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| WC1 | Open two or three game windows, then press **Cascade game windows** with **Start from** on *Bottom left, going up* and **Resize to fit the screen** on. | The first time, Windows asks for permission once (a UAC prompt for PowerShell); allow it. The oldest window sits at the bottom left of the screen, each newer one a title bar's height up and to the right, the newest in front at the top right; together they fill the screen above the taskbar. The window you were typing in keeps the keyboard. The status line says how many were cascaded. |
+| WC2 | Press **Cascade game windows** again. | No Windows prompt this time; the windows cascade the same way. Task Scheduler shows *CherrysKit \ Cascade game windows*, and `C:\ProgramData\CherrysKit\GlobalBank-Windows.py` exists. |
+| WC3 | With the game started as administrator (Task Manager's Elevated column says Yes), press **Cascade game windows**. | The windows move; nothing is reported as refused. |
+| WC4 | Delete the task in Task Scheduler, press **Cascade game windows** and choose **No** at the Windows prompt. | Games not started as administrator still move; ones started as administrator are reported as refused, with a hint to allow the prompt. |
+| WC5 | Switch **Start from** to *Top left, going down* and press **Cascade game windows**. | The oldest window is at the top left, each newer one steps down and to the right, the newest in front at the bottom right. |
+| WC6 | Turn **Resize to fit the screen** off, resize one window by hand, and press **Cascade game windows**. | The windows keep their own sizes and only move into the cascade, all on the screen. |
+| WC7 | Minimize one game window and maximize another, then press **Cascade game windows**. | Both come back at their cascade place and size. |
+| WC8 | Run one client in full-screen mode, then press **Cascade game windows**. | The full-screen window is left as it is, and the status line says so. |
+| WC9 | On a display scaled to 125% or 150%, press **Cascade game windows**. | The windows still fill the screen exactly and line up; the step looks like one title bar. |
+| WC10 | In the toolbar popup's **Advanced**, set Resolution 1280 x 800 and Offset 60 x 30, then press **Cascade game windows**. | Every game window is 1280 x 800 (its visible frame), each one 60 px right and 30 px up from the one behind it, from the corner chosen on the page. The page shows the same numbers. |
+| WC11 | Turn **Move cascade button under Global Bank button** on, close and reopen the popup. | A cascade button sits right under Open Global Bank and the one in Advanced is gone; it cascades the same way. |
+| WC12 | Start a new game client and wait. | Nothing moves by itself: cascading only happens on the button. |
+| WC13 | With two screens, open **Display** on the page and in the popup. | Each screen is listed with its resolution, the main one marked. Picking the second screen and pressing the button moves the whole cascade there, lined up with its taskbar. |
+| WC14 | Pick *Display 1, 2560 x 1440 screen* (or your screen) in **Size for a screen**, close and reopen the popup, then type another number into Resolution. | Resolution becomes 1134 x 818 on a 1440p screen (851 x 614 on 1080p) and the list keeps showing the screen picked, also after reopening; typing in Resolution sets it back to *Pick a screen*. |
+| WC17 | With Resolution 1134 x 818 on a 1440p screen, open 20 or more game windows and cascade. | After about 18 windows the next ones start a second row beside the first window, back at the bottom (or top); every window's corner is on its own spot. |
+| WC15 | Put Chrome over the game windows and press the button in the popup. | The game windows come in front of Chrome, newest in front, and Chrome keeps the keyboard. Clicking Chrome brings it back over them. |
+| WC16 | Turn **Keep game windows on top** on and press the button, then click Chrome. | The game windows stay above Chrome. Turning it off and pressing again lets other programs cover them again. |
+
 ## Snapshots after switching characters, automatic helper (Global Bank 1.6.8, extension 1.3.8, not yet released)
 
 Reload the extension first; the page's sidebar says Version 1.3.8.

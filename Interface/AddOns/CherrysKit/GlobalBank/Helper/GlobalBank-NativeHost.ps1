@@ -18,7 +18,7 @@ function Read-Bytes([int]$length) {
     return ,$buffer
 }
 # Raised whenever the extension needs something new from this bridge; the extension asks for an update when it's lower.
-$BridgeVersion = 4
+$BridgeVersion = 6
 function Send-Frame([string]$text) {
     $bytes = $utf8.GetBytes($text)
     # Chrome ends the connection on anything over 1 MB, so the page gets a reason rather than a dead port.
@@ -148,6 +148,22 @@ try {
             . (Join-Path $PSScriptRoot 'GlobalBank-Backups.ps1')
             Update-BackupsIfSaved (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Runes of Magic') (Get-HelperDataDirectory)
         } catch { }
+        exit 0
+    }
+    # "Cascade game windows" on the page or popup: arranges the game windows open right now, with their choices.
+    # The first time, Windows asks for permission to make the task that can move a game started as administrator.
+    if ($message.type -eq 'windows-cascade') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Windows.ps1')
+        $null = Write-GBCascadeSettings (Get-HelperDataDirectory) $message.cascade
+        $answer = Invoke-GBCascade (Get-HelperDataDirectory)
+        $answer.ok = $true
+        Send-Response $answer
+        exit 0
+    }
+    # The Display list beside the cascade options.
+    if ($message.type -eq 'windows-monitors') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Windows.ps1')
+        Send-Response @{ ok = $true; monitors = (Get-GBMonitors) }
         exit 0
     }
     if ($message.type -eq 'helper-status' -or $message.type -eq 'helper-start') {
