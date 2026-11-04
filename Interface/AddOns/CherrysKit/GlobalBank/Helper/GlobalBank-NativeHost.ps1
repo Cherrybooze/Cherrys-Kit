@@ -157,8 +157,8 @@ try {
     # "Cascade now" on the page: arranges the game windows open right now, with the page's choices.
     if ($message.type -eq 'windows-cascade') {
         . (Join-Path $PSScriptRoot 'GlobalBank-Windows.ps1')
-        $settings = Write-GBCascadeSettings (Get-HelperDataDirectory) $message.cascade
-        $answer = Invoke-GBCascade $settings
+        $null = Write-GBCascadeSettings (Get-HelperDataDirectory) $message.cascade
+        $answer = Invoke-GBCascade (Get-HelperDataDirectory)
         $answer.ok = $true
         Send-Response $answer
         exit 0

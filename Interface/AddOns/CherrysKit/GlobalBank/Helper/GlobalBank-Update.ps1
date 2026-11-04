@@ -865,8 +865,7 @@ while ($true) {
         $nextCascadeCheck = (Get-Date).AddSeconds(2)
         try {
             $cascaded = Update-GBCascadeWatch $cascadeWatch
-            if ($cascaded -and $cascaded.moved) { Write-Log "Cascaded $(Format-GBCount $cascaded.moved 'game window')." 'notice' 'muted' }
-            if ($cascaded -and $cascaded.refused) { Write-Log "Windows refused to move $(Format-GBCount $cascaded.refused 'game window'): a game started as administrator can only be moved by a helper started as administrator too." 'notice' 'warn' }
+            if ($cascaded -and $cascaded.started) { Write-Log "New game window: cascading once it has settled." 'notice' 'muted' }
         } catch {
             Write-HelperError $_ 'Game window cascade'
             Write-Log 'Game windows could not be cascaded, so the helper stopped trying until it restarts; see GlobalBankHelper-errors.log.' 'notice' 'error'

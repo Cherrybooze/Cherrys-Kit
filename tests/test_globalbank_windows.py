@@ -1,6 +1,8 @@
 """Cascading the game windows: the extension's choice, its route to the local host, and the layout the helper uses."""
 from pathlib import Path
+import importlib.util
 import json
+import sys
 import re
 import shutil
 import subprocess
@@ -9,7 +11,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
 EXTENSION = HELPER / 'ChromeExtension'
-WINDOWS = HELPER / 'GlobalBank-Windows.ps1'
+WINDOWS = HELPER / 'GlobalBank-Windows.py'
 NODE = shutil.which('node')
 SHELL = shutil.which('powershell') or shutil.which('pwsh')
 
@@ -49,11 +51,13 @@ class CascadeWiringTests(unittest.TestCase):
         for banned in ('SetForegroundWindow', 'SendInput', 'keybd_event', 'mouse_event', 'PostMessage', 'SendMessage'):
             self.assertNotIn(banned, text)
         self.assertIn('0x0010 | 0x0200', text)  # SWP_NOACTIVATE | SWP_NOOWNERZORDER
-        self.assertIn('ShowWindow(hwnd, 4)', text)  # SW_SHOWNOACTIVATE
+        self.assertIn('u.ShowWindow(hwnd, 4)', text)  # SW_SHOWNOACTIVATE
+        # Nothing is compiled: Add-Type failed where Chrome's temp folder was C:\Windows\TEMP.
+        self.assertNotIn('Add-Type', (HELPER / 'GlobalBank-Windows.ps1').read_text(encoding='utf-8'))
 
     def test_extension_copy_is_identical(self):
         extra = ROOT / 'extras/GlobalBankDailyRewards/GlobalBank/Helper'
-        for name in ('GlobalBank-Windows.ps1', 'GlobalBank-NativeHost.ps1', 'ChromeExtension/background.js',
+        for name in ('GlobalBank-Windows.ps1', 'GlobalBank-Windows.py', 'GlobalBank-NativeHost.ps1', 'ChromeExtension/background.js',
                      'ChromeExtension/control.js', 'ChromeExtension/control.html'):
             self.assertEqual((extra / name).read_bytes(), (HELPER / name).read_bytes(), name)
 
@@ -107,19 +111,21 @@ same(full.pop().cascade, {on:true, corner:'bottom-left', fit:true, width:0, heig
 ''')
 
 
-@unittest.skipUnless(SHELL, 'PowerShell required')
-class CascadeLayoutTests(unittest.TestCase):
-    def run_ps(self, body):
-        script = '. ' + "'" + str(WINDOWS).replace("'", "''") + "'\n" + body
-        result = subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-Command', script], capture_output=True, text=True, timeout=60)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        return json.loads(result.stdout)
+def load_windows():
+    sys.dont_write_bytecode = True  # no __pycache__ beside the helper: it would ship in the release
+    spec = importlib.util.spec_from_file_location('gb_windows', WINDOWS)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)  # only the layout and settings: the Win32 calls load on Windows alone
+    return module
 
-    def layout(self, count, corner, fit, frames=None, work=(0, 0, 1920, 1040), step=32):
-        frames = frames or [{'w': 1280, 'h': 800}] * count
-        listed = ','.join('@{w=%d;h=%d}' % (f['w'], f['h']) for f in frames)
-        return self.run_ps('ConvertTo-Json -Compress -InputObject @(Get-GBCascadeLayout @(%s) ([int[]]@(%s)) %s $%s %d %d 800 600)'
-                           % (listed, ','.join(map(str, work)), corner, 'true' if fit else 'false', step, step))
+
+class CascadeLayoutTests(unittest.TestCase):
+    def setUp(self):
+        self.gb = load_windows()
+
+    def layout(self, count, corner, fit, frames=None, work=(0, 0, 1920, 1040), step=32, exact=False, step_y=None):
+        frames = frames or [(1280, 800)] * count
+        return self.gb.layout(frames, work, corner, fit, step, step if step_y is None else step_y, 800, 600, exact)
 
     def test_bottom_left_fits_the_work_area_going_up_and_right(self):
         cells = self.layout(3, 'bottom-left', True)
@@ -131,7 +137,7 @@ class CascadeLayoutTests(unittest.TestCase):
         self.assertEqual([(c['x'], c['y']) for c in cells], [(0, 0), (32, 32), (64, 64)])
 
     def test_own_sizes_stay_on_screen(self):
-        cells = self.layout(2, 'bottom-left', False, [{'w': 1024, 'h': 768}, {'w': 3000, 'h': 2000}])
+        cells = self.layout(2, 'bottom-left', False, [(1024, 768), (3000, 2000)])
         self.assertEqual(cells[0], {'x': 0, 'y': 272, 'w': 1024, 'h': 768})
         self.assertEqual(cells[1], {'x': 0, 'y': 0, 'w': 1920, 'h': 1040})
 
@@ -141,15 +147,14 @@ class CascadeLayoutTests(unittest.TestCase):
         self.assertGreaterEqual(cells[0]['h'], 600)
         self.assertLessEqual(cells[-1]['y'] + cells[-1]['h'], 1040)
 
-    def test_an_exact_offset_is_kept_even_with_many_windows(self):
-        cells = self.run_ps('ConvertTo-Json -Compress -InputObject @(Get-GBCascadeLayout @(' + ','.join(['@{w=1000;h=700}'] * 6)
-                            + ') ([int[]]@(0,0,1920,1040)) top-left $false 50 20 800 600 $true)')
-        self.assertEqual([(c['x'], c['y']) for c in cells[:3]], [(0, 0), (50, 20), (100, 40)])
+    def test_exact_resolution_and_offset(self):
+        cells = self.layout(6, 'bottom-left', False, [(1280, 800)] * 6, step=60, step_y=30, exact=True)
+        self.assertEqual([(c['x'], c['y'], c['w'], c['h']) for c in cells[:3]], [(0, 240, 1280, 800), (60, 210, 1280, 800), (120, 180, 1280, 800)])
 
     def test_settings_are_cleaned(self):
-        value = self.run_ps("ConvertTo-Json -Compress -InputObject (ConvertTo-GBCascadeSettings ('{\"on\":\"yes\",\"corner\":\"x\",\"fit\":false}' | ConvertFrom-Json))")
-        self.assertEqual(value, {'on': False, 'corner': 'bottom-left', 'fit': False, 'width': 0, 'height': 0, 'stepX': 0, 'stepY': 0})
+        self.assertEqual(self.gb.clean_settings({'on': 'yes', 'corner': 'x', 'fit': False, 'width': 1280.7, 'stepX': -1, 'stepY': True}),
+                         {'on': False, 'corner': 'bottom-left', 'fit': False, 'width': 1280, 'height': 0, 'stepX': 0, 'stepY': 0})
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_script_answers_in_json_when_it_cannot_run(self):
+        result = subprocess.run([sys.executable, '-I', str(WINDOWS), 'nonsense'], capture_output=True, text=True, timeout=30)
+        self.assertEqual(json.loads(result.stdout)['ok'], False)
