@@ -896,6 +896,20 @@ const GBBank = (() => {
     return `<button type="button" class="xfer-plate is-${escapeHtml(plate.kind)}" data-xfer="${escapeHtml(plate.id)}" data-xfer-open aria-label="${escapeHtml(plate.label)}">`
       + `<b>Xfer</b><span class="xfer-sep" aria-hidden="true">\u203a</span>${escapeHtml(plate.to)}<span class="xfer-sep" aria-hidden="true">\u203a</span><span class="xfer-when">${escapeHtml(plate.when)}</span></button>`;
   }
+  // Accounts with one character get no heading of their own: their characters share one group, before the characters
+  // with no account known, and each one's account is in its hover card.
+  const SINGLES = '~single';
+  function gatherSingles(groups, rows) {
+    const singles = groups.filter(group => group.rows.length === 1 && group.key !== '~none');
+    if (singles.length < 2) return groups;
+    const rest = groups.filter(group => !singles.includes(group));
+    // In the table's own order, not the accounts'
+    const alone = new Set(singles.map(group => group.rows[0]));
+    const together = {key: SINGLES, title: 'Single-character accounts', rows: rows.filter(row => alone.has(row))};
+    const at = rest.findIndex(group => group.key === '~none' || group.key === '');
+    rest.splice(at < 0 ? rest.length : at, 0, together);
+    return rest;
+  }
   function renderRoster(root, characters, options = {}) {
     root.sorting = root.sorting || {key: 'gold', descending: true};
     root.collapsed = root.collapsed || new Set();
@@ -904,7 +918,8 @@ const GBBank = (() => {
     root.openCharacter = options.openCharacter;
     const how = options.how || 'server';
     const rows = searchRows(rosterRows(characters, root.sorting.key, root.sorting.descending, options.accountName, options.romTitle), options.search, options);
-    const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
+    let groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
+    if (how === 'account' && options.singlesTogether) groups = gatherSingles(groups, rows);
     // A heading that names the accounts says them for every line under it
     const showAccounts = how !== 'account';
     if (!showAccounts && (root.sorting.key === 'account' || root.sorting.key === 'rom')) {

@@ -4,7 +4,7 @@
 		<Size><AbsDimension x="1" y="1"/></Size>
 		<Anchors><Anchor point="TOPLEFT"/></Anchors>
 		<Scripts>
-			<OnLoad>this:RegisterEvent("VARIABLES_LOADED"); this:RegisterEvent("LOADING_END"); this:RegisterEvent("PLAYER_BAG_CHANGED"); this:RegisterEvent("BAG_ITEM_UPDATE"); this:RegisterEvent("BAG_UPDATE_COOLDOWN");</OnLoad>
+			<OnLoad>this:RegisterEvent("VARIABLES_LOADED"); this:RegisterEvent("LOADING_END"); this:RegisterEvent("PLAYER_BAG_CHANGED"); this:RegisterEvent("BAG_ITEM_UPDATE"); this:RegisterEvent("BAG_UPDATE_COOLDOWN"); this:RegisterEvent("BANK_OPEN"); this:RegisterEvent("BANK_UPDATE");</OnLoad>
 			<OnEvent>zBagKit.OnEvent(event);</OnEvent>
 			<OnUpdate>zBagKit.OnUpdate(elapsedTime);</OnUpdate>
 		</Scripts>

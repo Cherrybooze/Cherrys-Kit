@@ -66,8 +66,9 @@ end
 -- Individual bags: slot numbers over the game's buttons (overlays zBagKitBag1-180, zBagKitBank1-40)
 ---------------------------------------------------------------------------
 
--- stats: also the "Stats" tick's short stat names (bags only); the overlays then stay shown.
-local function updateOverlays(prefix, buttonPrefix, count, show, slotOf, stats)
+-- stats: also the "Stats" tick's short stat names; the overlays then stay shown. bank: slotOf gives
+-- bank slots.
+local function updateOverlays(prefix, buttonPrefix, count, show, slotOf, stats, bank)
   for n = 1, count do
     local overlay = _G[prefix .. n]
     local slot = nil
@@ -77,7 +78,11 @@ local function updateOverlays(prefix, buttonPrefix, count, show, slotOf, stats)
     K.Label(overlay, show and slot or nil, nil, not stats)
     if stats then
       if overlay and not overlay:IsVisible() then overlay:Show() end
-      K.StatPrefix(overlay, nil, nil, slot)
+      if bank then
+        K.StatPrefix(overlay, nil, nil, nil, slot)
+      else
+        K.StatPrefix(overlay, nil, nil, slot)
+      end
     elseif overlay and overlay.kitStatText and overlay.kitStatText ~= "" then
       K.StatPrefix(overlay, nil)
     end
@@ -116,10 +121,12 @@ function K.OnUpdate(elapsed)
     K.bagNumbers, K.bagStats = bag, stats
     updateOverlays("zBagKitBag", "BagItemButton", K.BAG_SLOTS, bag, K.GameBagSlot, stats)
   end
-  local bank = on and not K.IsOneBank() and var()["bankslotnumbers"] == 1 and BankFrame ~= nil and BankFrame:IsVisible()
-  if bank or K.bankNumbers then
-    K.bankNumbers = bank
-    updateOverlays("zBagKitBank", "BankItemButton", K.BANK_PAGE, bank, K.GameBankSlot)
+  local bankOpen = on and not K.IsOneBank() and BankFrame ~= nil and BankFrame:IsVisible()
+  local bank = bankOpen and var()["bankslotnumbers"] == 1
+  local bankStats = bankOpen and var()["statprefix"] == 1
+  if bank or bankStats or K.bankNumbers or K.bankStats then
+    K.bankNumbers, K.bankStats = bank, bankStats
+    updateOverlays("zBagKitBank", "BankItemButton", K.BANK_PAGE, bank, K.GameBankSlot, bankStats, true)
   end
 end
 
@@ -130,6 +137,9 @@ function K.OnEvent(event)
     K.ApplyMoney()
     K.PlaceSearchBoxes()
     if K.SyncStatTicks then K.SyncStatTicks() end
+  elseif event == "BANK_OPEN" or event == "BANK_UPDATE" then
+    -- bank slots changed: the "Stats" labels look their items up again
+    if K.StatPrefixRefresh then K.StatPrefixRefresh() end
   elseif event == "PLAYER_BAG_CHANGED" or event == "BAG_ITEM_UPDATE" or event == "BAG_UPDATE_COOLDOWN" then
     if event ~= "BAG_UPDATE_COOLDOWN" and K.StatPrefixRefresh then K.StatPrefixRefresh() end
     K.UpdateCherry()
