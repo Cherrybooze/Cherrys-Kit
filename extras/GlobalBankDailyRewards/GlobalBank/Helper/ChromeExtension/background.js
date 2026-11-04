@@ -14,6 +14,12 @@ const ADDON_REQUESTS = new Set(['addons-list', 'addons-check', 'addons-install',
 // so the helper's exit message can say what happens next.
 // With the choice on, the same once-a-minute message also starts a helper that isn't running.
 let autoHelperChoice, showTerminalChoice = false;
+// Only these values reach the local host.
+const cascadePixels = (value, most) => Number.isInteger(value) && value >= 0 && value <= most ? value : 0;
+const cleanCascade = value => ({corner: value?.corner === 'top-left' ? 'top-left' : 'bottom-left', fit: value?.fit !== false,
+  width: cascadePixels(value?.width, 16000), height: cascadePixels(value?.height, 16000),
+  stepX: cascadePixels(value?.stepX, 1000), stepY: cascadePixels(value?.stepY, 1000),
+  monitor: cascadePixels(value?.monitor, 32), onTop: value?.onTop === true});
 chrome.storage?.local?.get?.(['autoHelper', 'showTerminal'])?.then?.(({autoHelper, showTerminal}) => {
   autoHelperChoice = !!autoHelper;
   showTerminalChoice = !!showTerminal;
@@ -207,6 +213,22 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
   if (control && message?.type === 'bank-data') {
     const offset = Number.isSafeInteger(message.offset) && message.offset > 0 ? message.offset : 0;
     chrome.runtime.sendNativeMessage(HOST, {type:'bank-data', offset}, response => {
+      const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
+      reply(error ? {ok:false,error} : response);
+    });
+    return true;
+  }
+  // "Cascade game windows": the local host arranges the game windows open right now.
+  if ((control || popup) && message?.type === 'windows-cascade') {
+    chrome.runtime.sendNativeMessage(HOST, {type:'windows-cascade', cascade: cleanCascade(message.cascade)}, response => {
+      const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
+      reply(error ? {ok:false,error} : response);
+    });
+    return true;
+  }
+  // The displays, for the Display list beside the cascade options.
+  if ((control || popup) && message?.type === 'windows-monitors') {
+    chrome.runtime.sendNativeMessage(HOST, {type:'windows-monitors'}, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);
     });
