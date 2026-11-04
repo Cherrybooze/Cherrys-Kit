@@ -1,6 +1,6 @@
 # Cherry's Kit
 
-Version **0.4.34** · Kit release **0.11.117** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
+Version **0.4.34** · Kit release **0.11.118** · [Project overview](https://github.com/Cherrybooze/Cherrys-Kit#readme)
 
 **The control hub for Cherry's addons: one window to open, turn on or off, and reload every Cherry's Kit addon.**
 

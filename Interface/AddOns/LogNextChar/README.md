@@ -1,6 +1,6 @@
 # LogNextChar
 
-Version **1.4.0** · Kit release **0.11.117** · [All addons / hub](../CherrysKit/README.md)
+Version **1.4.0** · Kit release **0.11.118** · [All addons / hub](../CherrysKit/README.md)
 
 **Next** and **Prev** buttons in game, plus `/lnc`, log you out and straight into the neighbouring character on the account. It brings its own login screen, which picks the character, and which is a better login screen in its own right.
 
