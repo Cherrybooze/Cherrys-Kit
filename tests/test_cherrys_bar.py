@@ -53,6 +53,7 @@ function GetPlayerMoney(kind) return kind == "copper" and state.gold or 5 end
 function GetFramerate() calls.ping = calls.ping + 1; return state.fps end
 function GetPing() return state.ping end
 function GetZoneName() return zone end
+function GetServerName() return "Aynara" end
 function GetPlayerWorldMapPos() return 0.123, 0.456 end
 function GetFriendCount() return 2 end
 function GetFriendInfo(_, i) return "Friend" .. i, 1, i == 1 end
@@ -621,6 +622,52 @@ class BarTest(unittest.TestCase):
             CherrysBar.Displays.Rebuild()
         """)
         self.assertEqual(self.text_of("Clock"), "00:00")
+
+    def test_clock_server_name_tick_in_the_right_click_menu_widens_the_clock(self):
+        self.run_lua("CherrysBar.Displays.MouseUp(CherrysBar.Displays.byKey.Clock.slot, 'RBUTTON')")
+        name = "Show server name with clock"
+        rows = self.menu_rows()
+        self.assertIn("CheckboxOff", self.ev(f"CBar_MenuRow{rows[name]}Icon.texture"))
+        narrow = self.ev("frameOf('Clock').w")
+        self.run_lua(f"CherrysBar.Menu.RowClick({rows[name]}, 'LBUTTON')")
+        self.assertEqual(self.text_of("Clock"), "00:00 - Aynara")
+        self.assertEqual(self.ev("cfg('Clock').fmt"), "[TIME24] - [SERVER]")
+        self.assertGreater(self.ev("frameOf('Clock').w"), narrow)
+        self.assertIn("CheckboxOn", self.ev(f"CBar_MenuRow{self.menu_rows()[name]}Icon.texture"))
+        self.run_lua(f"CherrysBar.Menu.RowClick({self.menu_rows()[name]}, 'LBUTTON')")
+        self.assertEqual(self.text_of("Clock"), "00:00")
+        self.assertEqual(self.ev("cfg('Clock').fmt"), "[TIME24]")
+        self.assertEqual(self.ev("frameOf('Clock').w"), narrow)
+
+    def test_clock_server_name_tick_in_the_options_window(self):
+        self.run_lua("""
+            CherrysBar.Options.Toggle()
+            CherrysBar.Options.ChipUp(CherrysBar.Displays.byKey.Clock.slot, 'LBUTTON')
+        """)
+        self.assertEqual(self.ev("CBar_OptionsOptionLabel.text"), "Show server name with clock")
+        self.run_lua("CherrysBar.Options.PickedOption()")
+        self.assertEqual(self.ev("CBar_OptionsFormat.text"), "[TIME24] - [SERVER]")
+        self.assertTrue(self.ev("CBar_OptionsOption.checked"))
+        self.run_lua("CherrysBar.Options.PickedOption()")
+        self.assertEqual(self.ev("CBar_OptionsFormat.text"), "[TIME24]")
+
+    def test_clock_server_token_and_tooltip(self):
+        self.run_lua("""
+            GetServerName = nil
+            local D = CherrysBar.Displays
+            D.Config(D.byKey.Clock).fmt = '[SERVER] [TIME24]'
+            D.Rebuild()
+        """)
+        self.assertEqual(self.text_of("Clock"), "? 00:00")
+        self.run_lua("""
+            GetServerName = function() return "Kalia" end
+            local D = CherrysBar.Displays
+            D.Rebuild()
+            D.Enter(D.byKey.Clock.slot, frameOf('Clock'))
+        """)
+        self.assertEqual(self.text_of("Clock"), "Kalia 00:00")
+        lines = " ".join(str(v) for v in self.ev("GameTooltip.lines").values())
+        self.assertIn("Kalia", lines)
 
     def test_perf_records_frames_memory_and_addon_cost_then_restores(self):
         self.run_lua("""

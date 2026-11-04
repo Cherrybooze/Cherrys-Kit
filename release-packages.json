@@ -408,7 +408,7 @@
     {
       "folder": "CherrysBar",
       "title": "Cherry's Bar",
-      "version": "1.1.10",
+      "version": "1.1.11",
       "command": "/cbar",
       "description_file": "17-cherrys-bar.md",
       "summary": "Information bars at the top, bottom or both, with displays set per bar.",
