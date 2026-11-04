@@ -129,6 +129,8 @@ $script:AAHMaintenancePending = $false
 $script:AAHWorker = $null
 $script:AAHWorkerFailed = $false
 $script:AAHWorkerInbox = Join-Path $data ('.AAH-worker-' + $PID + '.json')
+$script:BusySaves = @{}    # folder -> $true: save files the last update couldn't read; their entries stay until they can be
+$script:SaveStamps = @{}   # folder -> write time and size of the save file the database was last built from
 
 . (Join-Path $PSScriptRoot "GlobalBank-Data.ps1")
 . (Join-Path $PSScriptRoot "AAH-Cache.ps1")
@@ -301,8 +303,9 @@ function Write-Log([string]$text, [string]$kind = 'notice', [string]$tone = 'inf
 # Collecting the save files
 
 # One pass over every character folder. A file that can't be read right now (a game window is
-# writing it) keeps that character's entry from the previous database. Returns the new entries,
-# or $null when the database couldn't be written.
+# writing it) keeps that character's entry from the previous database, and goes on the busy list
+# that the helper window reads again until it can. Returns the new entries, or $null when the
+# database couldn't be written.
 # Exclusions live only in Interface\GlobalBankHelper, never in the addon package.
 function Read-Exclusions {
     $result = @{}
@@ -325,6 +328,87 @@ function Save-Exclusions($names) {
 
 function Is-Excluded([string]$name) { return $script:Excluded.ContainsKey($name) }
 
+# A save file is opened letting others read, write or replace it meanwhile, so the helper doesn't stand
+# in the way of a game window saving. It counts as read whole when its write time and size are the same
+# before and after.
+$script:GBSaveShare = [IO.FileShare]'ReadWrite, Delete'
+
+# A save file's write time and size, or '' when there is none.
+function Get-GBSaveStamp([string]$file) {
+    try {
+        $info = New-Object IO.FileInfo($file)
+        if (-not $info.Exists) { return '' }
+        return "$($info.LastWriteTimeUtc.Ticks):$($info.Length)"
+    } catch { return '' }
+}
+
+# True while the game is likely still writing a file: written in the last 2 seconds. Only the helper
+# window waits for that, since it reads busy files again; a one-off update reads what's there.
+function Test-GBSaveFresh([string]$file) {
+    try {
+        $age = ([DateTime]::UtcNow - (New-Object IO.FileInfo($file)).LastWriteTimeUtc).TotalSeconds
+        return ($age -ge 0 -and $age -lt 2)
+    } catch { return $false }
+}
+
+# The whole save file and its stamp, or $null when it's busy: missing, being written, or locked.
+function Read-GBSaveText([string]$file) {
+    $before = Get-GBSaveStamp $file
+    if (-not $before -or ($Watch -and (Test-GBSaveFresh $file))) { return $null }
+    try {
+        $stream = New-Object IO.FileStream($file, [IO.FileMode]::Open, [IO.FileAccess]::Read, $script:GBSaveShare)
+        try {
+            $reader = New-Object IO.StreamReader($stream, $script:latin1, $true)
+            $text = $reader.ReadToEnd()
+            $reader.Dispose()
+        } finally { $stream.Dispose() }
+    } catch { return $null }
+    if ((Get-GBSaveStamp $file) -ne $before) { return $null }
+    return @{ text = $text; stamp = $before }
+}
+
+# True when a busy save file could be read now. A folder that's gone counts too: the next update drops it.
+function Test-GBSaveReady([string]$folder) {
+    $dir = Get-Item -LiteralPath (Join-Path $SaveFolder $folder) -ErrorAction SilentlyContinue
+    if (-not $dir) { return $true }
+    $file = Join-Path $dir.FullName 'SaveVariables.lua'
+    if (-not (Get-GBSaveStamp $file) -or (Test-GBSaveFresh $file)) { return $false }
+    try {
+        (New-Object IO.FileStream($file, [IO.FileMode]::Open, [IO.FileAccess]::Read, $script:GBSaveShare)).Dispose()
+        return $true
+    } catch { return $false }
+}
+
+# Character folders whose save file isn't the one the database was built from: a logout the file
+# watcher missed (Windows drops its events when too many come at once). Busy ones wait for their retry.
+function Get-GBUnreadSaves {
+    $unread = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($dir in @(Get-ChildItem -LiteralPath $SaveFolder -Directory -ErrorAction SilentlyContinue)) {
+        $name = $dir.Name
+        if ($script:BusySaves.ContainsKey($name) -or (Is-Excluded $name)) { continue }
+        $stamp = Get-GBSaveStamp (Join-Path $dir.FullName 'SaveVariables.lua')
+        if ($stamp -and $script:SaveStamps[$name] -ne $stamp) { $unread.Add($name) }
+    }
+    return $unread.ToArray()
+}
+
+# What an update says about save files it couldn't read, and about busy ones it has read since.
+function Get-GBBusyText($names, [bool]$freed) {
+    $one = ($names.Count -eq 1)
+    $what = if ($one) { "$($names[0])'s save file" } else { "$($names.Count) save files ($($names -join ', '))" }
+    $it = if ($one) { 'it' } else { 'them' }
+    if ($freed) { return "Read $what now that the game is done with $it." }
+    $stays = if ($one) { 'Its last entry stays' } else { 'Their last entries stay' }
+    $later = if ($Watch) { "the helper reads $it as soon as the game is done" } else { "the next update reads $it" }
+    return "Couldn't read $what yet: the game is still writing $it. $stays, and $later."
+}
+
+# True when the database was read and written. Anything else a call prints is not the answer.
+function Invoke-UpdateChecked($loggedOut) {
+    $result = @(Invoke-Update $loggedOut $false)
+    return ($result.Count -gt 0 -and $result[-1] -eq $true)
+}
+
 function Update-Database {
     if (-not (Test-Path -LiteralPath $SaveFolder)) {
         Write-Log "Can't find the game's save folder: $SaveFolder (start the script with -SaveFolder ""<folder>"")"
@@ -343,16 +427,23 @@ function Update-Database {
     foreach ($key in $prevNotes.Keys) { $notes[$key] = @{ v = $prevNotes[$key].v; t = $prevNotes[$key].t; time = [DateTime]::MinValue } }
     $found = New-Object 'System.Collections.Generic.List[object]'
     $removed = @{}   # name -> newest removed snapshot date, from every character's "Remove entry"
-    $kept = 0
+    $busy = @{}      # folder -> $true: couldn't be read this time
+    $stamps = @{}    # folder -> stamp of the save file read
     foreach ($folder in Get-ChildItem -LiteralPath $SaveFolder -Directory | Sort-Object Name) {
         if ($Watch) { Write-Beat }
         if (Is-Excluded $folder.Name) { continue }
         $file = Join-Path $folder.FullName "SaveVariables.lua"
-        if (-not (Test-Path -LiteralPath $file)) { continue }
+        $known = @($previousByFolder[$folder.Name] | Where-Object { $_ })
+        # No file and nothing known: a character folder without saves yet. With something known, the
+        # game may be replacing the file right now, so it waits as busy.
+        if (-not (Test-Path -LiteralPath $file) -and -not $known.Count) { continue }
         $entry = $null
         $folderEntries = @{}
+        $read = Read-GBSaveText $file
+        if ($read) { $stamps[$folder.Name] = $read.stamp } else { $busy[$folder.Name] = $true }
+        if ($read) {
         try {
-            $text = [System.IO.File]::ReadAllText($file, $script:latin1)
+            $text = $read.text
             # A one-shot character edit must not rebuild the unrelated auction cache.
             if (-not $script:GBSkipCacheImport) {
                 try { Import-CharacterAAH $file $text }
@@ -414,22 +505,35 @@ function Update-Database {
                 }
             }
         } catch { Write-HelperError $_ 'Read character snapshot' }
+        }
         # What's known from before stays: this name on another server, and everything when this file is busy.
         # One saved before servers were recorded gives way to a save that says which server it's on.
-        foreach ($old in @($previousByFolder[$folder.Name] | Where-Object { $_ })) {
+        foreach ($old in $known) {
             if ($folderEntries.ContainsKey($old.name)) { continue }
             if ($old.name -ceq $old.folder -and $folderEntries.Count) { continue }
             $folderEntries[$old.name] = $old
-            $kept++
         }
         foreach ($key in @($folderEntries.Keys | Sort-Object)) {
             $character = ConvertFrom-GBSnapshot $folderEntries[$key].s $folderEntries[$key].saved
             if ($character -and -not (Is-Excluded $character.Name)) { $found.Add($folderEntries[$key]) }
         }
     }
+    # One entry per character. A copy in another character's save file (switching characters keeps the
+    # game's Lua state, so one character's data could ride along in the next one's file) never outranks
+    # the character's own file or what the database had from it, and otherwise the newest save wins.
+    $best = @{}
+    foreach ($e in $found) {
+        $have = $best[$e.name]
+        if (-not $have) { $best[$e.name] = $e; continue }
+        $eOwn = ($e.folder -eq (ConvertTo-GBText $e.s.Split([char]'`')[0].Split([char]'~')[1]))
+        $haveOwn = ($have.folder -eq (ConvertTo-GBText $have.s.Split([char]'`')[0].Split([char]'~')[1]))
+        if (($eOwn -and -not $haveOwn) -or ($eOwn -eq $haveOwn -and [string]::CompareOrdinal($e.saved, $have.saved) -gt 0)) { $best[$e.name] = $e }
+    }
+    $unique = New-Object 'System.Collections.Generic.List[object]'
+    foreach ($e in $found) { if ([object]::ReferenceEquals($best[$e.name], $e)) { $unique.Add($e) } }
     # Leave out snapshots someone removed in game, unless the character has saved a newer one since.
     $entries = New-Object 'System.Collections.Generic.List[object]'
-    foreach ($e in $found) {
+    foreach ($e in $unique) {
         if ($removed.ContainsKey($e.name) -and [string]::CompareOrdinal($e.saved, $removed[$e.name]) -le 0) { continue }
         if ($removed.ContainsKey($e.folder) -and [string]::CompareOrdinal($e.saved, $removed[$e.folder]) -le 0) { continue }
         $entries.Add($e)
@@ -454,14 +558,21 @@ function Update-Database {
     for ($try = 1; $try -le 10; $try++) {
         try {
             Move-Item -LiteralPath $tmp -Destination $out -Force
-            if ($kept) { Write-Log "$kept save file(s) were busy; kept their previous entries." }
+            # Only now are these saves in the database, so only now do they count as read.
+            $newlyBusy = @($busy.Keys | Where-Object { -not $script:BusySaves.ContainsKey($_) } | Sort-Object)
+            $freed = @($script:BusySaves.Keys | Where-Object { -not $busy.ContainsKey($_) } | Sort-Object)
+            $script:BusySaves = $busy
+            foreach ($key in $stamps.Keys) { $script:SaveStamps[$key] = $stamps[$key] }
+            if ($newlyBusy.Count) { Write-Log (Get-GBBusyText $newlyBusy $false) }
+            if ($freed.Count) { Write-Log (Get-GBBusyText $freed $true) 'notice' 'muted' }
             $script:WrittenNotes = $notes
             return ,$entries
         } catch {
             Start-Sleep -Milliseconds 500
         }
     }
-    Write-Log "Couldn't replace $out (in use); will try again on the next change."
+    $later = if ($Watch) { 'the update runs again in a few seconds' } else { 'run the update again' }
+    Write-Log "Couldn't replace $out (in use); nothing read was lost, and $later."
     return $null
 }
 
@@ -736,7 +847,9 @@ foreach ($kind in "Changed", "Created", "Renamed") {
 }
 $watcher.EnableRaisingEvents = $true
 Load-Model
-[void](Invoke-Update $null $false)
+$startupRead = $false
+try { $startupRead = Invoke-UpdateChecked $null }
+catch { Write-HelperError $_ 'Character database update'; Write-Log 'Update failed; see GlobalBankHelper-errors.log. Trying again in a few seconds.' 'notice' 'error' }
 [void](Write-Json)
 Update-GBFeedModel
 Set-GBFeedState @{ state = 'watching' }
@@ -753,7 +866,14 @@ $nextAutoCheck = (Get-Date).AddSeconds(15)
 $autoStop = Join-Path $data 'GlobalBankHelperAuto.stop'
 
 $root = (Get-Item -LiteralPath $SaveFolder).FullName.TrimEnd("\")
-$due = $null
+# Nothing is dropped: a failed update runs again with the same logouts, later each time (up to a minute),
+# busy save files are tried again until they can be read, and every 30 seconds the save files are
+# checked against the ones the database was built from, for any logout the file watcher missed.
+$due = if ($startupRead) { $null } else { (Get-Date).AddSeconds(3) }
+$failures = if ($startupRead) { 0 } else { 1 }
+$busyCheck = $null
+$busyDelay = 2
+$nextSweep = (Get-Date).AddSeconds(30)
 $loggedOut = @{}
 # At the start, and a little after any save: the game writes several files for each logout.
 $backupsDue = Get-Date
@@ -845,12 +965,39 @@ while ($true) {
         $nextBridgeTidy = (Get-Date).AddMinutes(1)
         Clear-GBBridgeLeftovers
     }
+    if ((Get-Date) -ge $nextSweep) {
+        $nextSweep = (Get-Date).AddSeconds(30)
+        if (-not $due) {
+            try { foreach ($missed in @(Get-GBUnreadSaves)) { $loggedOut[$missed] = $true; $due = Get-Date } }
+            catch { Write-HelperError $_ 'Save file check' }
+        }
+    }
+    if ($script:BusySaves.Count) {
+        if (-not $busyCheck) { $busyDelay = 2; $busyCheck = (Get-Date).AddSeconds($busyDelay) }
+        elseif ((Get-Date) -ge $busyCheck) {
+            $ready = $false
+            foreach ($folderName in @($script:BusySaves.Keys)) { if (Test-GBSaveReady $folderName) { $ready = $true; break } }
+            if ($ready) { $busyDelay = 2; if (-not $due) { $due = Get-Date } }
+            else { $busyDelay = [Math]::Min(60, $busyDelay * 2) }
+            $busyCheck = (Get-Date).AddSeconds($busyDelay)
+        }
+    } else { $busyCheck = $null }
     if ($due -and (Get-Date) -ge $due) {
         $due = $null
         $names = $loggedOut
         $loggedOut = @{}
-        try { [void](Invoke-Update $names $false) }
-        catch { Write-HelperError $_ 'Character database update'; Write-Log 'Update failed; see GlobalBankHelper-errors.log. Watching continues.' 'notice' 'error' }
+        $done = $false
+        try { $done = Invoke-UpdateChecked $names }
+        catch {
+            Write-HelperError $_ 'Character database update'
+            if (-not $failures) { Write-Log 'Update failed; see GlobalBankHelper-errors.log. Trying again in a few seconds.' 'notice' 'error' }
+        }
+        if ($done) { $failures = 0 }
+        else {
+            foreach ($retryName in $names.Keys) { $loggedOut[$retryName] = $true }
+            $failures++
+            $due = (Get-Date).AddSeconds([Math]::Min(60, 3 * [Math]::Pow(2, $failures - 1)))
+        }
     }
     if ($backupsDue -and (Get-Date) -ge $backupsDue) {
         $backupsDue = $null

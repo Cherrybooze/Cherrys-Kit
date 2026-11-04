@@ -49,6 +49,17 @@ The tests use throwaway game folders and local release folders; none of this has
 | UM26 | Open **Mass send** next to the game's bags. Tick and untick **C.O.D.**, then close and open the mailbox. | Each bag and each slot has rounded corners like the game's bags. The C.O.D. price box shows only while C.O.D. is ticked, and unticking empties it. It is off again after reopening. |
 | UM27 | On **Mass send**, look at the two rows of boxes under the bags and hold the mouse over a few. Click **Runes** (first box) with runes in the bags, then a pet egg box, then **All**. Send a few items and watch the boxes while they go out. | 36 boxes sit under the bag columns, between the bags and **Unmark all** / **Send**. Each shows a game icon that fits its kind; recipe, T6, pet egg and Cenedril boxes also carry a short tag (pet egg tags in their element's colour), and the tooltip gives the full name. A click marks every item of that kind; **All** marks every kind. The boxes grey out while mails go out. The line under **Marked** says what Send will do. Note any box whose icon looks wrong. |
 
+## Busy save files and missed logouts (Global Bank 1.6.10, not yet released)
+
+Restart the helper first, so it runs the new files.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| BS1 | Start the helper while a few characters are logged in, and read its first lines. | No *save file(s) were busy* line. If a save file can't be read, the line names its character and says the helper reads it as soon as the game is done. |
+| BS2 | Log out 5 or more game windows at once, then wait a minute. | Every character that logged out appears in the log (updated, or *saved; nothing changed*), none missing. A *Couldn't read ... yet* line, if any, is followed by *Read ... now that the game is done* within a minute. |
+| BS3 | With the helper running, log in a character, move an item, and log out while the Global Bank page is open on Bank. | The item shows in its new place within a few seconds, as before. |
+| BS4 | Switch with Next from a character that has the same name on another server to one that hasn't, log out, and run `show <second character>` in the helper. | The second character shows its own data. Neither character's other-server entry changes. |
+
 ## Cascade the game windows (Global Bank 1.6.9, extension 1.4.0, not yet released)
 
 Needs Python 3. Update the helper files and reload the extension (the page's sidebar says Version 1.4.0). Open the page's **Connection** panel; the options are under **Game windows**.
