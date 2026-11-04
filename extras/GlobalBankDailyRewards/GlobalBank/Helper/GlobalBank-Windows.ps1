@@ -1,9 +1,12 @@
-# Game windows (Cherry's Kit): cascades the Runes of Magic client windows.
-# The Chrome extension can't move windows. It stores the choice, the local host copies it to
-# Interface\GlobalBankHelper\WindowCascade.json, and GlobalBank-Windows.py moves the windows with plain
-# Win32 calls (Python's ctypes: nothing to compile). This file finds Python, runs it, and in the helper
-# watches for new game clients. Only window positions, sizes and stacking change: nothing is clicked,
-# typed or read from the game.
+# Game windows (Cherry's Kit): "Cascade game windows" on the Chrome page and popup.
+# The Chrome extension can't move windows. The local host saves the choice to
+# Interface\GlobalBankHelper\WindowCascade.json and runs GlobalBank-Windows.py, which moves the windows with
+# plain Win32 calls (Python's ctypes: nothing to compile). Only window positions, sizes and stacking change:
+# nothing is clicked, typed or read from the game.
+# A game started as administrator only lets a program running as administrator move its windows. So the
+# first Cascade asks Windows once (GlobalBank-WindowsTask.ps1) to make a scheduled task that runs the script
+# that way; later ones start the task, with no question. The task runs a copy of the script in
+# ProgramData\CherrysKit, which only an administrator can change.
 # Copyright (C) Cherry. GPL v2 (see LICENSE.txt in Cherry's Kit).
 
 $script:GBCascadeCorners = @('bottom-left', 'top-left')
@@ -42,9 +45,8 @@ function Get-GBCascadePath([string]$dataFolder) { return Join-Path $dataFolder '
 function ConvertTo-GBCascadeSettings($value) {
     # width, height (each window's size) and stepX, stepY (each window's offset from the one behind it) are exact
     # pixels; 0 means automatic (fit or own size, and a title bar's height).
-    $settings = [ordered]@{ on = $false; corner = 'bottom-left'; fit = $true; width = 0; height = 0; stepX = 0; stepY = 0 }
+    $settings = [ordered]@{ corner = 'bottom-left'; fit = $true; width = 0; height = 0; stepX = 0; stepY = 0 }
     if ($null -eq $value) { return $settings }
-    if ($value.on -is [bool]) { $settings.on = $value.on }
     if ($value.corner -is [string] -and $script:GBCascadeCorners -contains $value.corner) { $settings.corner = $value.corner }
     if ($value.fit -is [bool]) { $settings.fit = $value.fit }
     foreach ($field in @(@('width', 16000), @('height', 16000), @('stepX', 1000), @('stepY', 1000))) {
@@ -61,7 +63,6 @@ function Read-GBCascadeSettings([string]$dataFolder) {
     try { return ConvertTo-GBCascadeSettings ($text | ConvertFrom-Json -ErrorAction Stop) } catch { return ConvertTo-GBCascadeSettings $null }
 }
 
-# Written only when it changes, so the helper's check of the file's time stays cheap.
 function Write-GBCascadeSettings([string]$dataFolder, $value) {
     $settings = ConvertTo-GBCascadeSettings $value
     $text = ConvertTo-Json -InputObject $settings -Compress
@@ -76,57 +77,80 @@ function Write-GBCascadeSettings([string]$dataFolder, $value) {
     return $settings
 }
 
+$script:GBCascadeTask = '\CherrysKit\Cascade game windows'
+
+function Get-GBCascadeCopy { return Join-Path $env:ProgramData 'CherrysKit\GlobalBank-Windows.py' }
+
+# Runs a Windows tool quietly; true when it succeeded.
+function Invoke-GBQuiet([string]$exe, [string[]]$arguments) {
+    $before = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    try { $null = & $exe @arguments 2>&1; return $LASTEXITCODE -eq 0 } catch { return $false }
+    finally { $ErrorActionPreference = $before }
+}
+
+# The task is ready when it exists, its copy of the script is this kit's, and it runs the Python found now.
+function Test-GBCascadeTask([string]$dataFolder, $python) {
+    if (-not (Invoke-GBQuiet 'schtasks.exe' @('/Query', '/TN', $script:GBCascadeTask))) { return $false }
+    try {
+        $copy = Get-GBCascadeCopy
+        if (-not [IO.File]::Exists($copy)) { return $false }
+        if ((Get-FileHash -LiteralPath $copy).Hash -ne (Get-FileHash -LiteralPath $script:GBCascadeScript).Hash) { return $false }
+        return ([IO.File]::ReadAllText((Join-Path $dataFolder 'WindowCascadeTask.txt'))).Trim() -eq $python.quiet
+    } catch { return $false }
+}
+
+# Asks Windows for permission once and makes the task. False when the player said no.
+function New-GBCascadeTask([string]$dataFolder, $python) {
+    $request = Join-Path $dataFolder 'WindowCascadeTask-request.json'
+    $answer = Join-Path $dataFolder 'WindowCascadeTask-answer.json'
+    Remove-Item -LiteralPath $answer -Force -ErrorAction SilentlyContinue
+    $fields = @{ python = $python.quiet; pythonArgs = @($python.args); script = $script:GBCascadeScript
+        settings = (Get-GBCascadePath $dataFolder); result = (Join-Path $dataFolder 'WindowCascade-result.json')
+        user = [Security.Principal.WindowsIdentity]::GetCurrent().Name; answer = $answer }
+    [IO.File]::WriteAllText($request, (ConvertTo-Json -InputObject $fields -Compress), (New-Object Text.UTF8Encoding($false)))
+    $maker = Join-Path $PSScriptRoot 'GlobalBank-WindowsTask.ps1'
+    try {
+        $process = Start-Process -FilePath 'powershell.exe' -Verb RunAs -WindowStyle Hidden -Wait -PassThru `
+            -ArgumentList ('-NoLogo -NoProfile -ExecutionPolicy Bypass -File "{0}" -Request "{1}"' -f $maker, $request)
+    } catch { return $false }
+    $text = $null
+    try { $text = [IO.File]::ReadAllText($answer) } catch { }
+    if (-not $text) { throw 'Windows gave permission, but the task could not be made.' }
+    $result = $text | ConvertFrom-Json
+    if (-not $result.ok) { throw ('The task could not be made: ' + [string]$result.error) }
+    [IO.File]::WriteAllText((Join-Path $dataFolder 'WindowCascadeTask.txt'), $python.quiet)
+    return $true
+}
+
 # Cascades the game windows now, with the choice saved in the helper's folder. Returns what happened, for the page.
 function Invoke-GBCascade([string]$dataFolder) {
     $python = Get-GBPython
     if (-not $python) { throw 'Cascading needs Python 3. Install it (the kit''s setup offers it), then try again.' }
     if (-not (Test-Path -LiteralPath $script:GBCascadeScript)) { throw 'GlobalBank-Windows.py is missing: update Cherry''s Kit.' }
-    $before = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
-    try { $output = & $python.exe @($python.args) $script:GBCascadeScript 'cascade' (Get-GBCascadePath $dataFolder) 2>$null }
-    finally { $ErrorActionPreference = $before }
-    $line = @($output | Where-Object { ([string]$_).StartsWith('{') } | Select-Object -Last 1)
-    if (-not $line.Count) { throw 'The window script gave no answer.' }
-    $answer = $line[0] | ConvertFrom-Json
+    $answer = $null
+    $result = Join-Path $dataFolder 'WindowCascade-result.json'
+    $ready = Test-GBCascadeTask $dataFolder $python
+    if (-not $ready) { $ready = New-GBCascadeTask $dataFolder $python }
+    if ($ready) {
+        Remove-Item -LiteralPath $result -Force -ErrorAction SilentlyContinue
+        if (Invoke-GBQuiet 'schtasks.exe' @('/Run', '/TN', $script:GBCascadeTask)) {
+            $clock = [Diagnostics.Stopwatch]::StartNew()
+            while ($clock.ElapsedMilliseconds -lt 15000 -and -not [IO.File]::Exists($result)) { Start-Sleep -Milliseconds 100 }
+            $text = $null
+            try { $text = [IO.File]::ReadAllText($result) } catch { }
+            if ($text) { $answer = $text | ConvertFrom-Json }
+            else { Remove-Item -LiteralPath (Join-Path $dataFolder 'WindowCascadeTask.txt') -Force -ErrorAction SilentlyContinue; throw 'The administrator task gave no answer. Press Cascade again to set it up again.' }
+        }
+    }
+    if (-not $answer) {
+        # No task (permission declined): as this user, which moves only games not started as administrator.
+        $before = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        try { $output = & $python.exe @($python.args) $script:GBCascadeScript 'cascade' (Get-GBCascadePath $dataFolder) 2>$null }
+        finally { $ErrorActionPreference = $before }
+        $line = @($output | Where-Object { ([string]$_).StartsWith('{') } | Select-Object -Last 1)
+        if (-not $line.Count) { throw 'The window script gave no answer.' }
+        $answer = $line[0] | ConvertFrom-Json
+    }
     if (-not $answer.ok) { throw ('The window script failed: ' + [string]$answer.error) }
-    return @{ found = [int]$answer.found; moved = [int]$answer.moved; fullScreen = [int]$answer.fullScreen; refused = [int]$answer.refused }
-}
-
-###########################################################################
-# The helper's side: new game clients, checked every couple of seconds while the option is on
-
-function New-GBCascadeWatch([string]$dataFolder) {
-    return @{ data = $dataFolder; stamp = -1; settings = $null; known = @{}; started = $false; failed = $false }
-}
-
-# Called from the helper's loop about every two seconds. Cheap when nothing is new: the settings file's time
-# and the list of Client processes. A new client gets a hidden Python run that waits until its window has
-# settled and then cascades every game window. Clients open before the helper started are left as they are.
-function Update-GBCascadeWatch($watch) {
-    if ($watch.failed) { return $null }
-    $path = Get-GBCascadePath $watch.data
-    $stamp = 0
-    try { if ([IO.File]::Exists($path)) { $stamp = [IO.File]::GetLastWriteTimeUtc($path).Ticks } } catch { }
-    if ($stamp -ne $watch.stamp) { $watch.stamp = $stamp; $watch.settings = Read-GBCascadeSettings $watch.data }
-    $alive = @{}
-    foreach ($process in @(Get-Process -Name Client -ErrorAction SilentlyContinue)) { $alive[[int]$process.Id] = $true }
-    foreach ($id in @($watch.known.Keys)) { if (-not $alive.ContainsKey($id)) { $watch.known.Remove($id) } }
-    $first = -not $watch.started
-    $watch.started = $true
-    $new = @()
-    foreach ($id in $alive.Keys) {
-        if ($watch.known.ContainsKey($id)) { continue }
-        $watch.known[$id] = $true
-        if (-not $first) { $new += $id }
-    }
-    if (-not $new.Count -or -not $watch.settings.on) { return $null }
-    try {
-        $python = Get-GBPython
-        if (-not $python) { throw 'Cascading needs Python 3. Install it (the kit''s setup offers it), then restart the helper.' }
-        $arguments = @($python.args) + @('"' + $script:GBCascadeScript + '"', 'launch', '"' + $path + '"') + @($new | ForEach-Object { [string]$_ })
-        Start-Process -FilePath $python.quiet -ArgumentList $arguments -WindowStyle Hidden | Out-Null
-        return @{ started = $new.Count }
-    } catch {
-        $watch.failed = $true
-        throw
-    }
+    return @{ found = [int]$answer.found; moved = [int]$answer.moved; fullScreen = [int]$answer.fullScreen; refused = [int]$answer.refused; admin = [bool]$answer.admin }
 }

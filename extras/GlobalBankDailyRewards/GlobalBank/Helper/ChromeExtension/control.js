@@ -1257,16 +1257,15 @@
   });
   refreshStatus();
   setInterval(refreshStatus, 30000);
-  // Game windows: the helper does the cascading. The choice is stored here and reaches it with the clock.
-  const cascadeOn = byId('cascade-on'), cascadeCorner = byId('cascade-corner'), cascadeFit = byId('cascade-fit');
+  // Game windows: the local host cascades them when the button is pressed, with the choice stored here.
+  const cascadeCorner = byId('cascade-corner'), cascadeFit = byId('cascade-fit');
   const cascadeStatus = byId('cascade-status');
   const cascadeWidth = byId('cascade-width'), cascadeHeight = byId('cascade-height'), cascadeStepX = byId('cascade-step-x'), cascadeStepY = byId('cascade-step-y');
   // Exact pixels, or 0 for automatic.
   const pixels = (input, most) => { const n = Math.floor(Number(input.value)); return input.value !== '' && n > 0 && n <= most ? n : 0; };
-  const cascadeChoice = () => ({on: cascadeOn.checked, corner: cascadeCorner.value === 'top-left' ? 'top-left' : 'bottom-left', fit: cascadeFit.checked,
+  const cascadeChoice = () => ({corner: cascadeCorner.value === 'top-left' ? 'top-left' : 'bottom-left', fit: cascadeFit.checked,
     width: pixels(cascadeWidth, 16000), height: pixels(cascadeHeight, 16000), stepX: pixels(cascadeStepX, 1000), stepY: pixels(cascadeStepY, 1000)});
   const showCascade = value => {
-    cascadeOn.checked = value?.on === true;
     cascadeCorner.value = value?.corner === 'top-left' ? 'top-left' : 'bottom-left';
     cascadeFit.checked = value?.fit !== false;
     for (const [input, key] of [[cascadeWidth, 'width'], [cascadeHeight, 'height'], [cascadeStepX, 'stepX'], [cascadeStepY, 'stepY']]) {
@@ -1275,28 +1274,19 @@
   };
   chrome.storage.local.get('windowCascade').then(({windowCascade}) => showCascade(windowCascade)).catch(() => {});
   chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && changes.windowCascade) showCascade(changes.windowCascade.newValue); });
-  for (const input of [cascadeOn, cascadeCorner, cascadeFit, cascadeWidth, cascadeHeight, cascadeStepX, cascadeStepY]) {
-    input.addEventListener('change', async () => {
-      const choice = cascadeChoice();
-      await chrome.storage.local.set({windowCascade: choice});
-      if (!choice.on) { cascadeStatus.textContent = ''; return; }
-      try {
-        const info = await send({type:'helper-info'});
-        cascadeStatus.textContent = info.running ? 'The helper cascades the game windows each time one opens.'
-          : 'The helper isn\u2019t running, so nothing is cascaded yet. Start it, or turn on Run automatically above.';
-      } catch (error) {
-        cascadeStatus.textContent = 'Cannot reach the local helper: ' + String(error.message || error);
-      }
-    });
+  for (const input of [cascadeCorner, cascadeFit, cascadeWidth, cascadeHeight, cascadeStepX, cascadeStepY]) {
+    input.addEventListener('change', () => chrome.storage.local.set({windowCascade: cascadeChoice()}).catch(() => {}));
   }
   byId('cascade-now').addEventListener('click', async () => {
     const button = byId('cascade-now');
     button.disabled = true;
-    cascadeStatus.textContent = 'Cascading\u2026';
+    cascadeStatus.textContent = 'Cascading\u2026 The first time, allow the Windows prompt.';
     try {
-      const result = await send({type:'windows-cascade', cascade: cascadeChoice()});
+      const choice = cascadeChoice();
+      await chrome.storage.local.set({windowCascade: choice});
+      const result = await send({type:'windows-cascade', cascade: choice});
       const full = result.fullScreen ? ` ${result.fullScreen} in full-screen mode ${result.fullScreen === 1 ? 'was' : 'were'} left as ${result.fullScreen === 1 ? 'it is' : 'they are'}.` : '';
-      const refused = result.refused ? ` Windows refused to move ${result.refused}: a game started as administrator can only be moved by a helper started as administrator too.` : '';
+      const refused = result.refused ? ` Windows refused to move ${result.refused}: ${result.refused === 1 ? 'it runs' : 'they run'} as administrator. Press the button again and allow the Windows prompt.` : '';
       cascadeStatus.textContent = !result.found ? 'No Runes of Magic window is open.'
         : `Cascaded ${result.moved} game window${result.moved === 1 ? '' : 's'}.${full}${refused}`;
     } catch (error) {

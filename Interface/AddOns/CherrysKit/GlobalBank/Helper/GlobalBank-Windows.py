@@ -5,36 +5,31 @@ Interface\\GlobalBankHelper\\WindowCascade.json, and this script does the moving
 through ctypes, so nothing is compiled. Only window positions, sizes and stacking change: nothing is
 clicked, typed or read from the game.
 
-    python GlobalBank-Windows.py cascade SETTINGS.json
-        cascades the game windows open now and prints what happened as JSON
-    python GlobalBank-Windows.py launch SETTINGS.json PID [PID ...]
-        waits until those new game windows have stopped changing size, then cascades every game window
+    python GlobalBank-Windows.py cascade SETTINGS.json [RESULT.json]
+        cascades the game windows open now and prints what happened as JSON (also written to RESULT.json)
+
+A game started as administrator only lets a program running as administrator move its windows, so the local
+host runs this through a scheduled task made once with Windows' permission (GlobalBank-WindowsTask.ps1).
 
 Copyright (C) Cherry. GPL v2 (see LICENSE.txt in Cherry's Kit).
 """
 import json
 import os
 import sys
-import time
 
 CORNERS = ('bottom-left', 'top-left')
 # Each window's offset from the one behind it at 100% display scale: about one title bar.
 AUTO_STEP = 32
 # Smallest size a fitted window gets at 100% scale; an automatic step shrinks before the windows do.
 MIN_WIDTH, MIN_HEIGHT = 800, 600
-# A new window is left alone until it has kept the same place and size this long: the client sizes its window while it loads.
-SETTLE_SECONDS = 6
-GIVE_UP_SECONDS = 180
 
 
 def clean_settings(value):
     """What the extension sent, made safe. width/height (each window's size) and stepX/stepY (the offset from
     the window behind) are exact pixels; 0 means automatic."""
-    settings = {'on': False, 'corner': 'bottom-left', 'fit': True, 'width': 0, 'height': 0, 'stepX': 0, 'stepY': 0}
+    settings = {'corner': 'bottom-left', 'fit': True, 'width': 0, 'height': 0, 'stepX': 0, 'stepY': 0}
     if not isinstance(value, dict):
         return settings
-    if isinstance(value.get('on'), bool):
-        settings['on'] = value['on']
     if value.get('corner') in CORNERS:
         settings['corner'] = value['corner']
     if isinstance(value.get('fit'), bool):
@@ -253,6 +248,7 @@ class Windows:
 
     def cascade(self, settings):
         answer = {'found': 0, 'moved': 0, 'fullScreen': 0, 'refused': 0}
+        errors = set()
         windows = []
         for _, hwnd in self.game_windows():
             info = self.info(hwnd)
@@ -297,66 +293,41 @@ class Windows:
             if u.SetWindowPos(hwnd, above, cell['x'] - ml, cell['y'] - mt, cell['w'] + ml + mr, cell['h'] + mt + mb, 0x0010 | 0x0200):
                 answer['moved'] += 1
             else:
-                # Windows won't let a program move the window of one running as administrator unless it is too.
+                # Windows won't let a program move the window of one running as administrator unless it is too
+                # (error 5, access denied).
                 answer['refused'] += 1
+                errors.add(self.ctypes.get_last_error())
             above = hwnd
+        if errors:
+            answer['errors'] = sorted(errors)
+        answer['admin'] = self.is_admin()
         return answer
 
-    def wait_and_cascade(self, settings_path, pids):
-        """For new clients: wait until each one's window has kept its place and size for a few seconds."""
-        pending = {pid: {'shape': None, 'steady': None} for pid in pids}
-        started = time.monotonic()
-        while pending and time.monotonic() - started < GIVE_UP_SECONDS:
-            time.sleep(1)
-            now = time.monotonic()
-            alive = {pid for pid, _, _ in self.processes()}
-            windows = self.main_windows(list(pending))
-            ready = False
-            for pid in list(pending):
-                if pid not in alive:
-                    del pending[pid]
-                    continue
-                hwnd = windows.get(pid)
-                info = self.info(hwnd) if hwnd else None
-                if info is None or info['iconic']:
-                    continue
-                shape = (info['x'], info['y'], info['w'], info['h'])
-                entry = pending[pid]
-                if shape != entry['shape']:
-                    entry['shape'], entry['steady'] = shape, now
-                elif now - entry['steady'] >= SETTLE_SECONDS and now - started >= SETTLE_SECONDS:
-                    ready = True
-            if ready:
-                # The choice may have changed while it loaded.
-                settings = read_settings(settings_path)
-                if not settings['on']:
-                    return {'found': 0, 'moved': 0, 'fullScreen': 0, 'refused': 0, 'off': True}
-                answer = self.cascade(settings)
-                # One still loading waits for its own cascade.
-                for pid in list(pending):
-                    entry = pending[pid]
-                    if entry['steady'] is not None and now - entry['steady'] >= SETTLE_SECONDS:
-                        del pending[pid]
-                if not pending:
-                    return answer
-        return None
+    def is_admin(self):
+        try:
+            return bool(self.ctypes.windll.shell32.IsUserAnAdmin())
+        except (AttributeError, OSError):
+            return False
 
 
 def main(argv):
-    if len(argv) < 3 or argv[1] not in ('cascade', 'launch'):
-        print(json.dumps({'ok': False, 'error': 'usage: cascade SETTINGS.json | launch SETTINGS.json PID...'}))
+    if len(argv) < 3 or argv[1] != 'cascade':
+        print(json.dumps({'ok': False, 'error': 'usage: cascade SETTINGS.json [RESULT.json]'}))
         return 2
     try:
-        windows = Windows()
-        if argv[1] == 'cascade':
-            answer = windows.cascade(read_settings(argv[2]))
-        else:
-            answer = windows.wait_and_cascade(argv[2], [int(pid) for pid in argv[3:] if pid.isdigit()])
-        print(json.dumps(dict(answer or {}, ok=True)))
-        return 0
+        answer = dict(Windows().cascade(read_settings(argv[2])), ok=True)
     except Exception as error:  # the caller shows this line
-        print(json.dumps({'ok': False, 'error': '%s: %s' % (type(error).__name__, error)}))
-        return 1
+        answer = {'ok': False, 'error': '%s: %s' % (type(error).__name__, error)}
+    text = json.dumps(answer)
+    print(text)
+    if len(argv) > 3:
+        try:
+            with open(argv[3] + '.tmp', 'w', encoding='utf-8') as handle:
+                handle.write(text)
+            os.replace(argv[3] + '.tmp', argv[3])
+        except OSError:
+            pass
+    return 0 if answer['ok'] else 1
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/GlobalBank-Update.ps1'
 SHELL = shutil.which('powershell') or shutil.which('pwsh')
 HELPER_FILES = ('GlobalBank-Update.ps1', 'GlobalBank-Data.ps1', 'GlobalBank-Control.ps1', 'GlobalBank-Backups.ps1', 'GlobalBank-Macros.ps1', 'AAH-Cache.ps1',
-                'GlobalBank-Bridge.ps1', 'GlobalBank-Commands.ps1', 'GlobalBank-Console.ps1', 'GlobalBank-Windows.ps1')
+                'GlobalBank-Bridge.ps1', 'GlobalBank-Commands.ps1', 'GlobalBank-Console.ps1')
 
 
 def quote(path):

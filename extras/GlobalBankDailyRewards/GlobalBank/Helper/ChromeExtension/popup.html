@@ -96,7 +96,7 @@
       <span class="open-bank-copy"><strong>Open Global Bank</strong><span>Your items. Every character.</span></span>
       <span class="ico open-bank-arrow" data-ui-icon="arrow-up-right"></span>
     </button>
-    <button id="cascade-quick" type="button" hidden style="width:100%">Cascade Runes of Magic windows</button>
+    <button id="cascade-quick" type="button" hidden style="width:100%">Cascade game windows</button>
     <p id="cascade-quick-status" class="hint" role="status" hidden></p>
 
     <section id="helper-card" class="card" data-state="busy" aria-labelledby="helper-title">
@@ -156,17 +156,13 @@
           <label class="gb-switch"><input id="show-terminal" type="checkbox"><span aria-hidden="true"></span></label>
         </div>
         <p class="hint">A helper running automatically restarts to apply this. Otherwise it applies the next time one starts.</p>
-        <div class="preference-row">
-          <label for="cascade-on">Cascade Runes of Magic windows on launch<span class="preference-hint">Each time a game window opens, the running helper cascades every game window. The start corner is chosen on the page's Connection panel.</span></label>
-          <label class="gb-switch"><input id="cascade-on" type="checkbox"><span aria-hidden="true"></span></label>
-        </div>
         <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:4px 8px;align-items:center;font-size:11px;color:#a7bbd1">
           <span></span><span>X</span><span>Y</span>
           <span>Resolution</span><input id="cascade-width" type="number" min="0" max="16000" step="1" placeholder="auto" aria-label="Window width in pixels"><input id="cascade-height" type="number" min="0" max="16000" step="1" placeholder="auto" aria-label="Window height in pixels">
           <span>Offset</span><input id="cascade-step-x" type="number" min="0" max="1000" step="1" placeholder="auto" aria-label="Offset to the right in pixels"><input id="cascade-step-y" type="number" min="0" max="1000" step="1" placeholder="auto" aria-label="Offset up or down in pixels">
         </div>
-        <p class="hint">Pixels. Resolution gives every game window that size; offset is how far each one steps from the one behind it. Empty means automatic. New game windows and Cascade now both use them.</p>
-        <button id="cascade-now" type="button" style="justify-self:start">Cascade now</button>
+        <p class="hint">Pixels. Resolution gives every game window that size; offset is how far each one steps from the one behind it. Empty means automatic. The start corner is chosen on the page's Connection panel. The first time, Windows asks once for permission.</p>
+        <button id="cascade-now" type="button" style="justify-self:start">Cascade game windows</button>
         <div class="preference-row">
           <label for="cascade-under-bank">Move cascade button under Global Bank button</label>
           <label class="gb-switch"><input id="cascade-under-bank" type="checkbox"><span aria-hidden="true"></span></label>

@@ -51,23 +51,22 @@ The tests use throwaway game folders and local release folders; none of this has
 
 ## Cascade the game windows (Global Bank 1.6.9, extension 1.3.11, not yet released)
 
-Update the helper files, reload the extension (the page's sidebar says Version 1.3.11) and restart the helper. Open the page's **Connection** panel; the options are under **Game windows**.
+Needs Python 3. Update the helper files and reload the extension (the page's sidebar says Version 1.3.11). Open the page's **Connection** panel; the options are under **Game windows**.
 
 | # | Do this | Expected |
 | --- | --- | --- |
-| WC1 | Open two or three game windows, then press **Cascade now** with **Start from** on *Bottom left, going up* and **Resize to fit the screen** on. | The oldest window sits at the bottom left of the screen, each newer one a title bar's height up and to the right, the newest in front at the top right; together they fill the screen above the taskbar. The window you were typing in keeps the keyboard. The status line says how many were cascaded. |
-| WC2 | Switch **Start from** to *Top left, going down* and press **Cascade now**. | The oldest window is at the top left, each newer one steps down and to the right, the newest in front at the bottom right. |
-| WC3 | Turn **Resize to fit the screen** off, resize one window by hand, and press **Cascade now**. | The windows keep their own sizes and only move into the cascade, all on the screen. |
-| WC4 | Turn **Cascade Runes of Magic windows on launch** on with the helper running, then start another game client. | A few seconds after its window stops changing size, all game windows are cascaded with the new one in front; the helper log says *Cascaded N game windows*. |
-| WC5 | Minimize one game window and maximize another, then press **Cascade now**. | Both come back at their cascade place and size. |
-| WC6 | With the helper stopped, turn the option on. | The status line says the helper isn't running; nothing moves until it runs. |
-| WC7 | Run one client in full-screen mode, then press **Cascade now**. | The full-screen window is left as it is, and the status line says so. |
-| WC8 | On a display scaled to 125% or 150%, press **Cascade now**. | The windows still fill the screen exactly and line up; the step looks like one title bar. |
-| WC9 | If the game runs as administrator (its window has a shield, or Task Manager's Elevated column says Yes), press **Cascade now**. | Either the windows move, or the status line says Windows refused to move them because the game was started as administrator. |
-| WC10 | Open the toolbar popup and expand **Advanced**. Turn **Cascade Runes of Magic windows on launch** on there, then press **Cascade now**. | The page's Connection panel shows the same toggle on. The windows cascade with the corner and size chosen on the page. |
-| WC11 | In the popup's **Advanced**, set Resolution 1280 x 800 and Offset 60 x 30, then press **Cascade now**. | Every game window is 1280 x 800 (its visible frame), each one 60 px right and 30 px up from the one behind it. |
-| WC12 | Turn **Move cascade button under Global Bank button** on, close and reopen the popup. | A cascade button sits right under Open Global Bank and the one in Advanced is gone; it cascades the same way. |
-| WC13 | Start a new game client with the helper restarted after this update. | The new window gets the same size and offset as Cascade now gives. |
+| WC1 | Open two or three game windows, then press **Cascade game windows** with **Start from** on *Bottom left, going up* and **Resize to fit the screen** on. | The first time, Windows asks for permission once (a UAC prompt for PowerShell); allow it. The oldest window sits at the bottom left of the screen, each newer one a title bar's height up and to the right, the newest in front at the top right; together they fill the screen above the taskbar. The window you were typing in keeps the keyboard. The status line says how many were cascaded. |
+| WC2 | Press **Cascade game windows** again. | No Windows prompt this time; the windows cascade the same way. Task Scheduler shows *CherrysKit \ Cascade game windows*, and `C:\ProgramData\CherrysKit\GlobalBank-Windows.py` exists. |
+| WC3 | With the game started as administrator (Task Manager's Elevated column says Yes), press **Cascade game windows**. | The windows move; nothing is reported as refused. |
+| WC4 | Delete the task in Task Scheduler, press **Cascade game windows** and choose **No** at the Windows prompt. | Games not started as administrator still move; ones started as administrator are reported as refused, with a hint to allow the prompt. |
+| WC5 | Switch **Start from** to *Top left, going down* and press **Cascade game windows**. | The oldest window is at the top left, each newer one steps down and to the right, the newest in front at the bottom right. |
+| WC6 | Turn **Resize to fit the screen** off, resize one window by hand, and press **Cascade game windows**. | The windows keep their own sizes and only move into the cascade, all on the screen. |
+| WC7 | Minimize one game window and maximize another, then press **Cascade game windows**. | Both come back at their cascade place and size. |
+| WC8 | Run one client in full-screen mode, then press **Cascade game windows**. | The full-screen window is left as it is, and the status line says so. |
+| WC9 | On a display scaled to 125% or 150%, press **Cascade game windows**. | The windows still fill the screen exactly and line up; the step looks like one title bar. |
+| WC10 | In the toolbar popup's **Advanced**, set Resolution 1280 x 800 and Offset 60 x 30, then press **Cascade game windows**. | Every game window is 1280 x 800 (its visible frame), each one 60 px right and 30 px up from the one behind it, from the corner chosen on the page. The page shows the same numbers. |
+| WC11 | Turn **Move cascade button under Global Bank button** on, close and reopen the popup. | A cascade button sits right under Open Global Bank and the one in Advanced is gone; it cascades the same way. |
+| WC12 | Start a new game client and wait. | Nothing moves by itself: cascading only happens on the button. |
 
 ## Snapshots after switching characters, automatic helper (Global Bank 1.6.8, extension 1.3.8, not yet released)
 

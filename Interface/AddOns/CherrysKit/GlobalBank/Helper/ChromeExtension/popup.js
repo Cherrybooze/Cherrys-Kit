@@ -268,8 +268,7 @@ document.getElementById('reload-extension').addEventListener('click', event => {
 });
 poll();
 
-// Game windows: the same choice as the page's Connection panel. The helper does the cascading.
-const cascadeOn = document.getElementById('cascade-on');
+// Game windows: the same choice as the page's Connection panel. The local host does the cascading.
 const cascadeNow = document.getElementById('cascade-now');
 const cascadeStatus = document.getElementById('cascade-status');
 const cascadeQuick = document.getElementById('cascade-quick');
@@ -279,11 +278,11 @@ let cascadeStored = {};
 const cascadeFields = [['cascade-width', 'width', 16000], ['cascade-height', 'height', 16000], ['cascade-step-x', 'stepX', 1000], ['cascade-step-y', 'stepY', 1000]]
   .map(([id, key, most]) => ({input: document.getElementById(id), key, most})).filter(field => field.input);
 const showCascadeStored = () => {
-  cascadeOn.checked = cascadeStored.on === true;
   for (const {input, key} of cascadeFields) if (document.activeElement !== input) input.value = cascadeStored[key] > 0 ? String(cascadeStored[key]) : '';
 };
 const saveCascade = async () => {
-  cascadeStored = {corner: 'bottom-left', fit: true, ...cascadeStored, on: cascadeOn.checked};
+  cascadeStored = {corner: 'bottom-left', fit: true, ...cascadeStored};
+  delete cascadeStored.on;
   for (const {input, key, most} of cascadeFields) {
     const n = Math.floor(Number(input.value));
     cascadeStored[key] = input.value !== '' && n > 0 && n <= most ? n : 0;
@@ -300,12 +299,12 @@ const placeCascadeButton = under => {
 async function runCascade(button, line) {
   button.disabled = true;
   line.hidden = false;
-  line.textContent = 'Cascading\u2026';
+  line.textContent = 'Cascading\u2026 The first time, allow the Windows prompt.';
   try {
     await saveCascade();
     const result = await chrome.runtime.sendMessage({type:'windows-cascade', cascade: cascadeStored});
     if (!result?.ok) throw new Error(result?.error || 'No response from the local bridge.');
-    const refused = result.refused ? ` Windows refused to move ${result.refused}: the game runs as administrator.` : '';
+    const refused = result.refused ? ` Windows refused to move ${result.refused}: ${result.refused === 1 ? 'it runs' : 'they run'} as administrator. Press again and allow the Windows prompt.` : '';
     line.textContent = !result.found ? 'No Runes of Magic window is open.'
       : `Cascaded ${result.moved} game window${result.moved === 1 ? '' : 's'}.${refused}`;
   } catch (error) {
@@ -314,16 +313,12 @@ async function runCascade(button, line) {
     button.disabled = false;
   }
 }
-if (cascadeOn && cascadeNow && cascadeStatus) {
+if (cascadeNow && cascadeStatus) {
   chrome.storage.local.get(['windowCascade', 'cascadeUnderBank']).then(({windowCascade, cascadeUnderBank: under}) => {
     cascadeStored = windowCascade || {};
     showCascadeStored();
     placeCascadeButton(under === true);
   }).catch(() => {});
-  cascadeOn.addEventListener('change', async () => {
-    await saveCascade();
-    cascadeStatus.textContent = cascadeOn.checked ? 'Needs the helper running: turn on Run automatically to keep it so.' : '';
-  });
   for (const {input} of cascadeFields) input.addEventListener('change', saveCascade);
   cascadeNow.addEventListener('click', () => runCascade(cascadeNow, cascadeStatus));
   cascadeQuick?.addEventListener('click', () => runCascade(cascadeQuick, cascadeQuickStatus));

@@ -67,7 +67,7 @@ Data is not sold, used for unrelated purposes, or used for credit decisions. See
 
 | Version | Date | Changes | Status |
 | --- | --- | --- | --- |
-| 1.3.11 | 2026-11-04 | Connection panel: "Cascade Runes of Magic windows on launch" (start corner, fit to screen) and "Cascade now". The choice is stored locally and sent to the local helper over the existing native messaging host, which moves and sizes the game's own windows; no permission changes. | Draft |
+| 1.3.11 | 2026-11-04 | Connection panel and popup Advanced: "Cascade game windows" button (start corner, fit to screen, exact resolution and offset) and an option to show the button under Open Global Bank. The choice is stored locally and sent to the local helper over the existing native messaging host, which moves and sizes the game's own windows; no permission changes. | Draft |
 | 1.3.10 | 2026-11-04 | Characters page, grouped by account: a switch gathers single-character accounts into one group, their account shown on hover. Stored locally; no permission changes. | Draft |
 | 1.3.9 | 2026-11-04 | New saves reach every tab of the page within seconds while it is open (Stats included), not only the Terminal; a second save within the same minute is no longer skipped. No permission or storage changes. | Draft |
 | 1.3.8 | 2026-11-04 | Automatic helper start: with the option on, a helper that is not running starts again within a minute; a helper window open when the option is turned on hands over to a background helper. No permission or storage changes. | Draft |

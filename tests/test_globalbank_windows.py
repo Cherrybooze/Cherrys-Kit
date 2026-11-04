@@ -19,25 +19,37 @@ SHELL = shutil.which('powershell') or shutil.which('pwsh')
 class CascadeWiringTests(unittest.TestCase):
     def test_page_has_the_options(self):
         html = (EXTENSION / 'control.html').read_text(encoding='utf-8')
-        for needle in ('id="cascade-on"', 'Cascade Runes of Magic windows on launch', 'id="cascade-corner"',
+        self.assertNotIn('cascade-on', html)
+        for needle in ('id="cascade-corner"', 'Cascade game windows',
                        '<option value="bottom-left">', '<option value="top-left">', 'id="cascade-fit"', 'id="cascade-now"'):
             self.assertIn(needle, html)
 
     def test_popup_has_the_toggle_and_cascade_now_under_advanced(self):
         html = (EXTENSION / 'popup.html').read_text(encoding='utf-8')
         advanced = html[html.index('class="popup-settings"'):]
-        for needle in ('id="cascade-on"', 'Cascade Runes of Magic windows on launch', 'id="cascade-now"', 'id="cascade-status"',
+        self.assertNotIn('cascade-on', html)
+        for needle in ('id="cascade-now"', 'Cascade game windows', 'id="cascade-status"',
                        'id="cascade-width"', 'id="cascade-height"', 'id="cascade-step-x"', 'id="cascade-step-y"',
                        'id="cascade-under-bank"', 'Move cascade button under Global Bank button'):
             self.assertIn(needle, advanced)
 
-    def test_helper_watches_on_its_loop_every_two_seconds(self):
+    def test_no_cascade_on_launch(self):
+        # Cascading is a button only: the helper's loop and the clock leave the windows alone.
         update = (HELPER / 'GlobalBank-Update.ps1').read_text(encoding='utf-8-sig')
-        self.assertIn('. (Join-Path $PSScriptRoot "GlobalBank-Windows.ps1")', update)
-        self.assertIn('$cascadeWatch = New-GBCascadeWatch $data', update)
-        self.assertRegex(update, r'\$nextCascadeCheck = \(Get-Date\)\.AddSeconds\(2\)\s+try \{\s+\$cascaded = Update-GBCascadeWatch \$cascadeWatch')
-        # A failure is logged; the watcher keeps running.
-        self.assertIn("Write-HelperError $_ 'Game window cascade'", update)
+        self.assertNotIn('Cascade', update)
+        background = (EXTENSION / 'background.js').read_text(encoding='utf-8')
+        self.assertNotIn('cascade', re.search(r'const stampClock = .*?;\n', background, re.S).group(0))
+        self.assertNotIn('windowCascade', background)
+
+    def test_cascade_runs_elevated_through_a_task_made_once(self):
+        windows = (HELPER / 'GlobalBank-Windows.ps1').read_text(encoding='utf-8')
+        self.assertIn("-Verb RunAs", windows)
+        self.assertIn("'/Run', '/TN', $script:GBCascadeTask", windows)
+        task = (HELPER / 'GlobalBank-WindowsTask.ps1').read_text(encoding='utf-8')
+        self.assertIn('-RunLevel Highest', task)
+        self.assertIn('CherrysKit', task)
+        # The task's copy of the script is only changeable by administrators.
+        self.assertIn('SetAccessRuleProtection($true, $false)', task)
 
     def test_host_routes_the_choice_and_cascade_now(self):
         host = (HELPER / 'GlobalBank-NativeHost.ps1').read_text(encoding='utf-8-sig')
@@ -57,8 +69,8 @@ class CascadeWiringTests(unittest.TestCase):
 
     def test_extension_copy_is_identical(self):
         extra = ROOT / 'extras/GlobalBankDailyRewards/GlobalBank/Helper'
-        for name in ('GlobalBank-Windows.ps1', 'GlobalBank-Windows.py', 'GlobalBank-NativeHost.ps1', 'ChromeExtension/background.js',
-                     'ChromeExtension/control.js', 'ChromeExtension/control.html'):
+        for name in ('GlobalBank-Windows.ps1', 'GlobalBank-Windows.py', 'GlobalBank-WindowsTask.ps1', 'GlobalBank-NativeHost.ps1', 'ChromeExtension/background.js',
+                     'ChromeExtension/control.js', 'ChromeExtension/control.html', 'ChromeExtension/popup.js', 'ChromeExtension/popup.html'):
             self.assertEqual((extra / name).read_bytes(), (HELPER / name).read_bytes(), name)
 
 
@@ -68,16 +80,16 @@ class CascadeExtensionTests(unittest.TestCase):
         result = subprocess.run([NODE, '-e', source, str(EXTENSION)], capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_background_sends_the_cleaned_choice_with_the_clock_and_gates_cascade_now(self):
+    def test_background_gates_cascade_and_keeps_it_off_the_clock(self):
         self.run_js(r'''
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
 (async () => {
-const listeners = {}, full = [], changed = [];
+const listeners = {}, full = [];
 const event = name => ({addListener:fn => { (listeners[name] ||= []).push(fn); }});
 const runtime = {id:'test', getURL:file => 'chrome-extension://test/' + file,
   onMessage:event('message'), onStartup:event('startup'), onInstalled:event('installed'), onConnect:event('connect'),
   sendNativeMessage:(host, message, reply) => { full.push(message); reply({ok:true, found:2, moved:2, fullScreen:0}); }};
-let stored = {windowCascade:{on:true, corner:'top-left', fit:false, extra:'x'}};
+const stored = {windowCascade:{corner:'top-left', fit:false}};
 const storage = {local:{get:async () => stored, set:async () => {}, setAccessLevel:async () => {}},
   session:{set:async () => {}, setAccessLevel:async () => {}}, onChanged:event('changed')};
 const alarms = {create:() => {}, onAlarm:event('alarm')};
@@ -85,28 +97,22 @@ vm.runInNewContext(fs.readFileSync(path.join(process.argv[1], 'background.js'), 
 const flush = () => new Promise(resolve => setImmediate(resolve));
 const same = (actual, expected) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected);
 await flush();
+// The clock carries no cascade: windows only move on the button.
 listeners.alarm[0]({name:'globalbank-heartbeat'});
-same(full.pop().cascade, {on:true, corner:'top-left', fit:false, width:0, height:0, stepX:0, stepY:0});
-// A change on the page reaches the helper's folder at once, cleaned.
-for (const fn of listeners.changed) fn({windowCascade:{newValue:{on:'yes', corner:'middle'}}}, 'local');
-const sent = full.pop();
-assert.equal(sent.type, 'clock');
-same(sent.cascade, {on:false, corner:'bottom-left', fit:true, width:0, height:0, stepX:0, stepY:0});
-for (const fn of listeners.changed) fn({windowCascade:{newValue:{on:true, width:1280, height:800.5, stepX:-3, stepY:40}}}, 'local');
-same(full.pop().cascade, {on:true, corner:'bottom-left', fit:true, width:1280, height:0, stepX:0, stepY:40});
-// Cascade now only from the extension's own page.
+assert.equal(full.pop().cascade, undefined);
 const ask = (message, url) => new Promise(resolve => {
   let answered = false;
   const kept = listeners.message.some(fn => fn(message, {id:'test', url}, value => { answered = true; resolve(value); }) === true);
   if (!kept && !answered) resolve(undefined);
 });
-assert.equal(await ask({type:'windows-cascade', cascade:{on:true}}, 'https://example.com/'), undefined);
+assert.equal(await ask({type:'windows-cascade', cascade:{}}, 'https://example.com/'), undefined);
 assert.equal(full.length, 0);
-const answer = await ask({type:'windows-cascade', cascade:{corner:'top-left', fit:false, evil:1}}, 'chrome-extension://test/control.html');
+const answer = await ask({type:'windows-cascade', cascade:{on:true, corner:'top-left', fit:false, evil:1, width:1280, height:800.5, stepX:-3, stepY:40}},
+  'chrome-extension://test/control.html');
 assert.equal(answer.moved, 2);
-same(full.pop(), {type:'windows-cascade', cascade:{on:false, corner:'top-left', fit:false, width:0, height:0, stepX:0, stepY:0}});
-assert.equal((await ask({type:'windows-cascade', cascade:{on:true}}, 'chrome-extension://test/popup.html')).ok, true);
-same(full.pop().cascade, {on:true, corner:'bottom-left', fit:true, width:0, height:0, stepX:0, stepY:0});
+same(full.pop(), {type:'windows-cascade', cascade:{corner:'top-left', fit:false, width:1280, height:0, stepX:0, stepY:40}});
+assert.equal((await ask({type:'windows-cascade', cascade:{corner:'middle'}}, 'chrome-extension://test/popup.html')).ok, true);
+same(full.pop().cascade, {corner:'bottom-left', fit:true, width:0, height:0, stepX:0, stepY:0});
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
@@ -153,7 +159,7 @@ class CascadeLayoutTests(unittest.TestCase):
 
     def test_settings_are_cleaned(self):
         self.assertEqual(self.gb.clean_settings({'on': 'yes', 'corner': 'x', 'fit': False, 'width': 1280.7, 'stepX': -1, 'stepY': True}),
-                         {'on': False, 'corner': 'bottom-left', 'fit': False, 'width': 1280, 'height': 0, 'stepX': 0, 'stepY': 0})
+                         {'corner': 'bottom-left', 'fit': False, 'width': 1280, 'height': 0, 'stepX': 0, 'stepY': 0})
 
     def test_script_answers_in_json_when_it_cannot_run(self):
         result = subprocess.run([sys.executable, '-I', str(WINDOWS), 'nonsense'], capture_output=True, text=True, timeout=30)

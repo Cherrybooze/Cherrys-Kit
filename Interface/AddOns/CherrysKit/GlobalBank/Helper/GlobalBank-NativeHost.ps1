@@ -130,10 +130,6 @@ try {
     }
     if ($message.type -eq 'clock') {
         Write-AutoStartChoice $message.autoHelper
-        # The game window choice: the helper reads it from its folder.
-        if ($null -ne $message.cascade) {
-            try { . (Join-Path $PSScriptRoot 'GlobalBank-Windows.ps1'); $null = Write-GBCascadeSettings (Get-HelperDataDirectory) $message.cascade } catch { }
-        }
         Send-Response @{ok=$true}
         # Automatic mode: a helper that isn't running (a window closed, or one was open when the toggle went on) starts
         # again within the minute. The mutex check is cheap; the rest only runs when nothing holds it.
@@ -154,7 +150,8 @@ try {
         } catch { }
         exit 0
     }
-    # "Cascade now" on the page: arranges the game windows open right now, with the page's choices.
+    # "Cascade game windows" on the page or popup: arranges the game windows open right now, with their choices.
+    # The first time, Windows asks for permission to make the task that can move a game started as administrator.
     if ($message.type -eq 'windows-cascade') {
         . (Join-Path $PSScriptRoot 'GlobalBank-Windows.ps1')
         $null = Write-GBCascadeSettings (Get-HelperDataDirectory) $message.cascade

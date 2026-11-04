@@ -13,23 +13,18 @@ const ADDON_REQUESTS = new Set(['addons-list', 'addons-check', 'addons-install',
 // The clock also tells the helper's folder the automatic-start choice, which only this extension knows,
 // so the helper's exit message can say what happens next.
 // With the choice on, the same once-a-minute message also starts a helper that isn't running.
-// The game window choice rides along too: the helper reads it from its folder.
-let autoHelperChoice, showTerminalChoice = false, cascadeChoice;
+let autoHelperChoice, showTerminalChoice = false;
 // Only these values reach the local host.
 const cascadePixels = (value, most) => Number.isInteger(value) && value >= 0 && value <= most ? value : 0;
-const cleanCascade = value => ({on: value?.on === true, corner: value?.corner === 'top-left' ? 'top-left' : 'bottom-left', fit: value?.fit !== false,
+const cleanCascade = value => ({corner: value?.corner === 'top-left' ? 'top-left' : 'bottom-left', fit: value?.fit !== false,
   width: cascadePixels(value?.width, 16000), height: cascadePixels(value?.height, 16000),
   stepX: cascadePixels(value?.stepX, 1000), stepY: cascadePixels(value?.stepY, 1000)});
-chrome.storage?.local?.get?.(['autoHelper', 'showTerminal', 'windowCascade'])?.then?.(({autoHelper, showTerminal, windowCascade}) => {
+chrome.storage?.local?.get?.(['autoHelper', 'showTerminal'])?.then?.(({autoHelper, showTerminal}) => {
   autoHelperChoice = !!autoHelper;
   showTerminalChoice = !!showTerminal;
-  cascadeChoice = cleanCascade(windowCascade);
 })?.catch?.(() => {});
-const stampClock = () => {
-  const message = autoHelperChoice === undefined ? {type:'clock'} : {type:'clock', autoHelper: autoHelperChoice, showWindow: showTerminalChoice};
-  if (cascadeChoice) message.cascade = cascadeChoice;
-  chrome.runtime.sendNativeMessage(HOST, message, () => void chrome.runtime.lastError);
-};
+const stampClock = () => chrome.runtime.sendNativeMessage(HOST, autoHelperChoice === undefined ? {type:'clock'}
+  : {type:'clock', autoHelper: autoHelperChoice, showWindow: showTerminalChoice}, () => void chrome.runtime.lastError);
 // Once a minute is cheap and keeps the helper's 15-second check honest.
 const ensureHeartbeat = () => chrome.alarms?.create?.('globalbank-heartbeat', {periodInMinutes: 1});
 chrome.alarms?.onAlarm?.addListener(alarm => { if (alarm.name === 'globalbank-heartbeat') stampClock(); });
@@ -46,7 +41,6 @@ chrome.storage?.onChanged?.addListener((changes, area) => {
   if ('autoCollect' in changes) shareAutoCollect();
   if ('showTerminal' in changes) showTerminalChoice = !!changes.showTerminal.newValue;
   if ('autoHelper' in changes) { autoHelperChoice = !!changes.autoHelper.newValue; stampClock(); }
-  if ('windowCascade' in changes) { cascadeChoice = cleanCascade(changes.windowCascade.newValue); stampClock(); }
 });
 // The Terminal view talks over one open port, so its polling never starts a process. The host answers in
 // order. The port closes itself when the view has gone quiet, and a request on a dead port is reported, never resent.
@@ -223,7 +217,7 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     });
     return true;
   }
-  // "Cascade now": the local host arranges the game windows open right now.
+  // "Cascade game windows": the local host arranges the game windows open right now.
   if ((control || popup) && message?.type === 'windows-cascade') {
     chrome.runtime.sendNativeMessage(HOST, {type:'windows-cascade', cascade: cleanCascade(message.cascade)}, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
