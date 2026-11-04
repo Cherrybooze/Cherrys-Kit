@@ -26,7 +26,7 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 **Item shop bank next to the bank.** With *Use one bank (classic zBag)*, tick *Item shop bank next to bank* in **/zb** and the item shop bank's 100 slots open in their own box, attached to the right side of the bank window, with as many slots on a row as the bank. It moves with the bank, and the bank search box sits under it. It needs bank tab 6 ticked. *Lock resize* for Cherry's bags moved down to the *Hide default backpack* row to make room.
 
-**Stats on bag icons.** Tick *Stats* beside the bag search box and every mana stone in your bags shows the short names of its stats on its icon, one per line: a strength and stamina stone says *str* and *stam*, a strength, dexterity and physical attack one *str*, *dex*, *patt* (up to four lines). It works in every bag layout and turns off again with the same tick. zBag reads each item's tooltip once, a few at a time, so items it hasn't seen yet show their stats a moment later.
+**Stats on bag icons.** Tick *Stats* beside the bag search box and every mana stone in your bags shows the short names of its stats on its icon, one per line: a strength and stamina stone says *str* and *stam*, a strength, dexterity and physical attack one *str*, *dex*, *patt* (up to four lines). A stat the stone has twice or more reads *2x stam*. It works in every bag layout and turns off again with the same tick. zBag reads each item's tooltip once, a few at a time, so items it hasn't seen yet show their stats a moment later.
 
 **Steady slot numbers on mouseover.** With *Numbers on mouseover only*, a slot's number is now ready at its size before the mouse gets there, so it no longer shows big for a moment and then shrinks.
 

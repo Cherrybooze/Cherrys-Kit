@@ -393,15 +393,24 @@ function K.StatPrefixText(names)
   if text then
     return text
   end
-  local lines, seen = {}, {}
+  -- one line per stat; a stat the stone has twice or more reads "2x stam" (C, 2026-11-04)
+  local lines, count = {}, {}
   for name in string.gmatch(names, "[^\n]+") do
     local short = K.ShortStat(name)
-    if short ~= "" and not seen[short] then
-      seen[short] = true
-      lines[#lines + 1] = short
-      if #lines >= K.STAT_PREFIX_LINES then
-        break
+    if short ~= "" then
+      if not count[short] then
+        lines[#lines + 1] = short
       end
+      count[short] = (count[short] or 0) + 1
+    end
+  end
+  for i = #lines, K.STAT_PREFIX_LINES + 1, -1 do
+    lines[i] = nil
+  end
+  for i = 1, #lines do
+    local n = count[lines[i]]
+    if n > 1 then
+      lines[i] = n .. "x " .. lines[i]
     end
   end
   text = table.concat(lines, "\n")

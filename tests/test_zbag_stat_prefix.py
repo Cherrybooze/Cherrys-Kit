@@ -49,9 +49,9 @@ class StatPrefixTests(unittest.TestCase):
     def test_icon_gets_one_line_per_stat_without_repeats_text_before_size(self):
         self.g.zBagKit.StatPrefix(self.g.Owner, 5, 7.6)
         stats = self.g.OwnerKitStats
-        self.assertEqual(stats.text, "str\nstam")
+        self.assertEqual(stats.text, "str\n2x stam")
         self.assertTrue(stats.visible)
-        self.assertEqual(list(stats.writes.values()), ["text:z", "text:str\nstam", "size:8"])
+        self.assertEqual(list(stats.writes.values()), ["text:z", "text:str\n2x stam", "size:8"])
 
     def test_at_most_four_lines(self):
         self.g.zBagKit.StatPrefix(self.g.Owner, 6, 8)
@@ -70,7 +70,7 @@ class StatPrefixTests(unittest.TestCase):
     def test_bag_slot_resolves_the_index_lazily(self):
         self.g.links[105] = "|Hitem:31858 0 0 1 0 0|h"
         self.g.zBagKit.StatPrefix(self.g.Owner, None, 8, 5)
-        self.assertEqual(self.g.OwnerKitStats.text, "str\nstam")
+        self.assertEqual(self.g.OwnerKitStats.text, "str\n2x stam")
 
     def test_unread_item_asks_the_tick_and_draws_after_the_read(self):
         self.g.links[7] = "|Hitem:31858 0 0 3 0 0|h"
