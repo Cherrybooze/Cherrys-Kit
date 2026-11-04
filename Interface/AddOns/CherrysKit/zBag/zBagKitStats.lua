@@ -333,14 +333,13 @@ function FindBankItemByName(itemName)
 end
 
 ---------------------------------------------------------------------------
--- "Stats" tick beside the bag search (zBag_VAR["statprefix"] = 1): every mana stone's bag icon shows
--- the short names of its stats, one per line ("str", "stam", "patt"), in every layout. The names come from the
+-- "Stats" tick beside the bag search (zBag_VAR["statprefix"] = 1): a mana stone with one stat shows
+-- its short name on the bag icon, one with more shows "2x" to "6x", in every layout. The names come from the
 -- same cache as the stat search; items not read yet are read by K.StatsTick and drawn after.
 -- Each icon only looks its item up again when the bags change (K.prefixGen) or it holds another
 -- slot, so an open bag costs nothing between bag events.
 ---------------------------------------------------------------------------
 
-K.STAT_PREFIX_LINES = 4
 K.SHORT_STATS = {
   ["strength"] = "str", ["stamina"] = "stam", ["dexterity"] = "dex", ["intelligence"] = "int",
   ["wisdom"] = "wis", ["all attributes"] = "all", ["all main attributes"] = "all",
@@ -393,27 +392,20 @@ function K.StatPrefixText(names)
   if text then
     return text
   end
-  -- one line per stat; a stat the stone has twice or more reads "2x stam" (C, 2026-11-04)
-  local lines, count = {}, {}
+  -- a single-stat stone shows its stat's short name ("stam"); a stone with 2 to 6 stats shows only
+  -- how many it has ("2x" ... "6x") (C, 2026-11-04)
+  local n, first = 0, nil
   for name in string.gmatch(names, "[^\n]+") do
-    local short = K.ShortStat(name)
-    if short ~= "" then
-      if not count[short] then
-        lines[#lines + 1] = short
-      end
-      count[short] = (count[short] or 0) + 1
-    end
+    n = n + 1
+    first = first or name
   end
-  for i = #lines, K.STAT_PREFIX_LINES + 1, -1 do
-    lines[i] = nil
+  if n == 0 then
+    text = ""
+  elseif n == 1 then
+    text = K.ShortStat(first)
+  else
+    text = n .. "x"
   end
-  for i = 1, #lines do
-    local n = count[lines[i]]
-    if n > 1 then
-      lines[i] = n .. "x " .. lines[i]
-    end
-  end
-  text = table.concat(lines, "\n")
   if K.prefixCount >= K.STATS_CACHE_MAX then
     K.prefixCache = {}
     K.prefixCount = 0

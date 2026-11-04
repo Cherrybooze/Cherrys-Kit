@@ -46,16 +46,24 @@ class StatPrefixTests(unittest.TestCase):
                            ("block rate", "block"), ("toughness", "toug"), ("fire resistance bonus", "frbon")):
             self.assertEqual(short(name), want, name)
 
-    def test_icon_gets_one_line_per_stat_without_repeats_text_before_size(self):
+    def test_multi_stat_stone_shows_its_stat_count_text_before_size(self):
         self.g.zBagKit.StatPrefix(self.g.Owner, 5, 7.6)
         stats = self.g.OwnerKitStats
-        self.assertEqual(stats.text, "str\n2x stam")
+        self.assertEqual(stats.text, "3x")
         self.assertTrue(stats.visible)
-        self.assertEqual(list(stats.writes.values()), ["text:z", "text:str\n2x stam", "size:8"])
+        self.assertEqual(list(stats.writes.values()), ["text:z", "text:3x", "size:8"])
 
-    def test_at_most_four_lines(self):
+    def test_counts_up_to_six_and_single_stat_shows_its_name(self):
         self.g.zBagKit.StatPrefix(self.g.Owner, 6, 8)
-        self.assertEqual(self.g.OwnerKitStats.text, "str\ndex\npatt\nmdef")
+        self.assertEqual(self.g.OwnerKitStats.text, "5x")
+        self.lua.execute('''
+          links[10] = "|Hitem:31858 0 0 9 0 0|h"; zBagKit.statCache[links[10]] = "physical attack"
+          links[11] = "|Hitem:31858 0 0 8 0 0|h"; zBagKit.statCache[links[11]] = "a\\nb\\nc\\nd\\ne\\nf"
+        ''')
+        self.g.zBagKit.StatPrefix(self.g.Owner, 10, 8)
+        self.assertEqual(self.g.OwnerKitStats.text, "patt")
+        self.g.zBagKit.StatPrefix(self.g.Owner, 11, 8)
+        self.assertEqual(self.g.OwnerKitStats.text, "6x")
 
     def test_icon_looks_its_item_up_again_only_when_the_bags_change(self):
         prefix = self.g.zBagKit.StatPrefix
@@ -70,7 +78,7 @@ class StatPrefixTests(unittest.TestCase):
     def test_bag_slot_resolves_the_index_lazily(self):
         self.g.links[105] = "|Hitem:31858 0 0 1 0 0|h"
         self.g.zBagKit.StatPrefix(self.g.Owner, None, 8, 5)
-        self.assertEqual(self.g.OwnerKitStats.text, "str\n2x stam")
+        self.assertEqual(self.g.OwnerKitStats.text, "3x")
 
     def test_unread_item_asks_the_tick_and_draws_after_the_read(self):
         self.g.links[7] = "|Hitem:31858 0 0 3 0 0|h"
