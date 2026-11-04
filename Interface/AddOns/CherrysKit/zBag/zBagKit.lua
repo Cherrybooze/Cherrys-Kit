@@ -368,11 +368,11 @@ function K.Label(owner, slot, size, showOwner)
   end
   -- The number is laid out (text, then font size) whenever the slot or size changes, also while
   -- hidden, so a mouseover only shows it. Setting the text while showing it drew it at the template's
-  -- bigger font for a moment before the small size took (C, 2026-11-04).
+  -- bigger font for a moment before the small size took.
   if changed then
     if text then
       -- As zBag's own config button text: the client only takes SetFontSize after the text has
-      -- changed, so the text goes to "z" and back first and the size comes last (C, 2026-11-04: with
+      -- changed, so the text goes to "z" and back first and the size comes last (with
       -- the size set before the text, the font size setting never showed).
       text:SetText("z")
       text:SetText(slot ~= nil and tostring(slot) or "")
