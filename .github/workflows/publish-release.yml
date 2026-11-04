@@ -1,6 +1,6 @@
 name: Publish release
 
-# Runs only when started by hand (Actions > Publish release > Run workflow).
+# Publishes only when started by hand (Actions > Publish release > Run workflow).
 # Builds the kit at the chosen commit of main, tags it v<kit_version>, creates
 # the GitHub release with the generated notes, uploads the install ZIPs and
 # metadata files (docs/RELEASING.md steps 5 to 8), checks the uploaded files
@@ -8,6 +8,12 @@ name: Publish release
 
 on:
   workflow_dispatch:
+  # GitHub only lists a workflow (and its Run workflow button) after an event
+  # has created a run for it. A push that changes this file creates one; the
+  # job below is skipped for it, so a push never publishes anything.
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-release.yml']
 
 permissions:
   contents: write
@@ -20,7 +26,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     steps:
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
