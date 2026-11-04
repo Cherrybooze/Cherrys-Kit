@@ -355,7 +355,7 @@ K.SHORT_STATS = {
   ["block rate"] = "block", ["movement speed"] = "move", ["healing"] = "heal", ["heal"] = "heal", ["resistance"] = "res",
 }
 
--- A colour per main stat so a bag of stones reads at a glance (C, 2026-11-04).
+-- A colour per main stat so a bag of stones reads at a glance.
 K.STAT_COLORS = {
   str = "ff4a4a", stam = "ffa53c", dex = "5ce65c", int = "4aa0ff", wis = "7fe8ff",
   patt = "ff6fc8", matt = "b77cff", def = "c8c8c8", mdef = "3cd2b4",
@@ -399,7 +399,7 @@ function K.StatPrefixText(names)
     return text
   end
   -- a single-stat stone shows its stat's short name ("stam"); a stone with 2 to 6 stats shows only
-  -- how many it has ("2x" ... "6x") (C, 2026-11-04)
+  -- how many it has ("2x" ... "6x")
   local n, first = 0, nil
   for name in string.gmatch(names, "[^\n]+") do
     n = n + 1
@@ -443,7 +443,7 @@ function K.StatPrefix(owner, index, size, bagSlot)
       index = GetBagItemInfo(bagSlot)
     end
     local link = index and index >= 0 and GetBagItemLink and GetBagItemLink(index)
-    -- mana and fusion stones only (C, 2026-11-04); a clean stone has nothing to show
+    -- mana and fusion stones only; a clean stone has nothing to show
     if link and link ~= "" and K.StoneState(link) == 2 then
       local names = K.statCache[link]
       if names == nil then
