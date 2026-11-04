@@ -24,6 +24,18 @@ const GBTransfers = (() => {
   // The servers the game lists, so that a server's name on the site's page can be told from a character's
   const SERVERS = ['Aynara', 'Kadmos', 'Kerub', 'Gaia', 'Svidur', 'Ayvenas'];
   const STATES = new Set(['planned', 'cancelled', 'moved', 'done', 'stayed']);
+  // The site's account: its RoM account's username and its Gameforge account's e-mail address, as the transfer page
+  // and the account page (/user/administration) show them, kept for the characters the same login lists
+  const ACCOUNT_STORE = 'gbSiteAccounts';
+  const MAX_LINKS = 2000;
+  // What the site showed last, and when: a page that lists characters without the account's fields still counts as the
+  // same login this soon after, unless it lists a character already kept for another account
+  const ACCOUNT_MEMORY = 30 * MINUTE;
+  const USER = /^[\p{L}\p{N}_.@-]{2,40}$/u;
+  const EMAIL = /^[^\s@<>"'`(),;:]{1,64}@[^\s@<>"'`(),;:]{1,190}\.[^\s@<>"'`(),;:.]{2,24}$/u;
+  // The labels in the site's languages, with the value after a colon or in the next piece of text
+  const USER_LABEL = /^(?:user\s*name|account\s*name|login\s*name|benutzername|kontoname|nom\s+d['’]utilisateur|identifiant|nombre\s+de\s+usuario|nome\s+utente|nazwa\s+u\u017cytkownika|u\u017eivatelsk\u00e9\s+jm\u00e9no|kullan\u0131c\u0131\s+ad\u0131|\u0438\u043c\u044f\s+\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f|\u043b\u043e\u0433\u0438\u043d\s+\u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0430)\s*:?\s*(.*)$/iu;
+  const EMAIL_LABEL = /^(?:e-?mail(?:\s*address)?|e-?mail-adresse|adresse\s+(?:e-?mail|\u00e9lectronique)|courriel|correo(?:\s+electr\u00f3nico)?|adres\s+e-?mail|indirizzo\s+e-?mail|e-?posta|\u044d\u043b\.?\s*\u043f\u043e\u0447\u0442\u0430|\u043f\u043e\u0447\u0442\u0430)\s*:?\s*(.*)$/iu;
 
   const squash = text => String(text ?? '').replace(/\s+/g, ' ').trim();
   const lower = text => String(text ?? '').toLowerCase();
@@ -155,12 +167,60 @@ const GBTransfers = (() => {
       }
       at = target.next - 1;
     }
-    return {planned, offered, form: characterList >= 0 || serverList >= 0};
+    // Characters the page names anywhere else, such as a list on the account page
+    const listed = [], named = new Set([...planned.map(item => keyOf(item.name, item.from)), ...offered.map(item => keyOf(item.name, item.server))]);
+    for (let at = 0; at < texts.length && listed.length < 400; at++) {
+      const who = characterLabel(texts[at], known);
+      if (!who || named.has(keyOf(who.name, who.server))) continue;
+      named.add(keyOf(who.name, who.server));
+      listed.push({name: who.name, server: who.server});
+    }
+    return {planned, offered, listed, form: characterList >= 0 || serverList >= 0, account: parseAccount(texts, page?.fields)};
   }
+  // The login's own fields: {user, email}, each '' when the page doesn't show it, or null when it shows neither.
+  // texts: the page's text in order; fields: [{label, value}] of its text boxes. An e-mail address without a label
+  // counts when it is the only one on the page, as under the transfer page's My account.
+  function parseAccount(texts, fields) {
+    const found = {user: '', email: ''};
+    const label = text => USER_LABEL.exec(text) || EMAIL_LABEL.exec(text);
+    const take = (kind, value) => {
+      const text = squash(value).replace(/^[:\s]+/, '').slice(0, 200);
+      if (found[kind] || !text || label(text)) return;
+      if (kind === 'user' && USER.test(text) && !EMAIL.test(text)) found.user = text;
+      if (kind === 'email' && EMAIL.test(text)) found.email = text.toLowerCase();
+    };
+    const list = (Array.isArray(texts) ? texts : []).map(squash).filter(Boolean);
+    for (let at = 0; at < list.length; at++) {
+      for (const [kind, pattern] of [['user', USER_LABEL], ['email', EMAIL_LABEL]]) {
+        const hit = pattern.exec(list[at]);
+        if (!hit || list[at].length > 60) continue;
+        if (hit[1]) { take(kind, hit[1]); continue; }
+        let next = at + 1;
+        while (next < list.length && next < at + 3 && decorative(list[next])) next++;
+        if (next < list.length) take(kind, list[next]);
+      }
+    }
+    for (const field of (Array.isArray(fields) ? fields : []).slice(0, 40)) {
+      const name = squash(field?.label).slice(0, 60);
+      if (USER_LABEL.test(name)) take('user', field?.value);
+      else if (EMAIL_LABEL.test(name)) take('email', field?.value);
+    }
+    if (!found.email) {
+      const loose = new Set([...list, ...(Array.isArray(fields) ? fields : []).slice(0, 40).map(field => squash(field?.value))].filter(text => EMAIL.test(text)).map(lower));
+      if (loose.size === 1) found.email = [...loose][0];
+    }
+    return found.user || found.email ? found : null;
+  }
+  const cleanAccount = account => {
+    const user = squash(account?.user), email = lower(squash(account?.email));
+    const clean = {user: USER.test(user) && !EMAIL.test(user) ? user : '', email: EMAIL.test(email) ? email : ''};
+    return clean.user || clean.email ? clean : null;
+  };
   // A read from the site's page, as the background gets it, checked again; null when it isn't one
   function cleanRead(message) {
     if (!Array.isArray(message?.planned) || !Array.isArray(message?.offered) || message.planned.length > 40 || message.offered.length > 400) return null;
-    const read = {planned: [], offered: [], form: message.form === true};
+    if (message.listed !== undefined && (!Array.isArray(message.listed) || message.listed.length > 400)) return null;
+    const read = {planned: [], offered: [], listed: [], form: message.form === true, account: cleanAccount(message.account)};
     for (const item of message.planned) {
       const name = String(item?.name ?? ''), from = cleanServer(item?.from), to = cleanServer(item?.to);
       if (NAME.test(name) && SERVER_NAME.test(from) && SERVER_NAME.test(to) && !sameServer(from, to)) read.planned.push({name, from, to});
@@ -168,6 +228,10 @@ const GBTransfers = (() => {
     for (const item of message.offered) {
       const name = String(item?.name ?? ''), server = cleanServer(item?.server);
       if (NAME.test(name) && SERVER_NAME.test(server)) read.offered.push({name, server});
+    }
+    for (const item of message.listed || []) {
+      const name = String(item?.name ?? ''), server = cleanServer(item?.server);
+      if (NAME.test(name) && SERVER_NAME.test(server)) read.listed.push({name, server});
     }
     return read;
   }
@@ -281,6 +345,59 @@ const GBTransfers = (() => {
     }
     trim(records);
     return {state, changed: JSON.stringify(state) !== before, added, ended};
+  }
+
+  // The site's account, kept for its characters: {v: 1, chars: {'server|name': {user, email, at}}}
+  function loadAccounts(stored) {
+    const chars = Object.create(null);
+    const kept = stored && typeof stored.chars === 'object' && stored.chars ? stored.chars : {};
+    for (const [key, entry] of Object.entries(kept)) {
+      const clean = cleanAccount(entry);
+      if (/^[^|]{0,40}\|[^|]{2,32}$/.test(key) && clean && timeOf(entry.at)) chars[key] = {user: clean.user, email: clean.email, at: entry.at};
+    }
+    return {v: 1, chars};
+  }
+  // What one read of the site's account or transfer page links. recent: what the site showed last, {at, user, email},
+  // from the background's session storage, or null. Returns {state, changed, recent: to keep for the next read,
+  // linked: {user, email, count} or null, conflict: characters kept for another account, when nothing was linked}.
+  function applyAccount(stored, read, {now = Date.now(), recent = null} = {}) {
+    const state = loadAccounts(stored);
+    const before = JSON.stringify(state);
+    const fresh = recent && now - timeOf(recent.at) < ACCOUNT_MEMORY && now >= timeOf(recent.at) ? cleanAccount(recent) : null;
+    let account = read.account ? {...read.account} : null;
+    // One field shown, the other the same login showed a moment ago
+    if (account && fresh && ((account.user && lower(account.user) === lower(fresh.user)) || (account.email && account.email === fresh.email))) {
+      account.user = account.user || fresh.user;
+      account.email = account.email || fresh.email;
+    }
+    const shown = !!account;
+    account = account || fresh;
+    const nextRecent = read.account ? {at: iso(now), ...account} : recent && fresh ? recent : null;
+    const keys = [...new Set([...read.planned.map(item => keyOf(item.name, item.from)), ...read.offered.map(item => keyOf(item.name, item.server)),
+      ...(read.listed || []).map(item => keyOf(item.name, item.server))])];
+    if (!account || !keys.length) return {state, changed: false, recent: nextRecent, linked: null, conflict: 0};
+    const other = entry => !!entry && ((account.user && entry.user && lower(entry.user) !== lower(account.user)) || (account.email && entry.email && entry.email !== account.email));
+    // Remembered, not shown: a character kept for another account says that the site's login changed since
+    const conflict = keys.filter(key => other(state.chars[key])).length;
+    if (!shown && conflict) return {state, changed: false, recent: nextRecent, linked: null, conflict};
+    let count = 0;
+    for (const key of keys) {
+      const old = state.chars[key];
+      const same = old && !other(old);
+      const entry = {user: account.user || (same ? old.user : ''), email: account.email || (same ? old.email : ''), at: iso(now)};
+      const differs = !old || old.user !== entry.user || old.email !== entry.email;
+      if (differs) count++;
+      // The same link seen again within the hour isn't worth a write
+      if (differs || now - timeOf(old.at) >= HOUR) state.chars[key] = entry;
+    }
+    const all = Object.keys(state.chars);
+    if (all.length > MAX_LINKS) {
+      all.sort((a, b) => timeOf(state.chars[a].at) - timeOf(state.chars[b].at));
+      for (const key of all.slice(0, all.length - MAX_LINKS)) delete state.chars[key];
+    }
+    // Only when the link is new or different: a page read again doesn't count as news
+    const changed = JSON.stringify(state) !== before;
+    return {state, changed, recent: nextRecent, linked: count ? {user: account.user, email: account.email, count} : null, conflict: 0};
   }
 
   // A maintenance can start late or run long: a save this long after the start it was due in is surely after it
@@ -782,7 +899,7 @@ const GBTransfers = (() => {
     });
   }
 
-  return {STORE, MAINTENANCE_STORE, ZONE, MAINTENANCE, DAYS, SERVERS, TAB_MEMORY, PHASE_NAMES, cleanServer, keyOf, savedTime, zoneParts, zoneOffset, zoned,
-    maintenanceOf, nextMaintenance, dueOf, serverLabel, characterLabel, parsePage, cleanRead, load, applyRead, evidence, cleanChanges, applyChanges,
+  return {STORE, MAINTENANCE_STORE, ACCOUNT_STORE, ACCOUNT_MEMORY, ZONE, MAINTENANCE, DAYS, SERVERS, TAB_MEMORY, PHASE_NAMES, cleanServer, keyOf, savedTime, zoneParts, zoneOffset, zoned,
+    maintenanceOf, nextMaintenance, dueOf, serverLabel, characterLabel, parsePage, parseAccount, cleanRead, load, applyRead, loadAccounts, applyAccount, evidence, cleanChanges, applyChanges,
     overlay, countdown, roughly, phase, plateOf, cardLine, tipOf, create};
 })();

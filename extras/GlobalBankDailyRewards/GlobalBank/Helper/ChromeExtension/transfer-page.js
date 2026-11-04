@@ -1,10 +1,13 @@
 'use strict';
-// Reads the Runes of Magic site's character transfer page while the player has it open: the transfers it lists as
-// planned, and the characters its form offers. GBTransfers.parsePage (transfers.js, loaded before this) makes sense of
-// it, and the extension keeps it for the Global Bank page. It looks through the page's text for those and passes on
-// nothing else: no account name, no e-mail address, no link. It never clicks, fills in or fetches anything.
+// Reads the Runes of Magic site's character transfer page and its account page (/user/administration) while the
+// player has them open: the transfers listed as planned, the characters the form offers or the page lists, and the
+// login's RoM username and Gameforge e-mail address, so the Global Bank page can name those characters' accounts.
+// GBTransfers.parsePage (transfers.js, loaded before this) makes sense of it, and the extension keeps it in its own
+// storage on this PC. It passes on nothing else: no password, no link. It never clicks, fills in or fetches anything.
 (() => {
-  if (!/^[a-z0-9-]+\.runesofmagic\.gameforge\.com$/i.test(location.hostname) || !/^\/charactertransfer(\/|$)/i.test(location.pathname)) return;
+  if (!/^[a-z0-9-]+\.runesofmagic\.gameforge\.com$/i.test(location.hostname)) return;
+  const kind = /^\/charactertransfer(\/|$)/i.test(location.pathname) ? 'transfer' : /^\/user\/administration(\/|$)/i.test(location.pathname) ? 'account' : '';
+  if (!kind) return;
   const SKIP = 'select, option, script, style, noscript, template, textarea';
   const MAX_TEXTS = 4000;
   let stopped = false, timer = 0, firstTimer = 0, last = '', notice = null;
@@ -31,7 +34,16 @@
         texts.push(text.slice(0, 200));
       }
     }
-    return {selects, texts};
+    // Text boxes that show the account, by their label; never a password box
+    const fields = [];
+    for (const box of [...document.querySelectorAll('input')].slice(0, 60)) {
+      const type = String(box.type || 'text').toLowerCase();
+      if ((type !== 'text' && type !== 'email') || !box.value || fields.length >= 20) continue;
+      const label = (box.id && document.querySelector(`label[for="${CSS.escape(box.id)}"]`)?.textContent) || box.closest?.('label')?.textContent
+        || box.getAttribute?.('aria-label') || box.placeholder || box.name || '';
+      fields.push({label: String(label).slice(0, 60), value: String(box.value).slice(0, 200)});
+    }
+    return {selects, texts, fields};
   }
   // A short note in the page's corner when Global Bank took a transfer up, or saw one end
   function tell(lines) {
@@ -68,19 +80,22 @@
     if (!active()) { stop(); return; }
     const read = GBTransfers.parsePage(snapshot());
     const text = JSON.stringify(read);
-    // A page that says nothing about transfers yet, or the same as last time, isn't worth a message
-    if (text === last || (!read.form && !read.planned.length && !last)) return;
+    // A page that says nothing about transfers or the account yet, or the same as last time, isn't worth a message
+    if (text === last || (!read.form && !read.planned.length && !read.account && !read.listed.length && !last)) return;
     const first = !last;
     last = text;
     try {
-      const answer = await chrome.runtime.sendMessage({type: 'transfer-page', ...read});
+      const answer = await chrome.runtime.sendMessage({type: 'transfer-page', kind, ...read});
       if (!active() || !answer?.ok) return;
       const lines = [...(answer.added || []).map(item => `Recorded ${item.name}'s transfer to ${item.to}. The game moves it in the maintenance on ${when(item.due)} (your time).`),
         ...(answer.ended || []).map(item => (item.state === 'cancelled' ? `${item.name}'s transfer to ${item.to} is cancelled: its plate is gone from the Characters page.`
           : item.state === 'moved' ? `${item.name} has moved to ${item.to}: log in with it there to confirm.` : `${item.name} is still on ${item.from}.`))];
+      const linked = answer.linked;
+      if (linked) lines.push(`Linked ${linked.count === 1 ? 'a character' : `${linked.count} characters`} to ${[linked.user ? `RoM account ${linked.user}` : '', linked.email ? `Gameforge account ${linked.email}` : ''].filter(Boolean).join(' and ')}.`);
+      if (answer.remembered) lines.push(`Remembered ${[answer.remembered.user, answer.remembered.email].filter(Boolean).join(' and ')}: open the transfer page with this login to link its characters.`);
       // The first time, also what it understood, so a page it can't read shows at once
       const count = read.planned.length;
-      if (first && !lines.length) lines.push(count ? `Keeping track of ${count === 1 ? 'the planned transfer' : `the ${count} planned transfers`} on this page.` : 'No transfer is planned on this page yet.');
+      if (first && !lines.length && kind === 'transfer') lines.push(count ? `Keeping track of ${count === 1 ? 'the planned transfer' : `the ${count} planned transfers`} on this page.` : 'No transfer is planned on this page yet.');
       tell(lines);
     } catch (error) {
       if (/extension context invalidated/i.test(String(error?.message || error))) stop();

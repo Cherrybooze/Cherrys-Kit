@@ -49,6 +49,41 @@ The tests use throwaway game folders and local release folders; none of this has
 | UM26 | Open **Mass send** next to the game's bags. Tick and untick **C.O.D.**, then close and open the mailbox. | Each bag and each slot has rounded corners like the game's bags. The C.O.D. price box shows only while C.O.D. is ticked, and unticking empties it. It is off again after reopening. |
 | UM27 | On **Mass send**, look at the two rows of boxes under the bags and hold the mouse over a few. Click **Runes** (first box) with runes in the bags, then a pet egg box, then **All**. Send a few items and watch the boxes while they go out. | 36 boxes sit under the bag columns, between the bags and **Unmark all** / **Send**. Each shows a game icon that fits its kind; recipe, T6, pet egg and Cenedril boxes also carry a short tag (pet egg tags in their element's colour), and the tooltip gives the full name. A click marks every item of that kind; **All** marks every kind. The boxes grey out while mails go out. The line under **Marked** says what Send will do. Note any box whose icon looks wrong. |
 
+## Busy save files and missed logouts (Global Bank 1.6.10, not yet released)
+
+Restart the helper first, so it runs the new files.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| BS1 | Start the helper while a few characters are logged in, and read its first lines. | No *save file(s) were busy* line. If a save file can't be read, the line names its character and says the helper reads it as soon as the game is done. |
+| BS2 | Log out 5 or more game windows at once, then wait a minute. | Every character that logged out appears in the log (updated, or *saved; nothing changed*), none missing. A *Couldn't read ... yet* line, if any, is followed by *Read ... now that the game is done* within a minute. |
+| BS3 | With the helper running, log in a character, move an item, and log out while the Global Bank page is open on Bank. | The item shows in its new place within a few seconds, as before. |
+| BS4 | Switch with Next from a character that has the same name on another server to one that hasn't, log out, and run `show <second character>` in the helper. | The second character shows its own data. Neither character's other-server entry changes. |
+
+## Cascade the game windows (Global Bank 1.6.9, extension 1.4.0, not yet released)
+
+Needs Python 3. Update the helper files and reload the extension (the page's sidebar says Version 1.4.0). Open the page's **Connection** panel; the options are under **Game windows**.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| WC1 | Open two or three game windows, then press **Cascade game windows** with **Start from** on *Bottom left, going up* and **Resize to fit the screen** on. | The first time, Windows asks for permission once (a UAC prompt for PowerShell); allow it. The oldest window sits at the bottom left of the screen, each newer one a title bar's height up and to the right, the newest in front at the top right; together they fill the screen above the taskbar. The window you were typing in keeps the keyboard. The status line says how many were cascaded. |
+| WC2 | Press **Cascade game windows** again. | No Windows prompt this time; the windows cascade the same way. Task Scheduler shows *CherrysKit \ Cascade game windows*, and `C:\ProgramData\CherrysKit\GlobalBank-Windows.py` exists. |
+| WC3 | With the game started as administrator (Task Manager's Elevated column says Yes), press **Cascade game windows**. | The windows move; nothing is reported as refused. |
+| WC4 | Delete the task in Task Scheduler, press **Cascade game windows** and choose **No** at the Windows prompt. | Games not started as administrator still move; ones started as administrator are reported as refused, with a hint to allow the prompt. |
+| WC5 | Switch **Start from** to *Top left, going down* and press **Cascade game windows**. | The oldest window is at the top left, each newer one steps down and to the right, the newest in front at the bottom right. |
+| WC6 | Turn **Resize to fit the screen** off, resize one window by hand, and press **Cascade game windows**. | The windows keep their own sizes and only move into the cascade, all on the screen. |
+| WC7 | Minimize one game window and maximize another, then press **Cascade game windows**. | Both come back at their cascade place and size. |
+| WC8 | Run one client in full-screen mode, then press **Cascade game windows**. | The full-screen window is left as it is, and the status line says so. |
+| WC9 | On a display scaled to 125% or 150%, press **Cascade game windows**. | The windows still fill the screen exactly and line up; the step looks like one title bar. |
+| WC10 | In the toolbar popup's **Advanced**, set Resolution 1280 x 800 and Offset 60 x 30, then press **Cascade game windows**. | Every game window is 1280 x 800 (its visible frame), each one 60 px right and 30 px up from the one behind it, from the corner chosen on the page. The page shows the same numbers. |
+| WC11 | Turn **Move cascade button under Global Bank button** on, close and reopen the popup. | A cascade button sits right under Open Global Bank and the one in Advanced is gone; it cascades the same way. |
+| WC12 | Start a new game client and wait. | Nothing moves by itself: cascading only happens on the button. |
+| WC13 | With two screens, open **Display** on the page and in the popup. | Each screen is listed with its resolution, the main one marked. Picking the second screen and pressing the button moves the whole cascade there, lined up with its taskbar. |
+| WC14 | Pick *Display 1, 2560 x 1440 screen* (or your screen) in **Size for a screen**, close and reopen the popup, then type another number into Resolution. | Resolution becomes 1134 x 818 on a 1440p screen (851 x 614 on 1080p) and the list keeps showing the screen picked, also after reopening; typing in Resolution sets it back to *Pick a screen*. |
+| WC17 | With Resolution 1134 x 818 on a 1440p screen, open 20 or more game windows and cascade. | After about 18 windows the next ones start a second row beside the first window, back at the bottom (or top); every window's corner is on its own spot. |
+| WC15 | Put Chrome over the game windows and press the button in the popup. | The game windows come in front of Chrome, newest in front, and Chrome keeps the keyboard. Clicking Chrome brings it back over them. |
+| WC16 | Turn **Keep game windows on top** on and press the button, then click Chrome. | The game windows stay above Chrome. Turning it off and pressing again lets other programs cover them again. |
+
 ## Snapshots after switching characters, automatic helper (Global Bank 1.6.8, extension 1.3.8, not yet released)
 
 Reload the extension first; the page's sidebar says Version 1.3.8.
@@ -75,6 +110,19 @@ Not run on the real site yet: the reader was checked against a copy of the trans
 | XF7 | Under **Transfers**, change **Weekly maintenance** to another day or time. | **Next** follows it, and so does the countdown on the plates. Set it back to Thursday 09:00 afterwards, or to the real maintenance time if that differs. |
 | XF8 | Type `#xfer` in the Characters search. | Only characters with a planned transfer, or one waiting for its login, are listed. |
 | XF9 | Register a transfer for a character Global Bank has no save for (one not logged in since Global Bank was installed). | **Characters** gets a row for it with its name, server and plate; class, level, gold, bag, bank and the other fields stay blank. Its hover card and details say it is known from the transfer page only. After the maintenance it shows on its new server with **Log in to confirm transfer**. |
+
+## Account names from the site (Global Bank 1.6.11, extension 1.4.1, not yet released)
+
+Reload the extension first; the page's sidebar says Version 1.4.1.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| SA1 | Open `https://en.runesofmagic.gameforge.com/user/administration` while logged in on the site. | The Global Bank note in the page's corner names the username and e-mail address it remembered, or the characters it linked if the page lists any. If no note shows, send a screenshot of the page with the address and username covered. |
+| SA2 | Within 30 minutes, open the character transfer page with the same login. | The note says it linked the characters the form offers to that RoM account and Gameforge account. |
+| SA3 | On the Global Bank page, hover one of those characters, and group **Characters** by account. | The hover card's RoM account is the site's username instead of *Name's account*, for every character on that login screen. With no Gameforge account linked, the e-mail address shows as the Gameforge account. A RoM account you renamed keeps your name. |
+| SA4 | With Gameforge accounts unlocked, add a Gameforge account named with that e-mail address (or have one already). | The characters the site listed with it are linked to it; characters you linked by hand to another account stay there. |
+| SA5 | Right-click one of those characters and pick **Forget the site's account details**. | The RoM account goes back to *Name's account* (or your name for it), and the e-mail address no longer shows. Opening the site's pages again brings them back. |
+| SA6 | Log in on the site with another account and open the transfer page within 30 minutes of SA1. | If its fields show on the page, its characters get its own username and address. If they don't, and a character there is already kept for the first account, nothing is linked. |
 
 ## Global Bank Addons page (not yet released)
 

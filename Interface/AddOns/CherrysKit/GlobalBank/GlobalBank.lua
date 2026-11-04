@@ -38,7 +38,7 @@
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.6.8"
+GB.version = "1.6.11"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -1377,6 +1377,8 @@ end
 -- has. A character that never saved Global Bank data (new, or new to the kit) so starts with the last one's
 -- snapshot, tooltips and mailbox, and would save them as its own until its first snapshot. A snapshot naming
 -- someone else marks them all as inherited. Same name on another server is the same file, and SettleServer's.
+-- GlobalBank_Others only ever holds this name on other servers, so another name's snapshots in it came the same
+-- way (a character with no other servers saves none) and are dropped even when the rest is this character's own.
 function GB.DropInherited()
   local name = GB.PlayerName()
   local mine = name and GB.Parse(GlobalBank_Char)
@@ -1385,7 +1387,25 @@ function GB.DropInherited()
     GlobalBank_Others, GlobalBank_MailOthers = nil, nil
     return true
   end
+  if name and type(GlobalBank_Others) == "string" then
+    GlobalBank_Others = GB.OwnOthers(GlobalBank_Others, name)
+  end
   return false
+end
+
+-- The snapshots in an Others string ("`"-joined, each starting GB1~) that are of this name.
+function GB.OwnOthers(text, name)
+  local keep, from, me = {}, 1, string.lower(name)
+  while from <= #text do
+    local at = string.find(text, "`GB1~", from, true)
+    local snapshot = string.sub(text, from, at and at - 1 or #text)
+    local c = GB.Parse(snapshot)
+    if c and c.name and string.lower(c.name) == me then
+      keep[#keep + 1] = snapshot
+    end
+    from = at and at + 1 or #text + 1
+  end
+  return #keep > 0 and table.concat(keep, "`") or nil
 end
 
 ---------------------------------------------------------------------------
