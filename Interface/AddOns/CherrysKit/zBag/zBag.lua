@@ -443,6 +443,7 @@ function zBag_Update()
 			else
 				zBagKit.Label(item, nil);
 			end
+			if (zBagKit.StatPrefix) then zBagKit.StatPrefix(item, index, zBagKit.SlotNumberFontSize()*ZBAG_SCALE); end -- Cherry's Kit: "Stats" tick
 			if (GameTooltip:IsVisible() and GameTooltip:IsOwned(item)) then
 				GameTooltip:SetBagItem(item.index);
 			end

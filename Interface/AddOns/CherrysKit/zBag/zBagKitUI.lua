@@ -66,18 +66,29 @@ end
 -- Individual bags: slot numbers over the game's buttons (overlays zBagKitBag1-180, zBagKitBank1-40)
 ---------------------------------------------------------------------------
 
-local function updateOverlays(prefix, buttonPrefix, count, show, slotOf)
+-- stats: also the "Stats" tick's short stat names (bags only); the overlays then stay shown.
+local function updateOverlays(prefix, buttonPrefix, count, show, slotOf, stats)
   for n = 1, count do
     local overlay = _G[prefix .. n]
     local slot = nil
-    if show and _G[buttonPrefix .. n] then
+    if (show or stats) and _G[buttonPrefix .. n] then
       slot = slotOf(n)
     end
-    K.Label(overlay, slot, nil, true)
+    K.Label(overlay, show and slot or nil, nil, not stats)
+    if stats then
+      if overlay and not overlay:IsVisible() then overlay:Show() end
+      K.StatPrefix(overlay, nil, nil, slot)
+    elseif overlay and overlay.kitStatText and overlay.kitStatText ~= "" then
+      K.StatPrefix(overlay, nil)
+    end
   end
 end
 
 local wait, watchWait = 0, 0
+
+function K.UpdateOverlaysNow()
+  wait = 0
+end
 
 -- Resizing follows the mouse every frame; the backpack watch runs 20 times a second
 -- and the slot numbers five times a second.
@@ -98,10 +109,12 @@ function K.OnUpdate(elapsed)
   if K.onebag == nil then return end
   if K.onebag == false then K.WatchAll() end
   local on = K.IsOn()
-  local bag = on and K.onebag == false and var()["slotnumbers"] == 1 and BagFrame ~= nil and BagFrame:IsVisible()
-  if bag or K.bagNumbers then
-    K.bagNumbers = bag
-    updateOverlays("zBagKitBag", "BagItemButton", K.BAG_SLOTS, bag, K.GameBagSlot)
+  local bagOpen = on and K.onebag == false and BagFrame ~= nil and BagFrame:IsVisible()
+  local bag = bagOpen and var()["slotnumbers"] == 1
+  local stats = bagOpen and var()["statprefix"] == 1
+  if bag or stats or K.bagNumbers or K.bagStats then
+    K.bagNumbers, K.bagStats = bag, stats
+    updateOverlays("zBagKitBag", "BagItemButton", K.BAG_SLOTS, bag, K.GameBagSlot, stats)
   end
   local bank = on and not K.IsOneBank() and var()["bankslotnumbers"] == 1 and BankFrame ~= nil and BankFrame:IsVisible()
   if bank or K.bankNumbers then
@@ -116,7 +129,9 @@ function K.OnEvent(event)
     K.Freeze(event)
     K.ApplyMoney()
     K.PlaceSearchBoxes()
+    if K.SyncStatTicks then K.SyncStatTicks() end
   elseif event == "PLAYER_BAG_CHANGED" or event == "BAG_ITEM_UPDATE" or event == "BAG_UPDATE_COOLDOWN" then
+    if event ~= "BAG_UPDATE_COOLDOWN" and K.StatPrefixRefresh then K.StatPrefixRefresh() end
     K.UpdateCherry()
   end
 end
@@ -196,6 +211,7 @@ function K.FillItem(item, slot, search, numbers, isRented, rentTime)
   local duration, remaining = GetBagItemCooldown(index)
   CooldownFrame_SetTime(_G[item:GetName() .. "Cooldown"], duration, remaining)
   K.Label(item, numbers and slot or nil)
+  K.StatPrefix(item, index)
   local match = search == "" or (name and name ~= "" and (string.find(string.lower(name), search, 1, true)
     or (K.BagStatsMatch and K.BagStatsMatch(index, search))))
   item:SetAlpha(match and 1 or 0.2)
@@ -607,6 +623,7 @@ function K.LoadConfig()
   zBagKitConfigMoney:SetChecked(v["showmoney"] == 1)
   zBagKitConfigShare:SetChecked(zBag_SHARE ~= 0)
   zBagKitConfigOneBank:SetChecked(v["bankmode"] == "onebank")
+  if K.SyncStatTicks then K.SyncStatTicks() end
   if zBagKitConfigShopSide then zBagKitConfigShopSide:SetChecked(v["bankshopside"] == 1) end
   local hint
   if not K.IsOn() then
@@ -717,6 +734,7 @@ end
 
 K.TOOLTIPS = {
   share = { "Share bag settings across characters", "Use the same bag and bank settings for your characters. Turn this off to keep separate settings for each character. Existing shared and separate settings are kept when you switch." },
+  statprefix = { "Stats on icons", "On mana stones in your bags: one stat shows its short name on the icon (str, stam, patt), more stats show how many (2x to 6x). Works in every bag layout. Items are read from their tooltips the first time, so new ones show their stats a moment later." },
   shopside = { "Item shop bank next to bank", "With one bank (classic zBag): the item shop bank opens in its own box attached to the right side of the bank, and the bank search box moves under it. Needs bank tab 6 ticked." },
   onebank = { "Use one bank (classic zBag)", "Show all bank pages in zBag's combined bank window. Turn this off for the game's normal bank. This choice is independent of your bag layout." },
   individual = { "Individual bags (stock+search)", "Use the game's own bag window, one page at a time, with a search box and slot numbers added. Choose the bank separately." },
