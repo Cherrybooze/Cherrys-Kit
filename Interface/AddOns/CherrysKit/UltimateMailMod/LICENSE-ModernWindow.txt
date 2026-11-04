@@ -21,7 +21,8 @@ Pictures (Textures/Modern/)
     share and change them, with credit, under that same licence, and not for money or other
     commercial advantage.
   - activity, caps, cod, compose, gem, inbox, letter, mass, search, split, the round-*.tga button
-    shapes and white.tga: drawn for this window in rom weakauras' style, offered under the GPL v2.
+    shapes, slot, bagpanel and white.tga: drawn for this window in rom weakauras' style, offered
+    under the GPL v2.
 
 Font (Fonts/FiraSans-Medium.ttf)
   Fira Sans Medium, copied unchanged from rom weakauras.

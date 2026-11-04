@@ -1,9 +1,11 @@
 -- Cherry's Kit: the Compose page of the modern mail window. One name in To, one mail in mind, and
 -- whatever does not fit one mail goes out as more mails to the same name: each item in its own mail
--- (drop items on +), text longer than a mail holds in numbered parts. Gold on the right goes to any
--- names, one row each (up to 999,999,999 a row), taken from the inbox's gold mails when this
--- character does not carry enough (Modern/Plan.lua works out the order). Send shows the whole list
--- first whenever it is more than one plain mail; Modern/Queue.lua sends it.
+-- (drop items on +), text longer than a mail holds in numbered parts. The box beside C.O.D. is the
+-- gold for the name in To (with the text when there are no items), or the C.O.D. price of each item
+-- mail while C.O.D. is ticked; the two preset buttons beside it fill it in. Extra gold mails on the
+-- right go to any names, one row each (up to 999,999,999 a row). All gold is taken from the inbox's
+-- gold mails when this character does not carry enough (Modern/Plan.lua works out the order). Send
+-- shows the whole list first whenever it is more than one plain mail; Modern/Queue.lua sends it.
 
 local M = UMMModern;
 local C = M.C;
@@ -33,27 +35,34 @@ M.Default("UMM_M_CO_FULL", "10 items at most here. For more, use Mass send.");
 M.Default("UMM_M_CO_GONE", "%s is no longer in that bag slot, so it was taken out of the mail.");
 M.Default("UMM_M_CO_BAGERR", "The game did not say which bag slot that item came from. Move a few items in your bag and try again.");
 M.Default("UMM_M_CO_COD", "C.O.D.");
-M.Default("UMM_M_CO_COD_TIP", "Each item mail asks this much gold from the receiver before they can take the item.");
-M.Default("UMM_M_CO_COD_HINT", "price, each item mail");
+M.Default("UMM_M_CO_COD_TIP", "Ticked: the box beside it is the C.O.D. price, the gold each item mail asks before the receiver can take its item. Unticked (always the start): the box is gold for the name in To. Switching empties the box.");
+M.Default("UMM_M_CO_COD_HINT", "C.O.D. price, each item mail");
+M.Default("UMM_M_CO_GOLD", "Gold");
+M.Default("UMM_M_CO_GOLD_HINT", "gold to send");
+M.Default("UMM_M_CO_GOLD_TIP", "Gold for the name in To, up to 999,999,999. With text and no items it goes in the same mail. Gold for more names: Extra gold mails on the right.");
+M.Default("UMM_M_CO_PRESET", "Gold preset %d");
+M.Default("UMM_M_CO_PRESET_TIP", "Puts %s gold in the gold box (C.O.D. goes off). Change both amounts in the settings (cog).");
 M.Default("UMM_M_CO_COD_ITEM", "C.O.D. needs an item.");
 M.Default("UMM_M_CO_COD_AMOUNT", "Enter the C.O.D. price.");
 M.Default("UMM_M_CO_RESET", "Reset");
-M.Default("UMM_M_CO_RESET_TIP", "Empties subject, text, items and gold rows; To stays. Once more empties To too.");
+M.Default("UMM_M_CO_RESET_TIP", "Empties subject, text, items, gold and the extra gold mails; To stays. Once more empties To too.");
 M.Default("UMM_M_CO_SEND", "Send");
 M.Default("UMM_M_CO_SENDN", "Send %d mails");
-M.Default("UMM_M_CO_EMPTY", "Write a mail, drop items on +, or add gold on the right.");
+M.Default("UMM_M_CO_EMPTY", "Write a mail, drop items on +, or enter gold.");
 M.Default("UMM_M_CO_PLAN_MAIN1", "1 mail to %s");
 M.Default("UMM_M_CO_PLAN_MAIN", "%d mails to %s");
 M.Default("UMM_M_CO_PLAN_ITEMS", "%d with an item");
 M.Default("UMM_M_CO_PLAN_PARTS", "text in %d parts");
+M.Default("UMM_M_CO_PLAN_GOLDPART", "%s gold");
 M.Default("UMM_M_CO_PLAN_GOLD", "%d gold mails, %s gold");
+M.Default("UMM_M_CO_PLAN_GOLD1", "1 gold mail, %s gold");
 M.Default("UMM_M_CO_PLAN_TAKES", "First takes the gold of %d inbox mails, one at a time.");
 M.Default("UMM_M_CO_PLAN_COD", "C.O.D. %s on each item mail.");
 M.Default("UMM_M_CO_YOU", "that is you");
 M.Default("UMM_M_CO_WHO_OWN", "your character");
 M.Default("UMM_M_CO_WHO_FRIEND", "friend");
 M.Default("UMM_M_CO_WHO_GUILD", "guild");
-M.Default("UMM_M_GO_TITLE", "Gold");
+M.Default("UMM_M_GO_TITLE", "Extra gold mails");
 M.Default("UMM_M_GO_HAND", "On this character");
 M.Default("UMM_M_GO_INBOX", "In the inbox");
 M.Default("UMM_M_GO_INBOXN", "%s in %d mails");
@@ -61,14 +70,15 @@ M.Default("UMM_M_GO_NONE", "no gold mails");
 M.Default("UMM_M_GO_FILL", "Use inbox gold");
 M.Default("UMM_M_GO_FILL_TIP", "One row per gold mail in the inbox (up to 8), each with that mail's gold. Put a name in each row, or leave it empty for the name in To. Send takes the gold out of those mails and sends it on, one mail at a time, so this character never carries more than 999,999,999.");
 M.Default("UMM_M_GO_CLEAR", "Clear");
-M.Default("UMM_M_GO_ADD", "Add row");
-M.Default("UMM_M_GO_ADD_TIP", "One more name and amount: up to 999,999,999 gold a row, the most one mail holds.");
+M.Default("UMM_M_GO_ADD", "Add gold mail");
+M.Default("UMM_M_GO_ADD_TIP", "One more gold mail: a name (empty: the name in To) and up to 999,999,999 gold, the most one mail holds. Gold for the name in To alone goes in the box beside C.O.D.");
 M.Default("UMM_M_GO_TO", "To");
 M.Default("UMM_M_GO_AMOUNT", "Gold");
 M.Default("UMM_M_GO_SAME", "same as To");
 M.Default("UMM_M_GO_SAMEAS", "= %s");
 M.Default("UMM_M_GO_REMOVE", "Remove this row");
 M.Default("UMM_M_GO_TOTAL", "Total %s gold in %d mails");
+M.Default("UMM_M_GO_TOTAL1", "Total %s gold in 1 mail");
 M.Default("UMM_M_GO_SHORT", "Row %d is %s short");
 M.Default("UMM_M_GO_MORE", "%d more gold mails in the inbox: 8 rows at most, send again for the rest.");
 M.Default("UMM_M_RV_TITLE", "Check before sending");
@@ -86,19 +96,21 @@ M.Default("UMM_M_RV_CODN", "  C.O.D. %s");
 
 local SLOTS, GOLD_ROWS = 10, 8;
 -- The item row sits below the name list (it opens under To and ends at 272), so all of the row,
--- C.O.D. and its price stay in reach while the list is open.
+-- C.O.D., the gold box and its presets stay in reach while the list is open.
 local SLOT, SLOT_GAP, SLOT_X, SLOT_Y = 38, 42, 54, 282;
 local COD_Y = SLOT_Y + SLOT + 8;
+local MONEY_X, MONEY_W = 100, 130;
+local PRESET_X, PRESET_W, PRESET_GAP = 238, 104, 4;
 local ROWS_Y, ROW_STEP = 128, 28;
 local REVIEW_LINES = 14;
 
 local items = {};        -- { index, link, name, count, icon }: one mail each
 local rowCount = 0;      -- gold rows shown
-local codOn = false;
+local codOn = false;     -- the box beside C.O.D. is its price (else gold for To); off at every start
 local sending = nil;     -- this page's run: { parts, sentParts }
 local reviewPlan, reviewOffset = nil, 0;
 local ui = {};
-local slots, goldRow, goldTo, goldAmount, goldRemove = {}, {}, {}, {}, {};
+local slots, goldRow, goldTo, goldAmount, goldRemove, presets = {}, {}, {}, {}, {}, {};
 local lastPlan = nil;
 local autoSubject = nil;  -- the subject as this page filled it in (nil: empty or typed by the player)
 local firstKind = nil;    -- "item" or "gold": which came first, for that subject
@@ -123,7 +135,13 @@ local function readForm()
     -- filled in from the first item or gold: item and gold mails still say what each one holds
     form.subject, form.autoSubject = "", subject;
   end
-  if (codOn) then form.cod = M.GoldOf(UMMModernComposeCODAmount) or 0; end
+  local money = M.GoldOf(UMMModernComposeMoney);
+  if (codOn) then
+    form.cod = money or 0;
+  elseif (money) then
+    -- gold for the name in To: the first gold of the Send, ahead of the extra gold mails (row 0)
+    table.insert(form.gold, { to = "", amount = money, row = 0 });
+  end
   for i = 1, rowCount do
     local amount = M.GoldOf(goldAmount[i]);
     if (amount) then table.insert(form.gold, { to = trim(goldTo[i]:GetText()), amount = amount, row = i }); end
@@ -253,6 +271,19 @@ end
 local function drawPlan(plan, form)
   lastPlan = plan;
   local errors = plan.errors;
+  -- the mails to the name in To (with the gold of the box beside C.O.D.), and the extra gold mails
+  local toMails, toGold, extraMails, extraGold = 0, 0, 0, 0;
+  for _, step in ipairs(plan.steps) do
+    if (step.kind == "mail") then
+      local src = step.src or {};
+      if (src.kind == "gold" and src.row ~= 0) then
+        extraMails, extraGold = extraMails + 1, extraGold + (step.money or 0);
+      else
+        toMails = toMails + 1;
+        if (src.kind == "gold") then toGold = toGold + (step.money or 0); end
+      end
+    end
+  end
   local main, note, mainColor = "", "", C.text;
   if (isEmpty(form)) then
     main, mainColor = UMM_M_CO_EMPTY, C.dim;
@@ -261,16 +292,20 @@ local function drawPlan(plan, form)
     note = errors[2] or "";
   else
     local pieces = {};
-    local mainMails = plan.mails - plan.goldMails;
-    if (mainMails > 0) then
-      local text = mainMails == 1 and string.format(UMM_M_CO_PLAN_MAIN1, form.to) or string.format(UMM_M_CO_PLAN_MAIN, mainMails, form.to);
+    if (toMails > 0) then
+      local text = toMails == 1 and string.format(UMM_M_CO_PLAN_MAIN1, form.to) or string.format(UMM_M_CO_PLAN_MAIN, toMails, form.to);
       local detail = {};
-      if (mainMails > 1 and plan.itemMails > 0) then table.insert(detail, string.format(UMM_M_CO_PLAN_ITEMS, plan.itemMails)); end
+      if (toMails > 1 and plan.itemMails > 0) then table.insert(detail, string.format(UMM_M_CO_PLAN_ITEMS, plan.itemMails)); end
       if (plan.textParts > 1) then table.insert(detail, string.format(UMM_M_CO_PLAN_PARTS, plan.textParts)); end
+      if (toGold > 0) then table.insert(detail, string.format(UMM_M_CO_PLAN_GOLDPART, M.Gold(toGold))); end
       if (table.getn(detail) > 0) then text = text.." ("..table.concat(detail, ", ")..")"; end
       table.insert(pieces, text);
     end
-    if (plan.goldMails > 0) then table.insert(pieces, string.format(UMM_M_CO_PLAN_GOLD, plan.goldMails, M.Gold(plan.goldTotal))); end
+    if (extraMails == 1) then
+      table.insert(pieces, string.format(UMM_M_CO_PLAN_GOLD1, M.Gold(extraGold)));
+    elseif (extraMails > 1) then
+      table.insert(pieces, string.format(UMM_M_CO_PLAN_GOLD, extraMails, M.Gold(extraGold)));
+    end
     main = table.concat(pieces, "  +  ");
     local notes = {};
     if (plan.takes > 0) then table.insert(notes, string.format(UMM_M_CO_PLAN_TAKES, plan.takes)); end
@@ -280,15 +315,17 @@ local function drawPlan(plan, form)
   M.SetText(ui.plan, main, mainColor);
   M.SetText(ui.note, note, table.getn(errors) > 0 and C.warn or C.dim);
 
-  -- gold column total
+  -- the extra gold mails' total (gold the box beside C.O.D. lacks is the plan line's to say)
   local short = nil;
   for row, missing in pairs(plan.shortRows or {}) do
-    if (not short or row < short) then short = row; end
+    if (row ~= 0 and (not short or row < short)) then short = row; end
   end
   if (short) then
     M.SetText(ui.total, string.format(UMM_M_GO_SHORT, short, M.Gold(plan.shortRows[short])), C.bad);
-  elseif (plan.goldMails > 0) then
-    M.SetText(ui.total, string.format(UMM_M_GO_TOTAL, M.Gold(plan.goldTotal), plan.goldMails), C.gold);
+  elseif (extraMails == 1) then
+    M.SetText(ui.total, string.format(UMM_M_GO_TOTAL1, M.Gold(extraGold)), C.gold);
+  elseif (extraMails > 1) then
+    M.SetText(ui.total, string.format(UMM_M_GO_TOTAL, M.Gold(extraGold), extraMails), C.gold);
   else
     ui.total:SetText("");
   end
@@ -297,16 +334,17 @@ local function drawPlan(plan, form)
   M.ButtonText(UMMModernComposeSend, plan.mails > 1 and string.format(UMM_M_CO_SENDN, plan.mails) or UMM_M_CO_SEND);
   M.Enable(UMMModernComposeSend, ok and not sending and not M.Busy());
   M.Enable(UMMModernComposeReset, not sending);
+  for i = 1, 2 do M.Enable(presets[i], not sending); end
 end
 
 -- The first item or gold amount put in names the mail while the subject is empty or still the one
 -- filled in here; a subject you type stays.
 local function subjectFromForm()
   local item = items[1];
-  local gold = nil;
+  local gold = (not codOn) and M.GoldOf(UMMModernComposeMoney) or nil;
   for i = 1, rowCount do
-    local amount = M.GoldOf(goldAmount[i]);
-    if (amount) then gold = amount; break; end
+    if (gold) then break; end
+    gold = M.GoldOf(goldAmount[i]);
   end
   if (not item and not gold) then
     firstKind = nil;
@@ -439,6 +477,41 @@ local function checkItems()
     drawSlots();
     changed();
   end
+end
+
+-- ### The gold box beside C.O.D. ###
+
+-- C.O.D. ticked or not. The amount in the box meant the other thing, so it goes.
+local function setCOD(on)
+  codOn = on and true or false;
+  M.ButtonIcon(UMMModernComposeCOD, codOn and "CheckboxOn" or "CheckboxOff");
+  M.Hint(UMMModernComposeMoney, codOn and UMM_M_CO_COD_HINT or UMM_M_CO_GOLD_HINT);
+  M.SetEditText(UMMModernComposeMoney, "");
+end
+
+-- A preset button: its gold in the box, as gold to send (never as a C.O.D. price).
+local function usePreset(i)
+  if (sending) then return; end
+  local amount = UMMSettings:GoldPreset(i);
+  if (not amount) then return; end
+  if (codOn) then setCOD(false); end
+  M.SetGold(UMMModernComposeMoney, amount);
+  changed();
+end
+
+-- Use last and the two presets follow the "Mail shortcuts" setting, like the classic window.
+local function drawShortcuts()
+  local on = UMMSettings:ShortcutsEnabled();
+  for i = 1, 2 do
+    local b = presets[i];
+    if (on) then
+      M.ButtonText(b, M.Gold(UMMSettings:GoldPreset(i)), C.gold);
+      b:Show();
+    else
+      b:Hide();
+    end
+  end
+  if (on) then UMMModernComposeLast:Show(); else UMMModernComposeLast:Hide(); end
 end
 
 -- ### Gold rows ###
@@ -640,9 +713,7 @@ local function clearForm(keepTo)
   autoSubject, firstKind, subjectEmptied = nil, nil, false;
   M.SetEditText(UMMModernComposeBody, "");
   items = {};
-  codOn = false;
-  M.SetEditText(UMMModernComposeCODAmount, "");
-  M.ButtonIcon(UMMModernComposeCOD, "CheckboxOff");
+  setCOD(false);
   for i = 1, GOLD_ROWS do setRow(i, "", ""); end
   rowCount = 0;
   drawSlots();
@@ -672,7 +743,7 @@ function Page.QueueStep(step, status)
   elseif (src.kind == "text") then
     sending.sentParts[src.n] = true;
   elseif (src.kind == "gold") then
-    local box = goldAmount[src.row];
+    local box = (src.row == 0) and UMMModernComposeMoney or goldAmount[src.row];
     if (box) then
       local left = (M.GoldOf(box) or 0) - (step.money or 0);
       M.SetGold(box, left > 0 and left or nil);
@@ -751,14 +822,16 @@ local function buildMail()
   ui.toLabel = M.Label(f, 12, C.dim, "LEFT");
   M.Place(ui.toLabel, f, 8, 6, 30, 22);
   ui.toLabel:SetText(UMM_M_CO_TO);
-  M.Edit(UMMModernComposeTo, f, 40, 6, 194, 22, { hint = UMM_M_CO_TO_HINT, text = function(box)
+  M.Edit(UMMModernComposeTo, f, 40, 6, 194, 22, { hint = UMM_M_CO_TO_HINT, name = true, text = function(box)
     if (K.IsOpenFor(box)) then K.Filter(); end
     toChanged();
   end, nextBox = UMMModernComposeSubject });
-  nameBox(UMMModernComposeTo, function() UMMModernComposeSubject:SetFocus(); end);
+  -- a name chosen (from the list, Enter or Use last): next comes the gold, so the cursor goes there;
+  -- Tab still goes on to Subject
+  nameBox(UMMModernComposeTo, function() UMMModernComposeMoney:SetFocus(); end);
   M.Button(UMMModernComposePick, f, 238, 6, 24, 22, { icon = "Characters", iconSize = 16, style = "quiet",
     tip = { UMM_M_CO_PICK_TIP }, click = function()
-      K.Toggle(UMMModernComposeTo, function() changed(); UMMModernComposeSubject:SetFocus(); end);
+      K.Toggle(UMMModernComposeTo, function() changed(); UMMModernComposeMoney:SetFocus(); end);
     end });
   M.Button(UMMModernComposeLast, f, 266, 6, 74, 22, { text = UMM_M_CO_LAST, size = 12, style = "quiet",
     tip = { UMM_M_CO_LAST, UMM_M_CO_LAST_TIP }, click = function()
@@ -767,6 +840,7 @@ local function buildMail()
         K.Close();
         UMMModernComposeTo:SetText(last);
         toChanged();
+        UMMModernComposeMoney:SetFocus();
       end
     end });
   ui.who = M.Label(f, 11, C.dim, "LEFT");
@@ -783,7 +857,7 @@ local function buildMail()
   UMMModernComposeSubject.ummEnterKey = function() UMMModernComposeBody:SetFocus(); end;
   -- the subject filled in from an item or gold is selected on the way in, so typing replaces it
   UMMModernComposeSubject.ummFocus = function(box)
-    if (autoSubject and (box:GetText() or "") == autoSubject) then box:HighlightText(); end
+    if (autoSubject and (box:GetText() or "") == autoSubject) then M.SelectAll(box); end
   end;
   UMMModernComposeSubject.ummUnfocus = function(box)
     if (subjectEmptied) then subjectEmptied = false; changed(); end
@@ -840,20 +914,32 @@ local function buildMail()
   UMMModernComposeAdd.ummSlot = nil;   -- past the last item: a new mail
   dropTarget(UMMModernComposeAdd);
 
+  -- C.O.D. only ever changes by a click on it: typing an amount never ticks it
   M.Button(UMMModernComposeCOD, f, 8, COD_Y, 84, 22, { text = UMM_M_CO_COD, icon = "CheckboxOff", iconSize = 14, size = 12,
     style = "quiet", tip = { UMM_M_CO_COD, UMM_M_CO_COD_TIP }, click = function()
-      codOn = not codOn;
-      M.ButtonIcon(UMMModernComposeCOD, codOn and "CheckboxOn" or "CheckboxOff");
-      if (codOn) then UMMModernComposeCODAmount:SetFocus(); end
+      if (sending) then return; end
+      setCOD(not codOn);
+      UMMModernComposeMoney:SetFocus();
       changed();
     end });
-  M.Edit(UMMModernComposeCODAmount, f, 100, COD_Y, 130, 22, { gold = true, hint = UMM_M_CO_COD_HINT, text = function()
-    if (not codOn and (UMMModernComposeCODAmount:GetText() or "") ~= "") then
-      codOn = true;
-      M.ButtonIcon(UMMModernComposeCOD, "CheckboxOn");
-    end
-    changed();
-  end });
+  M.Edit(UMMModernComposeMoney, f, MONEY_X, COD_Y, MONEY_W, 22, { gold = true, hint = UMM_M_CO_GOLD_HINT, text = changed,
+    tip = function()
+      if (codOn) then return { UMM_M_CO_COD, UMM_M_CO_COD_TIP }; end
+      return { UMM_M_CO_GOLD, UMM_M_CO_GOLD_TIP };
+    end });
+  -- getting the cursor selects the amount, so typing replaces it
+  UMMModernComposeMoney.ummFocus = function(box)
+    if ((box:GetText() or "") ~= "") then M.SelectAll(box); end
+  end;
+  for i = 1, 2 do
+    local b = getglobal("UMMModernComposePreset"..i);
+    presets[i] = b;
+    M.Button(b, f, PRESET_X + (i - 1) * (PRESET_W + PRESET_GAP), COD_Y, PRESET_W, 22, {
+      text = M.Gold(UMMSettings:GoldPreset(i)), icon = "Gold", iconSize = 14, size = 12, style = "quiet",
+      tip = function()
+        return { string.format(UMM_M_CO_PRESET, i), string.format(UMM_M_CO_PRESET_TIP, M.Gold(UMMSettings:GoldPreset(i))) };
+      end, click = function() usePreset(i); end });
+  end
 
   ui.plan = M.Label(f, 12, C.text, "LEFT");
   M.Place(ui.plan, f, 8, COD_Y + 28, 462, 18);
@@ -907,7 +993,7 @@ local function buildGold()
     local amount = getglobal("UMMModernGoldRow"..i.."Amount");
     local remove = getglobal("UMMModernGoldRow"..i.."Remove");
     goldTo[i], goldAmount[i], goldRemove[i] = to, amount, remove;
-    M.Edit(to, row, 10, 1, 108, 22, { hint = UMM_M_GO_SAME, text = function(box)
+    M.Edit(to, row, 10, 1, 108, 22, { hint = UMM_M_GO_SAME, name = true, text = function(box)
       if (K.IsOpenFor(box)) then K.Filter(); end
       changed();
     end, nextBox = amount });
@@ -970,6 +1056,7 @@ end
 -- ### Page hooks ###
 
 function Page.Show()
+  drawShortcuts();
   drawGoldHead();
   drawCounter();
   drawWho();
@@ -1018,4 +1105,10 @@ end
 function Page.Closed()
   closeReview();
   sending = nil;
+  -- C.O.D. is off whenever a mailbox opens: a price from last time does not wait in the box
+  if (codOn) then setCOD(false); end
+end
+
+function Page.ShortcutsChanged()
+  drawShortcuts();
 end

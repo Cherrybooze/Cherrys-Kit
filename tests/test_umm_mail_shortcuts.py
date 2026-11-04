@@ -86,6 +86,11 @@ class MailShortcutsTests(unittest.TestCase):
         obj.text = attributes.get("text", "")
         obj.mouse = attributes.get("enableMouse") == "true"
         obj.alpha = float(attributes.get("alpha", 1))
+        if kind == "EditBox":
+            # what the client's typing goes by (test_umm_modern.py: ummChar)
+            obj.numeric = attributes.get("numeric") == "true"
+            obj.multiLine = attributes.get("multiLine") == "true"
+            obj.letters = int(attributes.get("letters", 255))
         self.g.ummScripts[name] = self.lua.table_from(scripts)
         # These child labels come from the client's common panel/check templates.
         inherited = {source.get("inherits") for source in sources}

@@ -192,6 +192,92 @@ function W:ClearFocus()
   UMMFixtureDispatch(self.name, "OnEditFocusLost")
 end
 function ummFocused() return focused and focused.name end
+
+-- ### Typing, as the client's EditBox does it (ui/core/uieditbox.cpp) ###
+-- The caret counts UTF-16 units (a 4-byte UTF-8 character takes 2); only one-line boxes have
+-- OnCursorChanged (Modern.xml), with the caret as arg1.
+local function chars(text)
+  local out = {}
+  for ch in string.gmatch(text, "[%z\1-\127\194-\244][\128-\191]*") do out[#out + 1] = ch end
+  return out
+end
+local function unitsOf(ch) return #ch == 4 and 2 or 1 end
+local function textUnits(text)
+  local n = 0
+  for _, ch in ipairs(chars(text)) do n = n + unitsOf(ch) end
+  return n
+end
+local function byteAt(text, caret)
+  local n, b = 0, 0
+  for _, ch in ipairs(chars(text)) do
+    if n >= caret then break end
+    n, b = n + unitsOf(ch), b + #ch
+  end
+  return b
+end
+local function placeCaret(box, caret)
+  if caret < 0 or caret > textUnits(box.text) then return end
+  box.caret = caret
+  arg1, arg2 = caret, 0
+  UMMFixtureDispatch(box.name, "OnCursorChanged")
+end
+function W:HighlightText(first, last)
+  first, last = first or 0, last or -1
+  if first >= 0 and first <= textUnits(self.text) then self.selStart = first end
+  if last == -1 then last = textUnits(self.text) end
+  placeCaret(self, last)
+end
+local function deleteSelection(box)
+  local caret, sel = box.caret or 0, box.selStart or 0
+  if caret == sel then return false end
+  local a, b = math.min(caret, sel), math.max(caret, sel)
+  box.text = string.sub(box.text, 1, byteAt(box.text, a))..string.sub(box.text, byteAt(box.text, b) + 1)
+  UMMFixtureDispatch(box.name, "OnTextChanged")
+  placeCaret(box, a)
+  box.selStart = box.caret
+  return true
+end
+-- WM_CHAR (CUiEditBox::OnChar): Backspace, or a character typed at the caret
+function ummChar(name, ch)
+  local box = _G[name]
+  if ch == "\8" then
+    if not deleteSelection(box) and (box.caret or 0) > 0 then
+      local at = byteAt(box.text, box.caret - 1)
+      local gone = string.sub(box.text, at + 1, byteAt(box.text, box.caret))
+      box.text = string.sub(box.text, 1, at)..string.sub(box.text, at + #gone + 1)
+      UMMFixtureDispatch(name, "OnTextChanged")
+      placeCaret(box, box.caret - unitsOf(gone))
+      box.selStart = box.caret
+    end
+    return
+  end
+  if ch < " " and not (ch == "\n" and box.multiLine) then return end
+  if box.numeric and not string.find(ch, "^%d$") then return end
+  deleteSelection(box)
+  if textUnits(box.text) + unitsOf(ch) > (box.letters or 255) then return end
+  local caret = box.caret or 0
+  local b = byteAt(box.text, caret)
+  box.text = string.sub(box.text, 1, b)..ch..string.sub(box.text, b + 1)
+  UMMFixtureDispatch(name, "OnTextChanged")
+  placeCaret(box, caret + unitsOf(ch))
+  box.selStart = box.caret
+end
+-- a key pressed in a box: WM_KEYDOWN (OnKeyDown gets the key's name), then the WM_CHAR made of it
+function ummKey(name, keyName, ch)
+  key = keyName
+  UMMFixtureDispatch(name, "OnKeyDown")
+  if ch then ummChar(name, ch) end
+end
+function ummTypeKeys(name, text)
+  for _, ch in ipairs(chars(text)) do ummKey(name, ch == "\n" and "ENTER" or "A", ch) end
+end
+-- Ctrl+Backspace: Windows makes a DEL (0x7F) of it
+function ummCtrlBack(name)
+  ctrl = true
+  ummKey(name, "BACKSPACE", "\127")
+  ctrl = false
+end
+function ummCaret(name) return _G[name].caret or 0, _G[name].selStart or 0 end
 function CreateUIComponent(kind, name, parent) return UMMFixtureWidget(kind, name, parent) end
 GameTooltip.SetInboxItem = function(self, index, pos) table.insert(ummTips, { index = index, pos = pos }) end
 
@@ -380,7 +466,8 @@ class OpeningTests(ModernWindowFixture, unittest.TestCase):
         before = self.g.ummWidgetCount()
         self.page(3)
         made = self.g.ummWidgetCount() - before
-        self.assertEqual(made, 180 * 5 + 1, "5 textures and labels per bag slot and the selection box")
+        self.assertEqual(made, 180 * 5 + 1 + 6,
+                         "5 textures and labels per bag slot, the selection box and a rounded panel per bag")
         self.page(1)
         self.page(3)
         self.assertEqual(self.g.ummWidgetCount() - before, made)
@@ -469,8 +556,9 @@ class InboxTests(ModernWindowFixture, unittest.TestCase):
         self.assertEqual(self.row(3), ("Stranger", "Hello", "", ""))
         self.assertIsNone(self.row(4))
         self.assertIn("3 mails  ·  2 unread  ·  5,000,000 gold", self.texts("UMMModernInbox"))
-        self.assertEqual([self.label(f"UMMModernInboxFilter{i}") for i in range(1, 6)],
-                         ["All  3", "Gold  1", "Items  1", "Diamonds  0", "Unread  2"])
+        self.assertEqual([self.label(f"UMMModernInboxFilter{i}") for i in range(1, 5)],
+                         ["All  3", "Gold  1", "Items  1", "Unread  2"])
+        self.assertIsNone(self.g.UMMModernInboxFilter5, "diamonds can't be sent by mail: no filter for them")
         self.assertEqual(self.label("UMMModernTab1"), "Inbox  3")
         self.assertEqual(self.status(), "Ready.")
 
@@ -500,7 +588,7 @@ class InboxTests(ModernWindowFixture, unittest.TestCase):
         self.assertTrue(self.shown("UMMModernReaderItem2"))
         self.assertEqual(self.g.UMMModernReaderItem2.ummCount.text, "2")
         self.assertEqual(self.g.UMMModernInboxRow2.ummDays.text, "3d")
-        self.assertEqual(self.label("UMMModernInboxFilter5"), "Unread  1")
+        self.assertEqual(self.label("UMMModernInboxFilter4"), "Unread  1")
 
     def test_search_and_who_from_narrow_the_list(self):
         self.open()
@@ -661,6 +749,133 @@ class ComposeTests(ModernWindowFixture, unittest.TestCase):
         self.until("not UMMQueue:Busy()")
         self.assertEqual(self.delivered("recipient", "subject", "money"), [("Alt1", "Money: 400,000", 400_000)])
 
+    def ticked(self, name):
+        return self.g[name].umm.icon.texture.endswith("CheckboxOn.tga")
+
+    def test_gold_typed_beside_cod_goes_to_the_to_name(self):
+        """In game, gold typed in the box beside C.O.D. was taken as a C.O.D. price and ticked C.O.D.
+        by itself, so "Done: 1 of 1 mails sent" went without the gold. That box is the gold for To."""
+        self.g.ummSetMoney(600_000_000)
+        self.open()
+        self.page(2)
+        self.g.ummTypeKeys("UMMModernComposeTo", "Alt1")
+        self.h.script("UMMModernComposeTo", "OnEnterPressed")
+        self.step()
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeMoney", "a name chosen: the gold comes next")
+        self.g.ummTypeKeys("UMMModernComposeMoney", "500000000")
+        self.step(0.1)   # the commas, then the plan
+        money = self.g.UMMModernComposeMoney
+        self.assertEqual(money.text, "500,000,000")
+        self.assertFalse(self.ticked("UMMModernComposeCOD"), "typing gold never ticks C.O.D.")
+        self.assertEqual(self.g.UMMModernComposeSubject.text, "Money: 500,000,000")
+        self.assertIn("1 mail to Alt1 (500,000,000 gold)", self.texts("UMMModernCompose"))
+        self.assertIn("no gold mails", self.texts("UMMModernGold"), "the right side is for extra gold mails only")
+        self.assertEqual(self.label("UMMModernComposeSend"), "Send")
+
+        self.click("UMMModernComposeSend")
+        self.assertTrue(self.shown("UMMModernReview"), "gold always shows the list first")
+        self.assertEqual(self.review_lines(), ["1.  500,000,000 gold to Alt1"])
+        self.click("UMMModernReviewGo")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("recipient", "subject", "money", "cod"),
+                         [("Alt1", "Money: 500,000,000", 500_000_000, 0)])
+        self.assertEqual(self.status(), "Done: 1 of 1 mails sent.")
+        self.assertEqual(money.text, "", "sent: the gold box empties")
+        self.assertEqual(self.g.ummMoney, 100_000_000)
+
+    def test_gold_in_the_box_rides_with_the_text_and_extra_rows_add_their_own_mails(self):
+        self.g.ummSetMoney(10_000_000)
+        self.open()
+        self.page(2)
+        self.type("UMMModernComposeTo", "Alt1")
+        self.type("UMMModernComposeSubject", "Rent")
+        self.type("UMMModernComposeBody", "For the house")
+        self.type("UMMModernComposeMoney", "2000000")
+        self.click("UMMModernGoldAdd")
+        self.type("UMMModernGoldRow1To", "Alt2")
+        self.type("UMMModernGoldRow1Amount", "300000")
+        self.step()
+        compose = self.texts("UMMModernCompose")
+        self.assertIn("1 mail to Alt1 (2,000,000 gold)  +  1 gold mail, 300,000 gold", compose)
+        self.assertIn("Total 300,000 gold in 1 mail", compose, "the panel counts its own rows")
+        self.click("UMMModernComposeSend")
+        self.assertEqual(self.review_lines(), ["1.  2,000,000 gold to Alt1  + the text", "2.  300,000 gold to Alt2"])
+        self.click("UMMModernReviewGo")
+        self.until("not UMMQueue:Busy()")
+        # the text and its subject go with the gold for To; an extra gold mail is named by its gold
+        self.assertEqual(self.delivered("recipient", "subject", "body", "money"),
+                         [("Alt1", "Rent", "For the house", 2_000_000), ("Alt2", "Money: 300,000", "", 300_000)])
+
+    def test_cod_starts_off_never_ticks_itself_and_switching_empties_the_box(self):
+        self.lua.execute('ummItem(1, "Herb", 5)')
+        self.open()
+        self.page(2)
+        money = self.g.UMMModernComposeMoney
+        self.assertFalse(self.ticked("UMMModernComposeCOD"))
+        self.assertEqual(money.ummHint.text, "gold to send")
+        self.type("UMMModernComposeTo", "Alt1")
+        self.g.ummCursor = 1001
+        self.click("UMMModernComposeAdd")
+        self.type("UMMModernComposeMoney", "1000")
+        self.click("UMMModernComposeCOD")
+        self.assertTrue(self.ticked("UMMModernComposeCOD"))
+        self.assertEqual(money.text, "", "the gold to send is not a price: switching empties the box")
+        self.assertEqual(money.ummHint.text, "C.O.D. price, each item mail")
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeMoney")
+        self.type("UMMModernComposeMoney", "2500")
+        self.step()
+        self.assertIn("C.O.D. 2,500 on each item mail.", self.texts("UMMModernCompose"))
+        self.click("UMMModernComposeCOD")
+        self.assertFalse(self.ticked("UMMModernComposeCOD"))
+        self.assertEqual(money.text, "")
+        self.type("UMMModernComposeMoney", "700")
+        self.step()
+        self.assertFalse(self.ticked("UMMModernComposeCOD"), "and it stays off while gold is typed")
+        self.assertEqual(money.text, "700")
+
+        self.click("UMMModernComposeCOD")
+        self.type("UMMModernComposeMoney", "2500")
+        self.step()
+        self.click("UMMModernComposeSend")
+        if self.shown("UMMModernReview"):
+            self.click("UMMModernReviewGo")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("recipient", "item", "money", "cod"), [("Alt1", "Herb", 0, 2500)])
+
+        # closing the mailbox turns it off again
+        self.click("UMMModernComposeCOD")
+        self.assertTrue(self.ticked("UMMModernComposeCOD"))
+        self.close()
+        self.open()
+        self.page(2)
+        self.assertFalse(self.ticked("UMMModernComposeCOD"))
+        self.assertEqual(money.ummHint.text, "gold to send")
+
+    def test_the_gold_presets_fill_the_gold_box_and_follow_the_shortcuts_setting(self):
+        self.open()
+        self.page(2)
+        money = self.g.UMMModernComposeMoney
+        self.assertEqual(self.label("UMMModernComposePreset1"), "100,000")
+        self.assertEqual(self.label("UMMModernComposePreset2"), "1,000,000")
+        self.click("UMMModernComposeCOD")
+        self.click("UMMModernComposePreset2")
+        self.assertFalse(self.ticked("UMMModernComposeCOD"), "a preset is gold to send: C.O.D. goes off")
+        self.assertEqual(money.text, "1,000,000")
+        self.assertEqual(self.g.UMMModernComposeSubject.text, "Money: 1,000,000")
+        self.lua.execute('SlashCmdList.UMM(nil, "gold 250000 2000000")')
+        self.assertEqual(self.label("UMMModernComposePreset1"), "250,000", "a changed preset shows at once")
+        self.click("UMMModernComposePreset1")
+        self.assertEqual(money.text, "250,000")
+        self.lua.execute('SlashCmdList.UMM(nil, "shortcuts off")')
+        for name in ("UMMModernComposePreset1", "UMMModernComposePreset2", "UMMModernComposeLast"):
+            self.assertFalse(self.shown(name), f"{name} follows Mail shortcuts")
+        self.page(3)
+        self.assertFalse(self.shown("UMMModernMassLast"))
+        self.lua.execute('SlashCmdList.UMM(nil, "shortcuts on")')
+        self.assertTrue(self.shown("UMMModernMassLast"))
+        self.page(2)
+        self.assertTrue(self.shown("UMMModernComposePreset1"))
+
     def test_items_and_long_text_go_as_numbered_mails_to_one_name(self):
         self.lua.execute('ummItem(1, "Herb", 5); ummItem(2, "Ore", 1)')
         text = " ".join(f"line{i:04d}" for i in range(500))
@@ -722,7 +937,7 @@ class ComposeTests(ModernWindowFixture, unittest.TestCase):
         self.assertIsNone(self.g.ummCursor)
         press("UMMModernComposeSlot1")
         self.assertFalse(self.shown("UMMModernComposeSlot1"))
-        self.assertIn("Write a mail, drop items on +, or add gold on the right.", self.texts("UMMModernCompose"))
+        self.assertIn("Write a mail, drop items on +, or enter gold.", self.texts("UMMModernCompose"))
 
     def test_the_subject_takes_the_first_item_or_gold_until_one_is_typed(self):
         self.lua.execute('ummItem(1, "Herb", 5); ummItem(2, "Ore", 1); ummSetMoney(1000000)')
@@ -732,14 +947,13 @@ class ComposeTests(ModernWindowFixture, unittest.TestCase):
         self.type("UMMModernComposeTo", "Alt1")
         self.h.script("UMMModernComposeTo", "OnEnterPressed")
         self.step()
-        self.assertEqual(self.g.ummFocused(), "UMMModernComposeSubject")
-        # an item first: its name, even with the cursor waiting in the empty subject
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeMoney", "a name chosen: the gold comes next")
+        # an item first: its name
         self.g.ummCursor = 1001
         self.click("UMMModernComposeAdd")
         self.step()
         self.assertEqual(subject.text, "Herb (5)")
-        self.click("UMMModernGoldAdd")
-        self.type("UMMModernGoldRow1Amount", "400000")
+        self.type("UMMModernComposeMoney", "400000")
         self.step()
         self.assertEqual(subject.text, "Herb (5)", "the item came first")
         # the item taken out: the gold names the mail now, and keeps doing so when an item comes back
@@ -755,7 +969,7 @@ class ComposeTests(ModernWindowFixture, unittest.TestCase):
         subject.SetFocus(subject)
         self.assertEqual((subject.selStart, subject.caret), (0, len("Money: 400,000")))
         self.type("UMMModernComposeSubject", "For the bank")
-        self.type("UMMModernGoldRow1Amount", "50000")
+        self.type("UMMModernComposeMoney", "50000")
         self.step()
         self.assertEqual(subject.text, "For the bank")
         # emptied while typing, it stays empty until the cursor leaves it
@@ -856,7 +1070,7 @@ class ComposeTests(ModernWindowFixture, unittest.TestCase):
         self.h.script("UMMModernComposeTo", "OnEnterPressed")
         self.step()
         self.assertEqual(self.g.UMMModernComposeTo.text, "Pal")
-        self.assertEqual(self.g.ummFocused(), "UMMModernComposeSubject")
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeMoney", "a name chosen: the gold comes next")
         self.type("UMMModernComposeSubject", "Hi")
         self.type("UMMModernComposeBody", "See you tonight")
         self.assertEqual(self.label("UMMModernComposeSend"), "Send")
@@ -1010,6 +1224,41 @@ class MassSendTests(ModernWindowFixture, unittest.TestCase):
         self.step()
         self.assertEqual(self.marked(), {1, 2, 4, 7})
 
+    def test_cod_is_off_until_ticked_and_its_price_box_shows_only_then(self):
+        def ticked():
+            return self.g.UMMModernMassCOD.umm.icon.texture.endswith("CheckboxOn.tga")
+
+        price = "UMMModernMassCODAmount"
+        self.assertFalse(ticked())
+        self.assertFalse(self.shown(price))
+        self.press(3)
+        self.type("UMMModernMassTo", "Alt1")
+        self.click("UMMModernMassCOD")
+        self.assertTrue(ticked())
+        self.assertTrue(self.shown(price))
+        self.assertEqual(self.g.ummFocused(), price)
+        self.assertFalse(self.g.UMMModernMassSend.umm.enabled, "no price yet")
+        self.type(price, "5000")
+        self.step()
+        self.assertEqual(self.g[price].text, "5,000")
+        self.assertTrue(self.g.UMMModernMassSend.umm.enabled)
+        self.click("UMMModernMassCOD")
+        self.assertFalse(ticked())
+        self.assertFalse(self.shown(price))
+        self.assertEqual(self.g[price].text, "", "unticked: the price goes")
+        self.assertTrue(self.g.UMMModernMassSend.umm.enabled)
+
+        self.click("UMMModernMassCOD")
+        self.type(price, "5000")
+        self.click("UMMModernMassSend")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("item", "cod"), [("Ore", 5000)])
+        self.close()
+        self.open()
+        self.page(3)
+        self.assertFalse(ticked(), "closing the mailbox turns C.O.D. off")
+        self.assertFalse(self.shown(price))
+
     def test_forty_or_more_offers_safe_and_fast(self):
         self.lua.execute('for slot = 10, 54 do ummItem(slot, "Arrow", 99) end; UMMMasterFrame_OnEvent("PLAYER_BAG_CHANGED")')
         self.step(0.3)
@@ -1019,6 +1268,172 @@ class MassSendTests(ModernWindowFixture, unittest.TestCase):
         self.assertEqual(self.label("UMMModernMassSend"), "Send safely 45")
         self.assertTrue(self.shown("UMMModernMassFast"))
         self.assertTrue(self.g.UMMModernMassFast.umm.enabled)
+
+
+class CtrlBackspaceTests(ModernWindowFixture, unittest.TestCase):
+    """Ctrl+Backspace, which the client lacks: gold goes back to the last comma, a name goes whole,
+    text a word at a time. For it the client types a DEL (0x7F) in a text box and nothing in a
+    number box, and places the caret only after the text handler (tests: ummCtrlBack, ummChar)."""
+
+    def setUp(self):
+        super().setUp()
+        self.open()
+        self.page(2)
+
+    def back(self, name):
+        self.g.ummCtrlBack(name)
+        self.step(0.2)
+        text = self.g[name].text
+        self.assertNotIn("\x7f", text)
+        return text
+
+    def caret(self, name):
+        return tuple(self.g.ummCaret(name))
+
+    def focus(self, name):
+        box = self.g[name]
+        box.SetFocus(box)
+
+    def test_gold_goes_back_a_comma_group_at_a_time(self):
+        self.g.ummSetMoney(600_000_000)
+        self.g.ummTypeKeys("UMMModernComposeTo", "Alt1")
+        name = "UMMModernComposeMoney"
+        self.focus(name)
+        self.g.ummTypeKeys(name, "500000000")
+        self.step()
+        self.assertEqual(self.g[name].text, "500,000,000")
+        self.assertEqual(self.back(name), "500,000")
+        self.assertEqual(self.caret(name), (7, 7))
+        self.assertIn("1 mail to Alt1 (500,000 gold)", self.texts("UMMModernCompose"), "the plan follows")
+        self.assertEqual(self.g.UMMModernComposeSubject.text, "Money: 500,000")
+        self.assertEqual(self.back(name), "500")
+        self.assertEqual(self.back(name), "")
+        self.assertEqual(self.back(name), "", "nothing left: nothing happens")
+        self.assertEqual(self.g[name].ummHint.text, "gold to send")
+        # typing goes on where the caret is
+        self.g.ummTypeKeys(name, "12345")
+        self.step()
+        self.assertEqual(self.g[name].text, "12,345")
+        # plain Backspace is still one digit
+        self.g.ummKey(name, "BACKSPACE", "\b")
+        self.step()
+        self.assertEqual(self.g[name].text, "1,234")
+
+    def test_gold_with_the_caret_inside_takes_the_digits_back_to_the_comma_before_it(self):
+        name = "UMMModernComposeMoney"
+        self.focus(name)
+        self.g.ummTypeKeys(name, "1234567")
+        self.step()
+        box = self.g[name]
+        box.HighlightText(box, 7, 7)                   # 1,234,5|67
+        self.assertEqual(self.back(name), "123,467")
+        self.assertEqual(self.caret(name), (5, 5))     # 123,4|67
+        box.HighlightText(box, 4, 4)                   # 123,|467: the comma and the group before it
+        self.assertEqual(self.back(name), "467")
+        self.assertEqual(self.caret(name), (0, 0))
+        self.g.ummTypeKeys(name, "1000")
+        self.step()
+        self.assertEqual(box.text, "1,000,467")
+        box.HighlightText(box, 1, 1)                   # 1|,000,467: no zeros left in front
+        self.assertEqual(self.back(name), "467")
+
+    def test_gold_selected_on_the_way_in_empties_at_once(self):
+        name = "UMMModernComposeMoney"
+        self.type(name, "2500000")
+        self.step()
+        self.focus("UMMModernComposeSubject")
+        self.focus(name)                               # selected on the way in
+        self.assertEqual(self.caret(name), (9, 0))
+        self.assertEqual(self.back(name), "")
+        # an extra gold row and Mass send's C.O.D. price work the same way
+        self.click("UMMModernGoldAdd")
+        row = "UMMModernGoldRow1Amount"
+        self.focus(row)
+        self.g.ummTypeKeys(row, "75000")
+        self.step()
+        self.assertEqual(self.back(row), "75")
+        self.page(3)
+        self.click("UMMModernMassCOD")
+        self.g.ummTypeKeys("UMMModernMassCODAmount", "1500")
+        self.step()
+        self.assertEqual(self.back("UMMModernMassCODAmount"), "1")
+
+    def test_a_name_goes_whole_wherever_the_caret_is(self):
+        name = "UMMModernComposeTo"
+        self.assertEqual(self.g.ummFocused(), name)
+        self.g.ummTypeKeys(name, "Alt1")
+        self.assertEqual(self.g.UMMModernPickerRow1.ummName.text, "Alt1")
+        box = self.g[name]
+        box.HighlightText(box, 2, 2)
+        self.assertEqual(self.back(name), "")
+        self.assertEqual(box.ummHint.text, "Name")
+        self.assertTrue(self.shown("UMMModernPicker"), "the list shows every name again")
+        self.click("UMMModernGoldAdd")
+        self.g.ummTypeKeys("UMMModernGoldRow1To", "Alt2")
+        self.assertEqual(self.back("UMMModernGoldRow1To"), "")
+        self.page(3)
+        self.focus("UMMModernMassTo")
+        self.g.ummTypeKeys("UMMModernMassTo", "Pal")
+        self.assertEqual(self.back("UMMModernMassTo"), "")
+
+    def test_text_goes_a_word_at_a_time(self):
+        name = "UMMModernComposeSubject"
+        self.focus(name)
+        self.g.ummTypeKeys(name, "Grüße an alle  ")
+        self.assertEqual(self.back(name), "Grüße an ")
+        self.assertEqual(self.caret(name), (9, 9), "the caret counts letters, not bytes")
+        self.assertEqual(self.back(name), "Grüße ")
+        self.assertEqual(self.back(name), "")
+        self.g.ummTypeKeys(name, "one two three")
+        box = self.g[name]
+        box.HighlightText(box, 7, 7)                   # one two| three
+        self.assertEqual(self.back(name), "one  three")
+        self.assertEqual(self.caret(name), (4, 4))
+        box.HighlightText(box, 0, 3)                   # a selection goes, and only the selection
+        self.assertEqual(self.back(name), "  three")
+        self.assertEqual(self.caret(name), (0, 0))
+
+    def test_the_text_box_goes_back_a_line_break_or_a_word(self):
+        name = "UMMModernComposeBody"
+        self.focus(name)
+        self.g.ummTypeKeys(name, "first line\nsecond")
+        self.assertEqual(self.back(name), "first line\n")
+        self.assertEqual(self.back(name), "first line")
+        self.assertEqual(self.back(name), "first ")
+        self.assertIn("6 / 2,000", self.texts("UMMModernCompose"), "the counter follows")
+
+    def test_a_late_del_or_a_full_box_still_takes_one_word(self):
+        name = "UMMModernComposeSubject"
+        self.focus(name)
+        self.g.ummTypeKeys(name, "one two")
+        # the DEL a frame after the key: one word, not two
+        self.g.ctrl = True
+        self.g.ummKey(name, "BACKSPACE")
+        self.g.ctrl = False
+        self.step()
+        self.g.ummChar(name, "\x7f")
+        self.step(0.2)
+        self.assertEqual(self.g[name].text, "one ")
+        # a full box has no room for the DEL: the caret it was given says where
+        self.lua.execute(f"{name}.letters = 7")
+        self.g.ummTypeKeys(name, "two")
+        self.assertEqual(self.g[name].text, "one two")
+        self.assertEqual(self.back(name), "one ")
+
+    def test_the_rules(self):
+        back = self.g.UMMModern.CtrlBack
+        self.assertEqual(tuple(back("gold", "999,999,999", 11)), ("999,999", 7))
+        self.assertEqual(tuple(back("gold", "999,999,999", 0)), ("999,999,999", 0))
+        self.assertEqual(tuple(back("gold", "5", 1)), ("", 0))
+        self.assertEqual(tuple(back("name", "Somebody", 3)), ("", 0))
+        self.assertEqual(tuple(back("text", "a  b\t", 6)), ("a  ", 3))
+        self.assertEqual(tuple(back("text", "x\n\n", 3)), ("x\n", 2))
+        self.assertEqual(tuple(back("text", "line\n  ", 7)), ("line\n", 5))
+        units, nbytes = self.g.UMMModern.TextUnits, self.g.UMMModern.TextBytes
+        self.assertEqual(units("añ😀b", 7), 4, "ñ is one unit, the emoji two")
+        self.assertEqual(units("añ😀b", 8), 5)
+        self.assertEqual(nbytes("añ😀b", 4), 7)
+        self.assertEqual(nbytes("añ😀b", 99), 8)
 
 
 class LayoutTests(ModernWindowFixture, unittest.TestCase):
@@ -1266,19 +1681,44 @@ class LayoutTests(ModernWindowFixture, unittest.TestCase):
         self.assertGreater(x_in_window(self.g.UMMModern.gold), x_in_window(last) + last.width)
         self.assertEqual(self.click_on("UMMModernTab1"), "UMMModernTab1")
 
-    def test_a_click_that_misses_take_all_lands_on_delete_emptied_and_return_is_last(self):
+    def box(self, name):
+        """A frame's place and size in window units."""
+        left, top, _, _ = self.window_rect()
+        s = self.scale()
+        w = self.g[name]
+        x, y = w.GetPos(w)
+        width, height = w.GetRealSize(w)
+        return round((x - left) / s, 6), round((y - top) / s, 6), round(width / s, 6), round(height / s, 6)
+
+    def test_tick_all_joins_the_filters_take_all_takes_its_place_and_the_bottom_row_moves_left(self):
         self.lua.execute('ummMail("Bank", 1000)')
         self.open()
-        names = ["UMMModernInboxTake", "UMMModernInboxClean", "UMMModernInboxDelete", "UMMModernInboxReturn"]
-        xs = [self.g[name].GetPos(self.g[name])[0] for name in names]
-        self.assertEqual(xs, sorted(xs), "Take all, Delete emptied, Delete, Return")
-        take = self.g.UMMModernInboxTake
-        x, y = take.GetPos(take)
-        w, h = take.GetRealSize(take)
-        self.assertEqual(self.click_at(x + w + 6 * self.scale(), y + h / 2), "UMMModernInboxClean")
-        self.assertEqual(self.inbox(), ["Mail 1"], "nothing went back")
+        row = [self.box(f"UMMModernInboxFilter{i}") for i in range(1, 5)]
+        row += [self.box("UMMModernInboxSelect"), self.box("UMMModernInboxFrom")]
+        self.assertEqual(len({b[1] for b in row}), 1, "All, Gold, Items, Unread, Tick all, From: one row")
+        for a, b in zip(row, row[1:]):
+            self.assertEqual(b[0] - (a[0] + a[2]), 4, "left to right, 4 apart")
+        search, take, who = self.box("UMMModernInboxSearch"), self.box("UMMModernInboxTake"), row[-1]
+        self.assertEqual(take[1], search[1], "Take all is where Tick all was, beside the search")
+        self.assertEqual(take[0] - (search[0] + search[2]), 4)
+        self.assertEqual((take[0], take[2]), (who[0], who[2]), "right under From, as wide")
+        bottom = [self.box(n) for n in ("UMMModernInboxClean", "UMMModernInboxDelete", "UMMModernInboxReturn")]
+        self.assertEqual(bottom[0][0], search[0], "Delete emptied starts the bottom row now")
+        for a, b in zip(bottom, bottom[1:]):
+            self.assertEqual(b[0] - (a[0] + a[2]), 4, "Delete emptied, Delete, then Return last")
+        self.assertEqual(bottom[-1][0] + bottom[-1][2], search[0] + search[2])
+        for name in ("UMMModernInboxSelect", "UMMModernInboxFrom", "UMMModernInboxTake", "UMMModernInboxClean",
+                     "UMMModernInboxDelete", "UMMModernInboxReturn"):
+            self.assertEqual(self.g.RomLayout.FrameAt(*self.center(name)).name, name)
+        # a click just past Delete emptied lands on nothing
+        clean = self.g.UMMModernInboxClean
+        x, y = clean.GetPos(clean)
+        w, h = clean.GetRealSize(clean)
+        self.assertNotIn(self.click_at(x + w + 2 * self.scale(), y + h / 2),
+                         ("UMMModernInboxDelete", "UMMModernInboxReturn"))
+        self.assertEqual(self.inbox(), ["Mail 1"], "nothing went")
 
-    def test_the_open_name_list_leaves_the_items_cod_and_price_free(self):
+    def test_the_open_name_list_leaves_the_items_gold_box_and_presets_free(self):
         self.lua.execute('ummItem(1, "Herb", 5)')
         self.open()
         self.page(2)
@@ -1286,18 +1726,62 @@ class LayoutTests(ModernWindowFixture, unittest.TestCase):
         picker = self.g.UMMModernPicker
         px, py = picker.GetPos(picker)
         pw, ph = picker.GetRealSize(picker)
-        free = ["UMMModernComposeAdd", "UMMModernComposeCOD", "UMMModernComposeCODAmount", "UMMModernComposeSend"]
+        free = ["UMMModernComposeAdd", "UMMModernComposeCOD", "UMMModernComposeMoney", "UMMModernComposePreset1",
+                "UMMModernComposePreset2", "UMMModernComposeSend"]
         for name in free:
             w = self.g[name]
             _, y = w.GetPos(w)
             self.assertGreaterEqual(y, py + ph, f"{name} is under the name list")
+        money, cod = self.box("UMMModernComposeMoney"), self.box("UMMModernComposeCOD")
+        presets = [self.box(f"UMMModernComposePreset{i}") for i in (1, 2)]
+        self.assertEqual({money[1], presets[0][1], presets[1][1]}, {money[1]}, "the presets sit beside the gold")
+        self.assertLess(cod[0], money[0])
+        self.assertLess(money[0] + money[2], presets[0][0])
         self.g.ummCursor = 1001
         self.assertEqual(self.click_on("UMMModernComposeAdd"), "UMMModernComposeAdd")
         self.assertTrue(self.shown("UMMModernComposeSlot1"))
         slot = self.g.UMMModernComposeSlot1
         self.assertGreaterEqual(slot.GetPos(slot)[1], py + ph)
+        self.assertEqual(self.click_on("UMMModernComposePreset1"), "UMMModernComposePreset1")
+        self.assertEqual(self.g.UMMModernComposeMoney.text, "100,000")
         self.assertEqual(self.click_on("UMMModernComposeCOD"), "UMMModernComposeCOD")
-        self.assertEqual(self.g.ummFocused(), "UMMModernComposeCODAmount")
+        self.assertEqual(self.g.ummFocused(), "UMMModernComposeMoney")
+
+    def test_the_review_list_takes_its_clicks(self):
+        self.g.ummSetMoney(1_000_000)
+        self.open()
+        self.page(2)
+        self.type("UMMModernComposeTo", "Alt1")
+        self.type("UMMModernComposeMoney", "1000")
+        self.step()
+        self.click("UMMModernComposeSend")
+        self.assertTrue(self.shown("UMMModernReview"))
+        self.assertEqual(self.click_on("UMMModernReviewBack"), "UMMModernReviewBack")
+        self.assertFalse(self.shown("UMMModernReview"))
+        self.assertEqual(self.lua_list("ummSent"), [])
+        self.click("UMMModernComposeSend")
+        self.assertEqual(self.click_on("UMMModernReviewGo"), "UMMModernReviewGo")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("recipient", "money"), [("Alt1", 1000)])
+
+    def test_mass_send_bags_are_rounded_like_the_game_bags(self):
+        self.open()
+        self.page(3)
+        textures = self.lua.eval('''(function()
+          local out = {}
+          for _, w in pairs(ummWidgets) do
+            if w.kind == "Texture" and w.parent == "UMMModernMassGrid" and w.texture then
+              local file = string.match(w.texture, "([^/\\\\]+)%.tga$") or w.texture
+              out[file] = (out[file] or 0) + 1
+            end
+          end
+          return out end)()''')
+        counts = dict(textures.items())
+        self.assertEqual(counts.get("bagpanel"), 6, "one rounded panel per bag")
+        self.assertEqual(counts.get("slot"), 180, "a rounded slot under every cell")
+        self.assertEqual(counts.get("round-32-32"), 180, "and a rounded mark over it")
+        for name in ("bagpanel", "slot", "round-32-32"):
+            self.assertTrue((UMM / "Textures" / "Modern" / f"{name}.tga").is_file())
 
 
 class PlanTests(ModernWindowFixture, unittest.TestCase):

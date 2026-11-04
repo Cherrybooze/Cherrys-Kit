@@ -40,12 +40,16 @@ BUTTON_EVENTS = (("OnClick", "click", ", key"), ("OnEnter", "enter", ""), ("OnLe
 SLOT_EVENTS = BUTTON_EVENTS + (("OnReceiveDrag", "drop", ""),)
 HIT_EVENTS = (("OnEnter", "enter", ""), ("OnLeave", "leave", ""), ("OnMouseDown", "down", ", key"),
               ("OnMouseUp", "up", ", key"), ("OnMouseWheel", "wheel", ", delta or arg1"))
+# OnKeyDown (key "BACKSPACE" with Ctrl held) and OnCursorChanged (arg1: where the cursor is, in a
+# one-line box) give Ctrl+Backspace what it needs; the client has none of its own.
 EDIT_EVENTS = (("OnTextChanged", "text", ""), ("OnEnterPressed", "enterkey", ""),
                ("OnEscapePressed", "esc", ""), ("OnTabPressed", "tab", ""),
                ("OnEditFocusGained", "focus", ""), ("OnEditFocusLost", "unfocus", ""),
-               ("OnEnter", "enter", ""), ("OnLeave", "leave", ""))
-# A multi-line box keeps Enter and Tab for typing: no handlers for those keys.
-BODY_EVENTS = tuple(e for e in EDIT_EVENTS if e[1] not in ("enterkey", "tab"))
+               ("OnEnter", "enter", ""), ("OnLeave", "leave", ""),
+               ("OnKeyDown", "keydown", ", key"), ("OnCursorChanged", "cursor", ", arg1, arg2"))
+# A multi-line box keeps Enter and Tab for typing: no handlers for those keys. Its cursor comes as
+# line and column, which Lua can't turn into a place in the text, so it isn't followed.
+BODY_EVENTS = tuple(e for e in EDIT_EVENTS if e[1] not in ("enterkey", "tab", "cursor"))
 UPDATE_EVENTS = (("OnUpdate", "update", ", elapsedTime"),)
 WINDOW_EVENTS = (("OnShow", "show", ""), ("OnHide", "hide", ""))
 
@@ -119,7 +123,7 @@ def window():
     inbox_rows = [node("Button", f"UMMModernInboxRow{i}", "UMMModernButtonTemplate", "",
                        [button(f"UMMModernInboxRow{i}Check")]) for i in range(1, INBOX_ROWS + 1)]
     inbox = frame("UMMModernInbox", 'hidden="true"', [
-        *buttons("UMMModernInboxFilter", 5),
+        *buttons("UMMModernInboxFilter", 4),
         button("UMMModernInboxFrom"),
         edit("UMMModernInboxSearch"),
         hit("UMMModernInboxList", "", inbox_rows),
@@ -143,7 +147,9 @@ def window():
         edit("UMMModernComposeBody", "UMMModernBodyTemplate"),
         *[node("Button", f"UMMModernComposeSlot{i}", "UMMModernSlotTemplate") for i in range(1, COMPOSE_SLOTS + 1)],
         node("Button", "UMMModernComposeAdd", "UMMModernSlotTemplate"),
-        button("UMMModernComposeCOD"), edit("UMMModernComposeCODAmount", "UMMModernGoldTemplate"),
+        # C.O.D., the box for gold to the name in To (or the C.O.D. price), and the two gold presets
+        button("UMMModernComposeCOD"), edit("UMMModernComposeMoney", "UMMModernGoldTemplate"),
+        button("UMMModernComposePreset1"), button("UMMModernComposePreset2"),
         frame("UMMModernGold", "", [
             *gold_rows,
             button("UMMModernGoldAdd"), button("UMMModernGoldFill"), button("UMMModernGoldClear"),

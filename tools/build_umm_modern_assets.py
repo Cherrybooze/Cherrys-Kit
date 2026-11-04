@@ -12,6 +12,9 @@ UltimateMailMod/Fonts), so Ultimate Mail Mod keeps working when it is installed 
   exports were made (crop, square, scale to 32 px): trash
 - drawn here in rom weakauras' glyph style (tools/build_rwa_ui_icons.py): the GLYPHS, and the
   rounded button masks
+- drawn here for Mass send's bag grid (Modern/Mass.lua): slot (one bag slot, 28 x 28 UI units) and
+  bagpanel (one bag of 6 x 5 slots, 184 x 154 units), each a rounded box with a white edge and a grey
+  inside, so one tint colours both
 Every file is 32-bit uncompressed TGA, like the textures the game already loads from the kit.
 """
 from pathlib import Path
@@ -38,6 +41,8 @@ SHEET_CUTS = {'Trash': (820, 584, 973, 777)}
 CYAN, GOLD, RED, GREEN, GEM = '#55dcf2', '#ffd35e', '#ff5f6d', '#4af5b4', '#8fe3ff'
 GLYPHS = ('inbox', 'compose', 'mass', 'activity', 'gem', 'cod', 'search', 'split', 'caps', 'letter')
 MASKS = ((32, 32), (64, 32), (128, 32), (256, 32))
+# name: (picture size, the UI units Mass.lua draws it at, corner radius, inside grey)
+FRAMED = {'slot': ((32, 32), (28, 28), 3.5, 0.2), 'bagpanel': ((128, 128), (184, 154), 6, 0.42)}
 
 
 def glyph(name):
@@ -116,6 +121,18 @@ def mask(width, height):
     return im.resize((width, height), Image.Resampling.LANCZOS)
 
 
+def framed(size, units, radius, inside):
+    """A rounded box with a one-unit white edge and a grey inside, drawn at the size the game shows
+    it (units) and then fitted into the picture, so the corners stay round when it is stretched back."""
+    k = 8
+    w, h = units[0] * k, units[1] * k
+    grey = round(inside * 255)
+    im = Image.new('RGBA', (w, h))
+    ImageDraw.Draw(im).rounded_rectangle((0, 0, w - 1, h - 1), radius=round(radius * k), fill=(grey, grey, grey, 255),
+                                         outline='white', width=k)
+    return im.resize(size, Image.Resampling.LANCZOS)
+
+
 def main():
     if DEST.exists():
         shutil.rmtree(DEST)
@@ -130,6 +147,8 @@ def main():
         glyph(name).save(DEST / f'{name}.tga')
     for width, height in MASKS:
         mask(width, height).save(DEST / f'round-{width}-{height}.tga')
+    for name, (size, units, radius, inside) in FRAMED.items():
+        framed(size, units, radius, inside).save(DEST / f'{name}.tga')
     Image.new('RGBA', (8, 8), 'white').save(DEST / 'white.tga')
     fonts = UMM / 'Fonts'
     fonts.mkdir(exist_ok=True)

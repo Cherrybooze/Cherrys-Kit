@@ -35,6 +35,11 @@ M.Default("UMM_M_MS_TOSET", "This category goes to %s (Recipient/Characters.lua)
 
 local CELL, STEP = 28, 30;
 local BAG_W, BAG_H, BAG_GAP = 6 * STEP - 2, 5 * STEP - 2, 10;
+-- Drawn like the game's bags: each bag on a rounded panel, each slot a rounded box. The pictures
+-- (Textures/Modern/bagpanel and slot, from tools/build_umm_modern_assets.py) are made for these
+-- sizes; their edge takes the tint and their inside a darker share of it.
+local PANEL_PAD = 3;
+local PANEL_TINT, SLOT_TINT = {0.08, 0.16, 0.20}, {0.20, 0.30, 0.38};
 local GRID_X, GRID_Y = 8, 36;
 local GRID_W, GRID_H = BAG_W * 3 + BAG_GAP * 2, BAG_H * 2 + BAG_GAP;
 local LIST_ROWS, LIST_ROW = 7, 22;
@@ -150,19 +155,25 @@ local function buildGrid()
   if (built) then return; end
   built = true;
   local g = UMMModernMassGrid;
+  for bag = 0, 5 do
+    local x, y = cellPos(bag * 30 + 1);
+    M.Place(M.Texture(g, "BACKGROUND", "bagpanel", PANEL_TINT, 1), g, x - PANEL_PAD, y - PANEL_PAD,
+      BAG_W + 2 * PANEL_PAD, BAG_H + 2 * PANEL_PAD);
+  end
   for i = 1, 180 do
     local x, y = cellPos(i);
     local cell = {};
-    cell.back = M.Texture(g, "BACKGROUND", "white", C.bar, 1);
+    cell.back = M.Texture(g, "BORDER", "slot", SLOT_TINT, 1);
     M.Place(cell.back, g, x, y, CELL, CELL);
-    cell.icon = M.Icon(g, "ARTWORK", CELL - 2);
-    M.Place(cell.icon, g, x + 1, y + 1, CELL - 2, CELL - 2);
+    -- the icon stays inside the box's edge and round corners
+    cell.icon = M.Icon(g, "ARTWORK", CELL - 4);
+    M.Place(cell.icon, g, x + 2, y + 2, CELL - 4, CELL - 4);
     cell.quality = M.Texture(g, "ARTWORK", "white", C.line, 0.9);
-    M.Place(cell.quality, g, x + 1, y + CELL - 3, CELL - 2, 2);
-    cell.mark = M.Texture(g, "OVERLAY", "white", C.gold, 0.42);
+    M.Place(cell.quality, g, x + 3, y + CELL - 4, CELL - 6, 2);
+    cell.mark = M.Texture(g, "OVERLAY", "round-32-32", C.gold, 0.42);
     M.Place(cell.mark, g, x, y, CELL, CELL);
     cell.count = M.Label(g, 10, C.text, "RIGHT");
-    M.Place(cell.count, g, x, y + CELL - 13, CELL - 2, 12);
+    M.Place(cell.count, g, x, y + CELL - 14, CELL - 3, 12);
     cells[i] = cell;
   end
   selBox = M.Texture(g, "OVERLAY", "white", M.STYLES.choice.edge, 0.3);
@@ -260,6 +271,25 @@ local function drawControls()
   end
   M.Enable(UMMModernMassSend, ok);
   M.Enable(UMMModernMassClear, sendCount + boundCount > 0 and not running);
+end
+
+-- C.O.D. is off until ticked, and its price box shows only while it is on; ticking either way
+-- empties the price.
+local function setCOD(on)
+  codOn = on and true or false;
+  M.ButtonIcon(UMMModernMassCOD, codOn and "CheckboxOn" or "CheckboxOff");
+  M.SetEditText(UMMModernMassCODAmount, "");
+  if (codOn) then
+    UMMModernMassCODAmount:Show();
+  else
+    UMMModernMassCODAmount:ClearFocus();
+    UMMModernMassCODAmount:Hide();
+  end
+end
+
+-- Use last follows the "Mail shortcuts" setting, like the classic window.
+local function drawShortcuts()
+  if (UMMSettings:ShortcutsEnabled()) then UMMModernMassLast:Show(); else UMMModernMassLast:Hide(); end
 end
 
 local function marksChanged()
@@ -486,7 +516,7 @@ local function buildTop()
   local toLabel = M.Label(f, 12, C.dim, "LEFT");
   M.Place(toLabel, f, 8, 6, 30, 22);
   toLabel:SetText(UMM_M_CO_TO);
-  M.Edit(UMMModernMassTo, f, 40, 6, 194, 22, { hint = UMM_M_CO_TO_HINT, text = function(box)
+  M.Edit(UMMModernMassTo, f, 40, 6, 194, 22, { hint = UMM_M_CO_TO_HINT, name = true, text = function(box)
     if (K.IsOpenFor(box)) then K.Filter(); end
     drawWho();
     drawControls();
@@ -574,18 +604,13 @@ local function buildBottom()
     style = "quiet", click = clearMarks });
   M.Button(UMMModernMassCOD, f, 124, y, 84, 24, { text = UMM_M_MS_COD, icon = "CheckboxOff", iconSize = 14, size = 12,
     style = "quiet", tip = { UMM_M_MS_COD, UMM_M_MS_COD_TIP }, click = function()
-      codOn = not codOn;
-      M.ButtonIcon(UMMModernMassCOD, codOn and "CheckboxOn" or "CheckboxOff");
+      if (running) then return; end
+      setCOD(not codOn);
       if (codOn) then UMMModernMassCODAmount:SetFocus(); end
       drawControls();
     end });
-  M.Edit(UMMModernMassCODAmount, f, 214, y + 1, 120, 22, { gold = true, hint = UMM_M_MS_COD_HINT, text = function(box)
-    if (not codOn and (box:GetText() or "") ~= "") then
-      codOn = true;
-      M.ButtonIcon(UMMModernMassCOD, "CheckboxOn");
-    end
-    drawControls();
-  end });
+  M.Edit(UMMModernMassCODAmount, f, 214, y + 1, 120, 22, { gold = true, hint = UMM_M_MS_COD_HINT, text = drawControls });
+  UMMModernMassCODAmount:Hide();
   M.Button(UMMModernMassFast, f, 340, y, 104, 24, { text = UMM_M_MS_FAST, icon = "Run", iconSize = 14, size = 12,
     style = "action", tip = { UMM_MSI_BUTTON_SENDFAST, UMM_MSI_TIP_SENDFAST }, click = function() send("fast"); end });
   M.Button(UMMModernMassSend, f, 448, y, 114, 24, { text = "", icon = "Mail", iconSize = 16, size = 12,
@@ -614,6 +639,7 @@ end
 
 function Page.Show()
   buildGrid();   -- the 180 slots are made the first time the page opens
+  drawShortcuts();
   drawGrid();
   drawCats();
   drawWho();
@@ -645,4 +671,9 @@ end
 function Page.Closed()
   running = false;
   UMMModernMassHover:Hide();
+  if (codOn) then setCOD(false); end
+end
+
+function Page.ShortcutsChanged()
+  drawShortcuts();
 end

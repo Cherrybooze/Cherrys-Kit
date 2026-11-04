@@ -30,6 +30,7 @@ end
 function UMMRefreshMailShortcuts()
   for _, composer in pairs(composers) do composer:RefreshShortcuts(); end
   if (type(UMMHistory_Refresh) == "function") then UMMHistory_Refresh(); end
+  if (UMMModern and UMMModern.ready) then UMMModern.ShortcutsChanged(); end
 end
 
 function UMMComposeShortcutTooltip(button, kind, index)

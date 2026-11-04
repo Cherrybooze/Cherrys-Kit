@@ -377,9 +377,144 @@ local function regroupGold()
   end
 end
 
+-- ### Ctrl+Backspace ###
+-- The client has none of its own. With Ctrl held, Windows turns Backspace into a DEL character:
+-- a text box types it where the caret is (after deleting a selection), a number box drops it.
+-- OnKeyDown says the keys were pressed; the work waits a frame, as the client places the caret
+-- only after the text handler. The caret counts UTF-16 units, Lua strings count UTF-8 bytes.
+
+local DEL = "\127";
+local pendingBack = {};
+
+-- bytes of the character starting with byte b, and the UTF-16 units it takes
+local function charSize(b)
+  if (b >= 240) then return 4, 2; end
+  if (b >= 224) then return 3, 1; end
+  if (b >= 192) then return 2, 1; end
+  return 1, 1;
+end
+
+-- Bytes in text before caret position `units`.
+function M.TextBytes(text, units)
+  local pos, n, len = 1, 0, string.len(text);
+  while (pos <= len and n < units) do
+    local size, u = charSize(string.byte(text, pos));
+    pos = pos + size;
+    n = n + u;
+  end
+  return math.min(pos - 1, len);
+end
+
+-- Caret position (UTF-16 units) after the first `bytes` bytes of text.
+function M.TextUnits(text, bytes)
+  local pos, n, stop = 1, 0, math.min(bytes, string.len(text));
+  while (pos <= stop) do
+    local size, u = charSize(string.byte(text, pos));
+    pos = pos + size;
+    n = n + u;
+  end
+  return n;
+end
+
+-- What Ctrl+Backspace leaves of text with the caret after `caret` bytes: "name" empties the box,
+-- "gold" takes the digits back to the comma before them (the comma too), "text" a line break
+-- alone or the word before the caret and the spaces after it. Returns the text and the caret.
+function M.CtrlBack(kind, text, caret)
+  text = text or "";
+  local len = string.len(text);
+  if (not caret or caret > len) then caret = len; end
+  if (kind == "name") then return "", 0; end
+  if (caret <= 0) then return text, 0; end
+  local head, tail = string.sub(text, 1, caret), string.sub(text, caret + 1);
+  if (kind == "gold") then
+    head = string.gsub(head, "%D+$", "");
+    head = string.gsub(head, "%d+$", "");
+    local digits = string.gsub(head, "%D", "");
+    local keep = string.len(digits);
+    digits = digits..(string.gsub(tail, "%D", ""));
+    local _, zeros = string.find(digits, "^0*");
+    digits = string.sub(digits, zeros + 1);
+    keep = math.max(keep - zeros, 0);
+    local grouped, at = UMMGroupDigits(digits), 0;
+    while (keep > 0 and at < string.len(grouped)) do
+      at = at + 1;
+      if (string.sub(grouped, at, at) ~= ",") then keep = keep - 1; end
+    end
+    return grouped, at;
+  end
+  if (string.sub(head, -1) == "\n") then
+    head = string.sub(head, 1, -2);
+  else
+    head = string.gsub(head, "[ \t]+$", "");
+    head = string.gsub(head, "[^%s]+$", "");
+  end
+  return head..tail, string.len(head);
+end
+
+local function setBack(e, text, caret)
+  e.ummQuiet = true;
+  e:SetText(text);
+  e.ummQuiet = false;
+  if (e.ummGold) then e.ummShown = text; end
+  local units = M.TextUnits(text, caret);
+  e:HighlightText(units, units);
+  e.ummCaret, e.ummAll = units, nil;
+  M.Hint(e);
+  if (e.ummGold) then
+    if (e.ummAfter) then e.ummAfter(e); end
+  elseif (e.ummText) then
+    e.ummText(e);
+  end
+end
+
+local function backLater()
+  for e in pairs(pendingBack) do
+    local state = e.ummBack;
+    local text = e:GetText() or "";
+    local at = string.find(text, DEL, 1, true);
+    if (at) then
+      pendingBack[e], e.ummBack = nil, nil;
+      local clean, n = string.gsub(text, DEL, "");
+      local caret = at - 1;
+      if (state == "selection") then n = n - 1; end   -- that press took the selection out
+      for i = 1, n do clean, caret = M.CtrlBack(e.ummKind, clean, caret); end
+      setBack(e, clean, caret);
+    elseif (state == "key" and e.ummWait > 1) then
+      -- a text box's DEL may come a frame late: wait for it rather than take the word twice
+      e.ummWait = e.ummWait - 1;
+      M.Later(backLater);
+    else
+      pendingBack[e], e.ummBack = nil, nil;
+      if (state == "key" and not e.ummMulti) then
+        -- nothing typed: a number box, or a full one
+        if (e.ummAll) then
+          setBack(e, "", 0);
+        else
+          local caret = e.ummCaret and M.TextBytes(text, e.ummCaret) or string.len(text);
+          setBack(e, M.CtrlBack(e.ummKind, text, caret));
+        end
+      end
+    end
+  end
+end
+
+-- Selects the whole text; Ctrl+Backspace then empties the box, even a number box.
+function M.SelectAll(e)
+  e:HighlightText();
+  e.ummAll = true;
+end
+
 M.EDIT = {
   text = function(e)
     if (e.ummQuiet) then return; end
+    if (string.find(e:GetText() or "", DEL, 1, true)) then
+      if (not e.ummBack) then e.ummBack, e.ummWait = "key", 1; end
+      pendingBack[e] = true;
+      M.Later(backLater);
+      return;
+    end
+    -- Ctrl+Backspace over a selection: the client takes the selection out, then types the DEL
+    if (e.ummBack == "key") then e.ummBack = "selection"; end
     M.Hint(e);
     if (e.ummGold) then
       -- the client moves the caret after this handler: the commas go back in next frame
@@ -417,6 +552,18 @@ M.EDIT = {
   leave = function(e)
     M.HideTip(e);
   end,
+  keydown = function(e, key)
+    if (key ~= "BACKSPACE" or not M.Held(IsCtrlKeyDown)) then return; end
+    e.ummBack = "key";
+    e.ummWait = e.ummGold and 1 or 3;
+    pendingBack[e] = true;
+    M.Later(backLater);
+  end,
+  cursor = function(e, caret)
+    -- one-line boxes only (Modern.xml): the caret, in UTF-16 units
+    e.ummCaret = tonumber(caret);
+    e.ummAll = nil;
+  end,
 };
 
 -- Places an edit box from Modern.xml. A hint shows in grey while it is empty.
@@ -427,6 +574,9 @@ function M.Edit(e, parent, x, y, w, h, opts)
   e.ummText = opts.text;
   e.ummTip = opts.tip;
   e.ummNext = opts.nextBox;
+  -- what Ctrl+Backspace takes (M.CtrlBack); a multi-line box gives no caret to go by (Modern.xml)
+  e.ummKind = opts.gold and "gold" or opts.name and "name" or "text";
+  e.ummMulti = (opts.panel or opts.multi) and true or nil;
   if (opts.gold) then
     e.ummGold = true;
     e.ummShown = "";
@@ -464,10 +614,18 @@ function M.Hint(e, text)
 end
 
 function M.SetEditText(e, text)
+  text = text or "";
   e.ummQuiet = true;
-  e:SetText(text or "");
+  e:SetText(text);
   e.ummQuiet = false;
-  if (e.ummGold) then e.ummShown = text or ""; end
+  if (e.ummGold) then e.ummShown = text; end
+  -- SetText puts the caret at the start; while typing there, it goes to the end
+  e.ummCaret, e.ummAll = 0, nil;
+  if (M.focus == e and text ~= "") then
+    local units = M.TextUnits(text, string.len(text));
+    e:HighlightText(units, units);
+    e.ummCaret = units;
+  end
   M.Hint(e);
 end
 
@@ -816,6 +974,14 @@ function M.HistoryChanged()
   for _, key in ipairs(M.order) do
     local page = M.pages[key];
     if (page.HistoryChanged) then page.HistoryChanged(); end
+  end
+end
+
+-- The "Mail shortcuts" setting or a gold preset changed (UMMRefreshMailShortcuts).
+function M.ShortcutsChanged()
+  for _, key in ipairs(M.order) do
+    local page = M.pages[key];
+    if (page.ShortcutsChanged) then page.ShortcutsChanged(); end
   end
 end
 

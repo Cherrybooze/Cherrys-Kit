@@ -30,7 +30,7 @@ default("UMM_COMPOSER_USELAST", "Use last");
 default("UMM_COMPOSER_TIP_USELAST", "Fill To with the last successfully mailed recipient on this server. Shared by your characters there.");
 default("UMM_COMPOSER_TIP_GOLDPRESET", "Fill Send Gold with %s gold. Change both amounts in /umm. This button only fills the form.");
 default("UMM_SETTINGS_MAILSHORTCUTS", "Mail shortcuts");
-default("UMM_SETTINGS_TIP_MAILSHORTCUTS", "Show Use last beside To and two gold preset buttons below Send Gold. On by default; settings are shared across characters, recipient history by the characters on each server.");
+default("UMM_SETTINGS_TIP_MAILSHORTCUTS", "Show Use last beside To and two gold preset buttons (beside the gold box in the modern window, below Send Gold in the classic one). On by default; settings are shared across characters, recipient history by the characters on each server.");
 default("UMM_SETTINGS_GOLDPRESET", "Gold preset %d");
 default("UMM_SETTINGS_SAVEPRESETS", "Save presets");
 default("UMM_SETTINGS_PRESETHELP", "Shared across characters. Enter whole gold amounts, then Save presets.");

@@ -16,7 +16,6 @@ M.pages.inbox = I;
 M.Default("UMM_M_IN_ALL", "All");
 M.Default("UMM_M_IN_GOLD", "Gold");
 M.Default("UMM_M_IN_ITEMS", "Items");
-M.Default("UMM_M_IN_GEMS", "Diamonds");
 M.Default("UMM_M_IN_UNREAD", "Unread");
 M.Default("UMM_M_IN_CHIP_TIP", "Shows only these mails. The number counts them.");
 M.Default("UMM_M_IN_FROM", "From: %s");
@@ -32,7 +31,7 @@ M.Default("UMM_M_IN_UNCHECK", "Untick %d");
 M.Default("UMM_M_IN_CHECK_TIP", "Ticks every mail the list shows. Ctrl-click a mail (or its box) to tick it, Shift-click to tick everything up to it.");
 M.Default("UMM_M_IN_TAKEALL", "Take all %d");
 M.Default("UMM_M_IN_TAKE", "Take %d");
-M.Default("UMM_M_IN_TAKE_TIP", "Takes gold, diamonds and items from the ticked mails, or from every mail the list shows when none is ticked. C.O.D. mails are left out, and so is gold that would take this character past 999,999,999.");
+M.Default("UMM_M_IN_TAKE_TIP", "Takes gold and items from the ticked mails, or from every mail the list shows when none is ticked. C.O.D. mails are left out, and so is gold that would take this character past 999,999,999.");
 M.Default("UMM_M_IN_RETURN", "Return %d");
 M.Default("UMM_M_IN_RETURN_TIP", "Sends the ticked mails back to their senders, with everything still attached.");
 M.Default("UMM_M_IN_DELETE", "Delete %d");
@@ -82,9 +81,14 @@ local BAR_X, BAR_W, BAR_H = 446, 8, ROWS * ROW_H;
 local READER_ITEMS = 5;
 local TAKE_TIMEOUT = 6;
 
-local KINDS = { "all", "gold", "items", "gems", "unread" };
-local KIND_TEXT = { all = "UMM_M_IN_ALL", gold = "UMM_M_IN_GOLD", items = "UMM_M_IN_ITEMS", gems = "UMM_M_IN_GEMS", unread = "UMM_M_IN_UNREAD" };
-local CHIP_W = { 56, 60, 62, 84, 70 };
+-- No diamonds filter: players can't mail diamonds. A row still shows them if a mail ever has some.
+local KINDS = { "all", "gold", "items", "unread" };
+local KIND_TEXT = { all = "UMM_M_IN_ALL", gold = "UMM_M_IN_GOLD", items = "UMM_M_IN_ITEMS", unread = "UMM_M_IN_UNREAD" };
+-- Across the list and its scroll bar: the filter chips, Tick all and From; under them the search
+-- box (as wide as the chips and Tick all) and Take all (as wide as From). Delete emptied, Delete and
+-- Return start the bottom row at the left, so Take all is nowhere near Return.
+local ROW_RIGHT, GAP = LIST_X + LIST_W + BAR_W + 2, 4;
+local CHIP_W, CHECK_W = 62, 74;   -- From takes the rest (104)
 local FROMS = { "any", "Character", "Friend", "Guildie", "Other" };
 local FROM_TEXT = { any = "UMM_M_IN_FROM_ANY", Character = "UMM_M_IN_FROM_OWN", Friend = "UMM_M_IN_FROM_FRIEND",
                     Guildie = "UMM_M_IN_FROM_GUILD", Other = "UMM_M_IN_FROM_OTHER" };
@@ -138,7 +142,6 @@ end
 local function kindMatch(mail, k)
   if (k == "gold") then return mail.AttachedMoney > 0; end
   if (k == "items") then return mail.AttachedItems > 0; end
-  if (k == "gems") then return mail.AttachedDiamonds > 0; end
   if (k == "unread") then return not mail.WasRead; end
   return true;
 end
@@ -759,12 +762,15 @@ local function buildTools()
   for i, k in ipairs(KINDS) do
     local chip = getglobal("UMMModernInboxFilter"..i);
     chips[i] = chip;
-    M.Button(chip, f, x, 6, CHIP_W[i], 22, { text = getglobal(KIND_TEXT[k]), size = 12, style = "quiet",
+    M.Button(chip, f, x, 6, CHIP_W, 22, { text = getglobal(KIND_TEXT[k]), size = 12, style = "quiet",
       tip = { getglobal(KIND_TEXT[k]), UMM_M_IN_CHIP_TIP },
       click = function() kind = k; offset = 0; I.Refresh(); end });
-    x = x + CHIP_W[i] + 4;
+    x = x + CHIP_W + GAP;
   end
-  M.Button(UMMModernInboxFrom, f, x, 6, LIST_X + LIST_W + BAR_W + 2 - x, 22, { text = "", size = 12, style = "quiet",
+  M.Button(UMMModernInboxSelect, f, x, 6, CHECK_W, 22, { text = UMM_M_IN_CHECKALL, size = 12, style = "quiet",
+    tip = { UMM_M_IN_CHECKALL, UMM_M_IN_CHECK_TIP }, click = checkAll });
+  x = x + CHECK_W + GAP;
+  M.Button(UMMModernInboxFrom, f, x, 6, ROW_RIGHT - x, 22, { text = "", size = 12, style = "quiet",
     tip = { UMM_M_IN_FROM_TIP }, click = function()
       for i, value in ipairs(FROMS) do
         if (value == from) then from = FROMS[(i % table.getn(FROMS)) + 1]; break; end
@@ -772,31 +778,28 @@ local function buildTools()
       offset = 0;
       I.Refresh();
     end });
-  M.Edit(UMMModernInboxSearch, f, LIST_X + 6, 34, 324, 22, { hint = UMM_M_IN_SEARCH, text = function(e)
+  M.Edit(UMMModernInboxSearch, f, LIST_X, 34, x - GAP - LIST_X, 22, { hint = UMM_M_IN_SEARCH, text = function(e)
     search = string.lower(e:GetText() or "");
     offset = 0;
     I.Refresh();
   end });
   UMMModernInboxSearch.ummEsc = function(e) e:SetText(""); end;
-  M.Button(UMMModernInboxSelect, f, 344, 34, 110, 22, { text = UMM_M_IN_CHECKALL, size = 12, style = "quiet",
-    tip = { UMM_M_IN_CHECKALL, UMM_M_IN_CHECK_TIP }, click = checkAll });
+  M.Button(UMMModernInboxTake, f, x, 34, ROW_RIGHT - x, 22, { text = UMM_M_RD_TAKE, icon = "Bag", iconSize = 14, size = 12,
+    style = "action", tip = { UMM_M_RD_TAKE, UMM_M_IN_TAKE_TIP }, click = function() run("take"); end });
 
   summary = M.Label(f, 11, C.dim, "LEFT");
   M.Place(summary, f, LIST_X + 2, LIST_Y + BAR_H + 3, LIST_W, 18);
 
-  -- Take, then the Delete emptied toggle beside it: a click that misses Take must not return
-  -- mail, so Return sits at the far end
+  -- the bottom row from the left: the Delete emptied toggle, Delete, then Return
   local y = LIST_Y + BAR_H + 24;
-  M.Button(UMMModernInboxTake, f, LIST_X, y, 104, 24, { text = UMM_M_RD_TAKE, icon = "Bag", iconSize = 14, size = 12,
-    style = "action", tip = { UMM_M_RD_TAKE, UMM_M_IN_TAKE_TIP }, click = function() run("take"); end });
-  M.Button(UMMModernInboxClean, f, LIST_X + 108, y, 134, 24, { text = UMM_M_IN_CLEAN, icon = "CheckboxOn", iconSize = 14,
+  M.Button(UMMModernInboxClean, f, LIST_X, y, 134, 24, { text = UMM_M_IN_CLEAN, icon = "CheckboxOn", iconSize = 14,
     size = 12, style = "quiet", tip = { UMM_M_IN_CLEAN, UMM_M_IN_CLEAN_TIP }, click = function()
       UMMSettings:Set("CheckTakeDeleteEmpty", UMMSettings:Get("CheckTakeDeleteEmpty") == false);
       drawButtons();
     end });
-  M.Button(UMMModernInboxDelete, f, LIST_X + 246, y, 98, 24, { text = UMM_M_RD_DELETE, icon = "Trash", iconSize = 14,
+  M.Button(UMMModernInboxDelete, f, LIST_X + 138, y, 98, 24, { text = UMM_M_RD_DELETE, icon = "Trash", iconSize = 14,
     size = 12, style = "danger", tip = { UMM_M_RD_DELETE, UMM_M_IN_DELETE_TIP }, click = function() run("delete"); end });
-  M.Button(UMMModernInboxReturn, f, LIST_X + 348, y, 98, 24, { text = UMM_M_RD_RETURN, icon = "Reload", iconSize = 14,
+  M.Button(UMMModernInboxReturn, f, LIST_X + 240, y, 98, 24, { text = UMM_M_RD_RETURN, icon = "Reload", iconSize = 14,
     size = 12, style = "quiet", tip = { UMM_M_RD_RETURN, UMM_M_IN_RETURN_TIP }, click = function() run("return"); end });
 end
 
@@ -817,7 +820,7 @@ local function buildReader()
   M.Place(reader.subject, r, 10, 28, W - 20, 18);
   reader.info = M.Label(r, 11, C.dim, "LEFT");
   M.Place(reader.info, r, 10, 48, W - 20, 16);
-  M.Edit(UMMModernReaderBody, r, 8, 70, W - 16, 176, {});
+  M.Edit(UMMModernReaderBody, r, 8, 70, W - 16, 176, { multi = true });
   reader.unread = M.Label(r, 12, C.dim, "CENTER");
   M.Place(reader.unread, r, 12, 104, W - 24, 30);
   M.Button(UMMModernReaderShow, r, math.floor((W - 150) / 2), 140, 150, 26, { text = UMM_M_RD_SHOW, icon = "letter",

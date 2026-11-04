@@ -54,6 +54,8 @@
       <OnEditFocusLost>UMMModern_On(&quot;unfocus&quot;, this);</OnEditFocusLost>
       <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
       <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
+      <OnKeyDown>UMMModern_On(&quot;keydown&quot;, this, key);</OnKeyDown>
+      <OnCursorChanged>UMMModern_On(&quot;cursor&quot;, this, arg1, arg2);</OnCursorChanged>
     </Scripts>
   </EditBox>
   <EditBox name="UMMModernGoldTemplate" virtual="true" inherits="UIPanelEditBoxTemplate" enableMouse="true" numeric="true" letters="11" historyLines="0" autoFocus="false">
@@ -67,6 +69,8 @@
       <OnEditFocusLost>UMMModern_On(&quot;unfocus&quot;, this);</OnEditFocusLost>
       <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
       <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
+      <OnKeyDown>UMMModern_On(&quot;keydown&quot;, this, key);</OnKeyDown>
+      <OnCursorChanged>UMMModern_On(&quot;cursor&quot;, this, arg1, arg2);</OnCursorChanged>
     </Scripts>
   </EditBox>
   <EditBox name="UMMModernBodyTemplate" virtual="true" inherits="UIMultiEditBoxTemplate" enableMouse="true" multiLine="true" letters="8000" historyLines="0" autoFocus="false">
@@ -78,6 +82,7 @@
       <OnEditFocusLost>UMMModern_On(&quot;unfocus&quot;, this);</OnEditFocusLost>
       <OnEnter>UMMModern_On(&quot;enter&quot;, this);</OnEnter>
       <OnLeave>UMMModern_On(&quot;leave&quot;, this);</OnLeave>
+      <OnKeyDown>UMMModern_On(&quot;keydown&quot;, this, key);</OnKeyDown>
     </Scripts>
     <FontString inherits="GameEditFont" spacing="1"/>
     <TextInsets><AbsInset left="8" right="8" top="6" bottom="6"/></TextInsets>
@@ -106,7 +111,6 @@
           <Button name="UMMModernInboxFilter2" inherits="UMMModernButtonTemplate"/>
           <Button name="UMMModernInboxFilter3" inherits="UMMModernButtonTemplate"/>
           <Button name="UMMModernInboxFilter4" inherits="UMMModernButtonTemplate"/>
-          <Button name="UMMModernInboxFilter5" inherits="UMMModernButtonTemplate"/>
           <Button name="UMMModernInboxFrom" inherits="UMMModernButtonTemplate"/>
           <EditBox name="UMMModernInboxSearch" inherits="UMMModernEditTemplate"/>
           <Frame name="UMMModernInboxList" inherits="UMMModernHitTemplate">
@@ -232,7 +236,9 @@
           <Button name="UMMModernComposeSlot10" inherits="UMMModernSlotTemplate"/>
           <Button name="UMMModernComposeAdd" inherits="UMMModernSlotTemplate"/>
           <Button name="UMMModernComposeCOD" inherits="UMMModernButtonTemplate"/>
-          <EditBox name="UMMModernComposeCODAmount" inherits="UMMModernGoldTemplate"/>
+          <EditBox name="UMMModernComposeMoney" inherits="UMMModernGoldTemplate"/>
+          <Button name="UMMModernComposePreset1" inherits="UMMModernButtonTemplate"/>
+          <Button name="UMMModernComposePreset2" inherits="UMMModernButtonTemplate"/>
           <Frame name="UMMModernGold">
             <Size><AbsDimension x="1" y="1"/></Size>
             <Frames>
