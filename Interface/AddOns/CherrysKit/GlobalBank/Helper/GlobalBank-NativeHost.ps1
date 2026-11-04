@@ -131,6 +131,18 @@ try {
     if ($message.type -eq 'clock') {
         Write-AutoStartChoice $message.autoHelper
         Send-Response @{ok=$true}
+        # Automatic mode: a helper that isn't running (a window closed, or one was open when the toggle went on) starts
+        # again within the minute. The mutex check is cheap; the rest only runs when nothing holds it.
+        if ($message.autoHelper -eq $true) {
+            try {
+                $running = $false
+                try { $existing = [System.Threading.Mutex]::OpenExisting('Local\CherrysKitGlobalBankHelper'); $running = $true; $existing.Dispose() } catch [System.Threading.WaitHandleCannotBeOpenedException] { }
+                if (-not $running) {
+                    . (Join-Path $PSScriptRoot 'GlobalBank-Control.ps1')
+                    $null = Start-ControlHelperAuto (Get-HelperDataDirectory) ($message.showWindow -eq $true)
+                }
+            } catch { }
+        }
         # Chrome is open but the helper window may not be: a save still reaches the backups and the macro library.
         try {
             . (Join-Path $PSScriptRoot 'GlobalBank-Backups.ps1')

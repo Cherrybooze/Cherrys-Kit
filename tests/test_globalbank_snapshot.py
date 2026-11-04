@@ -474,4 +474,44 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         self.assertEqual(lua.eval('GlobalBank_MailOthers.Aynara'), 'O~9~Alt~Hi~0~0~0~')
         self.assertEqual(lua.eval('GlobalBank.mailbox.time'), 5)
 
+    def test_known_mailbox_without_os_table_still_saves(self):
+        # This client has no os table; reading the mailbox's date once stopped every snapshot.
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          UnitName=function() return 'Example' end
+          UnitClass=function() return 'Druid' end
+          UnitLevel=function() return 1 end
+          GlobalBank.ReadBag=function() return {}, 0 end
+          GlobalBank.ReadMoney=function() return 5 end
+          GlobalBank_Mail='I~0~1`N~RoM Team~Hi~0~0~0~1~100~u'
+          GlobalBank.LoadMail()
+          os=nil
+          GlobalBank.Snapshot(false,false)
+        """)
+        self.assertEqual(lua.eval('GlobalBank.Parse(GlobalBank_Char).name'), 'Example')
+        self.assertEqual(lua.eval('GlobalBank.Parse(GlobalBank_Char).mail.mails'), 1)
+
+    def test_snapshot_left_by_the_previous_character_is_dropped(self):
+        # Switching characters keeps the Lua state; a character with no data of its own starts with the last one's.
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          UnitName=function() return 'Modulus' end
+          GlobalBank_Char='GB1~Friar~Druid~1~100~60~300~1~'
+          GlobalBank_Tips='E3~x'
+          GlobalBank_Mail='I~0~1`N~RoM Sweetheart~Hi~0~0~0~1~100~u'
+          GlobalBank.IsOn=function() return true end
+          GlobalBank.HelperState=function() end
+          GlobalBank.OnEvent('VARIABLES_LOADED')
+        """)
+        self.assertIsNone(lua.eval('GlobalBank_Char'))
+        self.assertIsNone(lua.eval('GlobalBank_Mail'))
+        self.assertIsNone(lua.eval('GlobalBank.mailbox'))
+        self.assertIsNone(lua.eval('GlobalBank.chars.Friar'))
+        # Its own snapshot (any case) is kept
+        lua.execute("GlobalBank_Char='GB1~modulus~Druid~1~100~60~300~1~'; GlobalBank_Mail='I~0~0'")
+        self.assertFalse(lua.eval('GlobalBank.DropInherited()'))
+        self.assertIsNotNone(lua.eval('GlobalBank_Mail'))
+
 if __name__ == '__main__': unittest.main()

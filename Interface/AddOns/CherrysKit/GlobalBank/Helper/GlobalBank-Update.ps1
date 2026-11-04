@@ -694,6 +694,7 @@ Get-ChildItem -LiteralPath $data -Filter '.AAH-worker-*.json' -File -ErrorAction
     Remove-Item -Force -ErrorAction SilentlyContinue
 
 # One helper window per Windows user.
+$handover = $false
 $mutex = New-Object System.Threading.Mutex($false, "Local\CherrysKitGlobalBankHelper")
 $owned = $false
 try { $owned = $mutex.WaitOne(3000) } catch [System.Threading.AbandonedMutexException] { $owned = $true }
@@ -792,7 +793,15 @@ while ($true) {
     if ((Get-Date) -ge $nextStopCheck) {
         $nextStopCheck = (Get-Date).AddSeconds(2)
         if (Test-Path -LiteralPath $autoStop) {
+            $why = ''
+            try { $why = [IO.File]::ReadAllText($autoStop).Trim() } catch { }
             Remove-Item -LiteralPath $autoStop -Force -ErrorAction SilentlyContinue
+            # Automatic mode was turned on while this window ran: the background helper takes over once this one has let go.
+            if ($why -eq 'handover' -and -not $Auto) {
+                Send-GBEvent 'notice' 'Helper moved to the background.' 'warn'
+                $handover = $true
+                break
+            }
             Send-GBEvent 'notice' 'Stopped from Chrome.' 'warn'
             exit 0
         }
@@ -864,4 +873,13 @@ while ($true) {
     }
     if ($owned) { $mutex.ReleaseMutex() }
     $mutex.Dispose()
+}
+if ($handover) {
+    Write-Host ''
+    Write-Host 'Helper moved to the background. Close this window.' -ForegroundColor Yellow
+    Write-Host 'To bring back the terminal view: in the Chrome extension, turn "Run automatically while Chrome is open" off, then press "Start helper".' -ForegroundColor Gray
+    Write-Host ''
+    Write-Host 'Press any key to close.' -ForegroundColor DarkGray
+    try { [void][Console]::ReadKey($true) } catch { Start-Sleep -Seconds 60 }
+    exit 0
 }

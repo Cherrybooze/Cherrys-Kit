@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.7** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.6.8** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,12 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.8
+
+**Characters you log in update again.** A character's snapshot stopped saving once Global Bank knew its mailbox: reading the mailbox's date needed a time function this game client doesn't have, and that error ended the whole snapshot. Characters switched to in the same game window were hit hardest: one with no Global Bank data of its own yet saved the previous character's snapshot under its own name, so it never appeared. Both are fixed: the mailbox can no longer stop a snapshot, and a snapshot left over from the previous character is dropped at login.
+
+**Automatic helper** (extension 1.3.8). With **Run automatically while Chrome is open** on, a helper that isn't running starts in the background within a minute, for example after its window was closed. Turning the option on while a helper window is open moves the helper to the background: the window says so and how to get the terminal view back (turn the option off, then press **Start helper**).
 
 ## Updated in 1.6.7
 
