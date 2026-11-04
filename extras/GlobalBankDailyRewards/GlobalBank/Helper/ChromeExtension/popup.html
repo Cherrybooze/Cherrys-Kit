@@ -6,14 +6,19 @@
   <link rel="stylesheet" href="ui-tokens.css">
   <link rel="stylesheet" href="ui-components.css">
   <style>
-    html { min-width: 280px; }
-    body { width: 380px; max-width: 100%; margin: 0; font-size: 12px; background: #101925; }
+    /* One size in every state: Chrome resizes a popup to its content, so the window keeps 380 x 600 and only the
+       middle scrolls, its scroll bar space always kept. */
+    html, body { width: 380px; height: 600px; overflow: hidden; }
+    body { display: flex; flex-direction: column; margin: 0; font-size: 12px; background: #101925; }
+    .popup-header, .popup-footer { flex: none; }
     .popup-header { display: flex; align-items: center; gap: 11px; padding: 11px 14px; background: linear-gradient(130deg, #1c2936, #121d29 68%); border-bottom: 1px solid #ffffff0a; }
     .brand-mark { flex: none; filter: drop-shadow(0 3px 6px #00000025); }
     .brand-copy { min-width: 0; }
     .brand-copy h1 { margin: 0; font-size: 18px; font-weight: 650; line-height: 1.2; letter-spacing: -.4px; }
     .brand-copy p { margin: 1px 0 0; font-size: 11px; color: #a7b7c9; }
-    .popup-body { display: flex; flex-direction: column; gap: 9px; padding: 11px 12px; }
+    .popup-body { display: flex; flex: 1 1 auto; flex-direction: column; gap: 9px; min-height: 0; padding: 11px 12px; overflow-y: auto;
+      scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #2b3b4d transparent; }
+    .popup-body > * { flex: none; }
     .open-bank { display: flex; justify-content: flex-start; gap: 11px; width: 100%; min-height: 50px; padding: 7px 12px; }
     .open-bank-icon { width: 30px; height: 30px; background: #6a4b1713; border: 1px solid #6e4c1927; border-radius: 6px; }
     .open-bank-icon svg { width: 19px; height: 19px; }

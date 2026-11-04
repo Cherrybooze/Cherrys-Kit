@@ -142,6 +142,16 @@ async function popup(response) {
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
+    def test_popup_keeps_one_size_in_every_state(self):
+        # Chrome sizes a popup to its content, so a fixed page with a scrolling middle never resizes the window
+        # between Checking, Running and Stopped; the scroll bar's space is always kept so the width can't jump.
+        html = (ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper/ChromeExtension/popup.html').read_text(encoding='utf-8')
+        self.assertIn('html, body { width: 380px; height: 600px; overflow: hidden; }', html)
+        body = re.search(r'\.popup-body \{([^}]*)\}', html).group(1)
+        for rule in ('flex: 1 1 auto', 'min-height: 0', 'overflow-y: auto', 'scrollbar-gutter: stable'):
+            self.assertIn(rule, body)
+        self.assertIn('.popup-header, .popup-footer { flex: none; }', html)
+
     def test_installer_allows_every_listed_extension_id(self):
         folder = ROOT / 'Interface/AddOns/CherrysKit/GlobalBank/Helper'
         ids = (folder / 'extension-id.txt').read_text(encoding='ascii').split()
