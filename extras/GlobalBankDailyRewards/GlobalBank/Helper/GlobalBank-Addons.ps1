@@ -306,6 +306,14 @@ function Get-AddonsList($paths) {
     return $answer
 }
 
+# Whether an installed addon is newer than the release's: a build installed from a branch or pull request before its
+# release. The kit's own version may not have moved yet, so each addon is compared on its own.
+function Test-AddonsAhead([string]$latest, [string]$installed) {
+    if (-not $latest -or -not $installed) { return $false }
+    $order = Compare-AddonVersion $latest $installed
+    return ($null -ne $order -and $order -lt 0)
+}
+
 # The latest release against this install, one row per package the page can act on.
 function Get-AddonsCheck($paths, $release = $null) {
     if ($script:AddonsSetupProblem) { throw $script:AddonsSetupProblem }
@@ -338,7 +346,7 @@ function Get-AddonsCheck($paths, $release = $null) {
             $row.installed = Read-InstalledVersion $paths.kit
             $row.title = "Cherry's Kit hub"
             $row.latest = [string]$release.hub_version
-            $row.state = if ($row.installed -eq $row.latest -and $localKit -eq $answer.latestKit) { 'current' } elseif ($answer.ahead) { 'newer' } else { 'update' }
+            $row.state = if ($row.installed -eq $row.latest -and $localKit -eq $answer.latestKit) { 'current' } elseif ($answer.ahead -or (Test-AddonsAhead $row.latest $row.installed)) { 'newer' } else { 'update' }
         } else {
             $row.folder = Get-PackageFolder $package
             $here = Get-AddonsPackagePath $paths $package
@@ -346,7 +354,7 @@ function Get-AddonsCheck($paths, $release = $null) {
             if ($package.alternative_to) { $row.alternativeTo = [string]$package.alternative_to }
             if (Test-Path -LiteralPath $here) {
                 $row.installed = if ($package.install_folder) { Read-AddonsExternalVersion $here } else { Read-InstalledVersion $here }
-                $row.state = if ($row.installed -eq $row.latest) { 'current' } elseif ($answer.ahead) { 'newer' } else { 'update' }
+                $row.state = if ($row.installed -eq $row.latest) { 'current' } elseif ($answer.ahead -or (Test-AddonsAhead $row.latest $row.installed)) { 'newer' } else { 'update' }
                 if ($package.install_folder -and -not $row.installed) { $row.state = 'curseforge' }
             } elseif ($offloaded.ContainsKey($row.folder)) {
                 $row.installed = ''
