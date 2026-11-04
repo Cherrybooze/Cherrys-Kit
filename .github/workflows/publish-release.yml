@@ -1,0 +1,89 @@
+name: Publish release
+
+# Runs only when started by hand (Actions > Publish release > Run workflow).
+# Builds the kit at the chosen commit of main, tags it v<kit_version>, creates
+# the GitHub release with the generated notes, uploads the install ZIPs and
+# metadata files (docs/RELEASING.md steps 5 to 8), checks the uploaded files
+# against SHA256SUMS.txt and marks the release Latest.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Read kit version
+        id: version
+        run: |
+          version=$(python3 -c "import json; print(json.load(open('release-packages.json'))['kit_version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse an existing release or tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Release $TAG already exists. Published files can't change: bump kit_version first."
+            exit 1
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag $TAG already exists. Bump kit_version first."
+            exit 1
+          fi
+
+      - name: Build and verify all packages
+        run: python3 tools/build_release.py
+
+      - name: Run Lua regressions
+        run: |
+          python3 -m pip install -r tests/requirements.txt
+          python3 -m unittest discover -s tests -p 'test_*.py'
+
+      - name: Create the release and upload its files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          dist="dist/$VERSION"
+          # The Chrome Web Store archive is a separate upload, not a release asset.
+          mapfile -t assets < <(find "$dist" -maxdepth 1 -type f \( -name '*.zip' -o -name 'release-versions.json' -o -name 'release-manifest.json' -o -name 'SHA256SUMS.txt' \) ! -name '*ChromeWebStore*' | sort)
+          zips=$(printf '%s\n' "${assets[@]}" | grep -c '\.zip$')
+          if [ "$zips" -ne 17 ]; then
+            echo "::error::Expected 17 install ZIPs, found $zips."
+            exit 1
+          fi
+          gh release create "$TAG" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Cherry's Kit $VERSION" \
+            --notes-file "$dist/RELEASE_NOTES.md" \
+            --latest
+
+      - name: Check the uploaded files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir uploaded
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir uploaded
+          cd uploaded
+          grep -v 'ChromeWebStore' "../dist/$VERSION/SHA256SUMS.txt" | sha256sum -c -
