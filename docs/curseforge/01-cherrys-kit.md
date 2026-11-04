@@ -10,11 +10,11 @@ Cherry's Kit is the base package that every Cherry's Kit addon needs. On its own
 
 ## Recent changes
 
+- **0.4.35**: the guided setup always ends on the newest published versions: a fresh install from an older ZIP takes the latest release at once, Global Bank's Chrome extension is compared by its own version, an addon newer than the release is never swapped for an older one, and a failed GitHub check says so.
 - **0.4.34**: the guided setup asks for administrator rights at the start, so protected game folders can't stop a move or update part way.
 - **0.4.33**: kit 0.11.117 clarifies published releases and reloading installed files, and corrects the hub version comparison.
 - **0.4.32**: kit 0.11.116 adds the Global Bank Stats-page fixes and stronger private-data release checks.
 - **0.4.31**: the guided setup runs from wherever the ZIP was extracted: it lists the Runes of Magic installs it finds, Steam or Gameforge, and asks which to set up, or takes a typed folder, or shows how to put the files in the game by hand. On a first setup it asks whether the kit uses Ultimate Mail Mod or zMail. The hub reads that choice from `CherrysKit\Mailbox.txt`, and with zMail it keeps Ultimate Mail Mod off and says why in `/ck`.
-- **0.4.30**: Steam and Gameforge installs side by side. The setup finds both, or asks where the other one is, and puts the kit in each. They share one Global Bank data folder, and the Chrome extension stays with the Gameforge install.
 - **Guided setup**: the Hub zip carries `!setup_cherryskit.bat`. Double-click it after extracting, and any time you want to update: it says which addons are out of date against the latest release on GitHub and updates them with the old versions kept, asks before installing anything your addons can use that's missing, moves older copies out of the way, puts the login screen in place and walks you through the Chrome extension.
 
 ## Features

@@ -4,6 +4,17 @@ The automated tests run production Lua 5.1 modules and XML handlers with simulat
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck14 requires **0.4.34** for its modern mail window (0.4.17 for its History files). Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
 
+## Newest versions from the guided setup (setup 1.3.0, hub 0.4.35, not yet released)
+
+The tests use throwaway game folders and local release folders; none of this has run against a real install yet.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| N1 | With Global Bank as new as the latest release but `GlobalBank\Helper\ChromeExtension\manifest.json` older than its extension (a test build), run `!setup_cherryskit.bat`. | Updates lists `Global Bank's Chrome extension <old> -> <new>`. Afterwards the manifest has the new version, the rest of Global Bank is unchanged, and a copy of the old Global Bank is in `offloaded_addons`. Reload the extension in `chrome://extensions`. |
+| N2 | Extract an older Full ZIP, such as 0.11.117, into Downloads, run its setup and pick your game. | After copying, it says the release has newer versions and brings them in without asking. Global Bank and its extension end on the latest release's versions. |
+| N3 | Put a test build of an addon in, numbered higher than the release (say zBag `5.07-ck99`), and run the setup. | It says the addon is newer here and leaves it as it is. |
+| N4 | Disconnect from the internet and run the setup. | A yellow line says it couldn't check GitHub and that the versions here may not be the newest. |
+
 ## Ultimate Mail Mod's modern mail window (7.0.1-ck14, hub 0.4.34, not yet released)
 
 `tests/test_umm_modern.py` drives the window on a simulated mailbox: lazy loading, the classic switch, inbox filters that never read a mail, take/return/delete, compose plans (text parts, item mails, gold for To, inbox gold caps), the send queue with late gold and the gold limit, mass send, Activity, and Ctrl+Backspace typed the way the client types it. Its frames follow the client's own layout and click rules there (`tests/rom_layout.lua`, from the client source): sizes, anchors, which frame a click lands on, and the lift a click gives a frame. The game's own drawing, dropping items on **+**, fonts and mail timing still need these checks. Use characters whose mail you can afford to move around.

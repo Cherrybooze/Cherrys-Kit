@@ -47,7 +47,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $script:AskBudget = 5
 $script:AskRest = [Math]::Max(0, $script:AskBudget - $QuestionsUsed)
-$script:SetupVersion = '1.2.0'
+$script:SetupVersion = '1.3.0'
 $script:TempFiles = @()
 # Inside CherrysKit, the folders its manifest doesn't name that still belong to it.
 $script:KitOwnFolders = @('KitLoad', 'Media', 'docs', 'Setup')
@@ -273,6 +273,25 @@ function Get-GameProcesses([string]$gameFolder) {
 # Compares two kit versions; 0 when either can't be read, so that case never blocks anything.
 function Compare-KitVersion([string]$a, [string]$b) {
     try { return ([version]$a).CompareTo([version]$b) } catch { return 0 }
+}
+
+# Which of two addon versions is newer, reading their numbers left to right: 5.07-ck21 is newer than 5.07-ck20,
+# and 7.0.1-ck14 newer than 7.0.1. $null when either has no number in it.
+function Compare-AddonVersion([string]$a, [string]$b) {
+    $x = @([regex]::Matches($a, '\d+') | ForEach-Object { [long]$_.Value })
+    $y = @([regex]::Matches($b, '\d+') | ForEach-Object { [long]$_.Value })
+    if ($x.Count -eq 0 -or $y.Count -eq 0) { return $null }
+    for ($i = 0; $i -lt [Math]::Max($x.Count, $y.Count); $i++) {
+        $p = if ($i -lt $x.Count) { $x[$i] } else { 0 }
+        $q = if ($i -lt $y.Count) { $y[$i] } else { 0 }
+        if ($p -ne $q) { return $(if ($p -gt $q) { 1 } else { -1 }) }
+    }
+    return 0
+}
+
+# Global Bank's Chrome extension says its own version in its manifest.
+function Read-ExtensionVersion([string]$globalBankFolder) {
+    try { return [string]([IO.File]::ReadAllText((Join-Path $globalBankFolder 'Helper\ChromeExtension\manifest.json')) | ConvertFrom-Json).version } catch { return '' }
 }
 
 # The extension is set up for this folder when the local bridge registered for this Windows user points here.
@@ -565,7 +584,7 @@ function Get-LatestRelease {
         if (-not $script:ReleaseTask) { return $null }
         $text = $null
         try {
-            if (-not $script:ReleaseTask.Wait(8000)) { throw 'it did not answer in time' }
+            if (-not $script:ReleaseTask.Wait(30000)) { throw 'it did not answer in time' }
             $text = $script:ReleaseTask.Result
         } catch {
             $inner = $_.Exception
@@ -608,9 +627,10 @@ function Get-PackagePath($package, [string]$addonsFolder) {
     return (Join-Path (Join-Path $addonsFolder 'CherrysKit') (Get-PackageFolder $package))
 }
 
-# What this install has against that release. .items are the packages to download.
+# What this install has against that release. .items are the packages to download; .newer is what's newer here than
+# the release, which stays as it is.
 function Get-UpdatePlan([string]$kitFolder, $release) {
-    $plan = @{ items = @(); newAddons = @(); localKit = (Get-KitVersion $kitFolder); latestKit = [string]$release.kit_version; ahead = $false }
+    $plan = @{ items = @(); newAddons = @(); newer = @(); localKit = (Get-KitVersion $kitFolder); latestKit = [string]$release.kit_version; ahead = $false }
     if (-not $ReleaseFolder -and (Compare-KitVersion $plan.latestKit $plan.localKit) -lt 0) {
         $plan.ahead = $true
         return $plan
@@ -626,10 +646,27 @@ function Get-UpdatePlan([string]$kitFolder, $release) {
         foreach ($name in $known.Keys) { if (-not (Test-Path -LiteralPath (Join-Path $kitFolder $name))) { $missing++ } }
         if ($known.Count -lt 3) { $missing = 1 }
     } catch { $missing = 1 }
+    $extension = $null
     foreach ($package in $release.packages) {
-        if ($package.package -eq 'Full' -or $package.package -eq 'GlobalBankDailyRewards') { continue }
+        if ($package.package -eq 'Full') { continue }
+        if ($package.package -eq 'GlobalBankDailyRewards') {
+            # Global Bank's Chrome extension. Its files can be older than the release's while Global Bank's number is
+            # the same, so its own version counts too. Its package only lays files over Global Bank's, so it comes
+            # after Global Bank's own update.
+            $globalBank = Join-Path $kitFolder 'GlobalBank'
+            if (-not (Test-Path -LiteralPath $globalBank)) { continue }
+            $have = Read-ExtensionVersion $globalBank
+            if ($have -and -not $ReinstallAll -and ($have -eq [string]$package.version -or (Compare-AddonVersion $have ([string]$package.version)) -gt 0)) { continue }
+            $extension = @{ package = $package; folder = ''; within = 'GlobalBank'; path = $globalBank; from = $(if ($have) { $have } else { 'none' })
+                to = [string]$package.version; title = "Global Bank's Chrome extension" }
+            continue
+        }
         if ($package.package -eq 'Hub') {
             $localHub = Read-InstalledVersion $kitFolder
+            if (-not $ReinstallAll -and (Compare-AddonVersion $localHub ([string]$release.hub_version)) -gt 0) {
+                $plan.newer += ("Cherry's Kit hub " + $localHub)
+                continue
+            }
             if ($ReinstallAll -or $plan.localKit -ne $plan.latestKit -or $localHub -ne [string]$release.hub_version) {
                 $plan.items += @{ package = $package; folder = ''; from = $localHub; to = [string]$release.hub_version; title = "Cherry's Kit hub" }
             }
@@ -643,6 +680,7 @@ function Get-UpdatePlan([string]$kitFolder, $release) {
             if (-not (Test-Path -LiteralPath (Join-Path $here 'CherrysKit-version.txt'))) { continue }
             $from = Read-InstalledVersion $here
             if ($from -eq [string]$package.version -and -not $ReinstallAll) { continue }
+            if (-not $ReinstallAll -and (Compare-AddonVersion $from ([string]$package.version)) -gt 0) { $plan.newer += ([string]$package.title + ' ' + $from); continue }
             $plan.items += @{ package = $package; folder = $folder; path = $here; from = $from; to = [string]$package.version; title = [string]$package.title }
             continue
         }
@@ -650,6 +688,7 @@ function Get-UpdatePlan([string]$kitFolder, $release) {
         if (Test-Path -LiteralPath $here) {
             $from = Read-InstalledVersion $here
             if ($from -eq [string]$package.version -and -not $ReinstallAll) { continue }
+            if (-not $ReinstallAll -and (Compare-AddonVersion $from ([string]$package.version)) -gt 0) { $plan.newer += ([string]$package.title + ' ' + $from); continue }
             if (-not $from) { $from = 'unknown' }
         } else {
             $was = @($package.replaces | Where-Object { $_ -and (Test-Path -LiteralPath (Join-Path $kitFolder $_)) })
@@ -664,12 +703,16 @@ function Get-UpdatePlan([string]$kitFolder, $release) {
         }
         $plan.items += @{ package = $package; folder = $folder; path = $here; from = $from; to = [string]$package.version; title = [string]$package.title }
     }
+    if ($extension) { $plan.items += $extension }
     return $plan
 }
 
 function Show-UpdateStatus($plan, $release) {
     if (-not $release) {
-        if ($script:ReleaseProblem) { Write-Dim ('Updates:     could not check GitHub (' + $script:ReleaseProblem + ').') }
+        if ($script:ReleaseProblem) {
+            Write-Warn ('Updates:     could not check GitHub (' + $script:ReleaseProblem + ').')
+            Write-Warn '             What is here may not be the newest: run this setup again once GitHub can be reached.'
+        }
         return
     }
     $source = if ($ReleaseFolder) { 'the build in ' + $ReleaseFolder } else { 'the latest release on GitHub' }
@@ -690,11 +733,15 @@ function Show-UpdateStatus($plan, $release) {
     if ($plan.newAddons.Count -gt 0) {
         Write-Dim ('  New in that release, not installed here: ' + ($plan.newAddons -join ', ') + '.')
     }
+    if ($plan.newer.Count -gt 0) {
+        Write-Dim ('  Newer here than that release, so they stay: ' + ($plan.newer -join ', ') + '.')
+    }
 }
 
 # A ZIP may only put files under CherrysKit, plus the launchers beside it. A package outside the kit, like
-# zMail, may only fill its own folder. Checked before anything changes.
-function Test-KitZip([string]$zipPath, $package = $null) {
+# zMail, may only fill its own folder, and one laid over an addon, like the Chrome extension over Global Bank, only
+# that addon's. Checked before anything changes.
+function Test-KitZip([string]$zipPath, $package = $null, [string]$within = '') {
     $outside = if ($package) { Get-OutsideRoot $package } else { '' }
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $zip = [IO.Compression.ZipFile]::OpenRead($zipPath)
@@ -702,7 +749,9 @@ function Test-KitZip([string]$zipPath, $package = $null) {
         foreach ($entry in $zip.Entries) {
             $name = $entry.FullName
             if ($name -match '(^|[/\\])\.\.([/\\]|$)' -or $name -match '^[/\\]' -or $name -match ':') { return $false }
-            if ($outside) {
+            if ($within) {
+                if (-not $name.StartsWith('CherrysKit/' + $within + '/', [StringComparison]::Ordinal)) { return $false }
+            } elseif ($outside) {
                 if (-not $name.StartsWith($outside, [StringComparison]::OrdinalIgnoreCase)) { return $false }
             } elseif (-not $name.StartsWith('CherrysKit/', [StringComparison]::Ordinal) -and $script:RootFiles -notcontains $name) { return $false }
         }
@@ -747,8 +796,8 @@ function Install-Update($plan, [string]$addonsFolder, [string]$interfaceFolder) 
             if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ine [string]$package.sha256) {
                 throw ($package.filename + ' does not match the checksum in the release')
             }
-            if (-not (Test-KitZip $file $package)) {
-                $where = if (Get-OutsideRoot $package) { 'its own folder' } else { 'CherrysKit' }
+            if (-not (Test-KitZip $file $package ([string]$item.within))) {
+                $where = if ($item.within) { $item.within } elseif (Get-OutsideRoot $package) { 'its own folder' } else { 'CherrysKit' }
                 throw ($package.filename + ' holds files outside ' + $where)
             }
         }
@@ -775,6 +824,11 @@ function Install-Update($plan, [string]$addonsFolder, [string]$interfaceFolder) 
                     catch { Copy-Item -LiteralPath $old -Destination $kept -Recurse -Force }
                     Write-Dim ('  The old ' + $item.title + ' is in: ' + $kept)
                 }
+            } elseif ($item.within) {
+                # Files laid over an addon: a copy of that addon goes aside, unless it already moved for its own update.
+                $old = Join-Path $kitFolder $item.within
+                $aside = Join-Path $previous $item.within
+                if ((Test-Path -LiteralPath $old) -and -not (Test-Path -LiteralPath $aside)) { Copy-Item -LiteralPath $old -Destination $aside -Recurse -Force }
             } elseif ($item.folder) {
                 $old = Join-Path $kitFolder $item.folder
                 if (Test-Path -LiteralPath $old) {
@@ -1298,9 +1352,10 @@ if (-not (Test-Writable $interfaceFolder) -or -not (Test-Writable $addons)) { $n
 
 # Everything else runs as administrator too, so Windows can't refuse a move or an update part way through
 # (a game in C:\RunesOfMagic can let a normal user create folders but not replace what an administrator put there).
-# Only Windows has a permission prompt to ask (the tests run this on Linux too).
+# Only Windows has a permission prompt to ask (the tests run this on Linux too). CHERRYSKIT_NO_ADMIN leaves it out,
+# for tests on a Windows PC someone is using; a folder that really needs the rights still asks.
 $onWindows = $PSVersionTable.PSEdition -eq 'Desktop' -or $IsWindows
-$askAdmin = $onWindows -and -not $NonInteractive -and -not $Elevated -and -not $UpdatedFrom -and -not $OtherInstall -and -not (Test-Admin)
+$askAdmin = $onWindows -and -not $env:CHERRYSKIT_NO_ADMIN -and -not $NonInteractive -and -not $Elevated -and -not $UpdatedFrom -and -not $OtherInstall -and -not (Test-Admin)
 if ($needRights -or $askAdmin) {
     if (Test-Admin) {
         Write-Warn ('Even as administrator, writing to ' + $interfaceFolder + ' failed. Moves below may fail too.')
@@ -1414,6 +1469,7 @@ if ($runningHelpers.Count -eq 0) {
 # --------------------------------------------------------------------------------------------
 $sourceResolved = (Resolve-Path -LiteralPath $sourceKit).Path
 $installedKitExists = Test-Path -LiteralPath (Join-Path $installedKit 'CherrysKit.toc')
+$installedNow = $false
 $installedResolved = if ($installedKitExists) { (Resolve-Path -LiteralPath $installedKit).Path } else { $null }
 
 if ($sourceResolved -ine $installedResolved) {
@@ -1451,6 +1507,7 @@ if ($sourceResolved -ine $installedResolved) {
             if (Test-Path -LiteralPath $launcher) { Copy-Item -LiteralPath $launcher -Destination $addons -Force }
         }
         Write-Good ('  Cherry''s Kit ' + (Get-KitVersion $installedKit) + ' is in place.')
+        $installedNow = $true
     } else {
         Write-Warn '  Skipped; the older copy stays as it is.'
     }
@@ -1475,8 +1532,17 @@ if ($release -and -not $UpdatedFrom -and (Test-Path -LiteralPath (Join-Path $ins
             $size = 0
             foreach ($item in $updatePlan.items) { $size += [double]$item.package.bytes }
             $question = 'Update these now ({0:N1} MB)? The old versions move to offloaded_addons.' -f ($size / 1MB)
-            # Without anyone to ask, only an update from a build folder someone named runs.
-            if (Confirm-Step $question $true ([bool]$ReleaseFolder)) {
+            # A copy just installed from a ZIP takes the release's newer versions at once, so a ZIP downloaded a while
+            # ago never leaves old ones behind. Later runs ask. Without anyone to ask, only an update from a build folder
+            # someone named runs.
+            $updateNow = $false
+            if ($installedNow -and -not $NonInteractive) {
+                Write-Host ('  The release has newer versions than this ZIP, so they come in now ({0:N1} MB).' -f ($size / 1MB)) -ForegroundColor Gray
+                $updateNow = $true
+            } else {
+                $updateNow = Confirm-Step $question $true ([bool]$ReleaseFolder)
+            }
+            if ($updateNow) {
                 if (Install-Update $updatePlan $addons $interfaceFolder) {
                     Add-SetupLog $interfaceFolder ('{0}  updated {1} to {2}  {3}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm'), $updatePlan.localKit, $updatePlan.latestKit, (@($updatePlan.items | ForEach-Object { $_.title }) -join ', '))
                     $newSetup = Join-Path (Join-Path $installedKit 'Setup') 'Setup-CherrysKit.ps1'
