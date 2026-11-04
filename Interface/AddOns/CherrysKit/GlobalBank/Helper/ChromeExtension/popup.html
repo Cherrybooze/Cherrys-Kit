@@ -154,6 +154,12 @@
           <label class="gb-switch"><input id="show-terminal" type="checkbox"><span aria-hidden="true"></span></label>
         </div>
         <p class="hint">A helper running automatically restarts to apply this. Otherwise it applies the next time one starts.</p>
+        <div class="preference-row">
+          <label for="cascade-on">Cascade Runes of Magic windows on launch<span class="preference-hint">Each time a game window opens, the running helper cascades every game window. Corner and size are set on the page's Connection panel.</span></label>
+          <label class="gb-switch"><input id="cascade-on" type="checkbox"><span aria-hidden="true"></span></label>
+        </div>
+        <button id="cascade-now" type="button" style="justify-self:start">Cascade now</button>
+        <p id="cascade-status" class="hint" role="status"></p>
       </div>
     </details>
   </div>

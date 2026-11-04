@@ -221,7 +221,7 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     return true;
   }
   // "Cascade now": the local host arranges the game windows open right now.
-  if (control && message?.type === 'windows-cascade') {
+  if ((control || popup) && message?.type === 'windows-cascade') {
     chrome.runtime.sendNativeMessage(HOST, {type:'windows-cascade', cascade: cleanCascade(message.cascade)}, response => {
       const error = chrome.runtime.lastError?.message || response?.error || (response?.ok ? null : 'Local bridge returned no confirmation');
       reply(error ? {ok:false,error} : response);

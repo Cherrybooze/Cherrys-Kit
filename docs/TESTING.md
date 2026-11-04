@@ -64,6 +64,7 @@ Not run on Windows yet: the window calls were written without a Windows machine.
 | WC7 | Run one client in full-screen mode, then press **Cascade now**. | The full-screen window is left as it is, and the status line says so. |
 | WC8 | On a display scaled to 125% or 150%, press **Cascade now**. | The windows still fill the screen exactly and line up; the step looks like one title bar. |
 | WC9 | If the game runs as administrator (its window has a shield, or Task Manager's Elevated column says Yes), press **Cascade now**. | Either the windows move, or the status line says Windows refused to move them because the game was started as administrator. |
+| WC10 | Open the toolbar popup and expand **Advanced**. Turn **Cascade Runes of Magic windows on launch** on there, then press **Cascade now**. | The page's Connection panel shows the same toggle on. The windows cascade with the corner and size chosen on the page. |
 
 ## Snapshots after switching characters, automatic helper (Global Bank 1.6.8, extension 1.3.8, not yet released)
 

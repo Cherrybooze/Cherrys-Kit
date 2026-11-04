@@ -267,3 +267,35 @@ document.getElementById('reload-extension').addEventListener('click', event => {
   if (event.isTrusted) chrome.runtime.reload();
 });
 poll();
+
+// Game windows: the same choice as the page's Connection panel. The helper does the cascading.
+const cascadeOn = document.getElementById('cascade-on');
+const cascadeNow = document.getElementById('cascade-now');
+const cascadeStatus = document.getElementById('cascade-status');
+let cascadeStored = {};
+if (cascadeOn && cascadeNow && cascadeStatus) {
+  chrome.storage.local.get('windowCascade').then(({windowCascade}) => {
+    cascadeStored = windowCascade || {};
+    cascadeOn.checked = cascadeStored.on === true;
+  }).catch(() => {});
+  cascadeOn.addEventListener('change', async () => {
+    cascadeStored = {corner: 'bottom-left', fit: true, ...cascadeStored, on: cascadeOn.checked};
+    await chrome.storage.local.set({windowCascade: cascadeStored});
+    cascadeStatus.textContent = cascadeOn.checked ? 'Needs the helper running: turn on Run automatically to keep it so.' : '';
+  });
+  cascadeNow.addEventListener('click', async () => {
+    cascadeNow.disabled = true;
+    cascadeStatus.textContent = 'Cascading\u2026';
+    try {
+      const result = await chrome.runtime.sendMessage({type:'windows-cascade', cascade: cascadeStored});
+      if (!result?.ok) throw new Error(result?.error || 'No response from the local bridge.');
+      const refused = result.refused ? ` Windows refused to move ${result.refused}: the game runs as administrator.` : '';
+      cascadeStatus.textContent = !result.found ? 'No Runes of Magic window is open.'
+        : `Cascaded ${result.moved} game window${result.moved === 1 ? '' : 's'}.${refused}`;
+    } catch (error) {
+      cascadeStatus.textContent = 'Could not cascade: ' + String(error.message || error);
+    } finally {
+      cascadeNow.disabled = false;
+    }
+  });
+}

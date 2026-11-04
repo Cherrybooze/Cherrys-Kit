@@ -21,6 +21,12 @@ class CascadeWiringTests(unittest.TestCase):
                        '<option value="bottom-left">', '<option value="top-left">', 'id="cascade-fit"', 'id="cascade-now"'):
             self.assertIn(needle, html)
 
+    def test_popup_has_the_toggle_and_cascade_now_under_advanced(self):
+        html = (EXTENSION / 'popup.html').read_text(encoding='utf-8')
+        advanced = html[html.index('class="popup-settings"'):]
+        for needle in ('id="cascade-on"', 'Cascade Runes of Magic windows on launch', 'id="cascade-now"', 'id="cascade-status"'):
+            self.assertIn(needle, advanced)
+
     def test_helper_watches_on_its_loop_every_two_seconds(self):
         update = (HELPER / 'GlobalBank-Update.ps1').read_text(encoding='utf-8-sig')
         self.assertIn('. (Join-Path $PSScriptRoot "GlobalBank-Windows.ps1")', update)
@@ -91,6 +97,8 @@ assert.equal(full.length, 0);
 const answer = await ask({type:'windows-cascade', cascade:{corner:'top-left', fit:false, evil:1}}, 'chrome-extension://test/control.html');
 assert.equal(answer.moved, 2);
 same(full.pop(), {type:'windows-cascade', cascade:{on:false, corner:'top-left', fit:false}});
+assert.equal((await ask({type:'windows-cascade', cascade:{on:true}}, 'chrome-extension://test/popup.html')).ok, true);
+same(full.pop().cascade, {on:true, corner:'bottom-left', fit:true});
 })().catch(error => { console.error(error); process.exitCode = 1; });
 ''')
 
