@@ -103,10 +103,14 @@ const validDepot = url => {
   try { const u = new URL(url); return u.protocol === 'https:' && /^[a-z0-9-]+-shop-runesofmagic\.gameforge\.com$/i.test(u.hostname) && /^\/depotitems\//.test(u.pathname); }
   catch { return false; }
 };
-// The Runes of Magic site's character transfer page, in any of its languages
-const validTransferPage = url => {
-  try { const u = new URL(url); return u.protocol === 'https:' && /^[a-z0-9-]+\.runesofmagic\.gameforge\.com$/i.test(u.hostname) && /^\/charactertransfer(\/|$)/i.test(u.pathname); }
-  catch { return false; }
+// The Runes of Magic site's character transfer page, or its account page, in any of its languages: 'transfer',
+// 'account' or ''
+const sitePageKind = url => {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' || !/^[a-z0-9-]+\.runesofmagic\.gameforge\.com$/i.test(u.hostname)) return '';
+    return /^\/charactertransfer(\/|$)/i.test(u.pathname) ? 'transfer' : /^\/user\/administration(\/|$)/i.test(u.pathname) ? 'account' : '';
+  } catch { return ''; }
 };
 // One change to the transfer records at a time, whether from the site's page or the Global Bank page, so neither
 // writes over the other
@@ -119,7 +123,23 @@ const transferTask = task => {
 // What each tab of the transfer page showed last, so a transfer that leaves the list there was cancelled in that tab.
 // Session storage: gone when Chrome closes.
 const TRANSFER_TABS = 'transferTabs';
-async function recordTransferPage(tab, read) {
+// What the site's pages showed of the login last, {at, user, email}: a transfer page without those fields links its
+// characters to it for a while. Session storage: gone when Chrome closes.
+const SITE_LOGIN = 'siteLogin';
+async function recordSiteAccount(read) {
+  const [kept, session] = await Promise.all([chrome.storage.local.get(GBTransfers.ACCOUNT_STORE), chrome.storage.session.get(SITE_LOGIN)]);
+  const result = GBTransfers.applyAccount(kept[GBTransfers.ACCOUNT_STORE], read, {now: Date.now(), recent: session[SITE_LOGIN] || null});
+  if (result.recent) await chrome.storage.session.set({[SITE_LOGIN]: result.recent});
+  else await chrome.storage.session.remove(SITE_LOGIN);
+  if (result.changed) await chrome.storage.local.set({[GBTransfers.ACCOUNT_STORE]: result.state});
+  return result;
+}
+async function recordTransferPage(tab, read, kind = 'transfer') {
+  const site = await recordSiteAccount(read);
+  const linked = site.linked ? {user: site.linked.user, email: site.linked.email, count: site.linked.count} : null;
+  const remembered = !linked && read.account && !read.planned.length && !read.offered.length && !read.listed.length ? read.account : null;
+  // The account page lists no transfers: it never ends one
+  if (kind !== 'transfer') return {ok: true, added: [], ended: [], linked, remembered};
   const now = Date.now();
   const [kept, session] = await Promise.all([chrome.storage.local.get([GBTransfers.STORE, GBTransfers.MAINTENANCE_STORE]), chrome.storage.session.get(TRANSFER_TABS)]);
   const tabs = session[TRANSFER_TABS] && typeof session[TRANSFER_TABS] === 'object' ? session[TRANSFER_TABS] : {};
@@ -131,7 +151,7 @@ async function recordTransferPage(tab, read) {
   const maintenance = kept[GBTransfers.MAINTENANCE_STORE];
   return {ok: true,
     added: result.added.map(record => ({name: record.name, to: record.to, due: GBTransfers.dueOf(record, maintenance)})),
-    ended: result.ended.map(record => ({name: record.name, from: record.from, to: record.to, state: record.state}))};
+    ended: result.ended.map(record => ({name: record.name, from: record.from, to: record.to, state: record.state})), linked};
 }
 async function changeTransfers(changes) {
   const kept = await chrome.storage.local.get(GBTransfers.STORE);
@@ -156,11 +176,13 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     chrome.storage.local.set({depot}).then(() => reply({ok:true}), error => reply({ok:false,error:String(error)}));
     return true;
   }
-  // The character transfer page: only the transfers it lists and the characters its form offers
-  if (sender.id === chrome.runtime.id && !!sender.tab && message?.type === 'transfer-page' && validTransferPage(sender.url || '')) {
+  // The character transfer page and the account page: the transfers listed, the characters offered or listed, and the
+  // login's username and e-mail address
+  const siteKind = sender.id === chrome.runtime.id && !!sender.tab && message?.type === 'transfer-page' ? sitePageKind(sender.url || '') : '';
+  if (siteKind) {
     const read = GBTransfers.cleanRead(message);
     if (!read) { reply({ok:false, error:'Not a transfer page read.'}); return; }
-    transferTask(() => recordTransferPage(String(sender.tab.id), read)).then(reply, error => reply({ok:false,error:String(error?.message || error)}));
+    transferTask(() => recordTransferPage(String(sender.tab.id), read, siteKind)).then(reply, error => reply({ok:false,error:String(error?.message || error)}));
     return true;
   }
   const control = sender.url === chrome.runtime.getURL('control.html');

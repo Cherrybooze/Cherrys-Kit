@@ -3,7 +3,8 @@
 // Accounts, passwords and links only exist in the clear in this page's memory while unlocked. What's kept is
 // encrypted: GameforgeAccounts.json beside the helper's other files, and a copy in Chrome. Opening it takes both
 // a random key, which stays in Chrome's storage for this extension's own pages, and the player's password, which
-// is never kept. Only the encrypted file ever reaches the local host. Characters are only linked by hand.
+// is never kept. Only the encrypted file ever reaches the local host. Characters are linked by hand, or to the saved
+// Gameforge account whose name is the e-mail address the Runes of Magic site showed with them.
 const GBAccounts = (() => {
   const KEY_STORE = 'gfKey';
   const FILE_STORE = 'gfSealed';
@@ -191,6 +192,21 @@ const GBAccounts = (() => {
     }
     return null;
   }
+  // Characters not linked yet whose site e-mail address is a saved Gameforge account's name: linked to it. A link made
+  // by hand always stays. siteEmail(character): the address, or ''. Says how many it linked.
+  function autoLink(state, characters, siteEmail) {
+    if (!siteEmail || !state.accounts.length) return 0;
+    const byName = new Map(state.accounts.map(account => [String(account.name).trim().toLowerCase(), account.id]));
+    let linked = 0;
+    for (const character of characters) {
+      if (accountFor(state, character)) continue;
+      const id = byName.get(String(siteEmail(character) || '').toLowerCase());
+      if (!id) continue;
+      state.links[linkKeysOf(character)[0]] = id;
+      linked++;
+    }
+    return linked;
+  }
   // Links, or with no ID unlinks, and says how many changed.
   function setLinks(state, names, id) {
     let changed = 0;
@@ -354,6 +370,8 @@ const GBAccounts = (() => {
         delete state.links[keys[1]];
         moved++;
       }
+      // The site showed which Gameforge account these are on
+      moved += autoLink(state, options.listed ? characters.concat(options.listed()) : characters, options.siteEmail);
       if (moved) save();
     }
     async function readFile() {
@@ -975,6 +993,8 @@ const GBAccounts = (() => {
       }
       state.accounts.push({id: crypto.randomUUID(), name, password: byId('gf-new-password').value, secondary: byId('gf-new-secondary').value, notes: byId('gf-new-notes').value.trim()});
       for (const id of ['gf-new-name', 'gf-new-password', 'gf-new-secondary', 'gf-new-notes']) byId(id).value = '';
+      // Characters the site showed with this e-mail address join it at once
+      if (autoLink(state, options.listed ? characters.concat(options.listed()) : characters, options.siteEmail) && options.linksChanged) options.linksChanged();
       save();
       renderAccounts();
       byId('gf-link-account').value = state.accounts[state.accounts.length - 1].id;
@@ -1070,6 +1090,11 @@ const GBAccounts = (() => {
         settleLinks();
         renderAll();
       },
+      // The site's accounts changed: link who they name, and draw again
+      siteChanged() {
+        settleLinks();
+        renderAll();
+      },
       // A tab that was hidden when its data changed, drawn now that it's open
       refresh(tab) {
         if (tab === 'accounts' && linksDirty) renderLinks();
@@ -1102,6 +1127,6 @@ const GBAccounts = (() => {
       openMenu,
     };
   }
-  return {create, heatColor, heatName, heatShowsGold, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
+  return {create, heatColor, heatName, heatShowsGold, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, autoLink, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
     newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor, heatServers, heatServerKey};
 })();

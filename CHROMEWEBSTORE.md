@@ -1,6 +1,6 @@
 # Chrome Web Store listing — Global Bank for RoM
 
-Last updated: 2026-11-04. Working metadata for extension **1.3.10**; this file does not publish a store listing.
+Last updated: 2026-11-04. Working metadata for extension **1.4.1**; this file does not publish a store listing.
 
 ## Store listing
 
@@ -34,7 +34,7 @@ Daily reward tracking and automatic collection are optional. Automatic collectio
 | `alarms` | Keeps the local helper informed that Chrome is open when automatic helper operation is enabled. |
 | `nativeMessaging` | Reads local helper data and performs the local operations the player requests, such as backups, macro management and addon installation. |
 | Gameforge daily and depot content scripts | Read the displayed daily reward state or depot items on the pages the player opens. Runtime URL checks restrict processing to the Runes of Magic shop. |
-| Runes of Magic character transfer content script | Reads the planned transfers and the characters the transfer form offers on `*.runesofmagic.gameforge.com/charactertransfer`, while the player has it open. It keeps no account name, e-mail address or link, and never clicks or submits anything. |
+| Runes of Magic character transfer and account content script | Reads the planned transfers and the characters the transfer form offers on `*.runesofmagic.gameforge.com/charactertransfer`, and the login's RoM username and Gameforge e-mail address there and on `*.runesofmagic.gameforge.com/user/administration`, while the player has them open. It keeps no password or link, and never clicks or submits anything. |
 
 Character transfer tracking adds a content script on the site's transfer page and no permissions. The manifest and the [privacy policy](docs/privacy.md) describe the current scope.
 
@@ -47,6 +47,7 @@ Character transfer tracking adds a content script on the site's transfer page an
 | Gameforge accounts and passwords, when entered | An encrypted vault in local Chrome storage and the helper folder. The unlocking password is not retained. | No upload. |
 | Excluded stat names and display preferences | Local Chrome storage; exclusions only filter the Stats page. | No Chrome Sync or upload. |
 | Daily reward and depot page data | Local records after the player opens the supported Gameforge page. | Collecting a reward uses Gameforge's existing page/service. The helper does not upload its character database. |
+| Site account details | Local Chrome storage, unencrypted: the RoM username and Gameforge e-mail address the site's transfer and account pages showed, for each character they listed. Shown as the RoM and Gameforge account names; **Forget the site's account details** in a character's right-click menu removes them. | No upload. |
 | Character transfer log | Local Chrome storage: planned transfers read from the site's transfer page, the characters it offered with them, and what the characters' saves later showed. **Forget** removes one. | No upload. |
 | Addon release files | Downloaded from this GitHub repository after a check/install request. | Requests do not contain character records, mail, macros or account-vault contents. |
 
@@ -67,6 +68,7 @@ Data is not sold, used for unrelated purposes, or used for credit decisions. See
 
 | Version | Date | Changes | Status |
 | --- | --- | --- | --- |
+| 1.4.1 | 2026-11-04 | Site account details: the RoM username and Gameforge e-mail address on the site's transfer and account pages are kept for the characters those pages list, name their RoM account (instead of "Name's account") and Gameforge account, and link them to a saved Gameforge account of that name. Content script now also on `/user/administration`; no new permissions. | Draft |
 | 1.3.10 | 2026-11-04 | Characters page, grouped by account: a switch gathers single-character accounts into one group, their account shown on hover. Stored locally; no permission changes. | Draft |
 | 1.3.9 | 2026-11-04 | New saves reach every tab of the page within seconds while it is open (Stats included), not only the Terminal; a second save within the same minute is no longer skipped. No permission or storage changes. | Draft |
 | 1.3.8 | 2026-11-04 | Automatic helper start: with the option on, a helper that is not running starts again within a minute; a helper window open when the option is turned on hands over to a background helper. No permission or storage changes. | Draft |

@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.8** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.6.10** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.10
+
+**Account names from the Runes of Magic site** (extension 1.4.1). The RoM username and Gameforge e-mail address on the Runes of Magic site's character transfer page and account page (`/user/administration`) are kept for the characters those pages list. The username replaces *Name's account* as their RoM account's name (a name you gave it still wins), the e-mail address shows as their Gameforge account until one is linked, and characters not linked yet join a saved Gameforge account named with that address. A page that shows the fields without characters is remembered for 30 minutes, so the transfer page opened next with the same login links its characters; a character kept for another account stops that. **Forget the site's account details** in a character's right-click menu removes them. The details are kept unencrypted in Chrome's storage for the extension, like the RoM account names you type, and never leave the PC.
 
 ## Updated in 1.6.8
 

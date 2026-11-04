@@ -76,6 +76,19 @@ Not run on the real site yet: the reader was checked against a copy of the trans
 | XF8 | Type `#xfer` in the Characters search. | Only characters with a planned transfer, or one waiting for its login, are listed. |
 | XF9 | Register a transfer for a character Global Bank has no save for (one not logged in since Global Bank was installed). | **Characters** gets a row for it with its name, server and plate; class, level, gold, bag, bank and the other fields stay blank. Its hover card and details say it is known from the transfer page only. After the maintenance it shows on its new server with **Log in to confirm transfer**. |
 
+## Account names from the site (Global Bank 1.6.10, extension 1.4.1, not yet released)
+
+Reload the extension first; the page's sidebar says Version 1.4.1.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| SA1 | Open `https://en.runesofmagic.gameforge.com/user/administration` while logged in on the site. | The Global Bank note in the page's corner names the username and e-mail address it remembered, or the characters it linked if the page lists any. If no note shows, send a screenshot of the page with the address and username covered. |
+| SA2 | Within 30 minutes, open the character transfer page with the same login. | The note says it linked the characters the form offers to that RoM account and Gameforge account. |
+| SA3 | On the Global Bank page, hover one of those characters, and group **Characters** by account. | The hover card's RoM account is the site's username instead of *Name's account*, for every character on that login screen. With no Gameforge account linked, the e-mail address shows as the Gameforge account. A RoM account you renamed keeps your name. |
+| SA4 | With Gameforge accounts unlocked, add a Gameforge account named with that e-mail address (or have one already). | The characters the site listed with it are linked to it; characters you linked by hand to another account stay there. |
+| SA5 | Right-click one of those characters and pick **Forget the site's account details**. | The RoM account goes back to *Name's account* (or your name for it), and the e-mail address no longer shows. Opening the site's pages again brings them back. |
+| SA6 | Log in on the site with another account and open the transfer page within 30 minutes of SA1. | If its fields show on the page, its characters get its own username and address. If they don't, and a character there is already kept for the first account, nothing is linked. |
+
 ## Global Bank Addons page (not yet released)
 
 Not run on Windows yet: the tests check the page in Node and the bridge's offload and restore in PowerShell where it is installed. Use a game folder you can afford to change, with the game closed unless a row says otherwise.
