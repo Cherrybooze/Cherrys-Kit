@@ -661,6 +661,14 @@
       <label class="setting-row"><span>Run automatically<small>While Chrome is open</small></span><span class="gb-switch"><input id="auto-helper" type="checkbox"><span aria-hidden="true"></span></span></label>
       <label class="setting-row"><span>Show its terminal window<small>Applies now to a helper running automatically, otherwise the next time one starts</small></span><span class="gb-switch"><input id="show-terminal" type="checkbox"><span aria-hidden="true"></span></span></label>
     </section>
+    <section class="drawer-section" aria-labelledby="windows-title">
+      <h3 id="windows-title">Game windows</h3>
+      <label class="setting-row"><span>Cascade Runes of Magic windows on launch<small>Each time a game window opens, the helper lays every game window out in an overlapping cascade, the newest in front. Needs the helper running.</small></span><span class="gb-switch"><input id="cascade-on" type="checkbox"><span aria-hidden="true"></span></span></label>
+      <div class="setting-row"><span>Start from<small>The oldest window sits in this corner, and each newer one steps toward the right</small></span><label class="filter-select"><span class="gb-sr-only">Start from</span><select id="cascade-corner"><option value="bottom-left">Bottom left, going up</option><option value="top-left">Top left, going down</option></select></label></div>
+      <label class="setting-row"><span>Resize to fit the screen<small>Off keeps each window's own size</small></span><span class="gb-switch"><input id="cascade-fit" type="checkbox" checked><span aria-hidden="true"></span></span></label>
+      <div class="button-row"><button id="cascade-now" type="button">Cascade now</button></div>
+      <p id="cascade-status" class="hint" role="status"></p>
+    </section>
     <section class="drawer-section" aria-labelledby="accounts-lock-title">
       <h3 id="accounts-lock-title">Gameforge accounts</h3>
       <p id="connection-accounts" class="hint"></p>

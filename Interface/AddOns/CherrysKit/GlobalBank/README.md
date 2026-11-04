@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.8** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.6.9** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.9
+
+**Cascade the game windows** (extension 1.3.11). In the Chrome page's **Connection** panel, under **Game windows**, **Cascade Runes of Magic windows on launch** lays every Runes of Magic window out in an overlapping cascade each time a game window opens, the newest in front, each one a title bar's height from the one behind it. **Start from** picks the corner the oldest window sits in: bottom left, with the cascade going up and to the right, or top left, going down and to the right. **Resize to fit the screen** sizes the windows so the whole cascade fills the screen; turned off, each window keeps its own size. **Cascade now** arranges the windows already open. The helper does the moving, so the option needs it running (**Run automatically while Chrome is open** keeps it so); it waits until a new window has stopped changing size for a few seconds, never takes the keyboard from the window you're using, and leaves full-screen game windows alone. Windows doesn't let it move a game started as administrator unless the helper was started as administrator too; the page and the helper log say so. Windows open before the helper started are only moved by Cascade now or the next new window.
 
 ## Updated in 1.6.8
 

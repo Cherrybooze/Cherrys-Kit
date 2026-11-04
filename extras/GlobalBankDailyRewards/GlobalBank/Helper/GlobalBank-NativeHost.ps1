@@ -18,7 +18,7 @@ function Read-Bytes([int]$length) {
     return ,$buffer
 }
 # Raised whenever the extension needs something new from this bridge; the extension asks for an update when it's lower.
-$BridgeVersion = 4
+$BridgeVersion = 5
 function Send-Frame([string]$text) {
     $bytes = $utf8.GetBytes($text)
     # Chrome ends the connection on anything over 1 MB, so the page gets a reason rather than a dead port.
@@ -130,6 +130,10 @@ try {
     }
     if ($message.type -eq 'clock') {
         Write-AutoStartChoice $message.autoHelper
+        # The game window choice: the helper reads it from its folder.
+        if ($null -ne $message.cascade) {
+            try { . (Join-Path $PSScriptRoot 'GlobalBank-Windows.ps1'); $null = Write-GBCascadeSettings (Get-HelperDataDirectory) $message.cascade } catch { }
+        }
         Send-Response @{ok=$true}
         # Automatic mode: a helper that isn't running (a window closed, or one was open when the toggle went on) starts
         # again within the minute. The mutex check is cheap; the rest only runs when nothing holds it.
@@ -148,6 +152,15 @@ try {
             . (Join-Path $PSScriptRoot 'GlobalBank-Backups.ps1')
             Update-BackupsIfSaved (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Runes of Magic') (Get-HelperDataDirectory)
         } catch { }
+        exit 0
+    }
+    # "Cascade now" on the page: arranges the game windows open right now, with the page's choices.
+    if ($message.type -eq 'windows-cascade') {
+        . (Join-Path $PSScriptRoot 'GlobalBank-Windows.ps1')
+        $settings = Write-GBCascadeSettings (Get-HelperDataDirectory) $message.cascade
+        $answer = Invoke-GBCascade $settings
+        $answer.ok = $true
+        Send-Response $answer
         exit 0
     }
     if ($message.type -eq 'helper-status' -or $message.type -eq 'helper-start') {

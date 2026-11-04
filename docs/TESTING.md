@@ -49,6 +49,22 @@ The tests use throwaway game folders and local release folders; none of this has
 | UM26 | Open **Mass send** next to the game's bags. Tick and untick **C.O.D.**, then close and open the mailbox. | Each bag and each slot has rounded corners like the game's bags. The C.O.D. price box shows only while C.O.D. is ticked, and unticking empties it. It is off again after reopening. |
 | UM27 | On **Mass send**, look at the two rows of boxes under the bags and hold the mouse over a few. Click **Runes** (first box) with runes in the bags, then a pet egg box, then **All**. Send a few items and watch the boxes while they go out. | 36 boxes sit under the bag columns, between the bags and **Unmark all** / **Send**. Each shows a game icon that fits its kind; recipe, T6, pet egg and Cenedril boxes also carry a short tag (pet egg tags in their element's colour), and the tooltip gives the full name. A click marks every item of that kind; **All** marks every kind. The boxes grey out while mails go out. The line under **Marked** says what Send will do. Note any box whose icon looks wrong. |
 
+## Cascade the game windows (Global Bank 1.6.9, extension 1.3.11, not yet released)
+
+Not run on Windows yet: the window calls were written without a Windows machine. Update the helper files, reload the extension (the page's sidebar says Version 1.3.11) and restart the helper. Open the page's **Connection** panel; the options are under **Game windows**.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| WC1 | Open two or three game windows, then press **Cascade now** with **Start from** on *Bottom left, going up* and **Resize to fit the screen** on. | The oldest window sits at the bottom left of the screen, each newer one a title bar's height up and to the right, the newest in front at the top right; together they fill the screen above the taskbar. The window you were typing in keeps the keyboard. The status line says how many were cascaded. |
+| WC2 | Switch **Start from** to *Top left, going down* and press **Cascade now**. | The oldest window is at the top left, each newer one steps down and to the right, the newest in front at the bottom right. |
+| WC3 | Turn **Resize to fit the screen** off, resize one window by hand, and press **Cascade now**. | The windows keep their own sizes and only move into the cascade, all on the screen. |
+| WC4 | Turn **Cascade Runes of Magic windows on launch** on with the helper running, then start another game client. | A few seconds after its window stops changing size, all game windows are cascaded with the new one in front; the helper log says *Cascaded N game windows*. |
+| WC5 | Minimize one game window and maximize another, then press **Cascade now**. | Both come back at their cascade place and size. |
+| WC6 | With the helper stopped, turn the option on. | The status line says the helper isn't running; nothing moves until it runs. |
+| WC7 | Run one client in full-screen mode, then press **Cascade now**. | The full-screen window is left as it is, and the status line says so. |
+| WC8 | On a display scaled to 125% or 150%, press **Cascade now**. | The windows still fill the screen exactly and line up; the step looks like one title bar. |
+| WC9 | If the game runs as administrator (its window has a shield, or Task Manager's Elevated column says Yes), press **Cascade now**. | Either the windows move, or the status line says Windows refused to move them because the game was started as administrator. |
+
 ## Snapshots after switching characters, automatic helper (Global Bank 1.6.8, extension 1.3.8, not yet released)
 
 Reload the extension first; the page's sidebar says Version 1.3.8.

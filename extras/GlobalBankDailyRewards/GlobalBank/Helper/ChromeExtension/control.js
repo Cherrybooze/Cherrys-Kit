@@ -1195,7 +1195,7 @@
         showHelperState('running', `Helper running${ran}`, how);
       }
       // Older helper files don't say their version.
-      if ((Number(info.bridge) || 0) < 4) showHelperState('error', 'Helper files out of date', 'Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.');
+      if ((Number(info.bridge) || 0) < 5) showHelperState('error', 'Helper files out of date', 'Its files are older than this extension: update Cherry\u2019s Kit, then run Install Chrome extension.bat again.');
     } catch (error) {
       if (await GBFolders.usable('saves').catch(() => null)) showHelperState('stopped', 'Reading your folders', 'The helper isn\u2019t installed on this PC. The Bank page is reading your chosen folders.');
       else showHelperState('error', 'Helper not set up', 'Cannot reach the local bridge. Run Install Chrome extension.bat in the installed GlobalBank Helper folder, or choose your folders under Connection.');
@@ -1244,6 +1244,47 @@
   });
   refreshStatus();
   setInterval(refreshStatus, 30000);
+  // Game windows: the helper does the cascading. The choice is stored here and reaches it with the clock.
+  const cascadeOn = byId('cascade-on'), cascadeCorner = byId('cascade-corner'), cascadeFit = byId('cascade-fit');
+  const cascadeStatus = byId('cascade-status');
+  const cascadeChoice = () => ({on: cascadeOn.checked, corner: cascadeCorner.value === 'top-left' ? 'top-left' : 'bottom-left', fit: cascadeFit.checked});
+  const showCascade = value => {
+    cascadeOn.checked = value?.on === true;
+    cascadeCorner.value = value?.corner === 'top-left' ? 'top-left' : 'bottom-left';
+    cascadeFit.checked = value?.fit !== false;
+  };
+  chrome.storage.local.get('windowCascade').then(({windowCascade}) => showCascade(windowCascade)).catch(() => {});
+  chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && changes.windowCascade) showCascade(changes.windowCascade.newValue); });
+  for (const input of [cascadeOn, cascadeCorner, cascadeFit]) {
+    input.addEventListener('change', async () => {
+      const choice = cascadeChoice();
+      await chrome.storage.local.set({windowCascade: choice});
+      if (!choice.on) { cascadeStatus.textContent = ''; return; }
+      try {
+        const info = await send({type:'helper-info'});
+        cascadeStatus.textContent = info.running ? 'The helper cascades the game windows each time one opens.'
+          : 'The helper isn\u2019t running, so nothing is cascaded yet. Start it, or turn on Run automatically above.';
+      } catch (error) {
+        cascadeStatus.textContent = 'Cannot reach the local helper: ' + String(error.message || error);
+      }
+    });
+  }
+  byId('cascade-now').addEventListener('click', async () => {
+    const button = byId('cascade-now');
+    button.disabled = true;
+    cascadeStatus.textContent = 'Cascading\u2026';
+    try {
+      const result = await send({type:'windows-cascade', cascade: cascadeChoice()});
+      const full = result.fullScreen ? ` ${result.fullScreen} in full-screen mode ${result.fullScreen === 1 ? 'was' : 'were'} left as ${result.fullScreen === 1 ? 'it is' : 'they are'}.` : '';
+      const refused = result.refused ? ` Windows refused to move ${result.refused}: a game started as administrator can only be moved by a helper started as administrator too.` : '';
+      cascadeStatus.textContent = !result.found ? 'No Runes of Magic window is open.'
+        : `Cascaded ${result.moved} game window${result.moved === 1 ? '' : 's'}.${full}${refused}`;
+    } catch (error) {
+      cascadeStatus.textContent = 'Could not cascade: ' + String(error.message || error);
+    } finally {
+      button.disabled = false;
+    }
+  });
   // The folders
   const foldersStatus = byId('folders-status');
   const allow = byId('folders-allow');

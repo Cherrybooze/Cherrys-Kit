@@ -136,6 +136,7 @@ $script:AAHWorkerInbox = Join-Path $data ('.AAH-worker-' + $PID + '.json')
 . (Join-Path $PSScriptRoot "GlobalBank-Bridge.ps1")
 . (Join-Path $PSScriptRoot "GlobalBank-Commands.ps1")
 . (Join-Path $PSScriptRoot "GlobalBank-Console.ps1")
+. (Join-Path $PSScriptRoot "GlobalBank-Windows.ps1")
 
 ###########################################################################
 # Output
@@ -751,6 +752,9 @@ $nextRewardCheck = (Get-Date).AddSeconds(1)
 $nextStopCheck = (Get-Date).AddSeconds(2)
 $nextAutoCheck = (Get-Date).AddSeconds(15)
 $autoStop = Join-Path $data 'GlobalBankHelperAuto.stop'
+# "Cascade Runes of Magic windows on launch", from the extension: game windows that open while this runs.
+$cascadeWatch = New-GBCascadeWatch $data
+$nextCascadeCheck = Get-Date
 
 $root = (Get-Item -LiteralPath $SaveFolder).FullName.TrimEnd("\")
 $due = $null
@@ -856,6 +860,17 @@ while ($true) {
         $backupsDue = $null
         try { [void](Update-Backups $SaveFolder $data) }
         catch { Write-HelperError $_ 'Save file backups'; Write-Log 'Backups deferred; see GlobalBankHelper-errors.log.' }
+    }
+    if ((Get-Date) -ge $nextCascadeCheck) {
+        $nextCascadeCheck = (Get-Date).AddSeconds(2)
+        try {
+            $cascaded = Update-GBCascadeWatch $cascadeWatch
+            if ($cascaded -and $cascaded.moved) { Write-Log "Cascaded $(Format-GBCount $cascaded.moved 'game window')." 'notice' 'muted' }
+            if ($cascaded -and $cascaded.refused) { Write-Log "Windows refused to move $(Format-GBCount $cascaded.refused 'game window'): a game started as administrator can only be moved by a helper started as administrator too." 'notice' 'warn' }
+        } catch {
+            Write-HelperError $_ 'Game window cascade'
+            Write-Log 'Game windows could not be cascaded, so the helper stopped trying until it restarts; see GlobalBankHelper-errors.log.' 'notice' 'error'
+        }
     }
     Update-AAHWorker
     Update-GBConsole
