@@ -31,6 +31,7 @@ HELPER_CONTROL = KIT / 'GlobalBank/Helper/GlobalBank-Control.ps1'
 HELPER_UPDATE = KIT / 'GlobalBank/Helper/GlobalBank-Update.ps1'
 SHELL = shutil.which('powershell') or shutil.which('pwsh')
 os.environ['CHERRYSKIT_FIND_INSTALLS'] = 'none'  # never the real game folders of the PC running these
+os.environ['CHERRYSKIT_NO_ADMIN'] = '1'  # never a Windows permission prompt on the PC running these
 
 spec = importlib.util.spec_from_file_location('build_release', ROOT / 'tools/build_release.py')
 build_release = importlib.util.module_from_spec(spec)
@@ -878,6 +879,109 @@ class GuidedSetupTests(unittest.TestCase):
         self.assertIn('holds files outside its own folder', result.stdout)
         self.assertFalse((addons / 'CherrysKit/zBag/evil.lua').exists())
         self.assertEqual((addons / 'zmail/CherrysKit-version.txt').read_text(encoding='utf-8'), '1.3-ck1\n')
+
+
+    # ---- Always the release's newest versions: Global Bank's Chrome extension by its own version, nothing newer
+    # swapped for something older, and a fresh install brought up to the release at once.
+
+    def extension_game(self, globalbank='1.0', extension='1.3.8'):
+        game, addons = self.old_game(('GlobalBank', globalbank))
+        chrome = addons / 'CherrysKit/GlobalBank/Helper/ChromeExtension'
+        chrome.mkdir(parents=True)
+        (chrome / 'manifest.json').write_text(json.dumps({'name': 'Global Bank for RoM', 'version': extension}), encoding='utf-8')
+        (chrome / 'old-only.js').write_text('// only the old extension had this\n', encoding='utf-8')
+        return game, addons
+
+    @staticmethod
+    def extension_files(version, extra=None):
+        files = {'CherrysKit/GlobalBank/Helper/ChromeExtension/manifest.json': json.dumps({'name': 'Global Bank for RoM', 'version': version}),
+                 'CherrysKit/GlobalBank/Helper/Install Chrome extension.bat': '@echo off\n'}
+        files.update(extra or {})
+        return files
+
+    def manifest_version(self, addons):
+        return json.loads((addons / 'CherrysKit/GlobalBank/Helper/ChromeExtension/manifest.json').read_text(encoding='utf-8'))['version']
+
+    def test_the_extension_catches_up_when_global_banks_number_did_not_change(self):
+        game, addons = self.extension_game()
+        release = self.fake_release(kit='9.9.9', hub='1.0',
+            GlobalBank=('1.0', {'CherrysKit/GlobalBank/README.md': '# GB\n\nVersion **1.0** · x\n'}),
+            GlobalBankDailyRewards=('1.3.9', self.extension_files('1.3.9'), {'title': 'Global Bank for RoM'}))
+        result = self.run_update(addons, release)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertRegex(result.stdout, r"Global Bank's Chrome extension +1\.3\.8 +-> 1\.3\.9")
+        self.assertIn("Updated Global Bank's Chrome extension to 1.3.9.", result.stdout)
+        self.assertEqual(self.manifest_version(addons), '1.3.9')
+        # Laid over Global Bank: the rest of it stays, and a copy of it as it was goes aside.
+        self.assertTrue((addons / 'CherrysKit/GlobalBank/old.lua').is_file())
+        previous = next(path for path in (game / 'Interface/offloaded_addons').iterdir() if path.name.startswith('CherrysKit 9.9.9'))
+        self.assertEqual(json.loads((previous / 'GlobalBank/Helper/ChromeExtension/manifest.json').read_text(encoding='utf-8'))['version'], '1.3.8')
+        # Up to date afterwards.
+        again = self.run_update(addons, release)
+        self.assertEqual(again.returncode, 0, again.stdout + again.stderr)
+        self.assertIn('Updates:     up to date', again.stdout)
+
+    def test_global_bank_and_its_extension_update_together(self):
+        game, addons = self.extension_game()
+        release = self.fake_release(kit='9.9.9', hub='1.0',
+            GlobalBank=('2.0', dict(self.extension_files('1.3.9'), **{'CherrysKit/GlobalBank/README.md': '# GB\n\nVersion **2.0** · x\n'})),
+            GlobalBankDailyRewards=('1.3.9', self.extension_files('1.3.9'), {'title': 'Global Bank for RoM'}))
+        result = self.run_update(addons, release)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertRegex(result.stdout, r'GlobalBank +1\.0 +-> 2\.0')
+        self.assertRegex(result.stdout, r"Global Bank's Chrome extension +1\.3\.8 +-> 1\.3\.9")
+        self.assertEqual(self.manifest_version(addons), '1.3.9')
+        self.assertFalse((addons / 'CherrysKit/GlobalBank/old.lua').exists())
+        # The old Global Bank, its extension included, moved aside as it was.
+        previous = next(path for path in (game / 'Interface/offloaded_addons').iterdir() if path.name.startswith('CherrysKit 9.9.9'))
+        self.assertTrue((previous / 'GlobalBank/Helper/ChromeExtension/old-only.js').is_file())
+
+    def test_the_extension_package_stays_inside_global_bank(self):
+        game, addons = self.extension_game()
+        release = self.fake_release(kit='9.9.9', hub='1.0',
+            GlobalBank=('1.0', {'CherrysKit/GlobalBank/README.md': '# GB\n\nVersion **1.0** · x\n'}),
+            GlobalBankDailyRewards=('1.3.9', self.extension_files('1.3.9', {'CherrysKit/zBag/evil.lua': '-- no\n'}), {'title': 'Global Bank for RoM'}))
+        result = self.run_update(addons, release)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('holds files outside GlobalBank', result.stdout)
+        self.assertEqual(self.manifest_version(addons), '1.3.8')
+        self.assertFalse((addons / 'CherrysKit/zBag/evil.lua').exists())
+
+    def test_a_newer_addon_here_is_not_swapped_for_an_older_release(self):
+        game, addons = self.old_game(('zBag', '5.07-ck21'), ('GlobalBank', '1.0'))
+        release = self.fake_release(kit='9.9.9', hub='1.0',
+            zBag=('5.07-ck20', {'CherrysKit/zBag/README.md': '# zBag\n\nVersion **5.07-ck20** · x\n'}),
+            GlobalBank=('1.1', {'CherrysKit/GlobalBank/README.md': '# GB\n\nVersion **1.1** · x\n'}))
+        result = self.run_update(addons, release)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('Newer here than that release, so they stay: zBag 5.07-ck21.', result.stdout)
+        self.assertIn('Version **5.07-ck21**', (addons / 'CherrysKit/zBag/README.md').read_text(encoding='utf-8'))
+        self.assertIn('Version **1.1**', (addons / 'CherrysKit/GlobalBank/README.md').read_text(encoding='utf-8'))
+
+    def test_a_fresh_install_from_an_older_zip_takes_the_release_without_asking(self):
+        game = self.bare_game()
+        copy = self.downloads_copy()
+        release = self.fake_release(kit='9.9.10', hub='2.0')
+        env = dict(os.environ, CHERRYSKIT_FIND_INSTALLS=str(game))
+        result = subprocess.run(
+            [SHELL, '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(copy / 'CherrysKit/Setup' / SCRIPT.name),
+             '-ReleaseFolder', str(release)],
+            input='\n1\n' + '\n' * 10, capture_output=True, text=True, errors='replace', timeout=300, env=env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('The release has newer versions than this ZIP, so they come in now', result.stdout)
+        self.assertNotIn('Update these now', result.stdout)
+        kit = game / 'Interface/AddOns/CherrysKit'
+        self.assertIn('Version **2.0**', (kit / 'README.md').read_text(encoding='utf-8'))
+        self.assertIn('## Version: 9.9.10', (kit / 'CherrysKit.toc').read_text(encoding='utf-8'))
+
+    def test_without_the_release_it_says_the_versions_may_be_old(self):
+        game, addons = self.old_game()
+        empty = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, empty, True)
+        result = self.run_update(addons, empty)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('could not check GitHub', result.stdout)
+        self.assertIn('may not be the newest', result.stdout)
 
 
 if __name__ == '__main__':

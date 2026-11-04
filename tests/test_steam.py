@@ -17,6 +17,7 @@ SETUP = KIT / "Setup/Setup-CherrysKit.ps1"
 SHELL = shutil.which("powershell") or shutil.which("pwsh")
 NODE = shutil.which("node")
 os.environ["CHERRYSKIT_FIND_INSTALLS"] = "none"  # never the real game folders of the PC running these
+os.environ["CHERRYSKIT_NO_ADMIN"] = "1"  # never a Windows permission prompt on the PC running these
 
 
 class ClientKindTests(unittest.TestCase):
