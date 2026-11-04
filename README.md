@@ -26,6 +26,19 @@ Pick the full kit, or install the hub and just the addons you want. Type **`/ck`
 
 **On this page:** [Addon descriptions](#whats-included) · [Downloads and folder layout](#download-and-install) · [Setup choices](#guided-setup-every-prompt) · [Chrome installation and updates](#optional-chrome-extension) · [Update, offload and restore in Chrome](#manage-addons-from-chrome) · [Troubleshooting](#common-questions) · [Recent changes](#whats-new-in-011118)
 
+## Coming in the next release
+
+Merged on `main` since 0.11.118; not in a published release yet.
+
+- **Account names from the Runes of Magic site** (Global Bank 1.6.11, extension 1.4.1): the site's character transfer page and account page show the login's RoM username and Gameforge e-mail address. The extension keeps them for the characters that login lists, so the Characters page shows the real RoM account name (a name set by hand still wins) and groups the characters under the e-mail address until a Gameforge account is linked. A character's right-click menu can forget them.
+- **No save is dropped while the game is busy with it** (Global Bank 1.6.10): a save file the helper can't read yet (locked, or being replaced by the game) goes on a busy list and is read as soon as it can be, and every 30 seconds the save files are compared with the database, so a logout the file watcher missed is still read.
+- **Cascade game windows** (Global Bank 1.6.9, extension 1.4.0): a button on the page (and, if chosen, in the popup under Open Global Bank) lines up every Runes of Magic window from a chosen corner on a chosen display, with an optional size per screen and offset. Games started as administrator are moved by a scheduled task that Windows asks about once.
+- **Single-character accounts in one group** (extension 1.3.10): on the Characters page grouped by account, a switch gathers every account with one character into one group; each character's account stays in its hover card.
+- **Addons page: a newer copy is not an update** (Global Bank 1.6.12): an addon installed in a newer version than the latest release shows *Newer than the release* and no update button, so **Update all** can't put an older version back.
+- **Setup always ends on the newest versions** (hub 0.4.35, setup 1.3.0): the guided setup also compares Global Bank's Chrome extension with the release's and updates it when it is older.
+- **Stats labels in the stats' colours, on bank slots too** (zBag 5.07-ck22): labels take each stat's tooltip colour, the bank's slots show them like the bags, and a single stat with two tooltip lines counts as one.
+- **Server name with the clock** (Cherry's Bar 1.1.11): a *Show server name with clock* tick in the Clock's right-click menu and in `/cbar`; the Clock widens to fit and its tooltip names the server.
+
 ## What's new in 0.11.118
 
 - **Addons page updates run as administrator** (Global Bank 1.6.5): Windows asks for permission first, so a game folder such as `C:\RunesOfMagic` no longer stops an update with *Access is denied*. Declining changes nothing. Replaced addons leave the list once they're gone, a **Login screen** panel shows whether `Interface\loginxml` is in place, and the Offload/Delete buttons line up with the table rows. The **Stats** page shows each stat's own value, without high-durability gear's up to +20%. Gear with identical stats stacks whatever its durability, and hovering the stack lists each copy's durability, character and slot.

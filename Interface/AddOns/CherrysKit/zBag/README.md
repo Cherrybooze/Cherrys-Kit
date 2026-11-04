@@ -1,6 +1,6 @@
 # zBag
 
-Version **5.07-ck21** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **5.07-ck22** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
@@ -21,6 +21,10 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 > **Other addons:** AddonManager lists it when you have that addon. BagSearch 1.21, BagSort 1.05b, PocketMaid and Sol are built in, so delete any separate `BagSearch` or `BagSort` folder. The quick-sell filter is based on Lootomatic, which is a separate addon and can stay.
 
 <!-- end of requirements -->
+
+## Updated in 5.07-ck22
+
+**Stats labels in the stats' own colours, on bank slots too.** With the *Stats* tick on, each label takes its stat's tooltip colour (yellow, green or orange stats), and the bank's slots show the same labels as the bags. A stone's stats are counted from its item link, so a single stat that adds two tooltip lines (such as stamina and strength) counts as one, with both short names stacked.
 
 ## Updated in 5.07-ck21
 
