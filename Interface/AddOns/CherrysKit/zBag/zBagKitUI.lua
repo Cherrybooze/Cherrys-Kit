@@ -751,7 +751,10 @@ end
 
 K.TOOLTIPS = {
   share = { "Share bag settings across characters", "Use the same bag and bank settings for your characters. Turn this off to keep separate settings for each character. Existing shared and separate settings are kept when you switch." },
-  statprefix = { "Stats on icons", "On mana stones in your bags: one stat shows its short name on the icon (str, stam, patt), more stats show how many (2x to 6x). Works in every bag layout. Items are read from their tooltips the first time, so new ones show their stats a moment later." },
+  statprefix = { "Stats on icons", "On mana stones and gear in your bags and bank: one stat shows its short name on the icon (str, stam, patt) in the colour set for that stat, with an orange or yellow outline when the stat's tooltip line is orange or yellow; more stats show how many (2x to 6x). Works in every bag layout. Items are read from their tooltips the first time, so new ones show their stats a moment later. Stat colours: zBag settings (/zb colors)." },
+  statcolors = { "Stat colours", "Choose the colour of each stat's label for the Stats on icons tick. The outline round the icon is not a choice: it follows the stat's tooltip colour (bright orange or bright yellow)." },
+  statcolor = { "Colour of this stat", "Click to pick the colour of this stat's label. Magical attack, physical attack and defense can differ from strength, intelligence and the rest." },
+  statcolorsreset = { "Default colours", "Put every stat's label colour back to the default." },
   eqside = { "Equipment next to bag (zBag)", "With one bag (classic zBag) and Show equipment slots on: the equipment opens in its own box attached to the right side of the bag, in one column when the bag is tall enough, else in two, and the bag loses the equipment rows at its bottom." },
   shopside = { "Item shop bank next to bank (zBag)", "With one bank (classic zBag): the item shop bank opens in its own box attached to the right side of the bank, and the bank search box moves under it. Needs bank tab 6 ticked." },
   onebank = { "Use one bank (classic zBag)", "Show all bank pages in zBag's combined bank window. Turn this off for the game's normal bank. This choice is independent of your bag layout." },
@@ -838,20 +841,26 @@ function K.Probe()
     .. shown(BankSearchEditBox) .. "/" .. shown(GoodsSearchEditBox) .. ", use search " .. tostring(v["usebagsearch"]))
   add("stat search: reader " .. yes(zBagKitTipReader) .. ", items known " .. tostring(K.statCount)
     .. ", tooltips read " .. tostring(K.statsReadTotal) .. ", waiting " .. yes(K.statsMissing))
-  -- the first few stones with stats in the bags: link numbers, stat count, read names, colours, label
-  local stones = 0
+  -- the first few stones and gear pieces with stats in the bags: link numbers, stat count, read names,
+  -- colours, label and outline
+  local shownKinds = { [2] = 0, [3] = 0 }
   for slot = 1, K.BAG_STAT_SLOTS do
-    if stones >= 4 then break end
+    if shownKinds[2] >= 4 and shownKinds[3] >= 4 then break end
     local okInfo, index = pcall(GetBagItemInfo, slot)
     local link = okInfo and index and index >= 0 and GetBagItemLink and GetBagItemLink(index)
-    if link and link ~= "" and K.StoneState and K.StoneState(link) == 2 then
-      stones = stones + 1
+    local state = link and link ~= "" and K.StoneState and K.StoneState(link)
+    if (state == 2 or (state == 3 and K.StoneStatCount(link) > 0)) and shownKinds[state] < 4 then
+      shownKinds[state] = shownKinds[state] + 1
       local names = K.statCache[link]
-      local label = names and names ~= "" and K.StoneLabel and K.StoneLabel(link, names) or ""
+      local label, outline = "", nil
+      if names and (names ~= "" or state == 3) and K.ItemLabel then
+        label, outline = K.ItemLabel(link, names, state == 3)
+      end
       local function plain(s) return (string.gsub(string.gsub(tostring(s), "|", "!"), "\n", "/")) end
-      add("stone " .. slot .. ": " .. tostring(string.match(link, "|Hitem:([%x ]+)|h")) .. " stats "
+      add((state == 3 and "gear " or "stone ") .. slot .. ": " .. tostring(string.match(link, "|Hitem:([%x ]+)|h")) .. " stats "
         .. tostring(K.StoneStatCount and K.StoneStatCount(link)) .. ", names " .. plain(names)
-        .. ", colours " .. plain(K.statColors and K.statColors[link]) .. ", label " .. plain(label))
+        .. ", colours " .. plain(K.statColors and K.statColors[link]) .. ", label " .. plain(label)
+        .. ", outline " .. tostring(outline))
     end
   end
   local ok, used, free, total = pcall(GetBagCount)

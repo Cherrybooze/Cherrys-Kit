@@ -34,8 +34,15 @@ local tipLeft, tipRight -- the reader's FontStrings, looked up once
 local parts = {}        -- reused while building one cache entry
 local colorParts = {}
 
--- A tooltip line's colour as "rrggbb", or "" when the client can't tell.
-local function lineColor(fs)
+-- A tooltip line's colour as "rrggbb", or "" when the client can't tell. A |cAARRGGBB code at the start of
+-- the text is the line's colour (as in Global Bank's tooltip reader), else the FontString's own.
+local function lineColor(fs, text)
+  if type(text) == "string" then
+    local coded = string.match(text, "^|c%x%x(%x%x%x%x%x%x)")
+    if coded then
+      return string.lower(coded)
+    end
+  end
   if not fs or not fs.GetColor then
     return ""
   end
@@ -95,9 +102,9 @@ function K.StatNamesFromTip()
       if not left then break end
     else
       local name = K.StatName(l)
-      if name then n = n + 1; parts[n] = name; colorParts[n] = lineColor(left) end
+      if name then n = n + 1; parts[n] = name; colorParts[n] = lineColor(left, l) end
       name = K.StatName(r)
-      if name then n = n + 1; parts[n] = name; colorParts[n] = lineColor(right) end
+      if name then n = n + 1; parts[n] = name; colorParts[n] = lineColor(right, r) end
     end
   end
   local names = n > 0 and table.concat(parts, "\n", 1, n) or ""
@@ -174,7 +181,8 @@ end
 -- "#clean" and "#dirty" (the whole search text, any case): mana and fusion stones without stats, or
 -- with stats. A stone's link holds, after its ID, mode and creation time, three numbers of two stat IDs
 -- each (the same reading as Global Bank's GB.ReadStone), so no tooltip is needed. The answer is kept
--- per link: 0 = not a stone, 1 = clean, 2 = has stats.
+-- per link: 0 = not a stone, 1 = clean, 2 = has stats, 3 = a weapon, armour or jewellery piece (ID 210000
+-- to 239999, the same range Global Bank reads as gear; its link also holds its stats in fields 4-6).
 ---------------------------------------------------------------------------
 
 K.stoneCache = {}
@@ -182,6 +190,10 @@ K.stoneCount = 0
 
 local function isStone(id)
   return id and ((id >= 202840 and id <= 202859) or (id >= 202880 and id <= 202885))
+end
+
+local function isGear(id)
+  return id and id >= 210000 and id < 240000
 end
 
 function K.StoneState(link)
@@ -192,7 +204,9 @@ function K.StoneState(link)
   state = 0
   local hex = type(link) == "string" and string.match(link, "|Hitem:([%x ]+)|h")
   local id = hex and tonumber(string.match(hex, "^%x+") or "", 16)
-  if isStone(id) then
+  if isGear(id) then
+    state = 3
+  elseif isStone(id) then
     state = 1
     local n = 0
     for value in string.gmatch(hex, "%x+") do
@@ -217,7 +231,7 @@ function K.StoneState(link)
   return state
 end
 
--- How many stats a stone's link carries (each link field 4-6 holds two 16-bit stat ids). One stat can
+-- How many stats a stone's or gear's link carries (each link field 4-6 holds two 16-bit stat ids). One stat can
 -- add several tooltip lines ("Furiousness of the Righteous": stamina and strength), so this counts
 -- stats, not lines. Kept per link.
 K.stoneStats = {}
@@ -388,9 +402,12 @@ function FindBankItemByName(itemName)
 end
 
 ---------------------------------------------------------------------------
--- "Stats" tick beside the bag search (zBag_VAR["statprefix"] = 1): a mana stone with one stat shows
--- its short name on the bag icon, one with more shows "2x" to "6x", in every layout. The names come from the
--- same cache as the stat search; items not read yet are read by K.StatsTick and drawn after.
+-- "Stats" tick beside the bag search (zBag_VAR["statprefix"] = 1): a mana stone or a piece of gear with one
+-- stat shows its short name on the bag icon, one with more shows "2x" to "6x", in every layout. The name
+-- takes the colour set for that stat (K.STAT_COLORS, changed in zBag's settings under Stat colours), and the
+-- icon gets an outline in the colour of the stat's tooltip line (bright orange or bright yellow; green
+-- stats get none). The names come from the same cache as the stat search; items not read yet are read by
+-- K.StatsTick and drawn after.
 -- Each icon only looks its item up again when the bags change (K.prefixGen) or it holds another
 -- slot, so an open bag costs nothing between bag events.
 ---------------------------------------------------------------------------
@@ -430,20 +447,76 @@ for name, short in pairs(K.SHORT_STATS_DE) do
   K.SHORT_STATS[name] = K.SHORT_STATS[name] or short
 end
 
--- A colour per main stat so a bag of stones reads at a glance.
+-- The colour of each main stat's label (zBag settings, Stat colours: a picker per stat). These are the
+-- defaults; zBag_VAR["statcolors"][key] holds what was picked. Every stat not named here ("all attributes",
+-- hit points, critical rate ...) uses the "other" colour.
 K.STAT_COLORS = {
-  str = "ff4a4a", stam = "ffa53c", dex = "5ce65c", int = "4aa0ff", wis = "7fe8ff",
-  patt = "ff6fc8", matt = "b77cff", def = "c8c8c8", mdef = "3cd2b4",
+  str = "ff8c1a", dex = "33e633", wis = "b34dff", int = "ffe619", stam = "19d9c6",
+  matt = "ffe619", patt = "ff8c1a", def = "33e633", mdef = "19d9c6", other = "ffffff",
+}
+-- The rows of the Stat colours window, in order (zBagKitStatColorsColor1-10).
+K.STAT_COLOR_ORDER = { "str", "dex", "wis", "int", "stam", "matt", "patt", "def", "mdef", "other" }
+K.STAT_COLOR_NAMES = {
+  str = "Strength", dex = "Dexterity", wis = "Wisdom", int = "Intelligence", stam = "Stamina",
+  matt = "Magical attack", patt = "Physical attack", def = "Defense", mdef = "Magical defense", other = "All other stats",
 }
 
--- A single stat that adds several stat lines shows each line's name, one per line, in this colour and
--- order ("Sta" over "Str").
-K.COMBINED_COLOR = "ff8c1a"
+-- A single stat that adds several stat lines shows each line's name, one per line, in that stat's colour
+-- and this order ("Sta" over "Str").
 K.COMBINED_ORDER = { stam = 1, str = 2, dex = 3, int = 4, wis = 5, patt = 6, matt = 7, def = 8, mdef = 9 }
 K.COMBINED_NAMES = { stam = "Sta", str = "Str", dex = "Dex", int = "Int", wis = "Wis" }
 K.COUNT_TEXT = { "1x", "2x", "3x", "4x", "5x", "6x" }
 
+-- The outline round the icon of a single-stat item, by the stat's tooltip colour: bright orange and bright
+-- yellow, 3 pixels wide with a black pixel on each side (statring.tga and statring-back.tga). Green stats
+-- get no outline.
+K.OUTLINE_COLORS = { orange = "ff8a00", yellow = "ffee00" }
+
+-- The colour a stat's label takes: the picked one, else the default; any stat not listed uses "other".
+function K.StatColor(short)
+  local key = K.STAT_COLORS[short] and short or "other"
+  local picked = type(zBag_VAR) == "table" and zBag_VAR["statcolors"]
+  local value = type(picked) == "table" and picked[key]
+  if type(value) == "string" and string.find(value, "^%x%x%x%x%x%x$") then
+    return value
+  end
+  return K.STAT_COLORS[key]
+end
+
+-- "rrggbb" -> red, green, blue as 0 to 1 (white when it isn't a colour).
+function K.HexRgb(hex)
+  if type(hex) ~= "string" or not string.find(hex, "^%x%x%x%x%x%x$") then
+    return 1, 1, 1
+  end
+  return tonumber(string.sub(hex, 1, 2), 16) / 255, tonumber(string.sub(hex, 3, 4), 16) / 255,
+    tonumber(string.sub(hex, 5, 6), 16) / 255
+end
+
+-- Which of the three stat colours a tooltip line has: "orange" (f0610d), "yellow" (ffff00), "green"
+-- (00ff00), judged by the colour's parts so a slightly different shade still counts; nil for white, class
+-- colours and anything else.
+function K.LineKind(color)
+  if type(color) ~= "string" or not string.find(color, "^%x%x%x%x%x%x$") then
+    return nil
+  end
+  local r = tonumber(string.sub(color, 1, 2), 16)
+  local g = tonumber(string.sub(color, 3, 4), 16)
+  local b = tonumber(string.sub(color, 5, 6), 16)
+  if b > 90 then
+    return nil
+  end
+  if r >= 200 and g >= 200 then
+    return "yellow"
+  elseif r >= 200 and g >= 70 then
+    return "orange"
+  elseif g >= 200 and r <= 90 then
+    return "green"
+  end
+  return nil
+end
+
 K.prefixCache = {}
+K.prefixOutline = {}   -- item link -> outline colour (rrggbb) of its label, or false
 K.prefixCount = 0
 K.prefixGen = (K.prefixGen or 0) + 1
 
@@ -496,9 +569,9 @@ local function combinedBefore(a, b)
 end
 
 -- Rarer stat colours first when one label shows two colours ("2" orange, "x" yellow).
-K.LINE_COLOR_RANK = { f0610d = 1, ffff00 = 2, ["00ff00"] = 3, ffffff = 9 }
+K.LINE_KIND_RANK = { orange = 1, yellow = 2, green = 3 }
 local function colorBefore(a, b)
-  local ra, rb = K.LINE_COLOR_RANK[a] or 5, K.LINE_COLOR_RANK[b] or 5
+  local ra, rb = K.LINE_KIND_RANK[K.LineKind(a)] or 5, K.LINE_KIND_RANK[K.LineKind(b)] or 5
   if ra ~= rb then return ra < rb end
   return a < b
 end
@@ -510,37 +583,43 @@ local function paint(color, text)
   return text
 end
 
--- The text for an item's stat names ("" when it has none). stats: how many stats the link carries
--- (K.StoneStatCount), or nil to count the names. colors: each name's tooltip line colour ("rrggbb",
--- one per line like the names), or nil. Each label takes its stat's tooltip colour (yellow stats
--- yellow, green green, orange orange); without one, the main stats keep their own colour.
-function K.StatPrefixText(names, stats, colors)
+-- The text for an item's stat names ("" when it has none) and the outline colour for its icon (nil for
+-- none). stats: how many stats the link carries (K.StoneStatCount), or nil to count the names. colors: each
+-- name's tooltip line colour ("rrggbb", one per line like the names), or nil. gear: a weapon, armour or
+-- jewellery piece, whose tooltip also has lines that aren't stats; only the lines in a stat colour count then.
+--   one stat: its short name in that stat's colour (K.StatColor), and the icon outlined in the colour of
+--   its tooltip line (orange or yellow); a stat with several lines (Sta over Str) is still one stat
+--   2 to 6 stats: only how many ("2x" ... "6x"), in the tooltip colours, no outline
+function K.StatPrefixText(names, stats, colors, gear)
   -- one line per stat, without repeats, with the first colour seen for it
   local n, c = 0, 0
   local nextColor = colors and colors ~= "" and string.gmatch(colors .. "\n", "([^\n]*)\n")
   for name in string.gmatch(names, "[^\n]+") do
     local color = nextColor and nextColor() or ""
-    local short = K.ShortStat(name)
-    local seen = false
-    for i = 1, n do
-      if combined[i] == short then seen = true; break end
-    end
-    if not seen then
-      n = n + 1
-      combined[n] = short
-      combinedColor[short] = color
-    end
-    if color ~= "" then
-      local known = false
-      for i = 1, c do
-        if colorList[i] == color then known = true; break end
+    if not (gear and color ~= "" and not K.LineKind(color)) then
+      local short = K.ShortStat(name)
+      local seen = false
+      for i = 1, n do
+        if combined[i] == short then seen = true; break end
       end
-      if not known then c = c + 1; colorList[c] = color end
+      if not seen then
+        n = n + 1
+        combined[n] = short
+        combinedColor[short] = color
+      end
+      if color ~= "" then
+        local known = false
+        for i = 1, c do
+          if colorList[i] == color then known = true; break end
+        end
+        if not known then c = c + 1; colorList[c] = color end
+      end
     end
   end
-  local text
+  local text, outline
   if n == 0 then
-    text = ""
+    -- gear whose lines gave no stat: the link still knows how many it has
+    text = (gear and stats and stats > 0) and (K.COUNT_TEXT[stats] or (stats .. "x")) or ""
   elseif (stats and stats > 1) or (not stats and n > 1) then
     -- 2 to 6 stats: only how many ("2x" ... "6x"), in the stats' colour, or the count in the rarest
     -- colour and the x in the next one when they differ
@@ -551,20 +630,20 @@ function K.StatPrefixText(names, stats, colors)
     else
       text = paint(colorList[1], K.COUNT_TEXT[count] or (count .. "x"))
     end
-  elseif n == 1 then
-    local short = combined[1]
-    local color = combinedColor[short]
-    if color == "" then color = K.STAT_COLORS[short] end
-    text = paint(color, short)
   else
-    -- one stat with several lines: every line's name, stacked ("Sta" over "Str")
-    table.sort(combined, combinedBefore)
-    text = ""
-    for i = 1, n do
-      local short = combined[i]
-      local color = combinedColor[short]
-      if color == "" then color = K.COMBINED_COLOR end
-      text = text .. (i > 1 and "\n" or "") .. paint(color, K.COMBINED_NAMES[short] or short)
+    -- one stat: the outline takes the rarest colour among its lines
+    table.sort(colorList, colorBefore)
+    outline = K.OUTLINE_COLORS[K.LineKind(colorList[1])]
+    if n == 1 then
+      text = paint(K.StatColor(combined[1]), combined[1])
+    else
+      -- one stat with several lines: every line's name, stacked ("Sta" over "Str")
+      table.sort(combined, combinedBefore)
+      text = ""
+      for i = 1, n do
+        local short = combined[i]
+        text = text .. (i > 1 and "\n" or "") .. paint(K.StatColor(short), K.COMBINED_NAMES[short] or short)
+      end
     end
   end
   for i = n, 1, -1 do
@@ -574,34 +653,64 @@ function K.StatPrefixText(names, stats, colors)
   for i = c, 1, -1 do
     colorList[i] = nil
   end
-  return text
+  return text, outline
 end
 
--- The label for one stone, kept per item link.
-function K.StoneLabel(link, names)
+-- The label and outline colour for one item, kept per item link. gear: see K.StatPrefixText.
+function K.ItemLabel(link, names, gear)
   local text = K.prefixCache[link]
   if text then
-    return text
+    return text, K.prefixOutline[link] or nil
   end
-  text = K.StatPrefixText(names, K.StoneStatCount(link), K.statColors[link])
+  local outline
+  text, outline = K.StatPrefixText(names, K.StoneStatCount(link), K.statColors[link], gear)
   if K.prefixCount >= K.STATS_CACHE_MAX then
     K.prefixCache = {}
+    K.prefixOutline = {}
     K.prefixCount = 0
   end
   K.prefixCache[link] = text
+  K.prefixOutline[link] = outline or false
   K.prefixCount = K.prefixCount + 1
-  return text
+  return text, outline
 end
 
--- Draws (or clears) the short stat names on one icon. owner: zBag's item button or an individual-bags
--- overlay; index: the item's inventory index (nil or < 0 for none); size: font size.
+-- Draws (or clears) the outline round an icon: the black ring under the coloured one, both sized like the
+-- slot. The two textures are in the slot templates (zBagTmpl.xml, zBagKit.xml); outline: "rrggbb" or nil.
+function K.DrawRing(owner, outline, width, height)
+  local back, ring = owner.kitRingBack, owner.kitRing
+  if back == nil then
+    local name = owner:GetName()
+    back = _G[name .. "KitRingBack"] or false
+    ring = _G[name .. "KitRing"] or false
+    owner.kitRingBack, owner.kitRing = back, ring
+  end
+  if not back or not ring then
+    return
+  end
+  if outline then
+    if back.SetSize then
+      back:SetSize(width, height)
+      ring:SetSize(width, height)
+    end
+    ring:SetColor(K.HexRgb(outline))
+    back:Show()
+    ring:Show()
+  else
+    back:Hide()
+    ring:Hide()
+  end
+end
+
+-- Draws (or clears) the short stat names and the outline on one icon. owner: zBag's item button or an
+-- individual-bags overlay; index: the item's inventory index (nil or < 0 for none); size: font size.
 -- bagSlot (1-180) instead of index: the index is looked up only when the icon needs it.
 -- bankSlot (1-300) instead of both: a bank slot.
 function K.StatPrefix(owner, index, size, bagSlot, bankSlot)
   if not owner then
     return
   end
-  local text = ""
+  local text, outline = "", nil
   local key = bagSlot or index
   if bankSlot then key = -bankSlot end -- bank keys never meet bag keys
   if key and (bankSlot or bagSlot or index >= 0) and K.StatPrefixOn() then
@@ -618,14 +727,15 @@ function K.StatPrefix(owner, index, size, bagSlot, bankSlot)
     else
       link = index and index >= 0 and GetBagItemLink and GetBagItemLink(index)
     end
-    -- mana and fusion stones only; a clean stone has nothing to show
-    if link and link ~= "" and K.StoneState(link) == 2 then
+    -- mana and fusion stones with stats, and gear with stats; a clean stone has nothing to show
+    local state = link and link ~= "" and K.StoneState(link)
+    if state == 2 or (state == 3 and K.StoneStatCount(link) > 0) then
       local names = K.statCache[link]
       if names == nil then
         K.statsMissing = true
         owner.kitStatGen = nil -- look again after the read
-      elseif names ~= "" then
-        text = K.StoneLabel(link, names)
+      elseif names ~= "" or state == 3 then
+        text, outline = K.ItemLabel(link, names, state == 3)
       end
     end
   else
@@ -633,10 +743,12 @@ function K.StatPrefix(owner, index, size, bagSlot, bankSlot)
   end
   size = math.floor((size or K.SlotNumberFontSize()) + 0.5)
   local width, height = K.SlotSize(owner)
-  if owner.kitStatText == text and owner.kitStatSize == size and owner.kitStatWidth == width then
+  if owner.kitStatText == text and owner.kitStatSize == size and owner.kitStatWidth == width
+    and owner.kitStatOutline == outline then
     return
   end
-  owner.kitStatText, owner.kitStatSize, owner.kitStatWidth = text, size, width
+  owner.kitStatText, owner.kitStatSize, owner.kitStatWidth, owner.kitStatOutline = text, size, width, outline
+  K.DrawRing(owner, outline, width, height)
   local fs = owner.kitStatFS
   if fs == nil then
     fs = _G[owner:GetName() .. "KitStats"] or false
@@ -650,11 +762,12 @@ function K.StatPrefix(owner, index, size, bagSlot, bankSlot)
     fs:Hide()
     return
   end
-  -- the text fills the slot: the font shrinks until the longest line and every line fit
+  -- the text fills the slot inside the outline (5 pixels in on every side): the font shrinks until the
+  -- longest line and every line fit
   if fs.SetSize then
-    fs:SetSize(width - 2, height - 2)
+    fs:SetSize(width - 10, height - 10)
   end
-  size = K.FitLabelSize(text, size, width, height)
+  size = K.FitLabelSize(text, size, width - 8, height - 8)
   -- the client takes a font change only after the text changed; a thick black outline keeps the
   -- label readable on any icon
   fs:SetText("z")
@@ -729,4 +842,116 @@ function K.RefreshStatPrefixes()
   if K.UpdateAll then K.UpdateAll() end
   if K.UpdateCherry then K.UpdateCherry() end
   if K.UpdateOverlaysNow then K.UpdateOverlaysNow() end
+end
+
+---------------------------------------------------------------------------
+-- Stat colours (zBag settings, "Stat colours..."; zBagKitStatColors in zBagKit.xml): one swatch per main
+-- stat opens the game's colour picker. Only what was changed is saved, in zBag_VAR["statcolors"].
+---------------------------------------------------------------------------
+
+-- Labels are cached per item, so a new colour starts them over and redraws the open bags.
+local function colorsChanged()
+  K.prefixCache = {}
+  K.prefixOutline = {}
+  K.prefixCount = 0
+  K.SaveSettings()
+  K.StatPrefixRefresh()
+  K.RefreshStatPrefixes()
+end
+
+local function hexOf(r, g, b)
+  local function part(v)
+    return math.max(0, math.min(255, math.floor((tonumber(v) or 0) * 255 + 0.5)))
+  end
+  return string.format("%02x%02x%02x", part(r), part(g), part(b))
+end
+
+function K.SetStatColor(key, hex)
+  if not K.STAT_COLORS[key] or type(hex) ~= "string" or not string.find(hex, "^%x%x%x%x%x%x$") then
+    return false
+  end
+  if type(zBag_VAR) ~= "table" then zBag_VAR = {} end
+  if type(zBag_VAR["statcolors"]) ~= "table" then zBag_VAR["statcolors"] = {} end
+  hex = string.lower(hex)
+  -- a colour equal to the default is not kept
+  zBag_VAR["statcolors"][key] = hex ~= K.STAT_COLORS[key] and hex or nil
+  colorsChanged()
+  K.RefreshStatColorRows()
+  return true
+end
+
+function K.ResetStatColors()
+  if type(zBag_VAR) == "table" then
+    zBag_VAR["statcolors"] = nil
+  end
+  colorsChanged()
+  K.RefreshStatColorRows()
+end
+
+-- The swatches and names in the window show the colours in use; each name is written in its colour.
+function K.RefreshStatColorRows()
+  for i, key in ipairs(K.STAT_COLOR_ORDER) do
+    local color = K.StatColor(key)
+    local block = _G["zBagKitStatColorsColor" .. i .. "Block"]
+    if block then
+      block:SetColor(K.HexRgb(color))
+    end
+    local label = _G["zBagKitStatColorsLabel" .. i]
+    if label then
+      label:SetText("|cff" .. color .. K.STAT_COLOR_NAMES[key] .. "|r")
+    end
+  end
+end
+
+function K.ToggleStatColors()
+  if not zBagKitStatColors then return end
+  if zBagKitStatColors:IsVisible() then
+    zBagKitStatColors:Hide()
+  else
+    zBagKitStatColors:Show()
+  end
+end
+
+-- Opens the game's colour picker for row `id`; OK saves, a move of the picker shows live in the swatch,
+-- Cancel puts the saved colour back.
+function K.PickStatColor(id)
+  local key = K.STAT_COLOR_ORDER[id]
+  local swatch = _G["zBagKitStatColorsColor" .. id]
+  if not key or not swatch then return end
+  local block = _G["zBagKitStatColorsColor" .. id .. "Block"]
+  local r, g, b = K.HexRgb(K.StatColor(key))
+  local function okay()
+    K.SetStatColor(key, hexOf(ColorPickerFrame.r, ColorPickerFrame.g, ColorPickerFrame.b))
+  end
+  local function update()
+    if block then block:SetColor(ColorPickerFrame.r, ColorPickerFrame.g, ColorPickerFrame.b) end
+  end
+  local function cancel()
+    K.RefreshStatColorRows()
+  end
+  if ColorPickerFrame then
+    if ColorPickerFrame.SetFrameStrata then ColorPickerFrame:SetFrameStrata("DIALOG") end
+    ColorPickerFrame.call = swatch
+  end
+  if OpenColorPickerFrameEx then
+    OpenColorPickerFrameEx({
+      parent = swatch, titleText = "zBag - " .. K.STAT_COLOR_NAMES[key], alphaMode = nil,
+      r = r, g = g, b = b, a = 1, brightnessUp = 1, brightnessDown = 0.2,
+      callbackFuncOkay = okay, callbackFuncUpdate = update, callbackFuncCancel = cancel,
+    })
+  elseif OpenColorPickerFrame then
+    OpenColorPickerFrame(okay, false, "zBag - " .. K.STAT_COLOR_NAMES[key], r, g, b, 1, zBagKitStatColors)
+  elseif DEFAULT_CHAT_FRAME then
+    DEFAULT_CHAT_FRAME:AddMessage("zBag: this client has no colour picker. Use /zb color " .. key .. " rrggbb")
+  end
+end
+
+-- /zb colors opens the window; /zb color <stat> <rrggbb> sets one (stat: str dex wis int stam matt patt def mdef other).
+function K.StatColorCommand(rest)
+  local key, hex = string.match(rest or "", "^(%a+)%s+#?(%x+)%s*$")
+  if key and K.STAT_COLORS[string.lower(key)] and hex and string.len(hex) == 6 then
+    K.SetStatColor(string.lower(key), hex)
+  elseif DEFAULT_CHAT_FRAME then
+    DEFAULT_CHAT_FRAME:AddMessage("zBag: /zb color <stat> <rrggbb>, for example /zb color str ff8800. Stats: str dex wis int stam matt patt def mdef other. /zb colors opens the colour window.")
+  end
 end
