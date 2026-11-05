@@ -639,20 +639,46 @@ const GBBank = (() => {
     table.querySelector('thead').innerHTML = `<tr>${head}</tr>`;
     const parts = [];
     const span = spec.columns.length;
+    const closed = group => !spec.open && root.collapsed.has(group.key);
+    // A heading: its arrow and title open and close it. A Gameforge account's name is a button of its own, which
+    // copies it; the rest of the title still opens and closes the group.
+    const heading = (group, depth) => {
+      const key = escapeHtml(group.key);
+      const arrow = closed(group) ? '▸' : '▾';
+      const title = group.gf
+        ? `<button type="button" class="group-toggle" data-group-toggle="${key}" aria-expanded="${!closed(group)}" aria-label="${closed(group) ? 'Open' : 'Close'} ${escapeHtml(group.gf)}">${arrow}</button>${gfButton(group.gf)}`
+          + (group.rest ? `<button type="button" class="group-toggle is-rest" data-group-toggle="${key}" tabindex="-1">${escapeHtml(group.rest)}</button>` : '')
+        : `<button type="button" class="group-toggle" data-group-toggle="${key}" aria-expanded="${!closed(group)}">${arrow} ${escapeHtml(group.title)}</button>`;
+      const where = group.server ? `<span class="group-server">${escapeHtml(group.server)}</span>` : '';
+      const inside = `${title}${where} <span class="group-sub">${escapeHtml(group.sub || '')}</span> <button type="button" class="group-select" data-group-select="${key}">Select</button>`;
+      const cellsHtml = spec.groupCells ? spec.groupCells(group) : null;
+      const kind = depth > 1 ? 'is-sub' : 'is-top';
+      return cellsHtml ? `<tr class="group-row ${kind}" data-group="${key}"><td colspan="${spec.groupSpan || 1}">${inside}</td>${cellsHtml}</tr>`
+        : `<tr class="group-row ${kind}" data-group="${key}"><td colspan="${span}">${inside}</td></tr>`;
+    };
+    // depth: how far in it sits, 0 in a table without groups
+    const line = (row, depth) => {
+      const selected = spec.isSelected && spec.isSelected(row.key) ? ' is-selected' : '';
+      return `<tr data-char="${escapeHtml(row.key || '')}" class="char-row is-depth-${depth}${selected}${row.stale ? ' is-stale' : ''}${row.blank ? ' is-blank' : ''}">${spec.columns.map(column => `<td class="${cellClass(column)}">${column.cell(row)}</td>`).join('')}</tr>`;
+    };
+    // A group's rows, or its own groups: one without a title is rows that need no heading
     for (const group of spec.groups) {
+      const depth = group.title === null ? 0 : 1;
       if (group.title !== null) {
-        const closed = !spec.open && root.collapsed.has(group.key);
-        const cellsHtml = spec.groupCells ? spec.groupCells(group) : null;
-        if (cellsHtml) {
-          parts.push(`<tr class="group-row" data-group="${escapeHtml(group.key)}"><td colspan="${spec.groupSpan || 1}"><button type="button" class="group-toggle" data-group-toggle="${escapeHtml(group.key)}">${closed ? '▸' : '▾'} ${escapeHtml(group.title)}</button> <span class="group-sub">${escapeHtml(group.sub)}</span> <button type="button" class="group-select" data-group-select="${escapeHtml(group.key)}">Select</button></td>${cellsHtml}</tr>`);
-        } else {
-          parts.push(`<tr class="group-row" data-group="${escapeHtml(group.key)}"><td colspan="${span}"><button type="button" class="group-toggle" data-group-toggle="${escapeHtml(group.key)}">${closed ? '▸' : '▾'} ${escapeHtml(group.title)}</button> <span class="group-sub">${escapeHtml(group.sub)}</span> <button type="button" class="group-select" data-group-select="${escapeHtml(group.key)}">Select</button></td></tr>`);
-        }
-        if (closed) continue;
+        parts.push(heading(group, 1));
+        if (closed(group)) continue;
       }
-      for (const row of group.rows) {
-        const selected = spec.isSelected && spec.isSelected(row.key) ? ' is-selected' : '';
-        parts.push(`<tr data-char="${escapeHtml(row.key || '')}" class="char-row${selected}${row.stale ? ' is-stale' : ''}">${spec.columns.map(column => `<td class="${cellClass(column)}">${column.cell(row)}</td>`).join('')}</tr>`);
+      if (!group.children) {
+        for (const row of group.rows) parts.push(line(row, depth));
+        continue;
+      }
+      for (const child of group.children) {
+        if (child.title === null) {
+          for (const row of child.rows) parts.push(line(row, depth));
+          continue;
+        }
+        parts.push(heading(child, 2));
+        if (!closed(child)) for (const row of child.rows) parts.push(line(row, depth + 1));
       }
     }
     if (!parts.length) parts.push(`<tr><td colspan="${span}" class="hint">${escapeHtml(spec.empty || 'Nothing to show.')}</td></tr>`);
@@ -660,6 +686,8 @@ const GBBank = (() => {
     if (!root.wired) {
       root.wired = true;
       table.addEventListener('click', event => {
+        // The page copies a Gameforge account's name itself
+        if (event.target.closest('[data-gf-copy]')) return;
         const sortButton = event.target.closest('[data-sort]');
         if (sortButton) {
           const key = sortButton.dataset.sort;
@@ -685,40 +713,102 @@ const GBBank = (() => {
     }
   }
   // Groups for a table, sorted rows inside each. A long list starts with its groups closed.
-  function tableGroups(root, rows, how, groupOf, titleOf) {
+  function tableGroups(root, rows, how, options = {}) {
     if (how === 'none') return [{key: '', title: null, sub: '', rows}];
-    const groups = new Map();
-    for (const row of rows) {
-      const key = groupOf(row);
-      if (!groups.has(key)) groups.set(key, {key, title: titleOf(row), rows: []});
-      groups.get(key).rows.push(row);
-    }
-    // Accounts in the order their keys nest them, the rest biggest first
-    const list = [...groups.values()].sort((a, b) => Number(a.key === '' || a.key === '~none') - Number(b.key === '' || b.key === '~none')
-      || (how === 'account' ? (a.key < b.key ? -1 : a.key > b.key ? 1 : 0) : b.rows.length - a.rows.length || a.title.localeCompare(b.title)));
+    const list = how === 'account' ? accountTree(rows, options) : serverGroups(rows);
     if (!root.collapsedSet) {
       root.collapsedSet = true;
       if (rows.length > 400) for (const group of list) root.collapsed.add(group.key);
     }
     return list;
   }
-  // By account: the linked Gameforge account, its server, then the RoM account, the characters one login screen lists
+  // Names in the order people count them: zuuzuu9 before zuuzuu10
+  const natural = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+  // By server: the biggest first, the characters with no server known last
+  function serverGroups(rows) {
+    const groups = new Map();
+    for (const row of rows) {
+      const key = String(row.server || '').toLowerCase();
+      if (!groups.has(key)) groups.set(key, {key, title: row.server || NO_SERVER, rows: []});
+      groups.get(key).rows.push(row);
+    }
+    return [...groups.values()].sort((a, b) => Number(a.key === '') - Number(b.key === '') || b.rows.length - a.rows.length || natural.compare(a.title, b.title));
+  }
+  // By account: each Gameforge account once, its RoM accounts under it. A RoM account with one character on a server
+  // needs no heading: that character sits right under the Gameforge account, its RoM account named on its own line.
+  // One with more characters gets a heading of its own. A Gameforge account with only that one RoM account says both
+  // on one heading. After the Gameforge accounts: Steam logins, login screens no Gameforge account is linked to, and
+  // last the characters no login screen has listed yet.
+  // options: accountName(name), romTitle(character), locked(), and singlesTogether: the characters alone on their
+  // RoM accounts share one heading instead, their RoM accounts only on their hover cards.
   const loginScreen = row => row.character?.romAccount || row.character?.group || null;
-  const groupKeyOf = (how, accountName) => row => {
-    if (how === 'server') return String(row.server || '').toLowerCase();
-    const linked = (accountName && accountName(row.name)) || '';
-    const list = loginScreen(row);
-    if (!linked && !list) return '~none';
-    return `${linked ? 'gf:' + linked.toLowerCase() : 'group'}|${String(row.server || '\uffff').toLowerCase()}|${list ? list.names[0].toLowerCase() : '\uffff'}`;
-  };
-  const groupTitleOf = (how, accountName, romTitle, locked) => row => {
-    if (how === 'server') return row.server || NO_SERVER;
-    const linked = accountName && accountName(row.name);
-    if (!loginScreen(row)) return linked || 'No account known yet';
-    const rom = romOf(row.character, romTitle);
-    if (linked) return `${linked} › ${rom}`;
-    return loginScreen(row).steam ? rom : `${rom}, ${locked && locked() ? 'accounts locked' : 'not linked'}`;
-  };
+  const TOP_ORDER = {gf: 0, steam: 1, nolink: 2, none: 3};
+  const STEAM = 'Steam account';
+  function accountTree(rows, options = {}) {
+    const tops = new Map();
+    const locked = !!(options.locked && options.locked());
+    for (const row of rows) {
+      row.chip = '';
+      const gf = row.account ?? ((options.accountName && options.accountName(row.name)) || '');
+      const list = loginScreen(row);
+      const rom = row.rom ?? romOf(row.character || {}, options.romTitle);
+      const kind = gf ? 'gf' : list?.steam ? 'steam' : list || rom ? 'nolink' : 'none';
+      const topKey = kind === 'gf' ? 'gf:' + gf.toLowerCase() : '~' + kind;
+      if (!tops.has(topKey)) {
+        const title = kind === 'gf' ? gf : kind === 'steam' ? 'Steam logins'
+          : kind === 'nolink' ? (locked ? 'Gameforge accounts locked' : 'Not linked to a Gameforge account') : 'No account known yet';
+        tops.set(topKey, {key: topKey, kind, title, gf: kind === 'gf' ? gf : '', sub: '', rows: [], parts: new Map(), loose: new Set()});
+      }
+      const top = tops.get(topKey);
+      top.rows.push(row);
+      if (kind === 'none') continue;
+      // No RoM account known: right under its Gameforge account, with nothing on its line
+      if (!rom) { top.loose.add(row); continue; }
+      const server = String(row.server || '');
+      // Two login screens of one server are one RoM account when they have one name: the site's, or the one you gave
+      // it. "Steam account" names none, so each Steam login screen stays its own.
+      const id = rom === STEAM && list ? list.names[0] : rom;
+      const partKey = `${topKey}|${server.toLowerCase()}|${id.toLowerCase()}`;
+      if (!top.parts.has(partKey)) top.parts.set(partKey, {key: partKey, title: rom, rom, server: server || NO_SERVER, known: !!server, sub: '', rows: []});
+      top.parts.get(partKey).rows.push(row);
+    }
+    const list = [...tops.values()].sort((a, b) => TOP_ORDER[a.kind] - TOP_ORDER[b.kind] || natural.compare(a.title, b.title));
+    for (const top of list) {
+      const parts = [...top.parts.values()];
+      const loose = top.loose;
+      delete top.parts;
+      delete top.loose;
+      top.romAccounts = parts.length;
+      top.children = null;
+      if (top.kind === 'none') continue;
+      const several = parts.filter(part => part.rows.length > 1)
+        .sort((a, b) => Number(!a.known) - Number(!b.known) || natural.compare(a.server, b.server) || natural.compare(a.rom, b.rom));
+      const alone = new Set(loose);
+      for (const part of parts) if (part.rows.length === 1) alone.add(part.rows[0]);
+      // In the table's own order, not the accounts'
+      const singles = top.rows.filter(row => alone.has(row));
+      if (!singles.length && several.length === 1) {
+        const only = several[0];
+        // "Steam logins" says it already
+        top.rest = only.rom === STEAM ? '' : ` › ${only.rom}`;
+        if (!top.gf) top.title += top.rest;
+        top.server = only.server;
+        continue;
+      }
+      if (options.singlesTogether && singles.length > 1) {
+        top.children = [...several, {key: top.key + '|~single', title: 'Single-character accounts', sub: '', rows: singles}];
+        continue;
+      }
+      for (const part of parts) if (part.rows.length === 1 && part.rom !== STEAM) part.rows[0].chip = part.rom;
+      top.children = [...(singles.length ? [{key: top.key + '|~alone', title: null, rows: singles}] : []), ...several];
+    }
+    return list;
+  }
+  // Every group and the groups inside them
+  const allGroups = groups => groups.flatMap(group => [group, ...(group.children || [])]);
+  // A Gameforge account's name as a button that copies it. The page copies it, and its hover says whether its
+  // password is saved.
+  const gfButton = name => `<button type="button" class="gf-name" data-gf-copy="${escapeHtml(name)}">${escapeHtml(name)}<span class="ico gf-name-icon" data-cell-icon="copy" aria-hidden="true"></span></button>`;
   // The Characters and Currencies searches' filters, each one word: #level>=100, #classes>3, #dailytokens>5k,
   // #charges>10k, #gold<1m, #class=mage and so on, with k, m and b for thousands, millions and billions. A word on its
   // own, such as #charges, means more than none. extra.mailbox(key): its mailbox, for #mail and #mailgold.
@@ -796,7 +886,9 @@ const GBBank = (() => {
     return rows.filter(row => filters.tests.every(test => test(row.character || {}, row)) && (!wanted || row.name.toLowerCase().includes(wanted)
       || String(row.server || '').toLowerCase().includes(wanted) || String(row.account || '').toLowerCase().includes(wanted)
       || String(row.rom || '').toLowerCase().includes(wanted) || String(row.class || '').toLowerCase().includes(wanted)
-      || String(row.character?.note || '').toLowerCase().includes(wanted)));
+      || String(row.character?.note || '').toLowerCase().includes(wanted)
+      // The name it had before a character transfer renamed it
+      || String(row.character?.formerName || '').toLowerCase().includes(wanted)));
   }
   // Diamonds and Rubies belong to an account, and every character on it saved the same balance, so each account counts
   // once, as of the newest save on it. A character no login screen has listed could be on any account: it isn't counted,
@@ -852,13 +944,14 @@ const GBBank = (() => {
     const how = options.how || 'server';
     const table = currencyTable(characters, root.sorting.key, root.sorting.descending);
     const rows = searchRows(table.rows, options.search, options);
-    const groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
-    for (const group of groups) {
+    const groups = tableGroups(root, rows, how, options);
+    for (const group of allGroups(groups)) {
+      if (group.title === null) continue;
       group.totals = {};
       for (const column of table.columns) group.totals[column.key] = column.shop ? null : group.rows.reduce((sum, row) => sum + (row.amounts[column.key] || 0), 0);
-      group.sub = counted(group.rows.length, 'character');
+      group.sub = romCount(group) + counted(group.rows.length, 'character');
     }
-    root.selectGroup = key => options.selectKeys && options.selectKeys((groups.find(group => group.key === key)?.rows || []).map(row => row.key));
+    root.selectGroup = key => options.selectKeys && options.selectKeys((allGroups(groups).find(group => group.key === key)?.rows || []).map(row => row.key));
     const amount = (row, column) => {
       if (row.blank) return '';
       if (column.key !== 'gold' && row.stale && !(column.key in row.amounts)) return '<span class="not-recorded" title="Not recorded: log in once on the current version">—</span>';
@@ -866,7 +959,7 @@ const GBBank = (() => {
       return escapeHtml(formatNumber(row.amounts[column.key] || 0));
     };
     groupedTable(root, {
-      columns: [{key: 'name', name: 'Character', text: true, cell: row => `<span class="char-name">${escapeHtml(row.name)}</span>`}, {key: 'server', name: 'Server', text: true, cell: serverCell},
+      columns: [{key: 'name', name: 'Character', text: true, cell: row => `<span class="char-cell"><span class="char-name">${escapeHtml(row.name)}</span>${nameExtras(row)}</span>`}, {key: 'server', name: 'Server', text: true, cell: serverCell},
         ...table.columns.map(column => ({key: column.key, name: column.name, number: true, cell: row => amount(row, column)}))],
       groups, groupSpan: 2, isSelected: options.isSelected, open: !!String(options.search || '').trim(), empty: characters.length ? 'No character matches.' : 'No characters saved yet.',
       groupCells: group => group.title === null ? null : table.columns.map(column => `<td class="num">${group.totals[column.key] === null ? 'per account' : escapeHtml(formatNumber(group.totals[column.key]))}</td>`).join(''),
@@ -876,8 +969,15 @@ const GBBank = (() => {
     // The totals follow the search: all characters, or only the ones that match it.
     total.innerHTML = `<td colspan="2">${rows.length === table.rows.length ? 'All' : 'Matching'} ${escapeHtml(formatNumber(rows.length))} characters</td>${table.columns.map(column => `<td class="num">${column.shop ? 'per account' : escapeHtml(formatNumber(rows.reduce((sum, row) => sum + (row.amounts[column.key] || 0), 0)))}</td>`).join('')}`;
     root.querySelector('tbody').prepend(total);
+    if (typeof window !== 'undefined') for (const icon of root.querySelectorAll('[data-cell-icon]')) icon.innerHTML = window.GB_ICONS?.[icon.dataset.cellIcon] || '';
   }
-  const serverCell = row => (row.server ? `<span class="server-pill">${escapeHtml(row.server)}</span>` : `<span class="server-pill is-unknown">${escapeHtml(NO_SERVER)}</span>`);
+  // A Gameforge account's heading starts with how many RoM accounts it has, when it has more than one
+  const romCount = group => (group.children && group.romAccounts > 1 ? `${counted(group.romAccounts, 'RoM account')} · ` : '');
+  // After a character's name: the name it had before a character transfer renamed it, and the RoM account it is
+  // alone on, which has no heading of its own
+  const nameExtras = row => (row.character?.formerName ? `<span class="was-name" title="Renamed in a character transfer">was ${escapeHtml(row.character.formerName)}</span>` : '')
+    + (row.chip ? `<span class="rom-chip" title="RoM account">${escapeHtml(row.chip)}</span>` : '');
+  const serverCell =row => (row.server ? `<span class="server-pill">${escapeHtml(row.server)}</span>` : `<span class="server-pill is-unknown">${escapeHtml(NO_SERVER)}</span>`);
   // A cell nothing saved can fill: blank on a row only the character transfer page knows
   const unsaved = cell => row => (row.blank ? '' : cell(row));
   // The letter on a coloured square: the class at a glance, and its colour where the page knows it
@@ -896,19 +996,18 @@ const GBBank = (() => {
     return `<button type="button" class="xfer-plate is-${escapeHtml(plate.kind)}" data-xfer="${escapeHtml(plate.id)}" data-xfer-open aria-label="${escapeHtml(plate.label)}">`
       + `<b>Xfer</b><span class="xfer-sep" aria-hidden="true">\u203a</span>${escapeHtml(plate.to)}<span class="xfer-sep" aria-hidden="true">\u203a</span><span class="xfer-when">${escapeHtml(plate.when)}</span></button>`;
   }
-  // Accounts with one character get no heading of their own: their characters share one group, before the characters
-  // with no account known, and each one's account is in its hover card.
-  const SINGLES = '~single';
-  function gatherSingles(groups, rows) {
-    const singles = groups.filter(group => group.rows.length === 1 && group.key !== '~none');
-    if (singles.length < 2) return groups;
-    const rest = groups.filter(group => !singles.includes(group));
-    // In the table's own order, not the accounts'
-    const alone = new Set(singles.map(group => group.rows[0]));
-    const together = {key: SINGLES, title: 'Single-character accounts', rows: rows.filter(row => alone.has(row))};
-    const at = rest.findIndex(group => group.key === '~none' || group.key === '');
-    rest.splice(at < 0 ? rest.length : at, 0, together);
-    return rest;
+  // A heading's line: how many characters, their gold, full caps and transfer stones, and how many need a login or
+  // haven't saved yet. A character only the transfer page knows has no gold to count, not 0.
+  function rosterSummary(rows) {
+    const saved = rows.filter(row => !row.blank);
+    const gold = saved.reduce((sum, row) => sum + row.gold, 0);
+    const caps = saved.filter(row => row.gold >= FULL_CAP).length;
+    const stale = saved.filter(row => row.stale).length;
+    const stones = saved.reduce((sum, row) => sum + row.stones, 0);
+    const blank = rows.length - saved.length;
+    return [counted(rows.length, 'character'), saved.length ? `${formatNumber(gold)} gold` : '', caps ? counted(caps, 'full cap') : '',
+      stones ? counted(stones, 'transfer stone') : '', stale ? `${formatNumber(stale)} ${stale === 1 ? 'needs' : 'need'} a login` : '',
+      blank ? `${formatNumber(blank)} not saved yet` : ''].filter(Boolean).join(' · ');
   }
   function renderRoster(root, characters, options = {}) {
     root.sorting = root.sorting || {key: 'gold', descending: true};
@@ -917,25 +1016,13 @@ const GBBank = (() => {
     root.last = {characters, options};
     root.openCharacter = options.openCharacter;
     const how = options.how || 'server';
-    const rows = searchRows(rosterRows(characters, root.sorting.key, root.sorting.descending, options.accountName, options.romTitle), options.search, options);
-    let groups = tableGroups(root, rows, how, groupKeyOf(how, options.accountName), groupTitleOf(how, options.accountName, options.romTitle, options.locked));
-    if (how === 'account' && options.singlesTogether) groups = gatherSingles(groups, rows);
     // A heading that names the accounts says them for every line under it
     const showAccounts = how !== 'account';
-    if (!showAccounts && (root.sorting.key === 'account' || root.sorting.key === 'rom')) {
-      root.sorting = {key: 'gold', descending: true};
-      root.redraw();
-      return;
-    }
-    for (const group of groups) {
-      const gold = group.rows.reduce((sum, row) => sum + row.gold, 0);
-      const caps = group.rows.filter(row => row.gold >= FULL_CAP).length;
-      const stale = group.rows.filter(row => row.stale).length;
-      const stones = group.rows.reduce((sum, row) => sum + row.stones, 0);
-      group.sub = `${counted(group.rows.length, 'character')} · ${formatNumber(gold)} gold` + (caps ? ` · ${counted(caps, 'full cap')}` : '')
-        + (stones ? ` · ${counted(stones, 'transfer stone')}` : '') + (stale ? ` · ${formatNumber(stale)} ${stale === 1 ? 'needs' : 'need'} a login` : '');
-    }
-    root.selectGroup = key => options.selectKeys && options.selectKeys((groups.find(group => group.key === key)?.rows || []).map(row => row.key));
+    if (!showAccounts && (root.sorting.key === 'account' || root.sorting.key === 'rom')) root.sorting = {key: 'gold', descending: true};
+    const rows = searchRows(rosterRows(characters, root.sorting.key, root.sorting.descending, options.accountName, options.romTitle), options.search, options);
+    const groups = tableGroups(root, rows, how, options);
+    for (const group of allGroups(groups)) if (group.title !== null) group.sub = romCount(group) + rosterSummary(group.rows);
+    root.selectGroup = key => options.selectKeys && options.selectKeys((allGroups(groups).find(group => group.key === key)?.rows || []).map(row => row.key));
     root.selectAll = () => options.selectKeys && options.selectKeys(rows.map(row => row.key));
     const clock = new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'});
     const shortClock = new Intl.DateTimeFormat(undefined, {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
@@ -944,19 +1031,19 @@ const GBBank = (() => {
     groupedTable(root, {
       columns: [
         {key: 'name', name: 'Character', text: true, lead: `<input type="checkbox" class="select-all head-check" aria-label="Select all shown"${allSelected ? ' checked' : ''}>`,
-          cell: row => `<span class="char-cell"><input type="checkbox" class="char-check" aria-label="Select ${escapeHtml(row.name)}"${options.isSelected && options.isSelected(row.key) ? ' checked' : ''}>${classBadge(row.class, options.classColor && options.classColor(row.character))}<span class="char-name">${escapeHtml(row.name)}</span></span>`},
+          cell: row => `<span class="char-cell"><input type="checkbox" class="char-check" aria-label="Select ${escapeHtml(row.name)}"${options.isSelected && options.isSelected(row.key) ? ' checked' : ''}>${classBadge(row.class, options.classColor && options.classColor(row.character))}<span class="char-name">${escapeHtml(row.name)}</span>${nameExtras(row)}</span>`},
         {key: 'class', name: 'Class', text: true, cell: unsaved(row => (row.class ? escapeHtml(row.class) : '<span class="not-recorded">Not recorded</span>'))},
         {key: 'level', name: 'Level', number: true, cell: unsaved(row => (row.level ? escapeHtml(formatNumber(row.level)) : '<span class="not-recorded">—</span>'))},
         {key: 'server', name: 'Server', text: true, cell: serverCell},
         {key: 'stones', name: 'Transfer stones', number: true, cell: row => transferPlate(options.transfer ? options.transfer(row.character) : null) + (row.blank ? '' : stonesCell(row))},
-        ...(showAccounts ? [{key: 'account', name: 'Gameforge', text: true, cell: row => (row.account ? escapeHtml(row.account) : row.blank ? '' : `<span class="not-recorded">${options.locked && options.locked() ? 'Locked' : 'Not linked'}</span>`)},
+        ...(showAccounts ? [{key: 'account', name: 'Gameforge', text: true, cell: row => (row.account ? gfButton(row.account) : row.blank ? '' :`<span class="not-recorded">${options.locked && options.locked() ? 'Locked' : 'Not linked'}</span>`)},
           {key: 'rom', name: 'RoM account', text: true, cell: row => (row.rom ? escapeHtml(row.rom) : row.blank ? '' : '<span class="not-recorded">Not known</span>')}] : []),
         {key: 'gold', name: 'Gold', number: true, cell: unsaved(row => `<span class="gold-cell">${escapeHtml(formatNumber(row.gold))}</span>`)},
         {key: 'bag', name: 'Bag', number: true, cell: unsaved(row => slots(row.bag, row.character?.bagSlots))},
         {key: 'bank', name: 'Bank', number: true, cell: unsaved(row => (row.bankSeen || row.bank > 0 ? slots(row.bank, row.character?.bankSlots) : '<span class="not-recorded" title="Bank not recorded: one login with this character records it">Not recorded</span>'))},
         {key: 'saved', name: 'Last saved', text: true, cell: unsaved(row => escapeHtml(row.saved || 'Not recorded'))},
         {key: 'day', name: 'Reward day', number: true, also: [{key: 'taken', name: 'Taken'}],
-          cell: unsaved(row => (row.taken ? `<span title="${escapeHtml(clock.format(row.taken))}">Day ${escapeHtml(row.day || '?')} <span class="muted">· ${escapeHtml(shortClock.format(row.taken))}</span></span>` : '<span class="not-recorded">Not recorded</span>'))},
+          cell: unsaved(row => (row.taken ? `<span title="${escapeHtml(clock.format(row.taken))}">Day ${escapeHtml(row.day || '?')} <span class="muted">· ${escapeHtml(shortClock.format(row.taken))}</span></span>` : '<span class="not-recorded" title="No daily reward recorded">—</span>'))},
         {key: 'stale', name: 'Status', cell: row => (options.transfer && options.transfer(row.character)?.confirm
           ? `<span class="status-pill is-xfer" title="${escapeHtml(`It moved to ${row.character.transfer.to}: one login with it there confirms the transfer and saves it on its new server`)}">Log in to confirm transfer</span>`
           : row.blank ? '' : row.stale ? '<span class="status-pill" title="Saved by an older version: log in once on the current one">Needs login</span>' : '<span class="status-pill is-good" role="img" aria-label="Current" title="Current"></span>')},
@@ -2270,5 +2357,5 @@ const GBBank = (() => {
   return {create, tellApart, typeOf, qualityOf, QUALITY, TYPES, locationLabel, entries, applyFilters, matcher, cells, stackKey, statsSignature, instanceLines, duraRange, DEFAULT_RULES,
     quickFilters, wornGear, plusOf, slotLabel, SLOT_LABELS, TIER_FROM, statEffects, templateTip, SORT_GROUPS, sortGroupOf, sortByType, SORTS,
     formatDuration, totals, isHidden, toggleHidden, stackable, gearLines, tipLines, itemLines, holders, currencyTable, currencyName, renderCurrencies, accountCurrencies,
-    rosterRows, renderRoster, transferPlate, statTable, renderStats, searchRows, characterFilters, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
+    rosterRows, renderRoster, accountTree, tableGroups, allGroups, rosterSummary, gfButton, transferPlate, statTable, renderStats, searchRows, characterFilters, favouriteRows, groupedTable, escapeHtml, formatNumber, formatCompact, formatTiny, counted, tierOf, slotMarks, isStone, MARK_COLORS, transferStones, transferStonesText, bankKnown};
 })();

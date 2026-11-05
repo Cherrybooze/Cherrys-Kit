@@ -331,6 +331,8 @@
     who: record => transferWho(record),
     openLog: id => openTransferLog(id),
     tooltip: byId('xfer-tooltip'),
+    // The RoM username the site showed for a character: one that turns up renamed on the new server has the old one's
+    siteOf: key => roster.siteByKey(key),
   });
   let bank = null;
   bank = GBBank.create(byId('tab-bank'), bankSend, bankStatus, (totals, made, characters) => {
@@ -755,7 +757,20 @@
     add('Last saved', character.saved || 'Not recorded');
     add('Login status', character.fromTransfer ? 'Known from the character transfer page only: log in with it once'
       : character.notSaved ? 'Nothing saved yet: log in once' : character.stale ? 'Needs a login on the current version' : 'Current');
-    if (!roster.view.hideGameforge) add('Gameforge account', accounts.accountNameOf(character) || roster.siteEmail(character) || (accounts.locked() ? 'Locked' : 'Not linked'));
+    if (!roster.view.hideGameforge) {
+      const gf = accounts.accountNameOf(character) || roster.siteEmail(character);
+      if (!gf) add('Gameforge account', accounts.locked() ? 'Locked' : 'Not linked');
+      else {
+        // Its name copies on a click, and what's known of its password stands beside it
+        const cell = make('dd', 'detail-gf');
+        cell.innerHTML = GBBank.gfButton(gf);
+        for (const icon of cell.querySelectorAll('[data-cell-icon]')) icon.innerHTML = window.GB_ICONS?.[icon.dataset.cellIcon] || '';
+        const state = accounts.passwordState(gf);
+        cell.append(make('span', `gf-state${state === 'saved' ? ' is-good' : state === 'locked' ? '' : ' is-bad'}`,
+          state === 'saved' ? 'Password saved' : state === 'locked' ? 'Unlock your accounts to see its password' : 'Password missing'));
+        details.append(make('dt', '', 'Gameforge account'), cell);
+      }
+    }
     if (!roster.view.hideRom) add('RoM account', roster.romTitle(character) || 'Not known yet');
     const taken = Date.parse(character.dailyLogin?.collectedAt || '');
     const clock = new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'});
@@ -955,11 +970,80 @@
     currencyName: GBBank.currencyName,
     stones: GBBank.transferStonesText,
     transfer: character => transfers.cardLine(character),
+    // Red while the accounts are open and its Gameforge account has no password saved
+    password: character => {
+      const name = accounts.locked() ? '' : accounts.accountNameOf(character) || roster.siteEmail(character);
+      return name && accountState === 'open' && accounts.passwordState(name) === 'missing' ? {kind: 'bad', text: `Password missing for ${name}`} : null;
+    },
     mail: mailLine,
     menu: accounts.openMenu,
     rows: character => characterRows(character),
     // The note first, then what goes for all the characters selected with it
     bulk: character => [...(character.notSaved ? [] : [{label: character.note ? 'Edit note…' : 'Add note…', run: () => editNote(character)}]), ...bulkRows(character)],
+  });
+
+  // A Gameforge account's name, wherever the page shows it as a button: a click copies it, and its hover says whether
+  // its password is saved here. While the accounts are locked nothing can be read, so it says that instead.
+  const gfTip = byId('gf-tooltip');
+  let gfAnchor = null;
+  const tipNode = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    node.textContent = text;
+    return node;
+  };
+  function gfTipNodes(name) {
+    const state = accounts.passwordState(name);
+    const nodes = [tipNode('strong', '', name), tipNode('span', 'gf-tip-sub', 'Gameforge account')];
+    if (state === 'saved') nodes.push(tipNode('span', 'gf-tip-good', 'Password saved'));
+    else if (state === 'locked') nodes.push(tipNode('span', 'gf-tip-hint', 'Unlock your Gameforge accounts to see whether its password is saved.'));
+    else {
+      nodes.push(tipNode('span', 'gf-tip-bad', 'Password missing'));
+      nodes.push(tipNode('span', 'gf-tip-hint', accountState === 'none' ? 'Save your logins on the Gameforge accounts page.'
+        : accounts.hasAccount(name) ? 'Add it on the Gameforge accounts page.' : 'Not on your Gameforge accounts list.'));
+    }
+    nodes.push(tipNode('span', 'gf-tip-key', 'Click to copy the account name'));
+    return nodes;
+  }
+  function placeGfTip(x, y) {
+    gfTip.style.left = Math.max(4, Math.min(x + 16, window.innerWidth - gfTip.offsetWidth - 8)) + 'px';
+    gfTip.style.top = Math.max(4, Math.min(y + 16, window.innerHeight - gfTip.offsetHeight - 8)) + 'px';
+  }
+  function hideGfTip() {
+    gfTip.hidden = true;
+    gfAnchor = null;
+  }
+  function showGfTip(node, x, y) {
+    gfAnchor = node;
+    gfTip.replaceChildren(...gfTipNodes(node.dataset.gfCopy));
+    gfTip.hidden = false;
+    placeGfTip(x, y);
+  }
+  document.addEventListener('mouseover', event => {
+    // A dialog sits above the page's tooltips: the details panel says it in its own words
+    const node = event.target?.closest?.('[data-gf-copy]');
+    if (!node || node.closest('dialog')) { if (gfAnchor) hideGfTip(); return; }
+    if (node !== gfAnchor) showGfTip(node, event.clientX, event.clientY);
+  });
+  document.addEventListener('mousemove', event => { if (gfAnchor && !gfTip.hidden) placeGfTip(event.clientX, event.clientY); }, {passive: true});
+  document.addEventListener('focusin', event => {
+    const node = event.target?.closest?.('[data-gf-copy]');
+    if (!node || node.closest('dialog')) return;
+    const box = node.getBoundingClientRect();
+    showGfTip(node, box.left, box.bottom);
+  });
+  document.addEventListener('focusout', event => { if (event.target?.closest?.('[data-gf-copy]')) hideGfTip(); });
+  document.addEventListener('scroll', () => { if (gfAnchor) hideGfTip(); }, {passive: true, capture: true});
+  document.addEventListener('click', event => {
+    const node = event.target?.closest?.('[data-gf-copy]');
+    if (!node) return;
+    event.preventDefault();
+    const name = node.dataset.gfCopy;
+    navigator.clipboard.writeText(name).then(() => {
+      node.classList.add('is-copied');
+      setTimeout(() => node.classList.remove('is-copied'), 1600);
+      toast(`Copied ${name}`);
+    }, () => toast('Chrome did not let the page copy it: click the page once, then try again.'));
   });
 
   // A small form for one value: a new name, or a server from a list. Resolves to the text, to '' for its Clear
@@ -1071,8 +1155,46 @@
       const list = rom ? rom.characters.filter(member => !member.shownServer || member.manualServer) : [character];
       rows.push({label: character.manualServer ? 'Change the server you set…' : 'Set server…', run: () => setServerFor(list)});
     }
+    // A transfer can rename it: the page then follows it under its new name
+    const record = character.transfer ? transfers.record(character.transfer.id) : null;
+    if (record && record.renamed) rows.push({label: `Not renamed to ${record.renamed}…`, run: () => unrenameTransfer(record)});
+    else if (record && (record.state === 'planned' || record.state === 'moved')) rows.push({label: 'Renamed in its transfer…', run: () => renameTransfer(record)});
     if (!character.notSaved) rows.push({label: 'Stop tracking…', run: () => stopTracking(character)});
     return rows;
+  }
+  // The name a transfer gave a character. The characters on its new server that saved since it was registered, and
+  // that no other transfer brought there, are the likely ones.
+  async function renameTransfer(record) {
+    const since = Date.parse(record.at) || 0;
+    const others = new Set(transfers.records().filter(other => other.id !== record.id).map(other => (other.renamed || other.name).toLowerCase()));
+    const likely = roster.characters().filter(character => !character.notSaved && GBTransfers.cleanServer(character.shownServer || '').toLowerCase() === GBTransfers.cleanServer(record.to).toLowerCase()
+      && GBTransfers.savedTime(character) > since && character.base.toLowerCase() !== record.name.toLowerCase() && !others.has(character.base.toLowerCase()))
+      .map(character => character.base);
+    const text = await ask({
+      title: `Renamed in its transfer: ${record.name}`,
+      hint: `Its name on ${record.to}. The page then shows it under that name with "was ${record.name}" beside it, and its login there confirms the transfer.`
+        + (likely.length ? ` Saved on ${record.to} since the transfer was registered: ${likely.slice(0, 6).join(', ')}${likely.length > 6 ? ` and ${number(likely.length - 6)} more` : ''}.` : ''),
+      label: `New name on ${record.to}`, value: likely.length === 1 ? likely[0] : '', placeholder: 'Its new name',
+      check: text => (!/^[^\s()<>"'`\\|~;,:#&]{2,32}$/u.test(text) ? 'Type the character’s new name: 2 to 32 letters, no spaces.'
+        : text.toLowerCase() === record.name.toLowerCase() ? 'That is its old name.' : ''),
+    });
+    if (!text) return;
+    try {
+      await transfers.rename(record.id, text);
+      toast(`${record.name} is ${text} on ${record.to} now.`);
+    } catch (error) {
+      toast('Could not keep the new name: ' + String(error.message || error));
+    }
+  }
+  async function unrenameTransfer(record) {
+    const yes = await ask({title: `Not renamed to ${record.renamed}?`, hint: `${record.name}'s transfer to ${record.to} then waits for ${record.name} to log in there again, and ${record.renamed} isn't taken for it again.`,
+      noField: true, save: 'Not renamed'});
+    if (yes === null) return;
+    try {
+      await transfers.rename(record.id, '');
+    } catch (error) {
+      toast('Could not change it: ' + String(error.message || error));
+    }
   }
   async function forgetSite(character) {
     try {

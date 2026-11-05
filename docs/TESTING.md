@@ -118,6 +118,22 @@ Not run on the real site yet: the reader was checked against a copy of the trans
 | XF8 | Type `#xfer` in the Characters search. | Only characters with a planned transfer, or one waiting for its login, are listed. |
 | XF9 | Register a transfer for a character Global Bank has no save for (one not logged in since Global Bank was installed). | **Characters** gets a row for it with its name, server and plate; class, level, gold, bag, bank and the other fields stay blank. Its hover card and details say it is known from the transfer page only. After the maintenance it shows on its new server with **Log in to confirm transfer**. |
 
+## Characters by account, Gameforge names and renamed transfers (Global Bank 1.6.15, extension 1.4.5, not yet released)
+
+Reload the extension first; the page's sidebar says Version 1.4.5.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| CT1 | Open **Characters** and pick **Group by account**. | Each Gameforge account has one heading, its name in a gold button, with how many RoM accounts and characters it has. A RoM account with one character on a server has no heading: that character sits right under the Gameforge account, with the RoM account's name at the right of its name. A RoM account with more characters has its own heading, a step in, with its server. |
+| CT2 | Scroll down through a Gameforge account with many characters. | Its heading stays at the top of the table while its characters scroll under it. |
+| CT3 | Click a Gameforge account's name button, then paste somewhere. | The button turns green for a moment and a note at the bottom says it was copied; the paste is the account name. The group doesn't open or close. |
+| CT4 | Hover that button with the Gameforge accounts locked, then unlock them and hover again. | Locked: it says to unlock them to see whether the password is saved. Unlocked: **Password saved**, or **Password missing** in red. While unlocked, a character's hover card also has a red *Password missing for …* line. |
+| CT5 | With the accounts unlocked, open **Gameforge accounts**. | Each e-mail address the site showed with characters is on the list, with no password, and those characters are linked to it. Delete one and reload the page: it isn't added again. |
+| CT6 | Right-click a character on **Characters** and pick **Details…**. | Gameforge account is a button that copies it, with Password saved, Password missing or the locked note beside it. |
+| CT7 | Turn on **Show single-character accounts only on tooltip**. | The characters alone on their RoM accounts move under one *Single-character accounts* heading inside each Gameforge account, without the RoM account names on their lines. |
+| CT8 | After a transfer that renamed a character, open the site's transfer page with that login, then log in with the character on its new server. | It shows under its new name with *was* and the old name, the old server's copy is gone, and **Transfers** lists it as *Oldname → Newname*, Done. |
+| CT9 | For a moved character the page didn't match, right-click it, pick **Renamed in its transfer…** and type the new name. | Its row shows the new name with the old one beside it; once that name logs in on the new server, the transfer is Done. **Not renamed to …** in its right-click menu takes it back. |
+
 ## Sent mail grouped by send (Global Bank 1.6.14, extension 1.4.4, not yet released)
 
 Reload the extension first; the page's sidebar says Version 1.4.4. Chrome must have run once since Windows started, so the game knows the time.
