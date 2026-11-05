@@ -478,7 +478,14 @@ const GBTransfers = (() => {
     }
     return changes;
   }
-  function applyChanges(stored, changes, now = Date.now()) {
+  // A transfer whose maintenance has passed happened, or is happening, in the game, and can't be undone there: it
+  // stays in the log, and Forget is refused. Planned ones before their maintenance, cancelled ones and ones that
+  // didn't move can be forgotten.
+  function locked(record, now = Date.now(), maintenance = null) {
+    if (record.state === 'moved' || record.state === 'done') return true;
+    return record.state === 'planned' && now >= dueOf(record, maintenance);
+  }
+  function applyChanges(stored, changes, now = Date.now(), maintenance = null) {
     const state = load(stored);
     const before = JSON.stringify(state);
     for (const change of changes) {
@@ -486,7 +493,7 @@ const GBTransfers = (() => {
       if (index < 0) continue;
       const record = state.list[index];
       const at = Math.min(change.at, now);
-      if (change.state === 'forget') state.list.splice(index, 1);
+      if (change.state === 'forget') { if (!locked(record, now, maintenance)) state.list.splice(index, 1); }
       else if (change.state === 'moved' && record.state === 'planned') end(record, 'moved', at, change.text || 'Gone from its old server');
       else if (change.state === 'stayed' && record.state === 'planned') end(record, 'stayed', at, change.text || 'Still on its old server after the maintenance');
       else if (change.state === 'done' && record.state !== 'done') {
@@ -746,6 +753,7 @@ const GBTransfers = (() => {
         } catch { /* told again on the next load */ } finally { sending = false; }
         return changes.length;
       },
+      locked: (record, now = Date.now()) => locked(record, now, maintenance),
       async forget(id) {
         if (options.send) await options.send({type: 'transfers-change', changes: [{id, state: 'forget', at: Date.now(), text: ''}]});
       },
@@ -770,12 +778,14 @@ const GBTransfers = (() => {
         return count;
       },
       // The log, in a table's body: the ones still waiting first, then the newest. search: words a record's name,
-      // servers or state must hold (filters, #like this, are for the characters' table). Returns how many it shows.
-      renderLog(body, {search = ''} = {}) {
+      // servers or state must hold (filters, #like this, are for the characters' table). active: only the ones still in
+      // transfer (planned, due or moved); forget: false leaves out the Forget button. Returns how many it shows.
+      renderLog(body, {search = '', active = false, forget = true} = {}) {
         const now = Date.now();
         const words = lower(search).split(/[\s,]+/).filter(word => word && !word.startsWith('#'));
         const order = {planned: 0, due: 0, moved: 1};
         const rows = state.list.map(record => ({record, kind: phase(record, now, maintenance)}))
+          .filter(({kind}) => !active || kind in order)
           .filter(({record, kind}) => words.every(word => lower(`${record.name} ${record.from} ${record.to} ${PHASE_NAMES[kind]}`).includes(word)))
           .sort((a, b) => (order[a.kind] ?? 2) - (order[b.kind] ?? 2) || timeOf(b.record.at) - timeOf(a.record.at));
         body.replaceChildren(...rows.map(({record, kind}) => {
@@ -801,13 +811,23 @@ const GBTransfers = (() => {
           const last = record.events[record.events.length - 1];
           const news = make('td', 'xfer-news', last ? last.text : '');
           if (last) news.title = clock().long.format(timeOf(last.at));
-          const actions = make('td', 'xfer-actions');
-          const forget = make('button', 'gb-button--ghost gb-button--sm', 'Forget');
-          forget.type = 'button';
-          forget.dataset.xferForget = record.id;
-          forget.setAttribute('aria-label', `Forget ${record.name}'s transfer to ${record.to}`);
-          actions.append(forget);
-          row.append(who, route, registered, when, chip, news, actions);
+          row.append(who, route, registered, when, chip, news);
+          if (forget) {
+            const actions = make('td', 'xfer-actions');
+            if (locked(record, now, maintenance)) {
+              const keep = make('span', 'muted', 'Kept');
+              keep.title = 'Its maintenance has passed, so the transfer can no longer be cleared.';
+              actions.append(keep);
+              row.append(actions);
+              return row;
+            }
+            const button = make('button', 'gb-button--ghost gb-button--sm', 'Forget');
+            button.type = 'button';
+            button.dataset.xferForget = record.id;
+            button.setAttribute('aria-label', `Forget ${record.name}'s transfer to ${record.to}`);
+            actions.append(button);
+            row.append(actions);
+          }
           return row;
         }));
         return rows.length;
@@ -900,6 +920,6 @@ const GBTransfers = (() => {
   }
 
   return {STORE, MAINTENANCE_STORE, ACCOUNT_STORE, ACCOUNT_MEMORY, ZONE, MAINTENANCE, DAYS, SERVERS, TAB_MEMORY, PHASE_NAMES, cleanServer, keyOf, savedTime, zoneParts, zoneOffset, zoned,
-    maintenanceOf, nextMaintenance, dueOf, serverLabel, characterLabel, parsePage, parseAccount, cleanRead, load, applyRead, loadAccounts, applyAccount, evidence, cleanChanges, applyChanges,
+    maintenanceOf, nextMaintenance, dueOf, serverLabel, characterLabel, parsePage, parseAccount, cleanRead, load, applyRead, loadAccounts, applyAccount, evidence, cleanChanges, applyChanges, locked,
     overlay, countdown, roughly, phase, plateOf, cardLine, tipOf, create};
 })();

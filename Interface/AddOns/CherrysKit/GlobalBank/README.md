@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.11** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.6.12** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.12
+
+**Transfer log page** (extension 1.4.2). The Chrome page has a *Transfer log* page under Roster that lists every character with a transfer still under way: planned and waiting for the weekly maintenance, due in the one that just passed, or moved and waiting for one login on its new server. Hover a row for its countdown and history. Cancelled and finished transfers and the maintenance time stay in the full log under Characters, Transfers. Once its maintenance has passed, a transfer can no longer be cleared: it shows **Kept** instead of **Forget**, on this page and in the full log. The list is made from what Chrome keeps for the extension and is never sent anywhere.
 
 ## Updated in 1.6.11
 
