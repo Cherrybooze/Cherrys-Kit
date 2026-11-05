@@ -674,10 +674,15 @@ function zBag_Switch(a, msg)
         zBagKit.Probe(); -- Cherry's Kit: checks for the in-game test
     elseif (cmd=="all") then
         zBagKit.ToggleAllBags(); -- Cherry's Kit: All bags window, for macros
+    elseif (cmd=="colors" or cmd=="colours") then
+        zBagKit.ToggleStatColors(); -- Cherry's Kit: colours of the Stats labels
+    elseif (cmd=="color" or cmd=="colour") then
+        zBagKit.StatColorCommand(subcmd); -- Cherry's Kit: /zb color str ff8800
     elseif (cmd=="help")then
         yecho("zBag v. " .. ZBAG_VERSION .. " commands:");
         yecho("|cffFFFF00/zb help|r this one ;) and that's it");
         yecho("|cffFFFF00/zb all|r open or close the All bags window (works in macros)");
+        yecho("|cffFFFF00/zb colors|r open the Stat colours window for the Stats labels; |cffFFFF00/zb color str ff8800|r sets one");
         yecho("|cffFFFF00/zb probe|r Cherry's Kit checks (open your bag, and the bank if you can, first)");
         yecho("Project page: |cffFFFF00http://rom.curseforge.com/projects/zbag/|r");
     end

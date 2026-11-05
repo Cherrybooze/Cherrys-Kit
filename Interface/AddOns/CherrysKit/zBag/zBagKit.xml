@@ -280,6 +280,15 @@
 					<OnLeave>GameTooltip:Hide();</OnLeave>
 				</Scripts>
 			</Button>
+			<Button name="$parentStatColors" inherits="UIPanelButtonTemplate" text="Stat colours...">
+				<Size><AbsDimension x="120" y="22"/></Size>
+				<Anchors><Anchor point="TOPLEFT" relativeTo="$parentMoney" relativePoint="TOPLEFT"><Offset><AbsDimension x="340" y="1"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnClick>zBagKit.ToggleStatColors();</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolors");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
 		</Frames>
 	</Frame>
 	<Button name="zBagKitBagAll" parent="BagFrame" inherits="UIPanelButtonTemplate" text="All">
@@ -1819,14 +1828,22 @@
 		<Anchors><Anchor point="TOPLEFT"/><Anchor point="BOTTOMRIGHT"/></Anchors>
 		<Layers>
 			<Layer level="OVERLAY">
+				<Texture name="$parentKitRingBack" file="Interface/AddOns/CherrysKit/zBag/Textures/statring-back.tga" hidden="true">
+					<Size><AbsDimension x="32" y="32"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</Texture>
+				<Texture name="$parentKitRing" file="Interface/AddOns/CherrysKit/zBag/Textures/statring.tga" hidden="true">
+					<Size><AbsDimension x="32" y="32"/></Size>
+					<Anchors><Anchor point="CENTER"/></Anchors>
+				</Texture>
 				<Texture name="$parentKitSlotBack" hidden="true">
 					<Size><AbsDimension x="26" y="15"/></Size>
 					<Anchors><Anchor point="CENTER"/></Anchors>
 					<Color r="0" g="0" b="0" a="0.35"/>
 				</Texture>
 				<FontString name="$parentKitStats" inherits="GameFontHighlight" text="" justifyH="LEFT" hidden="true">
-					<Size><AbsDimension x="34" y="32"/></Size>
-					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="1" y="1"/></Offset></Anchor></Anchors>
+					<Size><AbsDimension x="22" y="22"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="5" y="5"/></Offset></Anchor></Anchors>
 				</FontString>
 				<FontString name="$parentKitSlot" inherits="GameFontHighlight" text="" hidden="true">
 					<Anchors><Anchor point="CENTER"/></Anchors>
@@ -2074,4 +2091,240 @@
 		<HighlightTexture file="Interface\Buttons\CheckBox-Highlight" alphaMode="ADD"/><CheckedTexture file="Interface\Buttons\CheckBox-Checked"/><DisabledCheckedTexture file="Interface\Buttons\CheckBox-Checked-Disabled"/>
 		<Scripts><OnClick>zBagKit.ToggleStatPrefix(this);</OnClick><OnEnter>zBagKit.ShowTooltip(this, "statprefix");</OnEnter><OnLeave>GameTooltip:Hide();</OnLeave></Scripts>
 	</CheckButton>
+	<!-- Cherry's Kit: one colour per main stat for the Stats labels on the bag icons (zBag settings, Stat colours). -->
+	<Frame name="zBagKitStatColors" parent="UIParent" inherits="UICommonFrameTemplate" enableMouse="true" frameStrata="HIGH" hidden="true">
+		<Size><AbsDimension x="300" y="354"/></Size>
+		<Anchors><Anchor point="CENTER" relativeTo="UIParent"><Offset><AbsDimension x="380" y="0"/></Offset></Anchor></Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parentTitleText" inherits="GameTitleFont" text="Stat colours">
+					<Anchors><Anchor point="TOP"><Offset><AbsDimension x="-12" y="7"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel1" inherits="GameFontHighlight" text="Strength" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="46"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel2" inherits="GameFontHighlight" text="Dexterity" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="72"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel3" inherits="GameFontHighlight" text="Wisdom" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="98"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel4" inherits="GameFontHighlight" text="Intelligence" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="124"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel5" inherits="GameFontHighlight" text="Stamina" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="150"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel6" inherits="GameFontHighlight" text="Magical attack" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="176"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel7" inherits="GameFontHighlight" text="Physical attack" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="202"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel8" inherits="GameFontHighlight" text="Defense" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="228"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel9" inherits="GameFontHighlight" text="Magical defense" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="254"/></Offset></Anchor></Anchors>
+				</FontString>
+				<FontString name="$parentLabel10" inherits="GameFontHighlight" text="All other stats" justifyH="LEFT">
+					<Size><AbsDimension x="236" y="20"/></Size>
+					<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="48" y="280"/></Offset></Anchor></Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnShow>zBagKit.RefreshStatColorRows();</OnShow>
+		</Scripts>
+		<Frames>
+			<Button name="$parentColor1" id="1">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="44"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentColor2" id="2">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="70"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentColor3" id="3">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="96"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentColor4" id="4">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="122"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentColor5" id="5">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="148"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentColor6" id="6">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="174"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentColor7" id="7">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="200"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentColor8" id="8">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="226"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentColor9" id="9">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="252"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentColor10" id="10">
+				<Size><AbsDimension x="20" y="20"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="278"/></Offset></Anchor></Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture file="Interface\Common\UIColorBorder"/>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBlock" file="Interface\Common\Block-Fill"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>zBagKit.PickStatColor(this:GetID());</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolor");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+			<Button name="$parentReset" inherits="UIPanelButtonTemplate" text="Default colours">
+				<Size><AbsDimension x="140" y="22"/></Size>
+				<Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="316"/></Offset></Anchor></Anchors>
+				<Scripts>
+					<OnClick>zBagKit.ResetStatColors();</OnClick>
+					<OnEnter>zBagKit.ShowTooltip(this, "statcolorsreset");</OnEnter>
+					<OnLeave>GameTooltip:Hide();</OnLeave>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
 </Ui>
