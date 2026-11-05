@@ -185,6 +185,10 @@ end
 -- wrapper below must keep finding them.
 UMMInboxState = UMMInboxState or {};
 local INBOX = UMMInboxState;
+-- UMMClock starts again at 0 when Reload UI runs Compose.lua again: times taken before it mean
+-- nothing now (an old OpenMail() would make the next mailbox in the world count as opened from anywhere)
+INBOX.remoteAsked = nil;
+INBOX.loadedAt = nil;
 local REMOTE_ANSWER_TIME = 15;   -- seconds a MAIL_SHOW may take after OpenMail() to count as its answer
 local RELOAD_GAP = 2;            -- no second reload sooner than this after one
 
@@ -199,7 +203,8 @@ end
 
 -- MAIL_SHOW: was this mailbox opened from anywhere (an OpenMail() call just before)?
 local function InboxOpened()
-  INBOX.remote = INBOX.remoteAsked ~= nil and (UMMClock - INBOX.remoteAsked) <= REMOTE_ANSWER_TIME;
+  local asked = INBOX.remoteAsked;
+  INBOX.remote = asked ~= nil and UMMClock >= asked and UMMClock - asked <= REMOTE_ANSWER_TIME;
   INBOX.remoteAsked = nil;
   INBOX.newMail = false;
   INBOX.loadedAt = UMMClock;
@@ -224,7 +229,7 @@ function UMMInboxReload()
     return "busy";
   end
   local canReopen = INBOX.remote and type(CloseMail) == "function" and type(UMMOriginalOpenMail) == "function";
-  if (canReopen and (INBOX.loadedAt == nil or UMMClock - INBOX.loadedAt >= RELOAD_GAP)) then
+  if (canReopen and (INBOX.loadedAt == nil or UMMClock < INBOX.loadedAt or UMMClock - INBOX.loadedAt >= RELOAD_GAP)) then
     UMMTraceAdd("inbox", "reload");
     INBOX.newMail = false;
     INBOX.loadedAt = UMMClock;

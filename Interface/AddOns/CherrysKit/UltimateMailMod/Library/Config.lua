@@ -48,6 +48,12 @@ end
 -- The server this character plays on, for the names you mailed: a character name exists on its own
 -- server only. The login screen leaves it in LOGCHAR_SERVER for a client that can't say in game
 -- (as Global Bank reads it). "?" while neither knows.
+-- A server name without its colour codes and the spaces around it.
+local function CleanServerName(name)
+  name = string.gsub(string.gsub(name, "|c%x%x%x%x%x%x%x%x", ""), "|r", "");
+  return string.match(name, "^%s*(.-)%s*$") or "";
+end
+
 function UMMServerKey()
   local name = nil;
   if (type(GetServerName) == "function") then
@@ -56,8 +62,7 @@ function UMMServerKey()
   end
   if (type(name) ~= "string" or name == "") then name = LOGCHAR_SERVER; end
   if (type(name) ~= "string") then return "?"; end
-  name = string.gsub(string.gsub(name, "|c%x%x%x%x%x%x%x%x", ""), "|r", "");
-  name = string.match(name, "^%s*(.-)%s*$") or "";
+  name = CleanServerName(name);
   if (name == "") then return "?"; end
   return name;
 end
@@ -311,7 +316,7 @@ UMMSettings = {
     if (type(list) ~= "table") then list = {}; end
     local roster, rosterServer = rawget(_G, "LOGCHAR_ROSTER"), rawget(_G, "LOGCHAR_SERVER");
     if (type(roster) == "table" and type(rosterServer) == "string"
-        and string.match(string.gsub(rosterServer, "|c%x%x%x%x%x%x%x%x", ""), "^%s*(.-)%s*$") == server) then
+        and CleanServerName(rosterServer) == server) then
       local fromRoster = {};
       for _, who in pairs(roster) do
         who = RecipientName(who);

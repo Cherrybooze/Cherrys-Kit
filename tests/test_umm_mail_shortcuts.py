@@ -500,6 +500,16 @@ class MailShortcutsTests(unittest.TestCase):
         ''')
         self.assertEqual(self.history(), ["Coralbankg"])
 
+    def test_the_login_screen_list_counts_when_its_server_name_has_colour_codes(self):
+        self.lua.execute('''
+          UMMConfig.Characters={"Coralbankb","Coralbankg","Garygoldman"}
+          ummRealm="Aynara"; ummPlayer="Coralbankb"
+          LOGCHAR_SERVER="|cffffd100Aynara|r "; LOGCHAR_ROSTER={"Coralbankb","Coralbankg"}
+          UMMSettings:CheckCharacter()
+        ''')
+        self.assertTrue(self.lua.eval("UMMConfig.RosterByServer.Aynara"))
+        self.assertEqual(list(self.lua.eval("UMMSettings:OwnCharacters()").values()), ["Coralbankb", "Coralbankg"])
+
     def test_slash_configuration_matches_ui_and_large_amount_labels_keep_leading_zero_groups(self):
         self.lua.execute('''
           SlashCmdList.UMM(nil,"gold 1000001 2000002")
