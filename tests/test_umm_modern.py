@@ -758,6 +758,22 @@ class InboxReloadTests(ModernWindowFixture, unittest.TestCase):
         self.assertEqual(self.g.UMMInboxReload(), "busy")
         self.assertEqual(self.calls(), ["open"])
 
+    def test_after_reload_ui_an_unanswered_open_mail_does_not_make_a_mailbox_in_the_world_remote(self):
+        # an hour in, OpenMail() gets no mailbox (no portable mailbox time left)
+        self.lua.execute("UMMClock = 3600; OpenMail()")
+        # Reload UI runs the files again in the same Lua state: UMMClock starts again at 0
+        self.h.load("Compose/Compose.lua")
+        self.h.load("UltimateMailMod.lua")
+        self.lua.execute('UMMMasterFrame_OnEvent("VARIABLES_LOADED")')
+        self.step(30)
+        self.open()   # a mailbox in the world
+        self.assertFalse(self.g.UMMInboxRemote())
+        self.new_mail()
+        self.step(2.5)
+        self.page(2)
+        self.page(1)
+        self.assertEqual(self.calls(), ["open"], "CloseMail would end a mailbox in the world")
+
 
 class SettingsWindowTests(ModernWindowFixture, unittest.TestCase):
     def setUp(self):
