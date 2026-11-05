@@ -368,6 +368,43 @@ tbody tr:last-child td { border-bottom: 0; }
 .group-toggle { min-height: 0; padding: 0 4px 0 0; font-weight: 600; color: #e0c487; white-space: nowrap; background: none; border: 0; box-shadow: none; }
 .group-select { min-height: 15px; margin-left: 4px; padding: 0 6px; font-size: 10px; line-height: 13px; vertical-align: top; }
 .group-sub { font-size: 11px; font-weight: 400; color: #9eb5ce; }
+/* Grouped by account: a Gameforge account's heading, its RoM accounts' headings a step in, and their characters
+   under them. A Gameforge account's heading stays in view while its characters scroll under it. */
+.group-row td > * { vertical-align: middle; }
+.group-row.is-top td { background: #1c3047; border-top: 1px solid #304963; }
+.table-scroll .group-row.is-top td:first-child { background: #1c3047; }
+.table-scroll .roster-table .group-row.is-top td { position: sticky; top: 25px; z-index: 2; }
+.group-row.is-sub td { font-weight: 500; background: #16263a; }
+.table-scroll .group-row.is-sub td:first-child { background: #16263a; }
+.group-row.is-sub td:first-child { padding-left: 24px; }
+.group-row.is-sub .group-toggle { color: #d6bd84; }
+.group-toggle.is-rest { padding-left: 2px; }
+.group-server { display: inline-block; margin: 0 6px 0 4px; padding: 0 5px; font-size: 11px; font-weight: 500; line-height: 15px; color: #b6c9dd; border: 1px solid #3b526b; border-radius: 3px; }
+.char-row.is-depth-2 td:first-child { padding-left: 24px; }
+.group-row ~ .char-row.is-depth-2 td:first-child { background-image: linear-gradient(90deg, transparent 13px, #33485e 13px 15px, transparent 15px); }
+/* The RoM account a character is alone on, at the right of its name; and the name it had before a transfer */
+.char-cell .rom-chip { flex: none; margin-left: auto; padding: 0 5px; font-size: 11px; line-height: 15px; color: #a8bdd3; white-space: nowrap; background: #22344a; border: 1px solid #34495f; border-radius: 3px; }
+.char-row:hover .rom-chip { color: #d1deeb; border-color: #4a6280; }
+.was-name { flex: none; font-size: 11px; font-style: italic; color: #a7b7c9; white-space: nowrap; }
+/* A character only the transfer page knows: its name in italics, and nothing else to read */
+.char-row.is-blank .char-name { font-style: italic; color: #b9c7d6; }
+/* A Gameforge account's name: a click copies it */
+button.gf-name { display: inline-flex; gap: 5px; min-height: 0; padding: 0 6px; font-size: 12px; font-weight: 600; line-height: 17px; color: #f1d796; vertical-align: middle; background: #a3803b1f; border: 1px solid #ad874655; border-radius: 4px; box-shadow: none; transition: background .3s ease, border-color .3s ease, color .3s ease; }
+button.gf-name:hover { color: #fff0c7; border-color: #d3a95c; filter: none; }
+button.gf-name:active { transform: none; box-shadow: none; }
+button.gf-name .ico svg { width: 11px; height: 11px; }
+button.gf-name.is-copied { color: #eafff3; background: #2c6e4c; border-color: #4fae7d; }
+td > button.gf-name { font-weight: 500; }
+.gf-tip .gf-tip-sub { font-size: 11px; color: #a7b7c9; }
+.gf-tip .gf-tip-bad, .detail-gf .gf-state.is-bad { font-weight: 650; color: var(--gb-red); }
+.gf-tip .gf-tip-good, .detail-gf .gf-state.is-good { color: var(--gb-teal); }
+.gf-tip .gf-tip-hint { font-size: 11px; color: #a7b7c9; }
+.gf-tip .gf-tip-key { margin-top: 5px; font-size: 11px; color: #8fa3b5; }
+.gf-tip { width: auto; max-width: 320px; }
+.detail-gf { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.detail-gf .gf-state { font-size: 12px; color: #a7b7c9; }
+.bank-tooltip .char-tip-bad { font-size: 12px; font-weight: 650; color: var(--gb-red); }
+.gf-menu .hint.is-bad { color: var(--gb-red); }
 .stat-table td:first-child, .stat-table th:first-child { white-space: nowrap; }
 .stat-table .stat-owners { min-width: 280px; text-align: left; white-space: normal; }
 .gf-password { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
@@ -432,6 +469,8 @@ tbody tr:last-child td { border-bottom: 0; }
 .xfer-table td { padding-block: 3px; white-space: nowrap; }
 .xfer-table td.xfer-news { min-width: 240px; white-space: normal; color: #a9bccf; }
 .xfer-table .xfer-name { font-weight: 600; color: #e0e7f0; }
+/* The name a transfer gave it, after its old one */
+.xfer-table .xfer-renamed { font-weight: 600; color: #d6bd84; }
 .xfer-table .xfer-to { font-weight: 600; color: #d9c48f; }
 .xfer-table .xfer-actions { width: 1%; text-align: right; }
 .xfer-row:hover td, .table-scroll .xfer-row:hover td:first-child { background: #1c2c3f; }

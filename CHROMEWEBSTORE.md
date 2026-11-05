@@ -1,6 +1,6 @@
 # Chrome Web Store listing — Global Bank for RoM
 
-Last updated: 2026-11-04. Working metadata for extension **1.4.1**; this file does not publish a store listing.
+Last updated: 2026-11-04. Working metadata for extension **1.4.5**; this file does not publish a store listing.
 
 ## Store listing
 
@@ -68,6 +68,7 @@ Data is not sold, used for unrelated purposes, or used for credit decisions. See
 
 | Version | Date | Changes | Status |
 | --- | --- | --- | --- |
+| 1.4.5 | 2026-11-05 | Characters page grouped by account: one heading per Gameforge account with its RoM accounts under it, a RoM account's only character on one line. Gameforge account names copy to the clipboard on a click (as the existing copy buttons do), and their hover says whether a password is saved. Characters with the same site e-mail address are linked to one Gameforge account, added to the encrypted account list with no password while it is open. Transfers that renamed a character are followed under the new name, kept with the transfer records already in local storage. No new permissions. | Draft |
 | 1.4.1 | 2026-11-04 | Site account details: the RoM username and Gameforge e-mail address on the site's transfer and account pages are kept for the characters those pages list, name their RoM account (instead of "Name's account") and Gameforge account, and link them to a saved Gameforge account of that name. Content script now also on `/user/administration`; no new permissions. | Draft |
 | 1.4.0 | 2026-11-04 | Connection panel and popup Advanced: "Cascade game windows" button (display, start corner, fit to screen, exact resolution and offset with suggested sizes, keep on top) and an option to show the button under Open Global Bank. The choice is stored locally and sent to the local helper over the existing native messaging host, which moves and sizes the game's own windows; no permission changes. | Draft |
 | 1.3.10 | 2026-11-04 | Characters page, grouped by account: a switch gathers single-character accounts into one group, their account shown on hover. Stored locally; no permission changes. | Draft |
