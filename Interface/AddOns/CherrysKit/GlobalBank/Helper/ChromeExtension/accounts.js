@@ -263,6 +263,17 @@ const GBAccounts = (() => {
     }
     return [...found.values()].sort((a, b) => Number(a.name === NO_SERVER) - Number(b.name === NO_SERVER) || b.count - a.count || a.name.localeCompare(b.name));
   }
+  // Each server's gold over every box, richest first, for the line beside the Gold overview's total: [{server, total, count}]
+  function heatServerTotals(boxes) {
+    const found = new Map();
+    for (const server of boxes.flatMap(box => box.servers)) {
+      if (!found.has(server.server)) found.set(server.server, {server: server.server, total: 0, count: 0});
+      const sum = found.get(server.server);
+      sum.total += server.total;
+      sum.count += server.roms.reduce((all, rom) => all + rom.characters.length, 0);
+    }
+    return [...found.values()].sort((a, b) => Number(a.server === NO_SERVER) - Number(b.server === NO_SERVER) || b.total - a.total || a.server.localeCompare(b.server));
+  }
   // A box for each Gameforge account, then one for the characters not linked to any. In a box its servers, and on a
   // server its RoM accounts, the characters one login screen lists, richest first, so that a full account shows as a
   // block of green. romTitle(character): the name to show for its RoM account. unlinked: the last box's name.
@@ -675,9 +686,17 @@ const GBAccounts = (() => {
       const allGold = boxes.reduce((sum, box) => sum + box.total, 0);
       const allCaps = boxes.reduce((sum, box) => sum + box.fullCaps, 0);
       const total = byId('heat-total');
-      total.textContent = `${shortGold(allGold)} gold`;
-      total.title = `${number(allGold)} gold`;
-      total.append(make('span', 'soft-count', `${number(allCaps)} full ${allCaps === 1 ? 'cap' : 'caps'}`));
+      // Each server's gold, then the total of them all
+      const perServer = heatServerTotals(boxes).map(sum => {
+        const chip = make('span', 'heat-server-gold');
+        chip.title = `${sum.server}: ${number(sum.total)} gold, ${number(sum.count)} ${sum.count === 1 ? 'character' : 'characters'}`;
+        chip.append(make('span', 'heat-server-gold-name', `${sum.server}:`), make('span', 'heat-server-gold-sum', shortGold(sum.total)));
+        return chip;
+      });
+      const whole = make('span', 'heat-server-gold is-total');
+      whole.title = `${number(allGold)} gold`;
+      whole.append(make('span', 'heat-server-gold-name', 'Total:'), make('span', 'heat-server-gold-sum', `${shortGold(allGold)} gold`));
+      total.replaceChildren(...perServer, whole, make('span', 'soft-count', `${number(allCaps)} full ${allCaps === 1 ? 'cap' : 'caps'}`));
       const fit = [];
       byId('heat-view').classList.toggle('no-server-names', !heatServerNames);
       byId('heat-view').replaceChildren(...boxes.map(box => {
@@ -1127,6 +1146,6 @@ const GBAccounts = (() => {
       openMenu,
     };
   }
-  return {create, heatColor, heatName, heatShowsGold, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, autoLink, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
+  return {create, heatColor, heatName, heatShowsGold, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, autoLink, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, heatServerTotals, emptyState,
     newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor, heatServers, heatServerKey};
 })();

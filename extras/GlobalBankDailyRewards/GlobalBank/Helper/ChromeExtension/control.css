@@ -453,6 +453,13 @@ tbody tr:last-child td { border-bottom: 0; }
 
 /* The Gold overview: Gameforge account, server, RoM account, characters, in columns like a sheet. 200+ characters fit on one screen. */
 .gold-overview-intro { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
+/* Gold per server beside the page title, then the total of them all */
+#heat-total { flex-wrap: wrap; gap: 4px 12px; }
+.heat-server-gold { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.heat-server-gold-name { font-weight: 400; color: #b4c6d9; }
+.heat-server-gold-sum { font-variant-numeric: tabular-nums; }
+.heat-server-gold.is-total { padding-left: 12px; border-left: 1px solid #2c3e52; }
+.heat-server-gold.is-total .heat-server-gold-name { font-weight: 600; color: inherit; }
 .heat-legend { --heat-color-none: #c62828; --heat-color-half: #f57c00; --heat-color-full: #00e640; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 11px; color: #a1b6ca; }
 .heat-legend > span:first-child { margin-right: 4px; }
 .heat-bar { width: 60px; height: 8px; }

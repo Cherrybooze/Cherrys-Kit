@@ -1680,6 +1680,12 @@ assert.deepEqual([...some[0].servers.map(s => s.server)], ['Aynara']);
 assert.equal(some[0].count, 2);
 assert.equal(some[0].total, 14);
 assert.deepEqual([...gb.heatServers(people).map(s => `${s.name}:${s.count}`)], ['Aynara:2', 'Kerub:1']);
+// Gold per server for the line beside the total, richest first
+const sums = gb.heatServerTotals(all);
+assert.equal(sums.reduce((sum, s) => sum + s.total, 0), all.reduce((sum, box) => sum + box.total, 0));
+assert.equal(sums.reduce((sum, s) => sum + s.count, 0), people.length);
+for (let i = 1; i < sums.length; i++) assert.ok(sums[i - 1].total >= sums[i].total);
+assert.deepEqual([...gb.heatServerTotals(some).map(s => s.server)], ['Aynara']);
 """)
 
     def test_characters_search_takes_filters(self):
