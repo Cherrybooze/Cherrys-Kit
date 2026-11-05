@@ -44,6 +44,7 @@
         <div class="nav-group">
           <span class="nav-label">Roster</span>
           <button type="button" class="nav-item" data-tab="characters" title="Characters"><span class="ico" data-ui-icon="users"></span><span class="nav-text">Characters</span><span id="nav-count-characters" class="nav-count"></span></button>
+          <button type="button" class="nav-item" data-tab="transferlog" title="Transfer log"><span class="ico" data-ui-icon="arrow-up-right"></span><span class="nav-text">Transfer log</span><span id="nav-count-transferlog" class="nav-count"></span></button>
           <button type="button" class="nav-item" data-tab="currencies" title="Currencies"><span class="ico" data-ui-icon="wallet"></span><span class="nav-text">Currencies</span></button>
           <button type="button" class="nav-item" data-tab="heatmap" title="Gold overview"><span class="ico" data-ui-icon="heatmap"></span><span class="nav-text">Gold overview</span></button>
           <button type="button" class="nav-item" data-tab="mail" title="Mail"><span class="ico" data-ui-icon="mail"></span><span class="nav-text">Mail</span><span id="nav-count-mail" class="nav-count"></span></button>
@@ -422,7 +423,7 @@
           <h2 id="transfers-title">Character transfers</h2>
           <a class="gb-button gb-button--sm" href="https://en.runesofmagic.gameforge.com/charactertransfer" target="_blank" rel="noopener noreferrer">Open the transfer page</a>
         </div>
-        <details class="help-note"><summary>How this works</summary><p class="hint">Open the character transfer page on the Runes of Magic site, with the gear icon in the Gameforge client and then its character transfer link, or with the button above once the site knows you. Global Bank keeps only the transfers it lists as planned and the characters its form offers: no account name, no e-mail address. Each Gameforge account has its own page, so open it once for each account with a transfer. A transfer registered there gets a plate on its character's row, and one cancelled there goes. The game moves characters in the weekly maintenance, so the plate counts down to it. After that, the next login with a character of the same account on the old server shows whether it went: then it shows on its new server, waiting for one login with it there, which confirms the transfer. All of this stays in this Chrome.</p></details>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Open the character transfer page on the Runes of Magic site, with the gear icon in the Gameforge client and then its character transfer link, or with the button above once the site knows you. Global Bank keeps only the transfers it lists as planned and the characters its form offers: no account name, no e-mail address. Each Gameforge account has its own page, so open it once for each account with a transfer. A transfer registered there gets a plate on its character's row, and one cancelled there goes. The game moves characters in the weekly maintenance, so the plate counts down to it. After that, the next login with a character of the same account on the old server shows whether it went: then it shows on its new server, waiting for one login with it there, which confirms the transfer. Once its maintenance has passed, a transfer can't be undone in the game, so it can't be forgotten here either: it stays in the log. All of this stays in this Chrome.</p></details>
         <div class="xfer-maintenance">
           <label for="xfer-day">Weekly maintenance</label>
           <select id="xfer-day"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select>
@@ -432,6 +433,16 @@
         </div>
         <p id="transfers-status" class="hint" role="status"></p>
         <div id="transfers-log" class="table-panel table-scroll is-grow"><table class="xfer-table"><thead><tr><th>Character</th><th>Transfer</th><th>Registered</th><th>Maintenance</th><th>State</th><th>Last news</th><th><span class="gb-sr-only">Forget</span></th></tr></thead><tbody id="transfers-rows"></tbody></table></div>
+      </section>
+    </div>
+
+    <div id="tab-transferlog" class="tab-panel" hidden>
+      <h1 class="page-title">Transfer log</h1>
+      <section class="panel is-grow transfers-panel" aria-labelledby="transferlog-title">
+        <h2 id="transferlog-title">Characters in transfer</h2>
+        <details class="help-note"><summary>How this works</summary><p class="hint">Every character with a transfer still under way: registered on the Runes of Magic site's transfer page and waiting for the weekly maintenance, due in the one that just passed, or moved and waiting for one login on its new server. Hover a row for its countdown and history. Once its maintenance has passed, a transfer can no longer be cleared, here or in the full log. The full log, with cancelled and finished transfers and the maintenance time, is under Characters, Transfers. This list is made from what this Chrome keeps and is never sent anywhere.</p></details>
+        <p id="transferlog-status" class="hint" role="status"></p>
+        <div id="transferlog-list" class="table-panel table-scroll is-grow"><table class="xfer-table"><thead><tr><th>Character</th><th>Transfer</th><th>Registered</th><th>Maintenance</th><th>State</th><th>Last news</th></tr></thead><tbody id="transferlog-rows"></tbody></table></div>
       </section>
     </div>
 

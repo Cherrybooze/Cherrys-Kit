@@ -160,8 +160,8 @@ async function recordTransferPage(tab, read, kind = 'transfer') {
     ended: result.ended.map(record => ({name: record.name, from: record.from, to: record.to, state: record.state})), linked};
 }
 async function changeTransfers(changes) {
-  const kept = await chrome.storage.local.get(GBTransfers.STORE);
-  const result = GBTransfers.applyChanges(kept[GBTransfers.STORE], changes);
+  const kept = await chrome.storage.local.get([GBTransfers.STORE, GBTransfers.MAINTENANCE_STORE]);
+  const result = GBTransfers.applyChanges(kept[GBTransfers.STORE], changes, Date.now(), kept[GBTransfers.MAINTENANCE_STORE]);
   if (result.changed) await chrome.storage.local.set({[GBTransfers.STORE]: result.state});
   return {ok: true, changed: result.changed};
 }

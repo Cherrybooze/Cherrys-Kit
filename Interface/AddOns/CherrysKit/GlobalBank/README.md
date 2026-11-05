@@ -26,6 +26,8 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Updated in 1.6.12
 
+**Transfer log page** (extension 1.4.2). The Chrome page has a *Transfer log* page under Roster that lists every character with a transfer still under way: planned and waiting for the weekly maintenance, due in the one that just passed, or moved and waiting for one login on its new server. Hover a row for its countdown and history. Cancelled and finished transfers and the maintenance time stay in the full log under Characters, Transfers. Once its maintenance has passed, a transfer can no longer be cleared: it shows **Kept** instead of **Forget**, on this page and in the full log. The list is made from what Chrome keeps for the extension and is never sent anywhere.
+
 **No downgrade offered.** On the Chrome page's **Addons** page, an addon installed from a newer build than the latest release (one installed from a pull request before its release) says **Newer than the release** instead of offering *Update from GitHub*, which would have put the older release back. *Update all* no longer counts it.
 
 ## Updated in 1.6.11

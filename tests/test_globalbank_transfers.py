@@ -200,8 +200,10 @@ assert.match(own[0].text, /Logged in on Kerub after the maintenance it was due i
 assert.equal(GBT.cleanChanges([{id: 'x', state: 'done'}]), null);
 assert.equal(GBT.cleanChanges([{id: id, state: 'planned'}]), null);
 assert.equal(GBT.cleanChanges([]), null);
-// Forget takes one out
-assert.equal(GBT.applyChanges(state, [{id, state: 'forget', at: after, text: ''}]).state.list.length, 0);
+// Forget takes out a cancelled one; one past its maintenance stays
+assert.equal(GBT.applyChanges(state, [{id, state: 'forget', at: after, text: ''}], after).state.list.length, 1);
+const cancelled = plain(state); cancelled.list[0].state = 'cancelled';
+assert.equal(GBT.applyChanges(cancelled, [{id, state: 'forget', at: after, text: ''}], after).state.list.length, 0);
 """)
 
     def test_moved_characters_show_on_their_new_server_until_they_log_in_there(self):
@@ -336,6 +338,51 @@ assert.equal(GBT.PHASE_NAMES[GBT.phase(moved, later)], 'Moved: log in to confirm
   process.exit(0);
 })().catch(error => { console.error(error); process.exit(1); });
 """)
+
+    def test_transfer_log_page_lists_only_characters_still_in_transfer(self):
+        self.run_js(r"""
+(async () => {
+  // Just enough of a document for the log's rows
+  const node = tag => ({tag, className: '', textContent: '', title: '', id: '', type: '', dataset: {}, children: [],
+    append(...items) { this.children.push(...items); }, setAttribute() {}, replaceChildren(...items) { this.children = items; }});
+  context.document = {createElement: node};
+  const stored = {};
+  const storage = {get: async () => plain(stored), set: async data => Object.assign(stored, plain(data))};
+  const iso = ms => new Date(ms).toISOString();
+  const now = Date.now();
+  // The maintenance three days from now, so nothing planned an hour ago has passed it, whenever this runs
+  stored.gbMaintenance = {day: (new Date().getUTCDay() + 3) % 7, hour: 9, minute: 0};
+  const record = (id, name, state, at) => ({id, name, from: 'Gaia', to: 'Kadmos', state, at: iso(at), seen: iso(at), account: [], events: [{at: iso(at), text: 'Listed as planned'}]});
+  stored.gbTransfers = {v: 1, list: [record('aaaaaaaa0001', 'Anna', 'planned', now - H), record('aaaaaaaa0002', 'Bert', 'moved', now - 9 * D),
+    record('aaaaaaaa0003', 'Cara', 'done', now - 20 * D), record('aaaaaaaa0004', 'Dora', 'cancelled', now - 2 * H), record('aaaaaaaa0005', 'Emil', 'stayed', now - 30 * D)]};
+  const page = GBT.create({storage});
+  await page.load();
+  const names = body => body.children.map(row => row.children[0].children[0].textContent);
+  const full = node('tbody'), current = node('tbody');
+  assert.equal(page.renderLog(full), 5);
+  assert.equal(page.renderLog(current, {active: true, forget: false}), 2);
+  assert.deepEqual(names(current), ['Anna', 'Bert']);
+  // Six cells and no Forget button on the Transfer log page; the full log keeps it
+  assert.ok(current.children.every(row => row.children.length === 6 && !JSON.stringify(row).includes('xferForget')));
+  assert.ok(full.children.every(row => row.children.length === 7));
+  assert.equal(page.counts().active, 2);
+  // Past its maintenance a transfer can't be cleared: moved, done and overdue planned ones refuse Forget
+  const forgettable = name => JSON.stringify(full.children.find(row => row.children[0].children[0].textContent === name)).includes('xferForget');
+  assert.deepEqual(['Anna', 'Bert', 'Cara', 'Dora', 'Emil'].map(forgettable), [true, false, false, true, true]);
+  const list = plain(stored.gbTransfers);
+  const overdue = {...list.list[0], id: 'aaaaaaaa0006', at: iso(now - 9 * D), seen: iso(now - 9 * D)};
+  const kept = GBT.applyChanges({v: 1, list: [...list.list, overdue]}, ['aaaaaaaa0001', 'aaaaaaaa0002', 'aaaaaaaa0003', 'aaaaaaaa0004', 'aaaaaaaa0005', 'aaaaaaaa0006']
+    .map(id => ({id, state: 'forget', at: now, text: ''})), now, stored.gbMaintenance);
+  assert.deepEqual(kept.state.list.map(record => record.name).sort(), ['Anna', 'Bert', 'Cara']);
+  process.exit(0);
+})().catch(error => { console.error(error); process.exit(1); });
+""")
+        page = (EXTENSION / 'control.html').read_text(encoding='utf-8')
+        for marker in ('data-tab="transferlog"', 'id="tab-transferlog"', 'id="transferlog-rows"', 'id="nav-count-transferlog"'):
+            self.assertIn(marker, page)
+        script = (EXTENSION / 'control.js').read_text(encoding='utf-8')
+        self.assertIn("views.transferlog = drawTransferLog", script)
+        self.assertIn("{active: true, forget: false}", script)
 
     def test_background_takes_reads_only_from_the_transfer_page_and_changes_only_from_its_own_page(self):
         self.run_js(r"""

@@ -117,6 +117,17 @@ Not run on the real site yet: the reader was checked against a copy of the trans
 | XF8 | Type `#xfer` in the Characters search. | Only characters with a planned transfer, or one waiting for its login, are listed. |
 | XF9 | Register a transfer for a character Global Bank has no save for (one not logged in since Global Bank was installed). | **Characters** gets a row for it with its name, server and plate; class, level, gold, bag, bank and the other fields stay blank. Its hover card and details say it is known from the transfer page only. After the maintenance it shows on its new server with **Log in to confirm transfer**. |
 
+## Transfer log page (Global Bank 1.6.12, extension 1.4.2, not yet released)
+
+Reload the extension first; the page's sidebar says Version 1.4.2.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| TL1 | Open **Transfer log** under Roster in the page's menu. | It lists every character with a planned, due or moved transfer, with its route, registration time, maintenance and state, and no Forget buttons. The menu shows how many. With none, it says no character is being transferred. |
+| TL2 | Hover a row. | The same tooltip as the full log: both servers, history and the countdown to the maintenance. |
+| TL3 | Cancel a transfer on the site, or log in to confirm a moved one. | It leaves the Transfer log within a few seconds, and the menu count drops; the full log under Characters, Transfers still has it. |
+| TL4 | Under **Characters**, **Transfers**, look at a transfer whose maintenance has passed (due, moved or done). | It shows **Kept** instead of Forget, with a tooltip saying it can no longer be cleared. Planned ones before their maintenance, cancelled ones and ones that didn't move still have Forget. |
+
 ## Account names from the site (Global Bank 1.6.11, extension 1.4.1, not yet released)
 
 Reload the extension first; the page's sidebar says Version 1.4.1.

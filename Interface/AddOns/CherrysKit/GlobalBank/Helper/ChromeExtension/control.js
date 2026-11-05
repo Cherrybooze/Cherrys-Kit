@@ -326,7 +326,7 @@
       // One that moved a character, or changed what it is, prepares the characters again, the selection kept on them
       if (what === 'records' && bank) roster.rekey(() => bank.reprepare());
       renderTransferCount();
-      changed(['characters']);
+      changed(['characters', 'transferlog']);
     },
     who: record => transferWho(record),
     openLog: id => openTransferLog(id),
@@ -455,6 +455,7 @@
     const node = byId('roster-count-transfers');
     node.textContent = count.total ? number(count.active) : '';
     node.classList.toggle('is-attention', count.due + count.moved > 0);
+    byId('nav-count-transferlog').textContent = count.active ? number(count.active) : '';
   }
   function renderMaintenance() {
     const plan = transfers.maintenance();
@@ -472,6 +473,15 @@
     byId('transfers-status').textContent = !total ? 'No character transfers yet. Open the transfer page on the Runes of Magic site, and Global Bank records the ones it lists as planned.'
       : !shown ? 'No transfer matches the search.' : '';
   }
+  // The Transfer log page: only the characters still in transfer, without Forget
+  function drawTransferLog() {
+    renderTransferCount();
+    const shown = transfers.renderLog(byId('transferlog-rows'), {active: true, forget: false});
+    byId('transferlog-list').hidden = !shown;
+    byId('transferlog-status').textContent = shown ? '' : 'No character is being transferred. Open the transfer page on the Runes of Magic site, and Global Bank records the transfers it lists as planned.';
+  }
+  views.transferlog = drawTransferLog;
+  dirty.add('transferlog');
   // From a plate: the log, at that transfer
   function openTransferLog(id) {
     setRosterFilter('transfers', true);
@@ -509,6 +519,7 @@
     const button = event.target.closest('[data-xfer-forget]');
     const record = button && transfers.record(button.dataset.xferForget);
     if (!record) return;
+    if (transfers.locked(record)) { toast('Its maintenance has passed, so this transfer can no longer be cleared.'); return; }
     const waiting = record.state === 'planned' || record.state === 'moved';
     const yes = await ask({title: 'Forget this transfer', noField: true, save: 'Forget',
       hint: `${record.name}, ${record.from} to ${record.to}, leaves the log` + (waiting ? ', and its plate goes. If the transfer page still lists it, it comes back the next time you open that page.' : '.')});
@@ -522,6 +533,7 @@
   // The log's countdowns, while it shows
   setInterval(() => {
     if (currentTab === 'characters' && rosterFilter === 'transfers' && !document.hidden && transfers.tickLog(byId('transfers-rows'))) drawTransfers();
+    if (currentTab === 'transferlog' && !document.hidden && transfers.tickLog(byId('transferlog-rows'))) drawTransferLog();
   }, 30000);
   // A character's note, kept by the helper and shown when you hover the character, here and in the game's window. It
   // goes through the helper's own note command, which checks it again.
@@ -1417,6 +1429,7 @@
     renderViewBar();
     renderSelectionBar();
     renderTransferCount();
+    changed(['transferlog']);
     tryReload();
   });
   // Coming back to this tab looks for new data, at most once a minute, and only reads it all when it changed.
