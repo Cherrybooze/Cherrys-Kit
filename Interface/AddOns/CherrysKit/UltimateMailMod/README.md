@@ -1,6 +1,6 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck14** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **7.0.1-ck16** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **A modern mail window for moving lots of mail between your characters and friends, with a mass send that no longer gets stuck after about 60 mails. The classic window is one switch away.**
 
@@ -21,6 +21,10 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
 <!-- end of requirements -->
+
+## Updated in 7.0.1-ck16
+
+**Items in the arcane transmutor can be mailed.** The game keeps what you put in the transmutor in its own slots, outside the bags, so Ultimate Mail Mod did not know those items: one carried from the transmutor onto a mail stayed on the cursor and nothing was added. Now an item dropped from the open transmutor goes on the mail (modern **Compose** and the classic window) and is sent straight from the transmutor. If you take it back into your bags before it goes, the mail follows it to its bag slot.
 
 ## Updated in 7.0.1-ck14
 

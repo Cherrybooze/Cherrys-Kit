@@ -187,7 +187,7 @@
     {
       "folder": "UltimateMailMod",
       "title": "Ultimate Mail Mod",
-      "version": "7.0.1-ck14",
+      "version": "7.0.1-ck16",
       "command": "/umm",
       "alternative_to": "zMail",
       "description_file": "09-ultimate-mail-mod.md",

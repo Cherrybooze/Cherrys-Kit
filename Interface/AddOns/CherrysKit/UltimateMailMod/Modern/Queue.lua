@@ -165,6 +165,15 @@ end
 
 function Q:StartMail(step)
   local item = step.item;
+  if (item and UMMIsTransmutorSlot(item.index) and not UMMSameItem(GetBagItemLink(item.index), nil, item.link, item.name)) then
+    -- taken back out of the arcane transmutor since it was planned: send it from its bag slot
+    local used = {};
+    for _, other in ipairs(self.steps) do
+      if (other ~= step and other.item) then used[other.item.index] = true; end
+    end
+    local entry = UMMBagManager:FindInBag(item.link, item.name, used);
+    if (entry) then item.index = entry.Index; end
+  end
   if (item and not UMMSameItem(GetBagItemLink(item.index), nil, item.link, item.name)) then
     self:Record(step, "skipped", "UMM_M_REASON_MOVED");
     UMMPrompt("|r|cff"..UMMColor.Yellow..string.format(UMM_M_Q_SKIPPED, item.name or "?", UMM_M_REASON_MOVED));

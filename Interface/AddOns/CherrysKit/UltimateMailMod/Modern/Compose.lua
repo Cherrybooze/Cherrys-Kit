@@ -464,6 +464,16 @@ local function checkItems()
   for k = table.getn(items), 1, -1 do
     local item = items[k];
     local link = GetBagItemLink(item.index);
+    if ((not link or not UMMSameItem(link, nil, item.link, item.name)) and UMMIsTransmutorSlot(item.index)) then
+      -- taken back out of the arcane transmutor: the mail follows it to its bag slot
+      local used = {};
+      for _, other in ipairs(items) do used[other.index] = true; end
+      local entry = UMMBagManager:FindInBag(item.link, item.name, used);
+      if (entry) then
+        item.index = entry.Index;
+        link = entry.Link;
+      end
+    end
     if (not link or not UMMSameItem(link, nil, item.link, item.name)) then
       table.remove(items, k);
       itemStatus(string.format(UMM_M_CO_GONE, item.name or "?"), C.warn);

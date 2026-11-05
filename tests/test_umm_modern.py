@@ -61,14 +61,33 @@ function GetBagItemInfo(slot)
   if item then return slot + 1000, item.icon, item.name, item.count end
   return slot + 1000, nil, nil, 0
 end
-function GetBagItemLink(index) local item = ummBagSlots[index - 1000]; return item and item.link end
+-- the arcane transmutor: body slots 51-60 (ummBox[51..60]), read with GetGoodsItemInfo, outside the bag list
+ummBox = {}
+function ummBoxItem(slot, name, count)
+  local item = ummItem(0, name, count)
+  ummBagSlots[0], ummBox[slot] = nil, item
+  return item
+end
+function ummBody(index)
+  if index and index >= 51 and index <= 60 then return ummBox[index] end
+  return index and ummBagSlots[index - 1000]
+end
+local function takeBody(index)
+  if index >= 51 and index <= 60 then ummBox[index] = nil else ummBagSlots[index - 1000] = nil end
+end
+function GetGoodsItemInfo(index)
+  local item = ummBox[index]
+  if item then return item.icon, item.name, item.count, false end
+  return "", "", 0, false
+end
+function GetBagItemLink(index) local item = ummBody(index); return item and item.link end
 
 -- cursor and the game's send slot
 function CursorHasItem() return ummCursor ~= nil end
 function GetCursorItemInfo() return ummCursor end
 function PickupBagItem(index)
   if ummCursor then ummCursor = nil            -- put back where it came from
-  elseif ummBagSlots[index - 1000] then ummCursor = index end
+  elseif ummBody(index) then ummCursor = index end
 end
 function ItemClipboard_Clear() ummCursor = nil end
 function ClickSendMailItemButton()
@@ -77,13 +96,13 @@ function ClickSendMailItemButton()
   later(ummReply, function() event("MAIL_SEND_INFO_UPDATE") end)
 end
 function GetSendMailItem()
-  local item = ummSlot and ummBagSlots[ummSlot - 1000]
+  local item = ummSlot and ummBody(ummSlot)
   if item then return item.name, item.icon, item.count end
 end
 function SetSendMailMoney(gold) ummAttachMoney = gold end
 function SetSendMailCOD(gold) ummAttachCOD = gold end
 function SendMail(to, subject, body)
-  local item = ummSlot and ummBagSlots[ummSlot - 1000]
+  local item = ummSlot and ummBody(ummSlot)
   local mail = { recipient = to, subject = subject, body = body, money = ummAttachMoney or 0,
     cod = ummAttachCOD or 0, slot = ummSlot, item = item and item.name }
   ummAttachMoney, ummAttachCOD = 0, 0
@@ -94,7 +113,7 @@ function SendMail(to, subject, body)
       event("MAIL_FAILED")
       return
     end
-    if mail.slot then ummBagSlots[mail.slot - 1000] = nil; ummSlot = nil end
+    if mail.slot then takeBody(mail.slot); ummSlot = nil end
     table.insert(ummDelivered, mail)
     event("MAIL_SEND_SUCCESS")
     if mail.slot then event("PLAYER_BAG_CHANGED") end
@@ -941,6 +960,54 @@ class ComposeTests(ModernWindowFixture, unittest.TestCase):
         press("UMMModernComposeSlot1")
         self.assertFalse(self.shown("UMMModernComposeSlot1"))
         self.assertIn("Write a mail, drop items on +, or enter gold.", self.texts("UMMModernCompose"))
+
+    def test_an_item_in_the_arcane_transmutor_can_be_dropped_in_and_sent(self):
+        # the transmutor keeps its items in body slots 51-60, outside the 180 bag slots
+        self.lua.execute('ummItem(1, "Herb", 5); ummBoxItem(53, "Mana Stone", 1)')
+        self.open()
+        self.page(2)
+        self.type("UMMModernComposeTo", "Alt1")
+        self.g.ummCursor = 53
+        self.click("UMMModernComposeAdd")
+        self.assertTrue(self.shown("UMMModernComposeSlot1"))
+        self.assertEqual(self.g.UMMModernComposeSlot1.ummIcon.texture, "Icons/Mana Stone")
+        self.assertIsNone(self.g.ummCursor, "the item went back into the transmutor")
+        self.assertEqual(self.g.UMMModernComposeSubject.text, "Mana Stone")
+        self.click("UMMModernComposeSend")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("recipient", "slot", "item"), [("Alt1", 53, "Mana Stone")])
+        self.assertIsNone(self.lua.eval("ummBox[53]"))
+
+    def test_a_transmutor_item_taken_back_to_the_bag_is_sent_from_its_bag_slot(self):
+        self.lua.execute('ummBoxItem(51, "Mana Stone", 1)')
+        self.open()
+        self.page(2)
+        self.type("UMMModernComposeTo", "Alt1")
+        self.g.ummCursor = 51
+        self.click("UMMModernComposeAdd")
+        self.assertTrue(self.shown("UMMModernComposeSlot1"))
+        # out of the transmutor into bag slot 7
+        self.lua.execute('ummBagSlots[7], ummBox[51] = ummBox[51], nil; UMMMasterFrame_OnEvent("PLAYER_BAG_CHANGED")')
+        self.step(0.2)
+        self.assertTrue(self.shown("UMMModernComposeSlot1"), "the mail followed the item")
+        self.click("UMMModernComposeSend")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("slot", "item"), [(1007, "Mana Stone")])
+
+    def test_a_planned_transmutor_item_moved_to_the_bag_before_its_turn_still_goes(self):
+        self.lua.execute('ummItem(1, "Herb", 5); ummBoxItem(52, "Mana Stone", 1)')
+        self.open()
+        self.page(2)
+        self.type("UMMModernComposeTo", "Alt1")
+        for slot in (1001, 52):
+            self.g.ummCursor = slot
+            self.click("UMMModernComposeAdd")
+        self.click("UMMModernComposeSend")
+        self.click("UMMModernReviewGo")
+        self.until("#ummDelivered == 1")
+        self.lua.execute('ummBagSlots[9], ummBox[52] = ummBox[52], nil')
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("slot", "item"), [(1001, "Herb"), (1009, "Mana Stone")])
 
     def test_the_subject_takes_the_first_item_or_gold_until_one_is_typed(self):
         self.lua.execute('ummItem(1, "Herb", 5); ummItem(2, "Ore", 1); ummSetMoney(1000000)')
