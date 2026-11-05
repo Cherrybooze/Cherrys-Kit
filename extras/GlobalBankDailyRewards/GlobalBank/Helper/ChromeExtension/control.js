@@ -810,6 +810,7 @@
     panel.classList.add('has-profile');
     panel.showModal();
   }
+  const openSends = new Set(); // the sends opened on the Mail page's Sent list
   Object.assign(views, {
     bank: () => bank.show(),
     favourites: () => bank.renderFavourites(),
@@ -827,14 +828,65 @@
     servers: () => renderServers(),
     mail: () => {
       renderMailCount();
-      GBMail.render(byId('tab-mail'), roster.shown(), {search: byId('mail-search').value, gold: GBBank.formatCompact});
+      const icons = GBMail.render(byId('tab-mail'), roster.shown(), {search: byId('mail-search').value, sentSearch: byId('mail-sent-search').value,
+        compact: byId('mail-sent-compact').checked, open: openSends, gold: GBBank.formatCompact});
+      if (icons?.length && typeof GBIcons !== 'undefined') {
+        const table = byId('mail-sent');
+        GBIcons.load(icons, bankSend, (name, url) => {
+          for (const picture of table.querySelectorAll('img[data-icon]')) if (picture.dataset.icon === name) picture.src = url;
+        }).catch(() => {});
+      }
     },
   });
   let mailTyping = 0;
-  byId('mail-search').addEventListener('input', () => {
-    clearTimeout(mailTyping);
-    mailTyping = setTimeout(() => changed(['mail']), 150);
+  for (const id of ['mail-search', 'mail-sent-search']) {
+    byId(id).addEventListener('input', () => {
+      clearTimeout(mailTyping);
+      mailTyping = setTimeout(() => changed(['mail']), 150);
+    });
+  }
+  // The Sent list: Compact groups each send on one line (remembered), and a send's "N mails" opens it
+  chrome.storage.local.get('mailSentCompact').then(({mailSentCompact}) => {
+    if (typeof mailSentCompact === 'boolean' && mailSentCompact !== byId('mail-sent-compact').checked) {
+      byId('mail-sent-compact').checked = mailSentCompact;
+      changed(['mail']);
+    }
+  }).catch(() => {});
+  byId('mail-sent-compact').addEventListener('change', () => {
+    chrome.storage.local.set({mailSentCompact: byId('mail-sent-compact').checked}).catch(() => {});
+    changed(['mail']);
   });
+  byId('mail-sent').addEventListener('click', event => {
+    const button = event.target.closest('.mail-send-toggle');
+    if (!button) return;
+    if (openSends.has(button.dataset.send)) openSends.delete(button.dataset.send);
+    else openSends.add(button.dataset.send);
+    changed(['mail']);
+  });
+  // A sent item's picture: its name, count, tier, plus, stats and runes on hover
+  {
+    const table = byId('mail-sent');
+    const tooltip = byId('bank-tooltip');
+    const place = event => {
+      tooltip.style.left = Math.max(4, Math.min(event.clientX + 14, window.innerWidth - tooltip.offsetWidth - 8)) + 'px';
+      tooltip.style.top = Math.max(4, Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 8)) + 'px';
+    };
+    let hovered = null;
+    table.addEventListener('mousemove', event => {
+      const slot = event.target.closest('.mail-item');
+      if (!slot) { if (hovered) { hovered = null; tooltip.hidden = true; } return; }
+      if (slot !== hovered) {
+        hovered = slot;
+        let item = null;
+        try { item = JSON.parse(slot.dataset.mailItem); } catch { item = null; }
+        if (!item) return;
+        tooltip.innerHTML = GBMail.itemTip(item);
+        tooltip.hidden = false;
+      }
+      place(event);
+    });
+    table.addEventListener('mouseleave', () => { hovered = null; tooltip.hidden = true; });
+  }
   // The logo: back to the Bank as it first opens, with no characters selected, no scope and no filters. The region
   // stays, and every one of its servers shows again.
   byId('brand-home').addEventListener('click', event => {

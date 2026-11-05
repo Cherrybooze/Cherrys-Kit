@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.12** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.6.14** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.14
+
+**Sent mail grouped by send, with item pictures** (extension 1.4.4). On the Mail page, the Sent list gets its own search and a **Compact** tick: each send, the mails that went one after another, is one line with its recipients, total gold and its items as pictures. Hover an item for its tier, plus, stats and runes; click *N mails* to see each mail. Global Bank now saves the real time a mail went (from the Chrome extension's clock, as the game has none), which send it was part of (mails within 30 seconds of each other with the mailbox open), and each item's picture and stats. Mail saved earlier is grouped when it went to the same name one after another, and its items get their pictures from what your characters hold. Each character keeps its newest 2,400 sent mails (was 360), written once a burst of mail is over, when the mailbox closes, or when you log out.
 
 ## Updated in 1.6.12
 

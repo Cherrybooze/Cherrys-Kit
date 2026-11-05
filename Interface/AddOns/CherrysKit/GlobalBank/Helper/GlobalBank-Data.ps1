@@ -303,7 +303,7 @@ function ConvertTo-GBTipTable([string]$records) {
 
 # One character's GlobalBank_Mail as JSON: what its mailbox held when last open, and the mail it sent, oldest first.
 # {"read": time or 0, "inbox": [{"from","subject","gold","diamonds","cod","items","minutes","unread","returned"}] or null,
-#  "sent": [{"at","to","subject","gold","diamonds","cod","items"}]}. Times are seconds since 1970; minutes are what the
+#  "sent": [{"at","to","subject","gold","diamonds","cod","items", and from Global Bank 1.6.14 "send","details"}]}. Times are seconds since 1970; minutes are what the
 # game said was left when the mailbox was read.
 function ConvertTo-GBMailJson([string]$records) {
     if (-not $records) { return 'null' }
@@ -323,7 +323,8 @@ function ConvertTo-GBMailJson([string]$records) {
         } elseif ($f[0] -ceq 'O' -and $f.Count -ge 8) {
             $sent.Add('{"at":' + (ConvertTo-GBNumber $f[1]) + ',"to":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[2])) + ',"subject":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[3])) +
                 ',"gold":' + (ConvertTo-GBNumber $f[4]) + ',"diamonds":' + (ConvertTo-GBNumber $f[5]) + ',"cod":' + (ConvertTo-GBNumber $f[6]) +
-                ',"items":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[7])) + '}')
+                ',"items":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[7])) +
+                $(if ($f.Count -ge 10) { ',"send":' + (ConvertTo-GBNumber $f[8]) + ',"details":' + (ConvertTo-GBJsonString (ConvertTo-GBText $f[9])) } else { '' }) + '}')
         }
     }
     $box = if ($null -ne $inbox) { '[' + ($inbox -join ',') + ']' } else { 'null' }
