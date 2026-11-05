@@ -383,6 +383,11 @@ UMMMailManager = {
     self.priv_TakeAutoDelete = nil;
     self.priv_TakeLastDelete = nil;
     self.priv_TakeDeleteIndex = 0;
+    self.priv_BagsFull = nil;
+    self.priv_SkippedFull = nil;
+    self.priv_TakingIndex = nil;
+    self.priv_InTake = nil;
+    self.priv_RefusedNow = nil;
     self:ClearAutomationLock();
     self:AutoEnableTabs();
     if (forced) then
@@ -620,9 +625,20 @@ UMMMailManager = {
   
   AutoTakeMail = function(self)
     if (self.priv_AutoRunning) then
+      -- Cherry's Kit: the game takes a mail with items only when each item stack has a free bag
+      -- slot, and then not even its gold (client NetCli_MailChild::TakeInboxItem). Such mails are
+      -- left in the inbox and the run goes on with the rest, so gold mails behind them still come.
+      local free = UMMFreeBagSlots();
       -- First find the index of the first tagged mail
       local mailIndex = 0;
       for mi = 1, self.MailCount do
+        local mail = self.Mails[mi];
+        if (mail.Tagged == true and mail.AttachedItems > 0 and mail.CODAmount == 0
+            and (self.priv_BagsFull or (free ~= nil and mail.AttachedItems > free))) then
+          mail.Tagged = false;
+          if (self.priv_TagTable and self.priv_TagTable[mi]) then self.priv_TagTable[mi].Tagged = false; end
+          self.priv_SkippedFull = (self.priv_SkippedFull or 0) + 1;
+        end
         if (self.Mails[mi].Tagged == true) then
           local canTake = nil;
           if (self.priv_AutoTakeFilter == 1) then
@@ -685,10 +701,19 @@ UMMMailManager = {
             end
           end
           if (canTake) then
+            self.priv_TakingIndex = mailIndex;
+            self.priv_InTake = true;
             if (self:GetAttachments(mailIndex, nil, nil, nil)) then
               --
             else
               -- This instance should never happen
+            end
+            self.priv_InTake = nil;
+            if (self.priv_RefusedNow) then
+              -- the game said "backpack full" inside TakeInboxItem: nothing was taken
+              self.priv_RefusedNow = nil;
+              self:BagFullContinue();
+              return;
             end
             if (not self.priv_TakeAutoDelete) then
               self.Mails[mailIndex].Tagged = false;
@@ -711,6 +736,10 @@ UMMMailManager = {
           end
         end
       else
+        if ((self.priv_SkippedFull or 0) > 0) then
+          UMMPrompt("|r|cff"..UMMColor.Yellow..string.format(UMM_INBOX_SKIPPED_BAGFULL, self.priv_SkippedFull));
+          self.priv_SkippedFull = 0;
+        end
         if (self.priv_TakeAutoDelete) then
           -- We'r done taking everything - now let's delete the mails we just emptied
           self:View():SetStatus(UMM_INBOX_STATUS_PREPARETAKEDELETE);
@@ -786,6 +815,37 @@ UMMMailManager = {
     end
   end;
   
+  -- "Your backpack is full" while taking: the game refused that mail before asking the server.
+  -- Leave it (and every other mail with items) in the inbox and go on with the gold-only mails.
+  -- True when the run goes on.
+  BagFullWhileTaking = function(self)
+    if (not self.priv_AutoRunning or self.priv_AutoType ~= "Take" or (self.priv_TakeDeleteIndex or 0) ~= 0) then
+      return false;
+    end
+    self.priv_BagsFull = true;
+    local index = self.priv_TakingIndex;
+    self.priv_TakingIndex = nil;
+    if (index and self.priv_TagTable and self.priv_TagTable[index]) then
+      self.priv_TagTable[index].Tagged = false;
+      self.priv_SkippedFull = (self.priv_SkippedFull or 0) + 1;
+    end
+    if (self.priv_InTake) then
+      -- still inside TakeInboxItem: AutoTakeMail goes on once it returns
+      self.priv_RefusedNow = true;
+    else
+      self:BagFullContinue();
+    end
+    return true;
+  end;
+
+  BagFullContinue = function(self)
+    self:ClearAutomationLock();
+    -- the mail was shown as emptied before the game answered: read the inbox again
+    self:InboxRefresh();
+    self:View():RefreshTOC();
+    UMMSetGlobalTimeout("UMMMailManager");
+  end;
+
   AttachmentSucceeded = function(self)
     if (self.priv_AutoRunning) then
       self:View():RefreshTOC();

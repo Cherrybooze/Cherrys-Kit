@@ -697,6 +697,63 @@ class InboxTests(ModernWindowFixture, unittest.TestCase):
         self.assertEqual(self.label("UMMModernInboxTake"), "Take all 0")
 
 
+class FullBagTakeTests(ModernWindowFixture, unittest.TestCase):
+    """With the bags full the game takes no mail with items (not even its gold): Take all goes on
+    with the gold mails behind it."""
+
+    def setUp(self):
+        super().setUp()
+        self.lua.execute('''
+          for slot = 1, 60 do ummItem(slot, "Stone", 1) end
+          ummInbox = {}
+          ummMail("Pal", 1000, { subject = "Item first", items = { { name = "Herb", icon = "Icons/Herb" } } })
+          ummMail("Alt1", 5000, { subject = "Gold A" })
+          ummMail("Alt2", 7000, { subject = "Gold B" })
+          -- the client: refuses a mail with items at once when the bags have no room, and says so
+          local take = TakeInboxItem
+          function TakeInboxItem(i)
+            local m = ummInbox[i]
+            local used = 0
+            for slot = 1, 60 do if ummBagSlots[slot] then used = used + 1 end end
+            if m and m.items and #m.items > 60 - used then
+              table.insert(ummTakes, "refused "..m.subject)
+              UMMMasterFrame_OnEvent("WARNING_MESSAGE", "SYS_GAMEMSGEVENT_750")
+              return
+            end
+            return take(i)
+          end
+        ''')
+        self.money = self.g.ummMoney
+
+    def take_all(self):
+        self.open()
+        self.click("UMMModernInboxTake")
+        self.until("not UMMMailManager:IsAutomating()")
+
+    def check_result(self, takes):
+        self.assertEqual(self.lua_list("ummTakes"), takes)
+        self.assertEqual(self.g.ummMoney - self.money, 12000)
+        self.assertEqual(self.inbox(), ["Item first"])
+        self.assertIn("1 mails with items stay in the inbox: the bags have no room for them",
+                      " ".join(self.chat()))
+
+    def test_mails_with_items_are_left_when_the_bags_are_counted_full(self):
+        self.lua.execute('''
+          function GetBagCount()
+            local used = 0
+            for slot = 1, 60 do if ummBagSlots[slot] then used = used + 1 end end
+            return used, 60
+          end
+        ''')
+        self.take_all()
+        self.check_result(["Gold A", "Gold B"])
+
+    def test_the_backpack_full_warning_skips_that_mail_and_goes_on(self):
+        self.lua.execute("GetBagCount = nil")   # nothing counted ahead: the game's warning decides
+        self.take_all()
+        self.check_result(["refused Item first", "Gold A", "Gold B"])
+
+
 class InboxReloadTests(ModernWindowFixture, unittest.TestCase):
     """The game loads the inbox list only when a mailbox opens; the Inbox tab opens it again."""
 

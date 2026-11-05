@@ -328,6 +328,11 @@ function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
       UMMTraceAdd("warning", arg1);
     end
     if (TEXT("SYS_GAMEMSGEVENT_750") == arg1 or TEXT("ASK_BACKPACK_FULL") == arg1) then
+      -- taking the inbox: that mail stays, the run goes on with the gold mails (7.0.1-ck17).
+      -- Before the empty slot check: a mail with 3 items needs 3 free slots, not 1.
+      if (UMMMailManager:BagFullWhileTaking()) then
+        return;
+      end
       -- Safety check on empty bags before stopping (release 5.0.3.2575)
       if (UMMBagManager:HasEmptySlot()) then
         return;

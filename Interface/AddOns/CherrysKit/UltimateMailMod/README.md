@@ -28,6 +28,8 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 
 **Recent names stay on their server.** Your characters are now kept per server (from the login screen's character list when loginxml is installed, and from each character you play). **Mine** shows only this server's characters, and **Recent** leaves out names that are your characters on another server only (left over from the one list every server shared before 7.0.1-ck14).
 
+**Take all with full bags.** The game takes a mail with items only when every item has a free bag slot, and then gives not even its gold. Take all used to stop at the first such mail; now it leaves those mails in the inbox, goes on with the gold mails behind them, and says in chat how many stayed.
+
 **Send safely is always there.** Mass send shows **Send safely** and **Send fast** side by side, whatever the number of mails; the green button sends safely.
 
 **A tidier settings window** (`/umm`): two columns with **Sending speed**, **Gold presets**, **Mail window**, **Options** and **Tools**, values with their units ("0.6 s", "20 mails"), changed values in green, a tooltip on every row, box and button (with each value's default), and **Default speeds**, which puts only the five speed values back.
