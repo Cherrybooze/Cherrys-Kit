@@ -420,35 +420,88 @@ class GlobalBankSnapshotTests(unittest.TestCase):
         """)
         self.assertEqual(lua.eval('GlobalBank_Mail'),
             'I~1800000000~3`N~Alt~Gold~5000~0~0~0~2160~`N~Shop~Gems~0~30~0~0~360~u`N~Trader~Pay me~0~0~900~1~2880~ur')
-        # Money set just before SendMail goes with it, once the server says it went
+        # Money set just before SendMail goes with it, once the server says it went; the list is written once the
+        # burst of mail is over (or the mailbox closes, or the game saves)
         lua.execute("""
+          clockNow=100
+          GetTime=function() return clockNow end
           SetSendMailMoney(250000, 0)
           SendMail('Bank~1', 'Some gold', '')
           GlobalBank.OnEvent('MAIL_SEND_SUCCESS')
         """)
         self.assertEqual(lua.eval('sent[1]'), 'Bank~1')
-        self.assertTrue(lua.eval('GlobalBank_Mail').endswith('`O~1800000000~Bank1~Some gold~250000~0~0~Herb x3'))
-        # A mail that failed isn't kept, and its money doesn't carry over to the next one
+        self.assertFalse(lua.eval('GlobalBank_Mail').endswith('Herb x3~1~Herb**3*icon*0*0**'))
+        lua.execute('GlobalBank.OnUpdate(6)')
+        self.assertTrue(lua.eval('GlobalBank_Mail').endswith('`O~1800000000~Bank1~Some gold~250000~0~0~Herb x3~1~Herb*n:Herb*3*icon*0*0**'))
+        # A mail that failed isn't kept, and its money doesn't carry over to the next one, sent 10 s later: same send
         lua.execute("""
           SetSendMailMoney(7, 0)
           SendMail('Other', 'No', '')
           GlobalBank.OnEvent('MAIL_FAILED')
           GetSendMailItem=function() return nil end
+          clockNow=110
           SendMail('Other', 'Letter', '')
           GlobalBank.OnEvent('MAIL_SEND_SUCCESS')
+          GlobalBank.OnEvent('MAIL_CLOSED')
         """)
-        self.assertTrue(lua.eval('GlobalBank_Mail').endswith('`O~1800000000~Other~Letter~0~0~0~'))
+        self.assertTrue(lua.eval('GlobalBank_Mail').endswith('`O~1800000000~Other~Letter~0~0~0~~1~'))
         self.assertEqual(lua.eval('#GlobalBank.mailSent'), 2)
+        # The mailbox closed: the next mail is a new send
+        lua.execute("SendMail('Other', 'Later', ''); GlobalBank.OnEvent('MAIL_SEND_SUCCESS'); GlobalBank.Flush()")
+        self.assertTrue(lua.eval('GlobalBank_Mail').endswith('`O~1800000000~Other~Later~0~0~0~~2~'))
         # Only the newest are kept, and they come back after a reload
         lua.execute("""
-          for i = 1, 365 do SendMail('Alt', 'n' .. i, ''); GlobalBank.OnEvent('MAIL_SEND_SUCCESS') end
+          for i = 1, 2405 do SendMail('Alt', 'n' .. i, ''); GlobalBank.OnEvent('MAIL_SEND_SUCCESS') end
+          GlobalBank.SaveMail()
           GlobalBank.LoadMail()
         """)
-        self.assertEqual(lua.eval('#GlobalBank.mailSent'), 360)
-        self.assertEqual(lua.eval('GlobalBank.mailSent[360].subject'), 'n365')
+        self.assertEqual(lua.eval('#GlobalBank.mailSent'), 2400)
+        self.assertEqual(lua.eval('GlobalBank.mailSent[2400].subject'), 'n2405')
+        self.assertEqual(lua.eval('GlobalBank.mailSent[2400].send'), 2)
         self.assertEqual(lua.eval('#GlobalBank.mailbox.list'), 3)
         self.assertTrue(lua.eval('GlobalBank.mailbox.list[3].returned'))
         self.assertEqual(lua.eval('GlobalBank.SerializeMail()'), lua.eval('GlobalBank_Mail'))
+        # Records from before send numbers still read and save as they were
+        lua.execute("GlobalBank_Mail='O~5~Alt~Old~1~0~0~Herb'; GlobalBank.LoadMail()")
+        self.assertEqual(lua.eval('GlobalBank.SerializeMail()'), 'O~5~Alt~Old~1~0~0~Herb')
+
+    def test_sent_mail_keeps_its_items_stats_and_the_clock_time(self):
+        lua = LuaRuntime(unpack_returned_tuples=True)
+        lua.execute("""
+          SendMail=function() end
+          ClickSendMailItemButton=function() end
+          SetSendMailMoney=function() end
+          SetSendMailCOD=function() end
+        """)
+        lua.execute(SOURCE.read_text(encoding='utf-8'))
+        lua.execute("""
+          os=nil
+          CherrysClock={UTC=function() return 1800000123.6 end}
+          GetTime=function() return 5 end
+          GlobalBank.started=true
+          NAMES={Sys511040_name='Genius I', Sys511904_name='Devour V', Sys520074_name='Quick II', Sys500102_name='Wisdom V'}
+          TEXT=function(key) return NAMES[key] or key end
+          LINKS={[12]='|Hitem:34182 3 74000a5f cfa0cc40 0 0 7ef8a 0 0 0 251c 967d|h|cffc805f8[Craft Crystal Staff]|r|h',
+                 [13]='|Hitem:3185d 3 0 66 0 0|h|cffffffff[Mana Stone Tier 6]|r|h'}
+          GetBagItemLink=function(i) return LINKS[i] end
+          cursor=12
+          GetCursorItemInfo=function() return cursor end
+          GetSendMailMultiItemEnable=function() return true end
+          SLOTS={}
+          GetSendMailItem=function(i) local s = SLOTS[i]; if s then return s[1], s[2], s[3] end end
+          ClickSendMailItemButton(1); SLOTS[1]={'Craft Crystal Staff', 'interface/icons/wp_staff', 1}
+          cursor=13
+          ClickSendMailItemButton(2); SLOTS[2]={'Mana Stone Tier 6', 'interface/icons/power stone', 2}
+          SendMail('Alt', 'Gear', '')
+          GlobalBank.OnEvent('MAIL_SEND_SUCCESS')
+          mail=GlobalBank.mailSent[1]
+        """)
+        self.assertEqual(lua.eval('mail.time'), 1800000123)
+        self.assertEqual(lua.eval('mail.items'), 'Craft Crystal Staff, Mana Stone Tier 6 x2')
+        self.assertEqual(lua.eval('mail.details'),
+            'Craft Crystal Staff*213378*1*interface/icons/wp_staff*0*0*Genius I;Devour V*Quick II^Mana Stone Tier 6*202845*2*interface/icons/power stone*0*0*Wisdom V*')
+        # The send slots are forgotten once the mail went
+        self.assertIsNone(lua.eval('GlobalBank.mailAttached[1]'))
 
     def test_mail_of_the_same_name_on_another_server_waits_for_it(self):
         lua = LuaRuntime(unpack_returned_tuples=True)

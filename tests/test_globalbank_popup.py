@@ -1663,9 +1663,38 @@ assert.equal(boxes.get(people[2].key).recorded, false);
 const sum = mail.totals(boxes, people);
 assert.deepEqual([sum.mails, sum.gold, sum.expiring, sum.characters, sum.read], [3, 255000, 1, 1, 1]);
 const sent = mail.sentLog(people);
-assert.deepEqual([...sent.map(m => m.subject)], ['Since', 'Away', 'Before', 'Too old']);
-assert.equal(sent[0].toKey, people[0].key);
-assert.equal(sent[1].toKey, '');
+// Same time: the later one in the sender's list is the newer
+assert.deepEqual([...sent.map(m => m.subject)], ['Away', 'Since', 'Before', 'Too old']);
+assert.equal(sent[1].toKey, people[0].key);
+assert.equal(sent[0].toKey, '');
+// Sends: the mails that went together. A send number says so; older mail goes by name and time.
+const sender = {name: 'Mass', server: 'Aynara', mail: {read: 0, inbox: null, sent: [
+  {at: 0, to: 'Zuu', subject: 'Mana Stone Tier 6', gold: 0, diamonds: 0, cod: 0, items: 'Mana Stone Tier 6'},
+  {at: 0, to: 'Zuu', subject: 'Mana Stone Tier 6', gold: 0, diamonds: 0, cod: 0, items: 'Mana Stone Tier 6'},
+  {at: 0, to: 'Bog', subject: 'Judge X (3)', gold: 0, diamonds: 0, cod: 0, items: 'Judge X x3'},
+  {at: now - 300, to: 'Alt', subject: 'Gear (1/2)', gold: 5, diamonds: 0, cod: 0, items: 'Sword', send: 7,
+   details: 'Sword*210001*1*interface/icons/wp_sword*12*3*Strength IX;Stamina VIII*Quick II'},
+  {at: now - 290, to: 'Bank', subject: 'Gear (2/2)', gold: 10, diamonds: 0, cod: 0, items: 'Mana Stone Tier 6 x2', send: 7,
+   details: 'Mana Stone Tier 6*202845*2*interface/icons/power stone*0*0*Wisdom V*'},
+  {at: now - 280, to: 'Bank', subject: 'Again', gold: 1, diamonds: 0, cod: 0, items: '', send: 8, details: ''}]}};
+roster.prepare([sender], null, null);
+const log = mail.sentLog([sender]);
+const sends = mail.sentSends(log);
+assert.deepEqual([...sends.map(s => s.count)], [1, 2, 1, 2]);
+assert.equal(sends[1].subject, 'Gear');
+assert.equal(sends[1].gold, 15);
+assert.equal(sends[1].first, now - 300);
+assert.deepEqual([...sends[1].to.map(t => t.name)], ['Alt', 'Bank']);
+assert.deepEqual([...sends[1].items.map(i => `${i.name}:${i.count}:${i.plus}:${i.tier}:${i.stats.join('/')}`)],
+  ['Sword:1:12:3:Strength IX/Stamina VIII', 'Mana Stone Tier 6:2:0:0:Wisdom V']);
+assert.equal(sends[1].items[0].icon, 'interface/icons/wp_sword');
+assert.deepEqual([...sends[1].items[0].runes], ['Quick II']);
+// Old mail: the two to Zuu one after another are one send, Judge X to someone else is another
+assert.equal(sends[3].subject, 'Mana Stone Tier 6');
+assert.equal(sends[3].items[0].count, 2);
+assert.equal(sends[2].items[0].name, 'Judge X');
+assert.equal(sends[2].items[0].count, 3);
+assert.match(mail.itemTip(sends[1].items[0]), /Stats: Strength IX, Stamina VIII/);
 assert.equal(mail.timeLeft(now + 3 * 86400, now), '3 days');
 assert.equal(mail.timeLeft(now + 5 * 3600, now), '5 h');
 assert.equal(mail.timeLeft(now - 1, now), 'gone');

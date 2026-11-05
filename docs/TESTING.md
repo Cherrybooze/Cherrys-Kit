@@ -111,6 +111,20 @@ Not run on the real site yet: the reader was checked against a copy of the trans
 | XF8 | Type `#xfer` in the Characters search. | Only characters with a planned transfer, or one waiting for its login, are listed. |
 | XF9 | Register a transfer for a character Global Bank has no save for (one not logged in since Global Bank was installed). | **Characters** gets a row for it with its name, server and plate; class, level, gold, bag, bank and the other fields stay blank. Its hover card and details say it is known from the transfer page only. After the maintenance it shows on its new server with **Log in to confirm transfer**. |
 
+## Sent mail grouped by send (Global Bank 1.6.14, extension 1.4.4, not yet released)
+
+Reload the extension first; the page's sidebar says Version 1.4.4. Chrome must have run once since Windows started, so the game knows the time.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| SM1 | Open the Mail page. | The Sent header has a search box and **Compact: group each send**, ticked. Old mails to the same name one after another share a line with *N mails*; their items show as pictures where a character holds the same item. |
+| SM2 | In game, send 3 mails in a row from one character with items (a mana stone with stats, a piece of gear) and gold, then close the mailbox and log out. | One line for them, with the time of the first and last mail, the recipients (a count when they differ, names on hover), the gold summed and each item's picture; tier and plus in the corners, a count when more than one. |
+| SM3 | Hover each item picture. | Its name, count, tier and plus, stats and runes. |
+| SM4 | Click *3 mails*. | Each mail opens under the line with its own time, recipient, subject, gold and items; clicking again closes it. |
+| SM5 | Type a stat name (e.g. *wisdom*) in the Sent search. | Only sends with a mail that has that stat, name or subject stay. |
+| SM6 | Untick **Compact**, reload the page. | The flat list is back, one row per mail, and stays after the reload. |
+| SM7 | Send a mail, wait more than 30 seconds, send another. | Two lines. |
+
 ## Account names from the site (Global Bank 1.6.11, extension 1.4.1, not yet released)
 
 Reload the extension first; the page's sidebar says Version 1.4.1.
