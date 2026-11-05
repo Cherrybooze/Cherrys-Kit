@@ -137,7 +137,7 @@ These are outside the Full ZIP. LogNextChar needs the hub and loads through it; 
 | --- | --- | --- | --- |
 | [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next/Prev buttons switch to the neighbouring character; `/lnc 3` logs in the character numbered 3 and `/lnc settings` configures the buttons. Its login screen handles a stuck server list, saved logins, secondary passwords and keyboard selection; with Global Bank it shows gold, last saves and Arcane Transmutor charges. Extract its ZIP into `Interface\AddOns`, then let setup install the login screen or run `CherrysKit\LogNextChar\Install login screen.bat` with the game closed. | `/lnc`, `/lpc` | 1.4.0 |
 | [zMail](#zmail-the-other-mailbox) | pyrr's mailbox addon, as an alternative to Ultimate Mail Mod, in its own `Interface\AddOns\zmail` folder. The kit's copy is zMail 1.4 with one fix: mails with gold over the gold cap are no longer opened, so they keep their 30 days. | Opens with the mailbox | 1.4-ck1 |
-| [Global Bank for RoM](extras/GlobalBankDailyRewards/README.md) | Chrome extension for Global Bank's page and popup: combined bank, gold overview, mail, stats, macros, addon management and the optional daily reward. Needs Global Bank and its Windows helper; see [Chrome installation](#optional-chrome-extension). | Chrome toolbar | 1.4.1 |
+| [Global Bank for RoM](extras/GlobalBankDailyRewards/README.md) | Chrome extension for Global Bank's page and popup: combined bank, gold overview, mail, stats, macros, addon management and the optional daily reward. Needs Global Bank and its Windows helper; see [Chrome installation](#optional-chrome-extension). | Chrome toolbar | 1.4.4 |
 
 Download it from this build: [LogNextChar-1.4.0.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.118/LogNextChar-1.4.0.zip).
 
@@ -345,7 +345,7 @@ That also prevents release downloads needed for missing addons; extract the pack
 
 ## Optional Chrome extension
 
-[**Download Global Bank for RoM for Chrome, 1.4.1**](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.118/CherrysKit-GlobalBankDailyRewards-1.4.1.zip) · [Detailed extension guide](extras/GlobalBankDailyRewards/README.md)
+[**Download Global Bank for RoM for Chrome, 1.4.4**](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.118/CherrysKit-GlobalBankDailyRewards-1.4.4.zip) · [Detailed extension guide](extras/GlobalBankDailyRewards/README.md)
 
 This optional Windows extension opens Global Bank in a Chrome tab: a searchable bank across your characters, equipment and mail, currencies, gold, favourites, item depot, locally encrypted Gameforge accounts, macros and addon-settings backups, plus the helper's terminal and auction cache. The [Addons page](#manage-addons-from-chrome) manages installed folders and kit updates. The extension can keep the helper running while Chrome is open and supplies the kit's clock.
 
