@@ -560,6 +560,7 @@ local function buildTop()
     drawControls();
   end });
   UMMModernMassTo.ummFocus = function(box)
+    if ((box:GetText() or "") ~= "") then M.SelectAll(box); end
     if (UMMAutoNameList()) then K.Open(box, function() drawWho(); drawControls(); end); end
   end;
   UMMModernMassTo.ummEnterKey = function(box)

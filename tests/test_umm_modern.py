@@ -277,6 +277,30 @@ function ummCtrlBack(name)
   ummKey(name, "BACKSPACE", "\127")
   ctrl = false
 end
+-- Ctrl+V (CUiEditBox::PasteFromClipboard): the selection goes first, then the clipboard text goes in
+-- at the caret (a one-line box takes it up to its first control character; a full box stops it),
+-- the text handler runs, and only then does the caret move past what came in
+function ummPaste(name, text)
+  local box = _G[name]
+  ctrl, key = true, "V"
+  UMMFixtureDispatch(name, "OnKeyDown")
+  ctrl = false
+  deleteSelection(box)
+  local put = {}
+  for _, ch in ipairs(chars(text)) do
+    if ch < " " and not box.multiLine then break end
+    if textUnits(box.text) + textUnits(table.concat(put)) + unitsOf(ch) > (box.letters or 255) then break end
+    put[#put + 1] = ch
+  end
+  local piece = table.concat(put)
+  if piece == "" then return end
+  local caret = box.caret or 0
+  local b = byteAt(box.text, caret)
+  box.text = string.sub(box.text, 1, b)..piece..string.sub(box.text, b + 1)
+  UMMFixtureDispatch(name, "OnTextChanged")
+  placeCaret(box, caret + textUnits(piece))
+  box.selStart = box.caret
+end
 function ummCaret(name) return _G[name].caret or 0, _G[name].selStart or 0 end
 function CreateUIComponent(kind, name, parent) return UMMFixtureWidget(kind, name, parent) end
 GameTooltip.SetInboxItem = function(self, index, pos) table.insert(ummTips, { index = index, pos = pos }) end
@@ -1528,6 +1552,146 @@ class CtrlBackspaceTests(ModernWindowFixture, unittest.TestCase):
         self.assertEqual(units("añ😀b", 8), 5)
         self.assertEqual(nbytes("añ😀b", 4), 7)
         self.assertEqual(nbytes("añ😀b", 99), 8)
+
+
+class CopyPasteTests(ModernWindowFixture, unittest.TestCase):
+    """Ctrl+V and Ctrl+A in the window's text boxes. The client pastes and copies by itself (it
+    types the characters 22, 3 and 24 into the box); the tests paste the way it does: the selection
+    goes, the text goes in, the text handler runs, then the caret moves (tests: ummPaste)."""
+
+    def setUp(self):
+        super().setUp()
+        self.open()
+        self.page(2)
+
+    def focus(self, name):
+        box = self.g[name]
+        box.SetFocus(box)
+
+    def paste(self, name, text):
+        self.focus(name)
+        self.g.ummPaste(name, text)
+        self.step(0.3)
+        return self.g[name].text
+
+    def ctrl_key(self, name, key):
+        self.g.ctrl = True
+        self.g.ummKey(name, key)
+        self.g.ctrl = False
+        self.step()
+
+    def selection(self, name):
+        caret, start = self.g.ummCaret(name)
+        return (start, caret)
+
+    def test_every_compose_box_takes_a_paste_and_follows_it(self):
+        self.g.ummSetMoney(10_000_000)
+        self.assertEqual(self.paste("UMMModernComposeTo", "Alt1"), "Alt1")
+        self.assertEqual(self.g.UMMModernComposeTo.ummHint.text, "")
+        self.assertEqual(self.g.UMMModernPickerRow1.ummName.text, "Alt1", "the name list narrows to what came in")
+        self.assertEqual(self.paste("UMMModernComposeSubject", "Hello there"), "Hello there")
+        self.assertEqual(self.paste("UMMModernComposeMoney", "1234567"), "1,234,567")
+        self.assertEqual(self.g.UMMModernComposeMoney.ummHint.text, "")
+        self.focus("UMMModernComposeSubject")
+        self.assertEqual(self.paste("UMMModernComposeMoney", "1,000,001"), "1,000,001", "the amount was selected on the way in: replaced")
+        self.click("UMMModernGoldAdd")
+        self.assertEqual(self.paste("UMMModernGoldRow1To", "Alt2"), "Alt2")
+        self.assertEqual(self.paste("UMMModernGoldRow1Amount", "75000"), "75,000")
+        compose = self.texts("UMMModernCompose")
+        self.assertIn("1 mail to Alt1 (1,000,001 gold)  +  1 gold mail, 75,000 gold", compose)
+
+    def test_text_pasted_from_windows_loses_its_carriage_returns_on_the_way_out(self):
+        body = "UMMModernComposeBody"
+        self.assertEqual(self.paste(body, "first\r\nsecond\r\nthird"), "first\r\nsecond\r\nthird", "the box keeps what the client put in")
+        self.assertEqual(self.g.UMMModernComposeBody.ummHint.text, "")
+        self.assertIn("18 / 2,000", self.texts("UMMModernCompose"), "the counter counts the letters that go out")
+        self.paste("UMMModernComposeTo", "Alt1")
+        self.paste("UMMModernComposeSubject", "Note")
+        self.click("UMMModernComposeSend")
+        self.until("not UMMQueue:Busy()")
+        self.assertEqual(self.delivered("recipient", "subject", "body"), [("Alt1", "Note", "first\nsecond\nthird")])
+
+    def test_every_mass_send_box_takes_a_paste(self):
+        self.page(3)
+        self.assertEqual(self.paste("UMMModernMassTo", "Alt3"), "Alt3")
+        self.assertEqual(self.paste("UMMModernMassSearch", "potion"), "potion")
+        self.assertEqual(self.g.UMMModernMassSearch.ummHint.text, "")
+        self.click("UMMModernMassCOD")
+        self.assertEqual(self.paste("UMMModernMassCODAmount", "2500"), "2,500")
+
+    def test_a_paste_goes_in_at_the_caret_and_over_a_selection(self):
+        name = "UMMModernComposeSubject"
+        self.paste(name, "one two")
+        box = self.g[name]
+        box.HighlightText(box, 3, 3)
+        self.g.ummPaste(name, " and")
+        self.step(0.3)
+        self.assertEqual(box.text, "one and two")
+        self.assertEqual(tuple(self.g.ummCaret(name)), (7, 7), "the caret ends after what came in")
+        box.HighlightText(box, 4, 7)
+        self.g.ummPaste(name, "or")
+        self.step(0.3)
+        self.assertEqual(box.text, "one or two")
+
+    def test_ctrl_a_selects_everything_so_a_paste_or_ctrl_backspace_takes_it_all(self):
+        for name, text in (("UMMModernComposeTo", "Alt1"), ("UMMModernComposeSubject", "Some words here"),
+                           ("UMMModernComposeBody", "first line\nsecond line"), ("UMMModernComposeMoney", "2500000")):
+            self.paste(name, text)
+            self.ctrl_key(name, "A")
+            self.assertEqual(self.selection(name), (0, len(self.g[name].text)), name)
+        name = "UMMModernComposeSubject"
+        self.ctrl_key(name, "A")
+        self.assertEqual(self.paste(name, "Fresh"), "Fresh", "a paste replaces the selected text")
+        self.ctrl_key(name, "A")
+        self.assertEqual(self.back(name), "", "so does Ctrl+Backspace")
+        # a plain A, Ctrl alone and Ctrl+other keys select nothing
+        self.g.ummTypeKeys(name, "abc")
+        self.assertEqual(self.selection(name), (3, 3))
+        self.g.ummKey(name, "B")
+        self.assertEqual(self.selection(name), (3, 3))
+
+    def back(self, name):
+        self.g.ummCtrlBack(name)
+        self.step(0.2)
+        return self.g[name].text
+
+    def test_a_filled_to_box_is_selected_when_it_gets_the_cursor_and_an_empty_one_is_not(self):
+        to = "UMMModernComposeTo"
+        self.paste(to, "Alt1")
+        self.focus("UMMModernComposeSubject")
+        self.focus(to)
+        self.assertEqual(self.selection(to), (0, 4), "typing replaces the name, Ctrl+C takes it")
+        self.assertTrue(self.shown("UMMModernPicker"), "the name list still opens")
+        self.g.ummTypeKeys(to, "Alt2")
+        self.assertEqual(self.g[to].text, "Alt2")
+        self.click("UMMModernGoldAdd")
+        row = "UMMModernGoldRow1To"
+        self.focus(row)
+        self.assertEqual(self.selection(row), (0, 0), "an empty box has nothing to select")
+        self.page(3)
+        mass = "UMMModernMassTo"
+        self.paste(mass, "Alt3")
+        self.focus("UMMModernMassSearch")
+        self.focus(mass)
+        self.assertEqual(self.selection(mass), (0, 4))
+
+    def test_a_paste_that_changes_nothing_says_so_and_a_real_one_does_not(self):
+        subject = "UMMModernComposeSubject"
+        self.paste(subject, "Hello")
+        self.lua.execute('UMMModern.Status("")')
+        self.assertEqual(self.paste(subject, "\nHello"), "Hello", "a one-line box stops at a line break: nothing came in")
+        self.assertEqual(self.status(), self.g.UMM_M_PASTE_NONE)
+        self.lua.execute('UMMModern.Status("")')
+        self.g.ummPaste(subject, " you")
+        self.step(0.3)
+        self.assertEqual(self.g[subject].text, "Hello you")
+        self.assertEqual(self.status(), "", "a paste that worked is not commented")
+        # the message belongs to the box that has the cursor
+        self.lua.execute('UMMModern.Status("")')
+        self.g.ummPaste(subject, "")
+        self.focus("UMMModernComposeTo")
+        self.step(0.3)
+        self.assertEqual(self.status(), "")
 
 
 class LayoutTests(ModernWindowFixture, unittest.TestCase):

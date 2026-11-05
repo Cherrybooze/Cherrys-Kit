@@ -1,6 +1,6 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck14** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **7.0.1-ck15** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **A modern mail window for moving lots of mail between your characters and friends, with a mass send that no longer gets stuck after about 60 mails. The classic window is one switch away.**
 
@@ -21,6 +21,10 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
 <!-- end of requirements -->
+
+## Updated in 7.0.1-ck15
+
+**Copy and paste in the modern window's text boxes.** Ctrl+V, Ctrl+C and Ctrl+X are the game's own text box keys, which the window leaves alone, in To, Subject, the text, the gold boxes, Mark by name and the C.O.D. price. New: **Ctrl+A** selects everything in the box you are typing in, so Ctrl+C copies it all and Ctrl+V or Ctrl+Backspace replaces it. Clicking into **To** (on Compose, in an extra gold row and on Mass send) selects the name that is in it, as the classic window does, so one Ctrl+C copies it. Text pasted from Windows into the mail's text keeps its line breaks and loses the extra carriage returns that came with them, so the letter count and the mails are right. A Ctrl+V that puts nothing in the box says so in the line at the bottom: the clipboard holds no text, or, for a one-line box, its text starts with a line break (the game pastes a one-line box up to the first line break).
 
 ## Updated in 7.0.1-ck14
 
