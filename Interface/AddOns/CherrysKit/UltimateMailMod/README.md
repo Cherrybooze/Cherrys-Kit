@@ -1,6 +1,6 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck14** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **7.0.1-ck17** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **A modern mail window for moving lots of mail between your characters and friends, with a mass send that no longer gets stuck after about 60 mails. The classic window is one switch away.**
 
@@ -21,6 +21,22 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
 <!-- end of requirements -->
+
+## Updated in 7.0.1-ck17
+
+**Inbox loads new mail again.** The game reads the inbox list only when a mailbox opens, so mail that came while it was open never showed. With a mailbox opened from anywhere (the item shop's portable mailbox), clicking **Inbox** now opens it again and the list comes in anew; the window stays open. At a mailbox in the world that takes a click on the mailbox itself, so the window says so as soon as new mail comes in.
+
+**Recent names stay on their server.** Your characters are now kept per server (from the login screen's character list when loginxml is installed, and from each character you play). **Mine** shows only this server's characters, and **Recent** leaves out names that are your characters on another server only (left over from the one list every server shared before 7.0.1-ck14).
+
+**Take all with full bags.** The game takes a mail with items only when every item has a free bag slot, and then gives not even its gold. Take all used to stop at the first such mail; now it leaves those mails in the inbox, goes on with the gold mails behind them, and says in chat how many stayed.
+
+**Send safely is always there.** Mass send shows **Send safely** and **Send fast** side by side, whatever the number of mails; the green button sends safely.
+
+**A tidier settings window** (`/umm`): two columns with **Sending speed**, **Gold presets**, **Mail window**, **Options** and **Tools**, values with their units ("0.6 s", "20 mails"), changed values in green, a tooltip on every row, box and button (with each value's default), and **Default speeds**, which puts only the five speed values back.
+
+## Updated in 7.0.1-ck16
+
+**Items in the arcane transmutor can be mailed.** The game keeps what you put in the transmutor in its own slots, outside the bags, so Ultimate Mail Mod did not know those items: one carried from the transmutor onto a mail stayed on the cursor and nothing was added. Now an item dropped from the open transmutor goes on the mail (modern **Compose** and the classic window) and is sent straight from the transmutor. If you take it back into your bags before it goes, the mail follows it to its bag slot.
 
 ## Updated in 7.0.1-ck14
 

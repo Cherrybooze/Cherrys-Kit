@@ -1,52 +1,109 @@
 -- Cherry's Kit: Ultimate Mail Mod settings window. /umm opens it (also the hub's Settings
 -- button). Every option here is also a /umm command; both write UMMConfig.Settings.
 
--- number rows: setting, label, step, low, high, format
+local function default(name, text)
+  if (_G[name] == nil) then _G[name] = text; end
+end
+
+default("UMM_SET_HEAD_SPEED", "Sending speed");
+default("UMM_SET_HEAD_GOLD", "Gold presets");
+default("UMM_SET_HEAD_WINDOW", "Mail window");
+default("UMM_SET_HEAD_OPTIONS", "Options");
+default("UMM_SET_HEAD_TOOLS", "Tools");
+default("UMM_SET_FAST", "Send fast: wait between mails");
+default("UMM_SET_SAFE", "Send safely: wait between mails");
+default("UMM_SET_BATCH", "Send safely: pause after");
+default("UMM_SET_PAUSE", "Send safely: pause for");
+default("UMM_SET_RETRIES", "Send safely: tries again");
+default("UMM_SET_SECONDS", "%s s");
+default("UMM_SET_MAILS", "%s mails");
+default("UMM_SET_NEVER", "never");
+default("UMM_SET_TIMES", "%sx");
+default("UMM_SET_DEFAULT_WAS", "Default: %s. Now: %s.");
+default("UMM_SET_TIP_FAST", "Seconds between two mails when you click Send fast. Lower is quicker, but past about 60 quick mails the server may drop the connection. Also /umm fastdelay.");
+default("UMM_SET_TIP_SAFE", "Seconds between two mails when you click Send safely (the green Send button). Higher is gentler on the connection. Also /umm delay.");
+default("UMM_SET_TIP_BATCH", "Send safely takes a break after this many mails. 0 = no breaks. Also /umm batch.");
+default("UMM_SET_TIP_PAUSE", "How long Send safely's break lasts, in seconds. Also /umm batch.");
+default("UMM_SET_TIP_RETRIES", "How often Send safely tries a mail again when the game refuses it, before it gives up on that mail and stops. Also /umm retries.");
+default("UMM_SET_SPEEDDEFAULTS", "Default speeds");
+default("UMM_SET_TIP_SPEEDDEFAULTS", "Puts the five sending speed values back to their defaults. Nothing else changes.");
+default("UMM_SET_SPEEDS_RESET", "sending speeds back to defaults");
+default("UMM_SET_SLOTCHECK", "Wait for item in send slot");
+default("UMM_SET_TIP_SLOTCHECK", "On (the default): a mail goes out only once the game shows its item in the send slot, so no mail leaves empty or with the wrong item. Also /umm slotcheck on|off.");
+default("UMM_SET_SOUND", "Sound on new mail");
+default("UMM_SET_TIP_SOUND", "Plays a sound when new mail arrives. Also /umm sound.");
+default("UMM_SET_EVENTS", "Mail events in chat");
+default("UMM_SET_TIP_EVENTS", "Writes every step of sending into chat as it happens (for finding problems). Off after a Reload UI. Also /umm trace on|off.");
+default("UMM_SET_TIP_SAVEPRESETS", "Saves both gold presets. Enter in a box saves too.");
+default("UMM_SET_CHECK", "Run check");
+default("UMM_SET_TIP_CHECK", "Prints what UMM sees right now (mailbox, send slot, cursor, pacing) into chat. Also /umm x.");
+default("UMM_SET_TRACE", "Show trace");
+default("UMM_SET_TIP_TRACE", "Prints the last 30 mail events into chat, to share when something went wrong. Also /umm trace.");
+default("UMM_SET_DEFAULTS", "All defaults");
+default("UMM_SET_TIP_DEFAULTS", "Puts every setting in this window back to its default: speeds, window size, the boxes on the right and the gold presets.");
+default("UMM_SET_RESET", "Forget own chars");
+default("UMM_SET_TIP_RESET", "Forgets the list of your characters on this server (asks first). It fills again as you log in, and from the login screen's list.");
+
+-- number rows: setting, label, step, low, high, format, tooltip
 local ROWS = {
-  { "FastDelay",  "Send fast: seconds between mails",  0.1, 0.1, 10,  "%.1f" },
-  { "SendDelay",  "Send safely: seconds between",      0.1, 0.2, 10,  "%.1f" },
-  { "BatchSize",  "Safely: pause after ... mails", 5, 0,  200, "%d" },
-  { "BatchPause", "Safely: pause length (s)",           1,   0,   120, "%d" },
-  { "MaxRetries", "Safely: tries again",      1,   0,   10,  "%d" },
-  { "WindowScale", UMM_SETTINGS_SCALE,       0.05, UMM_WINDOW_SCALE_LOW, UMM_WINDOW_SCALE_HIGH, "%.2f" },
+  { "FastDelay",  UMM_SET_FAST,    0.1, 0.1, 10,  "%.1f", UMM_SET_TIP_FAST,    UMM_SET_SECONDS },
+  { "SendDelay",  UMM_SET_SAFE,    0.1, 0.2, 10,  "%.1f", UMM_SET_TIP_SAFE,    UMM_SET_SECONDS },
+  { "BatchSize",  UMM_SET_BATCH,   5,   0,   200, "%d",   UMM_SET_TIP_BATCH,   UMM_SET_MAILS },
+  { "BatchPause", UMM_SET_PAUSE,   1,   0,   120, "%d",   UMM_SET_TIP_PAUSE,   UMM_SET_SECONDS },
+  { "MaxRetries", UMM_SET_RETRIES, 1,   0,   10,  "%d",   UMM_SET_TIP_RETRIES, UMM_SET_TIMES },
+  { "WindowScale", UMM_SETTINGS_SCALE, 0.05, UMM_WINDOW_SCALE_LOW, UMM_WINDOW_SCALE_HIGH, "%.2f", UMM_SETTINGS_TIP_SCALE },
 };
 local SCALE_ROW = 6;
+local SPEED_ROWS = 5;   -- rows 1-5: the "Default speeds" button
 
--- check boxes: label, read, write
+-- check boxes: label, read, write, tooltip
 local CHECKS = {
-  { "Wait for item in send slot",
+  { UMM_SET_SLOTCHECK,
     function() return UMMSettings:Get("NoSlotCheck") ~= true end,
-    function(on) UMMSettings:Set("NoSlotCheck", not on) end },
-  { "Sound on new mail",
+    function(on) UMMSettings:Set("NoSlotCheck", not on) end, UMM_SET_TIP_SLOTCHECK },
+  { UMM_SET_SOUND,
     function() return UMMSettings:Get("AudioWarning") == true end,
     function(on)
       UMMSettings:Set("AudioWarning", on and true or false);
       local box = getglobal("UMMFrameSettingAudioAlert");
       if (box) then box:SetChecked(on and 1 or nil); end
-    end },
-  { "Mail events in chat",
+    end, UMM_SET_TIP_SOUND },
+  { UMM_SET_EVENTS,
     function() return UMMTrace.live == true end,
-    function(on) UMMTrace.live = on and true or false end },
+    function(on) UMMTrace.live = on and true or false end, UMM_SET_TIP_EVENTS },
   { UMM_SETTINGS_MAILSHORTCUTS,
     function() return UMMSettings:ShortcutsEnabled() end,
-    function(on) UMMSettings:Set("MailShortcuts", on) end },
+    function(on) UMMSettings:Set("MailShortcuts", on) end, UMM_SETTINGS_TIP_MAILSHORTCUTS },
   { UMM_SETTINGS_CLASSICUI,
     function() return UMMUIStyle() == "classic" end,
     function(on)
       UMMSetUIStyle(on and "classic" or "modern");
       UMMPrompt(string.format(UMM_UI_NOW, on and UMM_UI_CLASSIC or UMM_UI_MODERN));
-    end },
+    end, UMM_SETTINGS_TIP_CLASSICUI },
   { UMM_SETTINGS_AUTOLIST,
     function() return UMMAutoNameList() end,
-    function(on) UMMSettings:Set("AutoNameList", on and true or false) end },
+    function(on) UMMSettings:Set("AutoNameList", on and true or false) end, UMM_SETTINGS_TIP_AUTOLIST },
+};
+
+-- section headers: frame part, text
+local HEADS = {
+  Speed = UMM_SET_HEAD_SPEED, Gold = UMM_SET_HEAD_GOLD, Window = UMM_SET_HEAD_WINDOW,
+  Options = UMM_SET_HEAD_OPTIONS, Tools = UMM_SET_HEAD_TOOLS,
 };
 
 local goldDirty, refreshingGold = false, false;
 local shownGold = {};   -- preset box name -> its text as last grouped
 
 local BUTTONS = {
-  Check = "Run check", Trace = "Show trace", Defaults = "Defaults", Reset = "Forget own chars",
-  ConfirmYes = "Yes", ConfirmNo = "No",
+  Check = UMM_SET_CHECK, Trace = UMM_SET_TRACE, Defaults = UMM_SET_DEFAULTS, Reset = UMM_SET_RESET,
+  ConfirmYes = "Yes", ConfirmNo = "No", SpeedDefaults = UMM_SET_SPEEDDEFAULTS,
+};
+-- button tooltips: frame part, title, text
+local BUTTON_TIPS = {
+  Check = { UMM_SET_CHECK, UMM_SET_TIP_CHECK }, Trace = { UMM_SET_TRACE, UMM_SET_TIP_TRACE },
+  Defaults = { UMM_SET_DEFAULTS, UMM_SET_TIP_DEFAULTS }, Reset = { UMM_SET_RESET, UMM_SET_TIP_RESET },
+  SpeedDefaults = { UMM_SET_SPEEDDEFAULTS, UMM_SET_TIP_SPEEDDEFAULTS },
+  SavePresets = { UMM_SETTINGS_SAVEPRESETS, UMM_SET_TIP_SAVEPRESETS },
 };
 -- "Forget own chars" asks first: the question and Yes/No take the place of these buttons.
 -- No sits where the clicked button was, so a double click cannot confirm.
@@ -55,6 +112,15 @@ local CONFIRM_SHOWS = { "ConfirmText", "ConfirmYes", "ConfirmNo" };
 
 local function Get(i)
   return UMMSendSetting(ROWS[i][1]);
+end
+
+-- A row's value as shown: "0.6 s", "20 mails", "3x"; a pause after 0 mails is "never".
+local function Shown(i, value)
+  local row = ROWS[i];
+  local text = string.format(row[6], value);
+  if (row[1] == "BatchSize" and value == 0) then return UMM_SET_NEVER; end
+  if (row[8]) then text = string.format(row[8], text); end
+  return text;
 end
 
 function UMMSettingsUI_OnLoad(this)
@@ -72,6 +138,9 @@ function UMMSettingsUI_OnLoad(this)
   for name, text in pairs(BUTTONS) do
     getglobal(this:GetName()..name):SetText(text);
   end
+  for name, text in pairs(HEADS) do
+    getglobal(this:GetName().."Head"..name):SetText(text);
+  end
   for i = 1, 2 do
     getglobal(this:GetName().."Preset"..i.."Label"):SetText(string.format(UMM_SETTINGS_GOLDPRESET, i));
   end
@@ -84,7 +153,17 @@ function UMMSettingsUI_Refresh(resetGold)
     return;
   end
   for i, row in ipairs(ROWS) do
-    getglobal("UMMSettingsFrameRow"..i.."Value"):SetText(string.format(row[6], Get(i)));
+    local value = Get(i);
+    local label = getglobal("UMMSettingsFrameRow"..i.."Value");
+    label:SetText(Shown(i, value));
+    -- a changed value stands out from the defaults
+    if (label.SetColor) then
+      if (math.abs(value - UMM_SEND_DEFAULTS[row[1]]) < 0.001) then
+        label:SetColor(1, 0.82, 0);
+      else
+        label:SetColor(0.45, 1, 0.55);
+      end
+    end
   end
   for i, check in ipairs(CHECKS) do
     getglobal("UMMSettingsFrameCheck"..i):SetChecked(check[2]() and 1 or nil);
@@ -190,9 +269,38 @@ function UMMSettingsUI_ListTip(this)
   tip(this, UMM_SETTINGS_AUTOLIST, UMM_SETTINGS_TIP_AUTOLIST);
 end
 
--- Number rows with a tooltip: the window scale only.
+-- A number row's tooltip: what it does, its default and its value now.
 function UMMSettingsUI_RowTip(this)
-  if (this:GetID() == SCALE_ROW) then tip(this, UMM_SETTINGS_SCALE, UMM_SETTINGS_TIP_SCALE); end
+  local i = this:GetID();
+  local row = ROWS[i];
+  if (not row or not GameTooltip) then return; end
+  GameTooltip:SetOwner(this, "ANCHOR_BOTTOMRIGHT", 0, 0);
+  GameTooltip:SetText(row[2]);
+  GameTooltip:AddLine(row[7], 1, 1, 1);
+  GameTooltip:AddLine(string.format(UMM_SET_DEFAULT_WAS, Shown(i, UMM_SEND_DEFAULTS[row[1]]), Shown(i, Get(i))), 0.6, 0.8, 1);
+  GameTooltip:Show();
+end
+
+-- Every part of the window points here on mouse over: rows, check boxes and buttons.
+function UMMSettingsUI_Tip(this)
+  local name = this:GetName() or "";
+  local part = string.gsub(name, "^UMMSettingsFrame", "");
+  local hover = getglobal(name.."Hover");
+  if (hover) then hover:Show(); end
+  if (string.find(part, "^Row%d+$")) then
+    UMMSettingsUI_RowTip(this);
+  elseif (string.find(part, "^Check%d+$")) then
+    local check = CHECKS[this:GetID()];
+    if (check) then tip(this, check[1], check[4]); end
+  elseif (BUTTON_TIPS[part]) then
+    tip(this, BUTTON_TIPS[part][1], BUTTON_TIPS[part][2]);
+  end
+end
+
+function UMMSettingsUI_Leave(this)
+  local hover = getglobal((this:GetName() or "").."Hover");
+  if (hover) then hover:Hide(); end
+  if (GameTooltip) then GameTooltip:Hide(); end
 end
 
 function UMMSettingsUI_Step(i, direction)
@@ -226,6 +334,12 @@ function UMMSettingsUI_Button(action)
     SlashCmdList["UMM"](nil, "x");
   elseif (action == "trace") then
     UMMTraceDump(30);
+  elseif (action == "speeds") then
+    for i = 1, SPEED_ROWS do
+      UMMSettings:Set(ROWS[i][1], UMM_SEND_DEFAULTS[ROWS[i][1]]);
+    end
+    UMMPrompt(UMM_SET_SPEEDS_RESET);
+    UMMSettingsUI_Refresh();
   elseif (action == "defaults") then
     for _, row in ipairs(ROWS) do
       UMMSettings:Set(row[1], UMM_SEND_DEFAULTS[row[1]]);

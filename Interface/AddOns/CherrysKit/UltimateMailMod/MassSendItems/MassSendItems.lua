@@ -880,8 +880,8 @@ function UMMMassSendItemsActionTemplate_OnLoad(this)
         getglobal(self:GetName()..name):Disable();
       end
     end
-    -- under SPLIT_AT mails one plain "Send" (fast); from SPLIT_AT on, "Send fast" + "Send safely"
-    local split = mailCount >= UMM_MSI_SPLIT_AT;
+    -- "Send safely" and "Send fast" side by side, whatever the number of mails (7.0.1-ck17)
+    local split = true;
     if (split ~= self.priv_Split) then
       self.priv_Split = split;
       local send = getglobal(self:GetName().."Send");
@@ -900,7 +900,7 @@ function UMMMassSendItemsActionTemplate_OnLoad(this)
     end
   end;
   
-  -- what the main button does: "safe" when split into two buttons, else "fast"
+  -- what the main button does: "safe" (split into two buttons), "fast" before the first update
   this.MainSendMode = function(self)
     return self.priv_Split and "safe" or "fast";
   end;

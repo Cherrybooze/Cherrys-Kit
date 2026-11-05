@@ -93,8 +93,10 @@ UMMFriends = {
     self.List = {};
     -- Start with own characters
     self:AddFriend(UnitName("player"), "own");
-    for index = 1, table.getn(UMMConfig.Characters) do
-      self:AddFriend(UMMConfig.Characters[index], "own");
+    -- this server's characters only: the same name on another server is someone else
+    local own = UMMSettings:OwnCharacters();
+    for index = 1, table.getn(own) do
+      self:AddFriend(own[index], "own");
     end
     if (UMM_OwnCharacters) then
       for index = 1, table.getn(UMM_OwnCharacters) do

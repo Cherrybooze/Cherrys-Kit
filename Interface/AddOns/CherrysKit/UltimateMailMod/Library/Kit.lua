@@ -112,6 +112,16 @@ end
 -- Defaults are deliberately gentle: the old 0.2 s spacing with no pauses is what ran into
 -- trouble around 60 mails. Change them with /umm delay, /umm batch and /umm retries.
 
+default("UMM_INBOX_SKIPPED_BAGFULL", "%d mails with items stay in the inbox: the bags have no room for them (the game gives neither their items nor their gold then).");
+
+-- Free bag slots the game counts when a mail is taken (GetBagCount: used, usable), nil if unknown.
+function UMMFreeBagSlots()
+  if (type(GetBagCount) ~= "function") then return nil; end
+  local ok, used, total = pcall(GetBagCount);
+  if (not ok or type(used) ~= "number" or type(total) ~= "number") then return nil; end
+  return math.max(0, total - used);
+end
+
 UMM_SEND_DEFAULTS = {
   FastDelay   = 0.2,  -- Send fast: seconds between two mails (the original pace)
   SendDelay   = 0.6,  -- Send safely: seconds between two mails

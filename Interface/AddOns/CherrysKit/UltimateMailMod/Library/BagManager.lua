@@ -26,6 +26,14 @@ function UMMSameItem(link, name, otherLink, otherName)
   return linkName ~= nil and linkName == otherLinkName;
 end
 
+-- Body slots of the arcane transmutor (magic box): 51-60, after the 50 item shop slots.
+UMM_TRANSMUTOR_FIRST = 51;
+UMM_TRANSMUTOR_LAST = 60;
+
+function UMMIsTransmutorSlot(slot)
+  return type(slot) == "number" and slot >= UMM_TRANSMUTOR_FIRST and slot <= UMM_TRANSMUTOR_LAST;
+end
+
 UMMBagManager = {
 
   ItemList = {};
@@ -48,8 +56,50 @@ UMMBagManager = {
   end;
 
   GetItem = function(self, slotIndex)
+    if (UMMIsTransmutorSlot(slotIndex)) then
+      return self:TransmutorItem(slotIndex);
+    end
     self:Ensure();
     return self.BySlot[slotIndex];
+  end;
+
+  -- An item in the arcane transmutor. The game keeps those in body slots 51-60, outside the
+  -- 180 bag slots, so the bag list never has them; the mail server sends from any body slot.
+  -- Read live (only a drop or a send asks), one entry per slot so the bound check is cached.
+  Transmutor = {};
+
+  TransmutorItem = function(self, slotIndex)
+    local texture, name, itemCount = nil, nil, 0;
+    if (GetGoodsItemInfo) then
+      texture, name, itemCount = GetGoodsItemInfo(slotIndex);
+    end
+    local link = (texture ~= nil and texture ~= "") and GetBagItemLink(slotIndex) or nil;
+    if (not link) then
+      self.Transmutor[slotIndex] = nil;
+      return nil;
+    end
+    local entry = self.Transmutor[slotIndex];
+    if (entry == nil or not UMMSameItem(entry.Link, entry.Name, link, name)) then
+      entry = { Index = slotIndex, Empty = false, Marked = false, Transmutor = true };
+      self.Transmutor[slotIndex] = entry;
+    end
+    entry.Icon = texture;
+    entry.Name = name;
+    entry.Count = itemCount or 1;
+    entry.Link = link;
+    return entry;
+  end;
+
+  -- The bag slot now holding this item (an item taken back out of the transmutor), or nil.
+  FindInBag = function(self, link, name, skip)
+    self:Ensure();
+    for i = 1, table.getn(self.ItemList) do
+      local entry = self.ItemList[i];
+      if (not entry.Empty and not (skip and skip[entry.Index]) and UMMSameItem(entry.Link, entry.Name, link, name)) then
+        return entry;
+      end
+    end
+    return nil;
   end;
 
   MarkItem = function(self, slotIndex)
