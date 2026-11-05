@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.11** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.6.12** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.12
+
+**No downgrade offered.** On the Chrome page's **Addons** page, an addon installed from a newer build than the latest release (one installed from a pull request before its release) says **Newer than the release** instead of offering *Update from GitHub*, which would have put the older release back. *Update all* no longer counts it.
 
 ## Updated in 1.6.11
 

@@ -493,6 +493,18 @@ ConvertTo-Json -InputObject $rows -Compress
             {'installed': '0.4.30', 'latest': '0.4.29', 'state': 'newer'},
         ])
 
+    def test_an_addon_newer_than_the_release_is_not_offered_as_an_update(self):
+        # Installed from a pull request before its release, with the kit's own version unchanged
+        output = self.run_ps("""
+$rows = @()
+foreach ($latest in @('5.07-ck19', '5.07-ck20', '5.07-ck18', '5.07')) {
+    $release = @{ kit_version = '0.11.115'; hub_version = '0.4.30'; packages = @(@{ package = 'zBag'; version = $latest; title = 'zBag'; bytes = 1 }) }
+    $rows += (Get-AddonsCheck $paths $release).packages[0].state
+}
+ConvertTo-Json -InputObject $rows -Compress
+""")
+        self.assertEqual(json.loads(output), ['current', 'update', 'newer', 'newer'])
+
     def test_refuses_paths_outside_its_folders_and_its_own_folders(self):
         (self.addons / 'CherrysKit' / 'GlobalBank').mkdir()
         out = self.run_ps("""
