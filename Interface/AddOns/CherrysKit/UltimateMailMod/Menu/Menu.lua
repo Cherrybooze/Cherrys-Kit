@@ -109,7 +109,17 @@ function UMMMenuTabTemplate_OnLoad(this)
 end
 
 function UMMMenuTabTemplate_OnClick(this)
-  UMMMenuSelectTab(this:GetID());
+  local id = this:GetID();
+  if (id == 1 and type(UMMInboxReload) == "function") then
+    -- the Inbox tab loads the list again where the game allows it (UltimateMailMod.lua)
+    local result = UMMInboxReload();
+    if (result == "walk") then
+      UMMPrompt(UMM_M_INBOX_WALK or "New mail came while the mailbox was open. Close the mailbox and click it again to see it.");
+    elseif (result == "same" and UMMMailManager:InboxShown()) then
+      UMMMailManager:View():RefreshTOC();
+    end
+  end
+  UMMMenuSelectTab(id);
 end
 
 function UMMFrame_OnLoad(this)

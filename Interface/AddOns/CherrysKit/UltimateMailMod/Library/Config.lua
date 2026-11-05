@@ -62,6 +62,27 @@ function UMMServerKey()
   return name;
 end
 
+-- Names as a set of lower-case keys.
+local function NameSet(list, into)
+  into = into or {};
+  if (type(list) == "table") then
+    for _, name in ipairs(list) do
+      if (type(name) == "string") then into[string.lower(name)] = true; end
+    end
+  end
+  return into;
+end
+
+-- Adds name to the sorted list unless it is there; true when added.
+local function AddSorted(list, name)
+  for _, have in ipairs(list) do
+    if (have == name) then return false; end
+  end
+  table.insert(list, name);
+  table.sort(list);
+  return true;
+end
+
 local function RefreshShortcuts()
   if (type(UMMRefreshMailShortcuts) == "function") then UMMRefreshMailShortcuts(); end
 end
@@ -125,6 +146,9 @@ UMMSettings = {
     if (UMMConfig.Characters == nil) then
       UMMConfig.Characters = {};
     end
+    -- your characters per server (7.0.1-ck17): Characters above is every server's, kept as it was
+    if (type(UMMConfig.CharactersByServer) ~= "table") then UMMConfig.CharactersByServer = {}; end
+    if (type(UMMConfig.RosterByServer) ~= "table") then UMMConfig.RosterByServer = {}; end
     self:Save();
     RefreshShortcuts();
   end;
@@ -148,8 +172,78 @@ UMMSettings = {
     return true;
   end;
 
-  -- The names mailed from this server, newest first (at most 20).
+  -- The names mailed from this server, newest first (at most 20), without the names of your
+  -- characters on other servers (see SavedHistory and OwnElsewhere).
   History = function(self)
+    local names = self:SavedHistory();
+    local elsewhere = self:OwnElsewhere();
+    if (not elsewhere) then return names; end
+    local kept = nil;
+    for i, name in ipairs(names) do
+      if (elsewhere[string.lower(name)]) then
+        if (not kept) then
+          kept = {};
+          for j = 1, i - 1 do kept[j] = names[j]; end
+        end
+      elseif (kept) then
+        kept[#kept + 1] = name;
+      end
+    end
+    return kept or names;
+  end;
+
+  -- Your characters on this server: the login screen's list (LOGCHAR_ROSTER, loginxml) once this
+  -- server's was seen, plus every character played here with UMM. Until then the account-wide
+  -- Characters list (every server's names) fills in, less the names known to be yours on another
+  -- server only.
+  OwnCharacters = function(self)
+    if (type(UMMConfig) ~= "table") then return {}; end
+    local legacy = type(UMMConfig.Characters) == "table" and UMMConfig.Characters or {};
+    local server = UMMServerKey();
+    if (server == "?") then return legacy; end
+    local byServer, rosters = UMMConfig.CharactersByServer, UMMConfig.RosterByServer;
+    local names = type(byServer) == "table" and byServer[server] or nil;
+    if (type(names) ~= "table") then names = {}; end
+    if (type(rosters) == "table" and rosters[server]) then return names; end
+    local result, seen = {}, NameSet(names);
+    for _, name in ipairs(names) do result[#result + 1] = name; end
+    local elsewhere = self:OwnElsewhere(true) or {};
+    for _, name in ipairs(legacy) do
+      local key = type(name) == "string" and string.lower(name);
+      if (key and not seen[key] and not elsewhere[key]) then
+        seen[key] = true;
+        result[#result + 1] = name;
+      end
+    end
+    table.sort(result);
+    return result;
+  end;
+
+  -- Lower-case names of your characters on other servers that are not yours here, or nil while
+  -- this server's full list is unknown (no login screen list seen yet): a Recent name that is one
+  -- of them was mailed from another server (the one list of every server before 7.0.1-ck14).
+  -- anyList: also while this server's list is not complete (for OwnCharacters' fill-in).
+  OwnElsewhere = function(self, anyList)
+    if (type(UMMConfig) ~= "table") then return nil; end
+    local server = UMMServerKey();
+    local rosters, byServer = UMMConfig.RosterByServer, UMMConfig.CharactersByServer;
+    if (server == "?" or type(byServer) ~= "table") then return nil; end
+    if (not anyList and (type(rosters) ~= "table" or not rosters[server])) then return nil; end
+    local here = NameSet(byServer[server]);
+    local result, any = {}, false;
+    for other, names in pairs(byServer) do
+      if (other ~= server and type(names) == "table") then
+        for _, name in ipairs(names) do
+          local key = type(name) == "string" and string.lower(name);
+          if (key and not here[key]) then result[key] = true; any = true; end
+        end
+      end
+    end
+    return any and result or nil;
+  end;
+
+  -- The names mailed from this server as saved, newest first.
+  SavedHistory = function(self)
     if (type(UMMConfig) ~= "table") then return {}; end
     local server = UMMServerKey();
     local byServer = UMMConfig.RecentByServer;
@@ -200,8 +294,46 @@ UMMSettings = {
         table.insert(UMMConfig.Characters, name);
         table.sort(UMMConfig.Characters);
       end
+      self:RecordServerCharacters(name);
     end
     self:Save();
+  end;
+
+  -- This server's characters: the one playing, and the login screen's list of this account on
+  -- this server when loginxml left it (LOGCHAR_ROSTER with LOGCHAR_SERVER). The roster replaces the
+  -- server's list, so deleted or moved characters drop out.
+  RecordServerCharacters = function(self, name)
+    local server = UMMServerKey();
+    if (server == "?") then return; end
+    if (type(UMMConfig.CharactersByServer) ~= "table") then UMMConfig.CharactersByServer = {}; end
+    if (type(UMMConfig.RosterByServer) ~= "table") then UMMConfig.RosterByServer = {}; end
+    local list = UMMConfig.CharactersByServer[server];
+    if (type(list) ~= "table") then list = {}; end
+    local roster, rosterServer = rawget(_G, "LOGCHAR_ROSTER"), rawget(_G, "LOGCHAR_SERVER");
+    if (type(roster) == "table" and type(rosterServer) == "string"
+        and string.match(string.gsub(rosterServer, "|c%x%x%x%x%x%x%x%x", ""), "^%s*(.-)%s*$") == server) then
+      local fromRoster = {};
+      for _, who in pairs(roster) do
+        who = RecipientName(who);
+        if (who) then AddSorted(fromRoster, who); end
+      end
+      if (#fromRoster > 0) then
+        list = fromRoster;
+        UMMConfig.RosterByServer[server] = true;
+      end
+    end
+    if (name) then AddSorted(list, name); end
+    UMMConfig.CharactersByServer[server] = list;
+  end;
+
+  -- "Forget own chars": this server's list starts again from the character playing.
+  ForgetCharacters = function(self)
+    if (type(UMMConfig) ~= "table") then self:Init(); end
+    UMMConfig.Characters = {};
+    local server = UMMServerKey();
+    if (type(UMMConfig.CharactersByServer) == "table") then UMMConfig.CharactersByServer[server] = nil; end
+    if (type(UMMConfig.RosterByServer) == "table") then UMMConfig.RosterByServer[server] = nil; end
+    self:CheckCharacter();
   end;
   
   NewMail = function(self, number)

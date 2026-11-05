@@ -30,7 +30,6 @@ M.Default("UMM_M_MS_CLEAR", "Unmark all");
 M.Default("UMM_M_MS_COD", "C.O.D.");
 M.Default("UMM_M_MS_COD_TIP", "Each mail asks this much gold from the receiver before they can take the item.");
 M.Default("UMM_M_MS_COD_HINT", "price, each mail");
-M.Default("UMM_M_MS_SEND", "Send %d");
 M.Default("UMM_M_MS_SAFE", "Send safely %d");
 M.Default("UMM_M_MS_FAST", "Send fast");
 M.Default("UMM_M_MS_TOSET", "This category goes to %s (Recipient/Characters.lua).");
@@ -114,7 +113,6 @@ local selBox = nil;
 local ui = {};
 local sendCount, boundCount = 0, 0;
 local TIP_SAFE = { UMM_MSI_BUTTON_SENDSAFE, UMM_MSI_TIP_SENDSAFE };
-local TIP_SEND = { UMM_MSI_BUTTON_SEND, UMM_MSI_TIP_SEND };
 
 local function trim(text)
   return string.match(text or "", "^%s*(.-)%s*$") or "";
@@ -303,17 +301,11 @@ local function drawControls()
   if (boundCount > 0) then text = text..string.format(UMM_M_MS_BOUND, boundCount); end
   M.SetText(ui.summary, text, sendCount > 0 and C.text or C.dim);
   local ok = sendOK();
-  local split = sendCount >= UMM_MSI_SPLIT_AT;
-  if (split) then
-    M.ButtonText(UMMModernMassSend, string.format(UMM_M_MS_SAFE, sendCount));
-    UMMModernMassSend.ummTip = TIP_SAFE;
-    UMMModernMassFast:Show();
-    M.Enable(UMMModernMassFast, ok);
-  else
-    M.ButtonText(UMMModernMassSend, string.format(UMM_M_MS_SEND, sendCount));
-    UMMModernMassSend.ummTip = TIP_SEND;
-    UMMModernMassFast:Hide();
-  end
+  -- Send safely and Send fast side by side, whatever the number of mails (7.0.1-ck17)
+  M.ButtonText(UMMModernMassSend, string.format(UMM_M_MS_SAFE, sendCount));
+  UMMModernMassSend.ummTip = TIP_SAFE;
+  UMMModernMassFast:Show();
+  M.Enable(UMMModernMassFast, ok);
   M.Enable(UMMModernMassSend, ok);
   M.Enable(UMMModernMassClear, sendCount + boundCount > 0 and not running);
   for i = 1, table.getn(catButtons) do M.Enable(catButtons[i], not running); end
@@ -691,7 +683,7 @@ local function buildBottom()
   M.Button(UMMModernMassFast, f, 340, y, 104, 24, { text = UMM_M_MS_FAST, icon = "Run", iconSize = 14, size = 12,
     style = "action", tip = { UMM_MSI_BUTTON_SENDFAST, UMM_MSI_TIP_SENDFAST }, click = function() send("fast"); end });
   M.Button(UMMModernMassSend, f, 448, y, 114, 24, { text = "", icon = "Mail", iconSize = 16, size = 12,
-    style = "save", click = function() send(sendCount >= UMM_MSI_SPLIT_AT and "safe" or "fast"); end });
+    style = "save", click = function() send("safe"); end });
   UMMModernMassFast:Hide();
 end
 

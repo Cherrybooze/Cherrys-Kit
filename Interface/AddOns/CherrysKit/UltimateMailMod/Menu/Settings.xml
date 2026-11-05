@@ -1,40 +1,70 @@
 <Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
   <!-- Cherry's Kit: Ultimate Mail Mod settings window (/umm). All handlers live here in XML:
-       RoM ignores script handlers set from Lua. -->
+       RoM ignores script handlers set from Lua. Two columns of sections (7.0.1-ck17): Sending speed
+       and Gold presets on the left; Mail window, Options and Tools on the right. Every row, box and
+       button has a tooltip (UMMSettingsUI_Tip, texts in Menu/Settings.lua). -->
 
   <CheckButton name="UMMSettingsCheckTemplate" inherits="CommonOptionsCheckButtonTemplate" virtual="true">
     <Size><AbsDimension x="25" y="25"/></Size>
     <Scripts>
       <OnClick>UMMSettingsUI_Check(this:GetID(), this:IsChecked());</OnClick>
+      <OnEnter>UMMSettingsUI_Tip(this);</OnEnter>
+      <OnLeave>GameTooltip:Hide();</OnLeave>
     </Scripts>
   </CheckButton>
 
-  <Frame name="UMMSettingsNumberRowTemplate" virtual="true">
+  <Button name="UMMSettingsButtonTemplate" inherits="UIPanelButtonTemplate" virtual="true" text="">
+    <Size><AbsDimension x="140" y="24"/></Size>
+    <Scripts>
+      <OnEnter>UMMSettingsUI_Tip(this);</OnEnter>
+      <OnLeave>GameTooltip:Hide();</OnLeave>
+    </Scripts>
+  </Button>
+
+  <Frame name="UMMSettingsNumberRowTemplate" virtual="true" enableMouse="true">
     <Size><AbsDimension x="300" y="28"/></Size>
     <Layers>
+      <Layer level="BACKGROUND">
+        <Texture name="$parentHover" file="Interface\Common\Bar\Smooth" alphaMode="ADD" hidden="true">
+          <Anchors><Anchor point="TOPLEFT"/><Anchor point="BOTTOMRIGHT"/></Anchors>
+          <Color r="0.18" g="0.18" b="0.18"/>
+        </Texture>
+      </Layer>
       <Layer level="ARTWORK">
         <FontString name="$parentLabel" inherits="GameFontHighlight" justifyH="LEFT" text="">
-          <Size><AbsDimension x="190" y="28"/></Size>
-          <Anchors><Anchor point="LEFT"/></Anchors>
+          <Size><AbsDimension x="186" y="28"/></Size>
+          <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="4" y="0"/></Offset></Anchor></Anchors>
         </FontString>
         <FontString name="$parentValue" inherits="GameFontNormal" justifyH="CENTER" text="">
-          <Size><AbsDimension x="44" y="28"/></Size>
-          <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="222" y="0"/></Offset></Anchor></Anchors>
+          <Size><AbsDimension x="50" y="28"/></Size>
+          <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="219" y="0"/></Offset></Anchor></Anchors>
         </FontString>
       </Layer>
     </Layers>
     <Frames>
       <Button name="$parentMinus" inherits="UIPanelButtonTemplate" text="-">
-        <Size><AbsDimension x="26" y="22"/></Size>
+        <Size><AbsDimension x="24" y="22"/></Size>
         <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="194" y="0"/></Offset></Anchor></Anchors>
-        <Scripts><OnClick>UMMSettingsUI_Step(this:GetParent():GetID(), -1);</OnClick></Scripts>
+        <Scripts>
+          <OnClick>UMMSettingsUI_Step(this:GetParent():GetID(), -1);</OnClick>
+          <OnEnter>UMMSettingsUI_Tip(this:GetParent());</OnEnter>
+          <OnLeave>UMMSettingsUI_Leave(this:GetParent());</OnLeave>
+        </Scripts>
       </Button>
       <Button name="$parentPlus" inherits="UIPanelButtonTemplate" text="+">
-        <Size><AbsDimension x="26" y="22"/></Size>
-        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="268" y="0"/></Offset></Anchor></Anchors>
-        <Scripts><OnClick>UMMSettingsUI_Step(this:GetParent():GetID(), 1);</OnClick></Scripts>
+        <Size><AbsDimension x="24" y="22"/></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="270" y="0"/></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>UMMSettingsUI_Step(this:GetParent():GetID(), 1);</OnClick>
+          <OnEnter>UMMSettingsUI_Tip(this:GetParent());</OnEnter>
+          <OnLeave>UMMSettingsUI_Leave(this:GetParent());</OnLeave>
+        </Scripts>
       </Button>
     </Frames>
+    <Scripts>
+      <OnEnter>UMMSettingsUI_Tip(this);</OnEnter>
+      <OnLeave>UMMSettingsUI_Leave(this);</OnLeave>
+    </Scripts>
   </Frame>
 
   <!-- numeric only filters typing: the commas come from UMMSettingsUI_FormatPresets.
@@ -51,118 +81,146 @@
   </EditBox>
 
   <Frame name="UMMSettingsFrame" parent="UIParent" inherits="UICommonFrameTemplate" enableMouse="true" frameStrata="DIALOG" hidden="true">
-    <Size><AbsDimension x="340" y="642"/></Size>
+    <Size><AbsDimension x="660" y="420"/></Size>
     <Anchors><Anchor point="CENTER"/></Anchors>
     <Layers><Layer level="ARTWORK">
+      <FontString name="$parentHeadSpeed" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="200" y="20"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="38"/></Offset></Anchor></Anchors>
+      </FontString>
+      <Texture name="$parentLineSpeed" file="Interface\Common\Bar\Smooth">
+        <Size><AbsDimension x="300" y="1"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="59"/></Offset></Anchor></Anchors>
+        <Color r="0.85" g="0.7" b="0.35" a="0.6"/>
+      </Texture>
+      <FontString name="$parentHeadGold" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="200" y="20"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="232"/></Offset></Anchor></Anchors>
+      </FontString>
+      <Texture name="$parentLineGold" file="Interface\Common\Bar\Smooth">
+        <Size><AbsDimension x="300" y="1"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="253"/></Offset></Anchor></Anchors>
+        <Color r="0.85" g="0.7" b="0.35" a="0.6"/>
+      </Texture>
+      <FontString name="$parentHeadWindow" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="200" y="20"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="38"/></Offset></Anchor></Anchors>
+      </FontString>
+      <Texture name="$parentLineWindow" file="Interface\Common\Bar\Smooth">
+        <Size><AbsDimension x="300" y="1"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="59"/></Offset></Anchor></Anchors>
+        <Color r="0.85" g="0.7" b="0.35" a="0.6"/>
+      </Texture>
+      <FontString name="$parentHeadOptions" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="200" y="20"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="150"/></Offset></Anchor></Anchors>
+      </FontString>
+      <Texture name="$parentLineOptions" file="Interface\Common\Bar\Smooth">
+        <Size><AbsDimension x="300" y="1"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="171"/></Offset></Anchor></Anchors>
+        <Color r="0.85" g="0.7" b="0.35" a="0.6"/>
+      </Texture>
+      <FontString name="$parentHeadTools" inherits="GameFontNormal" justifyH="LEFT" text="">
+        <Size><AbsDimension x="200" y="20"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="292"/></Offset></Anchor></Anchors>
+      </FontString>
+      <Texture name="$parentLineTools" file="Interface\Common\Bar\Smooth">
+        <Size><AbsDimension x="300" y="1"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="313"/></Offset></Anchor></Anchors>
+        <Color r="0.85" g="0.7" b="0.35" a="0.6"/>
+      </Texture>
       <FontString name="$parentPreset1Label" inherits="GameFontHighlight" justifyH="LEFT" text="">
         <Size><AbsDimension x="150" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="442"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="264"/></Offset></Anchor></Anchors>
       </FontString>
       <FontString name="$parentPreset2Label" inherits="GameFontHighlight" justifyH="LEFT" text="">
         <Size><AbsDimension x="150" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="474"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="296"/></Offset></Anchor></Anchors>
       </FontString>
       <FontString name="$parentPresetStatus" inherits="GameFontNormal" justifyH="LEFT" text="">
-        <Size><AbsDimension x="300" y="32"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="534"/></Offset></Anchor></Anchors>
+        <Size><AbsDimension x="300" y="40"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="24" y="360"/></Offset></Anchor></Anchors>
       </FontString>
       <FontString name="$parentConfirmText" inherits="GameFontHighlight" justifyH="LEFT" text="" hidden="true">
         <Size><AbsDimension x="300" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="572"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="322"/></Offset></Anchor></Anchors>
       </FontString>
     </Layer></Layers>
     <Frames>
+      <Button name="$parentSpeedDefaults" inherits="UMMSettingsButtonTemplate">
+        <Size><AbsDimension x="110" y="20"/></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="210" y="36"/></Offset></Anchor></Anchors>
+        <Scripts><OnClick>UMMSettingsUI_Button("speeds");</OnClick></Scripts>
+      </Button>
       <Frame name="$parentRow1" inherits="UMMSettingsNumberRowTemplate" id="1">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="40"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="66"/></Offset></Anchor></Anchors>
       </Frame>
       <Frame name="$parentRow2" inherits="UMMSettingsNumberRowTemplate" id="2">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="74"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="96"/></Offset></Anchor></Anchors>
       </Frame>
       <Frame name="$parentRow3" inherits="UMMSettingsNumberRowTemplate" id="3">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="108"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="126"/></Offset></Anchor></Anchors>
       </Frame>
       <Frame name="$parentRow4" inherits="UMMSettingsNumberRowTemplate" id="4">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="142"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="156"/></Offset></Anchor></Anchors>
       </Frame>
       <Frame name="$parentRow5" inherits="UMMSettingsNumberRowTemplate" id="5">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="176"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="186"/></Offset></Anchor></Anchors>
       </Frame>
-      <Frame name="$parentRow6" inherits="UMMSettingsNumberRowTemplate" id="6" enableMouse="true">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="210"/></Offset></Anchor></Anchors>
-        <Scripts>
-          <OnEnter>UMMSettingsUI_RowTip(this);</OnEnter>
-          <OnLeave>GameTooltip:Hide();</OnLeave>
-        </Scripts>
+      <Frame name="$parentRow6" inherits="UMMSettingsNumberRowTemplate" id="6">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="66"/></Offset></Anchor></Anchors>
       </Frame>
       <CheckButton name="$parentCheck1" inherits="UMMSettingsCheckTemplate" id="1">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="253"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="178"/></Offset></Anchor></Anchors>
       </CheckButton>
       <CheckButton name="$parentCheck2" inherits="UMMSettingsCheckTemplate" id="2">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="283"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="204"/></Offset></Anchor></Anchors>
       </CheckButton>
       <CheckButton name="$parentCheck3" inherits="UMMSettingsCheckTemplate" id="3">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="313"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="230"/></Offset></Anchor></Anchors>
       </CheckButton>
       <CheckButton name="$parentCheck4" inherits="UMMSettingsCheckTemplate" id="4">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="343"/></Offset></Anchor></Anchors>
-        <Scripts>
-          <OnEnter>UMMSettingsUI_ShortcutTip(this);</OnEnter>
-          <OnLeave>GameTooltip:Hide();</OnLeave>
-        </Scripts>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="256"/></Offset></Anchor></Anchors>
       </CheckButton>
       <CheckButton name="$parentCheck5" inherits="UMMSettingsCheckTemplate" id="5">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="373"/></Offset></Anchor></Anchors>
-        <Scripts>
-          <OnEnter>UMMSettingsUI_StyleTip(this);</OnEnter>
-          <OnLeave>GameTooltip:Hide();</OnLeave>
-        </Scripts>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="96"/></Offset></Anchor></Anchors>
       </CheckButton>
       <CheckButton name="$parentCheck6" inherits="UMMSettingsCheckTemplate" id="6">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="403"/></Offset></Anchor></Anchors>
-        <Scripts>
-          <OnEnter>UMMSettingsUI_ListTip(this);</OnEnter>
-          <OnLeave>GameTooltip:Hide();</OnLeave>
-        </Scripts>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="122"/></Offset></Anchor></Anchors>
       </CheckButton>
       <EditBox name="$parentPreset1" inherits="UMMSettingsGoldPresetTemplate">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="178" y="441"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="178" y="263"/></Offset></Anchor></Anchors>
       </EditBox>
       <EditBox name="$parentPreset2" inherits="UMMSettingsGoldPresetTemplate">
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="178" y="473"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="178" y="295"/></Offset></Anchor></Anchors>
       </EditBox>
-      <Button name="$parentSavePresets" inherits="UIPanelButtonTemplate" text="">
+      <Button name="$parentSavePresets" inherits="UMMSettingsButtonTemplate">
         <Size><AbsDimension x="130" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="190" y="506"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="190" y="328"/></Offset></Anchor></Anchors>
         <Scripts><OnClick>UMMSettingsUI_SavePresets();</OnClick></Scripts>
       </Button>
-      <Button name="$parentCheck" inherits="UIPanelButtonTemplate" text="">
-        <Size><AbsDimension x="120" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="572"/></Offset></Anchor></Anchors>
+      <Button name="$parentCheck" inherits="UMMSettingsButtonTemplate">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="322"/></Offset></Anchor></Anchors>
         <Scripts><OnClick>UMMSettingsUI_Button("check");</OnClick></Scripts>
       </Button>
-      <Button name="$parentTrace" inherits="UIPanelButtonTemplate" text="">
-        <Size><AbsDimension x="120" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="150" y="572"/></Offset></Anchor></Anchors>
+      <Button name="$parentTrace" inherits="UMMSettingsButtonTemplate">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="500" y="322"/></Offset></Anchor></Anchors>
         <Scripts><OnClick>UMMSettingsUI_Button("trace");</OnClick></Scripts>
       </Button>
-      <Button name="$parentDefaults" inherits="UIPanelButtonTemplate" text="">
-        <Size><AbsDimension x="120" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="602"/></Offset></Anchor></Anchors>
+      <Button name="$parentDefaults" inherits="UMMSettingsButtonTemplate">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="354"/></Offset></Anchor></Anchors>
         <Scripts><OnClick>UMMSettingsUI_Button("defaults");</OnClick></Scripts>
       </Button>
-      <Button name="$parentReset" inherits="UIPanelButtonTemplate" text="">
-        <Size><AbsDimension x="120" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="150" y="602"/></Offset></Anchor></Anchors>
+      <Button name="$parentReset" inherits="UMMSettingsButtonTemplate">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="500" y="354"/></Offset></Anchor></Anchors>
         <Scripts><OnClick>UMMSettingsUI_Button("resetchars");</OnClick></Scripts>
       </Button>
-      <Button name="$parentConfirmYes" inherits="UIPanelButtonTemplate" text="" hidden="true">
-        <Size><AbsDimension x="120" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="20" y="602"/></Offset></Anchor></Anchors>
+      <Button name="$parentConfirmYes" inherits="UMMSettingsButtonTemplate" hidden="true">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="340" y="354"/></Offset></Anchor></Anchors>
         <Scripts><OnClick>UMMSettingsUI_ConfirmReset(true);</OnClick></Scripts>
       </Button>
-      <Button name="$parentConfirmNo" inherits="UIPanelButtonTemplate" text="" hidden="true">
-        <Size><AbsDimension x="120" y="24"/></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="150" y="602"/></Offset></Anchor></Anchors>
+      <Button name="$parentConfirmNo" inherits="UMMSettingsButtonTemplate" hidden="true">
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="500" y="354"/></Offset></Anchor></Anchors>
         <Scripts><OnClick>UMMSettingsUI_ConfirmReset(false);</OnClick></Scripts>
       </Button>
       <!-- Shown for one frame after a gold preset edit to put the commas back. -->

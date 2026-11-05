@@ -459,6 +459,47 @@ class MailShortcutsTests(unittest.TestCase):
         self.lua.execute('UMMConfig.RecentByServer.Beta={" Bob ","bob","",false,"Cid"}; UMMSettings:Init()')
         self.assertEqual(self.history(), ["Bob", "Cid"])
 
+    def test_recent_and_own_lists_leave_out_own_characters_of_other_servers(self):
+        # one account, two servers; loginxml leaves each server's character list (LOGCHAR_ROSTER)
+        self.lua.execute('''
+          UMMConfig.Characters={"Coralbankb","Coralbankg","Garygoldman","Mastersword"}
+          UMMConfig.RecentByServer={Gaia={"Pal","Coralbankg","Mastersword","coralbankb"}}
+          ummRealm="Gaia"; ummPlayer="Garygoldman"
+        ''')
+        own = lambda: list(self.lua.eval("UMMSettings:OwnCharacters()").values())
+        # nothing known per server yet: every name as before
+        self.assertEqual(self.history(), ["Pal", "Coralbankg", "Mastersword", "coralbankb"])
+        self.assertEqual(own(), ["Coralbankb", "Coralbankg", "Garygoldman", "Mastersword"])
+        self.lua.execute('''
+          ummRealm="Aynara"; ummPlayer="Coralbankb"
+          LOGCHAR_SERVER="Aynara"; LOGCHAR_ROSTER={"Coralbankb","Coralbankg"}
+          UMMSettings:CheckCharacter()
+        ''')
+        self.assertEqual(own(), ["Coralbankb", "Coralbankg"])
+        # on Gaia without its list yet: the Aynara characters leave Mine, Recent stays as saved
+        self.lua.execute('ummRealm="Gaia"; ummPlayer="Garygoldman"; LOGCHAR_SERVER=nil; LOGCHAR_ROSTER=nil')
+        self.assertEqual(own(), ["Garygoldman", "Mastersword"])
+        self.assertEqual(self.history(), ["Pal", "Coralbankg", "Mastersword", "coralbankb"])
+        # once Gaia's list is known, Recent leaves out the Aynara characters too
+        self.lua.execute('''
+          LOGCHAR_SERVER="Gaia"; LOGCHAR_ROSTER={"Garygoldman","Mastersword"}
+          UMMSettings:CheckCharacter()
+        ''')
+        self.assertEqual(self.history(), ["Pal", "Mastersword"])
+        self.assertEqual(own(), ["Garygoldman", "Mastersword"])
+        self.send("Ann")
+        self.assertEqual(self.history(), ["Ann", "Pal", "Mastersword"])
+        # Aynara keeps its own names
+        self.lua.execute('ummRealm="Aynara"; UMMConfig.RecentByServer.Aynara={"Coralbankg","Pal"}')
+        self.assertEqual(self.history(), ["Coralbankg", "Pal"])
+        # a name that is yours on both servers stays
+        self.lua.execute('''
+          ummRealm="Gaia"; LOGCHAR_ROSTER={"Garygoldman","Mastersword","Coralbankg"}
+          UMMSettings:CheckCharacter()
+          UMMConfig.RecentByServer.Gaia={"Coralbankg","Coralbankb"}
+        ''')
+        self.assertEqual(self.history(), ["Coralbankg"])
+
     def test_slash_configuration_matches_ui_and_large_amount_labels_keep_leading_zero_groups(self):
         self.lua.execute('''
           SlashCmdList.UMM(nil,"gold 1000001 2000002")

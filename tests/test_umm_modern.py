@@ -697,6 +697,111 @@ class InboxTests(ModernWindowFixture, unittest.TestCase):
         self.assertEqual(self.label("UMMModernInboxTake"), "Take all 0")
 
 
+class InboxReloadTests(ModernWindowFixture, unittest.TestCase):
+    """The game loads the inbox list only when a mailbox opens; the Inbox tab opens it again."""
+
+    def setUp(self):
+        super().setUp()
+        self.lua.execute('''
+          ummMailCalls = {}
+          function CloseMail() table.insert(ummMailCalls, "close") end
+          function OpenMail() table.insert(ummMailCalls, "open") end
+          UMMInboxHookOpenMail()
+          ummMail("Alt1", 5000000, { subject = "Gold for you" })
+        ''')
+
+    def calls(self):
+        return self.lua_list("ummMailCalls")
+
+    def new_mail(self):
+        self.lua.execute('ummMail("Pal", 0, { subject = "Late one" }); '
+                         'UMMMasterFrame_OnEvent("CHAT_MSG_SYSTEM", "SYS_NEW_MAIL")')
+        self.step()
+
+    def test_a_mailbox_opened_from_anywhere_loads_the_list_again_on_the_inbox_tab(self):
+        self.lua.execute("OpenMail()")   # the item shop's portable mailbox
+        self.open()
+        self.assertTrue(self.g.UMMInboxRemote())
+        self.assertEqual(self.calls(), ["open"])
+        self.new_mail()
+        self.assertEqual(self.status(), "New mail came in. Click Inbox to load it.")
+        self.step(2.5)
+        self.page(1)
+        self.assertEqual(self.calls(), ["open", "close", "open"])
+        self.assertEqual(self.status(), "Loading inbox - please wait ...")
+        self.assertTrue(self.shown("UMMModernFrame"), "the window stays open while the list comes in again")
+        self.open()   # the game answers with MAIL_SHOW and the new list
+        self.assertTrue(self.g.UMMInboxRemote(), "opened again from anywhere")
+        self.assertIn("Late one", self.texts("UMMModernInbox"))
+        self.assertEqual(self.status(), "Ready.")
+        # not twice in a row within two seconds
+        self.page(1)
+        self.assertEqual(self.calls(), ["open", "close", "open"])
+
+    def test_at_a_mailbox_in_the_world_the_tab_says_how_to_see_new_mail(self):
+        self.open()
+        self.assertFalse(self.g.UMMInboxRemote())
+        self.new_mail()
+        walk = "New mail came while the mailbox was open. Close the mailbox and click it again to see it."
+        self.assertEqual(self.status(), walk)
+        self.step(2.5)
+        self.page(2)
+        self.page(1)
+        self.assertEqual(self.calls(), [], "CloseMail would end a mailbox in the world")
+        self.assertEqual(self.status(), walk)
+
+    def test_nothing_is_reopened_while_mail_goes_out(self):
+        self.lua.execute("OpenMail()")
+        self.open()
+        self.step(2.5)
+        self.lua.execute("UMMQueue.Busy = function() return true end")
+        self.assertEqual(self.g.UMMInboxReload(), "busy")
+        self.assertEqual(self.calls(), ["open"])
+
+
+class SettingsWindowTests(ModernWindowFixture, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.g.UMMSettingsFrame.Show(self.g.UMMSettingsFrame)
+
+    def value(self, row):
+        return self.g[f"UMMSettingsFrameRow{row}Value"].text
+
+    def tip(self, name):
+        self.g.GameTooltip.text = None
+        self.h.script(name, "OnEnter")
+        return self.g.GameTooltip.text, list(self.g.GameTooltip.lines.values()) if self.g.GameTooltip.lines else []
+
+    def test_sections_units_and_default_speeds(self):
+        heads = [self.g[f"UMMSettingsFrameHead{n}"].text for n in ("Speed", "Gold", "Window", "Options", "Tools")]
+        self.assertEqual(heads, ["Sending speed", "Gold presets", "Mail window", "Options", "Tools"])
+        self.assertEqual([self.value(i) for i in range(1, 7)], ["0.2 s", "0.6 s", "20 mails", "5 s", "3x", "1.00"])
+        for row in (1, 2, 3, 5):
+            self.h.script(f"UMMSettingsFrameRow{row}Plus")
+        self.h.script("UMMSettingsFrameRow6Plus")
+        for _ in range(5):
+            self.h.script("UMMSettingsFrameRow4Minus")
+        self.assertEqual([self.value(i) for i in range(1, 7)], ["0.3 s", "0.7 s", "25 mails", "0 s", "4x", "1.05"])
+        self.h.script("UMMSettingsFrameSpeedDefaults")
+        self.assertEqual([self.value(i) for i in range(1, 7)], ["0.2 s", "0.6 s", "20 mails", "5 s", "3x", "1.05"],
+                         "Default speeds leaves the window scale alone")
+        for _ in range(4):
+            self.h.script("UMMSettingsFrameRow3Minus")
+        self.assertEqual(self.value(3), "never")
+
+    def test_every_row_box_and_button_has_a_tooltip(self):
+        names = [f"UMMSettingsFrameRow{i}" for i in range(1, 7)] + [f"UMMSettingsFrameCheck{i}" for i in range(1, 7)]
+        names += ["UMMSettingsFrame" + n for n in ("SpeedDefaults", "SavePresets", "Check", "Trace", "Defaults", "Reset")]
+        for name in names:
+            title, lines = self.tip(name)
+            self.assertTrue(title and lines and len(lines[0]) > 20, name)
+        title, lines = self.tip("UMMSettingsFrameRow2")
+        self.assertEqual(title, "Send safely: wait between mails")
+        self.assertEqual(lines[1], "Default: 0.6 s. Now: 0.6 s.")
+        # the - and + buttons show their row's tooltip
+        self.assertEqual(self.tip("UMMSettingsFrameRow2Plus")[0], "Send safely: wait between mails")
+
+
 class ComposeTests(ModernWindowFixture, unittest.TestCase):
     def review_lines(self):
         return self.texts("UMMModernReviewList")
@@ -1262,8 +1367,9 @@ class MassSendTests(ModernWindowFixture, unittest.TestCase):
         self.assertIn("4 marked: enter a name in To.", self.texts("UMMModernMass"))
         self.type("UMMModernMassTo", "Alt1")
         self.assertIn("4 marked: 4 mails to Alt1", self.texts("UMMModernMass"))
-        self.assertEqual(self.label("UMMModernMassSend"), "Send 4")
-        self.assertFalse(self.shown("UMMModernMassFast"))
+        # Send safely and Send fast are both up, whatever the number of mails
+        self.assertEqual(self.label("UMMModernMassSend"), "Send safely 4")
+        self.assertTrue(self.shown("UMMModernMassFast"))
 
         self.click("UMMModernMassSend")
         self.until("not UMMQueue:Busy()")

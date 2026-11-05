@@ -42,7 +42,7 @@ UMM_VERSION = {
   Minor     = 0,
   Revision  = 2,
   Build     = 20211118,	-- 2787
-  ummRev    = '025-ck16';	-- Cherry's Kit 2026-11-05
+  ummRev    = '026-ck17';	-- Cherry's Kit 2026-11-05
 }
 
 -- ##### Local Variables #####
@@ -174,6 +174,74 @@ local function OpenMailWindow()
   ShowUIPanel(UMMFrame);
 end
 
+-- ##### Loading the inbox again #####
+-- The game asks the server for the inbox list only when a mailbox opens (client MailFrame.cpp:
+-- OpenMail sends SL_MailList once). A mail that arrives while the mailbox is open only prints
+-- "You have new mail" and never reaches the list. A mailbox opened from anywhere (OpenMail(), the
+-- item shop's portable mailbox) can be opened again from Lua: CloseMail() lets go of it on this
+-- side (the server answers nothing, so no window closes) and OpenMail() asks for it again, which
+-- loads the list anew. A mailbox in the world needs a click on it for that, so the window says so.
+-- Globals, not locals: Reload UI runs this file again in the same Lua state, and the OpenMail
+-- wrapper below must keep finding them.
+UMMInboxState = UMMInboxState or {};
+local INBOX = UMMInboxState;
+local REMOTE_ANSWER_TIME = 15;   -- seconds a MAIL_SHOW may take after OpenMail() to count as its answer
+local RELOAD_GAP = 2;            -- no second reload sooner than this after one
+
+function UMMInboxHookOpenMail()
+  if (UMMOriginalOpenMail ~= nil or type(OpenMail) ~= "function") then return; end
+  UMMOriginalOpenMail = OpenMail;
+  OpenMail = function(...)
+    UMMInboxState.remoteAsked = UMMClock;
+    return UMMOriginalOpenMail(...);
+  end
+end
+
+-- MAIL_SHOW: was this mailbox opened from anywhere (an OpenMail() call just before)?
+local function InboxOpened()
+  INBOX.remote = INBOX.remoteAsked ~= nil and (UMMClock - INBOX.remoteAsked) <= REMOTE_ANSWER_TIME;
+  INBOX.remoteAsked = nil;
+  INBOX.newMail = false;
+  INBOX.loadedAt = UMMClock;
+end
+
+function UMMInboxRemote()
+  return INBOX.remote == true;
+end
+
+-- "You have new mail" while the mailbox is open: the list does not have it yet.
+function UMMInboxNewMailWaiting()
+  return INBOX.newMail == true;
+end
+
+-- The Inbox tab was clicked. Returns what happened:
+--   "reloaded"  the mailbox was opened again, the list comes in anew
+--   "walk"      new mail is waiting, but only a click on the mailbox in the world loads it
+--   "busy"      mail is going out or the inbox is being taken from: nothing touched
+--   "same"      the list was read again from what the game already has
+function UMMInboxReload()
+  if (Sending() or UMMMailManager:IsAutomating()) then
+    return "busy";
+  end
+  local canReopen = INBOX.remote and type(CloseMail) == "function" and type(UMMOriginalOpenMail) == "function";
+  if (canReopen and (INBOX.loadedAt == nil or UMMClock - INBOX.loadedAt >= RELOAD_GAP)) then
+    UMMTraceAdd("inbox", "reload");
+    INBOX.newMail = false;
+    INBOX.loadedAt = UMMClock;
+    INBOX.remoteAsked = UMMClock;
+    local ok = pcall(CloseMail) and pcall(UMMOriginalOpenMail);
+    if (ok) then
+      UMMGlobalInboxLoadTimeout = 2.3;
+      return "reloaded";
+    end
+  end
+  UMMMailManager:InboxRefresh();
+  if (INBOX.newMail and not INBOX.remote) then
+    return "walk";
+  end
+  return "same";
+end
+
 function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
   idle = false;
   if (event == "VARIABLES_LOADED") then
@@ -186,6 +254,7 @@ function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
     UMMBagManager:Invalidate();
     UMMSettings:Init();
     UMMHookNameClicks();
+    UMMInboxHookOpenMail();
     if (AddonManager or CherrysKit) then
       -- Skip displaying the prompt for those running AddonManager or Cherry's Kit
     else
@@ -200,6 +269,7 @@ function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
     UMMSettings:CheckCharacter();
     UMMNewMailButton:CheckStatus();
   elseif (event == "MAIL_SHOW") then
+    InboxOpened();
     UMMSettings:CheckCharacter();
     OpenMailWindow();
   elseif (event == "MAIL_INBOX_UPDATE") then
@@ -236,10 +306,15 @@ function UMMMasterFrame_OnEvent(event, arg1, arg2, arg3, arg4)
     if (UMMQueue) then UMMQueue:MoneyChanged(); end
     if (UMMModern and UMMModern.MoneyChanged) then UMMModern.MoneyChanged(); end
   elseif (event == "CHAT_MSG_SYSTEM") then
-    if (arg1 ~= nil and TEXT("SYS_NEW_MAIL") == arg1) then
+    if (arg1 ~= nil and (TEXT("SYS_NEW_MAIL") == arg1 or TEXT("SYS_GOT_GIFT") == arg1)) then
       -- Pop the "New Mail" icon
       UMMSettings:NewMail(1);
       UMMNewMailButton:CheckStatus();
+      -- with the mailbox open the list does not get it: the Inbox tab loads it again
+      if (MailFrame:IsVisible()) then
+        INBOX.newMail = true;
+        if (UMMModern and UMMModern.NewMailWaiting) then UMMModern.NewMailWaiting(); end
+      end
     elseif (Sending()) then
       UMMTraceAdd("system", arg1);
     end
@@ -445,8 +520,7 @@ SlashCmdList["UMM"] = function(editBox, msg)
       UMMPrompt(UMM_SLASH_AUDIOENABLED);
     end
   elseif (cmd == "reset") then
-    UMMConfig.Characters = {};
-    UMMSettings:CheckCharacter();
+    UMMSettings:ForgetCharacters();
     UMMSettings:Save();
     UMMPrompt(UMM_SLASH_CHARSRESET);
   elseif (cmd == "delay") then

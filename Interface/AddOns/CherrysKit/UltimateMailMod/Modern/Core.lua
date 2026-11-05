@@ -25,6 +25,10 @@ default("UMM_M_CLOSE", "Close the mailbox");
 default("UMM_M_STOP", "Stop");
 default("UMM_M_STOP_TIP", "Stops after the mail that is on its way. What was not sent stays as it is.");
 default("UMM_M_READY", "Ready.");
+default("UMM_M_INBOX_TIP", "Click to load the inbox again: mail that came while the mailbox was open shows up.");
+default("UMM_M_INBOX_WALK", "New mail came while the mailbox was open. Close the mailbox and click it again to see it.");
+default("UMM_M_INBOX_NEWMAIL", "New mail came in. Click Inbox to load it.");
+default("UMM_M_INBOX_BUSY", "New mail loads once the mail on its way is done: click Inbox then.");
 default("UMM_M_DRAG_TIP", "Drag to move the window.");
 default("UMM_MODERN_FAILED", "the modern mail window could not load (%s). The classic window opens instead; /umm ui classic keeps it.");
 
@@ -857,7 +861,11 @@ local function buildFrame()
   for i, key in ipairs(M.order) do
     M.Button(getglobal("UMMModernTab"..i), f, TAB_X + (i - 1) * TAB_STEP, 6, TAB_W, 26, {
       text = getglobal(TAB_TEXT[key]), icon = TAB_ICONS[key], iconSize = 16, size = 13,
-      click = function() M.ShowPage(key); end,
+      click = function()
+        if (key == "inbox") then M.ReloadInbox(); end
+        M.ShowPage(key);
+      end,
+      tip = key == "inbox" and { UMM_M_TAB_INBOX, UMM_M_INBOX_TIP } or nil,
     });
   end
 
@@ -904,9 +912,41 @@ end
 
 function M.Open()
   UMMMailView = M.View;
+  if (UMMModernFrame:IsVisible()) then
+    -- the mailbox opened again under the open window (the Inbox tab loading the list anew):
+    -- the game's own mail frame stays off screen
+    MailFrame:ClearAllAnchors();
+    MailFrame:SetAnchor("TOPRIGHT", "TOPLEFT", "UIParent", 0, 110);
+    return true;
+  end
   M.PlaceWindow();
   UMMModernFrame:Show();
   return true;
+end
+
+-- The Inbox tab: load the list again where the game allows it (UltimateMailMod.lua UMMInboxReload).
+function M.ReloadInbox()
+  if (type(UMMInboxReload) ~= "function") then return; end
+  local result = UMMInboxReload();
+  if (result == "reloaded") then
+    M.Status(UMM_INBOX_LOADING, C.dim);
+  elseif (result == "walk") then
+    M.Status(UMM_M_INBOX_WALK, C.warn);
+  elseif (result == "busy") then
+    if (UMMInboxNewMailWaiting()) then M.Status(UMM_M_INBOX_BUSY, C.warn); end
+  elseif (M.pages.inbox.Refresh) then
+    M.pages.inbox.Refresh();
+  end
+end
+
+-- "You have new mail" with the window open: say how to see it.
+function M.NewMailWaiting()
+  if (not UMMModernFrame:IsVisible() or M.Busy() or UMMMailManager:IsAutomating()) then return; end
+  if (UMMInboxRemote()) then
+    M.Status(UMM_M_INBOX_NEWMAIL, C.good);
+  else
+    M.Status(UMM_M_INBOX_WALK, C.warn);
+  end
 end
 
 function M.StopAll()
