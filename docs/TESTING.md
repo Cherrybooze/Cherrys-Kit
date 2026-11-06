@@ -133,6 +133,7 @@ Reload the extension first; the page's sidebar says Version 1.4.5.
 | CT7 | Turn on **Show single-character accounts only on tooltip**. | The characters alone on their RoM accounts move under one *Single-character accounts* heading inside each Gameforge account, without the RoM account names on their lines. |
 | CT8 | After a transfer that renamed a character, open the site's transfer page with that login, then log in with the character on its new server. | It shows under its new name with *was* and the old name, the old server's copy is gone, and **Transfers** lists it as *Oldname → Newname*, Done. |
 | CT9 | For a moved character the page didn't match, right-click it, pick **Renamed in its transfer…** and type the new name. | Its row shows the new name with the old one beside it; once that name logs in on the new server, the transfer is Done. **Not renamed to …** in its right-click menu takes it back. |
+| CT10 | Open **Gold overview**. | The heading lists each server's gold, richest first, then **Total:** with all the gold and the full caps. Hovering a server shows its exact gold and how many characters it counts; a hidden server isn't listed. |
 
 ## Sent mail grouped by send (Global Bank 1.6.14, extension 1.4.4, not yet released)
 

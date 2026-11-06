@@ -415,7 +415,7 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 ## Recent changes
 
-- **5.07-ck22**: *Stats* labels take the stats' tooltip colours and show on the bank's slots too; a single stat that adds two tooltip lines counts as one.
+- **5.07-ck22**: *Stats* labels also show on gear and on the bank's slots; a single stat's name has its own colour (changeable under **Stat colours...** in **/zb**) and its icon an outline in the tooltip line's colour; a stat that adds two tooltip lines counts as one.
 - **5.07-ck21**: a *Stats* tick beside the bag search writes a single-stat mana stone's stat on its icon (*str*, *stam*, *patt*), or *2x* to *6x* for stones with more stats. *Item shop next to bank (zBag)* in **/zb** puts the one bank's item shop bank in its own box on the right side of the bank, with the bank search under it; *Next to bag (zBag)* does the same for the equipment slots.
 - **5.07-ck20**: *Numbers on mouseover only* sits next to *Show bag slot numbers* in **/zb**, with a new *Slot number font size* setting (- and +) right under it.
 - **5.07-ck19**: slot numbers show only on the slot under the mouse; untick *Numbers on mouseover only* in **/zb** to see every number again. Search *#clean* for mana stones without stats, or *#dirty* for mana stones with stats.
@@ -496,6 +496,10 @@ Built for players with many characters and bank alts. Each character saves a sma
 
 ## Recent changes
 
+- **1.6.15**: the Chrome page groups characters by account with one heading for each Gameforge account and its RoM accounts under it (a RoM account's only character sits on one line with the account's name), copies a Gameforge account's name with a click and says in red when its password is missing, links characters the site showed with the same e-mail address to one Gameforge account, follows a character renamed in a transfer under its new name, and shows each server's gold on the Gold overview.
+- **1.6.14**: the Chrome page's Mail page puts the mails sent together on one line, with their items as pictures (hover for stats), its own search and a Compact switch; sent mail keeps its real time.
+- **1.6.12**: the Chrome page has a *Transfer log* page listing every character with a transfer still under way, with its route, maintenance and countdown. The Addons page no longer offers the older release as an update for an addon installed from a newer build; it says *Newer than the release*.
+- **1.6.11**: the Chrome page names RoM and Gameforge accounts from the Runes of Magic site: the username and e-mail address its character transfer and account pages show are kept for the characters they list, replace *Name's account*, and link those characters to a saved Gameforge account of that address.
 - **1.6.10**: no save is dropped: a save file the game is still writing waits on a list until the helper can read it, a logout the file watcher missed is found within 30 seconds, a failed update runs again, and a copy of a character in another character's save file never wins over its own save.
 - **1.6.9**: the Chrome extension's **Cascade game windows** button lays the game windows out in an overlapping cascade on the display you choose, from the bottom left or the top left toward the right, sized to fill the screen, at their own size or at an exact resolution and offset; it can sit right under *Open Global Bank* in the toolbar popup.
 - **1.6.8**: characters you log in update again (a mailbox already read stopped every later snapshot, and a character switched to without data of its own saved the previous one's); with automatic start on, the helper starts again within a minute, and a helper window open when the option is turned on hands over to the background.

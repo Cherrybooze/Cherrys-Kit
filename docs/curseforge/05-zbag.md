@@ -18,7 +18,7 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 ## Recent changes
 
-- **5.07-ck22**: *Stats* labels take the stats' tooltip colours and show on the bank's slots too; a single stat that adds two tooltip lines counts as one.
+- **5.07-ck22**: *Stats* labels also show on gear and on the bank's slots; a single stat's name has its own colour (changeable under **Stat colours...** in **/zb**) and its icon an outline in the tooltip line's colour; a stat that adds two tooltip lines counts as one.
 - **5.07-ck21**: a *Stats* tick beside the bag search writes a single-stat mana stone's stat on its icon (*str*, *stam*, *patt*), or *2x* to *6x* for stones with more stats. *Item shop next to bank (zBag)* in **/zb** puts the one bank's item shop bank in its own box on the right side of the bank, with the bank search under it; *Next to bag (zBag)* does the same for the equipment slots.
 - **5.07-ck20**: *Numbers on mouseover only* sits next to *Show bag slot numbers* in **/zb**, with a new *Slot number font size* setting (- and +) right under it.
 - **5.07-ck19**: slot numbers show only on the slot under the mouse; untick *Numbers on mouseover only* in **/zb** to see every number again. Search *#clean* for mana stones without stats, or *#dirty* for mana stones with stats.
