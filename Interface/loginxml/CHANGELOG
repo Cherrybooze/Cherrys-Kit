@@ -1,3 +1,6 @@
+LogNextChar 1.4.1
+- No change to the login screen. In game, the buttons go Prev on top and Next under it, like the character list, and a Logout button sits at their left (an ordinary logout: the login screen picks nothing).
+
 LogNextChar 1.4.0
 - The character screen numbers the characters from 1 (Classic: while editing their order). Next and Prev show the number they log into, big under their name in cyan (playing 4: Next 5, Prev 3).
 - New toggle "Edit character order" (config.lua: character_order_edit): up and down arrows on each row, or Shift+Up/Down, change the numbers. The order is kept for each server (character_order, saved with the toggles; another account's characters keep their places), and Next, Prev and /lnc <number> follow it. ChangeChar(n) still takes the game's slot.

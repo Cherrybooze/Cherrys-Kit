@@ -72,7 +72,7 @@ class LoadsTest(unittest.TestCase):
                     self.assertEqual(set(ui.missing()) - {"Slider.GetStepRange"}, set())
 
     def test_top_right_names_the_login_screen_without_an_account_name(self):
-        for account, label in (("TNTLogin", "Loginxml 1.4.0"), ("", "Loginxml 1.4.0"), ("cherry", "cherry")):
+        for account, label in (("TNTLogin", "Loginxml 1.4.1"), ("", "Loginxml 1.4.1"), ("cherry", "cherry")):
             with self.subTest(account=account):
                 ui = LoginUI(before=f"CLIENT.account = '{account}'")
                 ui.character_screen()
@@ -80,7 +80,7 @@ class LoadsTest(unittest.TestCase):
                 ui.server_screen()
                 ui.event("OPEN_SERVER_LIST")
                 self.assertEqual(ui.state(ui.g("LoginAccount")).text, label)
-        self.assertEqual(ui.lua.eval("login.version"), "1.4.0")
+        self.assertEqual(ui.lua.eval("login.version"), "1.4.1")
 
     def test_modern_unless_turned_off(self):
         self.assertTrue(shown(None).lua.eval("LoginLook.modern"))

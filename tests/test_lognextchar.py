@@ -31,14 +31,18 @@ class LoginScreenHalfTest(unittest.TestCase):
 
 
 class LayoutTest(unittest.TestCase):
-    def test_next_above_prev(self):
+    def test_prev_above_next_and_logout_at_their_left(self):
+        # Prev on top counts down like the character list; Logout hangs at the left, halfway down
         path = os.path.join(ROOT, "AddOns", "LogNextChar", "LogNextChar.xml")
         ns = "{http://www.runewaker.com/}"
         bar = next(f for f in ET.parse(path).getroot() if f.get("name") == "LogNextCharBar")
         buttons = {b.get("name"): b.find(f"{ns}Anchors/{ns}Anchor").get("point") for b in bar.find(f"{ns}Frames")}
-        self.assertEqual(buttons, {"$parentNext": "TOP", "$parentPrev": "BOTTOM"})
+        self.assertEqual(buttons, {"$parentPrev": "TOPRIGHT", "$parentNext": "BOTTOMRIGHT", "$parentLogout": "LEFT"})
         size = bar.find(f"{ns}Size/{ns}AbsDimension")
-        self.assertGreater(int(size.get("y")), int(size.get("x")))
+        self.assertEqual((int(size.get("x")), int(size.get("y"))), (74, 74))  # two 36 tiles and a 2 gap each way
+        anchor = bar.find(f"{ns}Anchors/{ns}Anchor")
+        offset = anchor.find(f"{ns}Offset/{ns}AbsDimension")
+        self.assertEqual((anchor.get("point"), offset.get("x"), offset.get("y")), ("TOPRIGHT", "21", "89"))
 
     def test_slot_number_drawn_behind_the_name(self):
         # Within a layer the client draws in the order listed, so the number comes before the name
@@ -135,8 +139,9 @@ class DefaultSpotTest(unittest.TestCase):
 
     def test_sits_under_the_minimap(self):
         point, x, y, relative_to, relative_point = self.anchor(in_game())
-        self.assertEqual((point, relative_to, relative_point), ("TOP", "MinimapViewFrame", "CENTER"))
-        self.assertEqual((x, y), (3, 89))
+        # Right edge anchored where the old 36-wide bar's was (TOP at x 3), so Prev / Next stay put
+        self.assertEqual((point, relative_to, relative_point), ("TOPRIGHT", "MinimapViewFrame", "CENTER"))
+        self.assertEqual((x, y), (21, 89))
 
     def test_client_without_that_frame(self):
         point, x, y, relative_to, relative_point = self.anchor(in_game("MinimapViewFrame = nil"))
@@ -147,7 +152,7 @@ class DefaultSpotTest(unittest.TestCase):
         lua.execute('LogNextChar.Set("position", {x = 0.5, y = 0.5}); LogNextChar.Place()')
         point, x, y, relative_to, relative_point = self.anchor(lua)
         self.assertEqual((point, relative_to), ("TOPLEFT", "UIParent"))
-        self.assertEqual((x, y), (0.5 * (1920 - 36), 0.5 * (1080 - 74)))
+        self.assertEqual((x, y), (0.5 * (1920 - 74), 0.5 * (1080 - 74)))
 
     def test_probe_reports_without_switching(self):
         lua = in_game()
@@ -241,6 +246,48 @@ class ButtonTest(unittest.TestCase):
         self.assertEqual((lua.eval("LOGCHAR_FLAG"), lua.eval("LOGCHAR_MODE"), lua.eval("logouts")), (1, "next", 1))
         press(lua, "LogNextCharBarPrev")
         self.assertEqual(lua.eval("LOGCHAR_MODE"), "prev")
+
+    def test_logout_button_only_logs_out(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A", "B"}; CHARACTER_SELECT = {selectedIndex = 1}')
+        self.assertEqual((lua.eval("LogNextCharBarLogout.mode"), lua.eval("LogNextCharBarLogoutLetters.text")),
+                         ("logout", "Logout"))
+        self.assertEqual(lua.eval("LogNextCharBarLogoutNumber.text"), "")
+        press(lua, "LogNextCharBarLogout")
+        self.assertEqual((lua.eval("LOGCHAR_FLAG"), lua.eval("LOGCHAR_MODE"), lua.eval("logouts")), (0, None, 1))
+
+    def test_logout_drops_a_queued_switch(self):
+        lua = in_game()
+        lua.execute("LOGCHAR_FLAG = 1; LOGCHAR_MODE = 'next'; LOGCHAR_FROM = 'Bb'")
+        press(lua, "LogNextCharBarLogout")
+        self.assertEqual((lua.eval("LOGCHAR_FLAG"), lua.eval("LOGCHAR_MODE"), lua.eval("LOGCHAR_FROM")), (0, None, None))
+
+    def test_logout_works_with_one_character(self):
+        lua = in_game('LOGCHAR_ROSTER = {"A"}; CHARACTER_SELECT = {selectedIndex = 1}')
+        self.assertNotEqual(lua.eval("LogNextCharBarLogout.alpha"), 0.4)
+        press(lua, "LogNextCharBarLogout")
+        self.assertEqual(lua.eval("logouts"), 1)
+
+    def test_logout_closes_the_mailbox_first(self):
+        lua = in_game()
+        lua.execute('''
+          order = {}
+          MailFrame = {IsVisible=function(self) return self.open end, open=true, name="mail"}
+          function HideUIPanel(window) table.insert(order, window.name); window.open = false end
+          local logout = CampOutStart
+          CampOutStart = function() table.insert(order, "logout"); logout() end
+        ''')
+        press(lua, "LogNextCharBarLogout")
+        self.assertEqual(lua.eval('table.concat(order, ",")'), "mail,logout")
+
+    def test_slash_logout(self):
+        lua = in_game()
+        lua.execute('SlashCmdList.LOGNEXTCHAR(nil, "logout")')
+        self.assertEqual((lua.eval("LOGCHAR_FLAG"), lua.eval("logouts")), (0, 1))
+
+    def test_logout_tooltip(self):
+        lua = in_game()
+        lua.execute("LogNextChar.OnEnter(LogNextCharBarLogout)")
+        self.assertIn("log out to the character screen", " ".join(str(v) for v in lua_list(lua.eval("tip"))))
 
     def test_says_which_character_it_left(self):
         lua = in_game('function UnitName(unit) return unit == "player" and "Bb" or nil end')
@@ -349,7 +396,7 @@ class CommandTest(unittest.TestCase):
         self.assertFalse(lua.eval("LogNextCharBar.shown"))
         lua.execute('SlashCmdList.LOGNEXTCHAR(nil, "show"); SlashCmdList.LOGNEXTCHAR(nil, "reset")')
         self.assertTrue(lua.eval("LogNextCharBar.shown"))
-        self.assertEqual(lua.eval("LogNextCharBar.anchor[1]"), "TOP")
+        self.assertEqual(lua.eval("LogNextCharBar.anchor[1]"), "TOPRIGHT")
         self.assertEqual(lua.eval("logouts"), 0)
         lua.execute('SlashCmdList.LOGNEXTCHAR(nil, "unlock")')
         self.assertFalse(lua.eval('LogNextChar.Get("lock")'))
@@ -374,7 +421,7 @@ class SettingsWindowTest(unittest.TestCase):
         lua.execute('LogNextChar.Set("position", {x = 0.5, y = 0.5}); LogNextChar.Place()')
         self.assertEqual(lua.eval("LogNextCharBar.anchor[1]"), "TOPLEFT")
         lua.execute("LogNextChar.ResetPlace()")
-        self.assertEqual(lua.eval("LogNextCharBar.anchor[1]"), "TOP")
+        self.assertEqual(lua.eval("LogNextCharBar.anchor[1]"), "TOPRIGHT")
 
 
 class HubTest(unittest.TestCase):

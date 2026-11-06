@@ -44,6 +44,7 @@ Merged on `main` since 0.11.118; not in a published release yet.
 - **Copy and paste in the mail window** (Ultimate Mail Mod 7.0.1-ck15): **Ctrl+A** selects everything in a text box, clicking into a filled **To** selects the name, text pasted from Windows keeps its line breaks without extra carriage returns, and a Ctrl+V that puts nothing in the box says why.
 - **Stats on gear, a colour per stat** (zBag 5.07-ck22): *Stats* labels also show on gear (weapons, armour, jewellery) and on the bank's slots. A single stat's name has its own colour, changeable under **Stat colours...** in `/zb` (or `/zb colors`), and its icon an outline in the colour of its tooltip line; several stats show *2x* to *6x* in the tooltip colours. A stat that adds two tooltip lines counts as one.
 - **Setup always ends on the newest versions** (hub 0.4.35, setup 1.3.0): the guided setup also compares Global Bank's Chrome extension with the release's and updates it when it is older.
+- **Prev on top, and a Logout button** (LogNextChar 1.4.1): the buttons under the minimap now go Prev, then Next, counting down like the character list, and a **Logout** button hangs at their left for an ordinary logout to the character screen (also `/lnc logout`).
 - **Server name with the clock** (Cherry's Bar 1.1.11): a *Show server name with clock* tick in the Clock's right-click menu and in `/cbar`; the Clock widens to fit and its tooltip names the server.
 
 ## What's new in 0.11.118
@@ -150,11 +151,11 @@ These are outside the Full ZIP. LogNextChar needs the hub and loads through it; 
 
 | Package | What it does | Command | Version |
 | --- | --- | --- | --- |
-| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next/Prev buttons switch to the neighbouring character; `/lnc 3` logs in the character numbered 3 and `/lnc settings` configures the buttons. Its login screen handles a stuck server list, saved logins, secondary passwords and keyboard selection; with Global Bank it shows gold, last saves and Arcane Transmutor charges. Extract its ZIP into `Interface\AddOns`, then let setup install the login screen or run `CherrysKit\LogNextChar\Install login screen.bat` with the game closed. | `/lnc`, `/lpc` | 1.4.0 |
+| [LogNextChar](Interface/AddOns/LogNextChar/README.md) | Next/Prev buttons switch to the neighbouring character; `/lnc 3` logs in the character numbered 3 and `/lnc settings` configures the buttons. Its login screen handles a stuck server list, saved logins, secondary passwords and keyboard selection; with Global Bank it shows gold, last saves and Arcane Transmutor charges. Extract its ZIP into `Interface\AddOns`, then let setup install the login screen or run `CherrysKit\LogNextChar\Install login screen.bat` with the game closed. | `/lnc`, `/lpc` | 1.4.1 |
 | [zMail](#zmail-the-other-mailbox) | pyrr's mailbox addon, as an alternative to Ultimate Mail Mod, in its own `Interface\AddOns\zmail` folder. The kit's copy is zMail 1.4 with one fix: mails with gold over the gold cap are no longer opened, so they keep their 30 days. | Opens with the mailbox | 1.4-ck1 |
 | [Global Bank for RoM](extras/GlobalBankDailyRewards/README.md) | Chrome extension for Global Bank's page and popup: combined bank, gold overview, mail, stats, macros, addon management and the optional daily reward. Needs Global Bank and its Windows helper; see [Chrome installation](#optional-chrome-extension). | Chrome toolbar | 1.4.5 |
 
-Download it from this build: [LogNextChar-1.4.0.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.118/LogNextChar-1.4.0.zip).
+Download it from this build: [LogNextChar-1.4.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.118/LogNextChar-1.4.1.zip).
 
 ### zMail, the other mailbox
 
@@ -170,7 +171,7 @@ Which one runs is set in `CherrysKit/Mailbox.txt`: `Mailbox = "auto"` (zMail whe
 | --- | --- | --- |
 | The complete collection | **CherrysKit-Full-0.11.118.zip** | The hub, the addons in [What's included](#whats-included), and both setup launchers. LoadTimes is included but switched off. |
 | Only selected addons | **CherrysKit-Hub-0.11.118.zip** plus their individual ZIPs | The same hub and setup, with only the addons you choose. Every individual kit addon needs the hub; keep the hub current when updating one. |
-| Character switching and the login screen | **LogNextChar-1.4.0.zip**, plus the hub if you do not have it | A separate package, outside the Full ZIP. Setup can install its login screen after you extract the addon. |
+| Character switching and the login screen | **LogNextChar-1.4.1.zip**, plus the hub if you do not have it | A separate package, outside the Full ZIP. Setup can install its login screen after you extract the addon. |
 | Global Bank in Chrome | Global Bank and the hub, plus the optional **Global Bank for RoM** extension package when needed | A Windows helper and Chrome extension. Having the files does not load the extension into Chrome: finish the [Chrome steps](#first-installation-in-chrome). |
 | zMail instead of Ultimate Mail Mod | Choose **zMail** in setup, or use the separate zMail ZIP | pyrr's mailbox addon stays in `Interface\AddOns\zmail`. It is outside the Full ZIP and can also be managed with pyrr's own releases. |
 
