@@ -109,7 +109,7 @@
     {
       "folder": "zBag",
       "title": "zBag",
-      "version": "5.07-ck21",
+      "version": "5.07-ck22",
       "command": "/zb",
       "description_file": "05-zbag.md",
       "summary": "Bags, searching, sorting, quick sell and an All bags view.",
@@ -143,7 +143,7 @@
     {
       "folder": "GlobalBank",
       "title": "Global Bank",
-      "version": "1.6.11",
+      "version": "1.6.15",
       "command": "/gb",
       "description_file": "06-global-bank.md",
       "summary": "A searchable view of your characters' bags, banks and gold.",

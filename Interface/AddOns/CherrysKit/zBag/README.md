@@ -1,6 +1,6 @@
 # zBag
 
-Version **5.07-ck21** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **5.07-ck22** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
@@ -22,13 +22,21 @@ zBag 5.07 by adisadicul, updated for Cherry's Kit.
 
 <!-- end of requirements -->
 
+## Updated in 5.07-ck22
+
+**Stats on gear too, a colour per stat, an outline in the tooltip colour.** With the *Stats* tick on, a piece of gear (weapon, armour or jewellery) with stats gets the same label as a mana stone, and the bank's slots show the labels as the bags do. A single stat's short name has a colour per stat: strength and physical attack orange, dexterity and defense green, wisdom bright purple, intelligence and magical attack yellow, stamina and magical defense teal, every other stat white. Its icon also gets a 3 pixel outline, with a black pixel on each side, in the colour of the stat's tooltip line: bright orange for an orange stat, bright yellow for a yellow one, none for green. Stats of more than one kind (*2x* to *6x*) take the tooltip colours: the number in the rarer colour and the *x* in the other (an orange *2* and a yellow *x*). On gear only the tooltip lines in an orange, yellow or green stat colour count, so base attack, runes and set bonuses don't.
+
+**Stat colours window.** **Stat colours...** in **/zb** (or **/zb colors**) opens a colour picker for each stat and a button back to these defaults; `/zb color str ff8800` sets one by hex.
+
+**Stats counted from the item link.** A stone's or a piece of gear's stats are counted from its item link, so a single stat that adds two tooltip lines, such as *Furiousness of the Righteous*, counts as one stat and shows both names stacked (*Sta* over *Str*). The German client's stat names get short names too. Labels have a thick black outline and shrink to fit inside the outline at any window size.
+
 ## Updated in 5.07-ck21
 
 **Item shop bank next to the bank.** With *Use one bank (classic zBag)*, tick *Item shop next to bank (zBag)* in **/zb** and the item shop bank's 100 slots open in their own box, attached to the right side of the bank window, with as many slots on a row as the bank. It moves with the bank, and the bank search box sits under it. It needs bank tab 6 ticked. *Lock resize* for Cherry's bags moved down to the *Hide default backpack* row to make room.
 
 **Equipment next to the bag.** With one bag (classic zBag) and *Show equipment slots* on, tick *Next to bag (zBag)* beside it in **/zb**: the 21 equipment slots open in their own box attached to the right side of the bag, in one column when the bag has 21 rows or more, else in two (the first slots on the right). The box is a snug fit, level with the bag's slots. The bag then ends right after its last row of slots, without the equipment rows and padding at its bottom.
 
-**Stats on bag and bank icons.** Tick *Stats* beside the bag search box and a mana stone with one stat shows that stat's short name on its icon (*str*, *stam*, *dex*, *patt*), and one with more stats shows how many (*2x* to *6x*), in the bags and in the bank. Each label takes its stats' colour from the tooltip (yellow stats yellow, green stats green, orange stats orange); when a stone's stats have two colours, the number takes the rarer one and the *x* the other (an orange *2* and a yellow *x*). A stat the game shows no colour for keeps its own (str red, stam orange, dex green, int blue, wis light blue, patt pink, matt purple, def grey, mdef teal). A single stat that adds two stat lines, such as *Furiousness of the Righteous*, counts as one stat and shows both names stacked (*Sta* over *Str*). It works in every bag layout and turns off again with the same tick. zBag reads each item's tooltip once, a few at a time, so items it hasn't seen yet show their stats a moment later.
+**Stats on bag icons.** Tick *Stats* beside the bag search box and a mana stone with one stat shows that stat's short name on its icon (*str*, *stam*, *dex*, *patt*), each main stat in its own colour (str red, stam orange, dex green, int blue, wis light blue, patt pink, matt purple, def grey, mdef teal), and one with more stats shows how many (*2x* to *6x*). It works in every bag layout and turns off again with the same tick. zBag reads each item's tooltip once, a few at a time, so items it hasn't seen yet show their stats a moment later.
 
 **Steady slot numbers on mouseover.** With *Numbers on mouseover only*, a slot's number is now ready at its size before the mouse gets there, so it no longer shows big for a moment and then shrinks.
 

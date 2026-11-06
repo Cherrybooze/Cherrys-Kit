@@ -38,7 +38,7 @@
 GlobalBank = GlobalBank or {}
 local GB = GlobalBank
 
-GB.version = "1.6.11"
+GB.version = "1.6.15"
 GB.DATABASE = "Interface/GlobalBankHelper/GlobalBankDatabase.lua"
 GB.BEAT = "Interface/GlobalBankHelper/GlobalBankHelperBeat.lua" -- rewritten every 30 s while the helper runs
 GB.BEAT_LATE = 75 -- seconds without a new beat before the helper counts as stopped
@@ -1215,15 +1215,25 @@ end
 -- backticks, fields by "~", times as os.time():
 --   I~time~count     the mailbox was read at this time and held this many mails, each then
 --   N~sender~subject~gold~diamonds~cod~items~minutesLeft~flags   (flags: u unread, r returned)
---   O~time~to~subject~gold~diamonds~cod~items   a mail that went, oldest first, the last GB.MAIL_SENT_MAX of them
+--   O~time~to~subject~gold~diamonds~cod~items~send~details   a mail that went, oldest first, the last GB.MAIL_SENT_MAX
+--       of them. send numbers this character's sends: mails that went one after another, each within GB.MAIL_SEND_GAP
+--       seconds of the last with the mailbox still open, share one. details: each item as name*id*count*icon*plus*tier*
+--       stats*runes, joined by "^", stats and runes by ";". Older records end at items.
 ---------------------------------------------------------------------------
-GB.MAIL_SENT_MAX = 360
+GB.MAIL_SENT_MAX = 2400
+GB.MAIL_SEND_GAP = 30
+GB.MAIL_SAVE_QUIET = 5 -- seconds after the last mail before the sent list is written again (it can be 300 KB)
 GB.MAIL_READ_MAX = 200
 GB.mailbox = nil      -- {time, list} as the mailbox last was
 GB.mailSent = {}      -- the sent records, oldest first
 GB.mailOut = nil      -- the mail on its way, until the server says it went or failed
 GB.mailMoney, GB.mailDiamonds, GB.mailCOD = 0, 0, 0
+GB.mailAttached = {}  -- send slot -> the bag item's link, as it was put on the mail
+GB.mailLastAt = nil   -- GetTime() of the last mail that went, while the mailbox stays open
+GB.mailSaveIn = nil   -- seconds until the sent list is written, after a burst of mail
 
+-- Seconds since 1970, UTC. This client has no os table, so the time comes from CherrysClock (in the hub), which
+-- the Global Bank for RoM extension keeps. 0 while neither knows.
 local function clock()
   if os and os.time then
     local ok, value = pcall(os.time)
@@ -1231,9 +1241,25 @@ local function clock()
       return value
     end
   end
+  if type(CherrysClock) == "table" and type(CherrysClock.UTC) == "function" then
+    local ok, value = pcall(CherrysClock.UTC)
+    if ok and type(value) == "number" then
+      return math.floor(value)
+    end
+  end
   return 0
 end
 GB.Clock = clock
+
+local function gameTime()
+  local ok, value = pcall(GetTime)
+  return ok and tonumber(value) or nil
+end
+
+-- A field inside a sent mail's item details
+local function part(text)
+  return (string.gsub(clean(text), "[%^%*;]", ""))
+end
 
 function GB.SerializeMail()
   local parts = {}
@@ -1245,7 +1271,11 @@ function GB.SerializeMail()
     end
   end
   for _, mail in ipairs(GB.mailSent) do
-    parts[#parts + 1] = table.concat({ "O", mail.time, clean(mail.to), clean(mail.subject), mail.gold, mail.diamonds, mail.cod, clean(mail.items) }, "~")
+    local record = table.concat({ "O", mail.time, clean(mail.to), clean(mail.subject), mail.gold, mail.diamonds, mail.cod, clean(mail.items) }, "~")
+    if mail.send then
+      record = table.concat({ record, mail.send, clean(mail.details) }, "~")
+    end
+    parts[#parts + 1] = record
   end
   return table.concat(parts, "`")
 end
@@ -1264,7 +1294,7 @@ function GB.ParseMail(text)
         items = tonumber(f[7]) or 0, minutes = tonumber(f[8]) or 0, unread = string.find(f[9], "u", 1, true) ~= nil, returned = string.find(f[9], "r", 1, true) ~= nil }
     elseif f[1] == "O" and tonumber(f[2]) and f[8] then
       sent[#sent + 1] = { time = tonumber(f[2]), to = f[3], subject = f[4], gold = tonumber(f[5]) or 0, diamonds = tonumber(f[6]) or 0,
-        cod = tonumber(f[7]) or 0, items = f[8] }
+        cod = tonumber(f[7]) or 0, items = f[8], send = tonumber(f[9]), details = f[10] or "" }
     end
   end
   return box, sent
@@ -1273,10 +1303,52 @@ end
 function GB.LoadMail()
   GB.mailbox, GB.mailSent = GB.ParseMail(GlobalBank_Mail)
   GB.mailOut = nil
+  GB.mailLastAt, GB.mailSaveIn = nil, nil
 end
 
 function GB.SaveMail()
+  GB.mailSaveIn = nil
   GlobalBank_Mail = GB.SerializeMail()
+end
+
+-- Mail sent in a burst is written once it's over, when the mailbox closes, or before the game saves.
+function GB.SaveMailSoon()
+  GB.mailSaveIn = GB.MAIL_SAVE_QUIET
+end
+
+function GB.SaveMailNow()
+  if GB.mailSaveIn then
+    GB.SaveMail()
+  end
+end
+
+-- The item on the cursor goes into a send slot: its link is what tells its stats later. Taking an item out of a
+-- slot leaves the cursor empty, and the slot is forgotten.
+function GB.MailAttach(slot)
+  slot = tonumber(slot) or 1
+  local index = tonumber((call(GetCursorItemInfo)))
+  local link = index and index > 0 and call(GetBagItemLink, index)
+  GB.mailAttached[slot] = type(link) == "string" and link or nil
+end
+
+-- One item on a mail going out: name*id*count*icon*plus*tier*stats*runes
+function GB.MailItemDetail(slot, name, icon, count)
+  local link = GB.mailAttached[slot]
+  if link and not string.find(link, "[" .. name .. "]", 1, true) then
+    link = nil
+  end
+  local id = GB.ItemId(link, name)
+  local gear, stone = GB.ReadGear(id, link), GB.ReadStone(id, link)
+  local stats, runes = (gear and gear.stats) or (stone and stone.stats) or {}, gear and gear.runes or {}
+  local function joined(list)
+    local out = {}
+    for i, text in ipairs(list) do
+      out[i] = part(text)
+    end
+    return table.concat(out, ";")
+  end
+  return table.concat({ part(name), part(id), tonumber(count) or 1, part(icon), gear and gear.plus or 0, gear and gear.tier or 0,
+    joined(stats), joined(runes) }, "*")
 end
 
 -- Every mail's header, while the mailbox is open. Diamonds come as "account" money; cash on delivery is what the
@@ -1338,38 +1410,66 @@ function GB.MailCOD(copper)
 end
 
 function GB.MailSending(recipient, subject)
-  local names = {}
-  local function add(name, count)
+  local names, details = {}, {}
+  local function add(slot, name, icon, count)
     if type(name) == "string" and name ~= "" then
       count = tonumber(count) or 1
       names[#names + 1] = clean(name) .. (count > 1 and (" x" .. count) or "")
+      local ok, detail = pcall(GB.MailItemDetail, slot, name, icon, count)
+      details[#details + 1] = ok and detail or table.concat({ part(name), "", count, part(icon), 0, 0, "", "" }, "*")
     end
   end
   if call(GetSendMailMultiItemEnable) then
     for i = 1, 10 do
-      local name, _, count = call(GetSendMailItem, i)
-      add(name, count)
+      local name, icon, count = call(GetSendMailItem, i)
+      add(i, name, icon, count)
     end
   else
-    local name, _, count = call(GetSendMailItem)
-    add(name, count)
+    local name, icon, count = call(GetSendMailItem)
+    add(1, name, icon, count)
   end
   GB.mailOut = { time = clock(), to = clean(recipient), subject = clean(subject), gold = GB.mailMoney, diamonds = GB.mailDiamonds,
-    cod = GB.mailCOD, items = string.sub(table.concat(names, ", "), 1, 160) }
+    cod = GB.mailCOD, items = string.sub(table.concat(names, ", "), 1, 160), details = string.sub(table.concat(details, "^"), 1, 2000) }
+end
+
+-- The send a mail that just went belongs to: the last one's, while mail follows mail within GB.MAIL_SEND_GAP seconds
+-- and the mailbox stays open, else a new one.
+function GB.MailSendNumber()
+  local last = GB.mailSent[#GB.mailSent]
+  local number = last and tonumber(last.send) or 0
+  local now = gameTime()
+  if not (GB.mailLastAt and now and now >= GB.mailLastAt and now - GB.mailLastAt <= GB.MAIL_SEND_GAP and number > 0) then
+    number = number + 1
+  end
+  GB.mailLastAt = now
+  return number
 end
 
 -- The server's answer to the mail on its way: kept when it went, forgotten when it didn't. The money set for it
 -- goes either way, as the game's window clears it too.
 function GB.MailAnswered(went)
   if went and GB.mailOut and GB.mailOut.to ~= "" then
+    GB.mailOut.send = GB.MailSendNumber()
     GB.mailSent[#GB.mailSent + 1] = GB.mailOut
-    while #GB.mailSent > GB.MAIL_SENT_MAX do
-      table.remove(GB.mailSent, 1)
+    if #GB.mailSent > GB.MAIL_SENT_MAX then
+      local keep = {}
+      for i = #GB.mailSent - GB.MAIL_SENT_MAX + 1, #GB.mailSent do
+        keep[#keep + 1] = GB.mailSent[i]
+      end
+      GB.mailSent = keep
     end
-    GB.SaveMail()
+    GB.SaveMailSoon()
   end
   GB.mailOut = nil
+  GB.mailAttached = {}
   GB.mailMoney, GB.mailDiamonds, GB.mailCOD = 0, 0, 0
+end
+
+-- The mailbox closed: the send is over, and what went is written now.
+function GB.MailClosed()
+  GB.mailLastAt = nil
+  GB.mailAttached = {}
+  GB.SaveMailNow()
 end
 
 ---------------------------------------------------------------------------
@@ -1414,7 +1514,7 @@ end
 
 GB.EVENTS = { "VARIABLES_LOADED", "LOADING_END", "BAG_ITEM_UPDATE", "PLAYER_BAG_CHANGED", "PLAYER_MONEY",
   "BANK_OPEN", "BANK_CLOSE", "BANK_UPDATE", "UNIT_LEVEL", "EXCHANGECLASS_SUCCESS",
-  "MAIL_SHOW", "MAIL_INBOX_UPDATE", "MAIL_SEND_SUCCESS", "MAIL_FAILED" }
+  "MAIL_SHOW", "MAIL_INBOX_UPDATE", "MAIL_SEND_SUCCESS", "MAIL_FAILED", "MAIL_CLOSED" }
 
 function GB.OnLoad(frame)
   GB.registered = {}
@@ -1503,6 +1603,8 @@ function GB.OnEvent(event)
     GB.ReadMailbox()
   elseif event == "MAIL_SEND_SUCCESS" or event == "MAIL_FAILED" then
     GB.MailAnswered(event == "MAIL_SEND_SUCCESS")
+  elseif event == "MAIL_CLOSED" then
+    GB.MailClosed()
   else -- bags changed
     GB.dirty = true
     schedule(GB.QUIET, GB.bankOpen, GB.bankOpen, true)
@@ -1526,6 +1628,7 @@ end
 
 -- Anything still waiting is saved before the game writes the save file (logout, quit, reload).
 function GB.Flush()
+  pcall(GB.SaveMailNow)
   if timer ~= nil or GB.dirty then
     local withBank, auth = timerBank, timerAuth
     timer, timerBank, timerAuth = nil, false, false
@@ -1569,8 +1672,15 @@ end
 hookBefore("SendMail", "MailSending")
 hookBefore("SetSendMailMoney", "MailMoney")
 hookBefore("SetSendMailCOD", "MailCOD")
+hookBefore("ClickSendMailItemButton", "MailAttach")
 
 function GB.OnUpdate(elapsed)
+  if GB.mailSaveIn then
+    GB.mailSaveIn = GB.mailSaveIn - (elapsed or 0)
+    if GB.mailSaveIn <= 0 then
+      GB.SaveMail()
+    end
+  end
   if timer == nil then
     return
   end

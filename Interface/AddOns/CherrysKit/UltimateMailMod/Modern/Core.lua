@@ -508,6 +508,42 @@ function M.SelectAll(e)
   e.ummAll = true;
 end
 
+-- ### Ctrl+A and Ctrl+V ###
+-- The client's own text box does Ctrl+C, Ctrl+X, Ctrl+V and Shift+Insert (uieditbox.cpp: the keys
+-- arrive as characters 3, 24 and 22), so those are left alone. It has no Ctrl+A: that one selects the
+-- whole text here, which Ctrl+C and Ctrl+X then take. A one-line box pastes up to the first line
+-- break or tab of the clipboard text, so a clipboard that starts with one pastes nothing, and a
+-- locked or empty clipboard pastes nothing in any box. The paste is checked a few frames after the
+-- key and says so in the status line when the box did not change.
+
+M.Default("UMM_M_PASTE_NONE", "Ctrl+V pasted nothing: the clipboard holds no text, or its text starts with a line break.");
+
+local PASTE_FRAMES = 3;
+local pendingPaste = {};
+
+local function pasteLater()
+  local waiting = false;
+  for e, left in pairs(pendingPaste) do
+    local seen = e.ummPasted;
+    if ((e:GetText() or "") ~= seen) then
+      pendingPaste[e], e.ummPasted = nil, nil;
+    elseif (left > 1) then
+      pendingPaste[e] = left - 1;
+      waiting = true;
+    else
+      pendingPaste[e], e.ummPasted = nil, nil;
+      if (M.focus == e) then M.Status(UMM_M_PASTE_NONE, C.warn); end
+    end
+  end
+  if (waiting) then M.Later(pasteLater); end
+end
+
+local function watchPaste(e)
+  e.ummPasted = e:GetText() or "";
+  pendingPaste[e] = PASTE_FRAMES;
+  M.Later(pasteLater);
+end
+
 M.EDIT = {
   text = function(e)
     if (e.ummQuiet) then return; end
@@ -557,7 +593,9 @@ M.EDIT = {
     M.HideTip(e);
   end,
   keydown = function(e, key)
-    if (key ~= "BACKSPACE" or not M.Held(IsCtrlKeyDown)) then return; end
+    if ((key ~= "BACKSPACE" and key ~= "A" and key ~= "V") or not M.Held(IsCtrlKeyDown)) then return; end
+    if (key == "A") then M.SelectAll(e); return; end
+    if (key == "V") then watchPaste(e); return; end
     e.ummBack = "key";
     e.ummWait = e.ummGold and 1 or 3;
     pendingBack[e] = true;

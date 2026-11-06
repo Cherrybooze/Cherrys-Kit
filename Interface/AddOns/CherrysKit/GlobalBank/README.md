@@ -1,6 +1,6 @@
 # Global Bank
 
-Version **1.6.11** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.6.15** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **See every character's bags, bank and gold in one window, from any character, with item search.**
 
@@ -23,6 +23,26 @@ Built for players with many characters and bank alts. Each character saves a sma
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\GlobalBank` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 1.6.15
+
+**Characters page by account** (extension 1.4.5). Grouped by account, each Gameforge account has one heading, with its RoM accounts under it. A RoM account with one character on a server has no heading of its own: the character sits right under its Gameforge account, with the RoM account's name at the end of its line. A RoM account with more characters gets a heading with its server, a step in; a Gameforge account with only one RoM account says both on one heading. RoM accounts sort the way people count (u9 before u10), and two login screen lists of one server with the same RoM username are one account. A Gameforge account's heading stays in view while its characters scroll under it. Characters only the transfer page knows are shown in italics and counted as *not saved yet*, not as 0 gold. **Show single-character accounts only on tooltip** now gathers those characters under one heading inside each Gameforge account. The Currencies page groups the same way.
+
+**Gameforge account names copy with a click**, on the headings, in the Gameforge column and in a character's details, and their hover says whether the password is saved: **Password missing** in red when it isn't. While the Gameforge accounts are locked the page can't read them, and says so instead. Characters the Runes of Magic site showed with the same e-mail address are linked to one Gameforge account by themselves: while the accounts are open, an address not on the list yet is added to it with no password. An account deleted from the list isn't added back, and a character unlinked by hand stays unlinked.
+
+**Characters renamed in a transfer** are followed under their new name, with *was* and the old name beside it, and the new name's login confirms the transfer, so the old server's copy no longer counts its items and gold a second time. The page finds the new name when the site showed both names on one RoM username, or when exactly one new character on the new server has the old one's class, level and gold. Otherwise right-click the moved character and pick **Renamed in its transfer…**; **Not renamed to …** takes it back. The search finds a character by its old name too.
+
+**Gold per server.** The Gold overview's heading lists each server's gold, richest first (hidden servers left out), then **Total** and the number of full caps; hover a server for its exact gold and how many characters it counts.
+
+## Updated in 1.6.14
+
+**Sent mail grouped by send, with item pictures** (extension 1.4.4). On the Mail page, the Sent list gets its own search and a **Compact** tick: each send, the mails that went one after another, is one line with its recipients, total gold and its items as pictures. Hover an item for its tier, plus, stats and runes; click *N mails* to see each mail. Global Bank now saves the real time a mail went (from the Chrome extension's clock, as the game has none), which send it was part of (mails within 30 seconds of each other with the mailbox open), and each item's picture and stats. Mail saved earlier is grouped when it went to the same name one after another, and its items get their pictures from what your characters hold. Each character keeps its newest 2,400 sent mails (was 360), written once a burst of mail is over, when the mailbox closes, or when you log out.
+
+## Updated in 1.6.12
+
+**Transfer log page** (extension 1.4.2). The Chrome page has a *Transfer log* page under Roster that lists every character with a transfer still under way: planned and waiting for the weekly maintenance, due in the one that just passed, or moved and waiting for one login on its new server. Hover a row for its countdown and history. Cancelled and finished transfers and the maintenance time stay in the full log under Characters, Transfers. Once its maintenance has passed, a transfer can no longer be cleared: it shows **Kept** instead of **Forget**, on this page and in the full log. The list is made from what Chrome keeps for the extension and is never sent anywhere.
+
+**No downgrade offered.** On the Chrome page's **Addons** page, an addon installed from a newer build than the latest release (one installed from a pull request before its release) says **Newer than the release** instead of offering *Update from GitHub*, which would have put the older release back. *Update all* no longer counts it.
 
 ## Updated in 1.6.11
 

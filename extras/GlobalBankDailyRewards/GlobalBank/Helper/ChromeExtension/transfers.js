@@ -15,6 +15,7 @@ const GBTransfers = (() => {
   const MAX_RECORDS = 300;
   const MAX_EVENTS = 12;
   const MAX_ACCOUNT = 60;
+  const MAX_NOT_RENAMED = 10;
   const MINUTE = 60000, HOUR = 60 * MINUTE, DAY = 24 * HOUR;
   // What a tab read this recently still tells about what that tab showed before
   const TAB_MEMORY = 30 * MINUTE;
@@ -242,6 +243,8 @@ const GBTransfers = (() => {
   // listed with it, server|name; events: [{at, what, text}]}.
   // States: planned, cancelled, moved (gone from its old server: a login on the new one confirms it), done, stayed (still
   // on its old server after the maintenance).
+  // renamed: the name it has on its new server, when the transfer renamed it; notRenamed: names you said it doesn't
+  // have there, so they aren't taken for it again.
   function validRecord(record) {
     return !!record && typeof record.id === 'string' && /^[a-z0-9]{6,24}$/.test(record.id) && NAME.test(String(record.name)) && SERVER_NAME.test(String(record.from))
       && SERVER_NAME.test(String(record.to)) && STATES.has(record.state) && timeOf(record.at) > 0;
@@ -251,6 +254,11 @@ const GBTransfers = (() => {
     for (const record of list) {
       record.events = Array.isArray(record.events) ? record.events.filter(item => item && typeof item.text === 'string' && timeOf(item.at)) : [];
       record.account = Array.isArray(record.account) ? record.account.filter(key => typeof key === 'string').slice(0, MAX_ACCOUNT) : [];
+      if (record.renamed !== undefined && !(typeof record.renamed === 'string' && NAME.test(record.renamed) && lower(record.renamed) !== lower(record.name))) delete record.renamed;
+      if (record.notRenamed !== undefined) {
+        record.notRenamed = Array.isArray(record.notRenamed) ? record.notRenamed.filter(item => typeof item === 'string' && NAME.test(item)).map(lower).slice(-MAX_NOT_RENAMED) : [];
+        if (!record.notRenamed.length) delete record.notRenamed;
+      }
     }
     return {v: 1, list};
   }
@@ -402,18 +410,22 @@ const GBTransfers = (() => {
 
   // A maintenance can start late or run long: a save this long after the start it was due in is surely after it
   const AFTER_MAINTENANCE = 3 * HOUR;
-  // What the characters' saves show, as changes for the background to keep: [{id, state, at, text}].
-  // characters: as the page loaded them, so each one's own server and login screen list.
-  function evidence(records, characters, {now = Date.now(), maintenance = null} = {}) {
+  // What the characters' saves show, as changes for the background to keep: [{id, state, at, text, name}].
+  // characters: as the page loaded them, so each one's own server and login screen list. siteOf(key): what the site
+  // showed for 'server|name', {user, email}, or null.
+  function evidence(records, characters, {now = Date.now(), maintenance = null, siteOf = null} = {}) {
     const byName = new Map();
     const all = [];
     for (const character of characters || []) {
-      const name = lower(character.base ?? character.name);
+      // The name it saved: a transfer's new name shown on its old copy is the page's, not the save's
+      const own = character.origin?.name ?? character.base ?? character.name;
+      const name = lower(own);
       const save = {
-        name: String(character.base ?? character.name),
+        name: String(own),
         server: cleanServer(character.origin ? character.origin.server : character.server),
         roster: (character.origin ? character.origin.roster : character.roster) || [],
         saved: savedTime(character),
+        character,
       };
       if (!byName.has(name)) byName.set(name, []);
       byName.get(name).push(save);
@@ -421,21 +433,28 @@ const GBTransfers = (() => {
     }
     const lists = (save, name) => save.roster.some(other => lower(other) === name);
     const changes = [];
+    const renames = renamedArrivals(records, all, byName, {siteOf});
     for (const record of records || []) {
       if (record.state === 'done') continue;
       const since = timeOf(record.at);
       const name = lower(record.name);
       const saves = byName.get(name) || [];
+      // The name it has on its new server: the one the record keeps, or the one found for it just now
+      const found = renames.get(record.id);
+      const renamed = record.renamed || found?.name || '';
+      if (found) changes.push({id: record.id, state: 'renamed', name: found.name, at: found.at, text: found.text});
+      const arrivals = renamed ? byName.get(lower(renamed)) || [] : saves;
       // Saved on its new server since it was registered: it moved, and has logged in there
-      const arrived = saves.find(save => sameServer(save.server, record.to) && save.saved > since && save.saved <= now + DAY);
+      const arrived = arrivals.find(save => sameServer(save.server, record.to) && save.saved > since && save.saved <= now + DAY);
       if (arrived) {
-        changes.push({id: record.id, state: 'done', at: arrived.saved, text: `Logged in on ${record.to}: transfer confirmed`});
+        changes.push({id: record.id, state: 'done', at: arrived.saved, text: `Logged in on ${record.to}${renamed ? ` as ${renamed}` : ''}: transfer confirmed`});
         continue;
       }
       if (record.state !== 'planned') continue;
       // On its new server's login screen: a character there logged in after it was registered, and its list has it.
       // Names are one to a server, so that is this one.
-      const listedThere = all.find(save => sameServer(save.server, record.to) && save.saved > since && save.saved <= now + DAY && lists(save, name));
+      const listedThere = all.find(save => sameServer(save.server, record.to) && save.saved > since && save.saved <= now + DAY
+        && (lists(save, name) || (renamed && lists(save, lower(renamed)))));
       if (listedThere) {
         changes.push({id: record.id, state: 'moved', at: listedThere.saved, text: `${record.to}'s login screen lists it: ${listedThere.name} logged in there`});
         continue;
@@ -467,18 +486,100 @@ const GBTransfers = (() => {
     }
     return changes;
   }
-  // Changes from the Global Bank page, checked again: what its characters' saves showed, or a record forgotten
+  // A transfer can rename a character: it then logs in on its new server under a name nothing knew. Such a character
+  // is taken for a moved one's new name only when nothing else fits, and only one to one: the transfer has that one
+  // candidate, and no other transfer has it. A candidate saved on the new server after the transfer was registered,
+  // wasn't one of its account's characters then, and isn't another transfer's. Then either the site showed it on the
+  // same RoM username as the old name, or, with nothing from the site, it has the old copy's class, level and gold.
+  // Returns Map(record id -> {name, at, text}).
+  function renamedArrivals(records, all, byName, {siteOf = null} = {}) {
+    const found = new Map();
+    const open = (records || []).filter(record => record.state === 'moved' && !record.renamed);
+    if (!open.length) return found;
+    // Names transfers already account for, on the server they went to
+    const taken = new Set((records || []).flatMap(record => [keyOf(record.name, record.to), record.renamed ? keyOf(record.renamed, record.to) : '']).filter(Boolean));
+    const site = key => (siteOf ? siteOf(key) : null);
+    const userOf = key => lower(site(key)?.user || '');
+    const wants = new Map();
+    for (const record of open) {
+      const since = timeOf(record.at);
+      const name = lower(record.name);
+      // Its old copy, as its old server last saved it
+      const old = (byName.get(name) || []).find(save => sameServer(save.server, record.from));
+      // Logged in on its new server under its own name: not renamed
+      if ((byName.get(name) || []).some(save => sameServer(save.server, record.to) && save.saved > since)) continue;
+      const user = userOf(keyOf(record.name, record.from));
+      const rejected = new Set(record.notRenamed || []);
+      const candidates = all.filter(save => {
+        const key = keyOf(save.name, record.to);
+        if (!sameServer(save.server, record.to) || !(save.saved > since) || lower(save.name) === name || taken.has(key) || rejected.has(lower(save.name))) return false;
+        if (record.account.includes(key)) return false;
+        const theirs = userOf(key);
+        if (user && theirs) return theirs === user;
+        // Without the site: the same class and level as the old copy, and its gold to the coin
+        const was = old?.character, now = save.character;
+        if (!was || !now || was.notSaved || now.notSaved) return false;
+        const level = Number(was.level) || 0;
+        return level > 0 && level === (Number(now.level) || 0) && lower(was.class) === lower(now.class) && (Number(was.gold) || 0) === (Number(now.gold) || 0);
+      });
+      if (candidates.length !== 1) continue;
+      const pick = candidates[0];
+      const key = keyOf(pick.name, record.to);
+      const bySite = !!(user && userOf(key));
+      wants.set(record.id, {key, name: pick.name, at: pick.saved, text: bySite ? `Saved on ${record.to} as ${pick.name}, on the same RoM account (${site(key).user}): renamed in the transfer`
+        : `Saved on ${record.to} as ${pick.name}, with its class, level and gold: renamed in the transfer`});
+    }
+    // One to one: a candidate two transfers want is neither's
+    const count = new Map();
+    for (const want of wants.values()) count.set(want.key, (count.get(want.key) || 0) + 1);
+    for (const [id, want] of wants) if (count.get(want.key) === 1) found.set(id, {name: want.name, at: want.at, text: want.text});
+    return found;
+  }
+  // Changes from the Global Bank page, checked again: what its characters' saves showed, a record forgotten, or the
+  // name a transfer gave it (renamed, with its name) and taking that back (unrename)
   function cleanChanges(list) {
     if (!Array.isArray(list) || !list.length || list.length > 100) return null;
     const changes = [];
     for (const change of list) {
-      if (typeof change?.id !== 'string' || !/^[a-z0-9]{6,24}$/.test(change.id) || !['moved', 'stayed', 'done', 'forget'].includes(change.state)) return null;
+      if (typeof change?.id !== 'string' || !/^[a-z0-9]{6,24}$/.test(change.id) || !['moved', 'stayed', 'done', 'forget', 'renamed', 'unrename'].includes(change.state)) return null;
+      if (change.state === 'renamed' && !(typeof change.name === 'string' && NAME.test(change.name))) return null;
       const at = Number(change.at);
-      changes.push({id: change.id, state: change.state, at: Number.isFinite(at) && at > 0 ? at : Date.now(), text: String(change.text ?? '').slice(0, 200)});
+      changes.push({id: change.id, state: change.state, at: Number.isFinite(at) && at > 0 ? at : Date.now(), text: String(change.text ?? '').slice(0, 200),
+        ...(change.state === 'renamed' ? {name: change.name} : {})});
     }
     return changes;
   }
-  function applyChanges(stored, changes, now = Date.now()) {
+  // Its new name on the server it went to. A transfer that didn't happen keeps none.
+  function rename(record, name, at, text) {
+    if (!NAME.test(String(name || '')) || record.state === 'cancelled' || record.state === 'stayed') return;
+    if (lower(name) === lower(record.name)) { unrename(record, at); return; }
+    if (lower(record.renamed) === lower(name)) return;
+    record.renamed = name;
+    if (record.notRenamed) {
+      record.notRenamed = record.notRenamed.filter(item => item !== lower(name));
+      if (!record.notRenamed.length) delete record.notRenamed;
+    }
+    note(record, at, 'renamed', text || `Renamed to ${name} on ${record.to}`);
+  }
+  // Not renamed after all: that name isn't taken for it again, and it waits for a login under its own name
+  function unrename(record, at) {
+    if (!record.renamed) return;
+    record.notRenamed = [...new Set([...(record.notRenamed || []), lower(record.renamed)])].slice(-MAX_NOT_RENAMED);
+    note(record, at, 'unrenamed', `Not renamed to ${record.renamed}`);
+    delete record.renamed;
+    if (record.state === 'done') {
+      record.state = 'moved';
+      delete record.done;
+    }
+  }
+  // A transfer whose maintenance has passed happened, or is happening, in the game, and can't be undone there: it
+  // stays in the log, and Forget is refused. Planned ones before their maintenance, cancelled ones and ones that
+  // didn't move can be forgotten.
+  function locked(record, now = Date.now(), maintenance = null) {
+    if (record.state === 'moved' || record.state === 'done') return true;
+    return record.state === 'planned' && now >= dueOf(record, maintenance);
+  }
+  function applyChanges(stored, changes, now = Date.now(), maintenance = null) {
     const state = load(stored);
     const before = JSON.stringify(state);
     for (const change of changes) {
@@ -486,9 +587,11 @@ const GBTransfers = (() => {
       if (index < 0) continue;
       const record = state.list[index];
       const at = Math.min(change.at, now);
-      if (change.state === 'forget') state.list.splice(index, 1);
+      if (change.state === 'forget') { if (!locked(record, now, maintenance)) state.list.splice(index, 1); }
       else if (change.state === 'moved' && record.state === 'planned') end(record, 'moved', at, change.text || 'Gone from its old server');
       else if (change.state === 'stayed' && record.state === 'planned') end(record, 'stayed', at, change.text || 'Still on its old server after the maintenance');
+      else if (change.state === 'renamed') rename(record, change.name, at, change.text);
+      else if (change.state === 'unrename') unrename(record, at);
       else if (change.state === 'done' && record.state !== 'done') {
         if (record.state === 'planned') record.ended = iso(at);
         record.state = 'done';
@@ -504,16 +607,22 @@ const GBTransfers = (() => {
   // lists stop naming it, so it isn't boxed with its old account. A transferred character nothing has saved yet gets a
   // row of its own from what the transfer page said: its name, its server and the plate, the rest left blank. Run
   // before every prepare: each time it starts again from what the characters saved themselves.
+  // A transfer that renamed it: it shows under its new name, with the old one beside it (formerName), and its new
+  // name's own save is the one that confirms it.
   function overlay(list, records) {
     for (const character of list) {
-      if (!character.origin) character.origin = {server: character.server ?? '', roster: Array.isArray(character.roster) ? character.roster : [], mail: character.mail};
-      else {
+      if (!character.origin) {
+        character.origin = {server: character.server ?? '', roster: Array.isArray(character.roster) ? character.roster : [], mail: character.mail,
+          name: String(character.base ?? character.name ?? '')};
+      } else {
         character.server = character.origin.server;
         character.roster = character.origin.roster;
         character.mail = character.origin.mail;
+        if (character.origin.name !== undefined && character.base !== character.origin.name) character.base = character.name = character.origin.name;
       }
       delete character.transfer;
       delete character.formerKey;
+      delete character.formerName;
     }
     const byName = new Map();
     for (const character of list) {
@@ -530,11 +639,14 @@ const GBTransfers = (() => {
     // Rows for characters nothing saved, one for each name and server
     const blank = [], placed = new Set();
     const placeholder = (mine, record, server, shown) => {
-      const key = keyOf(record.name, server);
+      // On its new server under the name the transfer gave it
+      const name = record.renamed && sameServer(server, record.to) ? record.renamed : record.name;
+      const key = keyOf(name, server);
       if (placed.has(key) || mine.some(character => sameServer(serverOf(character), server))) return;
       placed.add(key);
-      blank.push({name: record.name, server, roster: [], notSaved: true, fromTransfer: true, stale: false, transfer: shown,
-        origin: {server: '', roster: [], mail: undefined}, ...(shown.carried ? {formerKey: keyOf(record.name, record.from)} : {})});
+      blank.push({name, server, roster: [], notSaved: true, fromTransfer: true, stale: false, transfer: shown,
+        origin: {server: '', roster: [], mail: undefined}, ...(shown.carried ? {formerKey: keyOf(record.name, record.from)} : {}),
+        ...(name !== record.name ? {formerName: record.name} : {})});
     };
     // Newest first, so a character's newest transfer is the one it shows
     const touched = new Set();
@@ -542,10 +654,12 @@ const GBTransfers = (() => {
       if (!['planned', 'moved', 'done'].includes(record.state)) continue;
       const name = lower(record.name);
       const mine = byName.get(name) || [];
+      // Renamed in the transfer: on its new server it has its new name
+      const theirs = record.renamed ? byName.get(lower(record.renamed)) || [] : mine;
       const since = timeOf(record.at);
       const old = on(mine, record.from);
-      const arrived = mine.find(character => sameServer(serverOf(character), record.to) && savedTime(character) > since);
-      const shown = {id: record.id, state: record.state, name: record.name, from: record.from, to: record.to};
+      const arrived = theirs.find(character => sameServer(serverOf(character), record.to) && savedTime(character) > since);
+      const shown = {id: record.id, state: record.state, name: record.name, from: record.from, to: record.to, ...(record.renamed ? {renamed: record.renamed} : {})};
       if (record.state === 'planned') {
         if (old && !touched.has(old)) {
           old.transfer = shown;
@@ -553,7 +667,7 @@ const GBTransfers = (() => {
         } else if (!old) placeholder(mine, record, record.from, shown);
         continue;
       }
-      if (!old && !arrived && record.state === 'moved') placeholder(mine, record, record.to, {...shown, carried: true});
+      if (!old && !arrived && record.state === 'moved') placeholder(theirs, record, record.to, {...shown, carried: true});
       const gone = timeOf(record.ended || record.done) || Date.now();
       if (old && !touched.has(old)) {
         if (arrived || record.state === 'done') {
@@ -565,12 +679,18 @@ const GBTransfers = (() => {
           old.mail = undefined;
           old.transfer = {...shown, carried: true};
           old.formerKey = keyOf(record.name, record.from);
+          // Until its new name logs in, the copy it carried shows under that name
+          if (record.renamed && !theirs.some(character => sameServer(serverOf(character), record.to))) {
+            old.base = old.name = record.renamed;
+            old.formerName = record.name;
+          }
         }
         touched.add(old);
       }
       if (arrived && !touched.has(arrived)) {
         arrived.transfer = {...shown, state: 'done'};
         arrived.formerKey = keyOf(record.name, record.from);
+        if (record.renamed) arrived.formerName = record.name;
         touched.add(arrived);
       }
       // The old login screen's lists name it no more, unless a character by that name is there again
@@ -641,7 +761,8 @@ const GBTransfers = (() => {
     if (!record) return null;
     const kind = phase(record, now, maintenance);
     const when = clock().short.format(timeOf(record.at));
-    const label = kind === 'moved' ? `Moved from ${record.from} to ${record.to}, registered ${when}: log in with it on ${record.to} to confirm`
+    const as = record.renamed ? ` as ${record.renamed}` : '';
+    const label = kind === 'moved' ? `Moved from ${record.from} to ${record.to}${as}, registered ${when}: log in with it on ${record.to} to confirm`
       : kind === 'due' ? `Transfer to ${record.to}, registered ${when}, was due in the last maintenance`
         : `Transfer to ${record.to}, registered ${when}`;
     return {id: record.id, kind, to: record.to, from: record.from, when, label, confirm: kind === 'moved'};
@@ -656,15 +777,15 @@ const GBTransfers = (() => {
     const when = clock().short;
     if (kind === 'planned') return {kind: 'row', text: `Transfer to ${record.to} registered ${when.format(timeOf(record.at))}: due in the maintenance ${clock().day.format(dueOf(record, maintenance))}`};
     if (kind === 'due') return {kind: 'warn', text: `Transfer to ${record.to} was due in the maintenance ${clock().day.format(dueOf(record, maintenance))}: log in to check`};
-    if (kind === 'moved') return {kind: 'warn', text: `Moved here from ${record.from}: log in with it on ${record.to} to confirm the transfer`};
-    return {kind: 'hint', text: `Came from ${record.from} by transfer, ${when.format(timeOf(record.done || record.ended || record.at))}`};
+    if (kind === 'moved') return {kind: 'warn', text: `Moved here from ${record.from}${record.renamed ? ` as ${record.renamed}, renamed from ${record.name}` : ''}: log in with it on ${record.to} to confirm the transfer`};
+    return {kind: 'hint', text: `Came from ${record.from} by transfer${record.renamed ? `, renamed from ${record.name}` : ''}, ${when.format(timeOf(record.done || record.ended || record.at))}`};
   }
   // A record's tooltip, from the plate or the log: {title, lines: [{text, kind}], countdown: {label, at} or null}.
   // who: {rom, gameforge, mail}, its RoM and Gameforge account as the page knows them, and what its mailbox holds.
   function tipOf(record, now = Date.now(), maintenance = null, who = null) {
     const plan = maintenanceOf(maintenance);
     const kind = phase(record, now, maintenance);
-    const lines = [{kind: 'sub', text: `${record.from} → ${record.to}`}];
+    const lines = [{kind: 'sub', text: `${record.from} → ${record.to}${record.renamed ? `, renamed to ${record.renamed}` : ''}`}];
     const accounts = [who?.rom ? `RoM account: ${who.rom}` : '', who?.gameforge ? `Gameforge: ${who.gameforge}` : ''].filter(Boolean);
     if (accounts.length) lines.push({kind: 'row', text: accounts.join(' · ')});
     lines.push({kind: `state is-${kind}`, text: PHASE_NAMES[kind]});
@@ -682,8 +803,9 @@ const GBTransfers = (() => {
       next = {label: `If it didn't move: next ${DAYS[plan.day]} maintenance in`, at: after, when: `${clock().day.format(after)} your time`};
     } else if (kind === 'moved') {
       lines.push({kind: 'warn', text: `Log in with it on ${record.to} to confirm the transfer.`});
+      if (!record.renamed) lines.push({kind: 'hint', text: 'Renamed in the transfer? Right-click it on the Characters page and pick Renamed in its transfer.'});
     }
-    return {title: `Transfer: ${record.name}`, lines, countdown: next};
+    return {title: `Transfer: ${record.name}${record.renamed ? ` → ${record.renamed}` : ''}`, lines, countdown: next};
   }
 
   // The Global Bank page's side: the records, the maintenance setting, the tooltip with its countdown, and the log.
@@ -698,7 +820,7 @@ const GBTransfers = (() => {
     let dueTimer = 0;
     const storage = options.storage || null;
     // What moves characters or changes a plate: a change only to when the site last listed one draws the page again
-    const shapeOf = () => JSON.stringify(state.list.map(record => [record.id, record.state, record.name, record.from, record.to, record.at, record.ended || '', record.done || '']));
+    const shapeOf = () => JSON.stringify(state.list.map(record => [record.id, record.state, record.name, record.from, record.to, record.at, record.ended || '', record.done || '', record.renamed || '']));
     function settle(stored, plan) {
       state = load(stored);
       maintenance = maintenanceOf(plan);
@@ -738,7 +860,7 @@ const GBTransfers = (() => {
       record: id => state.list.find(record => record.id === id) || null,
       // What the newly loaded saves say, sent to the background to keep
       async check(characters) {
-        const changes = evidence(state.list, characters, {now: Date.now(), maintenance});
+        const changes = evidence(state.list, characters, {now: Date.now(), maintenance, siteOf: options.siteOf || null});
         if (!changes.length || sending || !options.send) return 0;
         sending = true;
         try {
@@ -746,8 +868,16 @@ const GBTransfers = (() => {
         } catch { /* told again on the next load */ } finally { sending = false; }
         return changes.length;
       },
+      locked: (record, now = Date.now()) => locked(record, now, maintenance),
       async forget(id) {
         if (options.send) await options.send({type: 'transfers-change', changes: [{id, state: 'forget', at: Date.now(), text: ''}]});
+      },
+      // The name a transfer gave it on its new server, as you know it, or '' when it kept its name
+      async rename(id, name) {
+        if (!options.send) return;
+        const record = api.record(id);
+        const text = name ? `Renamed to ${name} on ${record?.to || 'its new server'}: set by hand` : '';
+        await options.send({type: 'transfers-change', changes: [name ? {id, state: 'renamed', name, at: Date.now(), text} : {id, state: 'unrename', at: Date.now(), text: ''}]});
       },
       async setMaintenance(plan) {
         maintenance = maintenanceOf(plan);
@@ -770,13 +900,15 @@ const GBTransfers = (() => {
         return count;
       },
       // The log, in a table's body: the ones still waiting first, then the newest. search: words a record's name,
-      // servers or state must hold (filters, #like this, are for the characters' table). Returns how many it shows.
-      renderLog(body, {search = ''} = {}) {
+      // servers or state must hold (filters, #like this, are for the characters' table). active: only the ones still in
+      // transfer (planned, due or moved); forget: false leaves out the Forget button. Returns how many it shows.
+      renderLog(body, {search = '', active = false, forget = true} = {}) {
         const now = Date.now();
         const words = lower(search).split(/[\s,]+/).filter(word => word && !word.startsWith('#'));
         const order = {planned: 0, due: 0, moved: 1};
         const rows = state.list.map(record => ({record, kind: phase(record, now, maintenance)}))
-          .filter(({record, kind}) => words.every(word => lower(`${record.name} ${record.from} ${record.to} ${PHASE_NAMES[kind]}`).includes(word)))
+          .filter(({kind}) => !active || kind in order)
+          .filter(({record, kind}) => words.every(word => lower(`${record.name} ${record.renamed || ''} ${record.from} ${record.to} ${PHASE_NAMES[kind]}`).includes(word)))
           .sort((a, b) => (order[a.kind] ?? 2) - (order[b.kind] ?? 2) || timeOf(b.record.at) - timeOf(a.record.at));
         body.replaceChildren(...rows.map(({record, kind}) => {
           const row = make('tr', `xfer-row is-${kind}`);
@@ -784,6 +916,7 @@ const GBTransfers = (() => {
           row.dataset.xfer = record.id;
           const who = make('td');
           who.append(make('b', 'xfer-name', record.name));
+          if (record.renamed) who.append(make('span', 'xfer-renamed', ` → ${record.renamed}`));
           const route = make('td', 'xfer-route');
           route.append(make('span', '', record.from), make('span', 'xfer-sep', ' › '), make('span', 'xfer-to', record.to));
           const at = timeOf(record.at);
@@ -801,13 +934,23 @@ const GBTransfers = (() => {
           const last = record.events[record.events.length - 1];
           const news = make('td', 'xfer-news', last ? last.text : '');
           if (last) news.title = clock().long.format(timeOf(last.at));
-          const actions = make('td', 'xfer-actions');
-          const forget = make('button', 'gb-button--ghost gb-button--sm', 'Forget');
-          forget.type = 'button';
-          forget.dataset.xferForget = record.id;
-          forget.setAttribute('aria-label', `Forget ${record.name}'s transfer to ${record.to}`);
-          actions.append(forget);
-          row.append(who, route, registered, when, chip, news, actions);
+          row.append(who, route, registered, when, chip, news);
+          if (forget) {
+            const actions = make('td', 'xfer-actions');
+            if (locked(record, now, maintenance)) {
+              const keep = make('span', 'muted', 'Kept');
+              keep.title = 'Its maintenance has passed, so the transfer can no longer be cleared.';
+              actions.append(keep);
+              row.append(actions);
+              return row;
+            }
+            const button = make('button', 'gb-button--ghost gb-button--sm', 'Forget');
+            button.type = 'button';
+            button.dataset.xferForget = record.id;
+            button.setAttribute('aria-label', `Forget ${record.name}'s transfer to ${record.to}`);
+            actions.append(button);
+            row.append(actions);
+          }
           return row;
         }));
         return rows.length;
@@ -900,6 +1043,6 @@ const GBTransfers = (() => {
   }
 
   return {STORE, MAINTENANCE_STORE, ACCOUNT_STORE, ACCOUNT_MEMORY, ZONE, MAINTENANCE, DAYS, SERVERS, TAB_MEMORY, PHASE_NAMES, cleanServer, keyOf, savedTime, zoneParts, zoneOffset, zoned,
-    maintenanceOf, nextMaintenance, dueOf, serverLabel, characterLabel, parsePage, parseAccount, cleanRead, load, applyRead, loadAccounts, applyAccount, evidence, cleanChanges, applyChanges,
+    maintenanceOf, nextMaintenance, dueOf, serverLabel, characterLabel, parsePage, parseAccount, cleanRead, load, applyRead, loadAccounts, applyAccount, evidence, renamedArrivals, cleanChanges, applyChanges, locked,
     overlay, countdown, roughly, phase, plateOf, cardLine, tipOf, create};
 })();

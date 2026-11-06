@@ -121,12 +121,20 @@ local function trim(text)
   return string.match(text or "", "^%s*(.-)%s*$") or "";
 end
 
+-- The text of the mail. Text pasted from Windows brings a carriage return with every line break;
+-- the client keeps them in the box, so they are left out here and never reach the mail.
+local function bodyText()
+  local body = UMMModernComposeBody:GetText() or "";
+  if (string.find(body, "\r", 1, true)) then body = string.gsub(body, "\r", ""); end
+  return body;
+end
+
 local function readForm()
   local subject = UMMModernComposeSubject:GetText() or "";
   local form = {
     to = trim(UMMModernComposeTo:GetText()),
     subject = subject,
-    body = UMMModernComposeBody:GetText() or "",
+    body = bodyText(),
     items = items,
     cod = 0,
     gold = {},
@@ -172,7 +180,7 @@ end
 -- ### Drawing ###
 
 local function drawCounter()
-  local body = UMMModernComposeBody:GetText() or "";
+  local body = bodyText();
   local len = string.len(body);
   if (len <= P.BODY_LIMIT) then
     M.SetText(ui.counter, string.format(UMM_M_CO_COUNT, M.Gold(len)), C.dim);
@@ -791,6 +799,8 @@ end
 
 local function nameBox(e, onDone)
   e.ummFocus = function(box)
+    -- a name already in the box is selected on the way in: typing replaces it, Ctrl+C takes it
+    if ((box:GetText() or "") ~= "") then M.SelectAll(box); end
     if (UMMAutoNameList()) then K.Open(box, function(b) changed(); onDone(b); end); end
   end;
   e.ummEnterKey = function(box)

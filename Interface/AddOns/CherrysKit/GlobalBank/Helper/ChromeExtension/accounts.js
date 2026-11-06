@@ -192,17 +192,36 @@ const GBAccounts = (() => {
     }
     return null;
   }
-  // Characters not linked yet whose site e-mail address is a saved Gameforge account's name: linked to it. A link made
-  // by hand always stays. siteEmail(character): the address, or ''. Says how many it linked.
-  function autoLink(state, characters, siteEmail) {
-    if (!siteEmail || !state.accounts.length) return 0;
-    const byName = new Map(state.accounts.map(account => [String(account.name).trim().toLowerCase(), account.id]));
+  // The saved Gameforge account for an e-mail address: the one named by it, or the one it was added as before you
+  // renamed it
+  function accountByEmail(state, email) {
+    const text = String(email || '').trim().toLowerCase();
+    if (!text) return null;
+    return state.accounts.find(account => String(account.name).trim().toLowerCase() === text)
+      || state.accounts.find(account => String(account.email || '').toLowerCase() === text) || null;
+  }
+  // Characters not linked yet join the Gameforge account the site showed them with: its e-mail address is the name
+  // you log in with. With create, an address not on the list yet is added to it, with no password, unless you
+  // deleted it from the list before. A link made by hand always stays, and a character you unlinked stays unlinked.
+  // siteEmail(character): the address, or ''. Says how many it linked.
+  function autoLink(state, characters, siteEmail, create = false) {
+    if (!siteEmail) return 0;
+    const removed = new Set(Array.isArray(state.removed) ? state.removed : []);
+    const unlinked = state.noAuto && typeof state.noAuto === 'object' ? state.noAuto : {};
     let linked = 0;
     for (const character of characters) {
       if (accountFor(state, character)) continue;
-      const id = byName.get(String(siteEmail(character) || '').toLowerCase());
-      if (!id) continue;
-      state.links[linkKeysOf(character)[0]] = id;
+      const keys = linkKeysOf(character);
+      if (keys.some(key => unlinked[key])) continue;
+      const email = String(siteEmail(character) || '').trim();
+      if (!email) continue;
+      let account = accountByEmail(state, email);
+      if (!account && create && !removed.has(email.toLowerCase())) {
+        account = {id: crypto.randomUUID(), name: email, password: '', secondary: '', notes: '', email: email.toLowerCase()};
+        state.accounts.push(account);
+      }
+      if (!account) continue;
+      state.links[keys[0]] = account.id;
       linked++;
     }
     return linked;
@@ -234,9 +253,15 @@ const GBAccounts = (() => {
     if (!problem) state.accounts.find(account => account.id === id).name = String(name).trim();
     return problem;
   }
+  // Its characters are unlinked, and its address isn't added back for them on its own
   function removeAccount(state, id) {
+    const gone = state.accounts.find(account => account.id === id);
     state.accounts = state.accounts.filter(account => account.id !== id);
     for (const key of Object.keys(state.links)) if (state.links[key] === id) delete state.links[key];
+    if (!gone) return;
+    const names = new Set(Array.isArray(state.removed) ? state.removed : []);
+    for (const name of [gone.name, gone.email]) if (name && String(name).includes('@')) names.add(String(name).trim().toLowerCase());
+    state.removed = [...names];
   }
   // Pasted names, one a line or split by commas, against the characters there are.
   function matchNames(text, characters) {
@@ -262,6 +287,17 @@ const GBAccounts = (() => {
       found.get(key).count++;
     }
     return [...found.values()].sort((a, b) => Number(a.name === NO_SERVER) - Number(b.name === NO_SERVER) || b.count - a.count || a.name.localeCompare(b.name));
+  }
+  // Each server's gold over every box, richest first, for the line beside the Gold overview's total: [{server, total, count}]
+  function heatServerTotals(boxes) {
+    const found = new Map();
+    for (const server of boxes.flatMap(box => box.servers)) {
+      if (!found.has(server.server)) found.set(server.server, {server: server.server, total: 0, count: 0});
+      const sum = found.get(server.server);
+      sum.total += server.total;
+      sum.count += server.roms.reduce((all, rom) => all + rom.characters.length, 0);
+    }
+    return [...found.values()].sort((a, b) => Number(a.server === NO_SERVER) - Number(b.server === NO_SERVER) || b.total - a.total || a.server.localeCompare(b.server));
   }
   // A box for each Gameforge account, then one for the characters not linked to any. In a box its servers, and on a
   // server its RoM accounts, the characters one login screen lists, richest first, so that a full account shows as a
@@ -370,9 +406,10 @@ const GBAccounts = (() => {
         delete state.links[keys[1]];
         moved++;
       }
-      // The site showed which Gameforge account these are on
-      moved += autoLink(state, options.listed ? characters.concat(options.listed()) : characters, options.siteEmail);
+      // The site showed which Gameforge account these are on: one not on the list yet is added to it
+      moved += autoLink(state, everyone(), options.siteEmail, true);
       if (moved) save();
+      return moved;
     }
     async function readFile() {
       let text = '';
@@ -448,9 +485,12 @@ const GBAccounts = (() => {
       const name = typeof owner === 'string' ? owner : String(owner.name);
       const account = typeof owner === 'string' ? accountOfName(owner) : accountFor(state, owner);
       if (heading) menu.append(make('strong', '', name));
-      menu.append(copyRow('Copy character name', String(name).replace(/ \([^()]*\)$/, '')), copyRow('Copy Gameforge account name', account?.name || ''),
+      // Not linked: the e-mail address the site showed with it is still its Gameforge account's name
+      const site = !account && typeof owner !== 'string' && options.siteEmail ? options.siteEmail(owner) : '';
+      menu.append(copyRow('Copy character name', String(name).replace(/ \([^()]*\)$/, '')), copyRow('Copy Gameforge account name', account?.name || site || ''),
         copyRow('Copy password', account?.password || ''), copyRow('Copy secondary password', account?.secondary || ''));
-      if (!account) menu.append(make('span', 'hint', fileKey ? 'Not linked to a Gameforge account yet.' : 'Unlock your Gameforge accounts to copy logins.'));
+      if (account && !account.password) menu.append(make('span', 'hint is-bad', 'Password missing: add it on the Gameforge accounts page.'));
+      else if (!account) menu.append(make('span', 'hint', fileKey ? 'Not linked to a Gameforge account yet.' : 'Unlock your Gameforge accounts to copy logins.'));
     }
     const ownerName = owner => typeof owner === 'string' ? owner : String(owner.name);
     // Level with its name: to the right of the menu, or to the left when the window has no room there
@@ -675,9 +715,17 @@ const GBAccounts = (() => {
       const allGold = boxes.reduce((sum, box) => sum + box.total, 0);
       const allCaps = boxes.reduce((sum, box) => sum + box.fullCaps, 0);
       const total = byId('heat-total');
-      total.textContent = `${shortGold(allGold)} gold`;
-      total.title = `${number(allGold)} gold`;
-      total.append(make('span', 'soft-count', `${number(allCaps)} full ${allCaps === 1 ? 'cap' : 'caps'}`));
+      // Each server's gold, then the total of them all
+      const perServer = heatServerTotals(boxes).map(sum => {
+        const chip = make('span', 'heat-server-gold');
+        chip.title = `${sum.server}: ${number(sum.total)} gold, ${number(sum.count)} ${sum.count === 1 ? 'character' : 'characters'}`;
+        chip.append(make('span', 'heat-server-gold-name', `${sum.server}:`), make('span', 'heat-server-gold-sum', shortGold(sum.total)));
+        return chip;
+      });
+      const whole = make('span', 'heat-server-gold is-total');
+      whole.title = `${number(allGold)} gold`;
+      whole.append(make('span', 'heat-server-gold-name', 'Total:'), make('span', 'heat-server-gold-sum', `${shortGold(allGold)} gold`));
+      total.replaceChildren(...perServer, whole, make('span', 'soft-count', `${number(allCaps)} full ${allCaps === 1 ? 'cap' : 'caps'}`));
       const fit = [];
       byId('heat-view').classList.toggle('no-server-names', !heatServerNames);
       byId('heat-view').replaceChildren(...boxes.map(box => {
@@ -751,6 +799,7 @@ const GBAccounts = (() => {
             account.password = password.value;
             account.secondary = secondary.value;
             account.notes = notes.value;
+            settleLinks();
             save();
             renderAll();
             if (options.linksChanged) options.linksChanged();
@@ -864,6 +913,9 @@ const GBAccounts = (() => {
         const before = accountFor(state, character)?.id || null;
         setLinks(state, keys, null);
         if (id) setLinks(state, [keys[0]], id);
+        // Unlinked by hand: the site's e-mail address doesn't link it again
+        if (id) { if (state.noAuto) for (const key of keys) delete state.noAuto[key]; }
+        else if (before) state.noAuto = {...(state.noAuto || {}), [keys[0]]: true};
         if (before !== (id || null)) changed++;
       }
       save();
@@ -993,8 +1045,10 @@ const GBAccounts = (() => {
       }
       state.accounts.push({id: crypto.randomUUID(), name, password: byId('gf-new-password').value, secondary: byId('gf-new-secondary').value, notes: byId('gf-new-notes').value.trim()});
       for (const id of ['gf-new-name', 'gf-new-password', 'gf-new-secondary', 'gf-new-notes']) byId(id).value = '';
+      // Added by hand: an address deleted before may come back on its own again
+      if (Array.isArray(state.removed)) state.removed = state.removed.filter(item => item !== name.toLowerCase());
       // Characters the site showed with this e-mail address join it at once
-      if (autoLink(state, options.listed ? characters.concat(options.listed()) : characters, options.siteEmail) && options.linksChanged) options.linksChanged();
+      if (autoLink(state, everyone(), options.siteEmail) && options.linksChanged) options.linksChanged();
       save();
       renderAccounts();
       byId('gf-link-account').value = state.accounts[state.accounts.length - 1].id;
@@ -1110,11 +1164,23 @@ const GBAccounts = (() => {
         return account ? {id: account.id, name: account.name} : null;
       },
       locked: () => !fileKey && !!sealedFile,
+      // Whether a Gameforge account's password is saved here, by its name or the e-mail address the site showed:
+      // 'saved'; 'missing' when it has none, isn't on the list, or no accounts are saved at all; 'locked' while they
+      // are locked, as nothing can be read then
+      passwordState(name) {
+        if (!fileKey) return sealedFile ? 'locked' : 'missing';
+        const account = accountByEmail(state, name);
+        return account && account.password ? 'saved' : 'missing';
+      },
+      // Whether one by that name or address is on the list (false while locked)
+      hasAccount: name => !!fileKey && !!accountByEmail(state, name),
       nameProblem: (id, name) => nameProblem(state, id, name),
       // A new name for a Gameforge account, saved like any other change. Says what's wrong, or ''.
       rename(id, name) {
         const problem = renameAccount(state, id, name);
         if (!problem) {
+          // Characters the site showed with the new name join it
+          settleLinks();
           save();
           renderAll();
         }
@@ -1127,6 +1193,6 @@ const GBAccounts = (() => {
       openMenu,
     };
   }
-  return {create, heatColor, heatName, heatShowsGold, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, autoLink, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, emptyState,
+  return {create, heatColor, heatName, heatShowsGold, validHeatColors, serverOf, accountOf, accountFor, linkKeysOf, autoLink, setLinks, nameProblem, renameAccount, removeAccount, matchNames, heatBoxes, heatServerTotals, emptyState,
     newKey, cleanKey, deriveKey, seal, unseal, validFile, accountGroups, classColor, heatServers, heatServerKey};
 })();

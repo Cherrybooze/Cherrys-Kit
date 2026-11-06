@@ -1,4 +1,5 @@
-"""Characters page grouped by account: accounts with one character can share one group instead of a heading each."""
+"""Characters page grouped by account: a RoM account with one character has no heading of its own. Its character sits
+under its Gameforge account with the RoM account on its line, or, with the switch on, such characters share one heading."""
 from pathlib import Path
 import shutil
 import subprocess
@@ -35,21 +36,31 @@ const html = singlesTogether => {
 const headings = text => [...text.matchAll(/data-group-toggle="([^"]*)"/g)].map(found => found[1]);
 const order = text => [...text.matchAll(/class="char-name">([^<]*)</g)].map(found => found[1]);
 
+// By account with nothing linked: one heading for the login screens no Gameforge account is linked to, one inside it
+// for the RoM account with two characters, and one for the character no login screen has listed
 const apart = html(false);
-assert.equal(headings(apart).length, 4);
+assert.equal(headings(apart).length, 3);
+assert.equal(headings(apart).at(-1), '~none');
 assert.ok(!apart.includes('Single-character accounts'));
+// The two alone on their RoM accounts sit right under it, richest first, each with its RoM account on its own line
+assert.deepEqual(order(apart), ['Delta', 'Gamma', 'Alpha', 'Beta', 'Nobody']);
+assert.equal((apart.match(/class="rom-chip"/g) || []).length, 2);
+assert.match(apart, /Delta<\/span><span class="rom-chip" title="RoM account">Delta&#39;s account</);
 
+// The switch on: they share one heading instead, after the RoM accounts with headings, their RoM accounts only on hover
 const together = html(true);
 const keys = headings(together);
-assert.deepEqual(keys.slice(-2), ['~single', '~none'], 'the shared group sits before the characters with no account');
-assert.equal(keys.length, 3);
+assert.equal(keys.length, 4);
+assert.ok(keys.at(-2).endsWith('|~single'), 'the shared group sits before the characters with no account');
+assert.equal(keys.at(-1), '~none');
 assert.ok(together.includes('Single-character accounts'));
+assert.ok(!together.includes('rom-chip'));
 // Inside it the table's sort (gold, highest first) holds, not the accounts' order
 const names = order(together);
 assert.ok(names.indexOf('Delta') < names.indexOf('Gamma'));
 assert.deepEqual(names.slice(0, 2), ['Alpha', 'Beta']);
 
-// Grouped by server, or with one single account only, nothing changes
+// Grouped by server, or with one single account only, nothing is shared
 const root = node();
 bank.renderRoster(root, characters.slice(0, 3), {how: 'account', singlesTogether: true});
 assert.ok(!root.querySelector('table').querySelector('tbody').innerHTML.includes('Single-character accounts'));

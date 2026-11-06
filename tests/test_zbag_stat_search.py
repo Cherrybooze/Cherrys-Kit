@@ -117,6 +117,13 @@ class StatSearchTests(unittest.TestCase):
         self.assertEqual(self.g.zBagKit.statCache["L1"], "stamina\ndexterity")
         self.assertEqual(self.g.zBagKit.statColors["L1"], "00ff00\n")
 
+    def test_a_colour_code_in_the_line_wins_over_the_fontstring_colour(self):
+        # line 3 carries |cff00ff00 itself; the FontString says white
+        self.lua.execute("zBagKitTipReaderTextLeft3.GetColor = function() return 1, 1, 1 end")
+        self.find("stamina")
+        self.tick_until_idle()
+        self.assertEqual(self.g.zBagKit.statColors["L1"], "00ff00\n")
+
     def test_known_items_are_never_read_again(self):
         self.find("stamina")
         self.tick_until_idle()

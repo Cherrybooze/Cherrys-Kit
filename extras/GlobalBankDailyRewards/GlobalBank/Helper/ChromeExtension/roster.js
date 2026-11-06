@@ -297,9 +297,12 @@ const GBRoster = (() => {
     const lines = [];
     const server = character.shownServer ? character.shownServer + (character.manualServer ? ' (set by hand)' : '') : NO_SERVER;
     const account = accountLine(character, extra);
+    // extra.password(character): a line when its Gameforge account has no password saved, or null
+    const password = !extra.hideGameforge && extra.password ? extra.password(character) : null;
     if (character.notSaved) {
       lines.push({kind: 'sub', text: server});
       if (account) lines.push(account);
+      if (password) lines.push(password);
       const transfer = extra.transfer ? extra.transfer(character) : null;
       if (transfer) lines.push(transfer);
       lines.push({kind: 'warn', text: character.fromTransfer ? TRANSFER_ONLY_NOTE : UNSAVED_NOTE});
@@ -316,6 +319,7 @@ const GBRoster = (() => {
     }
     lines.push({kind: 'gold', text: goldText, parts});
     if (account) lines.push(account);
+    if (password) lines.push(password);
     const bag = (character.bag || []).length, bank = (character.bank || []).length;
     const bagText = character.bagSlots ? `Bag ${number(bag)} of ${number(character.bagSlots)}` : `Bag ${number(bag)}`;
     const bankText = !character.bankSeen ? 'bank not recorded' : character.bankSlots ? `bank ${number(bank)} of ${number(character.bankSlots)}` : `bank ${number(bank)}`;
@@ -636,6 +640,8 @@ const GBRoster = (() => {
       },
       // What the site showed for it: {user, email}, or null
       siteAccount: character => siteOf(character),
+      // What the site showed for one 'server|name' key, and nothing else: {user, email}, or null
+      siteByKey: key => siteChars[key] || null,
       // Its Gameforge account's e-mail address as the site showed it, or ''
       siteEmail: character => siteOf(character)?.email || '',
       // The same by the name the page shows for it
@@ -810,8 +816,8 @@ const GBRoster = (() => {
     }
     const keyAt = target => target?.closest?.('[data-char], [data-char-tip]');
     document.addEventListener('mouseover', event => {
-      // A transfer plate shows its own tooltip, with its countdown
-      if (event.target?.closest?.('[data-xfer]')) {
+      // A transfer plate shows its own tooltip, with its countdown, and a Gameforge account's name its own
+      if (event.target?.closest?.('[data-xfer], [data-gf-copy]')) {
         if (shownKey) { tooltip.hidden = true; shownKey = null; }
         return;
       }
