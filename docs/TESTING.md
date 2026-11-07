@@ -4,6 +4,18 @@ The automated tests run production Lua 5.1 modules and XML handlers with simulat
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck14 requires **0.4.34** for its modern mail window (0.4.17 for its History files). Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
 
+## Press early on a kitty row (Cherry's KittyCombo 1.7.19, not yet released)
+
+`tests/test_kitty_press_early.py` runs the kitty engine against a model of the game's cooldown timing, taken from the client and server source: the server lowers whole-second cooldowns on each character's one-second beat, the client starts its countdown when the cast report arrives, and the client stops sending casts for about a second after five unanswered requests. In that model a Charged Chop row with **Press early (s)** 0.75 gets one cast a second (29 to 31 in 30 seconds) at 0.05 to 0.3 seconds between presses and 100 to 250 ms ping, with no blocked sends; the same row with "Skill is ready: Charged Chop 0" gets 19 to 26. The real server may differ, so count in game. Use a Warrior/Warden and a training dummy, and a damage meter that counts hits per skill.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| KE1 | In a copy of your Warrior/Warden kitty, enable the Charged Chop row, move it above the other attack rows, remove its "Skill is ready" condition and add **Press early (s)** with `0.75`. Take `/cast Charged Chop` out of the kitty macro. Hit the dummy for 30 seconds, pressing the kitty key as you usually do. | About 30 Charged Chops in 30 seconds (17 before with the old row, 23 with the macro line). There is no moment where nothing casts for about a second. |
+| KE2 | Repeat KE1 pressing very fast (key held down with repeat), then slowly (about 3 presses a second). | Charged Chop stays close to 30 both ways. Note whether the rows below it still fire now and then. |
+| KE3 | Repeat KE1 with `0.5` and with `1` in Press early (s). | Note both counts. With `1` the rows below Charged Chop may never fire, as the help text warns. |
+| KE4 | Show rom weakauras' Kitty tracker for that kitty during KE1. | It shows Charged Chop as the next skill while the kitty waits for it. |
+| KE5 | Export the kitty and import the code again. If you have a 1.7.18 install, import it there too. | The row comes back with Press early (s) 0.75. KittyCombo 1.7.18 refuses the code and names the unsupported condition `pressEarly`. |
+
 ## Newest versions from the guided setup (setup 1.3.0, hub 0.4.35, not yet released)
 
 The tests use throwaway game folders and local release folders; none of this has run against a real install yet.

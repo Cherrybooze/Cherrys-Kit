@@ -1,6 +1,7 @@
 -- Cherry's KittyCombo, based on KittyCombo (C) 2012-2013 Miranda
 -- ComboManager:check(): walks a kitty top to bottom and returns the first command
--- that can fire. Also the constructor, which reads skills and buffs lazily.
+-- that can fire. Also the constructor, which reads skills and buffs lazily, and
+-- the "Press early" rows (pressEarlyWindow / pressEarlyGate).
 --------------------------------------------------------------------------------
 -- Namespace
 if(_G and not _G.Kitty) then
@@ -27,19 +28,15 @@ Kitty.ComboManager.check = function(self, targetList, path)
 		-- Enabled commands
 		if(command.enable ~= false) then	-- nil counts as enabled
 			local result = false;
+			-- A "Press early" row: its own ready window, and the cooldown the client shows
+			local early, remaining = nil, nil;
 
-			if(command.commandType == "skill") then
-				-- Can the skill be cast? A press may use the execution tolerance
-				-- instead of an early wider window, so candidates that are not
-				-- close enough to ready fall through to the next command.
-				result = self.skillManager:canCast(command.commandName, Kitty.SkillManager.EXECUTION_TOLERANCE);
-				-- Debug.
-				if(Kitty.ComboManager.debugSkillList[command.commandName] == true) then
-					Kitty.print("canCast Result:[" .. tostring(result) .. "], Command:[" .. tostring(command.commandName) .. "]");
-				end
-			elseif(command.commandType == "suitskill") then
-				-- Can the skill be cast?
-				result = self.skillManager:canCast(command.commandName, Kitty.SkillManager.EXECUTION_TOLERANCE);
+			if(command.commandType == "skill" or command.commandType == "suitskill") then
+				-- Can the skill be cast? A press uses the execution tolerance (or the
+				-- row's "Press early" seconds) instead of an early wider window, so
+				-- candidates that are not close enough to ready fall through.
+				early = Kitty.ComboManager.pressEarlyWindow(command);
+				result, remaining = self.skillManager:canCast(command.commandName, early or Kitty.SkillManager.EXECUTION_TOLERANCE);
 				-- Debug.
 				if(Kitty.ComboManager.debugSkillList[command.commandName] == true) then
 					Kitty.print("canCast Result:[" .. tostring(result) .. "], Command:[" .. tostring(command.commandName) .. "]");
@@ -122,6 +119,14 @@ Kitty.ComboManager.check = function(self, targetList, path)
 			end
 
 			if(result) then
+				-- A "Press early" row whose skill is this close waits for it: a press
+				-- too soon to send it again sends nothing rather than a lower row.
+				if(early ~= nil and not self:pressEarlyGate(command.commandName, remaining, early)) then
+					if(Kitty.isDebugFlag) then
+						Kitty.debugPrint("Check result. CommandType:[hold], CommandName:[" .. command.commandName .. "]");
+					end
+					return "hold", command.commandName, nil;
+				end
 				if(Kitty.isDebugFlag) then
 					Kitty.debugPrint("Check result. CommandType:[" .. command.commandType .. "], CommandName:[" .. command.commandName .. "]");
 				end
@@ -178,11 +183,82 @@ Kitty.ComboManager.checkCondition = function(self, command)
 	return result;
 end;
 
+--------------------------------------------------------------------------------
+-- "Press early" rows (condition pressEarly, value = seconds)
+-- The server counts cooldowns in whole seconds and lowers them on each
+-- character's own one-second tick, while the client starts its countdown only
+-- when the cast report arrives. So the game often takes a skill again while
+-- its icon still shows a few tenths of a second. A press-early row may fire up
+-- to its seconds before the client shows the skill ready, and while the skill
+-- is that close the kitty waits for it instead of casting a lower row, whose
+-- global cooldown would push the skill back.
+-- The client stops sending casts for about a second once five requests went
+-- out without a finished spell (CGameMain::SetBeginSpell), so the skill is sent
+-- at most every PRESS_EARLY_GAP seconds (window / PRESS_EARLY_SENDS when that
+-- is longer) and at most PRESS_EARLY_SENDS times before it shows ready.
+Kitty.ComboManager.PRESS_EARLY_DEFAULT = 0.75;	-- when the value is blank
+Kitty.ComboManager.PRESS_EARLY_MAX = 2;
+Kitty.ComboManager.PRESS_EARLY_GAP = 0.15;
+Kitty.ComboManager.PRESS_EARLY_SENDS = 4;
+-- skill name -> {sent = last send, early = early sends in this cooldown, remaining = cooldown last seen, seen = when}
+Kitty.ComboManager.pressEarlyState = Kitty.ComboManager.pressEarlyState or {};
+-- Seconds from a "Press early" value: blank or unreadable = the default, 0 to PRESS_EARLY_MAX
+Kitty.ComboManager.pressEarlySeconds = function(value)
+	local seconds = tonumber(value);
+	if(seconds == nil and type(value) == "string") then
+		seconds = tonumber((string.gsub(value, ",", ".")));	-- 0,75
+	end
+	if(seconds == nil) then
+		return Kitty.ComboManager.PRESS_EARLY_DEFAULT;
+	end
+	return math.min(math.max(seconds, 0), Kitty.ComboManager.PRESS_EARLY_MAX);
+end;
+-- The row's own ready window, or nil when the row has no "Press early" condition
+Kitty.ComboManager.pressEarlyWindow = function(command)
+	for _, condition in ipairs(command) do
+		if(condition.conditionType == "pressEarly") then
+			return Kitty.ComboManager.pressEarlySeconds(condition.value);
+		end
+	end
+	return nil;
+end;
+-- May this press send a press-early row's skill? remaining: the cooldown the
+-- client shows (0 or less once it shows ready). Prediction replaces this.
+Kitty.ComboManager.pressEarlyGate = function(self, skillName, remaining, window)
+	local now = Kitty.getTime();
+	local state = Kitty.ComboManager.pressEarlyState[skillName];
+	if(state == nil) then
+		state = {sent = -100, early = 0, remaining = 0, seen = -100};
+		Kitty.ComboManager.pressEarlyState[skillName] = state;
+	end
+	remaining = tonumber(remaining) or 0;
+	-- The cooldown went up again (the skill went off), or the row was not
+	-- reached for a while: count again
+	if(remaining > state.remaining + 0.05 or now - state.seen > window + 1) then
+		state.early = 0;
+	end
+	state.remaining = remaining;
+	state.seen = now;
+	if(now - state.sent < math.max(Kitty.ComboManager.PRESS_EARLY_GAP, window / Kitty.ComboManager.PRESS_EARLY_SENDS)) then
+		return false;
+	end
+	if(remaining > 0) then
+		if(state.early >= Kitty.ComboManager.PRESS_EARLY_SENDS) then
+			return false;
+		end
+		state.early = state.early + 1;
+	end
+	state.sent = now;
+	return true;
+end;
+
 Kitty.ComboManager.cast = function(self, commandType, command)
 	if(commandType == "skill") or (commandType == "suitskill") then
 		-- Cast a skill
 		self.skillManager:cast(command);
 
+	elseif(commandType == "hold") then
+		-- A "Press early" row is waiting for its skill: nothing is sent
 	elseif(commandType == "action") then
 		-- Use an action slot
 		self.slotManager:use(command);

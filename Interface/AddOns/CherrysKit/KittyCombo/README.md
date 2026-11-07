@@ -1,6 +1,6 @@
 # Cherry's KittyCombo
 
-Version **1.7.18** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.7.19** · Kit release **0.11.118** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
@@ -23,6 +23,16 @@ A "kitty" is a list of commands (skills, items, macros) in priority order. Each 
 > **Other addons:** AddonManager lists it when you have that addon.
 
 <!-- end of requirements -->
+
+## Updated in 1.7.19
+
+**Press early (s)**, a new condition for skill rows (under *Skills, items & gear*). The row's skill may fire up to that many seconds before its icon shows it ready (blank means 0.75), and while the skill is that close the kitty waits for it instead of casting a lower row. It is made for short cooldowns like **Charged Chop**: the game lowers cooldowns on its own one-second beat, so it often takes a skill again while the icon still shows a few tenths of a second, and a lower skill cast in between would push it back by its global cooldown.
+
+The skill is sent at most every 0.15 seconds (or the seconds divided by 4, when that is longer) and at most 4 times before its icon shows ready. The game stops sending casts for about a second after five unanswered requests, which is what a `/cast Charged Chop` line in the kitty macro runs into. Keep the seconds below the skill's cooldown, or the rows under it never get a turn. The Kitty tracker in rom weakauras shows the skill as next while the kitty waits. Versions before 1.7.19 refuse share codes that use this condition.
+
+A "Skill is ready" condition on the same skill with **0** seconds still makes the row wait until the icon shows ready, so remove it from a row that presses early.
+
+Checked in a simulated client that follows the game's cooldown timing: one Charged Chop a second with 0.05 to 0.3 seconds between presses and 100 to 250 ms ping, and no blocked casts. Not yet checked in game.
 
 ## Updated in 1.7.18
 
@@ -81,7 +91,7 @@ The mode widgets wait for saved settings before restoring their positions. Start
 
 - **Visible priority**: every command has a rank number. 1 (green, top) is checked first.
 - **Plain-words conditions**: short phrases like "Pick next target when [my target] is dead" (the part you choose in teal), yes/no instead of true/false, and one sentence under each row saying what it checks. Hover any menu entry for help. Menus stay open until you click elsewhere.
-- **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on (switch modes with `/kc toggle aoe`, also from macros).
+- **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on (switch modes with `/kc toggle aoe`, also from macros), Press early (fire a short-cooldown skill such as Charged Chop before its icon shows ready, and wait for it).
 - **Modes**: switch your kitties between aoe, single, burst, dps, tank, heal, interrupt, pvp, farm, boss, request or your own modes, and let "Mode is on" rows decide what fires.
   - **Mode button** near the minimap (Kitty options > Show the mode button): shows the mode that is on as a picture. Click it to see every mode, click one to switch (the others turn off).
   - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for the same screen-aware mode-icon picker, including "No mode".
@@ -111,7 +121,7 @@ The mode widgets wait for saved settings before restoring their positions. Start
 - `/kc interrupt last`: add the spell your target is casting (or just cast) to your interrupt list
 - `/kc interrupt add <name>`, `/kc interrupt remove <name>`: add or remove a spell by name
 - `/kc interrupt list`: how many spells are built in, and the ones you added or removed
-- `/kc window 0.6`, `/kc window default`: how many seconds before a skill is ready a key press may fire it (default 0.2; saved)
+- `/kc window 0.6`, `/kc window default`: how many seconds before a skill is ready a key press may fire it (default 0.2; saved). A row with **Press early (s)** uses its own seconds instead.
 - `/kc probe`: checks the parts that can only be tested in game and prints OK / FAIL / LOOK per item
 - Macro: `/run Kitty.attack([[kitty name]])` (or use the Create macro button)
 
