@@ -32,7 +32,7 @@ The skill is sent at most every 0.15 seconds (or the seconds divided by 4, when 
 
 A "Skill is ready" condition on the same skill with **0** seconds still makes the row wait until the icon shows ready, so remove it from a row that presses early.
 
-Checked in a simulated client that follows the game's cooldown timing: one Charged Chop a second with 0.05 to 0.3 seconds between presses and 100 to 250 ms ping, and no blocked casts. Not yet checked in game.
+The rows below still get their turn right after each cast, because the kitty only waits in the last part before the skill is ready. A damage meter's count suggests Charged Chop starts no global cooldown, so the next skill can go straight after it. Checked in a simulated client that follows the game's cooldown timing, with a Warrior/Warden kitty: 22 to 30 Charged Chops in 30 seconds instead of 15 to 21 (30 when pressing fast at 100 ms ping), and the other skills 13 to 15 times instead of 14 to 17. Not yet checked in game.
 
 ## Updated in 1.7.18
 
