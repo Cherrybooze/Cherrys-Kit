@@ -1,6 +1,6 @@
 # zBag
 
-Version **5.07-ck22** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **5.07-ck22** · Kit release **0.11.119** · [All addons / hub](../README.md)
 
 **Your bags your way: the game's own bags, one combined bag, or separate bags you place and shape yourself, with item search, slot numbers, sorting and an All bags window.**
 
