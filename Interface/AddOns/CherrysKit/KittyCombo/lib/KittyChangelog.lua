@@ -17,6 +17,26 @@ Kitty.Changelog.getPages = function()
 	local contact = Kitty.Changelog.DISCORD_NAME .. " on " .. Kitty.Changelog.DISCORD_SERVER;
 	return {
 		{
+			title = "New in 1.7.19: press early",
+			text = table.concat({
+				"Press early (s): a new condition for skill rows (Skills, items & gear).",
+				"- The row's skill may fire up to that many seconds before its icon",
+				"  shows it ready (blank = 0.75), and while it is that close the kitty",
+				"  waits for it instead of casting a lower row.",
+				"- Made for short cooldowns like Charged Chop: the game lowers cooldowns",
+				"  on its own one-second beat and often takes a skill again before",
+				"  the icon shows it ready.",
+				"- It is sent at most every 0.15 s and 4 times early: after five",
+				"  unanswered requests the game stops your casts for about a second",
+				"  (what a /cast line in the kitty macro runs into).",
+				"- Keep it below the skill's cooldown, and take a \"Skill is ready\"",
+				"  condition with 0 seconds off that row.",
+				"- Give the attack rows below it Press early too (not buffs or",
+				"  potions): they then go out right after it instead of waiting",
+				"  for their icons. Pressing faster only helps.",
+			}, "\n"),
+		},
+		{
 			title = "New in 1.7: modes",
 			text = table.concat({
 				"- Mode button: Kitty options > Show the mode button. It sits near",

@@ -1566,6 +1566,29 @@ Kitty.ComboManager.castRecentlyType = function(self, condition)
 	return Kitty.ComboManager.TYPE_STRING_NUMBER_LIST;
 end;
 
+-- Condition: Press Early (seconds)
+-- Never blocks a row; the engine reads its value. On a skill row the skill may
+-- fire this many seconds before the client shows it ready, and while it is
+-- that close the kitty waits for it instead of casting lower rows (see
+-- ComboManager.pressEarlyGate). Blank = PRESS_EARLY_DEFAULT (0.75).
+Kitty.ComboManager.pressEarly = function(self, value)
+	return true;
+end;
+Kitty.ComboManager.pressEarlyHelp = function(self, value)
+	return Kitty.L("PressEarlyHelp", "Fire up to [<<1>>] s before this skill shows ready, and wait for it",
+		tostring(Kitty.ComboManager.pressEarlySeconds(value)));
+end;
+Kitty.ComboManager.pressEarlyDescribe = function(self, value)
+	return {
+		Kitty.L("pressEarlyDescription1", "Seconds for this row's skill (blank = 0.75). The game often takes a skill again before its icon shows it ready."),
+		Kitty.L("pressEarlyDescription2", "While the skill is that close, the kitty waits for it instead of casting lower rows. Keep it below the skill's cooldown."),
+		Kitty.L("pressEarlyDescription3", "It sends the skill at most every 0.15 s and 4 times early, so the game does not block your casts."),
+	};
+end;
+Kitty.ComboManager.pressEarlyType = function(self, value)
+	return Kitty.ComboManager.TYPE_STRING;
+end;
+
 -- Condition: Mode Is On
 -- Modes are switched with /kc toggle <name> (or Kitty.toggleMode("aoe") in a
 -- macro) and last until logout. Each entry: name = mode, value = false: mode off.
@@ -1629,7 +1652,7 @@ end;
 Kitty.ComboManager.CONDITION_GROUPS = {
 	{"player", "^player", "About me"},
 	{"target", "^target", "About my target"},
-	{"skill / gear", {canCast=true, canUse=true, inRange=true, isShield=true, isTwoHanded=true, castRecently=true}, "Skills, items & gear"},
+	{"skill / gear", {canCast=true, canUse=true, inRange=true, isShield=true, isTwoHanded=true, castRecently=true, pressEarly=true}, "Skills, items & gear"},
 	{"state", {isCG=true, isCombat=true, isShiftPressed=true, isTargeted=true, wardenPetExists=true, modeOn=true}, "Combat & situation"},
 };
 -- Short names shown in the menu and on the row (the saved data keeps the
@@ -1669,6 +1692,7 @@ Kitty.ComboManager.CONDITION_LABELS = {
 	canCast = "Skill is ready",
 	canUse = "Item is ready",
 	castRecently = "Cast in last X sec",
+	pressEarly = "Press early (s)",
 	inRange = "Skill in range",
 	isTwoHanded = "Two-handed weapon",
 	isShield = "Shield equipped",

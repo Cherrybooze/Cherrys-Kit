@@ -46,6 +46,7 @@ Kitty.MenuHelp.conditions = {
 	["canCast"] = "When [skill] is [ready] (or [on cooldown]): lets a command wait for another skill",
 	["canUse"] = "When action bar [slot] is [ready] (or [on cooldown])",
 	["castRecently"] = "When Kitty tried [skill] in the last [seconds] (or didn't): no double debuffs",
+	["pressEarly"] = "Fire this row's [skill] up to [seconds] before it shows ready, and wait for it: more casts of a short-cooldown skill",
 	["targetCasting"] = "When [my target] is casting [skill] (empty = built-in interrupt list; grow it with [/kc interrupt last])",
 	["targetDebuffStacks"] = "When [debuff] on [my target] has [number] stacks or more",
 	["modeOn"] = "When mode [aoe] is on (or off): switch with the [mode button] or [/kc mode aoe]",

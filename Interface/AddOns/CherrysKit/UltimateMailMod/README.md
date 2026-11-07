@@ -1,6 +1,6 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck17** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **7.0.1-ck17** · Kit release **0.11.119** · [All addons / hub](../README.md)
 
 **A modern mail window for moving lots of mail between your characters and friends, with a mass send that no longer gets stuck after about 60 mails. The classic window is one switch away.**
 
