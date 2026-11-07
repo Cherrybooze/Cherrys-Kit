@@ -4,10 +4,11 @@
 
 The timing model at the end follows the client and server source
 (cherrybooze/oneforall): the server lowers whole-second cooldown counters on
-each character's one-second tick and refuses a cast while the global cooldown
-or the skill's own counter is above 0; the client starts its 0.1 s countdown
-when the cast report arrives, and stops sending casts until 0.99 s after the
-last send once more than four went out without a finished spell.
+each character's one-second tick, sets them when a spell ends and refuses a
+cast while the global cooldown or the skill's own counter is above 0; the
+client starts its 0.1 s countdown when the cast report arrives, and stops
+sending casts until 0.99 s after the last send once more than four went out
+without a finished spell.
 """
 
 import heapq
@@ -195,55 +196,75 @@ class KittyPressEarlyTests(unittest.TestCase):
         ''')
 
 
+EARLY = 'row("Charged Chop", {conditionType = "pressEarly", value = "0.75"})'
+# "Skill is ready: Charged Chop 0" waits until the icon shows ready
+STRICT = 'row("Charged Chop", {conditionType = "canCast", {name = "Charged Chop", threshold = 0}})'
+
+
+def ready_row(name):
+    return 'row("%s", {conditionType = "canCast", {name = "%s", threshold = 0}})' % (name, name)
+
+
 class PressEarlyTimingModel(unittest.TestCase):
     """Drive the real engine against the client/server timing model.
 
-    One Charged Chop row (1 s cooldown, 1 s global cooldown) above a filler
-    skill. Ping and press rate vary; the press-early row must reach one cast
-    per server second and never trip the client's send block.
+    Server (MagicProcess.cpp, RD_Setting.cxx, NetSrv_MagicChild.cpp): own and
+    global cooldowns are whole seconds lowered on the character's 1 s beat and
+    set when the spell ends; the spell runs on the next 0.2 s process step and
+    ends 0.1 s later, and a request that arrives meanwhile is dropped without
+    an answer. A skill with no global cooldown (TimeAllMagic 0) does not set it
+    but still waits for it.
     """
 
     @staticmethod
-    def run_model(rows, press, ping, seed, duration=30.0):
+    def run_model(rows, press, ping, seed, cooldown=None, duration=30.0):
+        cooldown = cooldown or {"Charged Chop": (1, 1), "Filler": (6, 1)}
         lua = test_kitty_startup.KittyStartupTests().runtime()
         lua.execute(SETUP)
-        lua.execute('list = {info = {name = "Model"}, ' + rows + ', row("Filler")}')
+        # Rage, mana and energy are assumed to be enough
+        lua.execute('for _, key in ipairs({"manaList", "tensionList", "energyList", "focusList"}) do'
+                    ' Kitty.SkillManager[key] = {} end')
+        lua.execute('list = {info = {name = "Model"}, ' + ", ".join(rows) + '}')
         g = lua.globals()
         rng = random.Random(seed)
-        server_phase = rng.random()
-        client_phase = rng.random() * 0.1
-        cooldown = {"Charged Chop": (1, 1), "Filler": (6, 1)}
-        server = {"gcd": 0, "Charged Chop": 0, "Filler": 0}
-        client = {"gcd": 0, "Charged Chop": 0, "Filler": 0}
+        server = dict.fromkeys(cooldown, 0)
+        client = dict.fromkeys(cooldown, 0)
+        global_cd = {"server": 0, "client": 0}
+        spell = {"name": None, "ending": False}
         events, order = [], itertools.count()
 
         def add(when, kind, name=None):
             heapq.heappush(events, (when, next(order), kind, name))
 
         state = {"unfinished": 0, "last_send": -10.0, "blocked": 0}
-        casts = {"Charged Chop": 0, "Filler": 0}
+        casts = dict.fromkeys(cooldown, 0)
         t = 0.0
         while t < duration:
             add(t, "press")
             t += press * rng.uniform(0.85, 1.15)
+        server_phase = rng.random()
         for i in range(int(duration) + 3):
-            add(server_phase + i, "server tick")
+            add(server_phase + i, "server beat")
+        client_phase = rng.random() * 0.1
         for i in range(int(duration * 10) + 30):
             add(client_phase + i * 0.1, "client tick")
+        add(rng.random() * 0.2, "spell step")
         while events:
             now, _, kind, name = heapq.heappop(events)
             if now > duration:
                 break
-            if kind == "server tick":
+            if kind == "server beat":
                 for key in server:
                     server[key] = max(0, server[key] - 1)
+                global_cd["server"] = max(0, global_cd["server"] - 1)
             elif kind == "client tick":
                 for key in client:
                     client[key] = max(0, client[key] - 1)
+                global_cd["client"] = max(0, global_cd["client"] - 1)
             elif kind == "press":
                 g.now = 100 + now
-                for skill in casts:
-                    g.cooldowns[skill] = max(client["gcd"], client[skill]) * 0.1
+                for skill in client:
+                    g.cooldowns[skill] = max(global_cd["client"], client[skill]) * 0.1
                 before = len(g.sent)
                 lua.eval("press(list)")
                 for index in range(before + 1, len(g.sent) + 1):
@@ -254,39 +275,73 @@ class PressEarlyTimingModel(unittest.TestCase):
                     state["last_send"] = now
                     add(now + ping / 2 + rng.uniform(0, 0.01), "arrive", g.sent[index])
             elif kind == "arrive":
-                if server["gcd"] == 0 and server[name] == 0:
-                    own, gcd = cooldown[name]
-                    server[name] = own
-                    server["gcd"] = gcd
-                    casts[name] += 1
-                    add(now + ping / 2, "cast report", name)
+                if spell["name"] is None and global_cd["server"] == 0 and server[name] == 0:
+                    spell["name"], spell["ending"] = name, False
+            elif kind == "spell step":
+                step = 0.2
+                if spell["name"] is not None:
+                    step = 0.1
+                    if spell["ending"]:
+                        own, gcd = cooldown[spell["name"]]
+                        server[spell["name"]] = own
+                        if gcd:
+                            global_cd["server"] = gcd
+                        casts[spell["name"]] += 1
+                        add(now + ping / 2, "cast report", spell["name"])
+                        spell["name"] = None
+                    else:
+                        spell["ending"] = True
+                add(now + step, "spell step")
             elif kind == "cast report":
                 own, gcd = cooldown[name]
                 client[name] = own * 10
-                client["gcd"] = gcd * 10
+                if gcd:
+                    global_cd["client"] = gcd * 10
                 state["unfinished"] = 0
-        return casts["Charged Chop"], state["blocked"]
+        return casts, state["blocked"]
+
+    def chops(self, rows, press, ping, seeds=4, cooldown=None):
+        runs = [self.run_model(rows, press, ping, seed, cooldown) for seed in range(seeds)]
+        return [casts["Charged Chop"] for casts, _ in runs], runs
 
     def test_press_early_reaches_one_chop_per_second_without_blocks(self):
-        early = 'row("Charged Chop", {conditionType = "pressEarly", value = "0.75"})'
-        # "Skill is ready: Charged Chop 0" waits until the icon shows ready
-        strict = 'row("Charged Chop", {conditionType = "canCast", {name = "Charged Chop", threshold = 0}})'
+        # Charged Chop with its own 1 s global cooldown above a filler skill
         for press in (0.05, 0.1, 0.2, 0.3):
             for ping in (0.1, 0.25):
                 with self.subTest(press=press, ping=ping):
-                    chops, blocked = zip(*(self.run_model(early, press, ping, seed) for seed in range(4)))
+                    chops, runs = self.chops([EARLY, 'row("Filler")'], press, ping)
                     self.assertGreaterEqual(min(chops), 29)
-                    self.assertEqual(sum(blocked), 0)
-                    waited = [self.run_model(strict, press, ping, seed)[0] for seed in range(4)]
+                    self.assertEqual(sum(blocked for _, blocked in runs), 0)
+                    waited, _ = self.chops([STRICT, 'row("Filler")'], press, ping)
                     self.assertLess(max(waited), min(chops) - 1)
+
+    def test_skills_with_a_global_cooldown_still_fire_between_chops(self):
+        # The shape of a Warrior/Warden kitty measured with a damage meter
+        # (17 Charged Chops and 16 other skills in 30 s with "Skill is ready 0"):
+        # Charged Chop sets no global cooldown, the skills below it do, so they
+        # fit in right after each chop, but one landing between the server's
+        # beat and the chop pushes that chop back a second.
+        cooldown = {"Charged Chop": (1, 0), "Savage Whirlwind": (7, 1), "Probing Attack": (5, 1),
+                    "Open Flank": (5, 1), "Thunder": (14, 1)}
+        lower = [ready_row(name) for name in ("Savage Whirlwind", "Probing Attack", "Open Flank", "Thunder")]
+        for press in (0.1, 0.2):
+            for ping in (0.1, 0.25):
+                with self.subTest(press=press, ping=ping):
+                    waited, before = self.chops([STRICT] + lower, press, ping, 6, cooldown)
+                    chops, after = self.chops([EARLY] + lower, press, ping, 6, cooldown)
+                    others_before = sum(sum(casts.values()) for casts, _ in before) - sum(waited)
+                    others_after = sum(sum(casts.values()) for casts, _ in after) - sum(chops)
+                    self.assertLessEqual(sum(waited) / 6, 22)
+                    self.assertGreaterEqual(sum(chops) / 6, sum(waited) / 6 + 4)
+                    self.assertGreaterEqual(others_after / 6, others_before / 6 - 3)
 
     def test_a_plain_row_pressed_fast_trips_the_send_block(self):
         # Without pacing, fast presses at a high ping send more than five
         # requests before the first answer, and the client blocks the rest.
-        plain = 'row("Charged Chop")'
-        early = 'row("Charged Chop", {conditionType = "pressEarly", value = "0.75"})'
-        self.assertGreater(sum(self.run_model(plain, 0.05, 0.25, seed)[1] for seed in range(4)), 0)
-        self.assertEqual(sum(self.run_model(early, 0.05, 0.25, seed)[1] for seed in range(4)), 0)
+        plain = [self.run_model(['row("Charged Chop")', 'row("Filler")'], 0.05, 0.25, seed)[1] for seed in range(4)]
+        early = [self.run_model([EARLY, 'row("Filler")'], 0.05, 0.25, seed)[1] for seed in range(4)]
+        self.assertGreater(sum(plain), 0)
+        self.assertEqual(sum(early), 0)
 
 
 if __name__ == "__main__":
