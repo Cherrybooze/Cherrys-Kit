@@ -969,6 +969,8 @@ function Wn.LinkAtCursor(i)
   local index = last - (count - slot)
   -- RowAtCursor deliberately clamps during dragging. Link clicks must instead stay on
   -- the actual rendered row, excluding empty slots and padding above/below the text.
+  -- Kept for /cchat linkprobe: where the last click landed and the link areas of that row.
+  Wn.lastClick = { window = i, x = x, y = y, slot = slot, count = count, row = Wn.Rows(i)[index] }
   if slot < 1 or slot > count or index < first or index > last then return nil end
   local row = Wn.Rows(i)[index]
   for _, span in ipairs(row and row.spans or {}) do
@@ -1255,6 +1257,18 @@ function Wn.LinkProbe(i)
     end
   end
   if probe.clickError then output[#output + 1] = "Last native click error: " .. probe.clickError end
+  local click = Wn.lastClick
+  if click then
+    output[#output + 1] = string.format("\nLast click: chat %d, x %.1f, y %.1f, row slot %d of %d, UI scale %.4f",
+      click.window, click.x, click.y, click.slot, click.count, scale())
+    local row = click.row
+    if row then
+      output[#output + 1] = "Row text: " .. quoted(row.plain)
+      for _, span in ipairs(row.spans or {}) do
+        output[#output + 1] = string.format("link %.1f-%.1f: %s", span.x0, span.x1, quoted(span.link))
+      end
+    end
+  end
   C.DB().linkProbe = probe
   local report = table.concat(output, "\n")
   Wn.ShowCopy(i, report)

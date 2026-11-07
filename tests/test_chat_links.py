@@ -192,6 +192,22 @@ class ChatLinkTests(unittest.TestCase):
         self.assertIsNone(self.win.press)
         self.assertFalse(self.win.broken)
 
+    def test_each_of_two_items_on_one_line_opens_its_own_link_and_probe_shows_the_click(self):
+        # C (2026-11-07): with two links on one line, only the second one clicked in game.
+        raw = "|Hplayer:Bob|h[Bob]|h: wts " + item() + " and " + item(POLISH2, TARGET2) + " cheap"
+        rows, _ = self.install_rows(raw, 2000)
+        spans = list(rows[1].spans.values())
+        self.assertEqual([s.full for s in spans[1:]], [item(), item(POLISH2, TARGET2)])
+        for n, span in enumerate(spans[1:], 1):
+            self.cursor(1, (span.x0 + span.x1) / 2)
+            self.client.event("CherrysChat_W1", "OnMouseDown")
+            self.client.event("CherrysChat_W1", "OnMouseUp")
+            self.assertEqual(self.lua.globals().nativeCalls[n].full, span.full)
+        self.lua.execute("CherrysChat.Win.ShowCopy = function() end; CherrysChat.log[1] = {'x'}")
+        report = self.win.LinkProbe(1)
+        self.assertIn("Last click: chat 1", report)
+        self.assertIn('link %.1f-%.1f: "%s"' % (spans[2].x0, spans[2].x1, TARGET2), report)
+
     def test_a_learned_layout_without_the_link_is_dropped(self):
         # A saved layout that carries no link made every click pass nothing, through restarts.
         self.lua.execute("""CherrysChat.DB().linkSig = {n=1, 'frame', globals={this='frame', arg1='nil', arg2='nil', arg3='nil'}}""")

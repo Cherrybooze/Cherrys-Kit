@@ -23,7 +23,7 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 
 ## Updated in 0.11.5
 
-**Item links react again.** Right-clicking an item in chat gives the game's own right-click again, with **Preview** for skins; right-clicking a name or plain text still opens the copy menu. Item links no longer stop answering clicks after a Reload UI or a character change, when other addons that also watch link clicks could end up calling each other in a circle, and a saved click layout that never carried the link (one that had been learned from another addon's call) is thrown away instead of breaking every click from then on.
+**Item links react again.** Right-clicking an item in chat gives the game's own right-click again, with **Preview** for skins; right-clicking a name or plain text still opens the copy menu. Item links no longer stop answering clicks after a Reload UI or a character change, when other addons that also watch link clicks could end up calling each other in a circle, and a saved click layout that never carried the link (one that had been learned from another addon's call) is thrown away instead of breaking every click from then on. `/cchat linkprobe` now also shows where your last click in the chat landed and where each link of that row sits, for lines where a link still won't click.
 
 **Moving the game window to another monitor.** When the screen size or UI scale changes, the chat text is measured and laid out again and stays on the game's chat window. This has simulated-client coverage and still needs an in-game check.
 
