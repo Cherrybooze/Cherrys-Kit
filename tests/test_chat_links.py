@@ -172,6 +172,68 @@ class ChatLinkTests(unittest.TestCase):
         self.assertFalse(self.win.painting)
         self.assertEqual(len(self.lua.globals().nativeCalls), 0)
 
+    def test_right_click_on_an_item_goes_to_the_game_and_names_keep_the_menu(self):
+        # Testers (2026-11-07): right-clicking an item in chat lost the game's Preview menu.
+        self.lua.execute("CherrysChat.Win.Draw=function() end; menuOpened = 0; CherrysChat.Win.OpenMenu = function() menuOpened = menuOpened + 1 end")
+        raw = "|Hplayer:Ann|h[Ann]|h: " + item()
+        self.install_rows(raw, 200)
+        self.cursor(1, 1)  # on [Ann]
+        self.client.event("CherrysChat_W1", "OnMouseDown", "RBUTTON")
+        self.assertEqual(self.lua.globals().menuOpened, 1)
+        self.assertEqual(len(self.lua.globals().nativeCalls), 0)
+        self.cursor(1, 10)  # on the item
+        self.client.event("CherrysChat_W1", "OnMouseDown", "RBUTTON")
+        self.assertEqual(self.lua.globals().menuOpened, 1)
+        self.assertEqual(len(self.lua.globals().nativeCalls), 0)  # the game acts when the button comes up
+        self.client.event("CherrysChat_W1", "OnMouseUp", "RBUTTON")
+        calls = self.lua.globals().nativeCalls
+        self.assertEqual(len(calls), 1)
+        self.assertEqual((calls[1].full, calls[1].key), (item(), "RBUTTON"))
+        self.assertIsNone(self.win.press)
+        self.assertFalse(self.win.broken)
+
+    def test_a_learned_layout_without_the_link_is_dropped(self):
+        # A saved layout that carries no link made every click pass nothing, through restarts.
+        self.lua.execute("""CherrysChat.DB().linkSig = {n=1, 'frame', globals={this='frame', arg1='nil', arg2='nil', arg3='nil'}}""")
+        self.assertTrue(self.win.ClickLink(1, self.span(item()), "LBUTTON"))
+        self.assertEqual(self.lua.globals().nativeCalls[1].full, item())
+        self.assertIsNone(self.c.DB().linkSig)
+
+    def test_only_clicks_from_chat_windows_teach_the_layout(self):
+        self.win.WatchLinkClicks()
+        g = self.lua.globals()
+        self.lua.execute("this = nil; MakeFrame('OtherAddonFrame', true)")
+        g.ChatFrame_OnHyperlinkClick(g.OtherAddonFrame, "LBUTTON")
+        g.ChatFrame_OnHyperlinkClick("item:1")
+        self.assertIsNone(self.c.DB().linkSig)
+        g.ChatFrame_OnHyperlinkClick(g.ChatFrame1, item(), "LBUTTON")
+        self.assertEqual(self.c.DB().linkSig[2], "full")
+
+    def test_link_watch_survives_reload_and_rewrapping_without_looping(self):
+        g = self.lua.globals()
+        self.win.WatchLinkClicks()
+        # Another addon wraps us; after a reload Cherry's Chat watches again and that addon
+        # wraps again around us: Other -> Chat -> Other -> Chat ... unless guarded.
+        self.lua.execute("""
+          otherOriginal = ChatFrame_OnHyperlinkClick
+          otherWrapper = function(...) return otherOriginal(...) end
+          ChatFrame_OnHyperlinkClick = otherWrapper
+        """)
+        self.win.watching = None
+        self.win.WatchLinkClicks()
+        self.assertTrue(self.lua.eval("ChatFrame_OnHyperlinkClick == CherrysChat.linkWrapper"))
+        self.lua.execute("otherOriginal = ChatFrame_OnHyperlinkClick; ChatFrame_OnHyperlinkClick = otherWrapper")
+        ok = self.lua.eval("""function()
+          debug.sethook(function() error('link click loops') end, '', 1000000)
+          local ok = pcall(ChatFrame_OnHyperlinkClick, ChatFrame1, '""" + item() + """', 'LBUTTON')
+          debug.sethook()
+          return ok
+        end""")()
+        self.assertTrue(ok)
+        self.assertEqual(len(g.nativeCalls), 1)
+        self.assertTrue(self.win.ClickLink(1, self.span(item()), "LBUTTON"))
+        self.assertEqual(len(g.nativeCalls), 2)
+
     def test_native_nil_return_after_ctrl_click_preview_does_not_show_fallback_tooltip(self):
         self.lua.globals().ctrlHeld = True
         full = item(POLISH2, TARGET2)

@@ -818,7 +818,40 @@ end
 -- Following the game's chat windows: shown, place and size, every 0.2 s.
 ---------------------------------------------------------------------------
 
+-- Moving the game window to another monitor (or resizing it) changes the screen size and the UI
+-- scale. Text widths were measured at the old scale and the overlays were placed for the old
+-- screen, so both are worked out again (tester report, 2026-11-07). Numbers only: no garbage.
+Wn.screenW, Wn.screenH, Wn.screenScale = nil, nil, nil
+function Wn.ScreenChanged()
+  local w = type(GetScreenWidth) == "function" and GetScreenWidth() or 0
+  local h = type(GetScreenHeight) == "function" and GetScreenHeight() or 0
+  local s = scale()
+  if w == Wn.screenW and h == Wn.screenH and s == Wn.screenScale then
+    return false
+  end
+  local first = Wn.screenScale == nil
+  Wn.screenW, Wn.screenH, Wn.screenScale = w, h, s
+  if first then
+    return false
+  end
+  Wn.widthCache, Wn.widthCacheCount, Wn.gap = {}, 0, nil
+  for i = 1, Wn.WINDOWS do
+    Wn.rows[i] = nil
+    local o, state = overlay(i), Wn.state[i]
+    if state then
+      state.w, state.h, state.drawn = nil, nil, false
+    end
+    if o and o:IsVisible() then
+      try(o, "ClearAllAnchors")
+      try(o, "SetAnchor", "TOPLEFT", "TOPLEFT", C.Chat(i), 0, 0)
+    end
+  end
+  Wn.HideMenu()
+  return true
+end
+
 local function follow()
+  Wn.ScreenChanged()
   for i = 1, Wn.WINDOWS do
     local o, chat = overlay(i), C.Chat(i)
     if o and chat then
@@ -960,9 +993,32 @@ local function linkValue(kind, chat, span, key)
   end
 end
 
+-- A learned layout is used only if it actually carries the link somewhere. Anything else (an
+-- addon that once called ChatFrame_OnHyperlinkClick its own way) would make every later click
+-- pass nothing, and the saved layout would keep it that way through logouts and restarts
+-- (tester report, 2026-11-07), so such a layout is thrown away.
+local function carriesLink(sig)
+  if type(sig) ~= "table" or type(sig.n) ~= "number" or sig.n > 8 then return false end
+  local function link(kind) return kind == "full" or kind == "link" end
+  for p = 1, sig.n do
+    if link(sig[p]) then return true end
+  end
+  local g = sig.globals
+  return type(g) == "table" and (link(g.arg1) or link(g.arg2) or link(g.arg3)) or false
+end
+Wn.CarriesLink = carriesLink
+
+function Wn.LinkSig()
+  local d = C.DB()
+  if d.linkSig ~= nil and not carriesLink(d.linkSig) then
+    d.linkSig = nil
+  end
+  return d.linkSig
+end
+
 function Wn.LinkArgs(chat, span, key)
-  local sig = C.DB().linkSig
-  if type(sig) == "table" and sig.n then
+  local sig = Wn.LinkSig()
+  if sig then
     local args = {}
     for p = 1, sig.n do args[p] = linkValue(sig[p], chat, span, key) end
     return args, sig.n
@@ -982,14 +1038,16 @@ local function itemTooltip(span)
   return false
 end
 
+-- The click goes through the whole ChatFrame_OnHyperlinkClick chain as it is now, so other
+-- addons that wrap it (rom weakauras share links, Ultimate Mail Mod names) see it too.
 function Wn.ClickLink(i, span, key)
-  local fn = Wn.origLinkClick or ChatFrame_OnHyperlinkClick
+  local fn = ChatFrame_OnHyperlinkClick
   local ok, result = false, "native hyperlink click handler is unavailable"
   if type(fn) == "function" then
     local chat = C.Chat(i)
     local args, n = Wn.LinkArgs(chat, span, key)
     local oldThis, a1, a2, a3 = this, arg1, arg2, arg3
-    local sig = C.DB().linkSig
+    local sig = Wn.LinkSig()
     local globals = type(sig) == "table" and sig.globals
     if globals then
       this = linkValue(globals.this, chat, span, key)
@@ -998,9 +1056,9 @@ function Wn.ClickLink(i, span, key)
       -- Default event globals carry the same complete encoded hyperlink and key.
       this, arg1, arg2, arg3 = chat, span.full, key, nil
     end
-    Wn.callingLink = true
+    C.linkCalling = true
     ok, result = pcall(fn, unpack(args, 1, n))
-    Wn.callingLink = false
+    C.linkCalling = false
     this, arg1, arg2, arg3 = oldThis, a1, a2, a3
   end
   if ok and result ~= false then return true end
@@ -1041,52 +1099,95 @@ local function nativeSample(...)
   end
 end
 
--- Wraps the game's ChatFrame_OnHyperlinkClick: every real click in the game's chat is passed on
--- unchanged, and its argument layout is remembered (CherrysChat_DB.linkSig).
-function Wn.WatchLinkClicks()
-  if Wn.origLinkClick or type(ChatFrame_OnHyperlinkClick) ~= "function" then
-    return
-  end
-  local orig = C.Real("ChatFrame_OnHyperlinkClick", ChatFrame_OnHyperlinkClick)
-  if type(orig) ~= "function" then
-    return
-  end
-  Wn.origLinkClick = orig
-  ChatFrame_OnHyperlinkClick = C.MarkOurs(function(...)
-    if not Wn.callingLink then
-      pcall(function(...)
-        local n = select("#", ...)
-        local sig = { n = n, seen = {} }
-        local sample = nativeSample(...) or nativeSample(arg1, arg2, arg3)
-        for p = 1, n do
-          local v = select(p, ...)
-          sig[p] = argKind(v, sample)
-          sig.seen[p] = type(v) == "string" and string.sub(v, 1, 40) or type(v)
-        end
-        sig.globals = { this = argKind(this, sample), arg1 = argKind(arg1, sample),
-          arg2 = argKind(arg2, sample), arg3 = argKind(arg3, sample) }
-        sig.thisIsFrame = sig.globals.this == "frame"
-        sig.arg1 = type(arg1) == "string" and string.sub(arg1, 1, 40) or type(arg1)
-        local learned = C.DB().linkSig
-        C.DB().linkSig = sig
-        if Wn.learning then
-          Wn.learning = false
-          C.Print("learned how your game opens links: " .. table.concat(sig.seen, ", ") .. ". Cherry's chat is back on.")
-          Wn.Toggle(true)
-        elseif not learned then
-          C.Print("learned how your game opens links.")
-        end
-      end, ...)
+-- Was this call made by one of the game's chat windows? Only those calls teach the layout:
+-- other addons call ChatFrame_OnHyperlinkClick their own way.
+local function fromChat(...)
+  for k = 1, Wn.WINDOWS do
+    local chat = C.Chat(k)
+    if chat ~= nil then
+      if this == chat then return true end
+      for p = 1, select("#", ...) do
+        if select(p, ...) == chat then return true end
+      end
     end
-    return orig(...)
-  end)
+  end
+  return false
+end
+
+-- Remembers the argument layout of a real click in the game's chat (CherrysChat_DB.linkSig).
+function Wn.Learn(...)
+  if not fromChat(...) then return end
+  local n = select("#", ...)
+  local sig = { n = n, seen = {} }
+  local sample = nativeSample(...) or nativeSample(arg1, arg2, arg3)
+  for p = 1, n do
+    local v = select(p, ...)
+    sig[p] = argKind(v, sample)
+    sig.seen[p] = type(v) == "string" and string.sub(v, 1, 40) or type(v)
+  end
+  sig.globals = { this = argKind(this, sample), arg1 = argKind(arg1, sample),
+    arg2 = argKind(arg2, sample), arg3 = argKind(arg3, sample) }
+  sig.thisIsFrame = sig.globals.this == "frame"
+  sig.arg1 = type(arg1) == "string" and string.sub(arg1, 1, 40) or type(arg1)
+  if not carriesLink(sig) then return end
+  local learned = C.DB().linkSig
+  C.DB().linkSig = sig
+  if Wn.learning then
+    Wn.learning = false
+    C.Print("learned how your game opens links: " .. table.concat(sig.seen, ", ") .. ". Cherry's chat is back on.")
+    Wn.Toggle(true)
+  elseif not learned then
+    C.Print("learned how your game opens links.")
+  end
+end
+
+local function linkDone(ok, ...)
+  C.linkBusy = false
+  if not ok then error((...), 0) end
+  return ...
+end
+
+-- Wraps the game's ChatFrame_OnHyperlinkClick: every real click in the game's chat is passed on
+-- unchanged, and its argument layout is remembered. The wrapper is made once per game session
+-- and lives in CherrysChat, because Reload UI and a character change keep the Lua state.
+-- After a reload other addons wrap again around whatever is there, so the chain of wrappers
+-- can come back to this one (a loop that made every link click in the chat fail, tester
+-- report 2026-11-07). Coming back in goes straight to the first function wrapped.
+function Wn.WatchLinkClicks()
+  local current = ChatFrame_OnHyperlinkClick
+  if type(current) ~= "function" then
+    return
+  end
+  if not C.linkWrapper then
+    C.linkWrapper = C.MarkOurs(function(...)
+      if C.linkBusy then
+        local base = C.linkBase
+        if type(base) == "function" and base ~= C.linkWrapper then
+          return base(...)
+        end
+        return
+      end
+      C.linkBusy = true
+      if not C.linkCalling and C.Win and C.Win.Learn then
+        pcall(C.Win.Learn, ...)
+      end
+      return linkDone(pcall(C.linkOrig, ...))
+    end)
+  end
+  Wn.watching = true
+  if current == C.linkWrapper then
+    return
+  end
+  C.linkBase = C.linkBase or current
+  C.linkOrig = current
+  ChatFrame_OnHyperlinkClick = C.linkWrapper
 end
 
 -- /cchat linktest: the game draws its chat for a moment; clicking any item link or name there
 -- teaches Cherry's Chat the game's own call. Then Cherry's chat comes back by itself.
 function Wn.LinkTest()
   Wn.WatchLinkClicks()
-  if not Wn.origLinkClick then
+  if not Wn.watching then
     C.Print("this client has no ChatFrame_OnHyperlinkClick; links cannot be passed on.")
     return
   end
@@ -1173,10 +1274,26 @@ local function mouseButton(key)
   return ({LeftButton="LBUTTON",RightButton="RBUTTON",MiddleButton="MBUTTON"})[key] or key or "LBUTTON"
 end
 
+local function nameOf(link)
+  return link and string.match(link, "^player:([^:]+)")
+end
+
+-- Right-clicking a link that is not a name gives the game's own right-click (for items: the
+-- menu with Preview, testers 2026-11-07); names and plain text keep the copy menu.
+function Wn.NativeRightClick(i)
+  local span = Wn.LinkAtCursor(i)
+  return span and span.link and not nameOf(span.link) and span or nil
+end
+
 local function mouseDown(i, key)
   key = mouseButton(key)
   Wn.HideMenu()
   if key == "RBUTTON" then
+    if Wn.NativeRightClick(i) then
+      -- The game opens its menu when the button comes up (mouse-up below), like its own chat.
+      Wn.press = { i = i, key = key, moved = false, right = true }
+      return
+    end
     Wn.OpenMenu(i)
     return
   end
@@ -1239,6 +1356,13 @@ function Wn.MouseUp(i, key)
     Wn.press = nil
     Wn.painting = false
     Wn.edgeWait = nil
+    if p.right then
+      local span = p.i == i and Wn.NativeRightClick(i)
+      if span then
+        Wn.ClickLink(i, span, "RBUTTON")
+      end
+      return
+    end
     -- Mouse-up belongs to the pressed button, even on another overlay. Only
     -- a plain click released in its original window may activate a hyperlink.
     if p.i ~= i or p.moved then
@@ -1260,10 +1384,6 @@ end
 
 local function shiftDown()
   return type(IsShiftKeyDown) == "function" and IsShiftKeyDown() and true or false
-end
-
-local function nameOf(link)
-  return link and string.match(link, "^player:([^:]+)")
 end
 
 -- Another kit addon can take a Ctrl/Shift-clicked name first: Ultimate Mail Mod puts it in To

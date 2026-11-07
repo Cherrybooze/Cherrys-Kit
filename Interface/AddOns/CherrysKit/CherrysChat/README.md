@@ -1,6 +1,6 @@
 # Cherry's Chat
 
-Version **0.11.4** · Kit release **0.11.119** · [All addons / hub](../README.md)
+Version **0.11.5** · Kit release **0.11.120** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
@@ -20,6 +20,12 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysChat` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 0.11.5
+
+**Item links react again.** Right-clicking an item in chat gives the game's own right-click again, with **Preview** for skins; right-clicking a name or plain text still opens the copy menu. Item links no longer stop answering clicks after a Reload UI or a character change, when other addons that also watch link clicks could end up calling each other in a circle, and a saved click layout that never carried the link (one that had been learned from another addon's call) is thrown away instead of breaking every click from then on.
+
+**Moving the game window to another monitor.** When the screen size or UI scale changes, the chat text is measured and laid out again and stays on the game's chat window. This has simulated-client coverage and still needs an in-game check.
 
 ## Updated in 0.11.4
 
