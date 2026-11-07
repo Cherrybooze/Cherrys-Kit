@@ -17,6 +17,7 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 
 ## Recent changes
 
+- **0.11.4**: party adverts from addons such as ComeOnIn no longer show a wide gap after the name or run off the window as `...`; tabs and line breaks in a chat line show as spaces.
 - **0.11.3**: colour-wrapped chat lines (an empty link around the text, common in trade macros) no longer show stray `|` and `h` or break when they wrap, a lone `|` at the end of a line no longer shows as `|r`, and copied text leaves those codes out.
 - **0.11.2**: emoji in Say no longer reach the bubble as empty boxes when typed with the Windows emoji panel, unknown emoji go out as `?`, and `/cchat bubbletest` shows what your last message looked like.
 - **0.11.1**: a smaller file to read at login. The ten chat windows share one template, so its XML file went from 401 KB to 70 KB with the same windows.
