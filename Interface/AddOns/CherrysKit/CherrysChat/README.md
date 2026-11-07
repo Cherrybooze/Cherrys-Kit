@@ -1,6 +1,6 @@
 # Cherry's Chat
 
-Version **0.11.3** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **0.11.4** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 **Your normal chat, but you can select and copy it, see emoji as pictures, and talk in encrypted channels. Nothing to set up.**
 
@@ -20,6 +20,10 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 > **Older copy:** this addon has no original to give way to, but if `Interface\AddOns\CherrysChat` from an earlier release is still there, it takes precedence: this version stays off, and the hub says so in chat and in its window. Move that folder out of AddOns (`!setup_cherryskit.bat` offers to) and Reload UI to use this one.
 
 <!-- end of requirements -->
+
+## Updated in 0.11.4
+
+Party adverts from addons such as ComeOnIn no longer show a wide gap after the sender's name and run off the window as `...`. Their tabs measured as nothing but drew wide; tabs and line breaks in a chat line now show as one space each, and `/cchat linkprobe` lists them as `\009` so any other odd line can be checked. This has simulated-client coverage and still needs an in-game check.
 
 ## Updated in 0.11.3
 
