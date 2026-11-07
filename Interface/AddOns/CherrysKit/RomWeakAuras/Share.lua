@@ -917,16 +917,38 @@ function Share.OnHyperlinkClick(...)
   end
 end
 
+--
+-- Other addons wrap ChatFrame_OnHyperlinkClick again after a reload or character change too, so
+-- the chain can lead back to this wrapper (RWA -> other -> RWA ...: every link click failed with
+-- a stack overflow, tester report 2026-11-07). Coming back in while busy goes straight to the
+-- first function RWA ever wrapped.
+local function linkDone(ok, ...)
+  RWA.linkBusy = false
+  if not ok then
+    error((...), 0)
+  end
+  return ...
+end
+
 function Share.HookLinks()
   if type(ChatFrame_OnHyperlinkClick) ~= "function" then
     return
   end
   if not RWA.linkWrapper then
     RWA.linkWrapper = function(...)
-      return RWA.Share.OnHyperlinkClick(...)
+      if RWA.linkBusy then
+        local base = RWA.linkBase
+        if type(base) == "function" and base ~= RWA.linkWrapper then
+          return base(...)
+        end
+        return
+      end
+      RWA.linkBusy = true
+      return linkDone(pcall(RWA.Share.OnHyperlinkClick, ...))
     end
   end
   if ChatFrame_OnHyperlinkClick ~= RWA.linkWrapper then
+    RWA.linkBase = RWA.linkBase or ChatFrame_OnHyperlinkClick
     RWA.linkOriginal = ChatFrame_OnHyperlinkClick
     ChatFrame_OnHyperlinkClick = RWA.linkWrapper
   end

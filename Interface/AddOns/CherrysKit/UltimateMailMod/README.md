@@ -1,6 +1,6 @@
 # Ultimate Mail Mod
 
-Version **7.0.1-ck17** · Kit release **0.11.119** · [All addons / hub](../README.md)
+Version **7.0.1-ck18** · Kit release **0.11.120** · [All addons / hub](../README.md)
 
 **A modern mail window for moving lots of mail between your characters and friends, with a mass send that no longer gets stuck after about 60 mails. The classic window is one switch away.**
 
@@ -21,6 +21,10 @@ Ultimate Mail Mod 7.0.1 ("continued"), updated for Cherry's Kit with a rewritten
 > **Other addons:** AddonManager lists it when you have that addon. Its libraries, LibStub and Sol, come with it.
 
 <!-- end of requirements -->
+
+## Updated in 7.0.1-ck18
+
+**Link clicks after a reload.** The Ctrl/Shift+click name catcher could end up in a circle with other addons that watch chat link clicks after a Reload UI or a character change, so item links in chat stopped answering. A click that comes back round now goes straight on to the game.
 
 ## Updated in 7.0.1-ck17
 

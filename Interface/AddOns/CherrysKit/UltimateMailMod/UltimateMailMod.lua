@@ -42,7 +42,7 @@ UMM_VERSION = {
   Minor     = 0,
   Revision  = 2,
   Build     = 20211118,	-- 2787
-  ummRev    = '026-ck17';	-- Cherry's Kit 2026-11-05
+  ummRev    = '026-ck18';	-- Cherry's Kit 2026-11-07
 }
 
 -- ##### Local Variables #####

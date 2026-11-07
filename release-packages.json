@@ -48,7 +48,7 @@
     {
       "folder": "RomWeakAuras",
       "title": "rom weakauras",
-      "version": "0.9.33",
+      "version": "0.9.34",
       "command": "/wa",
       "description_file": "03-rom-weakauras.md",
       "summary": "Custom buff, debuff, cooldown, cast and status displays.",
@@ -78,7 +78,7 @@
     {
       "folder": "CherrysChat",
       "title": "Cherry's Chat",
-      "version": "0.11.4",
+      "version": "0.11.5",
       "command": "/cchat",
       "description_file": "04-cherrys-chat.md",
       "summary": "Selectable chat, copying, emoji and chat display settings.",
@@ -188,7 +188,7 @@
     {
       "folder": "UltimateMailMod",
       "title": "Ultimate Mail Mod",
-      "version": "7.0.1-ck17",
+      "version": "7.0.1-ck18",
       "command": "/umm",
       "alternative_to": "zMail",
       "description_file": "09-ultimate-mail-mod.md",

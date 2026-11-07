@@ -851,16 +851,36 @@ local function modifierDown()
 end
 
 -- Reload UI runs this file again in the same Lua state, so a function already wrapped stays as is.
+-- Other addons wrap again after a reload or character change too, so the chain can lead back
+-- to a UMM wrapper (a loop: every link click failed, tester report 2026-11-07). Coming back in
+-- while busy goes straight to the first function UMM ever wrapped for that key.
 UMMNameClickWrappers = UMMNameClickWrappers or {};
+UMMNameClickBase = UMMNameClickBase or {};
+UMMNameClickBusy = {};
 local function wrapNameClicks(key)
   local original = _G[key];
   if (type(original) ~= "function" or UMMNameClickWrappers[original]) then return; end
-  local wrapper = function(...)
+  if (not UMMNameClickBase[key]) then UMMNameClickBase[key] = original; end
+  local function done(ok, ...)
+    UMMNameClickBusy[key] = nil;
+    if (not ok) then error((...), 0); end
+    return ...;
+  end
+  local function run(...)
     if (modifierDown() and UMMMailWindowShown()) then
       local name = clickedName(...);
       if (name and UMMUseClickedName(name)) then return; end
     end
     return original(...);
+  end
+  local wrapper = function(...)
+    if (UMMNameClickBusy[key]) then
+      local base = UMMNameClickBase[key];
+      if (type(base) == "function" and not UMMNameClickWrappers[base]) then return base(...); end
+      return;
+    end
+    UMMNameClickBusy[key] = true;
+    return done(pcall(run, ...));
   end;
   UMMNameClickWrappers[wrapper] = true;
   _G[key] = wrapper;
