@@ -1,6 +1,6 @@
 # Cherry's KittyCombo
 
-Version **1.7.19** · Kit release **0.11.118** · [All addons / hub](../README.md)
+Version **1.7.19** · Kit release **0.11.119** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
