@@ -205,6 +205,10 @@ def ready_row(name):
     return 'row("%s", {conditionType = "canCast", {name = "%s", threshold = 0}})' % (name, name)
 
 
+def early_row(name, seconds="0.75"):
+    return 'row("%s", {conditionType = "pressEarly", value = "%s"})' % (name, seconds)
+
+
 class PressEarlyTimingModel(unittest.TestCase):
     """Drive the real engine against the client/server timing model.
 
@@ -334,6 +338,29 @@ class PressEarlyTimingModel(unittest.TestCase):
                     self.assertLessEqual(sum(waited) / 6, 22)
                     self.assertGreaterEqual(sum(chops) / 6, sum(waited) / 6 + 4)
                     self.assertGreaterEqual(others_after / 6, others_before / 6 - 3)
+
+    def test_rows_below_that_press_early_go_out_right_after_each_chop(self):
+        # "Skill is ready 0" on the rows below makes them wait for their icons,
+        # which lag the server by up to a second, so right after a chop they often
+        # still show the global cooldown and miss their turn. With Press early on
+        # them too, one of them goes out right after each chop instead, Charged
+        # Chop keeps its count, and the paced sends stay clear of the send block.
+        cooldown = {"Charged Chop": (1, 0), "Savage Whirlwind": (7, 1), "Probing Attack": (5, 1),
+                    "Open Flank": (5, 1), "Thunder": (14, 1)}
+        names = ("Savage Whirlwind", "Probing Attack", "Open Flank", "Thunder")
+        waiting = [EARLY] + [ready_row(name) for name in names]
+        pressing = [EARLY] + [early_row(name) for name in names]
+        for press in (0.05, 0.15):
+            for ping in (0.03, 0.1):
+                with self.subTest(press=press, ping=ping):
+                    chops_before, before = self.chops(waiting, press, ping, 6, cooldown)
+                    chops_after, after = self.chops(pressing, press, ping, 6, cooldown)
+                    others_before = sum(sum(casts.values()) for casts, _ in before) - sum(chops_before)
+                    others_after = sum(sum(casts.values()) for casts, _ in after) - sum(chops_after)
+                    self.assertGreaterEqual(sum(chops_after) / 6, 29)
+                    self.assertGreaterEqual(sum(chops_after) / 6, sum(chops_before) / 6 - 0.5)
+                    self.assertGreaterEqual(others_after / 6, others_before / 6 + 2)
+                    self.assertEqual(sum(blocked for _, blocked in after), 0)
 
     def test_a_plain_row_pressed_fast_trips_the_send_block(self):
         # Without pacing, fast presses at a high ping send more than five
