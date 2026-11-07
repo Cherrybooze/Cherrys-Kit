@@ -93,7 +93,7 @@ LogNextCharFrame.shown = false
 LogNextCharFrameLock = {SetText = function(self, text) self.text = text end}
 LogNextCharFrameShow = {SetChecked = function(self, on) self.checked = on end}
 LogNextCharBar = {x = 500, y = 300, shown = true,
-  GetWidth = function() return 36 end, GetHeight = function() return 74 end,
+  GetWidth = function() return 74 end, GetHeight = function() return 74 end,
   ClearAllAnchors = function() end,
   SetAnchor = function(self, point, relativePoint, relativeTo, x, y)
     self.anchor = {point, x, y, relativeTo, relativePoint}
@@ -123,6 +123,7 @@ local function button(name)
 end
 button("LogNextCharBarPrev")
 button("LogNextCharBarNext")
+button("LogNextCharBarLogout")
 """
 
 

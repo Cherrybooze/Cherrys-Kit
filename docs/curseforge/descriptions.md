@@ -332,6 +332,7 @@ Cherry's Chat draws the text of every chat window itself, on top of the game's o
 
 ## Recent changes
 
+- **0.11.4**: party adverts from addons such as ComeOnIn no longer show a wide gap after the name or run off the window as `...`; tabs and line breaks in a chat line show as spaces.
 - **0.11.3**: colour-wrapped chat lines (an empty link around the text, common in trade macros) no longer show stray `|` and `h` or break when they wrap, a lone `|` at the end of a line no longer shows as `|r`, and copied text leaves those codes out.
 - **0.11.2**: emoji in Say no longer reach the bubble as empty boxes when typed with the Windows emoji panel, unknown emoji go out as `?`, and `/cchat bubbletest` shows what your last message looked like.
 - **0.11.1**: a smaller file to read at login. The ten chat windows share one template, so its XML file went from 401 KB to 70 KB with the same windows.
@@ -1144,13 +1145,14 @@ Made for alts. One click, and you are on the next character without touching the
 
 ## Recent changes
 
+- **1.4.1**: Prev on top and Next under it, counting down like the character list, and a **Logout** button at their left for an ordinary logout (also `/lnc logout`).
 - **1.4.0**: The character screen numbers your characters, and Next and Prev show the number they log into, big under their name. **Edit character order** renumbers them with arrows. A modern login screen in the style of rom weakauras and Cherry's Bar, with gold beside a coin on the character screen, tidier character, server and settings panels, and new check boxes. **Modern look** in the settings panel switches back to the game's own look at once.
 - **1.3.4**: `Install login screen.bat` asks Windows for administrator rights and installs in that window, so a protected game folder can't refuse it.
 - **1.3.3**: Next and Prev no longer stay on the character screen. The login screen waits for the whole character list before it picks, and a logout you cancel drops the queued switch. Run `Install login screen.bat` again after updating.
 
 ## Features
 
-- **Next and Prev buttons** just below the minimap, Next on top and Prev under it, the same way round as the character list. They follow the minimap at any UI scale or resolution.
+- **Next and Prev buttons** just below the minimap, Prev on top and Next under it, counting down like the character list, with a **Logout** button at their left. They follow the minimap at any UI scale or resolution.
 - **The number of the character each button goes to**, big under its name in its own colour: playing number 4, Next shows 5 and Prev 3. The character screen shows the same numbers.
 - **Your own order**: **Edit character order** in the login screen's settings puts up and down arrows on the character screen to change the numbers, kept for each server. Next, Prev and `/lnc <number>` follow them.
 - **Hover to see who is next.** The tooltip names the character each button will pick.

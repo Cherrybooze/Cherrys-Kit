@@ -377,8 +377,19 @@ local function fitsOneRow(tokens, links, maxW)
   return Wn.TextWidth((string.gsub(C.Plain(table.concat(raw)), "%s+$", ""))) <= maxW
 end
 
+-- Tabs, line breaks and other control characters measure as nothing but the game draws some of
+-- them wide (a tab jumps to a tab stop): party adverts from addons such as ComeOnIn then showed a
+-- wide gap and ran past the window edge as "...". They are drawn as one space each; \1 and \2
+-- stay, they mark emoji pictures.
+function Wn.CleanControls(msg)
+  if type(msg) ~= "string" or not string.find(msg, "[%z\3-\31\127]") then return msg end
+  msg = string.gsub(msg, "[\t\n\v\f\r]", " ")
+  return (string.gsub(msg, "[%z\3-\8\14-\31\127]", ""))
+end
+
 function Wn.WrapMessage(msg, maxW, pics, baseColour)
   maxW = math.max(1, tonumber(maxW) or 1)
+  msg = Wn.CleanControls(msg)
   local tokens, links = Wn.Tokens(msg, pics)
   local oneRow = fitsOneRow(tokens, links, maxW)
   local list = oneRow and tokens or fittingTokens(tokens, maxW)
@@ -1092,7 +1103,12 @@ function Wn.LinkProbe(i)
     clickError = Wn.lastLinkError }
   local output = { "Cherry's Chat link report (chat " .. i .. ", " .. C.version .. ")" }
   local function quoted(value)
-    if type(value) == "string" then return string.format("%q", value) end
+    if type(value) == "string" then
+      -- Control characters (tabs, line breaks) as \ddd so they show in the report.
+      return (string.gsub(string.format("%q", value), "[%z\1-\31\127]", function(ch)
+        return ch == "\n" and "n" or string.format("\\%03d", string.byte(ch))
+      end))
+    end
     if type(value) == "number" or type(value) == "boolean" then return tostring(value) end
     return type(value)
   end
