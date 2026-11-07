@@ -1,6 +1,6 @@
 # LogNextChar
 
-Version **1.4.0** · Kit release **0.11.118** · [All addons / hub](../CherrysKit/README.md)
+Version **1.4.1** · Kit release **0.11.118** · [All addons / hub](../CherrysKit/README.md)
 
 **Next** and **Prev** buttons in game, plus `/lnc`, log you out and straight into the neighbouring character on the account. It brings its own login screen, which picks the character, and which is a better login screen in its own right.
 
@@ -21,6 +21,10 @@ Without the login screen installed, Next and Prev only log you out, and you pick
 > **After installing:** close the game and run `!setup_cherryskit.bat`, or double-click `Interface\AddOns\CherrysKit\LogNextChar\Install login screen.bat`. The game only reads a login screen from `Interface\loginxml`, so this copies it there. Until then, Next and Prev only log you out.
 
 <!-- end of requirements -->
+
+## Updated in 1.4.1
+
+The buttons under the minimap now go **Prev** on top and **Next** under it, counting down the same way as the character list. A **Logout** button hangs at their left, halfway down: it logs out to the character screen and picks nothing there, and `/lnc logout` does the same. It is not greyed out with one character. The three move together when unlocked; buttons you moved before keep their spot.
 
 ## Updated in 1.4.0
 

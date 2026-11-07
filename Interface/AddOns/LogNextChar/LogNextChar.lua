@@ -7,7 +7,7 @@ local ADDON = "LogNextChar"
 LogNextChar = LogNextChar or {}
 local me = LogNextChar
 
-me.version = "1.4.0"
+me.version = "1.4.1"
 me.BASE_PATH = (CherrysKit_Paths and CherrysKit_Paths.LogNextChar) or "Interface/AddOns/LogNextChar/"
 
 -- Saved: LogNextChar_Settings = { show, lock, position = { x, y } }
@@ -21,7 +21,8 @@ local DEFAULTS = { show = true, lock = true }
 -- Where the buttons sit until they are moved: under the minimap, below its coordinates.
 -- Anchored to the minimap in UI units, so the spot follows it at any UI scale or
 -- resolution. The second spot is for a client without that frame.
-me.DEFAULT_SPOT = { point = "TOP", relativeTo = "MinimapViewFrame", relativePoint = "CENTER", x = 3, y = 89 }
+-- The bar's right edge is anchored, so Prev / Next stay where they always were and Logout hangs at their left.
+me.DEFAULT_SPOT = { point = "TOPRIGHT", relativeTo = "MinimapViewFrame", relativePoint = "CENTER", x = 21, y = 89 }
 me.FALLBACK_SPOT = { point = "TOPRIGHT", relativeTo = "UIParent", relativePoint = "TOPRIGHT", x = -82, y = 200 }
 
 local function Print(msg)
@@ -40,8 +41,9 @@ local function ShowHelp()
     Print("  /lpc                 - Load previous character")
     Print("  /lnc current         - Relog the same character")
     Print("  /lnc <number>        - Load the character with that number on the character screen")
+    Print("  /lnc logout          - Log out to the character screen, no switch")
     Print("  /lnc settings        - Open the settings (also in the Cherry's Kit hub)")
-    Print("  /lnc show | hide     - Show or hide the Next / Prev buttons")
+    Print("  /lnc show | hide     - Show or hide the Prev / Next / Logout buttons")
     Print("  /lnc lock | unlock   - Stop or allow moving the buttons")
     Print("  /lnc reset           - Put the buttons back in their default spot")
     Print("  /lnc probe           - Show the positions and state for a bug report")
@@ -149,6 +151,29 @@ local function ArmAndLogout(mode, target)
     _G.LOGCHAR_FROM = type(UnitName) == "function" and UnitName("player") or nil
     me.queued = true
 
+    if CampOutStart then
+        CampOutStart()
+    elseif Logout then
+        Logout()
+    else
+        Print("Error: No logout method available")
+    end
+end
+
+-- The Logout button: an ordinary logout to the character screen. A switch queued earlier is dropped,
+-- so the login screen stays on the character list and picks nothing.
+function me.Logout()
+    if not me.IsOn() then
+        Print("Turned off in Cherry's Kit. Turn it on in the hub (/ck) and Reload UI.")
+        return
+    end
+    CloseMailbox()
+    _G.LOGCHAR_FLAG = 0
+    _G.LOGCHAR_MODE = nil
+    _G.LOGCHAR_TARGET = nil
+    _G.LOGCHAR_FROM = nil
+    me.queued = nil
+    Print("Logging out...")
     if CampOutStart then
         CampOutStart()
     elseif Logout then
@@ -368,6 +393,9 @@ function me.OnLoad(bar)
     bar:RegisterEvent("FORCE_DIALOG_HIDE")
     Step("Next button", Paint, LogNextCharBarNext, "next", "Next")
     Step("Prev button", Paint, LogNextCharBarPrev, "prev", "Prev")
+    if _G.LogNextCharBarLogout then
+        Step("Logout button", Paint, LogNextCharBarLogout, "logout", "Logout")
+    end
     Step("Placing the buttons", me.Place)
     me.Refresh()
     Step("Greying the buttons", me.UpdateEnabled)
@@ -434,7 +462,9 @@ function me.OnMouseUp(button)
             me.SavePlace()
         end
     end
-    if not moved and not dragKey and not SingleCharacter() then
+    if not moved and not dragKey and button.mode == "logout" then
+        me.Logout()
+    elseif not moved and not dragKey and not SingleCharacter() then
         ArmAndLogout(button.mode or (button == LogNextCharBarPrev and "prev" or "next"))
     end
 end
@@ -447,6 +477,17 @@ function me.OnEnter(button)
     end
     local mode = button.mode
     GameTooltip:SetOwner(button, "ANCHOR_RIGHT", 4, 0)
+    if mode == "logout" then
+        GameTooltip:SetText("Log out")
+        GameTooltip:AddLine("|cff9ea8baClick: log out to the character screen|r")
+        if me.Get("lock") then
+            GameTooltip:AddLine("|cff9ea8baLocked. Unlock in the settings to move: /lnc settings|r")
+        else
+            GameTooltip:AddLine("|cff9ea8baRight-drag (or Shift+drag): move|r")
+        end
+        GameTooltip:Show()
+        return
+    end
     GameTooltip:SetText(mode == "next" and "Next character" or "Previous character")
     if SingleCharacter() then
         GameTooltip:AddLine("|cff9ea8baOnly one character on this account|r")
@@ -579,6 +620,11 @@ local function HandleNext(editBox, text)
 
     if msg == "prev" or msg == "current" then
         ArmAndLogout(msg)
+        return
+    end
+
+    if msg == "logout" then
+        me.Logout()
         return
     end
 

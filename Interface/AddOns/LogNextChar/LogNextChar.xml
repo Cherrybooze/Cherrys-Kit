@@ -37,16 +37,20 @@
 		</Scripts>
 	</Button>
 
-	<!-- Next on top, Prev under it, like the character list (LogNextChar.lua). Unlocked, right-drag or Shift+drag moves them. -->
+	<!-- Prev on top, Next under it, the way the character list counts down. Logout hangs at the left of
+	     the pair, halfway down (LogNextChar.lua). Unlocked, right-drag or Shift+drag moves all three. -->
 	<Frame name="LogNextCharBar" parent="UIParent" frameStrata="MEDIUM" movable="true">
-		<Size><AbsDimension x="36" y="74" /></Size>
-		<Anchors><Anchor point="TOP" relativeTo="MinimapViewFrame" relativePoint="CENTER"><Offset><AbsDimension x="3" y="89" /></Offset></Anchor></Anchors>
+		<Size><AbsDimension x="74" y="74" /></Size>
+		<Anchors><Anchor point="TOPRIGHT" relativeTo="MinimapViewFrame" relativePoint="CENTER"><Offset><AbsDimension x="21" y="89" /></Offset></Anchor></Anchors>
 		<Frames>
-			<Button name="$parentNext" inherits="LogNextCharButtonTemplate">
-				<Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="TOP" /></Anchors>
-			</Button>
 			<Button name="$parentPrev" inherits="LogNextCharButtonTemplate">
-				<Anchors><Anchor point="BOTTOM" relativeTo="$parent" relativePoint="BOTTOM" /></Anchors>
+				<Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="TOPRIGHT" /></Anchors>
+			</Button>
+			<Button name="$parentNext" inherits="LogNextCharButtonTemplate">
+				<Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" /></Anchors>
+			</Button>
+			<Button name="$parentLogout" inherits="LogNextCharButtonTemplate">
+				<Anchors><Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT" /></Anchors>
 			</Button>
 		</Frames>
 		<Scripts>
