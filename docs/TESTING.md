@@ -355,6 +355,7 @@ Cherry's Chat 0.11.0. The simulated client checks what goes out on each channel;
 | --- | --- | --- |
 | CB1 | With Say bubbles on **Symbols (^_^)** (default), say `:heart: :star: :smile: :carrot:`. | The bubble shows ♥ ★ (^_^) :carrot:. Report any symbol that shows as a box. |
 | CB2 | Paste a real emoji with no symbol (Windows key + ., e.g. a carrot) into a Say line. | The bubble shows `:carrot:`, not two boxes. |
+| CB6 | Cherry's Chat 0.11.4: with someone using ComeOnIn, have them post their party advert (Shout) in Guild or Party, or wait for one. | The text follows straight after the name, wraps inside the window and has no `...` at the end. If not, type `/cchat linkprobe`, then Reload UI, so the line's raw text is saved. |
 | CB1 | Cherry's Chat 0.11.3: watch World for coloured trade lines, then type `/cchat linkprobe` and compare with `/cchat window` (the game's own chat). | No stray `\|` or `h` in Cherry's chat, the same text and colours as the game's chat, and item links still click. |
 | CB0 | Cherry's Chat 0.11.2: say something with an emoji, then type `/cchat bubbletest`. | Three lines: setting, chat type (should say SAY / Say), and the typed and sent text. "sent" has no \\240 codes. Send a screenshot if the bubble still shows boxes. |
 | CB3 | Click **Say bubbles** until it reads **Text (:fire:)**, then say `hi :fire`. | The bubble shows `hi :fire`; your Cherry's Chat window shows the fire picture. |
