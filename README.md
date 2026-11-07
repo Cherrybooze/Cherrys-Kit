@@ -1,4 +1,4 @@
-[![Download the full kit install ZIP. Run !setup_cherryskit.bat after extracting.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.119/CherrysKit-Full-0.11.119.zip)
+[![Download the full kit install ZIP. Run !setup_cherryskit.bat after extracting.](docs/images/download-full-kit.svg)](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.120/CherrysKit-Full-0.11.120.zip)
 
 <img width="226" height="167" alt="image" src="https://github.com/user-attachments/assets/ae948bbd-8894-4c24-82f5-a1fb8111cf20" />
 
@@ -13,18 +13,24 @@ Cherry's Kit combines original addons, rewrites and fixes to older favourites: o
 
 Pick the full kit, or install the hub and just the addons you want. Type **`/ck`** to open their settings from one window, switch kit addons on or off after Reload UI, and keep one button on your minimap. Every kit addon works with the hub alone; installing other addons adds the connections described below.
 
-> **Current release: 0.11.119.** The downloads below contain the latest hub, addons and Chrome extension. Setup and the Addons page check the release marked [Latest](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest). Features still needing native-client confirmation are listed in [TESTING.md](docs/TESTING.md).
+> **Current release: 0.11.120.** The downloads below contain the latest hub, addons and Chrome extension. Setup and the Addons page check the release marked [Latest](https://github.com/Cherrybooze/Cherrys-Kit/releases/latest). Features still needing native-client confirmation are listed in [TESTING.md](docs/TESTING.md).
 
 ### Install or update in four steps
 
-1. **Choose your download.** Use the full-kit button above, or get the **Hub** ZIP and the addon ZIPs you want from the [release page](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.119). [Compare the packages](#download-and-install) and [see what each addon does](#whats-included).
+1. **Choose your download.** Use the full-kit button above, or get the **Hub** ZIP and the addon ZIPs you want from the [release page](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.120). [Compare the packages](#download-and-install) and [see what each addon does](#whats-included).
 2. **Close the game and extract the ZIPs.** Downloads is fine; your game's `Interface\AddOns\` is fine too. Let Windows merge their `CherrysKit` folders. The Full and Hub ZIPs put **`!setup_cherryskit.bat`** beside that folder. Keep them together.
 3. **Double-click `!setup_cherryskit.bat`.** Select your game folder if asked, choose a mailbox addon on first setup, and review updates, optional extras and older addon copies. The [prompt-by-prompt walkthrough and flowchart](#guided-setup-every-prompt) explain the inputs and their results. Chrome has a few [one-time steps of its own](#first-installation-in-chrome).
 4. **Start the game and type `/ck`.** Open the settings of the addons you installed. Later, close the game and rerun the same setup file to update, or use [Addons in the Chrome extension](#manage-addons-from-chrome).
 
 **Already using CurseForge?** Pick the addons you want; the app installs the hub with them. Run the guided setup afterwards to deal with old separate copies, LogNextChar's login screen or Chrome. **Already on 0.11.114 or older?** Extract a current Full or Hub ZIP once to get the setup launchers.
 
-**On this page:** [Addon descriptions](#whats-included) · [Downloads and folder layout](#download-and-install) · [Setup choices](#guided-setup-every-prompt) · [Chrome installation and updates](#optional-chrome-extension) · [Update, offload and restore in Chrome](#manage-addons-from-chrome) · [Troubleshooting](#common-questions) · [Recent changes](#whats-new-in-011119)
+**On this page:** [Addon descriptions](#whats-included) · [Downloads and folder layout](#download-and-install) · [Setup choices](#guided-setup-every-prompt) · [Chrome installation and updates](#optional-chrome-extension) · [Update, offload and restore in Chrome](#manage-addons-from-chrome) · [Troubleshooting](#common-questions) · [Recent changes](#whats-new-in-011120)
+
+## What's new in 0.11.120
+
+- **Item links answer clicks again** (Cherry's Chat 0.11.5, rom weakauras 0.9.34, Ultimate Mail Mod 7.0.1-ck18): after a Reload UI or a character change, the addons that watch chat link clicks could end up calling each other in a circle, and item links in chat stopped answering until the game was restarted. A click that comes back round now goes straight on to the game. Cherry's Chat also throws away a saved click layout that never carried the link.
+- **Preview on right-click** (Cherry's Chat 0.11.5): right-clicking an item link in chat gives the game's own right-click again, with **Preview** for skins; right-clicking a name or plain text still opens the copy menu.
+- **Another monitor** (Cherry's Chat 0.11.5): when the game window moves to a screen with another size or UI scale, the chat text is measured and laid out again on the game's chat window. `/cchat linkprobe` now also shows where your last click in the chat landed and where each link of that row sits.
 
 ## What's new in 0.11.119
 
@@ -155,7 +161,7 @@ These are outside the Full ZIP. LogNextChar needs the hub and loads through it; 
 | [zMail](#zmail-the-other-mailbox) | pyrr's mailbox addon, as an alternative to Ultimate Mail Mod, in its own `Interface\AddOns\zmail` folder. The kit's copy is zMail 1.4 with one fix: mails with gold over the gold cap are no longer opened, so they keep their 30 days. | Opens with the mailbox | 1.4-ck1 |
 | [Global Bank for RoM](extras/GlobalBankDailyRewards/README.md) | Chrome extension for Global Bank's page and popup: combined bank, gold overview, mail, stats, macros, addon management and the optional daily reward. Needs Global Bank and its Windows helper; see [Chrome installation](#optional-chrome-extension). | Chrome toolbar | 1.4.5 |
 
-Download it from this build: [LogNextChar-1.4.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.119/LogNextChar-1.4.1.zip).
+Download it from this build: [LogNextChar-1.4.1.zip](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.120/LogNextChar-1.4.1.zip).
 
 ### zMail, the other mailbox
 
@@ -165,12 +171,12 @@ Which one runs is set in `CherrysKit/Mailbox.txt`: `Mailbox = "auto"` (zMail whe
 
 ## Download and install
 
-**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.119/CherrysKit-Full-0.11.119.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.119)
+**[Download the full-kit install ZIP](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.120/CherrysKit-Full-0.11.120.zip)** · [Hub and individual addon downloads](https://github.com/Cherrybooze/Cherrys-Kit/releases/tag/v0.11.120)
 
 | What you want | What to download | What to expect |
 | --- | --- | --- |
-| The complete collection | **CherrysKit-Full-0.11.119.zip** | The hub, the addons in [What's included](#whats-included), and both setup launchers. LoadTimes is included but switched off. |
-| Only selected addons | **CherrysKit-Hub-0.11.119.zip** plus their individual ZIPs | The same hub and setup, with only the addons you choose. Every individual kit addon needs the hub; keep the hub current when updating one. |
+| The complete collection | **CherrysKit-Full-0.11.120.zip** | The hub, the addons in [What's included](#whats-included), and both setup launchers. LoadTimes is included but switched off. |
+| Only selected addons | **CherrysKit-Hub-0.11.120.zip** plus their individual ZIPs | The same hub and setup, with only the addons you choose. Every individual kit addon needs the hub; keep the hub current when updating one. |
 | Character switching and the login screen | **LogNextChar-1.4.1.zip**, plus the hub if you do not have it | A separate package, outside the Full ZIP. Setup can install its login screen after you extract the addon. |
 | Global Bank in Chrome | Global Bank and the hub, plus the optional **Global Bank for RoM** extension package when needed | A Windows helper and Chrome extension. Having the files does not load the extension into Chrome: finish the [Chrome steps](#first-installation-in-chrome). |
 | zMail instead of Ultimate Mail Mod | Choose **zMail** in setup, or use the separate zMail ZIP | pyrr's mailbox addon stays in `Interface\AddOns\zmail`. It is outside the Full ZIP and can also be managed with pyrr's own releases. |
@@ -361,7 +367,7 @@ That also prevents release downloads needed for missing addons; extract the pack
 
 ## Optional Chrome extension
 
-[**Download Global Bank for RoM for Chrome, 1.4.5**](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.119/CherrysKit-GlobalBankDailyRewards-1.4.5.zip) · [Detailed extension guide](extras/GlobalBankDailyRewards/README.md)
+[**Download Global Bank for RoM for Chrome, 1.4.5**](https://github.com/Cherrybooze/Cherrys-Kit/releases/download/v0.11.120/CherrysKit-GlobalBankDailyRewards-1.4.5.zip) · [Detailed extension guide](extras/GlobalBankDailyRewards/README.md)
 
 This optional Windows extension opens Global Bank in a Chrome tab: a searchable bank across your characters, equipment and mail, currencies, gold, favourites, item depot, locally encrypted Gameforge accounts, macros and addon-settings backups, plus the helper's terminal and auction cache. The [Addons page](#manage-addons-from-chrome) manages installed folders and kit updates. The extension can keep the helper running while Chrome is open and supplies the kit's clock.
 
