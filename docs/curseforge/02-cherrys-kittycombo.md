@@ -20,7 +20,7 @@ A "kitty" is a list of commands (skills, items, macros) in priority order. Each 
 
 ## Recent changes
 
-- **1.7.19**: new **Press early (s)** condition for a skill row. The skill may fire up to that many seconds before its icon shows it ready, and the kitty waits for it instead of casting lower rows. It is sent at most every 0.15 s and 4 times early, so the game does not block your casts. Made for skills like Charged Chop, which the game takes again before the icon shows ready.
+- **1.7.19**: new **Press early (s)** condition for a skill row. The skill may fire up to that many seconds before its icon shows it ready, and the kitty waits for it instead of casting lower rows. It is sent at most every 0.15 s and 4 times early, so the game does not block your casts. Made for skills like Charged Chop, which the game takes again before the icon shows ready. Give the attack rows below it Press early as well, so they go out right after it instead of waiting for their icons.
 - **1.7.18**: a little lighter on each hit. The damage tracker looks up its table once, not twelve times.
 - **1.7.17**: with **Cherry's Bar** installed, the "Mode:" plate moves onto its bar, so it no longer sits at the top of the screen. Click the bar's Kitty mode display for the same mode pictures. Hide that display, or turn Cherry's Bar off, and the plate comes back if "Show current mode" is ticked.
 

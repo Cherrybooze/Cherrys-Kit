@@ -31,6 +31,9 @@ Kitty.Changelog.getPages = function()
 				"  (what a /cast line in the kitty macro runs into).",
 				"- Keep it below the skill's cooldown, and take a \"Skill is ready\"",
 				"  condition with 0 seconds off that row.",
+				"- Give the attack rows below it Press early too (not buffs or",
+				"  potions): they then go out right after it instead of waiting",
+				"  for their icons. Pressing faster only helps.",
 			}, "\n"),
 		},
 		{
