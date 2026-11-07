@@ -157,15 +157,15 @@ A "kitty" is a list of commands (skills, items, macros) in priority order. Each 
 
 ## Recent changes
 
+- **1.7.19**: new **Press early (s)** condition for a skill row. The skill may fire up to that many seconds before its icon shows it ready, and the kitty waits for it instead of casting lower rows. It is sent at most every 0.15 s and 4 times early, so the game does not block your casts. Made for skills like Charged Chop, which the game takes again before the icon shows ready.
 - **1.7.18**: a little lighter on each hit. The damage tracker looks up its table once, not twelve times.
 - **1.7.17**: with **Cherry's Bar** installed, the "Mode:" plate moves onto its bar, so it no longer sits at the top of the screen. Click the bar's Kitty mode display for the same mode pictures. Hide that display, or turn Cherry's Bar off, and the plate comes back if "Show current mode" is ticked.
-- **1.7.16**: lighter in fights. Catching errors no longer makes new functions and a table on every frame; errors are still reported in chat as before.
 
 ## Features
 
 - **Visible priority**: every command has a rank number. 1 (green, top) is checked first.
 - **Plain-words conditions**: short phrases like "Pick next target when [my target] is dead" (the part you choose in teal), yes/no instead of true/false, and one sentence under each row saying what it checks. Hover any menu entry for help. Menus stay open until you click elsewhere.
-- **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on, and Shift is held.
+- **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on, Shift is held, and Press early (fire a short-cooldown skill such as Charged Chop before its icon shows ready, and wait for it).
 - **Modes**: switch your kitties between aoe, single, burst, dps, tank, heal, interrupt, pvp, farm, boss, request or your own modes, and let "Mode is on" rows decide what fires. Switch with `/kc mode <name>` or `/kc toggle aoe` (macros too), or by picture:
   - **Mode button** near the minimap (Kitty options > Show the mode button): shows the mode that is on as a picture. Click it to see every mode, click one to switch (the others turn off).
   - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for the same mode pictures, including "No mode".

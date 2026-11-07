@@ -101,6 +101,9 @@ local function iconFor(comboManager, commandType, commandName, icons)
 	return icons[maskKey(commandType, commandName)];
 end
 
+local function alwaysSend()
+	return true;
+end
 -- A ComboManager whose skill checks look LOOKAHEAD seconds ahead and whose procs see the masked lists.
 local function predictor(masked, icons)
 	local comboManager = Kitty.ComboManager(Kitty.slotManager, Kitty.cooldownManager, Kitty.macroManager);
@@ -119,6 +122,8 @@ local function predictor(masked, icons)
 			return Kitty.SkillManager.canCast(self, skillName, math.max(threshold or 0.6, Kitty.Predict.LOOKAHEAD), true);
 		end,
 	}, {__index=realSkills}));
+	-- A "Press early" row shows as the next skill and leaves its send count alone
+	rawset(comboManager, "pressEarlyGate", alwaysSend);
 	local procs, lists = {}, {};
 	local function filteredOnce(commandList)
 		if(lists[commandList] == nil) then lists[commandList] = filtered(commandList, masked, icons); end
