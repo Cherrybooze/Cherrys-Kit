@@ -46,6 +46,7 @@ Kitty.MenuHelp.conditions = {
 	["canCast"] = "When [skill] is [ready] (or [on cooldown]): lets a command wait for another skill",
 	["canUse"] = "When action bar [slot] is [ready] (or [on cooldown])",
 	["castRecently"] = "When Kitty tried [skill] in the last [seconds] (or didn't): no double debuffs",
+	["imaginaryCooldown"] = "Fire this row at most once every [seconds], on the beat: a cooldown Kitty keeps itself",
 	["pressEarly"] = "Fire this row's [skill] up to [seconds] before it shows ready, and wait for it: more casts of a short-cooldown skill",
 	["targetCasting"] = "When [my target] is casting [skill] (empty = built-in interrupt list; grow it with [/kc interrupt last])",
 	["targetDebuffStacks"] = "When [debuff] on [my target] has [number] stacks or more",
@@ -98,6 +99,7 @@ Kitty.MenuHelp.effectTypes = {
 -- Command types (kitty editor rows)
 Kitty.MenuHelp.commandTypes = {
 	["skill"] = "Casts a skill from your skill book. Drag the skill onto the row's icon.",
+	["override"] = "Priority override: casts a skill (drag it onto the icon) before every other row, once every [N] s from its Imaginary cooldown (blank = 1). When the game does not take it, it is sent again while the rows below wait. The game's cooldown is not checked: add [Skill in range] or [Skill is ready] for that.",
 	["suitskill"] = "Casts a suit (set) skill.",
 	["action"] = "Uses whatever is in an action bar slot: items, potions, mounts...",
 	["extra"] = "Uses a button on the extra action bar (special skills that pop up).",

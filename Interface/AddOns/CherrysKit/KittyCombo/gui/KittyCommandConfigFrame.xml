@@ -148,7 +148,7 @@
 			</CheckButton>
 
 			<!-- Dropdown (command type) -->
-			<Frame name="$parentDropDownMenu" inherits="UIDropDownMenuTemplate">
+			<Frame name="$parentDropDownMenu" inherits="UIDropDownMenuTemplate" enableMouse="true">
 				<Size><AbsDimension x="80" /></Size>
 				<Anchors>
 					<Anchor point="LEFT" relativeTo="$parentActionButton" relativePoint="RIGHT">
@@ -165,12 +165,31 @@
 								function(this, button, value, text, previousValue, previousText)
 									Kitty.CommandConfigFrame.onTypeChanged(this:GetParent());
 								end,
-								{"skill", "suitskill", "action", "extra", "macro", "emote", "proc", "changemode", "other"},
-								{[9]={"break", "debug"}}
+								{"skill", "override", "suitskill", "action", "extra", "macro", "emote", "proc", "changemode", "other"},
+								{[10]={"break", "debug"}}
 							);
 						end)();
 						]]>
 					</OnLoad>
+					<OnEnter>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							-- What the row type does (the open menu shows the same per entry)
+							local text = tostring(UIDropDownMenu_GetText(this) or "");
+							local help = Kitty.MenuHelp and Kitty.MenuHelp.commandTypes[text];
+							if(help ~= nil) then
+								Kitty.showGameTooltip(this, {text, help});
+							end
+						end)();
+						]]>
+					</OnEnter>
+					<OnLeave>
+						<![CDATA[
+						Kitty.protectFunction(function()
+							Kitty.hideGameTooltip(this);
+						end)();
+						]]>
+					</OnLeave>
 					<OnMouseWheel>
 						<![CDATA[
 						Kitty.protectFunction(function()

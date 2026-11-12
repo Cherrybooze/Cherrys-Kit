@@ -221,13 +221,15 @@ class PressEarlyTimingModel(unittest.TestCase):
     """
 
     @staticmethod
-    def run_model(rows, press, ping, seed, cooldown=None, duration=30.0):
+    def run_model(rows, press, ping, seed, cooldown=None, duration=30.0, setup=""):
         cooldown = cooldown or {"Charged Chop": (1, 1), "Filler": (6, 1)}
         lua = test_kitty_startup.KittyStartupTests().runtime()
         lua.execute(SETUP)
         # Rage, mana and energy are assumed to be enough
         lua.execute('for _, key in ipairs({"manaList", "tensionList", "energyList", "focusList"}) do'
                     ' Kitty.SkillManager[key] = {} end')
+        if setup:
+            lua.execute(setup)
         lua.execute('list = {info = {name = "Model"}, ' + ", ".join(rows) + '}')
         g = lua.globals()
         rng = random.Random(seed)

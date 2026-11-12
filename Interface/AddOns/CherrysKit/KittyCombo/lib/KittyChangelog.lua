@@ -17,6 +17,25 @@ Kitty.Changelog.getPages = function()
 	local contact = Kitty.Changelog.DISCORD_NAME .. " on " .. Kitty.Changelog.DISCORD_SERVER;
 	return {
 		{
+			title = "New in 1.7.20: priority override, imaginary cooldown",
+			text = table.concat({
+				"Priority override: a new row type (override, under skill).",
+				"- Its skill goes before every other row of the kitty, once every",
+				"  N seconds of its Imaginary cooldown (blank = 1), wherever it is.",
+				"- It does not wait for the icon. Add Skill in range or Skill is",
+				"  ready for range, rage and cooldown: they start with its skill.",
+				"- When the game did not take it, it is sent again (4 times in the",
+				"  second at most) while the rows below wait.",
+				"",
+				"Imaginary cooldown (s): a new condition (Skills, items & gear).",
+				"- The row fires at most once every that many seconds (blank = 1):",
+				"  a cooldown Kitty keeps for the row, apart from the game's.",
+				"- It keeps the beat: while you keep pressing, the row fires once",
+				"  every N seconds, not N plus the wait for your next press.",
+				"- On a normal row the game's own cooldown still counts.",
+			}, "\n"),
+		},
+		{
 			title = "New in 1.7.19: press early",
 			text = table.concat({
 				"Press early (s): a new condition for skill rows (Skills, items & gear).",
