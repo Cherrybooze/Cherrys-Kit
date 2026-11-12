@@ -43,6 +43,7 @@ Kitty.MenuHelp.conditions = {
 	["isCombat"] = "When I am [in combat]",
 	["isCG"] = "When I am in a [guild castle] war",
 	["isTargeted"] = "When an enemy targets [me]",
+	["attackSpeed"] = "When I auto attack [4] times a second or faster: for a skill that keeps auto attack going (add an imaginary cooldown for how often)",
 	["canCast"] = "When [skill] is [ready] (or [on cooldown]): lets a command wait for another skill",
 	["canUse"] = "When action bar [slot] is [ready] (or [on cooldown])",
 	["castRecently"] = "When Kitty tried [skill] in the last [seconds] (or didn't): no double debuffs",
