@@ -17,6 +17,17 @@ Kitty.Changelog.getPages = function()
 	local contact = Kitty.Changelog.DISCORD_NAME .. " on " .. Kitty.Changelog.DISCORD_SERVER;
 	return {
 		{
+			title = "New in 1.7.20: imaginary cooldown",
+			text = table.concat({
+				"Imaginary cooldown (s): a new condition (Skills, items & gear).",
+				"- The row fires at most once every that many seconds (blank = 1):",
+				"  a cooldown Kitty keeps for the row, apart from the game's.",
+				"- It keeps the beat: while you keep pressing, the row fires once",
+				"  every N seconds, not N plus the wait for your next press.",
+				"- The game's own cooldown still counts on the row.",
+			}, "\n"),
+		},
+		{
 			title = "New in 1.7.19: press early",
 			text = table.concat({
 				"Press early (s): a new condition for skill rows (Skills, items & gear).",

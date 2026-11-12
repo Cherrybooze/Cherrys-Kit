@@ -1,6 +1,6 @@
 # Cherry's KittyCombo
 
-Version **1.7.19** · Kit release **0.11.119** · [All addons / hub](../README.md)
+Version **1.7.20** · Kit release **0.11.121** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
@@ -23,6 +23,10 @@ A "kitty" is a list of commands (skills, items, macros) in priority order. Each 
 > **Other addons:** AddonManager lists it when you have that addon.
 
 <!-- end of requirements -->
+
+## Updated in 1.7.20
+
+**Imaginary cooldown (s)**, a new condition (under *Skills, items & gear*). The row fires at most once every that many seconds (blank means 1): a cooldown Kitty keeps for the row, apart from the game's. A row can only fire on a key press, so it fires on the first press at or after each mark, and a press up to a quarter of a second late keeps the marks the same distance apart: while you keep pressing, the row fires exactly once every N seconds on average, not N plus the wait for your next press. After a longer gap it counts from the press that fired it. The game's own cooldown still counts on the row. Versions before 1.7.20 refuse share codes that use this condition.
 
 ## Updated in 1.7.19
 

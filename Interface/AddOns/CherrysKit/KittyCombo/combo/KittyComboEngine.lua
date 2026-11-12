@@ -1,7 +1,8 @@
 -- Cherry's KittyCombo, based on KittyCombo (C) 2012-2013 Miranda
 -- ComboManager:check(): walks a kitty top to bottom and returns the first command
--- that can fire. Also the constructor, which reads skills and buffs lazily, and
--- the "Press early" rows (pressEarlyWindow / pressEarlyGate).
+-- that can fire. Also the constructor, which reads skills and buffs lazily, the
+-- "Press early" rows (pressEarlyWindow / pressEarlyGate) and the imaginary
+-- cooldowns rows can have (Kitty.ImaginaryCooldown).
 --------------------------------------------------------------------------------
 -- Namespace
 if(_G and not _G.Kitty) then
@@ -30,8 +31,13 @@ Kitty.ComboManager.check = function(self, targetList, path)
 			local result = false;
 			-- A "Press early" row: its own ready window, and the cooldown the client shows
 			local early, remaining = nil, nil;
+			-- A row with an imaginary cooldown that has not run out is skipped
+			-- before anything else is read
+			local imaginary = Kitty.ComboManager.imaginaryCooldownSeconds(command);
 
-			if(command.commandType == "skill" or command.commandType == "suitskill") then
+			if(imaginary ~= nil and not self:imaginaryCooldownReady(command, imaginary)) then
+				result = false;
+			elseif(command.commandType == "skill" or command.commandType == "suitskill") then
 				-- Can the skill be cast? A press uses the execution tolerance (or the
 				-- row's "Press early" seconds) instead of an early wider window, so
 				-- candidates that are not close enough to ready fall through.
@@ -91,6 +97,10 @@ Kitty.ComboManager.check = function(self, targetList, path)
 					if(result) then
 						local commandType, commandName = self:check(commandLists[1], path);	-- Recursive call
 						if(commandType ~= nil) then
+							-- The proc row fired too (a waiting "hold" is not a fire)
+							if(imaginary ~= nil and commandType ~= "hold") then
+								self:imaginaryCooldownFired(command, imaginary);
+							end
 							if(Kitty.isDebugFlag) then
 								Kitty.debugPrint("Check result. CommandType:[" .. commandType .. "], CommandName:[" .. commandName .. "], ProcName:[" .. command.commandName .. "]");
 							end
@@ -126,6 +136,9 @@ Kitty.ComboManager.check = function(self, targetList, path)
 						Kitty.debugPrint("Check result. CommandType:[hold], CommandName:[" .. command.commandName .. "]");
 					end
 					return "hold", command.commandName, nil;
+				end
+				if(imaginary ~= nil) then
+					self:imaginaryCooldownFired(command, imaginary);
 				end
 				if(Kitty.isDebugFlag) then
 					Kitty.debugPrint("Check result. CommandType:[" .. command.commandType .. "], CommandName:[" .. command.commandName .. "]");
@@ -250,6 +263,112 @@ Kitty.ComboManager.pressEarlyGate = function(self, skillName, remaining, window)
 	end
 	state.sent = now;
 	return true;
+end;
+
+--------------------------------------------------------------------------------
+-- Imaginary cooldowns (condition imaginaryCooldown, value = seconds)
+-- A cooldown Kitty keeps itself, apart from the game's: a row with one fires
+-- at most once every N seconds, counted from when Kitty fired it. A row can
+-- only fire on a key press, so it fires on the first press at or after each
+-- mark. A fire up to CATCH_UP late (and at most half of N) keeps the marks
+-- N apart, so while the presses keep coming the row fires exactly once every
+-- N seconds on average instead of drifting later by each wait for a press.
+-- A later fire (no presses, or the row's other conditions failed for a while)
+-- starts the marks again from that fire. Kitty.Predict reads the marks but
+-- never moves them. Other addons can keep their own by any key (a string):
+--   Kitty.ImaginaryCooldown.ready(key, seconds[, now])  -> may it fire now?
+--   Kitty.ImaginaryCooldown.fired(key, seconds[, now])  it fired: start the wait
+--   Kitty.ImaginaryCooldown.remaining(key, seconds[, now]) -> seconds left
+--   Kitty.ImaginaryCooldown.reset(key)                  forget it
+--   Kitty.ImaginaryCooldown.seconds(value)              seconds from a typed value
+-- Kitty rows are keyed by their command table (weak keys: a kitty saved in
+-- the editor is a new copy and starts again).
+Kitty.ImaginaryCooldown = Kitty.ImaginaryCooldown or {};
+Kitty.ImaginaryCooldown.DEFAULT = 1;	-- when the value is blank or unreadable
+Kitty.ImaginaryCooldown.MIN = 0.1;
+Kitty.ImaginaryCooldown.MAX = 3600;
+Kitty.ImaginaryCooldown.CATCH_UP = 0.25;
+-- A press this close before a mark counts as on it (rounding of GetTime)
+Kitty.ImaginaryCooldown.EPSILON = 0.001;
+-- key -> {mark = the time the last fire counts from, at = when it really fired}
+Kitty.ImaginaryCooldown.state = Kitty.ImaginaryCooldown.state or setmetatable({}, {__mode = "k"});
+Kitty.ImaginaryCooldown.now = function()
+	if(Kitty.getTime) then
+		return Kitty.getTime();
+	end
+	return GetTime();
+end;
+-- Seconds from a typed value: blank or unreadable = DEFAULT, then MIN to MAX
+Kitty.ImaginaryCooldown.seconds = function(value)
+	local seconds = tonumber(value);
+	if(seconds == nil and type(value) == "string") then
+		seconds = tonumber((string.gsub(value, ",", ".")));	-- 0,5
+	end
+	if(seconds == nil) then
+		return Kitty.ImaginaryCooldown.DEFAULT;
+	end
+	return math.min(math.max(seconds, Kitty.ImaginaryCooldown.MIN), Kitty.ImaginaryCooldown.MAX);
+end;
+Kitty.ImaginaryCooldown.remaining = function(key, seconds, now)
+	local state = Kitty.ImaginaryCooldown.state[key];
+	if(state == nil) then
+		return 0;
+	end
+	now = now or Kitty.ImaginaryCooldown.now();
+	seconds = tonumber(seconds) or Kitty.ImaginaryCooldown.DEFAULT;
+	return math.max(state.mark + seconds - now, 0);
+end;
+Kitty.ImaginaryCooldown.ready = function(key, seconds, now)
+	local state = Kitty.ImaginaryCooldown.state[key];
+	if(state == nil) then
+		return true;
+	end
+	now = now or Kitty.ImaginaryCooldown.now();
+	seconds = tonumber(seconds) or Kitty.ImaginaryCooldown.DEFAULT;
+	return now >= state.mark + seconds - Kitty.ImaginaryCooldown.EPSILON;
+end;
+Kitty.ImaginaryCooldown.fired = function(key, seconds, now)
+	if(key == nil) then
+		return;
+	end
+	now = now or Kitty.ImaginaryCooldown.now();
+	seconds = tonumber(seconds) or Kitty.ImaginaryCooldown.DEFAULT;
+	local state = Kitty.ImaginaryCooldown.state[key];
+	if(state == nil) then
+		state = {};
+		Kitty.ImaginaryCooldown.state[key] = state;
+		state.mark = now;
+	else
+		local due = state.mark + seconds;
+		local late = now - due;
+		if(late >= -Kitty.ImaginaryCooldown.EPSILON and late <= math.min(Kitty.ImaginaryCooldown.CATCH_UP, seconds * 0.5)) then
+			state.mark = due;	-- on time: keep the marks N apart
+		else
+			state.mark = now;	-- long after the mark (or before it): count from now
+		end
+	end
+	state.at = now;
+end;
+Kitty.ImaginaryCooldown.reset = function(key)
+	if(key ~= nil) then
+		Kitty.ImaginaryCooldown.state[key] = nil;
+	end
+end;
+-- The row's imaginary cooldown in seconds, or nil when it has none
+Kitty.ComboManager.imaginaryCooldownSeconds = function(command)
+	for _, condition in ipairs(command) do
+		if(type(condition) == "table" and condition.conditionType == "imaginaryCooldown") then
+			return Kitty.ImaginaryCooldown.seconds(condition.value);
+		end
+	end
+	return nil;
+end;
+-- Instance methods, so prediction can read the marks without moving them
+Kitty.ComboManager.imaginaryCooldownReady = function(self, command, seconds)
+	return Kitty.ImaginaryCooldown.ready(command, seconds);
+end;
+Kitty.ComboManager.imaginaryCooldownFired = function(self, command, seconds)
+	Kitty.ImaginaryCooldown.fired(command, seconds);
 end;
 
 Kitty.ComboManager.cast = function(self, commandType, command)

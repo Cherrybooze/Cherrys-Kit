@@ -124,6 +124,8 @@ local function predictor(masked, icons)
 	}, {__index=realSkills}));
 	-- A "Press early" row shows as the next skill and leaves its send count alone
 	rawset(comboManager, "pressEarlyGate", alwaysSend);
+	-- Imaginary cooldowns are read as they are now, and a shown row never starts one
+	rawset(comboManager, "imaginaryCooldownFired", function() end);
 	local procs, lists = {}, {};
 	local function filteredOnce(commandList)
 		if(lists[commandList] == nil) then lists[commandList] = filtered(commandList, masked, icons); end

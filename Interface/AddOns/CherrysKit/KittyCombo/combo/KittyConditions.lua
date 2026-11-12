@@ -1566,6 +1566,30 @@ Kitty.ComboManager.castRecentlyType = function(self, condition)
 	return Kitty.ComboManager.TYPE_STRING_NUMBER_LIST;
 end;
 
+-- Condition: Imaginary Cooldown (seconds)
+-- A cooldown Kitty keeps for this row, apart from the game's: the row fires at
+-- most once every N seconds. Never blocks a row itself; the engine reads the
+-- value and skips the row until its time comes (Kitty.ImaginaryCooldown in
+-- KittyComboEngine.lua). Blank = Kitty.ImaginaryCooldown.DEFAULT (1).
+-- Shared with other hooks that need "every N seconds" (attack speed).
+Kitty.ComboManager.imaginaryCooldown = function(self, value)
+	return true;
+end;
+Kitty.ComboManager.imaginaryCooldownHelp = function(self, value)
+	return Kitty.L("ImaginaryCooldownHelp", "At most once every [<<1>>] s (imaginary cooldown)",
+		tostring(Kitty.ImaginaryCooldown.seconds(value)));
+end;
+Kitty.ComboManager.imaginaryCooldownDescribe = function(self, value)
+	return {
+		Kitty.L("imaginaryCooldownDescription1", "Seconds (blank = 1). A cooldown Kitty gives this row: after the row fires, Kitty skips it for that long."),
+		Kitty.L("imaginaryCooldownDescription2", "It keeps the beat: while you keep pressing, the row fires once every N seconds, not N plus the wait for your next press."),
+		Kitty.L("imaginaryCooldownDescription3", "The game's own cooldown still counts: the row's skill must be ready as well."),
+	};
+end;
+Kitty.ComboManager.imaginaryCooldownType = function(self, value)
+	return Kitty.ComboManager.TYPE_STRING;
+end;
+
 -- Condition: Press Early (seconds)
 -- Never blocks a row; the engine reads its value. On a skill row the skill may
 -- fire this many seconds before the client shows it ready, and while it is
@@ -1652,7 +1676,7 @@ end;
 Kitty.ComboManager.CONDITION_GROUPS = {
 	{"player", "^player", "About me"},
 	{"target", "^target", "About my target"},
-	{"skill / gear", {canCast=true, canUse=true, inRange=true, isShield=true, isTwoHanded=true, castRecently=true, pressEarly=true}, "Skills, items & gear"},
+	{"skill / gear", {canCast=true, canUse=true, inRange=true, isShield=true, isTwoHanded=true, castRecently=true, pressEarly=true, imaginaryCooldown=true}, "Skills, items & gear"},
 	{"state", {isCG=true, isCombat=true, isShiftPressed=true, isTargeted=true, wardenPetExists=true, modeOn=true}, "Combat & situation"},
 };
 -- Short names shown in the menu and on the row (the saved data keeps the
@@ -1692,6 +1716,7 @@ Kitty.ComboManager.CONDITION_LABELS = {
 	canCast = "Skill is ready",
 	canUse = "Item is ready",
 	castRecently = "Cast in last X sec",
+	imaginaryCooldown = "Imaginary cooldown (s)",
 	pressEarly = "Press early (s)",
 	inRange = "Skill in range",
 	isTwoHanded = "Two-handed weapon",
