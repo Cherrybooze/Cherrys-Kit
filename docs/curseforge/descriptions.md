@@ -157,15 +157,16 @@ A "kitty" is a list of commands (skills, items, macros) in priority order. Each 
 
 ## Recent changes
 
+- **1.7.20**: new **override** row type. Its skill goes before every other row of the kitty, once a second or every N seconds of the new **Imaginary cooldown (s)** condition, without waiting for the icon, and is sent again while the game hasn't taken it. Add Skill in range or Skill is ready for range, rage and cooldown: on an override row they start with its skill.
 - **1.7.19**: new **Press early (s)** condition for a skill row. The skill may fire up to that many seconds before its icon shows it ready, and the kitty waits for it instead of casting lower rows. It is sent at most every 0.15 s and 4 times early, so the game does not block your casts. Made for skills like Charged Chop, which the game takes again before the icon shows ready. Give the attack rows below it Press early as well, so they go out right after it instead of waiting for their icons.
 - **1.7.18**: a little lighter on each hit. The damage tracker looks up its table once, not twelve times.
-- **1.7.17**: with **Cherry's Bar** installed, the "Mode:" plate moves onto its bar, so it no longer sits at the top of the screen. Click the bar's Kitty mode display for the same mode pictures. Hide that display, or turn Cherry's Bar off, and the plate comes back if "Show current mode" is ticked.
 
 ## Features
 
 - **Visible priority**: every command has a rank number. 1 (green, top) is checked first.
 - **Plain-words conditions**: short phrases like "Pick next target when [my target] is dead" (the part you choose in teal), yes/no instead of true/false, and one sentence under each row saying what it checks. Hover any menu entry for help. Menus stay open until you click elsewhere.
-- **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on, Shift is held, and Press early (fire a short-cooldown skill such as Charged Chop before its icon shows ready, and wait for it).
+- **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on, Shift is held, Press early (fire a short-cooldown skill such as Charged Chop before its icon shows ready, and wait for it), and Imaginary cooldown (a row fires at most once every N seconds, on the beat).
+- **Priority override rows**: a row type whose skill goes before every other row, once a second or every N seconds of its Imaginary cooldown, without waiting for the icon, and is sent again while the game hasn't taken it.
 - **Modes**: switch your kitties between aoe, single, burst, dps, tank, heal, interrupt, pvp, farm, boss, request or your own modes, and let "Mode is on" rows decide what fires. Switch with `/kc mode <name>` or `/kc toggle aoe` (macros too), or by picture:
   - **Mode button** near the minimap (Kitty options > Show the mode button): shows the mode that is on as a picture. Click it to see every mode, click one to switch (the others turn off).
   - **Show current mode** (Kitty options): a small box reading "Mode: aoe". Click it for the same mode pictures, including "No mode".

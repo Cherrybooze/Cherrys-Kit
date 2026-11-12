@@ -126,6 +126,12 @@ local function predictor(masked, icons)
 	rawset(comboManager, "pressEarlyGate", alwaysSend);
 	-- Imaginary cooldowns are read as they are now, and a shown row never starts one
 	rawset(comboManager, "imaginaryCooldownFired", function() end);
+	-- A priority override row still waiting for the game shows as next, and
+	-- its sends are left alone
+	rawset(comboManager, "overrideSent", function() end);
+	rawset(comboManager, "overrideWait", function(self, command, remaining, seconds)
+		return Kitty.ComboManager.overrideWait(self, command, remaining, seconds, true);
+	end);
 	local procs, lists = {}, {};
 	local function filteredOnce(commandList)
 		if(lists[commandList] == nil) then lists[commandList] = filtered(commandList, masked, icons); end

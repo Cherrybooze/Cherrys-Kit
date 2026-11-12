@@ -284,7 +284,7 @@ Kitty.ComboManager.commandListHelp = function(targetList)
 			if(command.commandType ~= nil and command.commandType ~= "") then
 				-- Number, skill name
 				local message = Kitty.color(tostring(index), 255, 255, 255) .. "."
-							.. Kitty.ComboManager.formatCommandType(command.commandType)
+							.. Kitty.ComboManager.formatCommandType(command.commandType, command)
 							.. Kitty.color(tostring(commandName), 255, 255, 0);
 				table.insert(resultList, message);
 				-- Conditions
@@ -292,12 +292,12 @@ Kitty.ComboManager.commandListHelp = function(targetList)
 				table.insert(resultList, strList);	-- Nested list
 			else
 				table.insert(resultList, Kitty.color(tostring(index) .. ".", 255, 255, 255)
-										.. Kitty.color(Kitty.ComboManager.formatCommandType(command.commandType)
+										.. Kitty.color(Kitty.ComboManager.formatCommandType(command.commandType, command)
 										.. Kitty.T("message", "Invalid"), 255, 0, 0));
 			end
 		else
 			local message = Kitty.color(tostring(index) .. ".", 255, 255, 255)
-										.. Kitty.ComboManager.formatCommandType(command.commandType)
+										.. Kitty.ComboManager.formatCommandType(command.commandType, command)
 										.. tostring(commandName)
 										.. Kitty.color(Kitty.T("message", "Disable"), 255, 0, 255);
 			table.insert(resultList, message);
@@ -330,6 +330,17 @@ end;
 Kitty.ComboManager.commandHelp = function(command)
 	local resultList = {};
 	if(command ~= nil) then
+		-- Priority override rows say so first (and their 1 s when they have no condition for it)
+		if(Kitty.ComboManager.isOverride and Kitty.ComboManager.isOverride(command)) then
+			local line;
+			if(Kitty.ComboManager.imaginaryCooldownSeconds(command) == nil) then
+				line = Kitty.L("OverrideHelpDefault", "Priority override: before every other row, at most once every [<<1>>] s",
+					tostring(Kitty.ImaginaryCooldown.DEFAULT));
+			else
+				line = Kitty.L("OverrideHelp", "Priority override: before every other row");
+			end
+			table.insert(resultList, Kitty.color(Kitty.teal(line), 255, 255, 255));
+		end
 		-- Conditions
 		for index, condition in ipairs(command) do
 			local func = Kitty.ComboManager[condition.conditionType .. "Help"];
@@ -352,8 +363,10 @@ Kitty.ComboManager.commandHelp = function(command)
 	end
 	return resultList;
 end;
-Kitty.ComboManager.formatCommandType = function(commandType)
-	if(commandType == "skill") then
+Kitty.ComboManager.formatCommandType = function(commandType, command)
+	if(command ~= nil and Kitty.ComboManager.isOverride and Kitty.ComboManager.isOverride(command)) then
+		return Kitty.colorGreen("!");	-- priority override: before every other row
+	elseif(commandType == "skill") then
 		return Kitty.colorGreen("K");
 	elseif(commandType == "suitskill") then
 		return Kitty.colorGreen("S");

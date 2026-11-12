@@ -99,6 +99,7 @@ Kitty.MenuHelp.effectTypes = {
 -- Command types (kitty editor rows)
 Kitty.MenuHelp.commandTypes = {
 	["skill"] = "Casts a skill from your skill book. Drag the skill onto the row's icon.",
+	["override"] = "Priority override: casts a skill (drag it onto the icon) before every other row, once every [N] s from its Imaginary cooldown (blank = 1). When the game does not take it, it is sent again while the rows below wait. The game's cooldown is not checked: add [Skill in range] or [Skill is ready] for that.",
 	["suitskill"] = "Casts a suit (set) skill.",
 	["action"] = "Uses whatever is in an action bar slot: items, potions, mounts...",
 	["extra"] = "Uses a button on the extra action bar (special skills that pop up).",

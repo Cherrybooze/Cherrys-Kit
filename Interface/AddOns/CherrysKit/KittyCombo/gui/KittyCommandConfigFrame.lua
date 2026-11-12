@@ -323,8 +323,34 @@ end;
 Kitty.CommandConfigFrame.onTypeChanged = function(row)
 	local F = Kitty.CommandConfigFrame;
 	F.updateData(row);
+	-- A new override row gets its "Imaginary cooldown (s)" condition to edit
+	local index = KittyCommandConfigFrame_ScrollBar:GetValue() + row:GetID() - 1;
+	local command = F.targetCommandList and F.targetCommandList[index];
+	if(command ~= nil and Kitty.ComboManager.isOverride(command)) then
+		F.addOverrideCooldown(command);
+	end
 	F.onShowList(KittyCommandConfigFrame_ScrollBar,tonumber(KittyCommandConfigFrame_ScrollBar:GetValue()),10);
 	F.openModePicker(row);
+end;
+
+--------------------------------------------------------------------------------
+-- Priority override rows: the type menu shows "override" for a skill or suit
+-- skill row saved with override = true (Kitty.ComboManager.tryOverride)
+Kitty.CommandConfigFrame.OVERRIDE_TYPE = "override";
+-- The type the row's menu shows
+Kitty.CommandConfigFrame.typeText = function(command)
+	if(Kitty.ComboManager.isOverride(command)) then
+		return Kitty.CommandConfigFrame.OVERRIDE_TYPE;
+	end
+	return tostring(command.commandType);
+end;
+-- The row's imaginary cooldown goes first, 1 s, unless it has one already
+Kitty.CommandConfigFrame.addOverrideCooldown = function(command)
+	if(Kitty.ComboManager.imaginaryCooldownSeconds(command) ~= nil) then
+		return false;
+	end
+	table.insert(command, 1, {["conditionType"]="imaginaryCooldown", ["value"]=tostring(Kitty.ImaginaryCooldown.DEFAULT)});
+	return true;
 end;
 
 -- Drop
@@ -473,6 +499,10 @@ Kitty.CommandConfigFrame.onDrop = function(this)
 	if(previousType == "changemode" and command.commandType ~= "changemode") then
 		Kitty.ModeUI.clearCommandGuard(command);
 	end
+	-- An override row stays one for a dropped skill or suit skill only
+	if(command.override ~= nil and command.commandType ~= "skill" and command.commandType ~= "suitskill") then
+		command.override = nil;
+	end
 	-- Update row
 	Kitty.CommandConfigFrame.onRedraw(KittyCommandConfigFrame, tonumber(KittyCommandConfigFrame_ScrollBar:GetValue()), 10);
 
@@ -523,6 +553,11 @@ Kitty.CommandConfigFrame.updateData = function(this)
 		local dropDownMenu = getglobal(this:GetName() .. "DropDownMenu");
 		assert(dropDownMenu, this:GetName() .. "DropDownMenu is nil");
 		command.commandType = UIDropDownMenu_GetText(dropDownMenu);
+		-- "override" is a skill row (a suit skill stays one) that goes first
+		if(command.commandType == Kitty.CommandConfigFrame.OVERRIDE_TYPE) then
+			command.commandType = (previous.commandType == "suitskill") and "suitskill" or "skill";
+			command.override = true;
+		end
 
 		if(command.commandType == "changemode") then
 			command.commandName = previous.commandType == "changemode" and previous.commandName or "";
@@ -637,9 +672,13 @@ Kitty.CommandConfigFrame.showDetail = function(this, command, index, total)
 		if(total ~= nil and total > 1) then
 			ratio = (index - 1) / (total - 1);
 		end
-		rankLabel:SetText(tostring(index));
+		-- A priority override row is checked before all of them: "!" in gold
+		local override = Kitty.ComboManager.isOverride(command);
+		rankLabel:SetText(override and "!" or tostring(index));
 		if(command.enable == false) then
 			rankLabel:SetColor(0.5, 0.5, 0.5);
+		elseif(override) then
+			rankLabel:SetColor(1.0, 0.82, 0.0);
 		else
 			rankLabel:SetColor(0.2 + 0.8 * ratio, 1.0 - 0.5 * ratio, 0.2 * (1 - ratio));
 		end
@@ -662,7 +701,7 @@ Kitty.CommandConfigFrame.showDetail = function(this, command, index, total)
 	-- Dropdown (command type)
 	local dropDownMenu = getglobal(this:GetName() .. "DropDownMenu");
 	assert(dropDownMenu, this:GetName() .. "DropDownMenu is nil");
-	UIDropDownMenu_SetText(dropDownMenu, tostring(command.commandType));
+	UIDropDownMenu_SetText(dropDownMenu, Kitty.CommandConfigFrame.typeText(command));
 
 	-- Edit box (command name)
 	local editBox = getglobal(this:GetName() .. "CommandNameEditBox");

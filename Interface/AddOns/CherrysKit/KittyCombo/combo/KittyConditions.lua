@@ -1583,7 +1583,7 @@ Kitty.ComboManager.imaginaryCooldownDescribe = function(self, value)
 	return {
 		Kitty.L("imaginaryCooldownDescription1", "Seconds (blank = 1). A cooldown Kitty gives this row: after the row fires, Kitty skips it for that long."),
 		Kitty.L("imaginaryCooldownDescription2", "It keeps the beat: while you keep pressing, the row fires once every N seconds, not N plus the wait for your next press."),
-		Kitty.L("imaginaryCooldownDescription3", "The game's own cooldown still counts: the row's skill must be ready as well."),
+		Kitty.L("imaginaryCooldownDescription3", "On a normal row the skill must be ready as well. An [override] row goes first and skips the game's cooldown check."),
 	};
 end;
 Kitty.ComboManager.imaginaryCooldownType = function(self, value)

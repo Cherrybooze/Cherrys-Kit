@@ -47,7 +47,7 @@
 								function(this, button, value, text, previousValue, previousText)
 									-- Update the picked value (the menu shows friendly names)
 									local index = KittyCommandConditionFrame_ScrollBar:GetValue() + this:GetParent():GetID() - 1;
-									Kitty.CommandConditionFrame.targetConditionList[index] = {["conditionType"] = Kitty.ComboManager.conditionFromLabel(button:GetText())};
+									Kitty.CommandConditionFrame.targetConditionList[index] = Kitty.CommandConditionFrame.newCondition(Kitty.ComboManager.conditionFromLabel(button:GetText()));
 									Kitty.CommandConditionFrame.onShowList(KittyCommandConditionFrame_ScrollBar, tonumber(KittyCommandConditionFrame_ScrollBar:GetValue()), 10);
 								end,
 								level1,

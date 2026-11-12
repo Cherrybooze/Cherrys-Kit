@@ -1,8 +1,9 @@
 -- Cherry's KittyCombo, based on KittyCombo (C) 2012-2013 Miranda
 -- ComboManager:check(): walks a kitty top to bottom and returns the first command
 -- that can fire. Also the constructor, which reads skills and buffs lazily, the
--- "Press early" rows (pressEarlyWindow / pressEarlyGate) and the imaginary
--- cooldowns rows can have (Kitty.ImaginaryCooldown).
+-- "Press early" rows (pressEarlyWindow / pressEarlyGate), the imaginary
+-- cooldowns rows can have (Kitty.ImaginaryCooldown) and the priority override
+-- rows that go before all others (tryOverride).
 --------------------------------------------------------------------------------
 -- Namespace
 if(_G and not _G.Kitty) then
@@ -23,11 +24,21 @@ Kitty.ComboManager.check = function(self, targetList, path)
     end
     path[targetList] = true;
     local function walk()
+	-- Priority override rows go first, in their own order, whatever is above
+	-- them (see ComboManager.tryOverride)
+	for _, command in ipairs(targetList) do
+		if(command.override == true and command.enable ~= false and Kitty.ComboManager.isOverride(command)) then
+			local commandType, commandName = self:tryOverride(command);
+			if(commandType ~= nil) then
+				return commandType, commandName, nil;
+			end
+		end
+	end
 	-- Skill check
 	-- Each command, in priority order
 	for _, command in ipairs(targetList) do
-		-- Enabled commands
-		if(command.enable ~= false) then	-- nil counts as enabled
+		-- Enabled commands (override rows had their turn above)
+		if(command.enable ~= false and not Kitty.ComboManager.isOverride(command)) then	-- nil counts as enabled
 			local result = false;
 			-- A "Press early" row: its own ready window, and the cooldown the client shows
 			local early, remaining = nil, nil;
@@ -369,6 +380,151 @@ Kitty.ComboManager.imaginaryCooldownReady = function(self, command, seconds)
 end;
 Kitty.ComboManager.imaginaryCooldownFired = function(self, command, seconds)
 	Kitty.ImaginaryCooldown.fired(command, seconds);
+end;
+
+--------------------------------------------------------------------------------
+-- Priority override rows (row type "override" in the kitty editor: a skill or
+-- suit skill row saved with override = true)
+-- Checked before every other row of their kitty, whatever their place in it,
+-- and fired on their imaginary cooldown (blank or no condition = 1 s) instead
+-- of the cooldown the client shows, which lags the game by up to its
+-- one-second beat plus the ping: "Charged Chop every second" goes out on the
+-- first press after each mark. The skill must be in the skill book and
+-- usable now; range, rage or mana and the game's cooldown count only through
+-- the row's own conditions ("Skill in range", "Skill is ready"). Inside a
+-- proc kitty they go first in that kitty. Older versions read the row as a
+-- plain skill row.
+-- The game refuses a cast while the skill's own cooldown (lowered only on
+-- each character's one-second beat) or another skill's global cooldown runs,
+-- and drops one that comes in while a spell is going off. So after a fire the
+-- row waits for the game to take the skill (its cooldown goes up on the
+-- client, or a cast starts): for up to OVERRIDE_HOLD seconds (one beat; the
+-- period when that is shorter) it sends the skill again every quarter of that
+-- (at least OVERRIDE_GAP apart), OVERRIDE_SENDS times in all (the client stops
+-- sending for a second after five sends without an answer), and the rows
+-- below wait meanwhile. The marks stay where the first send put them. A skill
+-- whose cooldown the client never showed is sent once, and so is the next
+-- turn after one the game did not take (out of range, say), until the client
+-- shows the skill's cooldown going up again: a skill the game keeps refusing
+-- does not hold the kitty.
+Kitty.ComboManager.OVERRIDE_GAP = 0.15;
+Kitty.ComboManager.OVERRIDE_SENDS = 4;
+Kitty.ComboManager.OVERRIDE_HOLD = 1;
+-- command -> {first = first send of this turn, sent = last send, sends = sends
+-- this turn, seen = cooldown last seen, waiting = the game has not shown that
+-- it took the skill yet, shows = the client has shown a cooldown for it,
+-- missed = the last turn ended without the game taking it}
+Kitty.ComboManager.overrideState = Kitty.ComboManager.overrideState or setmetatable({}, {__mode = "k"});
+Kitty.ComboManager.isOverride = function(command)
+	return command.override == true and (command.commandType == "skill" or command.commandType == "suitskill");
+end;
+-- The override row's command type and skill when it fires on this press,
+-- "hold" while the rows below wait for the game to take its last send, or nil
+Kitty.ComboManager.tryOverride = function(self, command)
+	local skillName = command.commandName;
+	if(type(skillName) ~= "string" or skillName == "") then
+		return nil;
+	end
+	local seconds = Kitty.ComboManager.imaginaryCooldownSeconds(command) or Kitty.ImaginaryCooldown.DEFAULT;
+	local debug = (Kitty.ComboManager.debugSkillList[skillName] == true);
+	if(not self.skillManager:isAvailable(skillName)) then
+		if(debug) then
+			Kitty.print("override: not in the skill book or not usable, Command:[" .. skillName .. "]");
+		end
+		return nil;
+	end
+	local detail = self.skillManager.skillTable[skillName];
+	local remaining = tonumber(detail and detail.remaining) or 0;
+	-- The last send of this turn has not been taken yet: send again, or wait
+	local wait = self:overrideWait(command, remaining, seconds);
+	if(wait ~= nil) then
+		if(self:checkCondition(command) ~= true) then
+			return nil;
+		end
+		if(wait == "hold") then
+			return "hold", skillName;
+		end
+		self:overrideSent(command, remaining, false);
+		if(debug) then
+			Kitty.print("override sends again (not taken yet), Command:[" .. skillName .. "]");
+		end
+		return command.commandType, skillName;
+	end
+	if(not self:imaginaryCooldownReady(command, seconds)) then
+		return nil;
+	end
+	if(self:checkCondition(command) ~= true) then
+		return nil;
+	end
+	self:imaginaryCooldownFired(command, seconds);
+	self:overrideSent(command, remaining, true);
+	if(debug) then
+		Kitty.print("override fires, Command:[" .. skillName .. "], every " .. tostring(seconds) .. " s");
+	end
+	if(Kitty.isDebugFlag) then
+		Kitty.debugPrint("Check result. CommandType:[" .. command.commandType .. " override], CommandName:[" .. skillName .. "]");
+	end
+	return command.commandType, skillName;
+end;
+-- While a turn's sends wait for the game: "send" (again now), "hold" (the
+-- rows below wait), or nil when the game took it, the wait is over or nothing
+-- was sent. observeOnly (prediction) changes nothing and reads "hold" as "send".
+Kitty.ComboManager.overrideWait = function(self, command, remaining, seconds, observeOnly)
+	local state = Kitty.ComboManager.overrideState[command];
+	if(state == nil) then
+		return nil;
+	end
+	local now = Kitty.getTime();
+	local hold = math.min(Kitty.ComboManager.OVERRIDE_HOLD, seconds);
+	local gap = math.max(Kitty.ComboManager.OVERRIDE_GAP, hold / Kitty.ComboManager.OVERRIDE_SENDS);
+	-- Taken: its cooldown went up, or a cast started
+	local taken = (remaining > state.seen + 0.05)
+		or (type(UnitCastingTime) == "function" and UnitCastingTime("player") ~= nil);
+	local over = (now - state.first >= hold)
+		or (state.sends >= Kitty.ComboManager.OVERRIDE_SENDS and now - state.sent >= gap);
+	if(observeOnly) then
+		return (state.waiting and not taken and not over) and "send" or nil;
+	end
+	if(remaining > 0.05) then
+		state.shows = true;
+	end
+	state.seen = remaining;
+	if(taken) then
+		state.missed = false;
+	end
+	if(not state.waiting) then
+		return nil;
+	end
+	if(taken or over) then
+		state.waiting = false;
+		state.missed = not taken;
+		return nil;
+	end
+	if(state.sends >= Kitty.ComboManager.OVERRIDE_SENDS or now - state.sent < gap) then
+		return "hold";
+	end
+	return "send";
+end;
+-- The row sent its skill: first = the turn's first send (at a mark)
+Kitty.ComboManager.overrideSent = function(self, command, remaining, first)
+	local state = Kitty.ComboManager.overrideState[command];
+	if(state == nil) then
+		state = {["first"] = 0, ["sent"] = 0, ["sends"] = 0, ["seen"] = 0,
+			["waiting"] = false, ["shows"] = false, ["missed"] = false};
+		Kitty.ComboManager.overrideState[command] = state;
+	end
+	local now = Kitty.getTime();
+	if(remaining > 0.05) then
+		state.shows = true;
+	end
+	if(first) then
+		state.first = now;
+		state.sends = 0;
+		state.waiting = state.shows and not state.missed;
+	end
+	state.sends = state.sends + 1;
+	state.sent = now;
+	state.seen = remaining;
 end;
 
 Kitty.ComboManager.cast = function(self, commandType, command)
