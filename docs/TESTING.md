@@ -4,6 +4,19 @@ The automated tests run production Lua 5.1 modules and XML handlers with simulat
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck14 requires **0.4.34** for its modern mail window (0.4.17 for its History files). Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
 
+## Attack speed row on a kitty (Cherry's KittyCombo 1.7.21, not yet released)
+
+`tests/test_kitty_attack_speed.py` runs the kitty engine with a simulated rom weakauras: the row fires at or above its hits per second, falls back to the auto attack count when the aura is missing, works with Imaginary cooldown (s) (one Fan of Knives every 5 s while fast enough), and predictions match. Whether Fan of Knives keeps auto attack going needs the game. Use a character that reaches the attack speed where auto attack stops, and a training dummy.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| KA1 | Make sure rom weakauras' **Hits per second** aura is on (`/rwa`). In a copy of your kitty add a **Fan of Knives** row at the top with **Attack speed (hits/s)** `4` (under *Combat & situation*) and **Imaginary cooldown (s)** `5`. | The sentences under the conditions read "When I auto attack [4] times a second or faster" and the imaginary cooldown's own sentence. |
+| KA2 | Hit the dummy with buffs that push the Hits per second aura above 4, pressing the kitty key as usual. | Fan of Knives goes out about every 5 seconds while the aura shows 4 or more, and not while it shows less. Auto attack no longer stops, or stops less often. |
+| KA3 | Change the imaginary cooldown to `3`, then take it off the row. | With `3` Fan of Knives goes out about every 3 seconds (or its own cooldown, if longer); without it whenever it is ready and the rate is reached. |
+| KA4 | Turn the Hits per second aura off and repeat KA2. | Same as KA2 (the count is read without the aura). |
+| KA5 | On another kitty row, add a **WeakAura state** condition and pick **perSecond** for the Hits per second aura with min `4`. | That row fires only while the aura shows 4 or more. |
+| KA6 | Export the kitty and import the code again. | The row comes back with Attack speed 4. KittyCombo 1.7.20 refuses the code and names `attackSpeed`. |
+
 ## Priority override rows and Imaginary cooldown (Cherry's KittyCombo 1.7.20, not yet released)
 
 `tests/test_kitty_imaginary_cooldown.py` and `tests/test_kitty_priority_override.py` run the kitty engine, the editor's row and condition code, prediction and share codes with simulated client APIs, and the override row against the timing model of the Press early section below. In that model Charged Chop as an override row every second gets 28 to 30 casts in 30 seconds above a filler skill (18 to 22 waiting for its icon). With a Warrior/Warden kitty's attacks below it, each with a global cooldown, it gets 21 to 26 (16 to 23 waiting for the icon, 16 to 21 with a single send a second, 23 to 30 with Press early on its row), and the other skills fire 11 to 17 times. The game turns many of those once-a-second sends down in the model, which is why the row sends again up to 4 times within the second; the real server may differ, so count in game. Use a Warrior/Warden and a training dummy, and a damage meter that counts hits per skill.

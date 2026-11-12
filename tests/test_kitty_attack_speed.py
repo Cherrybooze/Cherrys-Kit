@@ -123,6 +123,29 @@ class KittyAttackSpeedTests(unittest.TestCase):
           t, n = press(list); assert(n == 'Other', tostring(n))
         ''')
 
+    def test_with_imaginary_cooldown_fires_every_n_seconds_only_when_fast(self):
+        self.lua.execute('''
+          Kitty.ImaginaryCooldown.state = setmetatable({}, {__mode = 'k'})
+          list = {info = {name = 'K'},
+            row('Fan of Knives', speed('4'), {conditionType = 'imaginaryCooldown', value = '5'}),
+            row('Other')}
+          auraRate = 3.5
+          local t, n = press(list); assert(n == 'Other', tostring(n))
+          auraRate = 4.3
+          t, n = press(list); assert(n == 'Fan of Knives', tostring(n))
+          local fans = 1
+          for i = 1, 100 do
+            now = now + 0.2
+            t, n = press(list)
+            if n == 'Fan of Knives' then fans = fans + 1 end
+          end
+          -- 20 s more at 4.3 hits/s: one every 5 s
+          assert(fans == 5, fans)
+          -- Slower again: none, even with its wait over
+          auraRate = 3; now = now + 10
+          t, n = press(list); assert(n == 'Other', tostring(n))
+        ''')
+
     def test_prediction_matches(self):
         self.lua.execute('''
           Kitty.isTurnedOff = function() return false end
