@@ -7,7 +7,7 @@
     {
       "folder": "KittyCombo",
       "title": "Cherry's KittyCombo",
-      "version": "1.7.20",
+      "version": "1.7.21",
       "command": "/kc",
       "description_file": "02-cherrys-kittycombo.md",
       "summary": "One-key priority combos, safer prediction and shared rotation codes.",

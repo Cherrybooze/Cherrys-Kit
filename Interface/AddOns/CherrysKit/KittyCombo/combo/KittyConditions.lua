@@ -1298,7 +1298,7 @@ end;
 -- field "true": the aura is showing, "false": it is not showing,
 -- any other field: RWA.GetAuraValue(name, field) must be between min and max (a blank bound is open).
 -- Condition: WeakAura
-Kitty.ComboManager.WEAKAURA_FIELDS = {"true", "false", "remaining", "stacks", "percent", "value", "total", "duration"};
+Kitty.ComboManager.WEAKAURA_FIELDS = {"true", "false", "remaining", "stacks", "percent", "value", "total", "duration", "perSecond"};
 -- The condition type menu: a dropdown level shows at most 32 entries and there
 -- are more condition types than that, so they are grouped. Types not listed
 -- here land in "other".
@@ -1613,6 +1613,72 @@ Kitty.ComboManager.pressEarlyType = function(self, value)
 	return Kitty.ComboManager.TYPE_STRING;
 end;
 
+-- Condition: Attack Speed (hits/s)
+-- value = auto attacks per second (blank = ATTACK_SPEED_RATE, "4,5" works).
+-- Passes at that rate or faster. The rate comes from the rom weakauras
+-- "Hits per second" aura (its measure and window, by default auto attacks
+-- over 3 s); when that aura is missing or hidden, from
+-- RWA.Recent.Rate("white", 3). Made for a skill such as Fan of Knives that
+-- keeps auto attack going when it breaks at a high attack speed; pair it with
+-- "Imaginary cooldown (s)" for how often the row may fire.
+Kitty.ComboManager.ATTACK_SPEED_AURA = "Hits per second";
+Kitty.ComboManager.ATTACK_SPEED_RATE = 4;
+Kitty.ComboManager.attackSpeedValue = function(value)
+	local number = tonumber(value);
+	if(number == nil and type(value) == "string") then
+		number = tonumber((string.gsub(value, ",", ".")));
+	end
+	if(number == nil) then
+		return Kitty.ComboManager.ATTACK_SPEED_RATE;
+	end
+	return math.max(number, 0);
+end;
+-- Auto attacks per second now, or nil without rom weakauras
+Kitty.ComboManager.attackSpeedRate = function()
+	if(type(RWA) ~= "table") then
+		return nil;
+	end
+	if(type(RWA.GetAuraValue) == "function") then
+		local ok, value = pcall(RWA.GetAuraValue, Kitty.ComboManager.ATTACK_SPEED_AURA, "perSecond");
+		if(ok and type(value) == "number") then
+			return value;
+		end
+	end
+	if(type(RWA.Recent) == "table" and type(RWA.Recent.Rate) == "function") then
+		local ok, value = pcall(RWA.Recent.Rate, "white", 3);
+		if(ok and type(value) == "number") then
+			return value;
+		end
+	end
+	return nil;
+end;
+Kitty.ComboManager.attackSpeedWarned = false;
+Kitty.ComboManager.attackSpeed = function(self, value)
+	local rate = Kitty.ComboManager.attackSpeedRate();
+	if(rate == nil) then
+		if(not Kitty.ComboManager.attackSpeedWarned) then
+			Kitty.ComboManager.attackSpeedWarned = true;
+			Kitty.sendMessage(Kitty.L("AttackSpeedMissing", "Cherry's KittyCombo: an \"Attack speed\" condition needs rom weakauras. Those commands are skipped."), "DEFAULT", 1, 0.5, 0);
+		end
+		return false;
+	end
+	return rate >= Kitty.ComboManager.attackSpeedValue(value);
+end;
+Kitty.ComboManager.attackSpeedHelp = function(self, value)
+	return Kitty.L("AttackSpeedHelp", "When I auto attack [<<1>>] times a second or faster",
+		tostring(Kitty.ComboManager.attackSpeedValue(value)));
+end;
+Kitty.ComboManager.attackSpeedDescribe = function(self, value)
+	return {
+		Kitty.L("attackSpeedDescription1", "Hits per second (blank = 4), read from the \"Hits per second\" aura in rom weakauras."),
+		Kitty.L("attackSpeedDescription2", "Add \"Imaginary cooldown (s)\" to the row for how often it may fire."),
+		Kitty.L("attackSpeedDescription3", "For example Fan of Knives at the top of a kitty, when auto attack stops at a high attack speed."),
+	};
+end;
+Kitty.ComboManager.attackSpeedType = function(self, value)
+	return Kitty.ComboManager.TYPE_STRING;
+end;
+
 -- Condition: Mode Is On
 -- Modes are switched with /kc toggle <name> (or Kitty.toggleMode("aoe") in a
 -- macro) and last until logout. Each entry: name = mode, value = false: mode off.
@@ -1677,7 +1743,7 @@ Kitty.ComboManager.CONDITION_GROUPS = {
 	{"player", "^player", "About me"},
 	{"target", "^target", "About my target"},
 	{"skill / gear", {canCast=true, canUse=true, inRange=true, isShield=true, isTwoHanded=true, castRecently=true, pressEarly=true, imaginaryCooldown=true}, "Skills, items & gear"},
-	{"state", {isCG=true, isCombat=true, isShiftPressed=true, isTargeted=true, wardenPetExists=true, modeOn=true}, "Combat & situation"},
+	{"state", {isCG=true, isCombat=true, isShiftPressed=true, isTargeted=true, wardenPetExists=true, modeOn=true, attackSpeed=true}, "Combat & situation"},
 };
 -- Short names shown in the menu and on the row (the saved data keeps the
 -- condition's code name, so kitties and share codes do not change)
@@ -1713,6 +1779,7 @@ Kitty.ComboManager.CONDITION_LABELS = {
 	isRequest = "Request mode (old)",
 	isShiftPressed = "Shift is held",
 	isTargeted = "An enemy targets me",
+	attackSpeed = "Attack speed (hits/s)",
 	canCast = "Skill is ready",
 	canUse = "Item is ready",
 	castRecently = "Cast in last X sec",
@@ -1868,7 +1935,7 @@ Kitty.ComboManager.weakauraDescribe = function(self, condition)
 	return {
 		Kitty.L("weakAuraDescription1", "Uses an aura you made in rom weakauras (/rwa)."),
 		Kitty.L("weakAuraDescription2", "true / false: the aura is / is not showing."),
-		Kitty.L("weakAuraDescription3", "remaining, stacks, percent, value, total, duration: the number must be between min and max (leave one blank for no limit)."),
+		Kitty.L("weakAuraDescription3", "remaining, stacks, percent, value, total, duration, perSecond: the number must be between min and max (leave one blank for no limit)."),
 	};
 end;
 Kitty.ComboManager.weakauraType = function(self, condition)

@@ -1,6 +1,6 @@
 # Cherry's KittyCombo
 
-Version **1.7.20** · Kit release **0.11.121** · [All addons / hub](../README.md)
+Version **1.7.21** · Kit release **0.11.121** · [All addons / hub](../README.md)
 
 **One-key priority combos: press one key and the first ready skill whose conditions pass fires. Based on KittyCombo by Miranda.**
 
@@ -23,6 +23,12 @@ A "kitty" is a list of commands (skills, items, macros) in priority order. Each 
 > **Other addons:** AddonManager lists it when you have that addon.
 
 <!-- end of requirements -->
+
+## Updated in 1.7.21
+
+**Attack speed (hits/s)**, a new condition (under *Combat & situation*) for a skill that keeps auto attack going when it stops at a high attack speed, such as **Fan of Knives**. Type the hits per second (blank means 4, `4,5` works); the row fires when you auto attack that many times a second or faster. Add **Imaginary cooldown (s)** to the same row for how often it may fire, for example 5 for once every 5 seconds, and put the row at the top of the kitty.
+
+The rate comes from the **Hits per second** aura in rom weakauras (auto attacks over the last 3 seconds, unless you changed that aura); when that aura is missing or hidden, from the same count without it. Without rom weakauras the row never fires, and chat says so once. The **WeakAura state** condition can now check an aura's **perSecond** too. Versions before 1.7.21 refuse share codes that use the new condition. Not yet checked in game.
 
 ## Updated in 1.7.20
 
@@ -103,7 +109,7 @@ The mode widgets wait for saved settings before restoring their positions. Start
 
 - **Visible priority**: every command has a rank number. 1 (green, top) is checked first.
 - **Plain-words conditions**: short phrases like "Pick next target when [my target] is dead" (the part you choose in teal), yes/no instead of true/false, and one sentence under each row saying what it checks. Hover any menu entry for help. Menus stay open until you click elsewhere.
-- **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on (switch modes with `/kc toggle aoe`, also from macros), Press early (fire a short-cooldown skill such as Charged Chop before its icon shows ready, and wait for it), Imaginary cooldown (a row fires at most once every N seconds, on the beat).
+- **New conditions**: Target is casting (for interrupts; empty name = a built-in interrupt list you can add to or trim in game), Target debuff stacks, Cast in last X seconds (no double debuffs), Mode is on (switch modes with `/kc toggle aoe`, also from macros), Press early (fire a short-cooldown skill such as Charged Chop before its icon shows ready, and wait for it), Imaginary cooldown (a row fires at most once every N seconds, on the beat), Attack speed (fire when you auto attack fast, for example Fan of Knives every few seconds).
 - **Priority override rows**: a row type whose skill goes before every other row, once every second or the seconds of its Imaginary cooldown, without waiting for the icon, and is sent again while the game hasn't taken it.
 - **Modes**: switch your kitties between aoe, single, burst, dps, tank, heal, interrupt, pvp, farm, boss, request or your own modes, and let "Mode is on" rows decide what fires.
   - **Mode button** near the minimap (Kitty options > Show the mode button): shows the mode that is on as a picture. Click it to see every mode, click one to switch (the others turn off).

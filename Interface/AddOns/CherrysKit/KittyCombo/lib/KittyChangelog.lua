@@ -17,6 +17,20 @@ Kitty.Changelog.getPages = function()
 	local contact = Kitty.Changelog.DISCORD_NAME .. " on " .. Kitty.Changelog.DISCORD_SERVER;
 	return {
 		{
+			title = "New in 1.7.21: attack speed",
+			text = table.concat({
+				"Attack speed (hits/s): a new condition (Combat & situation).",
+				"- The row fires when you auto attack that many times a second",
+				"  or faster (blank = 4).",
+				"- Made for a skill like Fan of Knives that keeps auto attack going",
+				"  when it stops at a high attack speed: put the row at the top",
+				"  and add Imaginary cooldown (s), for example 5, for how often.",
+				"- The rate comes from the \"Hits per second\" aura in rom",
+				"  weakauras; without rom weakauras the row never fires.",
+				"- WeakAura state can now check an aura's perSecond as well.",
+			}, "\n"),
+		},
+		{
 			title = "New in 1.7.20: priority override, imaginary cooldown",
 			text = table.concat({
 				"Priority override: a new row type (override, under skill).",
