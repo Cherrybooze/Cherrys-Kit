@@ -26,6 +26,12 @@ Pick the full kit, or install the hub and just the addons you want. Type **`/ck`
 
 **On this page:** [Addon descriptions](#whats-included) · [Downloads and folder layout](#download-and-install) · [Setup choices](#guided-setup-every-prompt) · [Chrome installation and updates](#optional-chrome-extension) · [Update, offload and restore in Chrome](#manage-addons-from-chrome) · [Troubleshooting](#common-questions) · [Recent changes](#whats-new-in-011120)
 
+## Coming in the next release
+
+Merged on `main` since 0.11.120; not in a published release yet.
+
+- **Priority override rows** (Cherry's KittyCombo 1.7.20): pick *override* in a kitty row's type menu, and its skill goes before every other row of the kitty, once a second or every N seconds of the new **Imaginary cooldown (s)** condition, without waiting for its icon. When the game didn't take it, it is sent again, up to 4 times within the second, while the rows below wait. *Skill in range* and *Skill is ready* start with the row's skill. On a normal row, Imaginary cooldown makes it fire at most once every N seconds, on the beat.
+
 ## What's new in 0.11.120
 
 - **Item links answer clicks again** (Cherry's Chat 0.11.5, rom weakauras 0.9.34, Ultimate Mail Mod 7.0.1-ck18): after a Reload UI or a character change, the addons that watch chat link clicks could end up calling each other in a circle, and item links in chat stopped answering until the game was restarted. A click that comes back round now goes straight on to the game. Cherry's Chat also throws away a saved click layout that never carried the link.
@@ -134,7 +140,7 @@ The **Full ZIP** contains the hub, guided setup 1.3.0 and every addon in this ta
 | Addon | What it does | Command | Version |
 | --- | --- | --- | --- |
 | [Cherry's Kit hub](Interface/AddOns/CherrysKit/README.md) | One settings launcher and minimap button for the collection, with an on/off switch for each installed kit addon. Explains when an older separate copy takes precedence and supplies a shared clock to addons that use it. | `/ck`, `/rwa` | 0.4.35 |
-| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | Build priority rotations called **kitties**: each key press checks your conditions and attempts the next action. Edit conditions in plain words, switch modes such as single, AoE or heal, import/export short share codes, and use **Create macro** to put a kitty on your action bar. | `/kc` | 1.7.19 |
+| [Cherry's KittyCombo](Interface/AddOns/CherrysKit/KittyCombo/README.md) | Build priority rotations called **kitties**: each key press checks your conditions and attempts the next action. Edit conditions in plain words, switch modes such as single, AoE or heal, import/export short share codes, and use **Create macro** to put a kitty on your action bar. | `/kc` | 1.7.20 |
 | [rom weakauras](Interface/AddOns/CherrysKit/RomWeakAuras/README.md) | Make icons, bars, text and alerts for buffs, debuffs, health, resources, cooldowns, casts, threat and more. Start from examples, set triggers and rules, position the display, and share it by code. With KittyCombo, show its next skill or use an aura as a rotation condition. | `/wa` | 0.9.33 |
 | [Cherry's Chat](Interface/AddOns/CherrysKit/CherrysChat/README.md) | Select and copy chat text, use emoji and encrypted channels, and adjust chat appearance. Say-bubble styles turn unsupported emoji into symbols or readable codes. With Ultimate Mail Mod, Ctrl+click a chat name to fill the mail recipient. | `/cchat` | 0.11.4 |
 | [zBag](Interface/AddOns/CherrysKit/zBag/README.md) | View bags together, search by item or stat, sort, and filter quick selling. Search bags and bank for **stamina**, `#clean` or `#dirty` mana stones, adjust slot numbers, and open Global Bank from the bag when installed. | `/zb` | 5.07-ck21 |

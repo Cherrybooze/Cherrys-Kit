@@ -243,6 +243,26 @@ Kitty.CommandConditionFrame.choiceValue = function(text)
 	end
 	return true;
 end;
+-- A condition just picked in the menu. A priority override row skips the
+-- game's range and cooldown checks, so there "Skill in range" and "Skill is
+-- ready" start with the row's own skill, and "Skill is ready" with 0.75 s
+-- (about how far the icon lags the game; 0 waits for the icon).
+Kitty.CommandConditionFrame.OVERRIDE_READY_SECONDS = 0.75;
+Kitty.CommandConditionFrame.newCondition = function(conditionType)
+	local condition = {["conditionType"] = conditionType};
+	local list = Kitty.CommandConditionFrame.commandList;
+	local command = list and list[Kitty.CommandConditionFrame.targetCommandIndex];
+	if(type(command) == "table" and Kitty.ComboManager.isOverride(command)
+	and type(command.commandName) == "string" and command.commandName ~= "") then
+		if(conditionType == "inRange") then
+			condition.value = command.commandName;
+		elseif(conditionType == "canCast") then
+			condition.name = command.commandName;
+			condition.threshold = Kitty.CommandConditionFrame.OVERRIDE_READY_SECONDS;
+		end
+	end
+	return condition;
+end;
 -- The condition code name of a row, from its type dropdown
 Kitty.CommandConditionFrame.rowConditionType = function(row)
 	local name = (type(row) == "string") and row or (row and row:GetName());
