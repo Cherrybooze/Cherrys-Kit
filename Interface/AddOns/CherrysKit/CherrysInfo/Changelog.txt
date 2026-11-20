@@ -1,5 +1,15 @@
 Cherry's Info
 
+1.0.4 (2026-11-20)
+- "Show all client buffs and debuffs" (Target & World tab, off by default): hides the game's player
+  buff frame and draws every buff and debuff the client holds for the player (UnitBuff / UnitDebuff,
+  no count limit on the client side) from 96 icons in AllBuffs.xml. Buffs, then debuffs on a new row,
+  then (with "Include hidden effects") the entries of UnitBuffInfo's whole list that no shown effect
+  accounts for. Timer and stack count, game tooltip, right-click cancels a buff, Shift+drag moves.
+  Read after UNIT_BUFF_CHANGED for the player (0.1 s gathering) and every 3 s as a fallback; timers
+  twice a second from cached texts.
+- /cinfo buffs: counts the effects the client holds against the game's own buff icons.
+
 1.0.1 (2026-11-01)
 - Overhead health bars build their frame names once, not on every pass.
 - CherrysQuests.xml: three tab labels had a bare &, which XML doesn't allow.

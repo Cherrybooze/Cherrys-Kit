@@ -17,6 +17,7 @@ Cherry's Info brings together five addons that used to be separate downloads: Ch
 
 ## Recent changes
 
+- **1.0.4**: **Show all client buffs and debuffs** on the Target & World tab hides the game's buff icons, which stop at a fixed number, and shows every buff and debuff the game holds on you, up to 96, with times, stacks, tooltips and right-click to cancel. Shift+drag moves them; hidden effects can be shown too.
 - **1.0.3**: it no longer saves the names of the game's macro icons, because the Global Bank page works them out itself.
 - **1.0.2**: the macro window has an Import button, which lists Global Bank's macro library with a search bar for names and groups.
 - **1.0.1**: the overhead health bars option no longer builds about 100 frame names on every pass, and three tab labels are written the way the game's file format requires.
@@ -26,7 +27,7 @@ Cherry's Info brings together five addons that used to be separate downloads: Ch
 
 - **Quests**: font, outline, sizes, scale, width, background, sort order, progress bars, daily colour, and how Ctrl+click picks NPCs.
 - **Tooltips & IDs**: richer unit tooltips, mana and race lines, player guild and title, your mouseover's target, material counts, a fixed tooltip position and opacity, plus which ID numbers to show and in what colour.
-- **Target & World**: target health on its portrait, the game's cast bar (hide it, show the cast time, move it), health numbers over heads, auto repair and the clock tooltip. **Everything else pbInfo can do** opens pbInfo's own window for the rest: material counts per bag and bank, sticky tooltips everywhere, its older quest tracker and extra languages.
+- **Target & World**: target health on its portrait, every buff and debuff on you in place of the game's buff icons, the game's cast bar (hide it, show the cast time, move it), health numbers over heads, auto repair and the clock tooltip. **Everything else pbInfo can do** opens pbInfo's own window for the rest: material counts per bag and bank, sticky tooltips everywhere, its older quest tracker and extra languages.
 - **Chat & Macros**: channel titles, XP and progress messages, class and level in chat, timestamps, thousands separator, chat history, and Extended Macro Icons.
 
 Changes apply at once, except the Extended Macro Icons tick, which applies after Reload UI.

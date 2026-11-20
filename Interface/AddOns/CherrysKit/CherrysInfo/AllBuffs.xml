@@ -1,0 +1,134 @@
+<Ui xmlns="http://www.runewaker.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.runewaker.com/UI.xsd">
+	<!-- Cherry's Info: "Show all client buffs and debuffs" (AllBuffs.lua). 96 icons declared here, since RoM gives
+	     frames made from Lua no scripts. The display frame is hidden while the setting is off, so it gets no OnUpdate. -->
+	<Button name="CInfoBuffTemplate" virtual="true" enableMouse="true" hidden="true">
+		<Size><AbsDimension x="30" y="30" /></Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBorder" file="Interface\Common\Bar\Smooth"><Size><AbsDimension x="30" y="30" /></Size><Anchors><Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture name="$parentIcon"><Size><AbsDimension x="28" y="28" /></Size><Anchors><Anchor point="CENTER" relativeTo="$parent" relativePoint="CENTER"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors></Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="$parentCount" inherits="NumberFontNormal" justifyH="RIGHT" text=""><Anchors><Anchor point="BOTTOMRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-1" y="-1" /></Offset></Anchor></Anchors></FontString>
+				<FontString name="$parentTime" inherits="GameFontHighlight" justifyH="CENTER" text=""><FontHeight><AbsValue val="10" /></FontHeight><Anchors><Anchor point="TOP" relativeTo="$parent" relativePoint="BOTTOM"><Offset><AbsDimension x="0" y="1" /></Offset></Anchor></Anchors></FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>this:RegisterForClicks("LeftButton", "RightButton");</OnLoad>
+			<OnClick>CherrysQuests.AllBuffs.Click(this:GetID(), key);</OnClick>
+			<OnMouseDown>CherrysQuests.AllBuffs.MouseDown(key);</OnMouseDown>
+			<OnMouseUp>CherrysQuests.AllBuffs.MouseUp(key);</OnMouseUp>
+			<OnEnter>CherrysQuests.AllBuffs.Enter(this:GetID(), this);</OnEnter>
+			<OnLeave>CherrysQuests.AllBuffs.Leave();</OnLeave>
+		</Scripts>
+	</Button>
+	<Frame name="CInfoBuffs" parent="UIParent" frameStrata="LOW" movable="true" hidden="true">
+		<Size><AbsDimension x="408" y="46" /></Size>
+		<Anchors><Anchor point="TOPRIGHT" relativeTo="UIParent" relativePoint="TOPRIGHT"><Offset><AbsDimension x="-230" y="12" /></Offset></Anchor></Anchors>
+		<Frames>
+			<Button name="CInfoBuff1" inherits="CInfoBuffTemplate" id="1" />
+			<Button name="CInfoBuff2" inherits="CInfoBuffTemplate" id="2" />
+			<Button name="CInfoBuff3" inherits="CInfoBuffTemplate" id="3" />
+			<Button name="CInfoBuff4" inherits="CInfoBuffTemplate" id="4" />
+			<Button name="CInfoBuff5" inherits="CInfoBuffTemplate" id="5" />
+			<Button name="CInfoBuff6" inherits="CInfoBuffTemplate" id="6" />
+			<Button name="CInfoBuff7" inherits="CInfoBuffTemplate" id="7" />
+			<Button name="CInfoBuff8" inherits="CInfoBuffTemplate" id="8" />
+			<Button name="CInfoBuff9" inherits="CInfoBuffTemplate" id="9" />
+			<Button name="CInfoBuff10" inherits="CInfoBuffTemplate" id="10" />
+			<Button name="CInfoBuff11" inherits="CInfoBuffTemplate" id="11" />
+			<Button name="CInfoBuff12" inherits="CInfoBuffTemplate" id="12" />
+			<Button name="CInfoBuff13" inherits="CInfoBuffTemplate" id="13" />
+			<Button name="CInfoBuff14" inherits="CInfoBuffTemplate" id="14" />
+			<Button name="CInfoBuff15" inherits="CInfoBuffTemplate" id="15" />
+			<Button name="CInfoBuff16" inherits="CInfoBuffTemplate" id="16" />
+			<Button name="CInfoBuff17" inherits="CInfoBuffTemplate" id="17" />
+			<Button name="CInfoBuff18" inherits="CInfoBuffTemplate" id="18" />
+			<Button name="CInfoBuff19" inherits="CInfoBuffTemplate" id="19" />
+			<Button name="CInfoBuff20" inherits="CInfoBuffTemplate" id="20" />
+			<Button name="CInfoBuff21" inherits="CInfoBuffTemplate" id="21" />
+			<Button name="CInfoBuff22" inherits="CInfoBuffTemplate" id="22" />
+			<Button name="CInfoBuff23" inherits="CInfoBuffTemplate" id="23" />
+			<Button name="CInfoBuff24" inherits="CInfoBuffTemplate" id="24" />
+			<Button name="CInfoBuff25" inherits="CInfoBuffTemplate" id="25" />
+			<Button name="CInfoBuff26" inherits="CInfoBuffTemplate" id="26" />
+			<Button name="CInfoBuff27" inherits="CInfoBuffTemplate" id="27" />
+			<Button name="CInfoBuff28" inherits="CInfoBuffTemplate" id="28" />
+			<Button name="CInfoBuff29" inherits="CInfoBuffTemplate" id="29" />
+			<Button name="CInfoBuff30" inherits="CInfoBuffTemplate" id="30" />
+			<Button name="CInfoBuff31" inherits="CInfoBuffTemplate" id="31" />
+			<Button name="CInfoBuff32" inherits="CInfoBuffTemplate" id="32" />
+			<Button name="CInfoBuff33" inherits="CInfoBuffTemplate" id="33" />
+			<Button name="CInfoBuff34" inherits="CInfoBuffTemplate" id="34" />
+			<Button name="CInfoBuff35" inherits="CInfoBuffTemplate" id="35" />
+			<Button name="CInfoBuff36" inherits="CInfoBuffTemplate" id="36" />
+			<Button name="CInfoBuff37" inherits="CInfoBuffTemplate" id="37" />
+			<Button name="CInfoBuff38" inherits="CInfoBuffTemplate" id="38" />
+			<Button name="CInfoBuff39" inherits="CInfoBuffTemplate" id="39" />
+			<Button name="CInfoBuff40" inherits="CInfoBuffTemplate" id="40" />
+			<Button name="CInfoBuff41" inherits="CInfoBuffTemplate" id="41" />
+			<Button name="CInfoBuff42" inherits="CInfoBuffTemplate" id="42" />
+			<Button name="CInfoBuff43" inherits="CInfoBuffTemplate" id="43" />
+			<Button name="CInfoBuff44" inherits="CInfoBuffTemplate" id="44" />
+			<Button name="CInfoBuff45" inherits="CInfoBuffTemplate" id="45" />
+			<Button name="CInfoBuff46" inherits="CInfoBuffTemplate" id="46" />
+			<Button name="CInfoBuff47" inherits="CInfoBuffTemplate" id="47" />
+			<Button name="CInfoBuff48" inherits="CInfoBuffTemplate" id="48" />
+			<Button name="CInfoBuff49" inherits="CInfoBuffTemplate" id="49" />
+			<Button name="CInfoBuff50" inherits="CInfoBuffTemplate" id="50" />
+			<Button name="CInfoBuff51" inherits="CInfoBuffTemplate" id="51" />
+			<Button name="CInfoBuff52" inherits="CInfoBuffTemplate" id="52" />
+			<Button name="CInfoBuff53" inherits="CInfoBuffTemplate" id="53" />
+			<Button name="CInfoBuff54" inherits="CInfoBuffTemplate" id="54" />
+			<Button name="CInfoBuff55" inherits="CInfoBuffTemplate" id="55" />
+			<Button name="CInfoBuff56" inherits="CInfoBuffTemplate" id="56" />
+			<Button name="CInfoBuff57" inherits="CInfoBuffTemplate" id="57" />
+			<Button name="CInfoBuff58" inherits="CInfoBuffTemplate" id="58" />
+			<Button name="CInfoBuff59" inherits="CInfoBuffTemplate" id="59" />
+			<Button name="CInfoBuff60" inherits="CInfoBuffTemplate" id="60" />
+			<Button name="CInfoBuff61" inherits="CInfoBuffTemplate" id="61" />
+			<Button name="CInfoBuff62" inherits="CInfoBuffTemplate" id="62" />
+			<Button name="CInfoBuff63" inherits="CInfoBuffTemplate" id="63" />
+			<Button name="CInfoBuff64" inherits="CInfoBuffTemplate" id="64" />
+			<Button name="CInfoBuff65" inherits="CInfoBuffTemplate" id="65" />
+			<Button name="CInfoBuff66" inherits="CInfoBuffTemplate" id="66" />
+			<Button name="CInfoBuff67" inherits="CInfoBuffTemplate" id="67" />
+			<Button name="CInfoBuff68" inherits="CInfoBuffTemplate" id="68" />
+			<Button name="CInfoBuff69" inherits="CInfoBuffTemplate" id="69" />
+			<Button name="CInfoBuff70" inherits="CInfoBuffTemplate" id="70" />
+			<Button name="CInfoBuff71" inherits="CInfoBuffTemplate" id="71" />
+			<Button name="CInfoBuff72" inherits="CInfoBuffTemplate" id="72" />
+			<Button name="CInfoBuff73" inherits="CInfoBuffTemplate" id="73" />
+			<Button name="CInfoBuff74" inherits="CInfoBuffTemplate" id="74" />
+			<Button name="CInfoBuff75" inherits="CInfoBuffTemplate" id="75" />
+			<Button name="CInfoBuff76" inherits="CInfoBuffTemplate" id="76" />
+			<Button name="CInfoBuff77" inherits="CInfoBuffTemplate" id="77" />
+			<Button name="CInfoBuff78" inherits="CInfoBuffTemplate" id="78" />
+			<Button name="CInfoBuff79" inherits="CInfoBuffTemplate" id="79" />
+			<Button name="CInfoBuff80" inherits="CInfoBuffTemplate" id="80" />
+			<Button name="CInfoBuff81" inherits="CInfoBuffTemplate" id="81" />
+			<Button name="CInfoBuff82" inherits="CInfoBuffTemplate" id="82" />
+			<Button name="CInfoBuff83" inherits="CInfoBuffTemplate" id="83" />
+			<Button name="CInfoBuff84" inherits="CInfoBuffTemplate" id="84" />
+			<Button name="CInfoBuff85" inherits="CInfoBuffTemplate" id="85" />
+			<Button name="CInfoBuff86" inherits="CInfoBuffTemplate" id="86" />
+			<Button name="CInfoBuff87" inherits="CInfoBuffTemplate" id="87" />
+			<Button name="CInfoBuff88" inherits="CInfoBuffTemplate" id="88" />
+			<Button name="CInfoBuff89" inherits="CInfoBuffTemplate" id="89" />
+			<Button name="CInfoBuff90" inherits="CInfoBuffTemplate" id="90" />
+			<Button name="CInfoBuff91" inherits="CInfoBuffTemplate" id="91" />
+			<Button name="CInfoBuff92" inherits="CInfoBuffTemplate" id="92" />
+			<Button name="CInfoBuff93" inherits="CInfoBuffTemplate" id="93" />
+			<Button name="CInfoBuff94" inherits="CInfoBuffTemplate" id="94" />
+			<Button name="CInfoBuff95" inherits="CInfoBuffTemplate" id="95" />
+			<Button name="CInfoBuff96" inherits="CInfoBuffTemplate" id="96" />
+		</Frames>
+		<Scripts>
+			<OnLoad>CherrysQuests.AllBuffs.OnLoad(this);</OnLoad>
+			<OnEvent>CherrysQuests.AllBuffs.OnEvent(event, arg1);</OnEvent>
+			<OnUpdate>CherrysQuests.AllBuffs.OnUpdate(elapsedTime);</OnUpdate>
+		</Scripts>
+	</Frame>
+</Ui>

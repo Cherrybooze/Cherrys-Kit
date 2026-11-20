@@ -4,6 +4,20 @@ The automated tests run production Lua 5.1 modules and XML handlers with simulat
 
 Install the Full ZIP into the game's Interface/AddOns folder, merge CherrysKit, and Reload UI. For individual updates, update the hub too: RWA 0.9.31 requires hub 0.4.14 or later; UMM 7.0.1-ck14 requires **0.4.34** for its modern mail window (0.4.17 for its History files). Cherry's Info 1.0 requires hub **0.4.27**, and Addon LoadTimes 1.3.0 requires hub **0.4.22**. Cherry's Bar 1.1.7 requires hub **0.4.23**, and Cherry's Loginxml 1.2.2 and LogNextChar 1.2.2 require hub **0.4.25**. The Full ZIP includes hub **0.4.25**.
 
+## Show all client buffs and debuffs (Cherry's Info 1.0.4, not yet released)
+
+`tests/test_cherrys_info_all_buffs.py` runs AllBuffs.lua, the options window and the XML pool with a simulated client whose effect list works like the client source (sprite/rolesprite.cpp): reading, rows, timers, one read per burst of events, no garbage while running, cancel, move and the counts of `/cinfo buffs`. The game's own buff frame names (PlayerBuffFrame, PlayerBuffButtonN, PlayerDebuffButtonN) are assumed from the kit's other code; `/cinfo buffs` reports what the client really has.
+
+| # | Do this | Expected |
+| --- | --- | --- |
+| AB1 | With a few buffs on, type `/cinfo buffs`. | Three lines: the effects the game holds on you (buffs, debuffs, hidden), the game's buff icons it found (PlayerBuffButton xN, PlayerDebuffButton xN) and no missing functions. Note the numbers in the report. |
+| AB2 | `/cinfo` > Target & World > tick **Show all client buffs and debuffs**. | The game's buff icons go; the new icons appear at the top right with times under them, buffs first, debuffs on their own row with a red border. |
+| AB3 | Stack more buffs than the game's icons showed (food, potions, party buffs, house buffs) until AB1's buff count is above its icon count. | Every buff has an icon; the count matches `/cinfo buffs`. |
+| AB4 | Hover a buff and a debuff; right-click a buff. | The game's tooltip (with the ID line if IDs are on) plus a hint line. The right-clicked buff goes away; right-click on a debuff does nothing. |
+| AB5 | Shift+drag an icon, Reload UI. `/cinfo buffs reset`. | The icons move together and stay there after Reload UI; reset puts them back at the top right. A plain click after the drag does not cancel anything. |
+| AB6 | Tick **Include hidden effects**, then cycle **Buff icon size**. | Hidden effects (if AB1 counted any) appear on their own row with a grey border and a "Hidden effect" tooltip. Small/medium/large change the size and icons per row. |
+| AB7 | Fight for a few minutes with the display on, watching /cbar perf or the frame rate. Untick the setting. | No stutter compared with it off. Unticked, the new icons go and the game's buff frame comes back (Reload UI if some of its icons stay hidden). |
+
 ## Priority override rows and Imaginary cooldown (Cherry's KittyCombo 1.7.20, not yet released)
 
 `tests/test_kitty_imaginary_cooldown.py` and `tests/test_kitty_priority_override.py` run the kitty engine, the editor's row and condition code, prediction and share codes with simulated client APIs, and the override row against the timing model of the Press early section below. In that model Charged Chop as an override row every second gets 28 to 30 casts in 30 seconds above a filler skill (18 to 22 waiting for its icon). With a Warrior/Warden kitty's attacks below it, each with a global cooldown, it gets 21 to 26 (16 to 23 waiting for the icon, 16 to 21 with a single send a second, 23 to 30 with Press early on its row), and the other skills fire 11 to 17 times. The game turns many of those once-a-second sends down in the model, which is why the row sends again up to 4 times within the second; the real server may differ, so count in game. Use a Warrior/Warden and a training dummy, and a damage meter that counts hits per skill.

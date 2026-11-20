@@ -285,6 +285,38 @@ O.TABS = {
         end
       end,
     },
+    {
+      key = "allBuffs",
+      kind = "check",
+      label = "Show all client buffs and debuffs",
+      tip = "Hides the game's buff icons and shows every buff and debuff the client has on you, up to 96. Right-click a buff to cancel it, Shift+drag to move them. /cinfo buffs compares the counts.",
+      set = function(v)
+        Q.S().allBuffs = v and true or false
+        Q.AllBuffs.Apply()
+      end,
+    },
+    {
+      key = "allBuffsHidden",
+      kind = "check",
+      label = "Include hidden effects",
+      tip = "Also shows effects the game never draws an icon for (grey border). They have no game tooltip and can't be cancelled.",
+      set = function(v)
+        Q.S().allBuffsHidden = v and true or false
+        Q.AllBuffs.Restyle()
+      end,
+    },
+    {
+      key = "allBuffsSize",
+      kind = "choice",
+      label = "Buff icon size",
+      choices = function()
+        return Q.AllBuffs and Q.AllBuffs.SIZES or {}
+      end,
+      set = function(v)
+        Q.S().allBuffsSize = v
+        Q.AllBuffs.Restyle()
+      end,
+    },
     pbOpt("MODIFYBLOODBARS", "check", "HP numbers on overhead health bars", { default = true }),
     pbOpt("BLOODBARSCOLORFADE", "check", "Overhead health bar colour fade", { default = false }),
     pbOpt("BloodBarsDelay", "num", "Overhead health bar refresh delay", { default = 0.2, min = 0.05, max = 1.0, step = 0.05, fmt = secs }),

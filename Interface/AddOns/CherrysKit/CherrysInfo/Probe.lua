@@ -62,6 +62,9 @@ function P.Run()
   if type(PortraitHP) == "table" and type(PortraitHP.Probe) == "function" then
     PortraitHP.Probe()
   end
+  if Q.AllBuffs then
+    Q.AllBuffs.Probe()
+  end
   if type(CherrysEMI) == "table" and type(CherrysEMI.Probe) == "function" then
     CherrysEMI.Probe()
   end
