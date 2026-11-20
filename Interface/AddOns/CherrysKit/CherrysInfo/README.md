@@ -1,6 +1,6 @@
 # Cherry's Info
 
-Version **1.0.3** · Kit release **0.11.115** · [All addons / hub](../README.md)
+Version **1.0.4** · Kit release **0.11.115** · [All addons / hub](../README.md)
 
 <!-- requirements: tools/curseforge_pages.py writes this -->
 
@@ -21,6 +21,10 @@ Version **1.0.3** · Kit release **0.11.115** · [All addons / hub](../README.md
 
 Cherry's Info brings together five addons that used to be separate downloads: **Cherry's Quests**, **pbInfo**, **TooltipIds**, **PortraitHP** and **Extended Macro Icons**. They now share one folder (`CherrysKit/CherrysInfo/`), one switch in `/ck` and one window.
 
+## Updated in 1.0.4
+
+**Every buff and debuff on you, not just the ones the game has room for.** Tick **Show all client buffs and debuffs** on the **Target & World** tab. The game's own buff icons stop at a fixed number, but the game keeps every effect you have; this hides the game's icons and shows them all, up to 96: buffs first, then debuffs on their own row with a red border, each with its time left and stack count. Hover one for the game's tooltip, right-click a buff to cancel it, and Shift+drag any icon to move them. **Include hidden effects** also shows the effects the game never draws an icon for (grey border), and **Buff icon size** picks small (16 a row), medium (12) or large (10). `/cinfo buffs` prints how many effects the game holds on you next to how many icons its own buff frame has.
+
 ## Updated in 1.0.3
 
 **Nothing extra in your saved settings.** It no longer saves the names of the game's macro icons, because the Global Bank page now works them out itself.
@@ -40,7 +44,7 @@ Cherry's Info brings together five addons that used to be separate downloads: **
 - **One settings window** (`/cinfo`, or `/cq` for its Quests tab). Changes apply at once, except the Extended Macro Icons tick, which applies after Reload UI:
   - **Quests**: the quest tracker's font, outline, sizes, scale, width, background, sort order, progress bars, daily colour, and how Ctrl+click picks NPCs. Reset its position, or forget your NPC picks.
   - **Tooltips & IDs**: pbInfo's unit, player and material tooltips, with TooltipIds' choice of ID numbers and their colour.
-  - **Target & World**: PortraitHP's health percent, cast bar options, health numbers over heads, auto repair and the clock tooltip. **Everything else pbInfo can do** opens pbInfo's own window for the rest: material counts per bag and bank, sticky tooltips everywhere, its older quest tracker and extra languages.
+  - **Target & World**: PortraitHP's health percent, every buff and debuff on you in place of the game's buff icons, cast bar options, health numbers over heads, auto repair and the clock tooltip. **Everything else pbInfo can do** opens pbInfo's own window for the rest: material counts per bag and bank, sticky tooltips everywhere, its older quest tracker and extra languages.
   - **Chat & Macros**: chat filters, class and level in chat, timestamps, chat history, and Extended Macro Icons (about 10,500 extra icons in 58 categories).
 - **Your saved settings carry over**: `CherrysQuests_DB`, `pbInfoSettings`, `pbInfoCharData`, `pbInfoPlayers`, `PortraitHP_DB` and `TooltipIds_Settings` are read and kept as they are. Other addons still find `pbInfo`, `PortraitHP`, `TooltipIds`, `CherrysQuests` and `CherrysEMI` under their old names.
 - **One switch**: if you had turned one of the five off in `/ck`, it's on again. Turn that part off on its tab instead.
@@ -65,6 +69,9 @@ Cherry's Info brings together five addons that used to be separate downloads: **
 | `/pbinfo`, `/pbic`, `/ti` | Open the **Tooltips & IDs** tab |
 | `/php` | Turns target health on or off |
 | `/mobinfo [party\|guild\|name]` | Prints or sends your target's health and class |
+| `/cinfo buffs` | Counts the buffs, debuffs and hidden effects the game holds on you, and the game's own buff icons |
+| `/cinfo buffs on \| off` | Turns **Show all client buffs and debuffs** on or off |
+| `/cinfo buffs reset` | Puts the buff display back at the top right |
 | `/cinfo probe` | Prints what all five parts see in your client |
 
 ## Install

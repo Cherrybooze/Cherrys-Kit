@@ -177,7 +177,9 @@ CherrysInfo/Npcs.lua
 CherrysInfo/Tracker.lua
 CherrysInfo/Options.lua
 CherrysInfo/Probe.lua
+CherrysInfo/AllBuffs.lua
 CherrysInfo/CherrysQuests.xml
+CherrysInfo/AllBuffs.xml
 KitLoad/CherrysGrid.lua
 CherrysGrid/Core.lua
 CherrysGrid/Roster.lua

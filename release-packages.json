@@ -305,7 +305,7 @@
     {
       "folder": "CherrysInfo",
       "title": "Cherry's Info",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "command": "/cinfo, /cq",
       "description_file": "16-cherrys-info.md",
       "summary": "Quest tracker with Ctrl+click NPCs, richer tooltips with IDs, target portrait HP%, chat filters and 10,500+ macro icons.",

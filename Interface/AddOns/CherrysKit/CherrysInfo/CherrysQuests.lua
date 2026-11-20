@@ -11,7 +11,7 @@ CherrysQuests = {}
 CherrysInfo = CherrysQuests
 local Q = CherrysQuests
 
-Q.version = "1.0.3"
+Q.version = "1.0.4"
 Q.MAX_ROWS = 30 -- quest rows declared in CherrysQuests.xml
 
 if SaveVariables then
@@ -93,6 +93,9 @@ Q.DEFAULTS = {
   y = nil,
   folded = {},          -- [quest name] = true
   allFolded = false,
+  allBuffs = false,     -- hide the game's buff icons and draw every buff and debuff (AllBuffs.lua)
+  allBuffsHidden = false, -- also effects the game data marks as hidden
+  allBuffsSize = "medium", -- small | medium | large
 }
 
 Q.FONTS = {
@@ -424,6 +427,9 @@ function Q.TryStart()
   Q.ready = true
   Q.InstallHooks()
   Q.Tracker.Setup()
+  if Q.AllBuffs then
+    Q.AllBuffs.Apply()
+  end
   Q.dirty = true
 end
 
@@ -475,6 +481,7 @@ function Q.Help()
   chat(" /cq track <name>  finds an NPC by name and tracks it (like the world map search)")
   chat(" /cq text [n]  prints the raw summary text of tracked quest n (for bug reports)")
   chat(" /cq forget  forgets every NPC you picked with Ctrl+click")
+  chat(" /cinfo buffs  counts the buffs the client holds against the game's icons (on | off | reset)")
   chat(" /cinfo probe  checks what this game client offers across all Cherry's Info modules")
 end
 
@@ -500,6 +507,12 @@ function Q.Command(msg, defaultTab)
     end
   elseif word == "quests" or word == "tooltips" or word == "target" or word == "chat" then
     Q.Options.OpenTab(word)
+  elseif word == "buffs" and (rest == "" or rest == "probe") then
+    Q.AllBuffs.Probe()
+  elseif word == "buffs" and not Q.ready then
+    chat("still loading, try again in a moment.")
+  elseif word == "buffs" then
+    Q.AllBuffs.Command(rest)
   elseif word == "ti" or word == "ids" then
     Q.Options.OpenTab("tooltips")
   elseif word == "php" then
